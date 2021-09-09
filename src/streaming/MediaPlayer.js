@@ -718,20 +718,12 @@ function MediaPlayer() {
      */
     function getDVRSeekOffset(value) {
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-        let metric = dashMetrics.getCurrentDVRInfo(type);
+        const metric = dashMetrics.getCurrentDVRInfo(type);
         if (!metric) {
             return 0;
         }
-
-        let liveDelay = playbackController.getLiveDelay();
-
-        let val = metric.range.start + value;
-
-        if (val > (metric.range.end - liveDelay)) {
-            val = metric.range.end - liveDelay;
-        }
-
-        return val;
+        const liveDelay = playbackController.getLiveDelay();
+        return Math.min(metric.range.start + value, metric.range.end - liveDelay);
     }
 
     /**
