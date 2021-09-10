@@ -846,7 +846,7 @@ function ProtectionController(config) {
         };
 
         xhr.onload = function () {
-            if (this.status === 200 || retriesCount <= 0) {
+            if (this.status === 200 || this.status === 201 || retriesCount <= 0) {
                 onLoad(this);
             } else {
                 logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);
