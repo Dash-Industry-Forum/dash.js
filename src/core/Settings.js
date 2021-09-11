@@ -772,7 +772,7 @@ function Settings() {
                 keepProtectionMediaKeys: false
             },
             buffer: {
-                enableSeekDecorrelationFix: true,
+                enableSeekDecorrelationFix: false,
                 fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
