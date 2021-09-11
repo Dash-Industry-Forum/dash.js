@@ -40,6 +40,9 @@ import {
 import DashConstants from './constants/DashConstants';
 
 
+const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
+
+
 function DashHandler(config) {
 
     config = config || {};
@@ -296,6 +299,50 @@ function DashHandler(config) {
         return request;
     }
 
+    /**
+     * This function returns a time for which we can generate a request. It is supposed to be as close as possible to the target time.
+     * This is useful in scenarios in which the user seeks into a gap. We will not find a valid request then and need to adjust the seektime.
+     * @param time
+     * @param mediaInfo
+     * @param representation
+     */
+    function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+
+        if (isNaN(time) || !mediaInfo || !representation) {
+            return NaN;
+        }
+
+        if (isNaN(targetThreshold)) {
+            targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+        }
+
+        let start = representation.adaptation.period.start;
+        let end = representation.adaptation.period.start + representation.adaptation.period.duration;
+        let lastFoundTime = NaN;
+
+        // Iterate while start not meets end
+        while (start <= end - Math.max(targetThreshold, 0.1)) {
+
+            // Find the mid
+            let mid = Math.round(((start + end) / 2) * 10 + Number.EPSILON) / 10;
+
+            // If we are within search threshold and found a valid request return true
+            const request = getSegmentRequestForTime(mediaInfo, representation, mid);
+            if (request) {
+                lastFoundTime = mid;
+                if (Math.abs(lastFoundTime - time) <= targetThreshold) {
+                    return lastFoundTime
+                }
+                start = lastFoundTime;
+            } else {
+                // Else look before mid
+                end = mid;
+            }
+        }
+
+        return lastFoundTime;
+    }
+
     function getCurrentIndex() {
         return lastSegment ? lastSegment.index : -1;
     }
@@ -316,7 +363,8 @@ function DashHandler(config) {
         getNextSegmentRequest,
         isLastSegmentRequested,
         reset,
-        getNextSegmentRequestIdempotent
+        getNextSegmentRequestIdempotent,
+        getValidSeekTimeCloseToTargetTime
     };
 
     setup();

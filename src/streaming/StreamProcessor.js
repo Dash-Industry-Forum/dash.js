@@ -380,7 +380,7 @@ function StreamProcessor(config) {
                     return;
                 }
                 // Init segment not in cache, send new request
-                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
+                const request = dashHandler ? dashHandler.getInitRequest(mediaInfo, rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else if (rescheduleIfNoRequest) {
@@ -397,58 +397,73 @@ function StreamProcessor(config) {
      * @private
      */
     function _onMediaFragmentNeeded(e, rescheduleIfNoRequest = true) {
-
-        if (manifestUpdateInProgress) {
+        // Don't schedule next fragments while updating manifest or pruning to avoid buffer inconsistencies
+        if (manifestUpdateInProgress || bufferController.getIsPruningInProgress()) {
             _noValidRequest();
             return;
         }
 
-        let request = null;
-
-        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
-        if (!bufferController.getIsPruningInProgress()) {
-            request = _getFragmentRequest();
-            if (request) {
-                shouldUseExplicitTimeForRequest = false;
-                if (!isNaN(request.startTime + request.duration)) {
-                    bufferingTime = request.startTime + request.duration;
-                }
-                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                scheduleController.setTimeToLoadDelay(0);
-            }
-        }
-
+        let request = _getFragmentRequest();
         if (request) {
-            if (!_shouldIgnoreRequest(request)) {
-                logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
-                fragmentModel.executeRequest(request);
-            } else {
-                logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
-                _noValidRequest();
-            }
+            shouldUseExplicitTimeForRequest = false;
+            _mediaRequestGenerated(request);
+        } else {
+            _noMediaRequestGenerated(rescheduleIfNoRequest);
         }
-        else {
-            // Check if the media is finished. If so, no need to schedule another request
-            const representation = representationController.getCurrentRepresentation();
-            const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+    }
 
-            if (isLastSegmentRequested) {
-                const segmentIndex = dashHandler.getCurrentIndex();
-                logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
-                eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
-                    streamId: streamInfo.id,
-                    mediaType: type
-                });
-                bufferController.segmentRequestingCompleted(segmentIndex);
-                scheduleController.clearScheduleTimer();
-                return;
-            }
+    /**
+     * If we generated a valid media request we can execute the request. In some cases the segment might be blacklisted.
+     * @param {object} request
+     * @private
+     */
+    function _mediaRequestGenerated(request) {
+        if (!isNaN(request.startTime + request.duration)) {
+            bufferingTime = request.startTime + request.duration;
+        }
+        request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+        scheduleController.setTimeToLoadDelay(0);
+        if (!_shouldIgnoreRequest(request)) {
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+            fragmentModel.executeRequest(request);
+        } else {
+            logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
+            _noValidRequest();
+        }
+    }
 
-            // Reschedule
-            if (rescheduleIfNoRequest) {
-                // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                _noValidRequest();
-            }
+    /**
+     * We could not generate a valid request. Check if the media is finished, we are stuck in a gap or simply need to wait for the next segment to be available.
+     * @param {boolean} rescheduleIfNoRequest
+     * @private
+     */
+    function _noMediaRequestGenerated(rescheduleIfNoRequest) {
+        // Check if the media is finished. If so, no need to schedule another request
+        const representation = representationController.getCurrentRepresentation();
+        const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+
+        if (isLastSegmentRequested) {
+            const segmentIndex = dashHandler.getCurrentIndex();
+            logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
+            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
+                streamId: streamInfo.id,
+                mediaType: type
+            });
+            bufferController.segmentRequestingCompleted(segmentIndex);
+            scheduleController.clearScheduleTimer();
+            return;
+        }
+
+        // If we reached this point and this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
+        // There is no point in trying again.We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
+        if (!isDynamic && shouldUseExplicitTimeForRequest) {
+            const adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, 0.5);
+            playbackController.seek(adjustedTime, false, false);
+            return;
+        }
+
+        if (rescheduleIfNoRequest) {
+            _noValidRequest();
         }
     }
 
@@ -486,9 +501,9 @@ function StreamProcessor(config) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
             if (useTime) {
-                request = dashHandler.getSegmentRequestForTime(getMediaInfo(), representation, bufferingTime);
+                request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
-                request = dashHandler.getNextSegmentRequest(getMediaInfo(), representation);
+                request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
             }
         }
 
@@ -918,7 +933,7 @@ function StreamProcessor(config) {
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
         let request = dashHandler.getNextSegmentRequestIdempotent(
-            getMediaInfo(),
+            mediaInfo,
             representation
         );
 
