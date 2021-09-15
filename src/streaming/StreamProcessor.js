@@ -438,10 +438,20 @@ function StreamProcessor(config) {
      * @private
      */
     function _noMediaRequestGenerated(rescheduleIfNoRequest) {
-        // Check if the media is finished. If so, no need to schedule another request
         const representation = representationController.getCurrentRepresentation();
-        const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
 
+        // If  this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
+        // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
+        if (settings.get().streaming.buffer.seekGapFix.enabled && !isDynamic && shouldUseExplicitTimeForRequest && playbackController.isSeeking()) {
+            const adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.buffer.seekGapFix.threshold);
+            if (!isNaN(adjustedTime)) {
+                playbackController.seek(adjustedTime, false, false);
+                return;
+            }
+        }
+
+        // Check if the media is finished. If so, no need to schedule another request
+        const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
         if (isLastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
@@ -451,14 +461,6 @@ function StreamProcessor(config) {
             });
             bufferController.segmentRequestingCompleted(segmentIndex);
             scheduleController.clearScheduleTimer();
-            return;
-        }
-
-        // If we reached this point and this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
-        // There is no point in trying again.We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
-        if (!isDynamic && shouldUseExplicitTimeForRequest) {
-            const adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, 0.5);
-            playbackController.seek(adjustedTime, false, false);
             return;
         }
 

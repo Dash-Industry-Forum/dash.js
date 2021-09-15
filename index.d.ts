@@ -178,6 +178,10 @@ declare namespace dashjs {
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
+                seekGapFix?: {
+                    enabled?: boolean,
+                    threshold?: number
+                },
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
@@ -1479,7 +1483,12 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestSelectionPriority' | 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode =
+        'highestSelectionPriority'
+        | 'highestBitrate'
+        | 'firstTrack'
+        | 'highestEfficiency'
+        | 'widestRange';
 
     export function supportsMediaSource(): boolean;
 

@@ -302,45 +302,60 @@ function DashHandler(config) {
     /**
      * This function returns a time for which we can generate a request. It is supposed to be as close as possible to the target time.
      * This is useful in scenarios in which the user seeks into a gap. We will not find a valid request then and need to adjust the seektime.
-     * @param time
-     * @param mediaInfo
-     * @param representation
+     * @param {number} time
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @param {number} targetThreshold
      */
     function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+        try {
 
-        if (isNaN(time) || !mediaInfo || !representation) {
+            if (isNaN(time) || !mediaInfo || !representation) {
+                return NaN;
+            }
+
+            if (isNaN(targetThreshold)) {
+                targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+            }
+
+            let start = representation.adaptation.period.start;
+            let end = representation.adaptation.period.start + representation.adaptation.period.duration;
+            let lastFoundTime = NaN;
+            let lastRequestFound = null;
+            let finished = false;
+
+            // Iterate while start not meets end
+            while (start <= end - Math.max(targetThreshold, 0.1) && !finished) {
+
+                // Find the mid
+                let mid = Math.round(((start + end) / 2) * 10 + Number.EPSILON) / 10;
+
+                // If we are within search threshold and found a valid request return true
+                const request = getSegmentRequestForTime(mediaInfo, representation, mid);
+                if (request) {
+                    lastFoundTime = mid;
+                    lastRequestFound = request
+                    if (Math.abs(lastFoundTime - time) <= targetThreshold) {
+                        finished = true;
+                    } else {
+                        start = lastFoundTime;
+                    }
+                } else {
+                    // Else look before mid
+                    end = mid;
+                }
+            }
+
+            // Adjust time depending on the distance to the end of the target segment. We can not be sure that there is a segment after the one we found.
+            if (!isNaN(lastFoundTime) && lastRequestFound) {
+                const requestEndTime = lastRequestFound.startTime + lastRequestFound.duration;
+                return Math.min(requestEndTime - targetThreshold, lastFoundTime);
+            }
+
+            return NaN;
+        } catch (e) {
             return NaN;
         }
-
-        if (isNaN(targetThreshold)) {
-            targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
-        }
-
-        let start = representation.adaptation.period.start;
-        let end = representation.adaptation.period.start + representation.adaptation.period.duration;
-        let lastFoundTime = NaN;
-
-        // Iterate while start not meets end
-        while (start <= end - Math.max(targetThreshold, 0.1)) {
-
-            // Find the mid
-            let mid = Math.round(((start + end) / 2) * 10 + Number.EPSILON) / 10;
-
-            // If we are within search threshold and found a valid request return true
-            const request = getSegmentRequestForTime(mediaInfo, representation, mid);
-            if (request) {
-                lastFoundTime = mid;
-                if (Math.abs(lastFoundTime - time) <= targetThreshold) {
-                    return lastFoundTime
-                }
-                start = lastFoundTime;
-            } else {
-                // Else look before mid
-                end = mid;
-            }
-        }
-
-        return lastFoundTime;
     }
 
     function getCurrentIndex() {
