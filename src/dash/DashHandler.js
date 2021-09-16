@@ -314,6 +314,10 @@ function DashHandler(config) {
                 return NaN;
             }
 
+            if (time < 0) {
+                time = 0;
+            }
+
             if (isNaN(targetThreshold)) {
                 targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
             }
@@ -322,23 +326,29 @@ function DashHandler(config) {
             let end = representation.adaptation.period.start + representation.adaptation.period.duration;
             let lastFoundTime = NaN;
             let lastRequestFound = null;
-            let finished = false;
 
             // Iterate while start not meets end
-            while (start <= end - Math.max(targetThreshold, 0.1) && !finished) {
+            while (start <= end - Math.max(targetThreshold, 0.1)) {
 
                 // Find the mid
                 let mid = Math.round(((start + end) / 2) * 10 + Number.EPSILON) / 10;
 
-                // If we are within search threshold and found a valid request return true
                 const request = getSegmentRequestForTime(mediaInfo, representation, mid);
+
                 if (request) {
                     lastFoundTime = mid;
                     lastRequestFound = request
+
+                    // If we are within our target threshold we can stop
                     if (Math.abs(lastFoundTime - time) <= targetThreshold) {
-                        finished = true;
+                        break;
+                    }
+
+                    // If the time we found is higher than our target time we search the left side of the tree. Otherwise the right side
+                    if (lastFoundTime > time) {
+                        end = lastFoundTime;
                     } else {
-                        start = lastFoundTime;
+                        start = lastFoundTime
                     }
                 } else {
                     // Else look before mid
@@ -349,6 +359,11 @@ function DashHandler(config) {
             // Adjust time depending on the distance to the end of the target segment. We can not be sure that there is a segment after the one we found.
             if (!isNaN(lastFoundTime) && lastRequestFound) {
                 const requestEndTime = lastRequestFound.startTime + lastRequestFound.duration;
+
+                // Keep the original start time in case it is covered by a segment
+                if (time >= lastRequestFound.startTime && requestEndTime - time > targetThreshold) {
+                    return time;
+                }
                 return Math.min(requestEndTime - targetThreshold, lastFoundTime);
             }
 

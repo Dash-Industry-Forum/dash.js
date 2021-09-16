@@ -11,6 +11,7 @@ import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
 import DashMetricsMock from './mocks/DashMetricsMock';
 
+const sinon = require('sinon');
 const expect = require('chai').expect;
 
 describe('DashHandler', function () {
@@ -92,7 +93,24 @@ describe('DashHandler', function () {
 
     describe('getValidSeekTimeCloseToTargetTime()', () => {
         let dummyRepresentation;
-        let dummyMediaInfo
+        let dummyMediaInfo;
+        let segRequestStub;
+
+        beforeEach(() => {
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+        })
+
+        afterEach(() => {
+            segRequestStub.restore();
+        });
 
         beforeEach(() => {
             dummyRepresentation = {
@@ -100,37 +118,31 @@ describe('DashHandler', function () {
                 adaptation: {
                     index: 0,
                     period: {
-                        start: 0,
-                        duration: 30,
-                        index: 0,
                         mpd: {
                             manifest: {
                                 Period_asArray: [
                                     {
-                                        AdaptationSet_asArray: [{
-                                            Representation_asArray: [
-                                                {
-                                                    SegmentTemplate: {
-                                                        SegmentTimeline: {
-                                                            S_asArray: [{
-                                                                t: 0,
-                                                                r: 14,
-                                                                d: 2
-                                                            }]
-                                                        }
+                                        AdaptationSet_asArray: [
+                                            {
+                                                Representation_asArray: [
+                                                    {
+                                                        bandwidth: 3000
                                                     }
-                                                }
-                                            ]
-                                        }]
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }
-                        }
+                        },
+                        start: 0,
+                        duration: 30,
+                        index: 0
                     }
                 },
                 segmentInfoType: 'SegmentTimeline',
                 timescale: 1,
-                segmentDuration: 4
+                segmentDuration: 2
             };
             dummyMediaInfo = {};
         })
@@ -159,10 +171,136 @@ describe('DashHandler', function () {
             expect(result).to.be.NaN;
         })
 
-        it('should return valid time if request can be found', () => {
+        it('should return valid time if request can be found and segment durations cover whole period', () => {
             const result = dashHandler.getValidSeekTimeCloseToTargetTime(3, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.NaN;
+            expect(result).to.be.equal(3);
+        })
+
+        it('should return valid time if requested time is larger than period end', () => {
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(29.5);
+        })
+
+        it('should return valid time if requested time is smaller than period start', () => {
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(0);
+        })
+
+        it('should return valid time if no valid segment for time and gap is right period end of period', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time > 28) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(29, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(27.5);
+        })
+
+        it('should return valid time if no valid segment for time and time is closer to end of period than the target threshold', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time > 28) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(29.8, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(27.5);
+        })
+
+        it('should return valid time if gap is in the middle and target time is close to left side of the buffer', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time > 10 && time < 20) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(12, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(9.5);
+        })
+
+        it('should return valid time if gap is in the middle and target time is close to right side of the buffer', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time > 10 && time < 20) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(20);
+        })
+
+        it('should return valid time if seek is right after the start of a gap', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time > 28) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(28.0001, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(27.5);
+        })
+
+        it('should return valid time if only one valid segment after target time', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time < 28) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(28);
         })
     })
 })
