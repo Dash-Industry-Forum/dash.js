@@ -322,52 +322,60 @@ function DashHandler(config) {
                 targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
             }
 
-            let start = representation.adaptation.period.start;
-            let end = representation.adaptation.period.start + representation.adaptation.period.duration;
-            let lastFoundTime = NaN;
-            let lastRequestFound = null;
-
-            // Iterate while start not meets end
-            while (start <= end - Math.max(targetThreshold, 0.1)) {
-
-                // Find the mid
-                let mid = Math.round(((start + end) / 2) * 10 + Number.EPSILON) / 10;
-
-                const request = getSegmentRequestForTime(mediaInfo, representation, mid);
-
-                if (request) {
-                    lastFoundTime = mid;
-                    lastRequestFound = request
-
-                    // If we are within our target threshold we can stop
-                    if (Math.abs(lastFoundTime - time) <= targetThreshold) {
-                        break;
-                    }
-
-                    // If the time we found is higher than our target time we search the left side of the tree. Otherwise the right side
-                    if (lastFoundTime > time) {
-                        end = lastFoundTime;
-                    } else {
-                        start = lastFoundTime
-                    }
-                } else {
-                    // Else look before mid
-                    end = mid;
-                }
+            if (getSegmentRequestForTime(mediaInfo, representation, time)) {
+                return time;
             }
 
-            // Adjust time depending on the distance to the end of the target segment. We can not be sure that there is a segment after the one we found.
-            if (!isNaN(lastFoundTime) && lastRequestFound) {
-                const requestEndTime = lastRequestFound.startTime + lastRequestFound.duration;
+            const start = representation.adaptation.period.start;
+            const end = representation.adaptation.period.start + representation.adaptation.period.duration;
+            let currentUpperTime = Math.min(time + targetThreshold, end);
+            let currentLowerTime = Math.max(time - targetThreshold, start);
+            let adjustedTime = NaN;
+            let targetRequest = null;
+
+            while (currentUpperTime <= end || currentLowerTime >= start) {
+                let upperRequest = null;
+                let lowerRequest = null;
+                if (currentUpperTime <= end) {
+                    upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
+                }
+                if (currentLowerTime >= start) {
+                    lowerRequest = getSegmentRequestForTime(mediaInfo, representation, currentLowerTime);
+                }
+
+                if (lowerRequest) {
+                    adjustedTime = currentLowerTime;
+                    targetRequest = lowerRequest;
+                    break;
+                } else if (upperRequest) {
+                    adjustedTime = currentUpperTime;
+                    targetRequest = upperRequest;
+                    break;
+                }
+
+                currentUpperTime += targetThreshold;
+                currentLowerTime -= targetThreshold;
+            }
+
+            if (targetRequest) {
+                const requestEndTime = targetRequest.startTime + targetRequest.duration;
 
                 // Keep the original start time in case it is covered by a segment
-                if (time >= lastRequestFound.startTime && requestEndTime - time > targetThreshold) {
+                if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
                     return time;
                 }
-                return Math.min(requestEndTime - targetThreshold, lastFoundTime);
+
+                // If target time is before the start of the request use request starttime
+                if (time < targetRequest.startTime) {
+                    return targetRequest.startTime;
+                }
+
+                return Math.min(requestEndTime - targetThreshold, adjustedTime);
             }
 
-            return NaN;
+            return adjustedTime;
+
+
         } catch (e) {
             return NaN;
         }

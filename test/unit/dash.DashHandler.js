@@ -98,6 +98,9 @@ describe('DashHandler', function () {
 
         beforeEach(() => {
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time < representation.adaptation.period.start || time > representation.adaptation.period.start + representation.adaptation.period.duration) {
+                    return null;
+                }
                 const segNumber = Math.floor(time / representation.segmentDuration);
                 return {
                     presentationStartTime: segNumber * representation.segmentDuration,
@@ -180,7 +183,7 @@ describe('DashHandler', function () {
         it('should return valid time if requested time is larger than period end', () => {
             const result = dashHandler.getValidSeekTimeCloseToTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.equal(29.5);
+            expect(result).to.be.equal(30);
         })
 
         it('should return valid time if requested time is smaller than period start', () => {
@@ -192,7 +195,7 @@ describe('DashHandler', function () {
         it('should return valid time if no valid segment for time and gap is right period end of period', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time > 28) {
+                if (time >= 28) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -211,7 +214,7 @@ describe('DashHandler', function () {
         it('should return valid time if no valid segment for time and time is closer to end of period than the target threshold', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time > 28) {
+                if (time >= 28) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -230,7 +233,7 @@ describe('DashHandler', function () {
         it('should return valid time if gap is in the middle and target time is close to left side of the buffer', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time > 10 && time < 20) {
+                if (time >= 10 && time <= 20) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -249,7 +252,7 @@ describe('DashHandler', function () {
         it('should return valid time if gap is in the middle and target time is close to right side of the buffer', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time > 10 && time < 20) {
+                if (time >= 10 && time <= 20) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -268,7 +271,7 @@ describe('DashHandler', function () {
         it('should return valid time if seek is right after the start of a gap', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time > 28) {
+                if (time >= 28) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -287,7 +290,7 @@ describe('DashHandler', function () {
         it('should return valid time if only one valid segment after target time', () => {
             segRequestStub.restore();
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time < 28) {
+                if (time <= 28) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);
@@ -302,6 +305,24 @@ describe('DashHandler', function () {
 
             expect(result).to.be.equal(28);
         })
+
+        it('should return valid time if only one valid segment before target time', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time >= 2) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(1.5);
+        })
     })
-})
-;
+});
