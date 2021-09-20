@@ -88,7 +88,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                 enableSeekDecorrelationFix: true,
  *                 seekGapFix: {
  *                   enabled: false,
- *                   threshold: 0.5
+ *                   threshold: 1
  *                },
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
@@ -250,7 +250,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
  *
  * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
- * @property {object} [seekGapFix={enabled=true,threshold=0.5}]
+ * @property {object} [seekGapFix={enabled=true,threshold=1}]
  * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
  *
  * @property {boolean} [fastSwitchEnabled=true]
@@ -781,8 +781,8 @@ function Settings() {
             buffer: {
                 enableSeekDecorrelationFix: false,
                 seekGapFix: {
-                    enabled: false,
-                    threshold: 0.5
+                    enabled: true,
+                    threshold: 1
                 },
                 fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,

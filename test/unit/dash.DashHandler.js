@@ -324,5 +324,24 @@ describe('DashHandler', function () {
 
             expect(result).to.be.equal(1.5);
         })
+
+        it('should return valid time for floating point numbers', () => {
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
+                if (time >= 30) {
+                    return null;
+                }
+                const segNumber = Math.floor(time / representation.segmentDuration);
+                return {
+                    presentationStartTime: segNumber * representation.segmentDuration,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl'
+                }
+            });
+            const result = dashHandler.getValidSeekTimeCloseToTargetTime(30.05, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.equal(29.5);
+        })
     })
 });
