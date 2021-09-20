@@ -109,7 +109,7 @@ function GapController() {
         eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
         eventBus.off(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBufferReplacementEnded, instance);
+        eventBus.off(Events.TRACK_CHANGE_RENDERED, _onBufferReplacementEnded, instance);
     }
 
     function _onPlaybackSeeking() {
