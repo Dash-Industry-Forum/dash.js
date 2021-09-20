@@ -781,7 +781,7 @@ function Settings() {
             buffer: {
                 enableSeekDecorrelationFix: false,
                 seekGapFix: {
-                    enabled: true,
+                    enabled: false,
                     threshold: 0.5
                 },
                 fastSwitchEnabled: true,
