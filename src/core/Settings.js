@@ -104,7 +104,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                jumpGaps: true,
  *                jumpLargeGaps: true,
  *                smallGapLimit: 1.5,
- *                threshold: 0.3
+ *                threshold: 0.3,
+ *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
  *                useManifestDateHeaderTimeSource: true,
@@ -365,7 +366,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Sets whether player should jump small gaps (discontinuities) in the buffer.
  * @property {boolean} [jumpLargeGaps=true]
  * Sets whether player should jump large gaps (discontinuities) in the buffer.
- * @property {number} [smallGapLimit=1.8]
+ * @property {number} [smallGapLimit=1.5]
  * Time in seconds for a gap to be considered small.
  * @property {number} [threshold=0.3]
  * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
