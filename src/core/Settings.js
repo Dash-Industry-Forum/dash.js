@@ -85,11 +85,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                keepProtectionMediaKeys: false
  *            },
  *            buffer: {
- *                 enableSeekDecorrelationFix: true,
- *                 seekGapFix: {
- *                   enabled: false,
- *                   threshold: 1
- *                },
+ *                enableSeekDecorrelationFix: true,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -250,9 +246,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
  *
  * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
- * @property {object} [seekGapFix={enabled=true,threshold=1}]
- * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
- *
+
  * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
@@ -377,6 +371,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
  * For live stream the jump might be delayed to keep a consistent live edge.
  * Note that the amount of buffer at which platforms automatically stall might differ.
+ * @property {boolean} [enableSeekFix=false]
+ * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
  */
 
 /**
@@ -780,10 +776,6 @@ function Settings() {
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
-                seekGapFix: {
-                    enabled: false,
-                    threshold: 1
-                },
                 fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
@@ -802,7 +794,8 @@ function Settings() {
                 jumpGaps: true,
                 jumpLargeGaps: true,
                 smallGapLimit: 1.5,
-                threshold: 0.3
+                threshold: 0.3,
+                enableSeekFix: false,
             },
             utcSynchronization: {
                 useManifestDateHeaderTimeSource: true,
