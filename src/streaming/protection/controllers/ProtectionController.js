@@ -748,7 +748,7 @@ function ProtectionController(config) {
                 return;
             }
 
-            if (xhr.status === 200) {
+            if (xhr.status >= 200 && xhr.status <= 299) {
                 let licenseResponse = new LicenseResponse(xhr.responseURL, Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null), xhr.response);
                 applyFilters(licenseResponseFilters, licenseResponse).then(() => {
                     const licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
@@ -846,7 +846,7 @@ function ProtectionController(config) {
         };
 
         xhr.onload = function () {
-            if (this.status === 200 || retriesCount <= 0) {
+            if (this.status >= 200 && this.status <= 299 || retriesCount <= 0) {
                 onLoad(this);
             } else {
                 logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);

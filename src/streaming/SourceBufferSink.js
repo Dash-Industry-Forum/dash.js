@@ -298,9 +298,11 @@ function SourceBufferSink(config) {
                 const appendWindowStart = buffer.appendWindowStart;
                 const appendWindowEnd = buffer.appendWindowEnd;
 
-                buffer.abort();
-                buffer.appendWindowStart = appendWindowStart;
-                buffer.appendWindowEnd = appendWindowEnd;
+                if (buffer) {
+                    buffer.abort();
+                    buffer.appendWindowStart = appendWindowStart;
+                    buffer.appendWindowEnd = appendWindowEnd;
+                }
                 resolve();
             });
         });
@@ -401,7 +403,9 @@ function SourceBufferSink(config) {
                 appendQueue = [];
                 if (mediaSource.readyState === 'open') {
                     _waitForUpdateEnd(() => {
-                        buffer.abort();
+                        if (buffer) {
+                            buffer.abort();
+                        }
                         resolve();
                     });
                 } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {

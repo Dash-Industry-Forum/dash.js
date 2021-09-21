@@ -105,7 +105,8 @@ function RepresentationController(config) {
 
         voAvailableRepresentations = availableRepresentations;
 
-        currentVoRepresentation = getRepresentationForQuality(quality);
+        const rep = getRepresentationForQuality(quality)
+        _setCurrentVoRepresentation(rep);
         realAdaptation = newRealAdaptation;
 
         if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
@@ -203,7 +204,7 @@ function RepresentationController(config) {
         return representation;
     }
 
-    function addRepresentationSwitch() {
+    function _addRepresentationSwitch() {
         checkConfig();
         const now = new Date();
         const currentRepresentation = getCurrentRepresentation();
@@ -214,9 +215,10 @@ function RepresentationController(config) {
 
         eventBus.trigger(MediaPlayerEvents.REPRESENTATION_SWITCH, {
             mediaType: type,
+            streamId: streamInfo.id,
             currentRepresentation,
             numberOfRepresentations: voAvailableRepresentations.length
-        })
+        }, { streamId: streamInfo.id, mediaType: type })
     }
 
     function getRepresentationForQuality(quality) {
@@ -285,15 +287,20 @@ function RepresentationController(config) {
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
             if (!repSwitch) {
-                addRepresentationSwitch();
+                _addRepresentationSwitch();
             }
             endDataUpdate();
         }
     }
 
     function prepareQualityChange(newQuality) {
-        currentVoRepresentation = getRepresentationForQuality(newQuality);
-        addRepresentationSwitch();
+        const newRep = getRepresentationForQuality(newQuality)
+        _setCurrentVoRepresentation(newRep);
+        _addRepresentationSwitch();
+    }
+
+    function _setCurrentVoRepresentation(value) {
+        currentVoRepresentation = value;
     }
 
     function onManifestValidityChanged(e) {

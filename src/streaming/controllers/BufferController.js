@@ -284,12 +284,15 @@ function BufferController(config) {
             return;
         }
 
+        // Check if session has not been stopped in the meantime (while last segment was being appended)
+        if (!sourceBufferSink) return;
+
         _updateBufferLevel();
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
 
-        if (!appendedBytesInfo.endFragment) {
+        if (!appendedBytesInfo || !appendedBytesInfo.endFragment) {
             return;
         }
 
@@ -343,7 +346,17 @@ function BufferController(config) {
         range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
-        if (currentTime < range.start) {
+        if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
+            // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
+
+            // Check if appended segment is not anterior from seek target (segments timeline/template tolerance)
+            if (seekTarget <= range.end) {
+                // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
+                playbackController.seek(Math.max(seekTarget, range.start), false, true);
+                seekTarget = NaN;
+            }
+        } else if (currentTime < range.start) {
             // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
             playbackController.seek(range.start, false, true);
             seekTarget = NaN;
