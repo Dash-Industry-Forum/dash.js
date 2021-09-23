@@ -954,10 +954,11 @@ function StreamController() {
             const refStream = stream ? stream : activeStream ? activeStream : null;
 
             if (refStream) {
-                const start = refStream.getStreamInfo().start;
+                const refStreamInfo = refStream.getStreamInfo();
 
                 return streams.filter(function (stream) {
-                    return (stream.getStreamInfo().start > start);
+                    const sInfo = stream.getStreamInfo();
+                    return sInfo.start > refStreamInfo.start && refStreamInfo.id !== sInfo.id;
                 });
             }
         } catch (e) {
