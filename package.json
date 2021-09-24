@@ -72,6 +72,6 @@
         "githook.js",
         "index.d.ts",
         "dist",
-        "doc"
+        "docs/jsdoc"
     ]
 }
