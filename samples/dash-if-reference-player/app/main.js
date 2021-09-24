@@ -140,7 +140,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             index: { data: [], selected: false, color: '#ffd446', label: 'Audio Current Index' },
             pendingIndex: { data: [], selected: false, color: '#FF6700', label: 'AudioPending Index' },
             ratio: { data: [], selected: false, color: '#329d61', label: 'Audio Ratio' },
-            download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)' },
+            download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Time (sec)' },
             latency: { data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS' },
             liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
@@ -151,7 +151,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             index: { data: [], selected: false, color: '#326e88', label: 'Video Current Quality' },
             pendingIndex: { data: [], selected: false, color: '#44c248', label: 'Video Pending Index' },
             ratio: { data: [], selected: false, color: '#00CCBE', label: 'Video Ratio' },
-            download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)' },
+            download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Time (sec)' },
             latency: { data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS' },
             liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
@@ -682,8 +682,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.togglelowLatencyMode = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'lowLatencyEnabled': $scope.lowLatencyModeSelected
+            streaming: {
+                lowLatencyEnabled: $scope.lowLatencyModeSelected
+            }
+        });
+    };
+
+    $scope.toggleLowLatencyByManifestMode = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                lowLatencyEnabledByManifest: $scope.lowLatencyEnabledByManifest
             }
         });
     };
@@ -776,16 +784,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
 
         var config = {
-            'streaming': {
-                'buffer': {
-                    'stableBufferTime': $scope.defaultStableBufferDelay,
-                    'bufferTimeAtTopQuality': $scope.defaultBufferTimeAtTopQuality,
-                    'bufferTimeAtTopQualityLongForm': $scope.defaultBufferTimeAtTopQualityLongForm,
+            streaming: {
+                buffer: {
+                    stableBufferTime: $scope.defaultStableBufferDelay,
+                    bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
+                    bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
                 },
-                'delay': {
-                    'liveDelay': $scope.defaultLiveDelay
+                delay: {
+                    liveDelay: $scope.defaultLiveDelay
                 },
-                'lowLatencyEnabled': $scope.lowLatencyModeSelected,
+                lowLatencyEnabled: $scope.lowLatencyModeSelected,
+                lowLatencyEnabledByManifest: $scope.lowLatencyEnabledByManifest,
                 abr: {},
                 cmcd: {}
             }
@@ -1008,7 +1017,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
                     } else {
-                        alert("Kid and Key must be specified!");
+                        alert('Kid and Key must be specified!');
                     }
 
                 } else {
@@ -1018,15 +1027,15 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         // Check if DRM-Priorisation is enabled
                         if (this.prioritiesEnabled) {
                             protectionData[input.drmKeySystem] = {
-                                "serverURL": input.licenseServerUrl,
-                                "priority": parseInt(input.priority)
+                                'serverURL': input.licenseServerUrl,
+                                'priority': parseInt(input.priority)
                             }
                             if (!angular.equals(input.httpRequestHeaders, {}))
                                 protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
 
                         } else {
                             protectionData[input.drmKeySystem] = {
-                                "serverURL": input.licenseServerUrl,
+                                'serverURL': input.licenseServerUrl,
                             }
                         }
 
@@ -1052,7 +1061,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         }
 
                     } else {
-                        console.log(input.licenseServerUrl, "is not a valid url!")
+                        console.log(input.licenseServerUrl, 'is not a valid url!')
                     }
 
                 }
@@ -1535,6 +1544,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
+        $scope.lowLatencyEnabledByManifest = currentConfig.streaming.lowLatencyEnabledByManifest;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
     }
 

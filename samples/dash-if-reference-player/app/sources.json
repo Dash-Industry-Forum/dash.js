@@ -285,8 +285,8 @@
                     "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
                     "name": "Akamai Low Latency Stream (Single Rate)",
                     "bufferConfig": {
-                        "lowLatencyMode": true,
-                        "liveDelay": 3
+                        "liveDelay": 3,
+                        "lowLatencyMode": true
                     },
                     "provider": "akamai"
                 },
@@ -294,7 +294,6 @@
                     "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd",
                     "name": "Akamai Low Latency Stream (Multi Rate)",
                     "bufferConfig": {
-                        "lowLatencyMode": true,
                         "liveDelay": 3
                     },
                     "provider": "akamai"
@@ -303,7 +302,6 @@
                     "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
                     "name": "Low Latency (Single-Rate) (livesim-chunked)",
                     "bufferConfig": {
-                        "lowLatencyMode": true,
                         "liveDelay": 4
                     },
                     "provider": "dashif"
@@ -312,7 +310,6 @@
                     "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
                     "name": "Low Latency (Multi-Rate) (livesim-chunked)",
                     "bufferConfig": {
-                        "lowLatencyMode": true,
                         "liveDelay": 4
                     },
                     "provider": "dashif"
@@ -323,7 +320,7 @@
             "name": "Subtitles and Captions",
             "submenu": [
                 {
-                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
                     "name": "External VTT subtitle file",
                     "provider": "dashif"
                 },
@@ -444,7 +441,7 @@
                     "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy?video_id=&provider="
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",

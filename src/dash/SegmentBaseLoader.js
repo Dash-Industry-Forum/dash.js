@@ -44,7 +44,6 @@ function SegmentBaseLoader() {
         boxParser,
         requestModifier,
         dashMetrics,
-        settings,
         mediaPlayerModel,
         urlLoader,
         errors,
@@ -62,7 +61,6 @@ function SegmentBaseLoader() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
-            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
             boxParser: boxParser,
             errors: errors,
             urlUtils: urlUtils,
@@ -86,10 +84,6 @@ function SegmentBaseLoader() {
 
         if (config.errHandler) {
             errHandler = config.errHandler;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
         }
 
         if (config.boxParser) {
@@ -298,9 +292,6 @@ function SegmentBaseLoader() {
             urlLoader.abort();
             urlLoader = null;
         }
-        errHandler = null;
-        boxParser = null;
-        requestModifier = null;
     }
 
     function getSegmentsForSidx(sidx, info) {

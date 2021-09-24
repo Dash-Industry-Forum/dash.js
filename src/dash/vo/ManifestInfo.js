@@ -34,7 +34,7 @@
  */
 class ManifestInfo {
     constructor() {
-        this.DVRWindowSize = NaN;
+        this.dvrWindowSize = NaN;
         this.loadedTime = null;
         this.availableFrom = null;
         this.minBufferTime = NaN;

@@ -73,6 +73,7 @@ function StreamProcessor(config) {
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
     let boxParser = config.boxParser;
+    let segmentBlacklistController = config.segmentBlacklistController;
 
     let instance,
         logger,
@@ -107,6 +108,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -253,6 +255,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
 
         resetInitialSettings();
         type = null;
@@ -377,7 +380,7 @@ function StreamProcessor(config) {
                     return;
                 }
                 // Init segment not in cache, send new request
-                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
+                const request = dashHandler ? dashHandler.getInitRequest(mediaInfo, rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else if (rescheduleIfNoRequest) {
@@ -394,49 +397,90 @@ function StreamProcessor(config) {
      * @private
      */
     function _onMediaFragmentNeeded(e, rescheduleIfNoRequest = true) {
-
-        if (manifestUpdateInProgress) {
+        // Don't schedule next fragments while updating manifest or pruning to avoid buffer inconsistencies
+        if (manifestUpdateInProgress || bufferController.getIsPruningInProgress()) {
             _noValidRequest();
             return;
         }
 
-        let request = null;
+        let request = _getFragmentRequest();
+        if (request) {
+            shouldUseExplicitTimeForRequest = false;
+            _mediaRequestGenerated(request);
+        } else {
+            _noMediaRequestGenerated(rescheduleIfNoRequest);
+        }
+    }
 
+    /**
+     * If we generated a valid media request we can execute the request. In some cases the segment might be blacklisted.
+     * @param {object} request
+     * @private
+     */
+    function _mediaRequestGenerated(request) {
+        if (!isNaN(request.startTime + request.duration)) {
+            bufferingTime = request.startTime + request.duration;
+        }
+        request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+        scheduleController.setTimeToLoadDelay(0);
+        if (!_shouldIgnoreRequest(request)) {
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+            fragmentModel.executeRequest(request);
+        } else {
+            logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
+            _noValidRequest();
+        }
+    }
+
+    /**
+     * We could not generate a valid request. Check if the media is finished, we are stuck in a gap or simply need to wait for the next segment to be available.
+     * @param {boolean} rescheduleIfNoRequest
+     * @private
+     */
+    function _noMediaRequestGenerated(rescheduleIfNoRequest) {
         const representation = representationController.getCurrentRepresentation();
-        const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
+
+        // If  this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
+        // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
+        if (settings.get().streaming.gaps.enableSeekFix && !isDynamic && shouldUseExplicitTimeForRequest && playbackController.isSeeking()) {
+            const adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+            if (!isNaN(adjustedTime)) {
+                playbackController.seek(adjustedTime, false, false);
+                return;
+            }
+        }
 
         // Check if the media is finished. If so, no need to schedule another request
-        if (isMediaFinished) {
+        const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+        if (isLastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
             eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
                 streamId: streamInfo.id,
                 mediaType: type
             });
+            bufferController.segmentRequestingCompleted(segmentIndex);
             scheduleController.clearScheduleTimer();
             return;
         }
 
-        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
-        if (!bufferController.getIsPruningInProgress()) {
-            request = _getFragmentRequest();
-            if (request) {
-                shouldUseExplicitTimeForRequest = false;
-                if (!isNaN(request.startTime + request.duration)) {
-                    bufferingTime = request.startTime + request.duration;
-                }
-                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                scheduleController.setTimeToLoadDelay(0);
-            }
-        }
-
-        if (request) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
-            fragmentModel.executeRequest(request);
-        } else if (rescheduleIfNoRequest) {
-            // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+        if (rescheduleIfNoRequest) {
             _noValidRequest();
         }
+    }
+
+    /**
+     * In certain situations we need to ignore a request. For instance, if a segment is blacklisted because it caused an MSE error.
+     * @private
+     */
+    function _shouldIgnoreRequest(request) {
+        let blacklistUrl = request.url;
+
+        if (request.range) {
+            blacklistUrl = blacklistUrl.concat('_', request.range);
+        }
+
+        return segmentBlacklistController.contains(blacklistUrl)
     }
 
     /**
@@ -459,9 +503,9 @@ function StreamProcessor(config) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
             if (useTime) {
-                request = dashHandler.getSegmentRequestForTime(getMediaInfo(), representation, bufferingTime);
+                request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
-                request = dashHandler.getNextSegmentRequest(getMediaInfo(), representation);
+                request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
             }
         }
 
@@ -522,7 +566,26 @@ function StreamProcessor(config) {
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             scheduleController.startScheduleTimer();
         }
+    }
 
+    /**
+     * This function is called when the corresponding SourceBuffer encountered an error.
+     * We blacklist the last segment assuming it caused the error
+     * @param {object} e
+     * @private
+     */
+    function _onSourceBufferError(e) {
+        if (!e || !e.lastRequestAppended || !e.lastRequestAppended.url) {
+            return;
+        }
+
+        let blacklistUrl = e.lastRequestAppended.url;
+
+        if (e.lastRequestAppended.range) {
+            blacklistUrl = blacklistUrl.concat('_', e.lastRequestAppended.range);
+        }
+        logger.warn(`Blacklisting segment with url ${blacklistUrl}`);
+        segmentBlacklistController.add(blacklistUrl);
     }
 
     /**
@@ -872,7 +935,7 @@ function StreamProcessor(config) {
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
         let request = dashHandler.getNextSegmentRequestIdempotent(
-            getMediaInfo(),
+            mediaInfo,
             representation
         );
 

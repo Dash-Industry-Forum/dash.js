@@ -67,7 +67,15 @@ function TimelineConverter() {
         clientServerTimeShift = value;
     }
 
-    function calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
+    /**
+     * Returns a "now" reference time for the client to compare the availability time of a segment against.
+     * Takes the client/server drift into account
+     */
+    function getClientReferenceTime() {
+        return Date.now() - (timelineAnchorAvailabilityOffset * 1000) + (clientServerTimeShift * 1000);
+    }
+
+    function _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
         let availabilityTime;
         let mpd = representation.adaptation.period.mpd;
         const availabilityStartTime = mpd.availabilityStartTime;
@@ -78,7 +86,7 @@ function TimelineConverter() {
             // When not present, the value is infinite.
             if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
                 // SAET = SAST + TSBD + seg@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime - clientServerTimeShift + mpd.timeShiftBufferDepth) * 1000));
+                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + mpd.timeShiftBufferDepth) * 1000));
             } else {
                 availabilityTime = mpd.availabilityEndTime;
             }
@@ -88,7 +96,7 @@ function TimelineConverter() {
                 // ASAST = SAST - ATO
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
                 // presentationEndTime = Period@start + seg@presentationStartTime + Segment@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - clientServerTimeShift - availabilityTimeOffset) * 1000);
+                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
                 availabilityTime = availabilityStartTime;
@@ -99,15 +107,15 @@ function TimelineConverter() {
     }
 
     function calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic);
+        return _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     }
 
     function calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic, true);
+        return _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, true);
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
+        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
@@ -136,10 +144,6 @@ function TimelineConverter() {
         }
 
         return wallTime;
-    }
-
-    function getAvailabilityWindowAnchorTime() {
-        return Date.now() - ((timelineAnchorAvailabilityOffset + clientServerTimeShift) * 1000);
     }
 
     /**
@@ -360,7 +364,7 @@ function TimelineConverter() {
         initialize,
         getClientTimeOffset,
         setClientTimeOffset,
-        getAvailabilityWindowAnchorTime,
+        getClientReferenceTime,
         calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
         calcPresentationTimeFromWallTime,

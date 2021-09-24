@@ -1023,6 +1023,7 @@ function DashAdapter() {
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+        mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
         if (mediaInfo.contentProtection) {
             mediaInfo.contentProtection.forEach(function (item) {
@@ -1071,7 +1072,7 @@ function DashAdapter() {
     function convertMpdToManifestInfo(mpd) {
         let manifestInfo = new ManifestInfo();
 
-        manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
+        manifestInfo.dvrWindowSize = mpd.timeShiftBufferDepth;
         manifestInfo.loadedTime = mpd.manifest.loadedTime;
         manifestInfo.availableFrom = mpd.availabilityStartTime;
         manifestInfo.minBufferTime = mpd.manifest.minBufferTime;

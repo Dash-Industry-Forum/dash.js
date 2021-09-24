@@ -257,105 +257,107 @@ function MediaPlayer() {
             })
         }
 
-        errHandler = ErrorHandler(context).getInstance();
+        if (!errHandler) {
+            errHandler = ErrorHandler(context).getInstance();
+        }
 
         if (!capabilities.supportsMediaSource()) {
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
 
-        if (mediaPlayerInitialized) return;
-        mediaPlayerInitialized = true;
+        if (!mediaPlayerInitialized) {
+            mediaPlayerInitialized = true;
 
-        // init some controllers and models
-        timelineConverter = TimelineConverter(context).getInstance();
-        if (!abrController) {
-            abrController = AbrController(context).getInstance();
-            abrController.setConfig({
+            // init some controllers and models
+            timelineConverter = TimelineConverter(context).getInstance();
+            if (!abrController) {
+                abrController = AbrController(context).getInstance();
+                abrController.setConfig({
+                    settings: settings
+                });
+            }
+
+            if (!schemeLoaderFactory) {
+                schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+            }
+
+            if (!playbackController) {
+                playbackController = PlaybackController(context).getInstance();
+            }
+
+            if (!mediaController) {
+                mediaController = MediaController(context).getInstance();
+            }
+
+            if (!streamController) {
+                streamController = StreamController(context).getInstance();
+            }
+
+            if (!gapController) {
+                gapController = GapController(context).getInstance();
+            }
+
+            if (!capabilitiesFilter) {
+                capabilitiesFilter = CapabilitiesFilter(context).getInstance();
+            }
+
+            adapter = DashAdapter(context).getInstance();
+
+            manifestModel = ManifestModel(context).getInstance();
+
+            cmcdModel = CmcdModel(context).getInstance();
+
+            dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
             });
+
+            domStorage = DOMStorage(context).getInstance({
+                settings: settings
+            });
+
+            adapter.setConfig({
+                constants: Constants,
+                cea608parser: cea608parser,
+                errHandler: errHandler,
+                BASE64: BASE64
+            });
+
+            if (!baseURLController) {
+                baseURLController = BaseURLController(context).create();
+            }
+
+            baseURLController.setConfig({
+                adapter: adapter
+            });
+
+            if (!segmentBaseController) {
+                segmentBaseController = SegmentBaseController(context).getInstance({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    errHandler: errHandler,
+                    baseURLController: baseURLController,
+                    events: Events,
+                    eventBus: eventBus,
+                    debug: debug,
+                    boxParser: BoxParser(context).getInstance(),
+                    requestModifier: RequestModifier(context).getInstance(),
+                    errors: Errors
+                });
+            }
+
+            // configure controllers
+            mediaController.setConfig({
+                domStorage: domStorage,
+                settings: settings
+            });
+
+            restoreDefaultUTCTimingSources();
+            setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+
+            // Detect and initialize offline module to support offline contents playback
+            _detectOffline();
         }
-
-        if (!schemeLoaderFactory) {
-            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
-        }
-
-        if (!playbackController) {
-            playbackController = PlaybackController(context).getInstance();
-        }
-
-        if (!mediaController) {
-            mediaController = MediaController(context).getInstance();
-        }
-
-        if (!streamController) {
-            streamController = StreamController(context).getInstance();
-        }
-
-        if (!gapController) {
-            gapController = GapController(context).getInstance();
-        }
-
-        if (!capabilitiesFilter) {
-            capabilitiesFilter = CapabilitiesFilter(context).getInstance();
-        }
-
-        adapter = DashAdapter(context).getInstance();
-
-        manifestModel = ManifestModel(context).getInstance();
-
-        cmcdModel = CmcdModel(context).getInstance();
-
-        dashMetrics = DashMetrics(context).getInstance({
-            settings: settings
-        });
-
-        domStorage = DOMStorage(context).getInstance({
-            settings: settings
-        });
-
-        adapter.setConfig({
-            constants: Constants,
-            cea608parser: cea608parser,
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
-
-        if (!baseURLController) {
-            baseURLController = BaseURLController(context).create();
-        }
-
-        baseURLController.setConfig({
-            adapter: adapter
-        });
-
-
-        segmentBaseController = SegmentBaseController(context).getInstance({
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            baseURLController: baseURLController,
-            events: Events,
-            eventBus: eventBus,
-            debug: debug,
-            boxParser: BoxParser(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance(),
-            errors: Errors
-        });
-
-        segmentBaseController.initialize();
-
-        // configure controllers
-        mediaController.setConfig({
-            domStorage: domStorage,
-            settings: settings
-        });
-
-        restoreDefaultUTCTimingSources();
-        setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
-
-        // Detect and initialize offline module to support offline contents playback
-        _detectOffline();
 
         if (view) {
             attachView(view);
@@ -390,8 +392,6 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-
-        segmentBaseController.reset();
 
         settings.reset();
 
@@ -698,7 +698,7 @@ function MediaPlayer() {
         if (!metric) {
             return 0;
         }
-        return metric.manifestInfo.DVRWindowSize;
+        return metric.manifestInfo.dvrWindowSize;
     }
 
     /**
@@ -842,13 +842,12 @@ function MediaPlayer() {
 
     /**
      * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
-     * rules update this value before every new download unless setAutoSwitchQualityFor(type, false) is called. For 'image'
+     * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
      * type, thumbnails, there is no ABR algorithm and quality is set manually.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
      * @returns {number} the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
@@ -871,13 +870,12 @@ function MediaPlayer() {
 
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
-     * This value will be overwritten by the ABR rules unless setAutoSwitchQualityFor(type, false) is called.
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
      * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
@@ -1195,7 +1193,7 @@ function MediaPlayer() {
             return false;
         }
 
-        return textController.enableForcedTextStreaming(activeStreamInfo.id, enable);
+        return textController.enableForcedTextStreaming(enable);
     }
 
     /**
@@ -1626,6 +1624,26 @@ function MediaPlayer() {
         filters.splice(index, 1);
     }
 
+    /**
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * @param {function} customFunc - the custom function that returns the initial track
+     */
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        if (mediaController) {
+            mediaController.setCustomInitialTrackSelectionFunction(customFunc);
+        }
+    }
+
+    /**
+     * Resets the custom initial track selection
+     */
+    function resetCustomInitialTrackSelectionFunction() {
+        if (mediaController) {
+            mediaController.setCustomInitialTrackSelectionFunction(null);
+        }
+    }
+
+
     /*
     ---------------------------------------------------------------------------
 
@@ -1902,6 +1920,7 @@ function MediaPlayer() {
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
+        segmentBaseController.reset();
         if (protectionController) {
             if (settings.get().streaming.protection.keepProtectionMediaKeys) {
                 protectionController.stop();
@@ -2006,6 +2025,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         cmcdModel.initialize();
+        segmentBaseController.initialize();
     }
 
     function _createManifestLoader() {
@@ -2281,6 +2301,8 @@ function MediaPlayer() {
         unregisterLicenseResponseFilter,
         registerCustomCapabilitiesFilter,
         unregisterCustomCapabilitiesFilter,
+        setCustomInitialTrackSelectionFunction,
+        resetCustomInitialTrackSelectionFunction,
         attachTTMLRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,

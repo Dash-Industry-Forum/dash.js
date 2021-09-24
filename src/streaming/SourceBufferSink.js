@@ -35,6 +35,7 @@ import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
 import constants from './constants/Constants';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import Events from '../core/events/Events';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -51,6 +52,7 @@ function SourceBufferSink(config) {
     const context = this.context;
     const settings = Settings(context).getInstance();
     const textController = config.textController;
+    const eventBus = config.eventBus;
 
     let instance,
         type,
@@ -63,6 +65,7 @@ function SourceBufferSink(config) {
     let appendQueue = [];
     let isAppendingInProgress = false;
     let mediaSource = config.mediaSource;
+    let lastRequestAppended = null;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -91,7 +94,7 @@ function SourceBufferSink(config) {
 
     function changeType(codec) {
         return new Promise((resolve) => {
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 if (buffer.changeType) {
                     buffer.changeType(codec);
                 }
@@ -149,17 +152,17 @@ function SourceBufferSink(config) {
         // use updateend event if possible
         if (typeof buffer.addEventListener === 'function') {
             try {
-                buffer.addEventListener('updateend', updateEndHandler, false);
-                buffer.addEventListener('error', errHandler, false);
-                buffer.addEventListener('abort', errHandler, false);
+                buffer.addEventListener('updateend', _updateEndHandler, false);
+                buffer.addEventListener('error', _errHandler, false);
+                buffer.addEventListener('abort', _errHandler, false);
 
             } catch (err) {
                 // use setInterval to periodically check if updating has been completed
-                intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
+                intervalId = setInterval(_updateEndHandler, CHECK_INTERVAL);
             }
         } else {
             // use setInterval to periodically check if updating has been completed
-            intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
+            intervalId = setInterval(_updateEndHandler, CHECK_INTERVAL);
         }
     }
 
@@ -170,9 +173,9 @@ function SourceBufferSink(config) {
     function _removeEventListeners() {
         try {
             if (typeof buffer.removeEventListener === 'function') {
-                buffer.removeEventListener('updateend', updateEndHandler, false);
-                buffer.removeEventListener('error', errHandler, false);
-                buffer.removeEventListener('abort', errHandler, false);
+                buffer.removeEventListener('updateend', _updateEndHandler, false);
+                buffer.removeEventListener('error', _errHandler, false);
+                buffer.removeEventListener('abort', _errHandler, false);
             }
             clearInterval(intervalId);
         } catch (e) {
@@ -188,7 +191,7 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 try {
                     if (!buffer) {
                         resolve();
@@ -227,7 +230,7 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 try {
                     if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
                         buffer.timestampOffset = MSETimeOffset;
@@ -258,6 +261,7 @@ function SourceBufferSink(config) {
             }
             buffer = null;
         }
+        lastRequestAppended = null;
     }
 
     function getBuffer() {
@@ -273,7 +277,7 @@ function SourceBufferSink(config) {
         }
     }
 
-    function append(chunk) {
+    function append(chunk, request = null) {
         return new Promise((resolve, reject) => {
             if (!chunk) {
                 reject({
@@ -282,21 +286,23 @@ function SourceBufferSink(config) {
                 });
                 return;
             }
-            appendQueue.push({ data: chunk, promise: { resolve, reject } });
-            waitForUpdateEnd(appendNextInQueue.bind(this));
+            appendQueue.push({ data: chunk, promise: { resolve, reject }, request });
+            _waitForUpdateEnd(_appendNextInQueue.bind(this));
         });
     }
 
     function _abortBeforeAppend() {
         return new Promise((resolve) => {
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 // Save the append window, which is reset on abort().
                 const appendWindowStart = buffer.appendWindowStart;
                 const appendWindowEnd = buffer.appendWindowEnd;
 
-                buffer.abort();
-                buffer.appendWindowStart = appendWindowStart;
-                buffer.appendWindowEnd = appendWindowEnd;
+                if (buffer) {
+                    buffer.abort();
+                    buffer.appendWindowStart = appendWindowStart;
+                    buffer.appendWindowEnd = appendWindowEnd;
+                }
                 resolve();
             });
         });
@@ -313,11 +319,11 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(function () {
+            _waitForUpdateEnd(function () {
                 try {
                     buffer.remove(start, end);
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(function () {
+                    _waitForUpdateEnd(function () {
                         resolve({
                             from: start,
                             to: end,
@@ -342,7 +348,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function appendNextInQueue() {
+    function _appendNextInQueue() {
         if (isAppendingInProgress) {
             return;
         }
@@ -355,7 +361,7 @@ function SourceBufferSink(config) {
             const afterSuccess = function () {
                 isAppendingInProgress = false;
                 if (appendQueue.length > 0) {
-                    appendNextInQueue.call(this);
+                    _appendNextInQueue.call(this);
                 }
                 // Init segments are cached. In any other case we dont need the chunk bytes anymore and can free the memory
                 if (nextChunk && nextChunk.data && nextChunk.data.segmentType && nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
@@ -365,6 +371,7 @@ function SourceBufferSink(config) {
             };
 
             try {
+                lastRequestAppended = nextChunk.request;
                 if (nextChunk.data.bytes.byteLength === 0) {
                     afterSuccess.call(this);
                 } else {
@@ -374,12 +381,12 @@ function SourceBufferSink(config) {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
                     }
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(afterSuccess.bind(this));
+                    _waitForUpdateEnd(afterSuccess.bind(this));
                 }
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
                 if (appendQueue.length > 0) {
-                    appendNextInQueue();
+                    _appendNextInQueue();
                 } else {
                     isAppendingInProgress = false;
                 }
@@ -395,8 +402,10 @@ function SourceBufferSink(config) {
             try {
                 appendQueue = [];
                 if (mediaSource.readyState === 'open') {
-                    waitForUpdateEnd(() => {
-                        buffer.abort();
+                    _waitForUpdateEnd(() => {
+                        if (buffer) {
+                            buffer.abort();
+                        }
                         resolve();
                     });
                 } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
@@ -412,36 +421,42 @@ function SourceBufferSink(config) {
 
     }
 
-    function executeCallback() {
+    function _executeCallback() {
         if (callbacks.length > 0) {
             if (!buffer.updating) {
                 const cb = callbacks.shift();
                 cb();
                 // Try to execute next callback if still not updating
-                executeCallback();
+                _executeCallback();
             }
         }
     }
 
-    function updateEndHandler() {
+    function _updateEndHandler() {
         // if updating is still in progress do nothing and wait for the next check again.
         if (buffer.updating) {
             return;
         }
 
         // updating is completed, now we can stop checking and resolve the promise
-        executeCallback();
+        _executeCallback();
     }
 
-    function errHandler() {
-        logger.error('SourceBufferSink error');
+    function _errHandler(e) {
+        const error = e.target || {};
+        _triggerEvent(Events.SOURCE_BUFFER_ERROR, { error, lastRequestAppended })
     }
 
-    function waitForUpdateEnd(callback) {
+    function _triggerEvent(eventType, data) {
+        let payload = data || {};
+        eventBus.trigger(eventType, payload, { streamId: mediaInfo.streamInfo.id, mediaType: type });
+    }
+
+    function _waitForUpdateEnd(callback) {
         callbacks.push(callback);
 
         if (!buffer.updating) {
-            executeCallback();
+            _executeCallback();
         }
     }
 
@@ -454,7 +469,6 @@ function SourceBufferSink(config) {
         abort,
         reset,
         updateTimestampOffset,
-        waitForUpdateEnd,
         initializeForStreamSwitch,
         initializeForFirstUse,
         updateAppendWindow,

@@ -80,11 +80,17 @@ describe('TimelineSegmentsGetter', () => {
     });
 
     describe('availableSegmentsNumber calculation', () => {
-        it('should calculate representation segment range correctly', () => {
+        it('should calculate the number of available segments correctly', () => {
             const representation = createRepresentationMock();
 
-            timelineSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(25);
+            const mediaFinishedInformation = timelineSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.numberOfSegments).to.equal(26);
+        });
+        it('should calculate the media time of the last segment correctly', () => {
+            const representation = createRepresentationMock();
+
+            const mediaFinishedInformation = timelineSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.mediaTimeOfLastSignaledSegment).to.equal(101.1);
         });
     });
 
@@ -93,17 +99,17 @@ describe('TimelineSegmentsGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = timelineSegmentsGetter.getSegmentByIndex(representation, 0, -1);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByIndex(representation, 1, 0);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(4.004);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByIndex(representation, 2, 4.004);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(8.008);
             expect(seg.duration).to.equal(4.004);
         });
@@ -132,32 +138,32 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 3);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 5);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(4.004);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 22);
-            expect(seg.availabilityIdx).to.equal(5);
+            expect(seg.index).to.equal(5);
             expect(seg.presentationStartTime).to.equal(20.02);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 53);
-            expect(seg.availabilityIdx).to.equal(13);
+            expect(seg.index).to.equal(13);
             expect(seg.presentationStartTime).to.equal(52.052);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 4.004);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(4.004);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 100.2);
-            expect(seg.availabilityIdx).to.equal(25);
+            expect(seg.index).to.equal(25);
             expect(seg.presentationStartTime).to.equal(100.1);
             expect(seg.duration).to.equal(1);
         });
