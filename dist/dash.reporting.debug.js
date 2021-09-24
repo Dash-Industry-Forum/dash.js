@@ -737,6 +737,13 @@ var Constants = /*#__PURE__*/function () {
 
       this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
       /**
+       *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+       *  @memberof Constants#
+       *  @static
+       */
+
+      this.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY = 'highestSelectionPriority';
+      /**
        *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
        *  @memberof Constants#
        *  @static
@@ -2390,6 +2397,7 @@ function DVBErrorsTranslator(config) {
 
   function handleHttpMetric(vo) {
     if (vo.responsecode === 0 || // connection failure - unknown
+    vo.responsecode == null || // Generated on .catch() and when uninitialised
     vo.responsecode >= 400 || // HTTP error status code
     vo.responsecode < 100 || // unknown status codes
     vo.responsecode >= 600) {

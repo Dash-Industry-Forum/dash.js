@@ -5261,6 +5261,515 @@ module.exports = localforage_js;
 
 /***/ }),
 
+/***/ "./node_modules/path-browserify/index.js":
+/*!***********************************************!*\
+  !*** ./node_modules/path-browserify/index.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
+// backported and transplited with Babel, with backwards-compat fixes
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var last = parts[i];
+    if (last === '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+  var resolvedPath = '',
+      resolvedAbsolute = false;
+
+  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+    var path = (i >= 0) ? arguments[i] : process.cwd();
+
+    // Skip empty and invalid entries
+    if (typeof path !== 'string') {
+      throw new TypeError('Arguments to path.resolve must be strings');
+    } else if (!path) {
+      continue;
+    }
+
+    resolvedPath = path + '/' + resolvedPath;
+    resolvedAbsolute = path.charAt(0) === '/';
+  }
+
+  // At this point the path should be resolved to a full absolute path, but
+  // handle relative paths to be safe (might happen when process.cwd() fails)
+
+  // Normalize the path
+  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+  var isAbsolute = exports.isAbsolute(path),
+      trailingSlash = substr(path, -1) === '/';
+
+  // Normalize the path
+  path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+
+  return (isAbsolute ? '/' : '') + path;
+};
+
+// posix version
+exports.isAbsolute = function(path) {
+  return path.charAt(0) === '/';
+};
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    if (typeof p !== 'string') {
+      throw new TypeError('Arguments to path.join must be strings');
+    }
+    return p;
+  }).join('/'));
+};
+
+
+// path.relative(from, to)
+// posix version
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+exports.delimiter = ':';
+
+exports.dirname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  if (path.length === 0) return '.';
+  var code = path.charCodeAt(0);
+  var hasRoot = code === 47 /*/*/;
+  var end = -1;
+  var matchedSlash = true;
+  for (var i = path.length - 1; i >= 1; --i) {
+    code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        if (!matchedSlash) {
+          end = i;
+          break;
+        }
+      } else {
+      // We saw the first non-path separator
+      matchedSlash = false;
+    }
+  }
+
+  if (end === -1) return hasRoot ? '/' : '.';
+  if (hasRoot && end === 1) {
+    // return '//';
+    // Backwards-compat fix:
+    return '/';
+  }
+  return path.slice(0, end);
+};
+
+function basename(path) {
+  if (typeof path !== 'string') path = path + '';
+
+  var start = 0;
+  var end = -1;
+  var matchedSlash = true;
+  var i;
+
+  for (i = path.length - 1; i >= 0; --i) {
+    if (path.charCodeAt(i) === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          start = i + 1;
+          break;
+        }
+      } else if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // path component
+      matchedSlash = false;
+      end = i + 1;
+    }
+  }
+
+  if (end === -1) return '';
+  return path.slice(start, end);
+}
+
+// Uses a mixed approach for backwards-compatibility, as ext behavior changed
+// in new Node.js versions, so only basename() above is backported here
+exports.basename = function (path, ext) {
+  var f = basename(path);
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+exports.extname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  var startDot = -1;
+  var startPart = 0;
+  var end = -1;
+  var matchedSlash = true;
+  // Track the state of characters (if any) we see before our first dot and
+  // after any path separator we find
+  var preDotState = 0;
+  for (var i = path.length - 1; i >= 0; --i) {
+    var code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+    if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // extension
+      matchedSlash = false;
+      end = i + 1;
+    }
+    if (code === 46 /*.*/) {
+        // If this is our first dot, mark it as the start of our extension
+        if (startDot === -1)
+          startDot = i;
+        else if (preDotState !== 1)
+          preDotState = 1;
+    } else if (startDot !== -1) {
+      // We saw a non-dot and non-path separator before our dot, so we should
+      // have a good chance at having a non-empty extension
+      preDotState = -1;
+    }
+  }
+
+  if (startDot === -1 || end === -1 ||
+      // We saw a non-dot character immediately before the dot
+      preDotState === 0 ||
+      // The (right-most) trimmed path component is exactly '..'
+      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+    return '';
+  }
+  return path.slice(startDot, end);
+};
+
+function filter (xs, f) {
+    if (xs.filter) return xs.filter(f);
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (f(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// String.prototype.substr - negative index don't work in IE8
+var substr = 'ab'.substr(-1) === 'b'
+    ? function (str, start, len) { return str.substr(start, len) }
+    : function (str, start, len) {
+        if (start < 0) start = str.length + start;
+        return str.substr(start, len);
+    }
+;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../process/browser.js */ "./node_modules/process/browser.js")))
+
+/***/ }),
+
+/***/ "./node_modules/process/browser.js":
+/*!*****************************************!*\
+  !*** ./node_modules/process/browser.js ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+
 /***/ "./node_modules/webpack/buildin/global.js":
 /*!***********************************!*\
   !*** (webpack)/buildin/global.js ***!
@@ -6055,13 +6564,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @typedef {Object} PlayerSettings
  * @property {module:Settings~DebugSettings} [debug]
  * Debug related settings.
+ * @property {module:Settings~ErrorSettings} [errors]
+ * Error related settings
  * @property {module:Settings~StreamingSettings} [streaming]
  * Streaming related settings.
  * @example
  *
  * // Full settings object
  * settings = {
- *  debug: {
+ *        debug: {
  *            logLevel: Debug.LOG_LEVEL_WARNING,
  *            dispatchEvent: false
  *        },
@@ -6069,6 +6580,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            lowLatencyEnabled: false,
+ *            lowLatencyEnabledByManifest: true,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
@@ -6093,6 +6605,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                keepProtectionMediaKeys: false
  *            },
  *            buffer: {
+ *                enableSeekDecorrelationFix: true,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -6111,7 +6624,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                jumpGaps: true,
  *                jumpLargeGaps: true,
  *                smallGapLimit: 1.5,
- *                threshold: 0.3
+ *                threshold: 0.3,
+ *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
  *                useManifestDateHeaderTimeSource: true,
@@ -6137,7 +6651,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            liveCatchup: {
  *                minDrift: 0.02,
- *                maxDrift: 0,
+ *                maxDrift: 12,
  *                playbackRate: 0.5,
  *                latencyThreshold: 60,
  *                playbackBufferMin: 0.5,
@@ -6151,7 +6665,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
- *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 0,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -6207,7 +6721,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY
  *            }
- *      }
+ *          },
+ *          errors: {
+ *            recoverAttempts: {
+ *                mediaErrorDecode: 5
+ *             }
+ *          }
  * }
  */
 
@@ -6243,7 +6762,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} Buffer
- * @property {boolean} [fastSwitchEnabled=false]
+ * @property {boolean} [enableSeekDecorrelationFix=false]
+ * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.
+ * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
+ *
+ * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
+
+ * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
@@ -6338,6 +6863,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  */
 
 /**
+ * @typedef {Object} module:Settings~ErrorSettings
+ * @property {object} [recoverAttempts={mediaErrorDecode: 5}]
+ * Defines the maximum number of recover attempts for specific media errors.
+ *
+ * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The resulting gap will be handled by the GapController.
+ */
+
+/**
  * @typedef {Object} CachingInfoSettings
  * @property {boolean} [enable]
  * Enable or disable the caching feature.
@@ -6353,12 +6886,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Sets whether player should jump small gaps (discontinuities) in the buffer.
  * @property {boolean} [jumpLargeGaps=true]
  * Sets whether player should jump large gaps (discontinuities) in the buffer.
- * @property {number} [smallGapLimit=1.8]
+ * @property {number} [smallGapLimit=1.5]
  * Time in seconds for a gap to be considered small.
  * @property {number} [threshold=0.3]
  * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
  * For live stream the jump might be delayed to keep a consistent live edge.
  * Note that the amount of buffer at which platforms automatically stall might differ.
+ * @property {boolean} [enableSeekFix=false]
+ * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
  */
 
 /**
@@ -6367,6 +6902,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
+ * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {number} [backgroundAttempts=2]
  * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
  *
@@ -6424,7 +6960,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [maxDrift=0]
+ * @property {number} [maxDrift=12]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
  * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
@@ -6634,9 +7170,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {boolean} [lowLatencyEnabled=false]
- * Enable or disable low latency mode.
+ * Manually enable or disable low latency mode.
  *
- * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+ * @property {boolean} [lowLatencyEnabledByManifest=true]
+ * If this value is set to true we enable the low latency mode based on MPD attributes:  Specifically in case "availabilityTimeComplete" of the current representation is set to false.
+ *
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
@@ -6678,8 +7216,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * Possible values
  *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY
+ * This mode makes the player select the track with the highest selectionPriority as defined in the manifest. If not selectionPriority is given we fallback to TRACK_SELECTION_MODE_HIGHEST_BITRATE. This mode is a default mode.
+ *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
- * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+ * This mode makes the player select the track with a highest bitrate.
  *
  * - Constants.TRACK_SELECTION_MODE_FIRST_TRACK
  * This mode makes the player select the first track found in the manifest.
@@ -6732,6 +7273,7 @@ function Settings() {
       abandonLoadTimeout: 10000,
       wallclockTimeUpdateInterval: 100,
       lowLatencyEnabled: false,
+      lowLatencyEnabledByManifest: true,
       manifestUpdateRetryInterval: 100,
       cacheInitSegments: false,
       eventControllerRefreshDelay: 150,
@@ -6756,6 +7298,7 @@ function Settings() {
         keepProtectionMediaKeys: false
       },
       buffer: {
+        enableSeekDecorrelationFix: false,
         fastSwitchEnabled: true,
         flushBufferAtTrackSwitch: false,
         reuseExistingSourceBuffers: true,
@@ -6774,7 +7317,8 @@ function Settings() {
         jumpGaps: true,
         jumpLargeGaps: true,
         smallGapLimit: 1.5,
-        threshold: 0.3
+        threshold: 0.3,
+        enableSeekFix: false
       },
       utcSynchronization: {
         useManifestDateHeaderTimeSource: true,
@@ -6800,7 +7344,7 @@ function Settings() {
       },
       liveCatchup: {
         minDrift: 0.02,
-        maxDrift: 0,
+        maxDrift: 12,
         playbackRate: 0.5,
         latencyThreshold: 60,
         playbackBufferMin: 0.5,
@@ -6823,7 +7367,7 @@ function Settings() {
         audio: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_ALWAYS_REPLACE,
         video: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
-      selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+      selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
       fragmentRequestTimeout: 0,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
@@ -6874,6 +7418,11 @@ function Settings() {
         rtp: null,
         rtpSafetyFactor: 5,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_MODE_QUERY
+      }
+    },
+    errors: {
+      recoverAttempts: {
+        mediaErrorDecode: 5
       }
     }
   };
@@ -6956,6 +7505,8 @@ var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingleton
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
+/* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path_browserify__WEBPACK_IMPORTED_MODULE_0__);
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -6999,6 +7550,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * @class
  * @ignore
  */
+
+
 var Utils = /*#__PURE__*/function () {
   function Utils() {
     _classCallCheck(this, Utils);
@@ -7122,6 +7675,41 @@ var Utils = /*#__PURE__*/function () {
       }
 
       return hash;
+    }
+    /**
+     * Compares both urls and returns a relative url (target relative to original)
+     * @param {string} original
+     * @param {string} target
+     * @return {string|*}
+     */
+
+  }, {
+    key: "getRelativeUrl",
+    value: function getRelativeUrl(originalUrl, targetUrl) {
+      try {
+        var original = new URL(originalUrl);
+        var target = new URL(targetUrl); // Unify the protocol to compare the origins
+
+        original.protocol = target.protocol;
+
+        if (original.origin !== target.origin) {
+          return targetUrl;
+        } // Use the relative path implementation of the path library. We need to cut off the actual filename in the end to get the relative path
+
+
+        var relativePath = path_browserify__WEBPACK_IMPORTED_MODULE_0___default.a.relative(original.pathname.substr(0, original.pathname.lastIndexOf('/')), target.pathname.substr(0, target.pathname.lastIndexOf('/'))); // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash in front of the filename
+
+        var startIndexOffset = relativePath.length === 0 ? 1 : 0;
+        relativePath += target.pathname.substr(target.pathname.lastIndexOf('/') + startIndexOffset, target.pathname.length - 1); // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of the two candidates.
+
+        if (target.pathname.length < relativePath.length) {
+          return target.pathname;
+        }
+
+        return relativePath;
+      } catch (e) {
+        return targetUrl;
+      }
     }
   }]);
 
@@ -7526,10 +8114,13 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     _this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
     _this.QUOTA_EXCEEDED = 'quotaExceeded';
+    _this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
+    _this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     _this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     _this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     _this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     _this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
+    _this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
     _this.STREAMS_COMPOSED = 'streamsComposed';
     _this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
     _this.STREAM_REQUESTING_COMPLETED = 'streamRequestingCompleted';
@@ -7727,6 +8318,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
 /* harmony import */ var _utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/SegmentsUtils */ "./src/dash/utils/SegmentsUtils.js");
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./constants/DashConstants */ "./src/dash/constants/DashConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -7763,6 +8355,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+var DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
+
 function DashHandler(config) {
   config = config || {};
   var eventBus = config.eventBus;
@@ -7773,17 +8367,17 @@ function DashHandler(config) {
   var segmentsController = config.segmentsController;
   var timelineConverter = config.timelineConverter;
   var baseURLController = config.baseURLController;
-  var instance, logger, segmentIndex, lastSegment, requestedTime, isDynamicManifest, dynamicStreamCompleted;
+  var instance, logger, lastSegment, isDynamicManifest, mediaHasFinished;
 
   function setup() {
     logger = debug.getLogger(instance);
     resetInitialSettings();
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
   }
 
   function initialize(isDynamic) {
     isDynamicManifest = isDynamic;
-    dynamicStreamCompleted = false;
+    mediaHasFinished = false;
     segmentsController.initialize(isDynamic);
   }
 
@@ -7799,30 +8393,16 @@ function DashHandler(config) {
     return streamInfo;
   }
 
-  function setCurrentIndex(value) {
-    segmentIndex = value;
-  }
-
-  function getCurrentIndex() {
-    return segmentIndex;
-  }
-
-  function resetIndex() {
-    segmentIndex = -1;
-    lastSegment = null;
-  }
-
   function resetInitialSettings() {
-    resetIndex();
-    requestedTime = null;
+    lastSegment = null;
   }
 
   function reset() {
     resetInitialSettings();
-    eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+    eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
   }
 
-  function setRequestUrl(request, destination, representation) {
+  function _setRequestUrl(request, destination, representation) {
     var baseURL = baseURLController.resolve(representation.path);
     var url, serviceLocation;
 
@@ -7864,7 +8444,7 @@ function DashHandler(config) {
     request.mediaInfo = mediaInfo;
     request.representationId = representation.id;
 
-    if (setRequestUrl(request, representation.initialization, representation)) {
+    if (_setRequestUrl(request, representation.initialization, representation)) {
       request.url = Object(_utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_4__["replaceTokenForTemplate"])(request.url, 'Bandwidth', representation.bandwidth);
       return request;
     }
@@ -7895,35 +8475,56 @@ function DashHandler(config) {
     request.availabilityEndTime = segment.availabilityEndTime;
     request.wallStartTime = segment.wallStartTime;
     request.quality = representation.index;
-    request.index = segment.availabilityIdx;
+    request.index = segment.index;
     request.mediaInfo = mediaInfo;
     request.adaptationIndex = representation.adaptation.index;
     request.representationId = representation.id;
 
-    if (setRequestUrl(request, url, representation)) {
+    if (_setRequestUrl(request, url, representation)) {
       return request;
     }
   }
 
-  function isMediaFinished(representation, bufferingTime) {
-    var isFinished = false;
-    if (!representation || !lastSegment) return isFinished; // if the buffer is filled up we are done
-    // we are replacing existing stuff.
+  function isLastSegmentRequested(representation, bufferingTime) {
+    if (!representation || !lastSegment) {
+      return false;
+    } // Either transition from dynamic to static was done or no next static segment found
+
+
+    if (mediaHasFinished) {
+      return true;
+    } // Period is endless
+
+
+    if (!isFinite(representation.adaptation.period.duration)) {
+      return false;
+    } // we are replacing existing stuff in the buffer for instance after a track switch
+
 
     if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
       return false;
-    }
+    } // Additional segment references may be added to the last period.
+    // Additional periods may be added to the end of the MPD.
+    // Segment references SHALL NOT be added to any period other than the last period.
+    // An MPD update MAY combine adding segment references to the last period with adding of new periods. An MPD update that adds content MAY be combined with an MPD update that removes content.
+    // The index of the last requested segment is higher than the number of available segments.
+    // For SegmentTimeline and SegmentTemplate the index does not include the startNumber.
+    // For SegmentList the index includes the startnumber which is why the numberOfSegments includes this as well
 
-    if (isDynamicManifest && dynamicStreamCompleted) {
-      isFinished = true;
-    } else if (lastSegment) {
-      var time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
-      var endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
-      var duration = representation.adaptation.period.duration;
-      return isFinite(duration) && endTime >= duration - 0.05;
-    }
 
-    return isFinished;
+    if (representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.numberOfSegments) && !isNaN(lastSegment.index) && lastSegment.index >= representation.mediaFinishedInformation.numberOfSegments - 1) {
+      // For static manifests and Template addressing we can compare the index against the number of available segments
+      if (!isDynamicManifest || representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TEMPLATE) {
+        return true;
+      } // For SegmentList we need to check if the next period is signaled
+      else if (isDynamicManifest && representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
+          return true;
+        }
+    } // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
+    // We can not simply use the index, as numberOfSegments might have decreased after an MPD update
+
+
+    return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TIMELINE && representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05);
   }
 
   function getSegmentRequestForTime(mediaInfo, representation, time) {
@@ -7933,18 +8534,11 @@ function DashHandler(config) {
       return request;
     }
 
-    if (requestedTime !== time) {
-      // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
-      requestedTime = time;
-      logger.debug('Getting the request for time : ' + time);
-    }
-
     var segment = segmentsController.getSegmentByTime(representation, time);
 
     if (segment) {
-      segmentIndex = segment.availabilityIdx;
       lastSegment = segment;
-      logger.debug('Index for time ' + time + ' is ' + segmentIndex);
+      logger.debug('Index for time ' + time + ' is ' + segment.index);
       request = _getRequestForSegment(mediaInfo, segment);
     }
 
@@ -7960,7 +8554,7 @@ function DashHandler(config) {
 
   function getNextSegmentRequestIdempotent(mediaInfo, representation) {
     var request = null;
-    var indexToRequest = segmentIndex + 1;
+    var indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
     var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
     if (!segment) return null;
     request = _getRequestForSegment(mediaInfo, segment);
@@ -7981,41 +8575,113 @@ function DashHandler(config) {
       return null;
     }
 
-    requestedTime = null;
-    var indexToRequest = segmentIndex + 1; // check that there is a segment in this index
+    var indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
+    var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1); // No segment found
 
-    var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
-
-    if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
-      logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
-      return null;
-    } else {
-      if (segment) {
-        request = _getRequestForSegment(mediaInfo, segment);
-        segmentIndex = segment.availabilityIdx;
+    if (!segment) {
+      // Dynamic manifest there might be something available in the next iteration
+      if (isDynamicManifest && !mediaHasFinished) {
+        logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
+        return null;
       } else {
-        if (isDynamicManifest) {
-          segmentIndex = indexToRequest - 1;
-        } else {
-          segmentIndex = indexToRequest;
-        }
+        mediaHasFinished = true;
       }
-    }
-
-    if (segment) {
+    } else {
+      request = _getRequestForSegment(mediaInfo, segment);
       lastSegment = segment;
     }
 
     return request;
   }
+  /**
+   * This function returns a time for which we can generate a request. It is supposed to be as close as possible to the target time.
+   * This is useful in scenarios in which the user seeks into a gap. We will not find a valid request then and need to adjust the seektime.
+   * @param {number} time
+   * @param {object} mediaInfo
+   * @param {object} representation
+   * @param {number} targetThreshold
+   */
 
-  function isEndlessMedia(representation) {
-    return !isFinite(representation.adaptation.period.duration);
+
+  function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+    try {
+      if (isNaN(time) || !mediaInfo || !representation) {
+        return NaN;
+      }
+
+      if (time < 0) {
+        time = 0;
+      }
+
+      if (isNaN(targetThreshold)) {
+        targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+      }
+
+      if (getSegmentRequestForTime(mediaInfo, representation, time)) {
+        return time;
+      }
+
+      var start = representation.adaptation.period.start;
+      var end = representation.adaptation.period.start + representation.adaptation.period.duration;
+      var currentUpperTime = Math.min(time + targetThreshold, end);
+      var currentLowerTime = Math.max(time - targetThreshold, start);
+      var adjustedTime = NaN;
+      var targetRequest = null;
+
+      while (currentUpperTime <= end || currentLowerTime >= start) {
+        var upperRequest = null;
+        var lowerRequest = null;
+
+        if (currentUpperTime <= end) {
+          upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
+        }
+
+        if (currentLowerTime >= start) {
+          lowerRequest = getSegmentRequestForTime(mediaInfo, representation, currentLowerTime);
+        }
+
+        if (lowerRequest) {
+          adjustedTime = currentLowerTime;
+          targetRequest = lowerRequest;
+          break;
+        } else if (upperRequest) {
+          adjustedTime = currentUpperTime;
+          targetRequest = upperRequest;
+          break;
+        }
+
+        currentUpperTime += targetThreshold;
+        currentLowerTime -= targetThreshold;
+      }
+
+      if (targetRequest) {
+        var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
+
+        if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+          return time;
+        } // If target time is before the start of the request use request starttime
+
+
+        if (time < targetRequest.startTime) {
+          return targetRequest.startTime;
+        }
+
+        return Math.min(requestEndTime - targetThreshold, adjustedTime);
+      }
+
+      return adjustedTime;
+    } catch (e) {
+      return NaN;
+    }
   }
 
-  function onDynamicToStatic() {
+  function getCurrentIndex() {
+    return lastSegment ? lastSegment.index : -1;
+  }
+
+  function _onDynamicToStatic() {
     logger.debug('Dynamic stream complete');
-    dynamicStreamCompleted = true;
+    mediaHasFinished = true;
   }
 
   instance = {
@@ -8025,13 +8691,12 @@ function DashHandler(config) {
     getStreamInfo: getStreamInfo,
     getInitRequest: getInitRequest,
     getSegmentRequestForTime: getSegmentRequestForTime,
-    getNextSegmentRequest: getNextSegmentRequest,
-    setCurrentIndex: setCurrentIndex,
     getCurrentIndex: getCurrentIndex,
-    isMediaFinished: isMediaFinished,
+    getNextSegmentRequest: getNextSegmentRequest,
+    isLastSegmentRequested: isLastSegmentRequested,
     reset: reset,
-    resetIndex: resetIndex,
-    getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent
+    getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent,
+    getValidSeekTimeCloseToTargetTime: getValidSeekTimeCloseToTargetTime
   };
   setup();
   return instance;
@@ -8321,7 +8986,10 @@ function RepresentationController(config) {
     checkConfig();
     updating = true;
     voAvailableRepresentations = availableRepresentations;
-    currentVoRepresentation = getRepresentationForQuality(quality);
+    var rep = getRepresentationForQuality(quality);
+
+    _setCurrentVoRepresentation(rep);
+
     realAdaptation = newRealAdaptation;
 
     if (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
@@ -8357,6 +9025,8 @@ function RepresentationController(config) {
           currentRep = _onSegmentsLoaded(currentRep, data[1]);
         }
 
+        _setMediaFinishedInformation(currentRep);
+
         _onRepresentationUpdated(currentRep);
 
         resolve();
@@ -8364,6 +9034,10 @@ function RepresentationController(config) {
         reject(e);
       });
     });
+  }
+
+  function _setMediaFinishedInformation(representation) {
+    representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
   }
 
   function _onInitLoaded(representation, e) {
@@ -8393,14 +9067,13 @@ function RepresentationController(config) {
     }
 
     if (segments.length > 0) {
-      representation.availableSegmentsNumber = segments.length;
       representation.segments = segments;
     }
 
     return representation;
   }
 
-  function addRepresentationSwitch() {
+  function _addRepresentationSwitch() {
     checkConfig();
     var now = new Date();
     var currentRepresentation = getCurrentRepresentation();
@@ -8412,8 +9085,12 @@ function RepresentationController(config) {
 
     eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_2__["default"].REPRESENTATION_SWITCH, {
       mediaType: type,
+      streamId: streamInfo.id,
       currentRepresentation: currentRepresentation,
       numberOfRepresentations: voAvailableRepresentations.length
+    }, {
+      streamId: streamInfo.id,
+      mediaType: type
     });
   }
 
@@ -8483,7 +9160,7 @@ function RepresentationController(config) {
       repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
       if (!repSwitch) {
-        addRepresentationSwitch();
+        _addRepresentationSwitch();
       }
 
       endDataUpdate();
@@ -8491,8 +9168,15 @@ function RepresentationController(config) {
   }
 
   function prepareQualityChange(newQuality) {
-    currentVoRepresentation = getRepresentationForQuality(newQuality);
-    addRepresentationSwitch();
+    var newRep = getRepresentationForQuality(newQuality);
+
+    _setCurrentVoRepresentation(newRep);
+
+    _addRepresentationSwitch();
+  }
+
+  function _setCurrentVoRepresentation(value) {
+    currentVoRepresentation = value;
   }
 
   function onManifestValidityChanged(e) {
@@ -8632,12 +9316,21 @@ function SegmentsController(config) {
     return getter ? getter.getSegmentByTime(representation, time) : null;
   }
 
+  function getMediaFinishedInformation(representation) {
+    var getter = getSegmentsGetter(representation);
+    return getter ? getter.getMediaFinishedInformation(representation) : {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
+  }
+
   instance = {
     initialize: initialize,
     updateInitData: updateInitData,
     updateSegmentData: updateSegmentData,
     getSegmentByIndex: getSegmentByIndex,
-    getSegmentByTime: getSegmentByTime
+    getSegmentByTime: getSegmentByTime,
+    getMediaFinishedInformation: getMediaFinishedInformation
   };
   setup();
   return instance;
@@ -9094,6 +9787,15 @@ function DashManifestModel() {
     });
   }
 
+  function getSelectionPriority(realAdaption) {
+    try {
+      var priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+      return isNaN(priority) ? 1 : priority;
+    } catch (e) {
+      return 1;
+    }
+  }
+
   function getEssentialPropertiesForRepresentation(realRepresentation) {
     if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
     return realRepresentation.EssentialProperty_asArray.map(function (prop) {
@@ -9280,6 +9982,10 @@ function DashManifestModel() {
   }
 
   function calcSegmentDuration(segmentTimeline) {
+    if (!segmentTimeline || !segmentTimeline.S_asArray) {
+      return NaN;
+    }
+
     var s0 = segmentTimeline.S_asArray[0];
     var s1 = segmentTimeline.S_asArray[1];
     return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
@@ -9382,6 +10088,10 @@ function DashManifestModel() {
 
         if (realPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
           voPeriod.duration = realPeriod.duration;
+        }
+
+        if (voPreviousPeriod) {
+          voPreviousPeriod.nextPeriodId = voPeriod.id;
         }
 
         voPeriods.push(voPeriod);
@@ -9881,6 +10591,7 @@ function DashManifestModel() {
     getRealPeriods: getRealPeriods,
     getRealPeriodForIndex: getRealPeriodForIndex,
     getCodec: getCodec,
+    getSelectionPriority: getSelectionPriority,
     getMimeType: getMimeType,
     getKID: getKID,
     getLabelsForAdaptation: getLabelsForAdaptation,
@@ -11089,6 +11800,23 @@ function ListSegmentsGetter(config, isDynamic) {
     }
   }
 
+  function getMediaFinishedInformation(representation) {
+    var mediaFinishedInformation = {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
+
+    if (!representation) {
+      return mediaFinishedInformation;
+    }
+
+    var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+    var startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
+    var offset = Math.max(startNumber - 1, 0);
+    mediaFinishedInformation.numberOfSegments = offset + list.SegmentURL_asArray.length;
+    return mediaFinishedInformation;
+  }
+
   function getSegmentByIndex(representation, index) {
     checkConfig();
 
@@ -11111,12 +11839,10 @@ function ListSegmentsGetter(config, isDynamic) {
         segment.replacementTime = (startNumber + index - 1) * representation.segmentDuration;
         segment.media = s.media ? s.media : '';
         segment.mediaRange = s.mediaRange;
-        segment.index = index;
         segment.indexRange = s.indexRange;
       }
     }
 
-    representation.availableSegmentsNumber = len;
     return segment;
   }
 
@@ -11140,7 +11866,8 @@ function ListSegmentsGetter(config, isDynamic) {
 
   instance = {
     getSegmentByIndex: getSegmentByIndex,
-    getSegmentByTime: getSegmentByTime
+    getSegmentByTime: getSegmentByTime,
+    getMediaFinishedInformation: getMediaFinishedInformation
   };
   return instance;
 }
@@ -11206,6 +11933,20 @@ function SegmentBaseGetter(config) {
     }
   }
 
+  function getMediaFinishedInformation(representation) {
+    var mediaFinishedInformation = {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
+
+    if (!representation || !representation.segments) {
+      return mediaFinishedInformation;
+    }
+
+    mediaFinishedInformation.numberOfSegments = representation.segments.length;
+    return mediaFinishedInformation;
+  }
+
   function getSegmentByIndex(representation, index) {
     checkConfig();
 
@@ -11219,7 +11960,7 @@ function SegmentBaseGetter(config) {
     if (index < len) {
       seg = representation.segments[index];
 
-      if (seg && seg.availabilityIdx === index) {
+      if (seg && seg.index === index) {
         return seg;
       }
     }
@@ -11227,7 +11968,7 @@ function SegmentBaseGetter(config) {
     for (var i = 0; i < len; i++) {
       seg = representation.segments[i];
 
-      if (seg && seg.availabilityIdx === index) {
+      if (seg && seg.index === index) {
         return seg;
       }
     }
@@ -11249,17 +11990,17 @@ function SegmentBaseGetter(config) {
     var segments = representation.segments;
     var ln = segments ? segments.length : null;
     var idx = -1;
-    var epsilon, frag, ft, fd, i;
+    var epsilon, seg, ft, fd, i;
 
     if (segments && ln > 0) {
       for (i = 0; i < ln; i++) {
-        frag = segments[i];
-        ft = frag.presentationStartTime;
-        fd = frag.duration;
+        seg = segments[i];
+        ft = seg.presentationStartTime;
+        fd = seg.duration;
         epsilon = fd / 2;
 
         if (time + epsilon >= ft && time - epsilon < ft + fd) {
-          idx = frag.availabilityIdx;
+          idx = seg.index;
           break;
         }
       }
@@ -11270,7 +12011,8 @@ function SegmentBaseGetter(config) {
 
   instance = {
     getSegmentByIndex: getSegmentByIndex,
-    getSegmentByTime: getSegmentByTime
+    getSegmentByTime: getSegmentByTime,
+    getMediaFinishedInformation: getMediaFinishedInformation
   };
   return instance;
 }
@@ -11422,17 +12164,17 @@ function replaceTokenForTemplate(url, token, value) {
   }
 }
 
-function getSegment(representation, duration, presentationStartTime, mediaStartTime, availabilityStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
+function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
   var seg = new _vo_Segment__WEBPACK_IMPORTED_MODULE_0__["default"]();
   seg.representation = representation;
   seg.duration = duration;
   seg.presentationStartTime = presentationStartTime;
   seg.mediaStartTime = mediaStartTime;
-  seg.availabilityStartTime = availabilityStartTime;
+  seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
   seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime + duration, representation, isDynamic);
   seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
   seg.replacementNumber = getNumberForSegment(seg, index);
-  seg.availabilityIdx = index;
+  seg.index = index;
   return seg;
 }
 
@@ -11450,9 +12192,10 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     // SAST = Period@start + seg@presentationStartTime + seg@duration
     // ASAST = SAST - ATO
     // SAET = SAST + TSBD + seg@duration
+    // refTime serves as an anchor time to compare the availability time of the segments against.
 
 
-    var refTime = timelineConverter.getAvailabilityWindowAnchorTime();
+    var refTime = timelineConverter.getClientReferenceTime();
     return segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
   }
 
@@ -11475,8 +12218,7 @@ function getIndexBasedSegment(timelineConverter, isDynamic, representation, inde
   presentationStartTime = parseFloat((representation.adaptation.period.start + index * duration).toFixed(5));
   presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
   var mediaTime = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
-  var availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
-  var segment = getSegment(representation, duration, presentationStartTime, mediaTime, availabilityStartTime, timelineConverter, presentationEndTime, isDynamic, index);
+  var segment = getSegment(representation, duration, presentationStartTime, mediaTime, timelineConverter, presentationEndTime, isDynamic, index);
 
   if (!isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
     return null;
@@ -11490,8 +12232,7 @@ function getTimeBasedSegment(timelineConverter, isDynamic, representation, time,
   var presentationStartTime, presentationEndTime, seg;
   presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
   presentationEndTime = presentationStartTime + scaledDuration;
-  var availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
-  seg = getSegment(representation, scaledDuration, presentationStartTime, scaledTime, availabilityStartTime, timelineConverter, presentationEndTime, isDynamic, index);
+  seg = getSegment(representation, scaledDuration, presentationStartTime, scaledTime, timelineConverter, presentationEndTime, isDynamic, index);
 
   if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
     return null;
@@ -11564,6 +12305,27 @@ function TemplateSegmentsGetter(config, isDynamic) {
     }
   }
 
+  function getMediaFinishedInformation(representation) {
+    var mediaFinishedInformation = {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
+
+    if (!representation) {
+      return mediaFinishedInformation;
+    }
+
+    var duration = representation.segmentDuration;
+
+    if (isNaN(duration)) {
+      mediaFinishedInformation.numberOfSegments = 1;
+    } else {
+      mediaFinishedInformation.numberOfSegments = Math.ceil(representation.adaptation.period.duration / duration);
+    }
+
+    return mediaFinishedInformation;
+  }
+
   function getSegmentByIndex(representation, index) {
     checkConfig();
 
@@ -11571,7 +12333,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
       return null;
     }
 
-    var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+    var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate; // This is the index without @startNumber
+
     index = Math.max(index, 0);
     var seg = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getIndexBasedSegment"])(timelineConverter, isDynamic, representation, index);
 
@@ -11581,14 +12344,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
       url = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["replaceTokenForTemplate"])(url, 'Number', seg.replacementNumber);
       url = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["replaceTokenForTemplate"])(url, 'Time', seg.replacementTime);
       seg.media = url;
-    }
-
-    var duration = representation.segmentDuration;
-
-    if (isNaN(duration)) {
-      representation.availableSegmentsNumber = 1;
-    } else {
-      representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
     }
 
     return seg;
@@ -11605,7 +12360,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     if (isNaN(duration)) {
       return null;
-    }
+    } // Calculate the relative time for the requested time in this period
+
 
     var periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
     var index = Math.floor(periodTime / duration);
@@ -11614,7 +12370,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
   instance = {
     getSegmentByIndex: getSegmentByIndex,
-    getSegmentByTime: getSegmentByTime
+    getSegmentByTime: getSegmentByTime,
+    getMediaFinishedInformation: getMediaFinishedInformation
   };
   return instance;
 }
@@ -11683,14 +12440,64 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
   }
 
+  function getMediaFinishedInformation(representation) {
+    if (!representation) {
+      return 0;
+    }
+
+    var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+    var timeline = base.SegmentTimeline;
+    var time = 0;
+    var scaledTime = 0;
+    var availableSegments = 0;
+    var fragments, frag, i, len, j, repeat, fTimescale;
+    fTimescale = representation.timescale;
+    fragments = timeline.S_asArray;
+    len = fragments.length;
+
+    for (i = 0; i < len; i++) {
+      frag = fragments[i];
+      repeat = 0;
+
+      if (frag.hasOwnProperty('r')) {
+        repeat = frag.r;
+      } // For a repeated S element, t belongs only to the first segment
+
+
+      if (frag.hasOwnProperty('t')) {
+        time = frag.t;
+        scaledTime = time / fTimescale;
+      } // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+      // next MPD update."
+
+
+      if (repeat < 0) {
+        var nextFrag = fragments[i + 1];
+        repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
+      }
+
+      for (j = 0; j <= repeat; j++) {
+        availableSegments++;
+        time += frag.d;
+        scaledTime = time / fTimescale;
+      }
+    } // We need to account for the index of the segments starting at 0. We subtract 1
+
+
+    return {
+      numberOfSegments: availableSegments,
+      mediaTimeOfLastSignaledSegment: scaledTime
+    };
+  }
+
   function iterateSegments(representation, iterFunc) {
     var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
     var timeline = base.SegmentTimeline;
     var list = base.SegmentURL_asArray;
     var time = 0;
     var scaledTime = 0;
-    var availabilityIdx = -1;
-    var fragments, frag, i, len, j, repeat, repeatEndTime, nextFrag, fTimescale;
+    var relativeIdx = -1;
+    var fragments, frag, i, len, j, repeat, fTimescale;
     fTimescale = representation.timescale;
     fragments = timeline.S_asArray;
     var breakIterator = false;
@@ -11712,51 +12519,50 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
 
       if (repeat < 0) {
-        nextFrag = fragments[i + 1];
-
-        if (nextFrag && nextFrag.hasOwnProperty('t')) {
-          repeatEndTime = nextFrag.t / fTimescale;
-        } else {
-          try {
-            var availabilityEnd = 0;
-
-            if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
-              // use end of the Period
-              availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-            } else {
-              // use DVR window
-              var dvrWindow = dashMetrics.getCurrentDVRInfo();
-              availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
-            }
-
-            repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
-            representation.segmentDuration = frag.d / fTimescale;
-          } catch (e) {
-            repeatEndTime = 0;
-          }
-        }
-
-        repeat = Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
+        var nextFrag = fragments[i + 1];
+        repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
       }
 
       for (j = 0; j <= repeat && !breakIterator; j++) {
-        availabilityIdx++;
-        breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i);
+        relativeIdx++;
+        breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, relativeIdx, i);
 
         if (breakIterator) {
-          representation.segmentDuration = frag.d / fTimescale; // check if there is at least one more segment
-
-          if (j < repeat - 1 || i < len - 1) {
-            availabilityIdx++;
-          }
+          representation.segmentDuration = frag.d / fTimescale;
         }
 
         time += frag.d;
         scaledTime = time / fTimescale;
       }
     }
+  }
 
-    representation.availableSegmentsNumber = availabilityIdx;
+  function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
+    var repeatEndTime;
+
+    if (nextFrag && nextFrag.hasOwnProperty('t')) {
+      repeatEndTime = nextFrag.t / fTimescale;
+    } else {
+      try {
+        var availabilityEnd = 0;
+
+        if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
+          // use end of the Period
+          availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+        } else {
+          // use DVR window
+          var dvrWindow = dashMetrics.getCurrentDVRInfo();
+          availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
+        }
+
+        repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
+        representation.segmentDuration = frag.d / fTimescale;
+      } catch (e) {
+        repeatEndTime = 0;
+      }
+    }
+
+    return Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
   }
 
   function getSegmentByIndex(representation, index, lastSegmentTime) {
@@ -11768,7 +12574,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     var segment = null;
     var found = false;
-    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
       if (found || lastSegmentTime < 0) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
@@ -11778,7 +12584,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
           mediaRange = list[i].mediaRange;
         }
 
-        segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, availabilityIdx, frag.tManifest);
+        segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, relativeIdx, frag.tManifest);
         return true;
       } else if (scaledTime >= lastSegmentTime - frag.d * 0.5 / fTimescale) {
         // same logic, if deviation is
@@ -11804,7 +12610,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     var segment = null;
     var requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
-    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
       // In some cases when requiredMediaTime = actual end time of the last segment
       // it is possible that this time a bit exceeds the declared end time of the last segment.
       // in this case we still need to include the last segment in the segment list.
@@ -11817,7 +12623,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
           mediaRange = list[i].mediaRange;
         }
 
-        segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, availabilityIdx, frag.tManifest);
+        segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, relativeIdx, frag.tManifest);
         return true;
       }
 
@@ -11828,7 +12634,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
   instance = {
     getSegmentByIndex: getSegmentByIndex,
-    getSegmentByTime: getSegmentByTime
+    getSegmentByTime: getSegmentByTime,
+    getMediaFinishedInformation: getMediaFinishedInformation
   };
   return instance;
 }
@@ -12208,6 +13015,7 @@ var Period = function Period() {
   this.duration = NaN;
   this.start = NaN;
   this.mpd = null;
+  this.nextPeriodId = null;
 };
 
 Period.DEFAULT_ID = 'defaultId';
@@ -12287,8 +13095,12 @@ var Representation = /*#__PURE__*/function () {
     this.range = null;
     this.presentationTimeOffset = 0; // Set the source buffer timeOffset to this
 
-    this.MSETimeOffset = NaN;
-    this.availableSegmentsNumber = 0;
+    this.MSETimeOffset = NaN; // The information we need in the DashHandler to determine whether the last segment has been loaded
+
+    this.mediaFinishedInformation = {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
     this.bandwidth = NaN;
     this.width = NaN;
     this.height = NaN;
@@ -12366,7 +13178,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Segment = function Segment() {
   _classCallCheck(this, Segment);
 
-  this.indexRange = null;
+  this.indexRange = null; // The index of the segment in the list of segments. We start at 0
+
   this.index = null;
   this.mediaRange = null;
   this.media = null;
@@ -12383,9 +13196,7 @@ var Segment = function Segment() {
 
   this.availabilityStartTime = NaN; // Ignore and  discard this segment after
 
-  this.availabilityEndTime = NaN; // The index of the segment inside the availability window
-
-  this.availabilityIdx = NaN; // For dynamic mpd's, this is the wall clock time that the video
+  this.availabilityEndTime = NaN; // For dynamic mpd's, this is the wall clock time that the video
   // element currentTime should be presentationStartTime
 
   this.wallStartTime = NaN;
@@ -13817,7 +14628,7 @@ function OfflineStreamProcessor(config) {
   }
 
   function getAvailableSegmentsNumber() {
-    return representationController.getCurrentRepresentation().availableSegmentsNumber + 1; // do not forget init segment
+    return representationController.getCurrentRepresentation().numberOfSegments + 1; // do not forget init segment
   }
 
   function updateProgression() {
@@ -16120,7 +16931,6 @@ function FragmentLoader(config) {
       dashMetrics: config.dashMetrics,
       mediaPlayerModel: config.mediaPlayerModel,
       requestModifier: config.requestModifier,
-      useFetch: config.settings.get().streaming.lowLatencyEnabled,
       urlUtils: urlUtils,
       constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"],
       boxParser: config.boxParser,
@@ -16950,6 +17760,13 @@ var Constants = /*#__PURE__*/function () {
 
       this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
       /**
+       *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+       *  @memberof Constants#
+       *  @static
+       */
+
+      this.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY = 'highestSelectionPriority';
+      /**
        *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
        *  @memberof Constants#
        *  @static
@@ -17312,7 +18129,8 @@ function CmcdModel() {
         eventBus.trigger(_metrics_MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
-          cmcdData: cmcdData
+          cmcdData: cmcdData,
+          headers: headers
         });
         return headers;
       }
@@ -17357,7 +18175,7 @@ function CmcdModel() {
   function _getCmcdDataForMpd() {
     var data = _getGenericCmcdData();
 
-    data.ot = "".concat(OBJECT_TYPES.MANIFEST);
+    data.ot = OBJECT_TYPES.MANIFEST;
     return data;
   }
 
@@ -17402,8 +18220,7 @@ function CmcdModel() {
 
     if (nextRequest) {
       if (request.url !== nextRequest.url) {
-        var url = new URL(nextRequest.url);
-        data.nor = url.pathname;
+        data.nor = encodeURIComponent(_core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].getRelativeUrl(request.url, nextRequest.url));
       } else if (nextRequest.range) {
         data.nrr = nextRequest.range;
       }
@@ -17472,7 +18289,7 @@ function CmcdModel() {
   function _getCmcdDataForInitSegment() {
     var data = _getGenericCmcdData();
 
-    data.ot = "".concat(OBJECT_TYPES.INIT);
+    data.ot = OBJECT_TYPES.INIT;
     data.su = true;
     return data;
   }
@@ -17480,7 +18297,7 @@ function CmcdModel() {
   function _getCmcdDataForOther() {
     var data = _getGenericCmcdData();
 
-    data.ot = "".concat(OBJECT_TYPES.OTHER);
+    data.ot = OBJECT_TYPES.OTHER;
     return data;
   }
 
@@ -17583,8 +18400,8 @@ function CmcdModel() {
   function _onManifestLoaded(data) {
     try {
       var isDynamic = dashManifestModel.getIsDynamic(data.data);
-      var st = isDynamic ? "".concat(STREAM_TYPES.LIVE) : "".concat(STREAM_TYPES.VOD);
-      var sf = data.protocol && data.protocol === 'MSS' ? "".concat(STREAMING_FORMATS.MSS) : "".concat(STREAMING_FORMATS.DASH);
+      var st = isDynamic ? STREAM_TYPES.LIVE : STREAM_TYPES.VOD;
+      var sf = data.protocol && data.protocol === 'MSS' ? STREAMING_FORMATS.MSS : STREAMING_FORMATS.DASH;
       internalData.st = "".concat(st);
       internalData.sf = "".concat(sf);
     } catch (e) {}
@@ -17633,7 +18450,7 @@ function CmcdModel() {
       var cmcdString = keys.reduce(function (acc, key, index) {
         if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
 
-        if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
+        if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
           var string = cmcdData[key].replace(/"/g, '\"');
           acc += "".concat(key, "=\"").concat(string, "\"");
         } else {
@@ -17646,7 +18463,9 @@ function CmcdModel() {
 
         return acc;
       }, '');
-      cmcdString = cmcdString.replace(/=true/g, '');
+      cmcdString = cmcdString.replace(/=true/g, ''); // Remove last comma at the end
+
+      cmcdString = cmcdString.replace(/,\s*$/, '');
       return cmcdString;
     } catch (e) {
       return null;
@@ -18996,7 +19815,6 @@ function HTTPLoader(cfg) {
   var mediaPlayerModel = cfg.mediaPlayerModel;
   var requestModifier = cfg.requestModifier;
   var boxParser = cfg.boxParser;
-  var useFetch = cfg.useFetch || false;
   var errors = cfg.errors;
   var requestTimeout = cfg.requestTimeout || 0;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
@@ -19172,7 +19990,7 @@ function HTTPLoader(cfg) {
 
     var loader;
 
-    if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
+    if (settings.get().streaming.lowLatencyEnabled && window.fetch && request.responseType === 'arraybuffer' && request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
       loader = Object(_FetchLoader__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
         requestModifier: requestModifier,
         lowLatencyThroughputModel: lowLatencyThroughputModel,
@@ -19202,6 +20020,7 @@ function HTTPLoader(cfg) {
       }
     }
 
+    request.url = modifiedUrl;
     var verb = request.checkExistenceOnly ? _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].HEAD : _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].GET;
     var withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
     httpRequest = {
@@ -19496,7 +20315,6 @@ function URLLoader(cfg) {
       errHandler: cfg.errHandler,
       mediaPlayerModel: cfg.mediaPlayerModel,
       requestModifier: cfg.requestModifier,
-      useFetch: cfg.useFetch || null,
       dashMetrics: cfg.dashMetrics,
       boxParser: cfg.boxParser ? cfg.boxParser : null,
       constants: cfg.constants ? cfg.constants : null,
