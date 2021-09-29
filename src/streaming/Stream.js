@@ -670,9 +670,11 @@ function Stream(config) {
 
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
-            logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvents.push(e);
-            manifestUpdater.refreshManifest();
+            if (!manifestUpdater.getIsUpdating()) {
+                logger.debug('Stream -  Refreshing manifest for switch track');
+                manifestUpdater.refreshManifest();
+            }
         } else {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {

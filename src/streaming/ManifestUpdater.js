@@ -136,7 +136,6 @@ function ManifestUpdater() {
     }
 
     function refreshManifest(ignorePatch = false) {
-        if (isUpdating) return;
         isUpdating = true;
         const manifest = manifestModel.getValue();
 
@@ -265,10 +264,15 @@ function ManifestUpdater() {
         isUpdating = false;
     }
 
+    function getIsUpdating() {
+        return isUpdating;
+    }
+
     instance = {
         initialize: initialize,
         setManifest: setManifest,
         refreshManifest: refreshManifest,
+        getIsUpdating: getIsUpdating,
         setConfig: setConfig,
         reset: reset
     };
