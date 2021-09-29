@@ -136,6 +136,7 @@ function ManifestUpdater() {
     }
 
     function refreshManifest(ignorePatch = false) {
+        if (isUpdating) return;
         isUpdating = true;
         const manifest = manifestModel.getValue();
 
