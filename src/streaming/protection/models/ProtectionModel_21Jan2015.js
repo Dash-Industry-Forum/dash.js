@@ -143,20 +143,24 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function selectKeySystem(keySystemAccess) {
-        keySystemAccess.mksa.createMediaKeys().then(function (mkeys) {
-            keySystem = keySystemAccess.keySystem;
-            mediaKeys = mkeys;
-            if (videoElement) {
-                videoElement.setMediaKeys(mediaKeys).then(function () {
-                    eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
+        return new Promise((resolve, reject) => {
+            keySystemAccess.mksa.createMediaKeys()
+                .then((mkeys) => {
+                    keySystem = keySystemAccess.keySystem;
+                    mediaKeys = mkeys;
+                    if (videoElement) {
+                        return videoElement.setMediaKeys(mediaKeys)
+                    } else {
+                        return Promise.resolve();
+                    }
+                })
+                .then(() => {
+                    resolve();
+                })
+                .catch(function () {
+                    reject({ error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
                 });
-            } else {
-                eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-            }
-
-        }).catch(function () {
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
-        });
+        })
     }
 
     function setMediaElement(mediaElement) {
@@ -231,7 +235,7 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_UPDATED);
             })
             .catch(function (error) {
-                eventBus.trigger(events.KEY_ERROR, {error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+                eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken) });
             });
     }
 
@@ -299,39 +303,41 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccessInternal(ksConfigurations, idx) {
+        return new Promise((resolve, reject) => {
 
-        if (navigator.requestMediaKeySystemAccess === undefined ||
-            typeof navigator.requestMediaKeySystemAccess !== 'function') {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Insecure origins are not allowed' });
-            return;
-        }
-
-        (function (i) {
-            const keySystem = ksConfigurations[i].ks;
-            const configs = ksConfigurations[i].configs;
-            let systemString = keySystem.systemString;
-
-            // PATCH to support persistent licenses on Edge browser (see issue #2658)
-            if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
-                systemString += '.recommendation';
+            if (navigator.requestMediaKeySystemAccess === undefined ||
+                typeof navigator.requestMediaKeySystemAccess !== 'function') {
+                reject({ error: 'Insecure origins are not allowed' });
+                return;
             }
 
-            navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
-                // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
-                const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                    mediaKeySystemAccess.getConfiguration() : null;
-                const keySystemAccess = new KeySystemAccess(keySystem, configuration);
-                keySystemAccess.mksa = mediaKeySystemAccess;
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
+            (function (i) {
+                const keySystem = ksConfigurations[i].ks;
+                const configs = ksConfigurations[i].configs;
+                let systemString = keySystem.systemString;
 
-            }).catch(function (error) {
-                if (++i < ksConfigurations.length) {
-                    requestKeySystemAccessInternal(ksConfigurations, i);
-                } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! ' + error.message });
+                // PATCH to support persistent licenses on Edge browser (see issue #2658)
+                if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+                    systemString += '.recommendation';
                 }
-            });
-        })(idx);
+
+                navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
+                    // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
+                    const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
+                        mediaKeySystemAccess.getConfiguration() : null;
+                    const keySystemAccess = new KeySystemAccess(keySystem, configuration);
+                    keySystemAccess.mksa = mediaKeySystemAccess;
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
+
+                }).catch(function (error) {
+                    if (++i < ksConfigurations.length) {
+                        requestKeySystemAccessInternal(ksConfigurations, i);
+                    } else {
+                        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! ' + error.message });
+                    }
+                });
+            })(idx);
+        })
     }
 
     function closeKeySessionInternal(sessionToken) {
@@ -480,19 +486,19 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     instance = {
-        getAllInitData: getAllInitData,
-        requestKeySystemAccess: requestKeySystemAccess,
-        getKeySystem: getKeySystem,
-        selectKeySystem: selectKeySystem,
-        setMediaElement: setMediaElement,
-        setServerCertificate: setServerCertificate,
-        createKeySession: createKeySession,
-        updateKeySession: updateKeySession,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
-        closeKeySession: closeKeySession,
-        stop: stop,
-        reset: reset
+        getAllInitData,
+        requestKeySystemAccess,
+        getKeySystem,
+        selectKeySystem,
+        setMediaElement,
+        setServerCertificate,
+        createKeySession,
+        updateKeySession,
+        loadKeySession,
+        removeKeySession,
+        closeKeySession,
+        stop,
+        reset
     };
 
     setup();

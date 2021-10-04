@@ -161,17 +161,20 @@ function ProtectionModel_3Feb2014(config) {
     }
 
     function selectKeySystem(ksAccess) {
-        try {
-            mediaKeys = ksAccess.mediaKeys = new window[api.MediaKeys](ksAccess.keySystem.systemString);
-            keySystem = ksAccess.keySystem;
-            keySystemAccess = ksAccess;
-            if (videoElement) {
-                setMediaKeys();
+        return new Promise((resolve, reject) => {
+            try {
+                mediaKeys = ksAccess.mediaKeys = new window[api.MediaKeys](ksAccess.keySystem.systemString);
+                keySystem = ksAccess.keySystem;
+                keySystemAccess = ksAccess;
+                if (videoElement) {
+                    setMediaKeys();
+                }
+                resolve();
+            } catch (error) {
+                reject({ error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
+
             }
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-        } catch (error) {
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
-        }
+        })
     }
 
     function setMediaElement(mediaElement) {
@@ -273,9 +276,14 @@ function ProtectionModel_3Feb2014(config) {
         session[api.release]();
     }
 
-    function setServerCertificate(/*serverCertificate*/) { /* Not supported */ }
-    function loadKeySession(/*sessionID*/) { /* Not supported */ }
-    function removeKeySession(/*sessionToken*/) { /* Not supported */ }
+    function setServerCertificate(/*serverCertificate*/) { /* Not supported */
+    }
+
+    function loadKeySession(/*sessionID*/) { /* Not supported */
+    }
+
+    function removeKeySession(/*sessionToken*/) { /* Not supported */
+    }
 
 
     function createEventHandler() {

@@ -172,7 +172,7 @@ function ProtectionModel_01b(config) {
 
     function selectKeySystem(keySystemAccess) {
         keySystem = keySystemAccess.keySystem;
-        eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
+        return Promise.resolve();
     }
 
     function setMediaElement(mediaElement) {
@@ -411,19 +411,19 @@ function ProtectionModel_01b(config) {
     }
 
     instance = {
-        getAllInitData: getAllInitData,
-        requestKeySystemAccess: requestKeySystemAccess,
-        getKeySystem: getKeySystem,
-        selectKeySystem: selectKeySystem,
-        setMediaElement: setMediaElement,
-        createKeySession: createKeySession,
-        updateKeySession: updateKeySession,
-        closeKeySession: closeKeySession,
-        setServerCertificate: setServerCertificate,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
+        getAllInitData,
+        requestKeySystemAccess,
+        getKeySystem,
+        selectKeySystem,
+        setMediaElement,
+        createKeySession,
+        updateKeySession,
+        closeKeySession,
+        setServerCertificate,
+        loadKeySession,
+        removeKeySession,
         stop: reset,
-        reset: reset
+        reset
     };
 
     setup();
