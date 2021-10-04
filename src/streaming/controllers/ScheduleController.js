@@ -128,7 +128,8 @@ function ScheduleController(config) {
     function schedule() {
         try {
             // Check if we are supposed to stop scheduling
-            if (_shouldClearScheduleTimer()) {
+            if (_shouldClearScheduleTimer() || 
+                (playbackController.isPaused() && !settings.get().streaming.scheduling.scheduleWhilePaused)) {
                 clearScheduleTimer();
                 return;
             }
