@@ -999,7 +999,7 @@ function StreamController() {
      * Auto Play indicates if the stream starts automatically as soon as it is initialized.
      * @return {boolean}
      */
-     function getAutoPlay() {
+    function getAutoPlay() {
         return autoPlay;
     }
 

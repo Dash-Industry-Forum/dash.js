@@ -193,8 +193,7 @@ function ScheduleController(config) {
     function _shouldClearScheduleTimer() {
         try {
             return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
-                    (playbackController.isPaused() && !playbackController.getStreamController().getInitialPlayback() && !settings.get().streaming.scheduling.scheduleWhilePaused) ||
-                    (playbackController.isPaused() && !playbackController.getStreamController().getAutoPlay() && !settings.get().streaming.scheduling.scheduleWhilePaused));
+                    (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
