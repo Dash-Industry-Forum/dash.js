@@ -128,8 +128,7 @@ function ScheduleController(config) {
     function schedule() {
         try {
             // Check if we are supposed to stop scheduling
-            if (_shouldClearScheduleTimer() || 
-                (playbackController.isPaused() && !settings.get().streaming.scheduling.scheduleWhilePaused)) {
+            if (_shouldClearScheduleTimer()) {
                 clearScheduleTimer();
                 return;
             }
@@ -193,7 +192,9 @@ function ScheduleController(config) {
      */
     function _shouldClearScheduleTimer() {
         try {
-            return (((type === Constants.TEXT) && !textController.isTextEnabled()));
+            return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
+                    (playbackController.isPaused() && !playbackController.getStreamController().getInitialPlayback() && !settings.get().streaming.scheduling.scheduleWhilePaused) ||
+                    (playbackController.isPaused() && !playbackController.getStreamController().getAutoPlay() && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
