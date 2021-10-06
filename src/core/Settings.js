@@ -796,7 +796,7 @@ function Settings() {
                 jumpLargeGaps: true,
                 smallGapLimit: 1.5,
                 threshold: 0.3,
-                enableSeekFix: false,
+                enableSeekFix: false
             },
             utcSynchronization: {
                 useManifestDateHeaderTimeSource: true,
