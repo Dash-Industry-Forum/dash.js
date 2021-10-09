@@ -114,7 +114,7 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
-        checkConfig();
+        _checkConfig();
 
         autoPlay = autoPl;
         protectionData = protData;
@@ -496,7 +496,7 @@ function StreamController() {
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
-        createPlaylistMetrics(PlayList.SEEK_START_REASON);
+        _createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     /**
@@ -698,7 +698,7 @@ function StreamController() {
 
             if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
-                createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
+                _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
             }
         }
@@ -755,7 +755,7 @@ function StreamController() {
         logger.debug('[onPlaybackStarted]');
         if (!initialPlayback && isPaused) {
             isPaused = false;
-            createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+            _createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
         }
     }
 
@@ -1214,7 +1214,7 @@ function StreamController() {
         dashMetrics.addPlayList();
     }
 
-    function createPlaylistMetrics(startReason) {
+    function _createPlaylistMetrics(startReason) {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
@@ -1305,7 +1305,7 @@ function StreamController() {
         return null;
     }
 
-    function checkConfig() {
+    function _checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !dashMetrics || !playbackController) {
@@ -1313,19 +1313,19 @@ function StreamController() {
         }
     }
 
-    function checkInitialize() {
+    function _checkInitialize() {
         if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
             throw new Error('initialize function has to be called previously');
         }
     }
 
     function load(url) {
-        checkConfig();
+        _checkConfig();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
-        checkInitialize();
+        _checkInitialize();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -1427,7 +1427,7 @@ function StreamController() {
     }
 
     function reset() {
-        checkConfig();
+        _checkConfig();
 
         timeSyncController.reset();
 
