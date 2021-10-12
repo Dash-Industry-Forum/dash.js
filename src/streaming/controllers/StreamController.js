@@ -753,13 +753,13 @@ function StreamController() {
      */
     function _onPlaybackStarted( /*e*/) {
         logger.debug('[onPlaybackStarted]');        
-        if (!initialPlayback && isPaused) {
-            isPaused = false;
+        if (!initialPlayback && isPaused) {            
             createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
         }
         if (initialPlayback) {
             initialPlayback = false;
         }
+        isPaused = false;
     }
 
     /**
