@@ -178,10 +178,6 @@ declare namespace dashjs {
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
-                seekGapFix?: {
-                    enabled?: boolean,
-                    threshold?: number
-                },
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
@@ -200,7 +196,8 @@ declare namespace dashjs {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
-                threshold?: number
+                threshold?: number,
+                enableSeekFix?: boolean
             },
             utcSynchronization?: {
                 useManifestDateHeaderTimeSource?: boolean,
