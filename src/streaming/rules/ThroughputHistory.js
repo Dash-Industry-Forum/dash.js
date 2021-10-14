@@ -137,6 +137,7 @@ function ThroughputHistory(config) {
 
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
+        // Low latency is enabled, we used the fetch API and received chunks
         if (settings.get().streaming.lowLatencyEnabled) {
             const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
             if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
@@ -146,7 +147,10 @@ function ThroughputHistory(config) {
             if (throughput === 0) {
                 throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
             }
-        } else {
+        }
+
+        // Standard case, we used standard XHR requests
+        else {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
         }
 

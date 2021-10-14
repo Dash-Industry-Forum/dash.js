@@ -197,6 +197,8 @@ function HTTPLoader(cfg) {
                 if (config.complete) {
                     config.complete(request, httpRequest.response.statusText);
                 }
+            } else {
+                _onerror();
             }
         };
 
