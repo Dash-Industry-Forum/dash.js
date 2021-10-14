@@ -80,7 +80,7 @@ function XHRLoader(cfg) {
         xhr.withCredentials = httpRequest.withCredentials;
 
         xhr.onload = httpRequest.onload;
-        xhr.onloadend = httpRequest.onend;
+        xhr.onloadend = httpRequest.onloadend;
         xhr.onerror = httpRequest.onerror;
         xhr.onprogress = httpRequest.progress;
         xhr.onabort = httpRequest.onabort;
@@ -99,8 +99,8 @@ function XHRLoader(cfg) {
     }
 
     instance = {
-        load: load,
-        abort: abort
+        load,
+        abort
     };
 
     return instance;

@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
 
 /**
  * @module FetchLoader
@@ -44,7 +45,7 @@ function FetchLoader(cfg) {
     cfg = cfg || {};
     const context = this.context;
     const requestModifier = cfg.requestModifier;
-    const lowLatencyThroughputModel = cfg.lowLatencyThroughputModel;
+    const lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
     const boxParser = cfg.boxParser;
     const settings = Settings(context).getInstance();
     let instance, dashMetrics;
@@ -152,7 +153,7 @@ function FetchLoader(cfg) {
                             };
                             httpRequest.progress(event);
                             httpRequest.onload();
-                            httpRequest.onend();
+                            httpRequest.onloadend();
                             return;
                         });
                     }
@@ -208,6 +209,7 @@ function FetchLoader(cfg) {
                                 return reader.read().then(processFetch);
                             });
                         }
+
                         // tee'ing streams is supported by all current major browsers
                         // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/tee
                         const [forMeasure, forConsumer] = response.body.tee();
@@ -248,7 +250,7 @@ function FetchLoader(cfg) {
                                 httpRequest.response.response = remaining.buffer;
                             }
                             httpRequest.onload();
-                            httpRequest.onend();
+                            httpRequest.onloadend();
                             return;
                         }
 
