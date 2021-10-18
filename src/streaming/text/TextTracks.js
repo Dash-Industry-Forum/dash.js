@@ -160,7 +160,7 @@ function TextTracks(config) {
 
             let onMetadataLoaded = function () {
                 const track = getTrackByIdx(defaultIndex);
-                if (track) {
+                if (track && track.renderingType === 'html') {
                     checkVideoSize.call(this, track, true);
                 }
                 eventBus.off(MediaPlayerEvents.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
