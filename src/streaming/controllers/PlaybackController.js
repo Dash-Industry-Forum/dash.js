@@ -181,7 +181,9 @@ function PlaybackController() {
         const DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
 
-        seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+        if (DVRWindow && !isNaN(DVRWindow.end)) {
+            seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+        }
     }
 
     function getTime() {
