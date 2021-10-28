@@ -96,6 +96,8 @@ function ProtectionController(config) {
         robustnessLevel = '';
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     }
 
     function checkConfig() {
@@ -122,8 +124,6 @@ function ProtectionController(config) {
 
         checkConfig();
 
-        eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, this);
-        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, this);
         mediaInfoArr.push(mediaInfo);
 
         // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
@@ -582,8 +582,8 @@ function ProtectionController(config) {
         licenseRequestFilters = [];
         licenseResponseFilters = [];
 
-        eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, this);
-        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, this);
+        eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
 
         setMediaElement(null);
 
