@@ -174,17 +174,17 @@ function KeySystemClearKey(config) {
     }
 
     instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData,
-        getSessionId: getSessionId,
+        uuid,
+        schemeIdURI,
+        systemString,
+        getInitData,
+        getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData,
+        getCDMData,
+        getSessionId,
         getLicenseServerUrlFromMediaInfo,
-        getClearKeysFromProtectionData: getClearKeysFromProtectionData
+        getClearKeysFromProtectionData
     };
 
     return instance;

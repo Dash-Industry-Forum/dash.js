@@ -104,10 +104,6 @@ function ProtectionModel_01b(config) {
         eventBus.trigger(events.TEARDOWN_COMPLETE);
     }
 
-    function getKeySystem() {
-        return keySystem;
-    }
-
     function getAllInitData() {
         const retVal = [];
         for (let i = 0; i < pendingSessions.length; i++) {
@@ -120,59 +116,66 @@ function ProtectionModel_01b(config) {
     }
 
     function requestKeySystemAccess(ksConfigurations) {
-        let ve = videoElement;
-        if (!ve) { // Must have a video element to do this capability tests
-            ve = document.createElement('video');
-        }
+        return new Promise((resolve, reject) => {
+            let ve = videoElement;
+            if (!ve) { // Must have a video element to do this capability tests
+                ve = document.createElement('video');
+            }
 
-        // Try key systems in order, first one with supported key system configuration
-        // is used
-        let found = false;
-        for (let ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
-            const systemString = ksConfigurations[ksIdx].ks.systemString;
-            const configs = ksConfigurations[ksIdx].configs;
-            let supportedAudio = null;
-            let supportedVideo = null;
-
-            // Try key system configs in order, first one with supported audio/video
+            // Try key systems in order, first one with supported key system configuration
             // is used
-            for (let configIdx = 0; configIdx < configs.length; configIdx++) {
-                //let audios = configs[configIdx].audioCapabilities;
-                const videos = configs[configIdx].videoCapabilities;
-                // Look for supported video container/codecs
-                if (videos && videos.length !== 0) {
-                    supportedVideo = []; // Indicates that we have a requested video config
-                    for (let videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-                        if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== '') {
-                            supportedVideo.push(videos[videoIdx]);
+            let found = false;
+            for (let ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+                const systemString = ksConfigurations[ksIdx].ks.systemString;
+                const configs = ksConfigurations[ksIdx].configs;
+                let supportedAudio = null;
+                let supportedVideo = null;
+
+                // Try key system configs in order, first one with supported audio/video
+                // is used
+                for (let configIdx = 0; configIdx < configs.length; configIdx++) {
+                    //let audios = configs[configIdx].audioCapabilities;
+                    const videos = configs[configIdx].videoCapabilities;
+                    // Look for supported video container/codecs
+                    if (videos && videos.length !== 0) {
+                        supportedVideo = []; // Indicates that we have a requested video config
+                        for (let videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+                            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== '') {
+                                supportedVideo.push(videos[videoIdx]);
+                            }
                         }
                     }
-                }
 
-                // No supported audio or video in this configuration OR we have
-                // requested audio or video configuration that is not supported
-                if ((!supportedAudio && !supportedVideo) ||
-                    (supportedAudio && supportedAudio.length === 0) ||
-                    (supportedVideo && supportedVideo.length === 0)) {
-                    continue;
-                }
+                    // No supported audio or video in this configuration OR we have
+                    // requested audio or video configuration that is not supported
+                    if ((!supportedAudio && !supportedVideo) ||
+                        (supportedAudio && supportedAudio.length === 0) ||
+                        (supportedVideo && supportedVideo.length === 0)) {
+                        continue;
+                    }
 
-                // This configuration is supported
-                found = true;
-                const ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
-                const ks = protectionKeyController.getKeySystemBySystemString(systemString);
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: new KeySystemAccess(ks, ksConfig) });
-                break;
+                    // This configuration is supported
+                    found = true;
+                    const ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
+                    const ks = protectionKeyController.getKeySystemBySystemString(systemString);
+                    const keySystemAccess = new KeySystemAccess(ks, ksConfig)
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
+                    resolve({ data: keySystemAccess });
+                    break;
+                }
             }
-        }
-        if (!found) {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! -- No valid audio/video content configurations detected!' });
-        }
+            if (!found) {
+                const errorMessage = 'Key system access denied! -- No valid audio/video content configurations detected!';
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage });
+                reject({ error: errorMessage });
+            }
+        })
+
     }
 
     function selectKeySystem(keySystemAccess) {
         keySystem = keySystemAccess.keySystem;
-        return Promise.resolve();
+        return Promise.resolve(keySystem);
     }
 
     function setMediaElement(mediaElement) {
@@ -259,13 +262,21 @@ function ProtectionModel_01b(config) {
         try {
             videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
         } catch (error) {
-            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message });
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {
+                data: null,
+                error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message
+            });
         }
     }
 
-    function setServerCertificate(/*serverCertificate*/) { /* Not supported */ }
-    function loadKeySession(/*sessionID*/) { /* Not supported */ }
-    function removeKeySession(/*sessionToken*/) { /* Not supported */ }
+    function setServerCertificate(/*serverCertificate*/) { /* Not supported */
+    }
+
+    function loadKeySession(/*sessionID*/) { /* Not supported */
+    }
+
+    function removeKeySession(/*sessionToken*/) { /* Not supported */
+    }
 
     function createEventHandler() {
         return {
@@ -413,7 +424,6 @@ function ProtectionModel_01b(config) {
     instance = {
         getAllInitData,
         requestKeySystemAccess,
-        getKeySystem,
         selectKeySystem,
         setMediaElement,
         createKeySession,

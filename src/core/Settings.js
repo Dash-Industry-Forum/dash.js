@@ -521,6 +521,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ * @property {boolean} ignoreEmeEncryptedEvent
+ * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  */
 
 /**
@@ -773,7 +775,8 @@ function Settings() {
                 applyServiceDescription: true
             },
             protection: {
-                keepProtectionMediaKeys: false
+                keepProtectionMediaKeys: false,
+                ignoreEmeEncryptedEvent: false
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
