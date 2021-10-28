@@ -78,7 +78,7 @@ function ProtectionController(config) {
 
     let instance,
         logger,
-        pendingNeedKeyData,
+        pendingKeySystemData,
         mediaInfoArr,
         protDataSet,
         sessionType,
@@ -90,7 +90,7 @@ function ProtectionController(config) {
 
     function setup() {
         logger = debug.getLogger(instance);
-        pendingNeedKeyData = [];
+        pendingKeySystemData = [];
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
@@ -127,7 +127,7 @@ function ProtectionController(config) {
         mediaInfoArr.push(mediaInfo);
 
         // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-        // and video will be the same.  Just use one valid MediaInfo object
+        // and video will be the same. Just use one valid MediaInfo object
         let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
 
         // Reorder key systems according to priority order provided in protectionData
@@ -152,7 +152,7 @@ function ProtectionController(config) {
 
         // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
         if (keySystemSelectionInProgress) {
-            pendingNeedKeyData.push(supportedKS);
+            pendingKeySystemData.push(supportedKS);
         }
 
         // First time, so we need to select a key system
@@ -170,7 +170,7 @@ function ProtectionController(config) {
         keySystemSelectionInProgress = true;
         const requestedKeySystems = [];
 
-        pendingNeedKeyData.push(supportedKS);
+        pendingKeySystemData.push(supportedKS);
 
         // Add all key systems to our request list since we have yet to select a key system
         for (let i = 0; i < supportedKS.length; i++) {
@@ -207,10 +207,10 @@ function ProtectionController(config) {
 
                 // Create key sessions for the different AdaptationSets
                 let ksIdx;
-                for (let i = 0; i < pendingNeedKeyData.length; i++) {
-                    for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
-                        if (selectedKeySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                            const current = pendingNeedKeyData[i][ksIdx]
+                for (let i = 0; i < pendingKeySystemData.length; i++) {
+                    for (ksIdx = 0; ksIdx < pendingKeySystemData[i].length; ksIdx++) {
+                        if (selectedKeySystem === pendingKeySystemData[i][ksIdx].ks) {
+                            const current = pendingKeySystemData[i][ksIdx]
                             _loadOrCreateKeySession(protData, current)
                             break;
                         }
@@ -599,6 +599,7 @@ function ProtectionController(config) {
         needkeyRetries = [];
 
         mediaInfoArr = [];
+        pendingKeySystemData = [];
     }
 
     /**
