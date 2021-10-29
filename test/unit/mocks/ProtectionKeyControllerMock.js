@@ -11,6 +11,10 @@ function ProtectionKeyControllerMock () {
     this.getLicenseServer = function () {
         return null;
     };
+
+    this.getLicenseServerModelInstance = function () {
+        return {};
+    }
 }
 
 export default ProtectionKeyControllerMock;

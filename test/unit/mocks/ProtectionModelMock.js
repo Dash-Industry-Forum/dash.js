@@ -14,6 +14,7 @@ function ProtectionModelMock (config) {
     };
 
     this.requestKeySystemAccess = function () {
+        return Promise.resolve();
     };
 }
 
