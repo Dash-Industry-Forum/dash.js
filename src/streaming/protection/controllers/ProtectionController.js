@@ -39,6 +39,7 @@ import LicenseResponse from '../vo/LicenseResponse';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
 import Constants from '../../constants/Constants';
+import FactoryMaker from '../../../core/FactoryMaker';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -489,10 +490,10 @@ function ProtectionController(config) {
         checkConfig();
         if (element) {
             protectionModel.setMediaElement(element);
-            eventBus.on(events.NEED_KEY, _onNeedKey, this);
+            eventBus.on(events.NEED_KEY, _onNeedKey, instance);
         } else if (element === null) {
             protectionModel.setMediaElement(element);
-            eventBus.off(events.NEED_KEY, _onNeedKey, this);
+            eventBus.off(events.NEED_KEY, _onNeedKey, instance);
         }
     }
 
@@ -559,13 +560,13 @@ function ProtectionController(config) {
      * @ignore
      */
     function reset() {
+        eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
+
         checkConfig();
 
         licenseRequestFilters = [];
         licenseResponseFilters = [];
-
-        eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
 
         setMediaElement(null);
 
@@ -1076,4 +1077,4 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-export default dashjs.FactoryMaker.getClassFactory(ProtectionController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ProtectionController); /* jshint ignore:line */
