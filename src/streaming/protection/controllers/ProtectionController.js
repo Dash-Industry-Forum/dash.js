@@ -162,7 +162,7 @@ function ProtectionController(config) {
 
         // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
         else if (selectedKeySystem) {
-            _initiateWithExistingKeySystem(supportedKS, fromManifest);
+            _initiateWithExistingKeySystem(supportedKS);
         }
     }
 
@@ -235,40 +235,24 @@ function ProtectionController(config) {
      * @param {boolean} fromManifest
      * @private
      */
-    function _initiateWithExistingKeySystem(supportedKS, fromManifest) {
-        const requestedKeySystems = [];
-
+    function _initiateWithExistingKeySystem(supportedKS,) {
         const ksIdx = supportedKS.findIndex((entry) => {
             return entry.ks === selectedKeySystem;
         });
 
-        if (ksIdx === -1 || !supportedKS[ksIdx].initData) {
+        const current = supportedKS[ksIdx];
+        if (ksIdx === -1 || !current.initData) {
             return;
         }
 
-        //  we only need to call this if the init data has changed
-        const initDataForKs = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, supportedKS[ksIdx].initData);
+        //  we only need to create or load a new key session if the init data has changed
+        const initDataForKs = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, current.initData);
         if (_isInitDataDuplicate(initDataForKs)) {
             return;
         }
 
-        requestedKeySystems.push({
-            ks: supportedKS[ksIdx].ks,
-            configs: [_getKeySystemConfiguration(selectedKeySystem)]
-        });
-
-
-        protectionModel.requestKeySystemAccess(requestedKeySystems)
-            .then(() => {
-                const protData = _getProtDataForKeySystem(selectedKeySystem);
-                const current = supportedKS[ksIdx];
-                _loadOrCreateKeySession(protData, current);
-            })
-            .catch((event) => {
-                if (!fromManifest) {
-                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
-                }
-            })
+        const protData = _getProtDataForKeySystem(selectedKeySystem);
+        _loadOrCreateKeySession(protData, current);
     }
 
     /**
@@ -387,13 +371,11 @@ function ProtectionController(config) {
     }
 
     /**
-     * Removes all entries from the mediaInfoArr array for a specific stream id
+     * Removes all entries from the mediaInfoArr
      * @param {String} streamId
      */
-    function clearMediaInfoArrayByStreamId(streamId) {
-        mediaInfoArr = mediaInfoArr.filter((mediaInfo) => {
-            return mediaInfo.streamInfo.id !== streamId;
-        });
+    function clearMediaInfoArray() {
+        mediaInfoArr = [];
     }
 
     /**
@@ -1070,7 +1052,7 @@ function ProtectionController(config) {
 
     instance = {
         initializeForMedia,
-        clearMediaInfoArrayByStreamId,
+        clearMediaInfoArray,
         createKeySession,
         loadKeySession,
         removeKeySession,
