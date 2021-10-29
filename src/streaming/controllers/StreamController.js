@@ -754,9 +754,12 @@ function StreamController() {
     function _onPlaybackStarted( /*e*/) {
         logger.debug('[onPlaybackStarted]');
         if (!initialPlayback && isPaused) {
-            isPaused = false;
             _createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
         }
+        if (initialPlayback) {
+            initialPlayback = false;
+        }
+        isPaused = false;
     }
 
     /**
@@ -982,6 +985,22 @@ function StreamController() {
      */
     function getActiveStream() {
         return activeStream;
+    }
+
+    /**
+     * Initial playback indicates if we have called play() for the first time yet.
+     * @return {*}
+     */
+    function getInitialPlayback() {
+        return initialPlayback;
+    }
+
+    /**
+     * Auto Play indicates if the stream starts automatically as soon as it is initialized.
+     * @return {boolean}
+     */
+    function getAutoPlay() {
+        return autoPlay;
     }
 
     /**
@@ -1504,6 +1523,8 @@ function StreamController() {
         getHasMediaOrInitialisationError,
         getStreams,
         getActiveStream,
+        getInitialPlayback,
+        getAutoPlay,
         reset
     };
 
