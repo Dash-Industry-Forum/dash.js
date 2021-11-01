@@ -119,7 +119,7 @@ function Protection() {
         protectionKeyController.setConfig({ debug: config.debug, BASE64: config.BASE64 });
         protectionKeyController.initialize();
 
-        let protectionModel =  getProtectionModel(config);
+        let protectionModel =  _getProtectionModel(config);
 
         if (!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
             controller = ProtectionController(context).create({
@@ -138,7 +138,7 @@ function Protection() {
         return controller;
     }
 
-    function getProtectionModel(config) {
+    function _getProtectionModel(config) {
         const debug = config.debug;
         const logger = debug.getLogger(instance);
         const eventBus = config.eventBus;
@@ -149,19 +149,19 @@ function Protection() {
             (!videoElement || videoElement.mediaKeys !== undefined)) {
             logger.info('EME detected on this user agent! (ProtectionModel_21Jan2015)');
             return ProtectionModel_21Jan2015(context).create({ debug: debug, eventBus: eventBus, events: config.events });
-        } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
+        } else if (_getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
             logger.info('EME detected on this user agent! (ProtectionModel_3Feb2014)');
-            return ProtectionModel_3Feb2014(context).create({ debug: debug, eventBus: eventBus, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014) });
-        } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
+            return ProtectionModel_3Feb2014(context).create({ debug: debug, eventBus: eventBus, events: config.events, api: _getAPI(videoElement, APIS_ProtectionModel_3Feb2014) });
+        } else if (_getAPI(videoElement, APIS_ProtectionModel_01b)) {
             logger.info('EME detected on this user agent! (ProtectionModel_01b)');
-            return ProtectionModel_01b(context).create({ debug: debug, eventBus: eventBus, errHandler: errHandler, events: config.events, api: getAPI(videoElement, APIS_ProtectionModel_01b) });
+            return ProtectionModel_01b(context).create({ debug: debug, eventBus: eventBus, errHandler: errHandler, events: config.events, api: _getAPI(videoElement, APIS_ProtectionModel_01b) });
         } else {
             logger.warn('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
             return null;
         }
     }
 
-    function getAPI(videoElement, apis) {
+    function _getAPI(videoElement, apis) {
         for (let i = 0; i < apis.length; i++) {
             const api = apis[i];
             // detect if api is supported by browser
@@ -177,7 +177,7 @@ function Protection() {
     }
 
     instance = {
-        createProtectionSystem: createProtectionSystem
+        createProtectionSystem
     };
 
     return instance;

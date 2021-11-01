@@ -100,7 +100,7 @@ function ProtectionModel_21Jan2015(config) {
                     });
                     // Close the session and handle errors, otherwise promise
                     // resolver above will be called
-                    closeKeySessionInternal(session).catch(function () {
+                    _closeKeySessionInternal(session).catch(function () {
                         done(s);
                     });
 
@@ -117,15 +117,11 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             session = sessions[i];
             if (!session.getUsable()) {
-                closeKeySessionInternal(session).catch(function () {
+                _closeKeySessionInternal(session).catch(function () {
                     removeSession(session);
                 });
             }
         }
-    }
-
-    function getKeySystem() {
-        return keySystem;
     }
 
     function getAllInitData() {
@@ -139,24 +135,82 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function requestKeySystemAccess(ksConfigurations) {
-        requestKeySystemAccessInternal(ksConfigurations, 0);
+        return new Promise((resolve, reject) => {
+            _requestKeySystemAccessInternal(ksConfigurations, 0, resolve, reject);
+        })
     }
 
-    function selectKeySystem(keySystemAccess) {
-        keySystemAccess.mksa.createMediaKeys().then(function (mkeys) {
-            keySystem = keySystemAccess.keySystem;
-            mediaKeys = mkeys;
-            if (videoElement) {
-                videoElement.setMediaKeys(mediaKeys).then(function () {
-                    eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-                });
-            } else {
-                eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-            }
+    /**
+     * Initializes access to a key system. Once we found a valid configuration we get a mediaKeySystemAccess object
+     * @param ksConfigurations
+     * @param idx
+     * @param resolve
+     * @param reject
+     * @private
+     */
+    function _requestKeySystemAccessInternal(ksConfigurations, idx, resolve, reject) {
+        if (navigator.requestMediaKeySystemAccess === undefined ||
+            typeof navigator.requestMediaKeySystemAccess !== 'function') {
+            const msg = 'Insecure origins are not allowed';
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: msg });
+            reject({ error: msg });
+            return;
+        }
 
-        }).catch(function () {
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
-        });
+        const keySystem = ksConfigurations[idx].ks;
+        const configs = ksConfigurations[idx].configs;
+        let systemString = keySystem.systemString;
+
+        // Patch to support persistent licenses on Edge browser (see issue #2658)
+        if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+            systemString += '.recommendation';
+        }
+
+        navigator.requestMediaKeySystemAccess(systemString, configs)
+            .then((mediaKeySystemAccess) => {
+                const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
+                    mediaKeySystemAccess.getConfiguration() : null;
+                const keySystemAccess = new KeySystemAccess(keySystem, configuration);
+
+                keySystemAccess.mksa = mediaKeySystemAccess;
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
+                resolve({ data: keySystemAccess });
+            })
+            .catch((error) => {
+                if (idx + 1 < ksConfigurations.length) {
+                    _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
+                } else {
+                    const errorMessage = 'Key system access denied! ';
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + error.message });
+                    reject({ error: errorMessage + error.message });
+                }
+            });
+    }
+
+    /**
+     * Selects a key system by creating the mediaKeys and adding them to the video element
+     * @param keySystemAccess
+     * @return {Promise<unknown>}
+     */
+    function selectKeySystem(keySystemAccess) {
+        return new Promise((resolve, reject) => {
+            keySystemAccess.mksa.createMediaKeys()
+                .then((mkeys) => {
+                    keySystem = keySystemAccess.keySystem;
+                    mediaKeys = mkeys;
+                    if (videoElement) {
+                        return videoElement.setMediaKeys(mediaKeys)
+                    } else {
+                        return Promise.resolve();
+                    }
+                })
+                .then(() => {
+                    resolve(keySystem);
+                })
+                .catch(function () {
+                    reject({ error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
+                });
+        })
     }
 
     function setMediaElement(mediaElement) {
@@ -194,6 +248,12 @@ function ProtectionModel_21Jan2015(config) {
         });
     }
 
+    /**
+     * Create a key session, a session token and initialize a request by calling generateRequest
+     * @param initData
+     * @param protData
+     * @param sessionType
+     */
     function createKeySession(initData, protData, sessionType) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not create sessions until you have selected a key system');
@@ -201,16 +261,15 @@ function ProtectionModel_21Jan2015(config) {
 
         const session = mediaKeys.createSession(sessionType);
         const sessionToken = createSessionToken(session, initData, sessionType);
-        const ks = this.getKeySystem();
 
-        // Generate initial key request.
-        // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
-        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData || (protData && protData.clearkeys)) ? 'keyids' : 'cenc';
+
+        // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
+        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData || (protData && protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+
         session.generateRequest(dataType, initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
         }).catch(function (error) {
-            // TODO: Better error string
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CREATED, {
                 data: null,
@@ -231,7 +290,7 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_UPDATED);
             })
             .catch(function (error) {
-                eventBus.trigger(events.KEY_ERROR, {error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+                eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken) });
             });
     }
 
@@ -289,7 +348,7 @@ function ProtectionModel_21Jan2015(config) {
 
     function closeKeySession(sessionToken) {
         // Send our request to the key session
-        closeKeySessionInternal(sessionToken).catch(function (error) {
+        _closeKeySessionInternal(sessionToken).catch(function (error) {
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CLOSED, {
                 data: null,
@@ -298,43 +357,7 @@ function ProtectionModel_21Jan2015(config) {
         });
     }
 
-    function requestKeySystemAccessInternal(ksConfigurations, idx) {
-
-        if (navigator.requestMediaKeySystemAccess === undefined ||
-            typeof navigator.requestMediaKeySystemAccess !== 'function') {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Insecure origins are not allowed' });
-            return;
-        }
-
-        (function (i) {
-            const keySystem = ksConfigurations[i].ks;
-            const configs = ksConfigurations[i].configs;
-            let systemString = keySystem.systemString;
-
-            // PATCH to support persistent licenses on Edge browser (see issue #2658)
-            if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
-                systemString += '.recommendation';
-            }
-
-            navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
-                // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
-                const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                    mediaKeySystemAccess.getConfiguration() : null;
-                const keySystemAccess = new KeySystemAccess(keySystem, configuration);
-                keySystemAccess.mksa = mediaKeySystemAccess;
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
-
-            }).catch(function (error) {
-                if (++i < ksConfigurations.length) {
-                    requestKeySystemAccessInternal(ksConfigurations, i);
-                } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! ' + error.message });
-                }
-            });
-        })(idx);
-    }
-
-    function closeKeySessionInternal(sessionToken) {
+    function _closeKeySessionInternal(sessionToken) {
         const session = sessionToken.session;
 
         // Remove event listeners
@@ -467,7 +490,7 @@ function ProtectionModel_21Jan2015(config) {
         session.addEventListener('message', token);
 
         // Register callback for session closed Promise
-        session.closed.then(function () {
+        session.closed.then(() => {
             removeSession(token);
             logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionID() });
@@ -480,19 +503,18 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     instance = {
-        getAllInitData: getAllInitData,
-        requestKeySystemAccess: requestKeySystemAccess,
-        getKeySystem: getKeySystem,
-        selectKeySystem: selectKeySystem,
-        setMediaElement: setMediaElement,
-        setServerCertificate: setServerCertificate,
-        createKeySession: createKeySession,
-        updateKeySession: updateKeySession,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
-        closeKeySession: closeKeySession,
-        stop: stop,
-        reset: reset
+        getAllInitData,
+        requestKeySystemAccess,
+        selectKeySystem,
+        setMediaElement,
+        setServerCertificate,
+        createKeySession,
+        updateKeySession,
+        loadKeySession,
+        removeKeySession,
+        closeKeySession,
+        stop,
+        reset
     };
 
     setup();

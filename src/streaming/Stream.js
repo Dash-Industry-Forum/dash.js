@@ -670,9 +670,11 @@ function Stream(config) {
 
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
-            logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvents.push(e);
-            manifestUpdater.refreshManifest();
+            if (!manifestUpdater.getIsUpdating()) {
+                logger.debug('Stream -  Refreshing manifest for switch track');
+                manifestUpdater.refreshManifest();
+            }
         } else {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {
@@ -713,7 +715,7 @@ function Stream(config) {
         if (protectionController) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
-            protectionController.clearMediaInfoArrayByStreamId(getId());
+            protectionController.clearMediaInfoArray();
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
                 const type = streamProcessors[i].getType();
                 const mediaInfo = streamProcessors[i].getMediaInfo();
