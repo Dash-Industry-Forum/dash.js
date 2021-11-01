@@ -43,7 +43,7 @@ declare namespace dashjs {
     interface ProtectionController {
         initializeForMedia(mediaInfo: ProtectionMediaInfo): void;
 
-        clearMediaInfoArrayByStreamId(streamId: string): void;
+        clearMediaInfoArray(): void;
 
         createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
 
