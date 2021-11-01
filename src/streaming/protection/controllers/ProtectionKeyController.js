@@ -279,7 +279,7 @@ function ProtectionKeyController() {
      * @instance
      *
      */
-    function getLicenseServer(keySystem, protData, messageType) {
+    function getLicenseServerModelInstance(keySystem, protData, messageType) {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
@@ -340,18 +340,18 @@ function ProtectionKeyController() {
     }
 
     instance = {
-        initialize: initialize,
-        setProtectionData: setProtectionData,
-        isClearKey: isClearKey,
-        initDataEquals: initDataEquals,
-        getKeySystems: getKeySystems,
-        setKeySystems: setKeySystems,
-        getKeySystemBySystemString: getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystems: getSupportedKeySystems,
-        getLicenseServer: getLicenseServer,
-        processClearKeyLicenseRequest: processClearKeyLicenseRequest,
-        setConfig: setConfig
+        initialize,
+        setProtectionData,
+        isClearKey,
+        initDataEquals,
+        getKeySystems,
+        setKeySystems,
+        getKeySystemBySystemString,
+        getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystems,
+        getLicenseServerModelInstance,
+        processClearKeyLicenseRequest,
+        setConfig
     };
 
     return instance;

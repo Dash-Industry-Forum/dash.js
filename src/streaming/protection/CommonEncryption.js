@@ -29,6 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
+    attributes: ['Laurl','laurl'],
+    prefixes: ['clearkey', 'dashif']
+};
+
 /**
  * @class
  * @ignore
@@ -210,6 +215,54 @@ class CommonEncryption {
         }
 
         return pssh;
+    }
+
+    static getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri) {
+        try {
+
+            if (!mediaInfo || mediaInfo.length === 0) {
+                return null;
+            }
+
+            let i = 0;
+            let licenseServer = null;
+
+            while (i < mediaInfo.length && !licenseServer) {
+                const info = mediaInfo[i];
+
+                if (info && info.contentProtection && info.contentProtection.length > 0) {
+                    const targetProtectionData = info.contentProtection.filter((cp) => {
+                        return cp.schemeIdUri && cp.schemeIdUri === schemeIdUri;
+                    });
+
+                    if (targetProtectionData && targetProtectionData.length > 0) {
+                        let j = 0;
+                        while (j < targetProtectionData.length && !licenseServer) {
+                            const ckData = targetProtectionData[j];
+                            let k = 0;
+                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
+                                let l = 0;
+                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
+                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
+                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
+                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
+                                        licenseServer = ckData[attribute].__text;
+                                    }
+                                    l += 1;
+                                }
+                                k += 1;
+                            }
+                            j += 1;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            return licenseServer;
+        } catch
+            (e) {
+            return null;
+        }
     }
 }
 

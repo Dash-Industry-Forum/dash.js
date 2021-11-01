@@ -389,7 +389,22 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "License server via MPD",
+                "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
+                "href": "drm/dashif-laurl.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
+            
         ]
     },
     {

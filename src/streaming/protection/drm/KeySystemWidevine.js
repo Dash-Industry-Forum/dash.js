@@ -87,16 +87,16 @@ function KeySystemWidevine(config) {
     }
 
     instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        init: init,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData,
-        getSessionId: getSessionId
+        uuid,
+        schemeIdURI,
+        systemString,
+        init,
+        getInitData,
+        getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData,
+        getCDMData,
+        getSessionId
     };
 
     return instance;
