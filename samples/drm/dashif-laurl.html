@@ -47,6 +47,15 @@
             player.initialize(video, url, true);
             player.setProtectionData(protData);
         }
+        function check() {
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+                var div = document.getElementById('http-warning');
+                div.innerHTML = out;
+                div.style.display = ''
+            }
+        }
     </script>
 </head>
 <body>
@@ -58,6 +67,13 @@
                  src="../lib/img/dashjs-logo.png"
                  width="200">
         </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
@@ -87,6 +103,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        check();
         init();
     });
 </script>
