@@ -1151,7 +1151,7 @@ function StreamProcessor(config) {
     }
 
     function _onSeekTarget(e) {
-        if (e && e.time) {
+        if (e && !isNaN(e.time)) {
             setExplicitBufferingTime(e.time);
             bufferController.setSeekTarget(e.time);
         }
