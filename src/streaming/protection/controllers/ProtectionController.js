@@ -892,6 +892,7 @@ function ProtectionController(config) {
         let url = null;
         const message = keyMessage.message;
 
+        // Check if the url is defined by the application
         if (protData && protData.serverURL) {
             const serverURL = protData.serverURL;
             if (typeof serverURL === 'string' && serverURL !== '') {
@@ -899,15 +900,24 @@ function ProtectionController(config) {
             } else if (typeof serverURL === 'object' && serverURL.hasOwnProperty(messageType)) {
                 url = serverURL[messageType];
             }
-        } else if (protData && protData.laURL && protData.laURL !== '') {
+        }
+
+        // This is the old way of providing the url
+        else if (protData && protData.laURL && protData.laURL !== '') {
             url = protData.laURL;
-        } else {
-            // For clearkey use the url defined in the manifest
-            if (protectionKeyController.isClearKey(selectedKeySystem)) {
-                url = selectedKeySystem.getLicenseServerUrlFromMediaInfo(mediaInfoArr);
-            } else {
+        }
+
+        // No url provided by the app. Check the manifest and the pssh
+        else {
+            // Check for url defined in the manifest
+            url = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfoArr, selectedKeySystem.schemeIdURI);
+
+            // In case we are not using Clearky we can still get a url from the pssh.
+            if (!url && !protectionKeyController.isClearKey(selectedKeySystem)) {
                 const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
                 url = selectedKeySystem.getLicenseServerURLFromInitData(psshData);
+
+                // Still no url, check the keymessage
                 if (!url) {
                     url = keyMessage.laURL;
                 }
