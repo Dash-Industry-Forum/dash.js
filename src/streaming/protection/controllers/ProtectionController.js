@@ -145,8 +145,8 @@ function ProtectionController(config) {
 
     /**
      * Selects a key system if we dont have any one yet. Otherwise we use the existing key system and trigger a new license request if the initdata has changed
-     * @param supportedKS
-     * @param fromManifest
+     * @param {array} supportedKS
+     * @param {boolean} fromManifest
      * @private
      */
     function _selectKeySystem(supportedKS, fromManifest) {
@@ -167,6 +167,12 @@ function ProtectionController(config) {
         }
     }
 
+    /**
+     * We do not have a key system yet. Select one
+     * @param {array} supportedKS
+     * @param {boolean} fromManifest
+     * @private
+     */
     function _selectInitialKeySystem(supportedKS, fromManifest) {
         keySystemSelectionInProgress = true;
         const requestedKeySystems = [];
@@ -231,9 +237,8 @@ function ProtectionController(config) {
     }
 
     /**
-     * If we have already selected a keysytem we only need to create a new key session and issue a new license request if the init data has changed
+     * If we have already selected a keysytem we only need to create a new key session and issue a new license request if the init data has changed.
      * @param {array} supportedKS
-     * @param {boolean} fromManifest
      * @private
      */
     function _initiateWithExistingKeySystem(supportedKS,) {
@@ -258,31 +263,31 @@ function ProtectionController(config) {
 
     /**
      * Loads an existing key session if we already have a session id. Otherwise we create a new key session
-     * @param protData
-     * @param current
+     * @param {object} protData
+     * @param {object} keySystemInfo
      * @private
      */
-    function _loadOrCreateKeySession(protData, current) {
+    function _loadOrCreateKeySession(protData, keySystemInfo) {
         // Clearkey
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
             // initData and overwrite possible initData indicated in encrypted event (EME)
             if (protData && protData.hasOwnProperty('clearkeys')) {
                 const initData = { kids: Object.keys(protData.clearkeys) };
-                current.initData = new TextEncoder().encode(JSON.stringify(initData));
+                keySystemInfo.initData = new TextEncoder().encode(JSON.stringify(initData));
             }
         }
 
         // Reuse existing KeySession
-        if (current.sessionId) {
+        if (keySystemInfo.sessionId) {
             // Load MediaKeySession with sessionId
-            loadKeySession(current.sessionId, current.initData);
+            loadKeySession(keySystemInfo.sessionId, keySystemInfo.initData);
         }
 
         // Create a new KeySession
-        else if (current.initData !== null) {
+        else if (keySystemInfo.initData !== null) {
             // Create new MediaKeySession with initData
-            createKeySession(current.initData, current.cdmData);
+            createKeySession(keySystemInfo.initData, keySystemInfo.cdmData);
         }
     }
 
@@ -344,8 +349,8 @@ function ProtectionController(config) {
 
     /**
      * Returns the protectionData for a specific keysystem as specified by the application.
-     * @param keySystem
-     * @return {null}
+     * @param {object} keySystem
+     * @return {object | null}
      * @private
      */
     function _getProtDataForKeySystem(keySystem) {
@@ -373,7 +378,6 @@ function ProtectionController(config) {
 
     /**
      * Removes all entries from the mediaInfoArr
-     * @param {String} streamId
      */
     function clearMediaInfoArray() {
         mediaInfoArr = [];
@@ -587,7 +591,7 @@ function ProtectionController(config) {
 
     /**
      * Returns an object corresponding to the EME MediaKeySystemConfiguration dictionary
-     * @param keySystem
+     * @param {object} keySystem
      * @return {KeySystemConfiguration}
      * @private
      */
@@ -617,7 +621,7 @@ function ProtectionController(config) {
 
     /**
      * Event handler for when the status of the key has changed
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onKeyStatusChanged(e) {
@@ -630,7 +634,7 @@ function ProtectionController(config) {
 
     /**
      * Event handler for the key message event. Once we have a key message we can issue a license request
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onKeyMessage(e) {
@@ -676,8 +680,8 @@ function ProtectionController(config) {
 
     /**
      * Notify other classes that the license request was completed
-     * @param data
-     * @param error
+     * @param {object} data
+     * @param {object} error
      * @private
      */
     function _sendLicenseRequestCompleteEvent(data, error) {
@@ -686,9 +690,9 @@ function ProtectionController(config) {
 
     /**
      * Start issuing a license request
-     * @param keyMessage
-     * @param licenseServerData
-     * @param protData
+     * @param {object} keyMessage
+     * @param {object} licenseServerData
+     * @param {object} protData
      * @private
      */
     function _issueLicenseRequest(keyMessage, licenseServerData, protData) {
@@ -778,12 +782,12 @@ function ProtectionController(config) {
 
     /**
      * Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-     * @param request
-     * @param retriesCount
-     * @param timeout
-     * @param onLoad
-     * @param onAbort
-     * @param onError
+     * @param {object} request
+     * @param {number} retriesCount
+     * @param {number} timeout
+     * @param {function} onLoad
+     * @param {function} onAbort
+     * @param {function} onError
      * @private
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
@@ -876,11 +880,11 @@ function ProtectionController(config) {
 
     /**
      * Returns the url of the license server
-     * @param protData
-     * @param messageType
-     * @param sessionToken
-     * @param keyMessage
-     * @param licenseServerData
+     * @param {object} protData
+     * @param {string} messageType
+     * @param {object} sessionToken
+     * @param {object} keyMessage
+     * @param {object} licenseServerData
      * @return {*}
      * @private
      */
@@ -917,8 +921,8 @@ function ProtectionController(config) {
 
     /**
      * Add new headers to the existing ones
-     * @param reqHeaders
-     * @param headers
+     * @param {array} reqHeaders
+     * @param {object} headers
      * @private
      */
     function _updateHeaders(reqHeaders, headers) {
@@ -931,11 +935,11 @@ function ProtectionController(config) {
 
     /**
      * Reports an error that might have occured during the license request
-     * @param xhr
-     * @param eventData
-     * @param keySystemString
-     * @param messageType
-     * @param licenseServerData
+     * @param {object} xhr
+     * @param {object} eventData
+     * @param {string} keySystemString
+     * @param {string} messageType
+     * @param {object} licenseServerData
      * @private
      */
     function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
@@ -947,8 +951,8 @@ function ProtectionController(config) {
 
     /**
      * Applies custom filters defined by the application
-     * @param filters
-     * @param param
+     * @param {array} filters
+     * @param {object} param
      * @return {Promise<void>|*}
      * @private
      */
@@ -963,8 +967,8 @@ function ProtectionController(config) {
 
     /**
      * Event handler for "needkey" and "encrypted" events
-     * @param event
-     * @param retry
+     * @param {object} event
+     * @param {number} retry
      */
     function _onNeedKey(event, retry) {
         if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
@@ -1027,7 +1031,7 @@ function ProtectionController(config) {
 
     /**
      * Sets all available key systems
-     * @param keySystems
+     * @param {array} keySystems
      */
     function setKeySystems(keySystems) {
         if (protectionKeyController) {
@@ -1037,7 +1041,7 @@ function ProtectionController(config) {
 
     /**
      * Sets the request filters to be applied before the license request is made
-     * @param filters
+     * @param {array} filters
      */
     function setLicenseRequestFilters(filters) {
         licenseRequestFilters = filters;
@@ -1045,7 +1049,7 @@ function ProtectionController(config) {
 
     /**
      * Sets the response filters to be applied after the license response has been received.
-     * @param filters
+     * @param {array} filters
      */
     function setLicenseResponseFilters(filters) {
         licenseResponseFilters = filters;
