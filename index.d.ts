@@ -201,6 +201,7 @@ declare namespace dashjs {
                 enableSeekFix?: boolean
             },
             utcSynchronization?: {
+                enabled?: boolean,
                 useManifestDateHeaderTimeSource?: boolean,
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
