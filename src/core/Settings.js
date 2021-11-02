@@ -108,6 +108,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
+ *                enabled: true,
  *                useManifestDateHeaderTimeSource: true,
  *                backgroundAttempts: 2,
  *                timeBetweenSyncAttempts: 30,
@@ -378,7 +379,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} UtcSynchronizationSettings
- *
+ * @property {boolean} [enabled=true]
+ * Enables or disables the UTC clock synchronization
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
@@ -802,6 +804,7 @@ function Settings() {
                 enableSeekFix: false
             },
             utcSynchronization: {
+                enabled: true,
                 useManifestDateHeaderTimeSource: true,
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,
