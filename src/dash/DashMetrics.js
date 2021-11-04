@@ -332,7 +332,7 @@ function DashMetrics(config) {
      * @ignore
      */
     function addManifestUpdate(request) {
-        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
+        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.startDate, request.endDate);
     }
 
     /**
@@ -354,9 +354,9 @@ function DashMetrics(config) {
             responseURL,
             request.serviceLocation || null,
             request.range || null,
-            request.requestStartDate,
+            request.startDate,
             request.firstByteDate,
-            request.requestEndDate,
+            request.endDate,
             responseStatus,
             request.duration,
             responseHeaders,

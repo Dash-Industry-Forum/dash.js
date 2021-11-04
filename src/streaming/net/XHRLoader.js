@@ -60,8 +60,8 @@ function XHRLoader(cfg) {
             xhr.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
+        if (!request.startDate) {
+            request.startDate = requestStartTime;
         }
 
         if (requestModifier) {

@@ -48,9 +48,9 @@ class FragmentRequest {
         this.range = null;
         this.url = url || null;
         this.serviceLocation = null;
-        this.requestStartDate = null;
+        this.startDate = null;
         this.firstByteDate = null;
-        this.requestEndDate = null;
+        this.endDate = null;
         this.quality = NaN;
         this.index = NaN;
         this.availabilityStartTime = null;

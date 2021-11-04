@@ -896,6 +896,7 @@ function Settings() {
                         latencyFastHalfLifeCount: 1
                     }
                 },
+                useResourceTimingApi: true,
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,

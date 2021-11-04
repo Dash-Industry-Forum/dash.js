@@ -74,8 +74,8 @@ function FetchLoader(cfg) {
             }
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
+        if (!request.startDate) {
+            request.startDate = requestStartTime;
         }
 
         if (requestModifier) {

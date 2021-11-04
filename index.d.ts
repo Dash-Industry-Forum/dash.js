@@ -1133,8 +1133,8 @@ declare namespace dashjs {
         mediaType: MediaType;
         quality: number;
         representationId: string;
-        requestStartDate: Date;
-        requestEndDate: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         responseType: string;
         serviceLocation: string;
         startTime: number;
