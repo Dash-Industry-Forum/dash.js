@@ -403,10 +403,14 @@ function SourceBufferSink(config) {
                 appendQueue = [];
                 if (mediaSource.readyState === 'open') {
                     _waitForUpdateEnd(() => {
-                        if (buffer) {
-                            buffer.abort();
+                        try {
+                            if (buffer) {
+                                buffer.abort();
+                            }
+                            resolve();
+                        } catch (e) {
+                            resolve();
                         }
-                        resolve();
                     });
                 } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
                     buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
@@ -418,7 +422,6 @@ function SourceBufferSink(config) {
                 resolve();
             }
         });
-
     }
 
     function _executeCallback() {
