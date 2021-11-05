@@ -320,7 +320,7 @@ function ProtectionController(config) {
      * @ignore
      */
     function createKeySession(keySystemInfo) {
-        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo.initData);
+        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
 
         if (initDataForKS) {
 
@@ -343,7 +343,7 @@ function ProtectionController(config) {
                     error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)
                 });
             }
-        } else if (keySystemInfo.initData) {
+        } else if (keySystemInfo && keySystemInfo.initData) {
             protectionModel.createKeySession(keySystemInfo);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {
