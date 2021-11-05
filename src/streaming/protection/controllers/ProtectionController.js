@@ -129,7 +129,7 @@ function ProtectionController(config) {
 
         // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
         // and video will be the same. Just use one valid MediaInfo object
-        let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+        let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
 
         // Reorder key systems according to priority order provided in protectionData
         supportedKS = supportedKS.sort((ksA, ksB) => {
@@ -218,7 +218,7 @@ function ProtectionController(config) {
                     for (ksIdx = 0; ksIdx < pendingKeySystemData[i].length; ksIdx++) {
                         if (selectedKeySystem === pendingKeySystemData[i][ksIdx].ks) {
                             const current = pendingKeySystemData[i][ksIdx]
-                            _loadOrCreateKeySession(protData, current)
+                            _loadOrCreateKeySession(current)
                             break;
                         }
                     }
@@ -241,7 +241,7 @@ function ProtectionController(config) {
      * @param {array} supportedKS
      * @private
      */
-    function _initiateWithExistingKeySystem(supportedKS,) {
+    function _initiateWithExistingKeySystem(supportedKS) {
         const ksIdx = supportedKS.findIndex((entry) => {
             return entry.ks === selectedKeySystem;
         });
@@ -251,29 +251,33 @@ function ProtectionController(config) {
             return;
         }
 
+
+        //  we only need to create or load a new key session if the key id has changed
+        if (_isKeyIdDuplicate(current.keyId)) {
+            return;
+        }
+
         //  we only need to create or load a new key session if the init data has changed
         const initDataForKs = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, current.initData);
         if (_isInitDataDuplicate(initDataForKs)) {
             return;
         }
 
-        const protData = _getProtDataForKeySystem(selectedKeySystem);
-        _loadOrCreateKeySession(protData, current);
+        _loadOrCreateKeySession(current);
     }
 
     /**
      * Loads an existing key session if we already have a session id. Otherwise we create a new key session
-     * @param {object} protData
      * @param {object} keySystemInfo
      * @private
      */
-    function _loadOrCreateKeySession(protData, keySystemInfo) {
+    function _loadOrCreateKeySession(keySystemInfo) {
         // Clearkey
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
             // initData and overwrite possible initData indicated in encrypted event (EME)
-            if (protData && protData.hasOwnProperty('clearkeys')) {
-                const initData = { kids: Object.keys(protData.clearkeys) };
+            if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+                const initData = { kids: Object.keys(keySystemInfo.protData.clearkeys) };
                 keySystemInfo.initData = new TextEncoder().encode(JSON.stringify(initData));
             }
         }
@@ -281,29 +285,28 @@ function ProtectionController(config) {
         // Reuse existing KeySession
         if (keySystemInfo.sessionId) {
             // Load MediaKeySession with sessionId
-            loadKeySession(keySystemInfo.sessionId, keySystemInfo.initData);
+            loadKeySession(keySystemInfo);
         }
 
         // Create a new KeySession
         else if (keySystemInfo.initData !== null) {
             // Create new MediaKeySession with initData
-            createKeySession(keySystemInfo.initData, keySystemInfo.cdmData);
+            createKeySession(keySystemInfo);
         }
     }
 
     /**
      * Loads a key session with the given session ID from persistent storage.  This essentially creates a new key session
      *
-     * @param {string} sessionID
-     * @param {string} initData
+     * @param {object} ksInfo
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
      * @ignore
      */
-    function loadKeySession(sessionID, initData) {
+    function loadKeySession(keySystemInfo) {
         checkConfig();
-        protectionModel.loadKeySession(sessionID, initData, _getSessionType(selectedKeySystem));
+        protectionModel.loadKeySession(keySystemInfo);
     }
 
     /**
@@ -316,11 +319,16 @@ function ProtectionController(config) {
      * @fires ProtectionController#KeySessionCreated
      * @ignore
      */
-    function createKeySession(initData, cdmData) {
-        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, initData);
-        const protData = _getProtDataForKeySystem(selectedKeySystem);
+    function createKeySession(keySystemInfo) {
+        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo.initData);
+        // const protData = _getProtDataForKeySystem(selectedKeySystem);
 
         if (initDataForKS) {
+
+            // Check for duplicate key id
+            if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
+                return;
+            }
 
             // Check for duplicate initData
             if (_isInitDataDuplicate(initDataForKS)) {
@@ -328,17 +336,16 @@ function ProtectionController(config) {
             }
 
             try {
-                const sessionType = _getSessionType(selectedKeySystem)
-                protectionModel.createKeySession(initDataForKS, protData, sessionType, cdmData);
+                keySystemInfo.initData = initDataForKS;
+                protectionModel.createKeySession(keySystemInfo);
             } catch (error) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {
                     data: null,
                     error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)
                 });
             }
-        } else if (initData) {
-            const sessionType = _getSessionType(selectedKeySystem)
-            protectionModel.createKeySession(initData, protData, sessionType, cdmData);
+        } else if (keySystemInfo.initData) {
+            protectionModel.createKeySession(keySystemInfo);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {
                 data: null,
@@ -400,7 +407,32 @@ function ProtectionController(config) {
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
         checkConfig();
-        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
+        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType);
+    }
+
+    /**
+     * Checks if a session has already created for the provided key id
+     * @param {string} keyId
+     * @return {boolean}
+     * @private
+     */
+     function _isKeyIdDuplicate(keyId) {
+
+        if (!keyId) {
+            return false;
+        }
+
+        try {
+            const sessions = protectionModel.getSessions();
+            for (let i = 0; i < sessions.length; i++) {
+                if (sessions[i].getKeyId() === keyId) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
@@ -658,7 +690,7 @@ function ProtectionController(config) {
 
         // Message not destined for license server
         if (!licenseServerModelInstance) {
-            logger.debug('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionID());
+            logger.debug('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionId());
             _sendLicenseRequestCompleteEvent(eventData);
             return;
         }
@@ -770,7 +802,7 @@ function ProtectionController(config) {
         const reqMethod = licenseServerData.getHTTPMethod(messageType);
         const responseType = licenseServerData.getResponseType(keySystemString, messageType);
         const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
-        const sessionId = sessionToken.getSessionID() || null;
+        const sessionId = sessionToken.getSessionId() || null;
 
         let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
         const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE]) ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
@@ -1021,7 +1053,7 @@ function ProtectionController(config) {
 
             logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-            const supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
+            const supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet, sessionType);
             if (supportedKS.length === 0) {
                 logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
                 return;
