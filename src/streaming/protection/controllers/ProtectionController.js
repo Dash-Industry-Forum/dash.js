@@ -181,7 +181,7 @@ function ProtectionController(config) {
 
         // Add all key systems to our request list since we have yet to select a key system
         for (let i = 0; i < supportedKS.length; i++) {
-            const keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i].ks);
+            const keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
             requestedKeySystems.push({
                 ks: supportedKS[i].ks,
                 configs: [keySystemConfiguration]
@@ -321,7 +321,6 @@ function ProtectionController(config) {
      */
     function createKeySession(keySystemInfo) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo.initData);
-        // const protData = _getProtDataForKeySystem(selectedKeySystem);
 
         if (initDataForKS) {
 
@@ -369,18 +368,6 @@ function ProtectionController(config) {
             }
         }
         return null;
-    }
-
-    /**
-     * Returns the session type either from the protData or as defined via setSessionType()
-     * @param keySystem
-     * @return {*}
-     * @private
-     */
-    function _getSessionType(keySystem) {
-        const protData = _getProtDataForKeySystem(keySystem);
-
-        return (protData && protData.sessionType) ? protData.sessionType : sessionType;
     }
 
     /**
@@ -627,13 +614,13 @@ function ProtectionController(config) {
      * @return {KeySystemConfiguration}
      * @private
      */
-    function _getKeySystemConfiguration(keySystem) {
-        const protData = _getProtDataForKeySystem(keySystem);
+    function _getKeySystemConfiguration(keySystemData) {
+        const protData = keySystemData;
         const audioCapabilities = [];
         const videoCapabilities = [];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
-        const ksSessionType = _getSessionType(keySystem);
+        const ksSessionType = keySystemData.sessionType;
         const distinctiveIdentifier = (protData && protData.distinctiveIdentifier) ? protData.distinctiveIdentifier : 'optional';
         const persistentState = (protData && protData.persistentState) ? protData.persistentState : (ksSessionType === 'temporary') ? 'optional' : 'required';
 
