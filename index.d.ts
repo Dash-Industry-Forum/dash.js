@@ -45,9 +45,9 @@ declare namespace dashjs {
 
         clearMediaInfoArray(): void;
 
-        createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
+        createKeySession(ksInfo: KeySystemInfo): void;
 
-        loadKeySession(sessionId: string, initData: ArrayBuffer): void;
+        loadKeySession(ksInfo: KeySystemInfo): void;
 
         removeKeySession(session: SessionToken): void;
 
@@ -63,7 +63,7 @@ declare namespace dashjs {
 
         setProtectionData(protDataSet: ProtectionDataSet): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
+        getSupportedKeySystemsFromContentProtection(cps: any[]): KeySystemInfo[];
 
         getKeySystems(): KeySystem[];
 
@@ -1362,16 +1362,17 @@ declare namespace dashjs {
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
-        getCDMData(): ArrayBuffer | null;
-
-        getSessionId(): string | null;
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
     }
 
-    export interface SupportedKeySystem {
+    export interface KeySystemInfo {
         ks: KeySystem;
-        initData: ArrayBuffer;
-        cdmData: ArrayBuffer | null;
-        sessionId: string | null;
+        sessionId?: string,
+        sessionType?: string,
+        keyId?: string,
+        initData?: ArrayBuffer;
+        cdmData?: ArrayBuffer;
+        protData?: ProtectionData
     }
 
     export interface LicenseRequest {
