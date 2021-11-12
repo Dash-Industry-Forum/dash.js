@@ -251,18 +251,6 @@ function ProtectionController(config) {
             return;
         }
 
-
-        //  we only need to create or load a new key session if the key id has changed
-        if (_isKeyIdDuplicate(current.keyId)) {
-            return;
-        }
-
-        //  we only need to create or load a new key session if the init data has changed
-        const initDataForKs = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, current.initData);
-        if (_isInitDataDuplicate(initDataForKs)) {
-            return;
-        }
-
         _loadOrCreateKeySession(current);
     }
 
