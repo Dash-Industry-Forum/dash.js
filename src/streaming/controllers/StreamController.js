@@ -258,8 +258,6 @@ function StreamController() {
                     if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
-                    // Update the DVR window now that we have new information
-                    addDVRMetric();
 
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
