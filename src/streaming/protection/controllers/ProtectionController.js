@@ -615,7 +615,7 @@ function ProtectionController(config) {
      * @private
      */
     function _getKeySystemConfiguration(keySystemData) {
-        const protData = keySystemData;
+        const protData = keySystemData.protData;
         const audioCapabilities = [];
         const videoCapabilities = [];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
