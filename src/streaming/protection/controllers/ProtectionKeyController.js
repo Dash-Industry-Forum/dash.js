@@ -191,13 +191,16 @@ function ProtectionKeyController() {
      *
      * @param {Array.<Object>} cps - array of content protection elements parsed
      * from the manifest
+     * @param {ProtectionData} protDataSet user specified protection data - license server url etc
+     * supported by the content
+     * @param {string} default session type
      * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromContentProtection(cps) {
+    function getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType) {
         let cp, ks, ksIdx, cpIdx;
         let supportedKS = [];
 
@@ -205,6 +208,10 @@ function ProtectionKeyController() {
             const cencContentProtection = CommonEncryption.findCencContentProtection(cps);
             for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 ks = keySystems[ksIdx];
+
+                // Get protection data that applies for current key system
+                const protData = _getProtDataForKeySystem(ks.systemString, protDataSet);
+
                 for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
@@ -213,9 +220,12 @@ function ProtectionKeyController() {
 
                         supportedKS.push({
                             ks: keySystems[ksIdx],
+                            keyId: cp.keyId,
                             initData: initData,
-                            cdmData: ks.getCDMData(),
-                            sessionId: ks.getSessionId(cp)
+                            protData: protData,
+                            cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+                            sessionId: _getSessionId(protData, cp),
+                            sessionType: _getSessionType(protData, sessionType)
                         });
                     }
                 }
@@ -234,13 +244,14 @@ function ProtectionKeyController() {
      * supported by the content
      * @param {ProtectionData} protDataSet user specified protection data - license server url etc
      * supported by the content
+     * @param {string} default session type
      * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystems(initData, protDataSet) {
+    function getSupportedKeySystems(initData, protDataSet, sessionType) {
         let supportedKS = [];
         let pssh = CommonEncryption.parsePSSHList(initData);
         let ks, keySystemString, shouldNotFilterOutKeySystem;
@@ -248,14 +259,20 @@ function ProtectionKeyController() {
         for (let ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             ks = keySystems[ksIdx];
             keySystemString = ks.systemString;
+
             shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
+
+            // Get protection data that applies for current key system
+            const protData = _getProtDataForKeySystem(keySystemString, protDataSet);
 
             if (ks.uuid in pssh && shouldNotFilterOutKeySystem) {
                 supportedKS.push({
                     ks: ks,
                     initData: pssh[ks.uuid],
-                    cdmData: ks.getCDMData(),
-                    sessionId: ks.getSessionId()
+                    protData: protData,
+                    cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+                    sessionId: _getSessionId(protData),
+                    sessionType: _getSessionType(protData, sessionType)
                 });
             }
         }
@@ -337,6 +354,25 @@ function ProtectionKeyController() {
                 keySystem.init(getProtectionData(keySystem.systemString));
             }
         }
+    }
+
+    function _getProtDataForKeySystem(systemString, protDataSet) {
+        if (!protDataSet) return null;
+        return (systemString in protDataSet) ? protDataSet[systemString] : null;
+    }
+
+    function _getSessionId(protData, cp) {
+        // Get sessionId from protectionData or from manifest (ContentProtection)
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
+        return null;
+    }
+
+    function _getSessionType(protData, sessionType) {
+        return (protData && protData.sessionType) ? protData.sessionType : sessionType;
     }
 
     instance = {

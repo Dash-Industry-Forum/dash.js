@@ -118,11 +118,7 @@ function KeySystemClearKey(config) {
         return null;
     }
 
-    function getCDMData() {
-        return null;
-    }
-
-    function getSessionId(/*cp*/) {
+    function getCDMData(/*cdmData*/) {
         return null;
     }
 
@@ -135,7 +131,6 @@ function KeySystemClearKey(config) {
         getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData,
         getCDMData,
-        getSessionId,
         getClearKeysFromProtectionData
     };
 
