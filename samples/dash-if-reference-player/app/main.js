@@ -467,7 +467,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if (e.data) {
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
-                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionId();
             }
         }
     }, $scope);
