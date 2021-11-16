@@ -98,6 +98,10 @@ function ProtectionModel_3Feb2014(config) {
         return retVal;
     }
 
+    function getSessions() {
+        return sessions;
+    }
+
     function requestKeySystemAccess(ksConfigurations) {
         return new Promise((resolve, reject) => {
             // Try key systems in order, first one with supported key system configuration
@@ -197,7 +201,7 @@ function ProtectionModel_3Feb2014(config) {
         }
     }
 
-    function createKeySession(initData, protData, sessionType, cdmData) {
+    function createKeySession(ksInfo) {
         if (!keySystem || !mediaKeys || !keySystemAccess) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
@@ -221,8 +225,8 @@ function ProtectionModel_3Feb2014(config) {
         }
 
         const contentType = capabilities.contentType;
-        const session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
-        const sessionToken = createSessionToken(session, initData);
+        const session = mediaKeys.createSession(contentType, new Uint8Array(ksInfo.initData), ksInfo.cdmData ? new Uint8Array(ksInfo.cdmData) : null);
+        const sessionToken = createSessionToken(session, ksInfo);
 
         // Add all event listeners
         session.addEventListener(api.error, sessionToken);
@@ -232,7 +236,7 @@ function ProtectionModel_3Feb2014(config) {
 
         // Add to our session list
         sessions.push(sessionToken);
-        logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+        logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
         eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
     }
 
@@ -279,7 +283,7 @@ function ProtectionModel_3Feb2014(config) {
     function setServerCertificate(/*serverCertificate*/) { /* Not supported */
     }
 
-    function loadKeySession(/*sessionID*/) { /* Not supported */
+    function loadKeySession(/*ksInfo*/) { /* Not supported */
     }
 
     function removeKeySession(/*sessionToken*/) { /* Not supported */
@@ -324,13 +328,18 @@ function ProtectionModel_3Feb2014(config) {
 
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
-    function createSessionToken(keySession, initData) {
+    function createSessionToken(keySession, ksInfo) {
         return {
             // Implements SessionToken
             session: keySession,
-            initData: initData,
+            keyId: ksInfo.keyId,
+            initData: ksInfo.initData,
 
-            getSessionID: function () {
+            getKeyId: function () {
+                return this.keyId;
+            },
+
+            getSessionId: function () {
                 return this.session.sessionId;
             },
 
@@ -341,6 +350,7 @@ function ProtectionModel_3Feb2014(config) {
             getSessionType: function () {
                 return 'temporary';
             },
+
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events
@@ -360,8 +370,8 @@ function ProtectionModel_3Feb2014(config) {
                         break;
 
                     case api.close:
-                        logger.debug('DRM: Session closed.  SessionID = ' + this.getSessionID());
-                        eventBus.trigger(events.KEY_SESSION_CLOSED, { data: this.getSessionID() });
+                        logger.debug('DRM: Session closed.  SessionID = ' + this.getSessionId());
+                        eventBus.trigger(events.KEY_SESSION_CLOSED, { data: this.getSessionId() });
                         break;
                 }
             }
@@ -370,6 +380,7 @@ function ProtectionModel_3Feb2014(config) {
 
     instance = {
         getAllInitData,
+        getSessions,
         requestKeySystemAccess,
         selectKeySystem,
         setMediaElement,

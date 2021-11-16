@@ -135,7 +135,7 @@ const ProtectionModel = function () { };
  */
 
 /**
- * Loads the persisted key session data associated with the given sessionID
+ * Loads the persisted key session data associated with the given sessionId
  * into a new session.  Sends KEY_SESSION_CREATED event with
  * {@MediaPlayer.vo.protection.SessionToken} as data.
  *

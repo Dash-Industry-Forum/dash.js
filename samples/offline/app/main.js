@@ -429,7 +429,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         if (e.data) {
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
-                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionId();
             }
         }
     }, $scope);
