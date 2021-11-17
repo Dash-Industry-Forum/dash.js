@@ -834,7 +834,7 @@ function StreamProcessor(config) {
             let bitrate = null;
 
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
-                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
+                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                 quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
             } else {
