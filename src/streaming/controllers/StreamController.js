@@ -371,7 +371,7 @@ function StreamController() {
             }
 
             isStreamSwitchingInProgress = true;
-            eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
+            eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
                 fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
                 toStreamInfo: stream.getStreamInfo()
             });

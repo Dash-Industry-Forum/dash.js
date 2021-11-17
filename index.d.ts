@@ -718,8 +718,8 @@ declare namespace dashjs {
         OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
         OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
-        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -746,7 +746,6 @@ declare namespace dashjs {
         STREAM_DEACTIVATED: 'streamDeactivated';
         STREAM_INITIALIZED: 'streamInitialized';
         STREAM_INITIALIZING: 'streamInitializing';
-        STREAM_SWITCH_STARTED: 'streamSwitchStarted';
         STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
         STREAM_UPDATED: 'streamUpdated';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';

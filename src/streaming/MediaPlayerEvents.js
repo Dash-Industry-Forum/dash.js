@@ -146,16 +146,16 @@ class MediaPlayerEvents extends EventsBase {
         this.METRIC_UPDATED = 'metricUpdated';
 
         /**
+         * Triggered when a new stream (period) starts.
+         * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+         */
+        this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+
+        /**
          * Triggered at the stream end of a period.
          * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
          */
         this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
-
-        /**
-         * Triggered when a new stream (period) starts.
-         * @event MediaPlayerEvents#STREAM_SWITCH_STARTED
-         */
-        this.STREAM_SWITCH_STARTED = 'streamSwitchStarted';
 
         /**
          * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
