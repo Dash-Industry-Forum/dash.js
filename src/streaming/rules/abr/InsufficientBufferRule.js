@@ -90,6 +90,7 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
         const streamInfo = rulesContext.getStreamInfo();
         const streamId = streamInfo ? streamInfo.id : null;
+        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
         if (shouldIgnore(mediaType) || !fragmentDuration) {
@@ -106,7 +107,7 @@ function InsufficientBufferRule(config) {
             const throughputHistory = abrController.getThroughputHistory();
 
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputHistory.getAverageThroughput(mediaType);
+            const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
             const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
