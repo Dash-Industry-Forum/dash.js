@@ -467,7 +467,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if (e.data) {
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
-                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionId();
             }
         }
     }, $scope);
@@ -1569,6 +1569,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             return vars;
         }
 
+        checkLocationProtocol();
+
         var vars = getUrlVars();
         var item = {};
 
@@ -1696,6 +1698,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     console.log('Error code: ' + errorCode);
                 }
             );
+        }
+    }
+
+    function checkLocationProtocol() {
+        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+            var out = 'This page has been loaded under http. This can result in the EME APIs not being available to the player and <b>any DRM-protected content will fail to play</b>. ' +
+                'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+            var divContainer = document.getElementById('http-warning-container');
+            var spanText = document.getElementById('http-warning-text');
+            spanText.innerHTML = out;
+            divContainer.style.display = ''
         }
     }
 }]);

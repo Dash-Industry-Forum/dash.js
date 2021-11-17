@@ -280,6 +280,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Fast bitrate switch",
+                "description": "Example showing how to aggressively replace segments in the buffer when switching up in quality.",
+                "href": "abr/fastswitch.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
