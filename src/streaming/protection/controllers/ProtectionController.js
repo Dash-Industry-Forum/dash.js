@@ -1028,7 +1028,7 @@ function ProtectionController(config) {
 
             logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-            const supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet, sessionType);
+            const supportedKS = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
             if (supportedKS.length === 0) {
                 logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
                 return;
