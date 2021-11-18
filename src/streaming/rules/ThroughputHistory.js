@@ -152,13 +152,13 @@ function ThroughputHistory(config) {
         ewmaObj.totalWeight += weight;
     }
 
-    function getSampleSize(isThroughput, mediaType, isLive) {
+    function getSampleSize(isThroughput, mediaType, isDynamic) {
         let arr,
             sampleSize;
 
         if (isThroughput) {
             arr = throughputDict[mediaType];
-            sampleSize = isLive ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
+            sampleSize = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
         } else {
             arr = latencyDict[mediaType];
             sampleSize = AVERAGE_LATENCY_SAMPLE_AMOUNT;
