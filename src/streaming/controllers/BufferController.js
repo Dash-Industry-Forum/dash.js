@@ -344,9 +344,15 @@ function BufferController(config) {
         // Get buffered range corresponding to the seek target
         const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
         range = getRangeAt(seekTarget, segmentDuration);
-        if (!range) return;
-
-        if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
+        if (!range) {
+            const earliestRange = _getEarliestRangeAfterTime(seekTarget);
+            if (earliestRange) {
+                logger.info(`_adjustSeekTarget: earliestRange: start: ${earliestRange.start}, end: ${earliestRange.end}`);
+                playbackController.seek(earliestRange.start, false, true);
+            } else {
+                logger.warn("_adjustSeekTarget: failed to define earliestRange");
+            }
+        } else if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
             // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
             // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
 
@@ -633,6 +639,23 @@ function BufferController(config) {
         }
 
         return null;
+    }
+
+    function _getEarliestRangeAfterTime(time) {
+        const ranges = sourceBufferSink.getAllBufferRanges();
+        if (ranges == null) {
+            logger.error("_getEarliestRangeAfterTime: there are no ranges");
+            return null;
+        }
+        let result = null;
+        for (let i = 0; i < ranges.length; ++i) {
+            const start = ranges.start(i);
+            const end = ranges.end(i);
+            if (start >= time && (result == null || result.start > start)) {
+                result = {start, end};
+            }
+        }
+        return result;
     }
 
     function getBufferLength(time, tolerance) {
