@@ -236,8 +236,7 @@ function ProtectionKeyController() {
 
     /**
      * Returns key systems supported by this player for the given PSSH
-     * initializationData. Only key systems supported by this player
-     * that have protection data present will be returned.  Key systems are returned in priority order
+     * initializationData. Key systems are returned in priority order
      * (highest priority first)
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
@@ -251,21 +250,19 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystems(initData, protDataSet, sessionType) {
+    function getSupportedKeySystemsFromSegmentPssh(initData, protDataSet, sessionType) {
         let supportedKS = [];
         let pssh = CommonEncryption.parsePSSHList(initData);
-        let ks, keySystemString, shouldNotFilterOutKeySystem;
+        let ks, keySystemString;
 
         for (let ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             ks = keySystems[ksIdx];
             keySystemString = ks.systemString;
 
-            shouldNotFilterOutKeySystem = (protDataSet) ? keySystemString in protDataSet : true;
-
             // Get protection data that applies for current key system
             const protData = _getProtDataForKeySystem(keySystemString, protDataSet);
 
-            if (ks.uuid in pssh && shouldNotFilterOutKeySystem) {
+            if (ks.uuid in pssh) {
                 supportedKS.push({
                     ks: ks,
                     initData: pssh[ks.uuid],
@@ -384,7 +381,7 @@ function ProtectionKeyController() {
         setKeySystems,
         getKeySystemBySystemString,
         getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystems,
+        getSupportedKeySystemsFromSegmentPssh,
         getLicenseServerModelInstance,
         processClearKeyLicenseRequest,
         setConfig
