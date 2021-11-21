@@ -1085,7 +1085,9 @@ function MediaPlayer() {
      */
     function getAverageThroughput(type) {
         const throughputHistory = abrController.getThroughputHistory();
-        return throughputHistory ? throughputHistory.getAverageThroughput(type) : 0;
+        const isDynamic = playbackController.getIsDynamic();
+
+        return throughputHistory ? throughputHistory.getAverageThroughput(type, isDynamic) : 0;
     }
 
     /**

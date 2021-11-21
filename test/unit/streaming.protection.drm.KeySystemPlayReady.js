@@ -71,11 +71,6 @@ describe('KeySystemPlayready', function () {
             expect(keySystem.setPlayReadyMessageFormat.bind(keySystem, 'utf-8')).not.to.throw('Specified message format is not one of "utf-8" or "utf-16"');
         });
 
-        it('should return null when getSessionId is called and protData is undefined', function () {
-            const sessionId = keySystem.getSessionId();
-            expect(sessionId).to.be.null;   // jshint ignore:line
-        });
-
         it('should return null when getCDMData is called and protData is undefined', function () {
             const cdmData = keySystem.getCDMData();
             expect(cdmData).to.be.null;   // jshint ignore:line
@@ -102,8 +97,7 @@ describe('KeySystemPlayready', function () {
         });
 
         it('should return the correct cdmData', function () {
-            keySystem.init(protData);
-            cdmData = keySystem.getCDMData();
+            cdmData = keySystem.getCDMData(protData.cdmData);
             expect(keySystem).to.be.defined;   // jshint ignore:line
             expect(cdmData).to.be.not.null;   // jshint ignore:line
             expect(cdmData).to.be.instanceOf(ArrayBuffer);

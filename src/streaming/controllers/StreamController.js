@@ -179,7 +179,6 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
@@ -202,7 +201,6 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
@@ -260,6 +258,7 @@ function StreamController() {
                     if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
+
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
@@ -324,7 +323,7 @@ function StreamController() {
     function _initializeForFirstStream(streamsInfo) {
 
         // Add the DVR window so we can calculate the right starting point
-        _addDVRMetric();
+        addDVRMetric();
 
         // If the start is in the future we need to wait
         const dvrRange = dashMetrics.getCurrentDVRInfo().range;
@@ -372,7 +371,7 @@ function StreamController() {
             }
 
             isStreamSwitchingInProgress = true;
-            eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
+            eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
                 fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
                 toStreamInfo: stream.getStreamInfo()
             });
@@ -660,7 +659,7 @@ function StreamController() {
     /**
      * Add the DVR window to the metric list. We need the DVR window to restrict the seeking and calculate the right start time.
      */
-    function _addDVRMetric() {
+    function addDVRMetric() {
         try {
             const isDynamic = adapter.getIsDynamic();
             const streamsInfo = adapter.getStreamsInfo();
@@ -722,16 +721,6 @@ function StreamController() {
         const stream = getStreamById(e.streamInfo.id);
 
         stream.prepareQualityChange(e);
-    }
-
-    /**
-     * Update the DVR window when the wallclock time has updated
-     * @private
-     */
-    function _onWallclockTimeUpdated() {
-        if (adapter.getIsDynamic()) {
-            _addDVRMetric();
-        }
     }
 
     /**
@@ -1508,6 +1497,7 @@ function StreamController() {
     instance = {
         initialize,
         getActiveStreamInfo,
+        addDVRMetric,
         hasVideoTrack,
         hasAudioTrack,
         getStreamById,

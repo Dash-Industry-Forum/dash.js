@@ -134,6 +134,10 @@ function ProtectionModel_21Jan2015(config) {
         return retVal;
     }
 
+    function getSessions() {
+        return sessions;
+    }
+
     function requestKeySystemAccess(ksConfigurations) {
         return new Promise((resolve, reject) => {
             _requestKeySystemAccessInternal(ksConfigurations, 0, resolve, reject);
@@ -250,24 +254,22 @@ function ProtectionModel_21Jan2015(config) {
 
     /**
      * Create a key session, a session token and initialize a request by calling generateRequest
-     * @param initData
-     * @param protData
-     * @param sessionType
+     * @param ksInfo
      */
-    function createKeySession(initData, protData, sessionType) {
+    function createKeySession(ksInfo) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
 
-        const session = mediaKeys.createSession(sessionType);
-        const sessionToken = createSessionToken(session, initData, sessionType);
+        const session = mediaKeys.createSession(ksInfo.sessionType);
+        const sessionToken = createSessionToken(session, ksInfo);
 
 
         // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
-        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData || (protData && protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (ksInfo.initData || (ksInfo.protData && ksInfo.protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
 
-        session.generateRequest(dataType, initData).then(function () {
-            logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+        session.generateRequest(dataType, ksInfo.initData).then(function () {
+            logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
             eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
         }).catch(function (error) {
             removeSession(sessionToken);
@@ -294,39 +296,41 @@ function ProtectionModel_21Jan2015(config) {
             });
     }
 
-    function loadKeySession(sessionID, initData, sessionType) {
+    function loadKeySession(ksInfo) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not load sessions until you have selected a key system');
         }
 
+        const sessionId = ksInfo.sessionId;
+
         // Check if session Id is not already loaded or loading
         for (let i = 0; i < sessions.length; i++) {
-            if (sessionID === sessions[i].sessionId) {
+            if (sessionId === sessions[i].sessionId) {
                 logger.warn('DRM: Ignoring session ID because we have already seen it!');
                 return;
             }
         }
 
-        const session = mediaKeys.createSession(sessionType);
-        const sessionToken = createSessionToken(session, initData, sessionType, sessionID);
+        const session = mediaKeys.createSession(ksInfo.sessionType);
+        const sessionToken = createSessionToken(session, ksInfo);
 
         // Load persisted session data into our newly created session object
-        session.load(sessionID).then(function (success) {
+        session.load(sessionId).then(function (success) {
             if (success) {
-                logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
+                logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionId());
                 eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
             } else {
                 removeSession(sessionToken);
                 eventBus.trigger(events.KEY_SESSION_CREATED, {
                     data: null,
-                    error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')
+                    error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionId + ')')
                 });
             }
         }).catch(function (error) {
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CREATED, {
                 data: null,
-                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)
+                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionId + ')! ' + error.name)
             });
         });
     }
@@ -335,12 +339,12 @@ function ProtectionModel_21Jan2015(config) {
         const session = sessionToken.session;
 
         session.remove().then(function () {
-            logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
-            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionID() });
+            logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionId());
+            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionId() });
         }, function (error) {
             eventBus.trigger(events.KEY_SESSION_REMOVED, {
                 data: null,
-                error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name
+                error: 'Error removing session (' + sessionToken.getSessionId() + '). ' + error.name
             });
 
         });
@@ -352,7 +356,7 @@ function ProtectionModel_21Jan2015(config) {
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CLOSED, {
                 data: null,
-                error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name
+                error: 'Error closing session (' + sessionToken.getSessionId() + ') ' + error.name
             });
         });
     }
@@ -424,11 +428,13 @@ function ProtectionModel_21Jan2015(config) {
 
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
-    function createSessionToken(session, initData, sessionType, sessionID) {
+    function createSessionToken(session, ksInfo) {
         const token = { // Implements SessionToken
             session: session,
-            initData: initData,
-            sessionId: sessionID,
+            keyId: ksInfo.keyId,
+            initData: ksInfo.initData,
+            sessionId: ksInfo.sessionId,
+            sessionType: ksInfo.sessionType,
 
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
@@ -457,8 +463,16 @@ function ProtectionModel_21Jan2015(config) {
                 }
             },
 
-            getSessionID: function () {
+            getKeyId: function () {
+                return this.keyId;
+            },
+
+            getSessionId: function () {
                 return session.sessionId;
+            },
+
+            getSessionType: function () {
+                return this.sessionType;
             },
 
             getExpirationTime: function () {
@@ -478,10 +492,6 @@ function ProtectionModel_21Jan2015(config) {
                     }
                 });
                 return usable;
-            },
-
-            getSessionType: function () {
-                return sessionType;
             }
         };
 
@@ -492,8 +502,8 @@ function ProtectionModel_21Jan2015(config) {
         // Register callback for session closed Promise
         session.closed.then(() => {
             removeSession(token);
-            logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionID());
-            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionID() });
+            logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionId());
+            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionId() });
         });
 
         // Add to our session list
@@ -504,6 +514,7 @@ function ProtectionModel_21Jan2015(config) {
 
     instance = {
         getAllInitData,
+        getSessions,
         requestKeySystemAccess,
         selectKeySystem,
         setMediaElement,

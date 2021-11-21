@@ -192,13 +192,13 @@ function ThroughputHistory(config) {
      * @return {number}
      * @private
      */
-    function _getSampleSize(isThroughput, mediaType, isLive) {
+    function _getSampleSize(isThroughput, mediaType, isDynamic) {
         let arr,
             sampleSize;
 
         if (isThroughput) {
             arr = throughputDict[mediaType];
-            sampleSize = isLive ? settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.live : settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.vod;
+            sampleSize = isDynamic ? settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.live : settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.vod;
         } else {
             arr = latencyDict[mediaType];
             sampleSize = settings.get().streaming.abr.throughputHistory.averageLatencySampleAmount;
