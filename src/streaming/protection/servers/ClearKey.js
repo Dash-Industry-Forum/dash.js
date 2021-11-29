@@ -77,11 +77,11 @@ function ClearKey() {
     }
 
     instance = {
-        getServerURLFromMessage: getServerURLFromMessage,
-        getHTTPMethod: getHTTPMethod,
-        getResponseType: getResponseType,
-        getLicenseMessage: getLicenseMessage,
-        getErrorResponse: getErrorResponse
+        getServerURLFromMessage,
+        getHTTPMethod,
+        getResponseType,
+        getLicenseMessage,
+        getErrorResponse
     };
 
     return instance;

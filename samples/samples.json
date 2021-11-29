@@ -280,6 +280,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Fast bitrate switch",
+                "description": "Example showing how to aggressively replace segments in the buffer when switching up in quality.",
+                "href": "abr/fastswitch.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -389,7 +400,22 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "License server via MPD",
+                "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
+                "href": "drm/dashif-laurl.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
+            
         ]
     },
     {

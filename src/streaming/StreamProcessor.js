@@ -85,7 +85,6 @@ function StreamProcessor(config) {
         representationController,
         shouldUseExplicitTimeForRequest,
         qualityChangeInProgress,
-        manifestUpdateInProgress,
         dashHandler,
         segmentsController,
         bufferingTime;
@@ -106,8 +105,6 @@ function StreamProcessor(config) {
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.on(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
-        eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
-        eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
         eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
     }
 
@@ -209,7 +206,6 @@ function StreamProcessor(config) {
         mediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
-        manifestUpdateInProgress = false;
         qualityChangeInProgress = false;
     }
 
@@ -253,8 +249,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.off(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
-        eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
-        eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
         eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
 
         resetInitialSettings();
@@ -364,7 +358,7 @@ function StreamProcessor(config) {
         // Event propagation may have been stopped (see MssHandler)
         if (!e.sender) return;
 
-        if (manifestUpdateInProgress) {
+        if (playbackController.getIsManifestUpdateInProgress()) {
             _noValidRequest();
             return;
         }
@@ -398,7 +392,7 @@ function StreamProcessor(config) {
      */
     function _onMediaFragmentNeeded(e, rescheduleIfNoRequest = true) {
         // Don't schedule next fragments while updating manifest or pruning to avoid buffer inconsistencies
-        if (manifestUpdateInProgress || bufferController.getIsPruningInProgress()) {
+        if (playbackController.getIsManifestUpdateInProgress() || bufferController.getIsPruningInProgress()) {
             _noValidRequest();
             return;
         }
@@ -518,19 +512,6 @@ function StreamProcessor(config) {
      */
     function _noValidRequest() {
         scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
-    }
-
-    /**
-     * A new manifest has been loaded, updating is still in progress. Wait for the update to be finished before fetching new segments.
-     * Otherwise we end up in inconsistencies like wrong base urls especially if periods have been removed.
-     * @private
-     */
-    function _onManifestUpdated() {
-        manifestUpdateInProgress = true;
-    }
-
-    function _onStreamsComposed() {
-        manifestUpdateInProgress = false;
     }
 
     function _onDataUpdateCompleted(e) {
@@ -853,7 +834,7 @@ function StreamProcessor(config) {
             let bitrate = null;
 
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
-                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
+                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                 quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
             } else {
@@ -1151,7 +1132,7 @@ function StreamProcessor(config) {
     }
 
     function _onSeekTarget(e) {
-        if (e && e.time) {
+        if (e && !isNaN(e.time)) {
             setExplicitBufferingTime(e.time);
             bufferController.setSeekTarget(e.time);
         }

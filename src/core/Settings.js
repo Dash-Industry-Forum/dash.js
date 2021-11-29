@@ -108,6 +108,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
+ *                enabled: true,
  *                useManifestDateHeaderTimeSource: true,
  *                backgroundAttempts: 2,
  *                timeBetweenSyncAttempts: 30,
@@ -378,7 +379,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} UtcSynchronizationSettings
- *
+ * @property {boolean} [enabled=true]
+ * Enables or disables the UTC clock synchronization
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
@@ -521,6 +523,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ * @property {boolean} ignoreEmeEncryptedEvent
+ * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  */
 
 /**
@@ -773,7 +777,8 @@ function Settings() {
                 applyServiceDescription: true
             },
             protection: {
-                keepProtectionMediaKeys: false
+                keepProtectionMediaKeys: false,
+                ignoreEmeEncryptedEvent: false
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
@@ -796,9 +801,10 @@ function Settings() {
                 jumpLargeGaps: true,
                 smallGapLimit: 1.5,
                 threshold: 0.3,
-                enableSeekFix: false,
+                enableSeekFix: false
             },
             utcSynchronization: {
+                enabled: true,
                 useManifestDateHeaderTimeSource: true,
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,

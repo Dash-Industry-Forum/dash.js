@@ -661,3 +661,7 @@ BS Information
 .bs-callout-information {
     border-left-color: #136bfb ;
 }
+
+.bs-callout-danger {
+    border-left-color: #CA0B00;
+}

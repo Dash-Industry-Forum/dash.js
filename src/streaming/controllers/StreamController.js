@@ -114,7 +114,7 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
-        checkConfig();
+        _checkConfig();
 
         autoPlay = autoPl;
         protectionData = protData;
@@ -179,7 +179,6 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
@@ -202,7 +201,6 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
@@ -260,6 +258,7 @@ function StreamController() {
                     if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
+
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
@@ -324,7 +323,7 @@ function StreamController() {
     function _initializeForFirstStream(streamsInfo) {
 
         // Add the DVR window so we can calculate the right starting point
-        _addDVRMetric();
+        addDVRMetric();
 
         // If the start is in the future we need to wait
         const dvrRange = dashMetrics.getCurrentDVRInfo().range;
@@ -372,7 +371,7 @@ function StreamController() {
             }
 
             isStreamSwitchingInProgress = true;
-            eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
+            eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
                 fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
                 toStreamInfo: stream.getStreamInfo()
             });
@@ -496,7 +495,7 @@ function StreamController() {
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
-        createPlaylistMetrics(PlayList.SEEK_START_REASON);
+        _createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     /**
@@ -660,7 +659,7 @@ function StreamController() {
     /**
      * Add the DVR window to the metric list. We need the DVR window to restrict the seeking and calculate the right start time.
      */
-    function _addDVRMetric() {
+    function addDVRMetric() {
         try {
             const isDynamic = adapter.getIsDynamic();
             const streamsInfo = adapter.getStreamsInfo();
@@ -698,7 +697,7 @@ function StreamController() {
 
             if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
-                createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
+                _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
             }
         }
@@ -725,16 +724,6 @@ function StreamController() {
     }
 
     /**
-     * Update the DVR window when the wallclock time has updated
-     * @private
-     */
-    function _onWallclockTimeUpdated() {
-        if (adapter.getIsDynamic()) {
-            _addDVRMetric();
-        }
-    }
-
-    /**
      * When the playback time is updated we add the droppedFrames metric to the dash metric object
      * @private
      */
@@ -754,9 +743,12 @@ function StreamController() {
     function _onPlaybackStarted( /*e*/) {
         logger.debug('[onPlaybackStarted]');
         if (!initialPlayback && isPaused) {
-            isPaused = false;
-            createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+            _createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
         }
+        if (initialPlayback) {
+            initialPlayback = false;
+        }
+        isPaused = false;
     }
 
     /**
@@ -982,6 +974,22 @@ function StreamController() {
      */
     function getActiveStream() {
         return activeStream;
+    }
+
+    /**
+     * Initial playback indicates if we have called play() for the first time yet.
+     * @return {*}
+     */
+    function getInitialPlayback() {
+        return initialPlayback;
+    }
+
+    /**
+     * Auto Play indicates if the stream starts automatically as soon as it is initialized.
+     * @return {boolean}
+     */
+    function getAutoPlay() {
+        return autoPlay;
     }
 
     /**
@@ -1214,7 +1222,7 @@ function StreamController() {
         dashMetrics.addPlayList();
     }
 
-    function createPlaylistMetrics(startReason) {
+    function _createPlaylistMetrics(startReason) {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
@@ -1305,7 +1313,7 @@ function StreamController() {
         return null;
     }
 
-    function checkConfig() {
+    function _checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !dashMetrics || !playbackController) {
@@ -1313,19 +1321,19 @@ function StreamController() {
         }
     }
 
-    function checkInitialize() {
+    function _checkInitialize() {
         if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
             throw new Error('initialize function has to be called previously');
         }
     }
 
     function load(url) {
-        checkConfig();
+        _checkConfig();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
-        checkInitialize();
+        _checkInitialize();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -1427,7 +1435,7 @@ function StreamController() {
     }
 
     function reset() {
-        checkConfig();
+        _checkConfig();
 
         timeSyncController.reset();
 
@@ -1489,6 +1497,7 @@ function StreamController() {
     instance = {
         initialize,
         getActiveStreamInfo,
+        addDVRMetric,
         hasVideoTrack,
         hasAudioTrack,
         getStreamById,
@@ -1504,6 +1513,8 @@ function StreamController() {
         getHasMediaOrInitialisationError,
         getStreams,
         getActiveStream,
+        getInitialPlayback,
+        getAutoPlay,
         reset
     };
 

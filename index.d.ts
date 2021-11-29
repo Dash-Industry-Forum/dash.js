@@ -43,11 +43,11 @@ declare namespace dashjs {
     interface ProtectionController {
         initializeForMedia(mediaInfo: ProtectionMediaInfo): void;
 
-        clearMediaInfoArrayByStreamId(streamId: string): void;
+        clearMediaInfoArray(): void;
 
-        createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
+        createKeySession(ksInfo: KeySystemInfo): void;
 
-        loadKeySession(sessionId: string, initData: ArrayBuffer): void;
+        loadKeySession(ksInfo: KeySystemInfo): void;
 
         removeKeySession(session: SessionToken): void;
 
@@ -63,7 +63,7 @@ declare namespace dashjs {
 
         setProtectionData(protDataSet: ProtectionDataSet): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
+        getSupportedKeySystemsFromContentProtection(cps: any[]): KeySystemInfo[];
 
         getKeySystems(): KeySystem[];
 
@@ -175,6 +175,7 @@ declare namespace dashjs {
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
+                ignoreEmeEncryptedEvent?: boolean
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -200,6 +201,7 @@ declare namespace dashjs {
                 enableSeekFix?: boolean
             },
             utcSynchronization?: {
+                enabled?: boolean,
                 useManifestDateHeaderTimeSource?: boolean,
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
@@ -716,8 +718,8 @@ declare namespace dashjs {
         OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
         OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
-        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -744,7 +746,6 @@ declare namespace dashjs {
         STREAM_DEACTIVATED: 'streamDeactivated';
         STREAM_INITIALIZED: 'streamInitialized';
         STREAM_INITIALIZING: 'streamInitializing';
-        STREAM_SWITCH_STARTED: 'streamSwitchStarted';
         STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
         STREAM_UPDATED: 'streamUpdated';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
@@ -1360,16 +1361,17 @@ declare namespace dashjs {
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
-        getCDMData(): ArrayBuffer | null;
-
-        getSessionId(): string | null;
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
     }
 
-    export interface SupportedKeySystem {
+    export interface KeySystemInfo {
         ks: KeySystem;
-        initData: ArrayBuffer;
-        cdmData: ArrayBuffer | null;
-        sessionId: string | null;
+        sessionId?: string,
+        sessionType?: string,
+        keyId?: string,
+        initData?: ArrayBuffer;
+        cdmData?: ArrayBuffer;
+        protData?: ProtectionData
     }
 
     export interface LicenseRequest {

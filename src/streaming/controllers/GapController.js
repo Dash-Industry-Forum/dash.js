@@ -211,7 +211,7 @@ function GapController() {
      */
     function _shouldIgnoreSeekingState() {
         const activeStream = streamController.getActiveStream();
-        const streamEnd = parseFloat((activeStream.getStartTime().toFixed(5) + activeStream.getDuration()).toFixed(5))
+        const streamEnd = parseFloat((activeStream.getStartTime() + activeStream.getDuration()).toFixed(5))
 
         return playbackController.getTime() + settings.get().streaming.gaps.threshold >= streamEnd;
     }
