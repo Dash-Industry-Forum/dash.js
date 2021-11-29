@@ -116,11 +116,6 @@
                     "provider": "bbc"
                 },
                 {
-                    "name": "SegmentTemplate with SegmentTimeline",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel.ism/.mpd",
-                    "provider": "unified"
-                },
-                {
                     "name": "1080p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
