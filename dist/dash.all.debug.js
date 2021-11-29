@@ -18624,6 +18624,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
+ *                enabled: true,
  *                useManifestDateHeaderTimeSource: true,
  *                backgroundAttempts: 2,
  *                timeBetweenSyncAttempts: 30,
@@ -18894,7 +18895,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} UtcSynchronizationSettings
- *
+ * @property {boolean} [enabled=true]
+ * Enables or disables the UTC clock synchronization
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
@@ -19037,6 +19039,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ * @property {boolean} ignoreEmeEncryptedEvent
+ * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  */
 
 /**
@@ -19291,7 +19295,8 @@ function Settings() {
         applyServiceDescription: true
       },
       protection: {
-        keepProtectionMediaKeys: false
+        keepProtectionMediaKeys: false,
+        ignoreEmeEncryptedEvent: false
       },
       buffer: {
         enableSeekDecorrelationFix: false,
@@ -19317,6 +19322,7 @@ function Settings() {
         enableSeekFix: false
       },
       utcSynchronization: {
+        enabled: true,
         useManifestDateHeaderTimeSource: true,
         backgroundAttempts: 2,
         timeBetweenSyncAttempts: 30,
@@ -19726,7 +19732,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.1.0';
+var VERSION = '4.2.0';
 function getVersionString() {
   return VERSION;
 }
@@ -21373,9 +21379,19 @@ function DashAdapter() {
     mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
     if (mediaInfo.contentProtection) {
-      mediaInfo.contentProtection.forEach(function (item) {
-        item.KID = dashManifestModel.getKID(item);
+      // Get the default key ID and apply it to all key systems
+      var keyIds = mediaInfo.contentProtection.map(function (cp) {
+        return dashManifestModel.getKID(cp);
+      }).filter(function (kid) {
+        return kid !== null;
       });
+
+      if (keyIds.length) {
+        var keyId = keyIds[0];
+        mediaInfo.contentProtection.forEach(function (cp) {
+          cp.keyId = keyId;
+        });
+      }
     }
 
     mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
@@ -29894,10 +29910,15 @@ function ManifestUpdater() {
     isUpdating = false;
   }
 
+  function getIsUpdating() {
+    return isUpdating;
+  }
+
   instance = {
     initialize: initialize,
     setManifest: setManifest,
     refreshManifest: refreshManifest,
+    getIsUpdating: getIsUpdating,
     setConfig: setConfig,
     reset: reset
   };
@@ -31087,7 +31108,8 @@ function MediaPlayer() {
 
   function getAverageThroughput(type) {
     var throughputHistory = abrController.getThroughputHistory();
-    return throughputHistory ? throughputHistory.getAverageThroughput(type) : 0;
+    var isDynamic = playbackController.getIsDynamic();
+    return throughputHistory ? throughputHistory.getAverageThroughput(type, isDynamic) : 0;
   }
   /**
    * Sets whether withCredentials on XHR requests for a particular request
@@ -32576,17 +32598,17 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.METRIC_UPDATED = 'metricUpdated';
     /**
+     * Triggered when a new stream (period) starts.
+     * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+     */
+
+    _this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+    /**
      * Triggered at the stream end of a period.
      * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
      */
 
     _this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
-    /**
-     * Triggered when a new stream (period) starts.
-     * @event MediaPlayerEvents#STREAM_SWITCH_STARTED
-     */
-
-    _this.STREAM_SWITCH_STARTED = 'streamSwitchStarted';
     /**
      * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
      * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
@@ -33427,11 +33449,15 @@ function SourceBufferSink(config) {
 
         if (mediaSource.readyState === 'open') {
           _waitForUpdateEnd(function () {
-            if (buffer) {
-              buffer.abort();
-            }
+            try {
+              if (buffer) {
+                buffer.abort();
+              }
 
-            resolve();
+              resolve();
+            } catch (e) {
+              resolve();
+            }
           });
         } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
           buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
@@ -34176,9 +34202,12 @@ function Stream(config) {
     logger.info('Stream -  Process track changed at current time ' + currentTime); // Applies only for MSS streams
 
     if (manifest.refreshManifestOnSwitchTrack) {
-      logger.debug('Stream -  Refreshing manifest for switch track');
       trackChangedEvents.push(e);
-      manifestUpdater.refreshManifest();
+
+      if (!manifestUpdater.getIsUpdating()) {
+        logger.debug('Stream -  Refreshing manifest for switch track');
+        manifestUpdater.refreshManifest();
+      }
     } else {
       processor.selectMediaInfo(mediaInfo).then(function () {
         if (mediaInfo.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || mediaInfo.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
@@ -34219,7 +34248,7 @@ function Stream(config) {
     if (protectionController) {
       // Need to check if streamProcessors exists because streamProcessors
       // could be cleared in case an error is detected while initializing DRM keysystem
-      protectionController.clearMediaInfoArrayByStreamId(getId());
+      protectionController.clearMediaInfoArray();
 
       for (var _i = 0; _i < ln && streamProcessors[_i]; _i++) {
         var type = streamProcessors[_i].getType();
@@ -34645,7 +34674,7 @@ function StreamProcessor(config) {
   var settings = config.settings;
   var boxParser = config.boxParser;
   var segmentBlacklistController = config.segmentBlacklistController;
-  var instance, logger, isDynamic, mediaInfo, mediaInfoArr, bufferController, scheduleController, representationController, shouldUseExplicitTimeForRequest, qualityChangeInProgress, manifestUpdateInProgress, dashHandler, segmentsController, bufferingTime;
+  var instance, logger, isDynamic, mediaInfo, mediaInfoArr, bufferController, scheduleController, representationController, shouldUseExplicitTimeForRequest, qualityChangeInProgress, dashHandler, segmentsController, bufferingTime;
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance().getLogger(instance);
@@ -34665,8 +34694,6 @@ function StreamProcessor(config) {
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].QUOTA_EXCEEDED, _onQuotaExceeded, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].STREAMS_COMPOSED, _onStreamsComposed, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
   }
 
@@ -34761,7 +34788,6 @@ function StreamProcessor(config) {
     mediaInfo = null;
     bufferingTime = 0;
     shouldUseExplicitTimeForRequest = false;
-    manifestUpdateInProgress = false;
     qualityChangeInProgress = false;
   }
 
@@ -34805,8 +34831,6 @@ function StreamProcessor(config) {
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].QUOTA_EXCEEDED, _onQuotaExceeded, instance);
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].STREAMS_COMPOSED, _onStreamsComposed, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
     resetInitialSettings();
     type = null;
@@ -34902,7 +34926,7 @@ function StreamProcessor(config) {
     // Event propagation may have been stopped (see MssHandler)
     if (!e.sender) return;
 
-    if (manifestUpdateInProgress) {
+    if (playbackController.getIsManifestUpdateInProgress()) {
       _noValidRequest();
 
       return;
@@ -34944,7 +34968,7 @@ function StreamProcessor(config) {
     var rescheduleIfNoRequest = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
     // Don't schedule next fragments while updating manifest or pruning to avoid buffer inconsistencies
-    if (manifestUpdateInProgress || bufferController.getIsPruningInProgress()) {
+    if (playbackController.getIsManifestUpdateInProgress() || bufferController.getIsPruningInProgress()) {
       _noValidRequest();
 
       return;
@@ -35078,20 +35102,6 @@ function StreamProcessor(config) {
 
   function _noValidRequest() {
     scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
-  }
-  /**
-   * A new manifest has been loaded, updating is still in progress. Wait for the update to be finished before fetching new segments.
-   * Otherwise we end up in inconsistencies like wrong base urls especially if periods have been removed.
-   * @private
-   */
-
-
-  function _onManifestUpdated() {
-    manifestUpdateInProgress = true;
-  }
-
-  function _onStreamsComposed() {
-    manifestUpdateInProgress = false;
   }
 
   function _onDataUpdateCompleted(e) {
@@ -35407,7 +35417,7 @@ function StreamProcessor(config) {
       var bitrate = null;
 
       if ((realAdaptation === null || realAdaptation.id !== newRealAdaptation.id) && type !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT) {
-        averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
+        averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
         bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
         quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
       } else {
@@ -35703,7 +35713,7 @@ function StreamProcessor(config) {
   }
 
   function _onSeekTarget(e) {
-    if (e && e.time) {
+    if (e && !isNaN(e.time)) {
       setExplicitBufferingTime(e.time);
       bufferController.setSeekTarget(e.time);
     }
@@ -36416,6 +36426,9 @@ var ProtectionConstants = /*#__PURE__*/function () {
       this.CLEARKEY_KEYSTEM_STRING = 'org.w3.clearkey';
       this.WIDEVINE_KEYSTEM_STRING = 'com.widevine.alpha';
       this.PLAYREADY_KEYSTEM_STRING = 'com.microsoft.playready';
+      this.INITIALIZATION_DATA_TYPE_CENC = 'cenc';
+      this.INITIALIZATION_DATA_TYPE_KEYIDS = 'keyids';
+      this.INITIALIZATION_DATA_TYPE_WEBM = 'webm';
     }
   }]);
 
@@ -37171,6 +37184,7 @@ function AbrController() {
   function _changeQuality(type, oldQuality, newQuality, maxIdx, reason, streamId) {
     if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
       var streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
+      var isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
       var bufferLevel = dashMetrics.getCurrentBufferLevel(type);
       logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
       qualityDict[streamId] = qualityDict[streamId] || {};
@@ -37190,7 +37204,7 @@ function AbrController() {
         streamId: streamInfo.id,
         mediaType: type
       });
-      var bitrate = throughputHistory.getAverageThroughput(type);
+      var bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
 
       if (!isNaN(bitrate)) {
         domStorage.setSavedBitrateSettings(type, bitrate);
@@ -39763,7 +39777,7 @@ function GapController() {
 
   function _shouldIgnoreSeekingState() {
     var activeStream = streamController.getActiveStream();
-    var streamEnd = parseFloat((activeStream.getStartTime().toFixed(5) + activeStream.getDuration()).toFixed(5));
+    var streamEnd = parseFloat((activeStream.getStartTime() + activeStream.getDuration()).toFixed(5));
     return playbackController.getTime() + settings.get().streaming.gaps.threshold >= streamEnd;
   }
   /**
@@ -40676,7 +40690,7 @@ var LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 function PlaybackController() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
-  var instance, logger, streamController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, streamInfo, isDynamic, mediaPlayerModel, playOnceInitialized, lastLivePlaybackTime, availabilityStartTime, seekTarget, internalSeek, isLowLatencySeekingInProgress, playbackStalled, minPlaybackRateChange, settings;
+  var instance, logger, streamController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, streamInfo, isDynamic, mediaPlayerModel, playOnceInitialized, lastLivePlaybackTime, availabilityStartTime, seekTarget, internalSeek, isLowLatencySeekingInProgress, playbackStalled, minPlaybackRateChange, manifestUpdateInProgress, settings;
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
@@ -40714,16 +40728,18 @@ function PlaybackController() {
     var ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
     var isSafari = /safari/.test(ua) && !/chrome/.test(ua);
     minPlaybackRateChange = isSafari ? 0.25 : 0.02;
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, this);
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, this);
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_ENDED, _onPlaybackEnded, this, {
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].STREAMS_COMPOSED, _onStreamsComposed, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_ENDED, _onPlaybackEnded, instance, {
       priority: _core_EventBus__WEBPACK_IMPORTED_MODULE_2__["default"].EVENT_PRIORITY_HIGH
     });
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZING, _onStreamInitializing, this);
-    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitch, this);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZING, _onStreamInitializing, instance);
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
 
     if (playOnceInitialized) {
       playOnceInitialized = false;
@@ -40793,7 +40809,10 @@ function PlaybackController() {
     var type = streamController && streamController.hasVideoTrack() ? _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
     var DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
     var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
-    seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+
+    if (DVRWindow && !isNaN(DVRWindow.end)) {
+      seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+    }
   }
 
   function getTime() {
@@ -40832,6 +40851,10 @@ function PlaybackController() {
 
   function getStreamController() {
     return streamController;
+  }
+
+  function getIsManifestUpdateInProgress() {
+    return manifestUpdateInProgress;
   }
   /**
    * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
@@ -40959,17 +40982,20 @@ function PlaybackController() {
     playOnceInitialized = false;
     liveDelay = 0;
     availabilityStartTime = 0;
+    manifestUpdateInProgress = false;
     seekTarget = NaN;
 
     if (videoModel) {
-      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
-      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_ENDED, _onPlaybackEnded, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZING, _onStreamInitializing, this);
-      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitch, this);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_3__["default"].STREAMS_COMPOSED, _onStreamsComposed, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYBACK_ENDED, _onPlaybackEnded, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZING, _onStreamInitializing, instance);
+      eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
       videoModel.setPlaybackRate(1.0, true);
       stopUpdatingWallclockTime();
       removeAllListeners();
@@ -41064,7 +41090,7 @@ function PlaybackController() {
 
   function updateCurrentTime() {
     var mediaType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-    if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return; // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
+    if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) return; // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
     // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
 
     if (!mediaType) {
@@ -41076,7 +41102,7 @@ function PlaybackController() {
     var actualTime = getActualPresentationTime(currentTime, mediaType);
     var timeChanged = !isNaN(actualTime) && actualTime !== currentTime;
 
-    if (timeChanged && !isSeeking() && (isStalled() || playbackStalled)) {
+    if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
       logger.debug("UpdateCurrentTime: Seek to actual time: ".concat(actualTime, " from currentTime: ").concat(currentTime));
       seek(actualTime);
     }
@@ -41229,6 +41255,8 @@ function PlaybackController() {
     // (video element doesn't call timeupdate when the playback is paused)
 
     if (getIsDynamic()) {
+      streamController.addDVRMetric();
+
       if (isPaused()) {
         _updateLivePlaybackTime();
       } else {
@@ -41583,6 +41611,24 @@ function PlaybackController() {
       });
     }
   }
+  /**
+   * A new manifest has been loaded, updating is still in progress.
+   * @private
+   */
+
+
+  function _onManifestUpdated() {
+    manifestUpdateInProgress = true;
+  }
+  /**
+   * Manifest update was completed
+   * @private
+   */
+
+
+  function _onStreamsComposed() {
+    manifestUpdateInProgress = false;
+  }
 
   function _checkEnableLowLatency(mediaInfo) {
     if (mediaInfo && mediaInfo.supplementalProperties && mediaInfo.supplementalProperties[_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
@@ -41640,6 +41686,7 @@ function PlaybackController() {
     getBufferLevel: getBufferLevel,
     getTime: getTime,
     getNormalizedTime: getNormalizedTime,
+    getIsManifestUpdateInProgress: getIsManifestUpdateInProgress,
     getPlaybackRate: getPlaybackRate,
     getPlayedRanges: getPlayedRanges,
     getEnded: getEnded,
@@ -41867,7 +41914,7 @@ function ScheduleController(config) {
 
   function _shouldClearScheduleTimer() {
     try {
-      return type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && !textController.isTextEnabled();
+      return type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && !textController.isTextEnabled() || playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused;
     } catch (e) {
       return false;
     }
@@ -42252,7 +42299,8 @@ function StreamController() {
   }
 
   function initialize(autoPl, protData) {
-    checkConfig();
+    _checkConfig();
+
     autoPlay = autoPl;
     protectionData = protData;
     timelineConverter.initialize();
@@ -42313,7 +42361,6 @@ function StreamController() {
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
   }
 
@@ -42336,7 +42383,6 @@ function StreamController() {
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
   }
   /**
@@ -42462,8 +42508,7 @@ function StreamController() {
 
   function _initializeForFirstStream(streamsInfo) {
     // Add the DVR window so we can calculate the right starting point
-    _addDVRMetric(); // If the start is in the future we need to wait
-
+    addDVRMetric(); // If the start is in the future we need to wait
 
     var dvrRange = dashMetrics.getCurrentDVRInfo().range;
 
@@ -42521,7 +42566,7 @@ function StreamController() {
       }
 
       isStreamSwitchingInProgress = true;
-      eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].STREAM_SWITCH_STARTED, {
+      eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].PERIOD_SWITCH_STARTED, {
         fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
         toStreamInfo: stream.getStreamInfo()
       });
@@ -42658,7 +42703,7 @@ function StreamController() {
       _handleOuterPeriodSeek(e, seekToStream);
     }
 
-    createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].SEEK_START_REASON);
+    _createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].SEEK_START_REASON);
   }
   /**
    * Cancels the preloading of certain streams based on the position we are seeking to.
@@ -42822,7 +42867,7 @@ function StreamController() {
    */
 
 
-  function _addDVRMetric() {
+  function addDVRMetric() {
     try {
       var isDynamic = adapter.getIsDynamic();
       var streamsInfo = adapter.getStreamsInfo();
@@ -42859,7 +42904,9 @@ function StreamController() {
 
       if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay()) {
         initialPlayback = false;
-        createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].INITIAL_PLAYOUT_START_REASON);
+
+        _createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].INITIAL_PLAYOUT_START_REASON);
+
         playbackController.play();
       }
     }
@@ -42883,17 +42930,6 @@ function StreamController() {
 
     var stream = getStreamById(e.streamInfo.id);
     stream.prepareQualityChange(e);
-  }
-  /**
-   * Update the DVR window when the wallclock time has updated
-   * @private
-   */
-
-
-  function _onWallclockTimeUpdated() {
-    if (adapter.getIsDynamic()) {
-      _addDVRMetric();
-    }
   }
   /**
    * When the playback time is updated we add the droppedFrames metric to the dash metric object
@@ -42924,9 +42960,14 @@ function StreamController() {
     logger.debug('[onPlaybackStarted]');
 
     if (!initialPlayback && isPaused) {
-      isPaused = false;
-      createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].RESUME_FROM_PAUSE_START_REASON);
+      _createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].RESUME_FROM_PAUSE_START_REASON);
     }
+
+    if (initialPlayback) {
+      initialPlayback = false;
+    }
+
+    isPaused = false;
   }
   /**
    * Once playback is paused flush metrics
@@ -43179,6 +43220,24 @@ function StreamController() {
     return activeStream;
   }
   /**
+   * Initial playback indicates if we have called play() for the first time yet.
+   * @return {*}
+   */
+
+
+  function getInitialPlayback() {
+    return initialPlayback;
+  }
+  /**
+   * Auto Play indicates if the stream starts automatically as soon as it is initialized.
+   * @return {boolean}
+   */
+
+
+  function getAutoPlay() {
+    return autoPlay;
+  }
+  /**
    * Called once the first stream has been initialized. We only use this function to seek to the right start time.
    * @return {number}
    * @private
@@ -43411,7 +43470,7 @@ function StreamController() {
     dashMetrics.addPlayList();
   }
 
-  function createPlaylistMetrics(startReason) {
+  function _createPlaylistMetrics(startReason) {
     dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
   }
 
@@ -43510,25 +43569,27 @@ function StreamController() {
     return null;
   }
 
-  function checkConfig() {
+  function _checkConfig() {
     if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') || !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler || !dashMetrics || !playbackController) {
       throw new Error(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
     }
   }
 
-  function checkInitialize() {
+  function _checkInitialize() {
     if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
       throw new Error('initialize function has to be called previously');
     }
   }
 
   function load(url) {
-    checkConfig();
+    _checkConfig();
+
     manifestLoader.load(url);
   }
 
   function loadWithManifest(manifest) {
-    checkInitialize();
+    _checkInitialize();
+
     manifestUpdater.setManifest(manifest);
   }
 
@@ -43649,7 +43710,8 @@ function StreamController() {
   }
 
   function reset() {
-    checkConfig();
+    _checkConfig();
+
     timeSyncController.reset();
 
     _flushPlaylistMetrics(hasMediaError || hasInitialisationError ? _vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayListTrace"].FAILURE_STOP_REASON : _vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayListTrace"].USER_REQUEST_STOP_REASON);
@@ -43712,6 +43774,7 @@ function StreamController() {
   instance = {
     initialize: initialize,
     getActiveStreamInfo: getActiveStreamInfo,
+    addDVRMetric: addDVRMetric,
     hasVideoTrack: hasVideoTrack,
     hasAudioTrack: hasAudioTrack,
     getStreamById: getStreamById,
@@ -43727,6 +43790,8 @@ function StreamController() {
     getHasMediaOrInitialisationError: getHasMediaOrInitialisationError,
     getStreams: getStreams,
     getActiveStream: getActiveStream,
+    getInitialPlayback: getInitialPlayback,
+    getAutoPlay: getAutoPlay,
     reset: reset
   };
   setup();
@@ -43904,7 +43969,7 @@ function TimeSyncController() {
 
 
   function _onAttemptBackgroundSync() {
-    if (isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
+    if (!settings.get().streaming.utcSynchronization.enabled || isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
       return;
     }
 
@@ -44025,7 +44090,7 @@ function TimeSyncController() {
 
   function _shouldPerformSynchronization(isDynamic) {
     try {
-      if (!isDynamic) {
+      if (!isDynamic || !settings.get().streaming.utcSynchronization.enabled) {
         return false;
       }
 
@@ -48817,7 +48882,7 @@ function MediaPlayerModel() {
     }
 
     var stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
-    return stableBufferTime > -1 ? stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    return stableBufferTime > 0 ? stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
   }
 
   function getRetryAttemptsForType(type) {
@@ -51022,19 +51087,22 @@ function URLLoader(cfg) {
   schemeLoaderFactory = Object(_streaming_net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
 
   function load(config) {
-    var loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
-    loader = loaderFactory(context).create({
-      errHandler: cfg.errHandler,
-      mediaPlayerModel: cfg.mediaPlayerModel,
-      requestModifier: cfg.requestModifier,
-      dashMetrics: cfg.dashMetrics,
-      boxParser: cfg.boxParser ? cfg.boxParser : null,
-      constants: cfg.constants ? cfg.constants : null,
-      dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
-      urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
-      requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
-      errors: cfg.errors
-    });
+    if (!loader) {
+      var loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
+      loader = loaderFactory(context).create({
+        errHandler: cfg.errHandler,
+        mediaPlayerModel: cfg.mediaPlayerModel,
+        requestModifier: cfg.requestModifier,
+        dashMetrics: cfg.dashMetrics,
+        boxParser: cfg.boxParser ? cfg.boxParser : null,
+        constants: cfg.constants ? cfg.constants : null,
+        dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
+        urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+        requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
+        errors: cfg.errors
+      });
+    }
+
     loader.load(config);
   }
 
@@ -51220,11 +51288,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+var LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
+  attributes: ['Laurl', 'laurl'],
+  prefixes: ['clearkey', 'dashif']
+};
 /**
  * @class
  * @ignore
  */
+
 var CommonEncryption = /*#__PURE__*/function () {
   function CommonEncryption() {
     _classCallCheck(this, CommonEncryption);
@@ -51427,6 +51499,62 @@ var CommonEncryption = /*#__PURE__*/function () {
 
       return pssh;
     }
+  }, {
+    key: "getLicenseServerUrlFromMediaInfo",
+    value: function getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri) {
+      try {
+        if (!mediaInfo || mediaInfo.length === 0) {
+          return null;
+        }
+
+        var i = 0;
+        var licenseServer = null;
+
+        while (i < mediaInfo.length && !licenseServer) {
+          var info = mediaInfo[i];
+
+          if (info && info.contentProtection && info.contentProtection.length > 0) {
+            var targetProtectionData = info.contentProtection.filter(function (cp) {
+              return cp.schemeIdUri && cp.schemeIdUri === schemeIdUri;
+            });
+
+            if (targetProtectionData && targetProtectionData.length > 0) {
+              var j = 0;
+
+              while (j < targetProtectionData.length && !licenseServer) {
+                var ckData = targetProtectionData[j];
+                var k = 0;
+
+                while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
+                  var l = 0;
+                  var attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
+
+                  while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
+                    var prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
+
+                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
+                      licenseServer = ckData[attribute].__text;
+                    }
+
+                    l += 1;
+                  }
+
+                  k += 1;
+                }
+
+                j += 1;
+              }
+            }
+          }
+
+          i += 1;
+        }
+
+        return licenseServer;
+      } catch (e) {
+        return null;
+      }
+    }
   }]);
 
   return CommonEncryption;
@@ -51563,7 +51691,8 @@ function Protection() {
       BASE64: config.BASE64
     });
     protectionKeyController.initialize();
-    var protectionModel = getProtectionModel(config);
+
+    var protectionModel = _getProtectionModel(config);
 
     if (!controller && protectionModel) {
       //TODO add ability to set external controller if still needed at all?
@@ -51584,7 +51713,7 @@ function Protection() {
     return controller;
   }
 
-  function getProtectionModel(config) {
+  function _getProtectionModel(config) {
     var debug = config.debug;
     var logger = debug.getLogger(instance);
     var eventBus = config.eventBus;
@@ -51598,22 +51727,22 @@ function Protection() {
         eventBus: eventBus,
         events: config.events
       });
-    } else if (getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
+    } else if (_getAPI(videoElement, APIS_ProtectionModel_3Feb2014)) {
       logger.info('EME detected on this user agent! (ProtectionModel_3Feb2014)');
       return Object(_models_ProtectionModel_3Feb2014__WEBPACK_IMPORTED_MODULE_5__["default"])(context).create({
         debug: debug,
         eventBus: eventBus,
         events: config.events,
-        api: getAPI(videoElement, APIS_ProtectionModel_3Feb2014)
+        api: _getAPI(videoElement, APIS_ProtectionModel_3Feb2014)
       });
-    } else if (getAPI(videoElement, APIS_ProtectionModel_01b)) {
+    } else if (_getAPI(videoElement, APIS_ProtectionModel_01b)) {
       logger.info('EME detected on this user agent! (ProtectionModel_01b)');
       return Object(_models_ProtectionModel_01b__WEBPACK_IMPORTED_MODULE_6__["default"])(context).create({
         debug: debug,
         eventBus: eventBus,
         errHandler: errHandler,
         events: config.events,
-        api: getAPI(videoElement, APIS_ProtectionModel_01b)
+        api: _getAPI(videoElement, APIS_ProtectionModel_01b)
       });
     } else {
       logger.warn('No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!');
@@ -51621,7 +51750,7 @@ function Protection() {
     }
   }
 
-  function getAPI(videoElement, apis) {
+  function _getAPI(videoElement, apis) {
     for (var i = 0; i < apis.length; i++) {
       var api = apis[i]; // detect if api is supported by browser
       // check only first function in api -> should be fine
@@ -51742,13 +51871,6 @@ var ProtectionEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.INTERNAL_KEY_MESSAGE = 'internalKeyMessage';
-    /**
-     * Event ID for events delivered when a key system selection procedure
-     * completes
-     * @ignore
-     */
-
-    _this.INTERNAL_KEY_SYSTEM_SELECTED = 'internalKeySystemSelected';
     /**
      * Event ID for events delivered when the status of one decryption keys has changed
      * @ignore
@@ -51910,6 +52032,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /* harmony import */ var _core_Utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../core/Utils */ "./src/core/Utils.js");
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../constants/Constants */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 /**
@@ -51952,6 +52075,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 
 
+
 var NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 var NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 var LICENSE_SERVER_REQUEST_RETRIES = 3;
@@ -51984,16 +52108,18 @@ function ProtectionController(config) {
   var needkeyRetries = [];
   var cmcdModel = config.cmcdModel;
   var settings = config.settings;
-  var instance, logger, pendingNeedKeyData, mediaInfoArr, protDataSet, sessionType, robustnessLevel, keySystem, licenseRequestFilters, licenseResponseFilters;
+  var instance, logger, pendingKeySystemData, mediaInfoArr, protDataSet, sessionType, robustnessLevel, selectedKeySystem, keySystemSelectionInProgress, licenseRequestFilters, licenseResponseFilters;
 
   function setup() {
     logger = debug.getLogger(instance);
-    pendingNeedKeyData = [];
+    pendingKeySystemData = [];
     mediaInfoArr = [];
     sessionType = 'temporary';
     robustnessLevel = '';
     licenseRequestFilters = [];
     licenseResponseFilters = [];
+    eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+    eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
   }
 
   function checkConfig() {
@@ -52002,16 +52128,11 @@ function ProtectionController(config) {
     }
   }
   /**
-   * Initialize this protection system with a given audio
-   * or video stream information.
+   * Initialize this protection system for a given media type.
    *
    * @param {StreamInfo} [mediaInfo] Media information
    * @memberof module:ProtectionController
    * @instance
-   * @todo This API will change when we have better support for allowing applications
-   * to select different adaptation sets for playback.  Right now it is clunky for
-   * applications to create {@link StreamInfo} with the right information,
-   * @ignore
    */
 
 
@@ -52025,27 +52146,246 @@ function ProtectionController(config) {
     }
 
     checkConfig();
-    eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-    eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
     mediaInfoArr.push(mediaInfo); // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-    // and video will be the same.  Just use one valid MediaInfo object
+    // and video will be the same. Just use one valid MediaInfo object
 
-    var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+    var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType); // Reorder key systems according to priority order provided in protectionData
+
+    supportedKS = supportedKS.sort(function (ksA, ksB) {
+      var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+      var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
+      return indexA - indexB;
+    });
 
     if (supportedKS && supportedKS.length > 0) {
-      selectKeySystem(supportedKS, true);
+      _selectKeySystem(supportedKS, true);
     }
   }
   /**
-   * Removes all entries from the mediaInfoArr array for a specific stream id
-   * @param {String} streamId
+   * Selects a key system if we dont have any one yet. Otherwise we use the existing key system and trigger a new license request if the initdata has changed
+   * @param {array} supportedKS
+   * @param {boolean} fromManifest
+   * @private
    */
 
 
-  function clearMediaInfoArrayByStreamId(streamId) {
-    mediaInfoArr = mediaInfoArr.filter(function (mediaInfo) {
-      return mediaInfo.streamInfo.id !== streamId;
+  function _selectKeySystem(supportedKS, fromManifest) {
+    // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
+    if (keySystemSelectionInProgress) {
+      pendingKeySystemData.push(supportedKS);
+    } // First time, so we need to select a key system
+    else if (!selectedKeySystem) {
+        _selectInitialKeySystem(supportedKS, fromManifest);
+      } // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
+      else if (selectedKeySystem) {
+          _initiateWithExistingKeySystem(supportedKS);
+        }
+  }
+  /**
+   * We do not have a key system yet. Select one
+   * @param {array} supportedKS
+   * @param {boolean} fromManifest
+   * @private
+   */
+
+
+  function _selectInitialKeySystem(supportedKS, fromManifest) {
+    keySystemSelectionInProgress = true;
+    var requestedKeySystems = [];
+    pendingKeySystemData.push(supportedKS); // Add all key systems to our request list since we have yet to select a key system
+
+    for (var i = 0; i < supportedKS.length; i++) {
+      var keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
+
+      requestedKeySystems.push({
+        ks: supportedKS[i].ks,
+        configs: [keySystemConfiguration]
+      });
+    }
+
+    var keySystemAccess;
+    protectionModel.requestKeySystemAccess(requestedKeySystems).then(function (event) {
+      keySystemAccess = event.data;
+      logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+      return protectionModel.selectKeySystem(keySystemAccess);
+    }).then(function (keySystem) {
+      selectedKeySystem = keySystem;
+      keySystemSelectionInProgress = false;
+
+      if (!protectionModel) {
+        return;
+      }
+
+      eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+        data: keySystemAccess
+      }); // Set server certificate from protData
+
+      var protData = _getProtDataForKeySystem(selectedKeySystem);
+
+      if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+      } // Create key sessions for the different AdaptationSets
+
+
+      var ksIdx;
+
+      for (var _i = 0; _i < pendingKeySystemData.length; _i++) {
+        for (ksIdx = 0; ksIdx < pendingKeySystemData[_i].length; ksIdx++) {
+          if (selectedKeySystem === pendingKeySystemData[_i][ksIdx].ks) {
+            var current = pendingKeySystemData[_i][ksIdx];
+
+            _loadOrCreateKeySession(current);
+
+            break;
+          }
+        }
+      }
+    })["catch"](function (event) {
+      selectedKeySystem = null;
+      keySystemSelectionInProgress = false;
+
+      if (!fromManifest) {
+        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+          data: null,
+          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+        });
+      }
     });
+  }
+  /**
+   * If we have already selected a keysytem we only need to create a new key session and issue a new license request if the init data has changed.
+   * @param {array} supportedKS
+   * @private
+   */
+
+
+  function _initiateWithExistingKeySystem(supportedKS) {
+    var ksIdx = supportedKS.findIndex(function (entry) {
+      return entry.ks === selectedKeySystem;
+    });
+    var current = supportedKS[ksIdx];
+
+    if (ksIdx === -1 || !current.initData) {
+      return;
+    }
+
+    _loadOrCreateKeySession(current);
+  }
+  /**
+   * Loads an existing key session if we already have a session id. Otherwise we create a new key session
+   * @param {object} keySystemInfo
+   * @private
+   */
+
+
+  function _loadOrCreateKeySession(keySystemInfo) {
+    // Clearkey
+    if (protectionKeyController.isClearKey(selectedKeySystem)) {
+      // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+      // initData and overwrite possible initData indicated in encrypted event (EME)
+      if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+        var initData = {
+          kids: Object.keys(keySystemInfo.protData.clearkeys)
+        };
+        keySystemInfo.initData = new TextEncoder().encode(JSON.stringify(initData));
+      }
+    } // Reuse existing KeySession
+
+
+    if (keySystemInfo.sessionId) {
+      // Load MediaKeySession with sessionId
+      loadKeySession(keySystemInfo);
+    } // Create a new KeySession
+    else if (keySystemInfo.initData !== null) {
+        // Create new MediaKeySession with initData
+        createKeySession(keySystemInfo);
+      }
+  }
+  /**
+   * Loads a key session with the given session ID from persistent storage.  This essentially creates a new key session
+   *
+   * @param {object} ksInfo
+   * @memberof module:ProtectionController
+   * @instance
+   * @fires ProtectionController#KeySessionCreated
+   * @ignore
+   */
+
+
+  function loadKeySession(keySystemInfo) {
+    checkConfig();
+    protectionModel.loadKeySession(keySystemInfo);
+  }
+  /**
+   * Create a new key session associated with the given initialization data from the MPD or from the PSSH box in the media
+   * For the latest version of the EME a request is generated. Once this request is ready we get notified via the INTERNAL_KEY_MESSAGE event
+   * @param {ArrayBuffer} initData the initialization data
+   * @param {Uint8Array} cdmData the custom data to provide to licenser
+   * @memberof module:ProtectionController
+   * @instance
+   * @fires ProtectionController#KeySessionCreated
+   * @ignore
+   */
+
+
+  function createKeySession(keySystemInfo) {
+    var initDataForKS = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
+
+    if (initDataForKS) {
+      // Check for duplicate key id
+      if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
+        return;
+      } // Check for duplicate initData
+
+
+      if (_isInitDataDuplicate(initDataForKS)) {
+        return;
+      }
+
+      try {
+        keySystemInfo.initData = initDataForKS;
+        protectionModel.createKeySession(keySystemInfo);
+      } catch (error) {
+        eventBus.trigger(events.KEY_SESSION_CREATED, {
+          data: null,
+          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)
+        });
+      }
+    } else if (keySystemInfo && keySystemInfo.initData) {
+      protectionModel.createKeySession(keySystemInfo);
+    } else {
+      eventBus.trigger(events.KEY_SESSION_CREATED, {
+        data: null,
+        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (selectedKeySystem ? selectedKeySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
+      });
+    }
+  }
+  /**
+   * Returns the protectionData for a specific keysystem as specified by the application.
+   * @param {object} keySystem
+   * @return {object | null}
+   * @private
+   */
+
+
+  function _getProtDataForKeySystem(keySystem) {
+    if (keySystem) {
+      var keySystemString = keySystem.systemString;
+
+      if (protDataSet) {
+        return keySystemString in protDataSet ? protDataSet[keySystemString] : null;
+      }
+    }
+
+    return null;
+  }
+  /**
+   * Removes all entries from the mediaInfoArr
+   */
+
+
+  function clearMediaInfoArray() {
+    mediaInfoArr = [];
   }
   /**
    * Returns a set of supported key systems and CENC initialization data
@@ -52066,50 +52406,33 @@ function ProtectionController(config) {
 
   function getSupportedKeySystemsFromContentProtection(cps) {
     checkConfig();
-    return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
+    return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType);
   }
   /**
-   * Create a new key session associated with the given initialization data from
-   * the MPD or from the PSSH box in the media
-   *
-   * @param {ArrayBuffer} initData the initialization data
-   * @param {Uint8Array} cdmData the custom data to provide to licenser
-   * @memberof module:ProtectionController
-   * @instance
-   * @fires ProtectionController#KeySessionCreated
-   * @todo In older versions of the EME spec, there was a one-to-one relationship between
-   * initialization data and key sessions.  That is no longer true in the latest APIs.  This
-   * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
-   * to come up to speed with the latest EME standard
-   * @ignore
+   * Checks if a session has already created for the provided key id
+   * @param {string} keyId
+   * @return {boolean}
+   * @private
    */
 
 
-  function createKeySession(initData, cdmData) {
-    var initDataForKS = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(keySystem, initData);
-    var protData = getProtData(keySystem);
+  function _isKeyIdDuplicate(keyId) {
+    if (!keyId) {
+      return false;
+    }
 
-    if (initDataForKS) {
-      // Check for duplicate initData
-      if (_isInitDataDuplicate(initDataForKS)) {
-        return;
+    try {
+      var sessions = protectionModel.getSessions();
+
+      for (var i = 0; i < sessions.length; i++) {
+        if (sessions[i].getKeyId() === keyId) {
+          return true;
+        }
       }
 
-      try {
-        protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
-      } catch (error) {
-        eventBus.trigger(events.KEY_SESSION_CREATED, {
-          data: null,
-          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)
-        });
-      }
-    } else if (initData) {
-      protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
-    } else {
-      eventBus.trigger(events.KEY_SESSION_CREATED, {
-        data: null,
-        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (keySystem ? keySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
-      });
+      return false;
+    } catch (e) {
+      return false;
     }
   }
   /**
@@ -52139,23 +52462,6 @@ function ProtectionController(config) {
     } catch (e) {
       return false;
     }
-  }
-  /**
-   * Loads a key session with the given session ID from persistent storage.  This
-   * essentially creates a new key session
-   *
-   * @param {string} sessionID
-   * @param {string} initData
-   * @memberof module:ProtectionController
-   * @instance
-   * @fires ProtectionController#KeySessionCreated
-   * @ignore
-   */
-
-
-  function loadKeySession(sessionID, initData) {
-    checkConfig();
-    protectionModel.loadKeySession(sessionID, initData, getSessionType(keySystem));
   }
   /**
    * Removes the given key session from persistent storage and closes the session
@@ -52227,10 +52533,10 @@ function ProtectionController(config) {
 
     if (element) {
       protectionModel.setMediaElement(element);
-      eventBus.on(events.NEED_KEY, onNeedKey, this);
+      eventBus.on(events.NEED_KEY, _onNeedKey, instance);
     } else if (element === null) {
       protectionModel.setMediaElement(element);
-      eventBus.off(events.NEED_KEY, onNeedKey, this);
+      eventBus.off(events.NEED_KEY, _onNeedKey, instance);
     }
   }
   /**
@@ -52301,13 +52607,14 @@ function ProtectionController(config) {
 
 
   function reset() {
+    eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+    eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     checkConfig();
     licenseRequestFilters = [];
     licenseResponseFilters = [];
-    eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-    eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
     setMediaElement(null);
-    keySystem = undefined;
+    selectedKeySystem = null;
+    keySystemSelectionInProgress = false;
 
     if (protectionModel) {
       protectionModel.reset();
@@ -52319,32 +52626,23 @@ function ProtectionController(config) {
     });
     needkeyRetries = [];
     mediaInfoArr = [];
-  } ///////////////
-  // Private
-  ///////////////
-
-
-  function getProtData(keySystem) {
-    var protData = null;
-
-    if (keySystem) {
-      var keySystemString = keySystem.systemString;
-
-      if (protDataSet) {
-        protData = keySystemString in protDataSet ? protDataSet[keySystemString] : null;
-      }
-    }
-
-    return protData;
+    pendingKeySystemData = [];
   }
+  /**
+   * Returns an object corresponding to the EME MediaKeySystemConfiguration dictionary
+   * @param {object} keySystem
+   * @return {KeySystemConfiguration}
+   * @private
+   */
 
-  function getKeySystemConfiguration(keySystem) {
-    var protData = getProtData(keySystem);
+
+  function _getKeySystemConfiguration(keySystemData) {
+    var protData = keySystemData.protData;
     var audioCapabilities = [];
     var videoCapabilities = [];
     var audioRobustness = protData && protData.audioRobustness && protData.audioRobustness.length > 0 ? protData.audioRobustness : robustnessLevel;
     var videoRobustness = protData && protData.videoRobustness && protData.videoRobustness.length > 0 ? protData.videoRobustness : robustnessLevel;
-    var ksSessionType = getSessionType(keySystem);
+    var ksSessionType = keySystemData.sessionType;
     var distinctiveIdentifier = protData && protData.distinctiveIdentifier ? protData.distinctiveIdentifier : 'optional';
     var persistentState = protData && protData.persistentState ? protData.persistentState : ksSessionType === 'temporary' ? 'optional' : 'required';
     mediaInfoArr.forEach(function (media) {
@@ -52356,206 +52654,14 @@ function ProtectionController(config) {
     });
     return new _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_2__["default"](audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType]);
   }
-
-  function getSessionType(keySystem) {
-    var protData = getProtData(keySystem);
-    var ksSessionType = protData && protData.sessionType ? protData.sessionType : sessionType;
-    return ksSessionType;
-  }
-
-  function selectKeySystem(supportedKS, fromManifest) {
-    // Reorder key systems according to priority order provided in protectionData
-    supportedKS = supportedKS.sort(function (ksA, ksB) {
-      var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-      var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-      return indexA - indexB;
-    }); // First time, so we need to select a key system
-
-    if (keySystem === undefined) {
-      _selectInitialKeySystem(supportedKS, fromManifest);
-    } // We already selected a key system. we only need to trigger a new license exchange if the init data has changed
-    else if (keySystem) {
-        _selectWithExistingKeySystem(supportedKS, fromManifest);
-      } // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
-      else {
-          pendingNeedKeyData.push(supportedKS);
-        }
-  }
-
-  function _selectWithExistingKeySystem(supportedKS, fromManifest) {
-    var self = this;
-    var requestedKeySystems = [];
-    var ksIdx = supportedKS.findIndex(function (entry) {
-      return entry.ks === keySystem;
-    });
-
-    if (ksIdx === -1 || !supportedKS[ksIdx].initData) {
-      return;
-    } //  we only need to call this if the init data has changed
+  /**
+   * Event handler for when the status of the key has changed
+   * @param {object} e
+   * @private
+   */
 
 
-    var initDataForKs = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(keySystem, supportedKS[ksIdx].initData);
-
-    if (_isInitDataDuplicate(initDataForKs)) {
-      return;
-    }
-
-    requestedKeySystems.push({
-      ks: supportedKS[ksIdx].ks,
-      configs: [getKeySystemConfiguration(keySystem)]
-    }); // Ensure that we would be granted key system access using the key
-    // system and codec information
-
-    var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
-      eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-
-      if (event.error) {
-        if (!fromManifest) {
-          eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-            error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)
-          });
-        }
-      } else {
-        logger.info('DRM: KeySystem Access Granted');
-        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-          data: event.data
-        });
-        var protData = getProtData(keySystem);
-
-        if (protectionKeyController.isClearKey(keySystem)) {
-          // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
-          // initData and overwrite possible initData indicated in encrypted event (EME)
-          if (protData && protData.hasOwnProperty('clearkeys')) {
-            var initData = {
-              kids: Object.keys(protData.clearkeys)
-            };
-            supportedKS[ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
-          }
-        }
-
-        if (supportedKS[ksIdx].sessionId) {
-          // Load MediaKeySession with sessionId
-          loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
-        } else if (supportedKS[ksIdx].initData) {
-          // Create new MediaKeySession with initData
-          createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
-        }
-      }
-    };
-
-    eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-    protectionModel.requestKeySystemAccess(requestedKeySystems);
-  }
-
-  function _selectInitialKeySystem(supportedKS, fromManifest) {
-    var self = this;
-    var requestedKeySystems = [];
-    var ksIdx; // First time through, so we need to select a key system
-
-    keySystem = null;
-    pendingNeedKeyData.push(supportedKS); // Add all key systems to our request list since we have yet to select a key system
-
-    for (var i = 0; i < supportedKS.length; i++) {
-      requestedKeySystems.push({
-        ks: supportedKS[i].ks,
-        configs: [getKeySystemConfiguration(supportedKS[i].ks)]
-      });
-    }
-
-    var keySystemAccess;
-
-    var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
-      eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-
-      if (event.error) {
-        keySystem = undefined;
-        eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-
-        if (!fromManifest) {
-          eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-            data: null,
-            error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)
-          });
-        }
-      } else {
-        keySystemAccess = event.data;
-        logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
-        protectionModel.selectKeySystem(keySystemAccess);
-      }
-    };
-
-    var onKeySystemSelected = function onKeySystemSelected(event) {
-      eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-      eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-
-      if (!event.error) {
-        if (!protectionModel) {
-          return;
-        }
-
-        keySystem = protectionModel.getKeySystem();
-        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-          data: keySystemAccess
-        }); // Set server certificate from protData
-
-        var protData = getProtData(keySystem);
-
-        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-          protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
-        } // Create key session for the remaining AdaptationSets which have been added to pendingNeedKeyData
-
-
-        for (var _i = 0; _i < pendingNeedKeyData.length; _i++) {
-          for (ksIdx = 0; ksIdx < pendingNeedKeyData[_i].length; ksIdx++) {
-            if (keySystem === pendingNeedKeyData[_i][ksIdx].ks) {
-              if (protectionKeyController.isClearKey(keySystem)) {
-                // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
-                // initData and overwrite possible initData indicated in encrypted event (EME)
-                if (protData && protData.hasOwnProperty('clearkeys')) {
-                  var initData = {
-                    kids: Object.keys(protData.clearkeys)
-                  };
-                  pendingNeedKeyData[_i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
-                }
-              }
-
-              if (pendingNeedKeyData[_i][ksIdx].sessionId) {
-                // Load MediaKeySession with sessionId
-                loadKeySession(pendingNeedKeyData[_i][ksIdx].sessionId, pendingNeedKeyData[_i][ksIdx].initData);
-              } else if (pendingNeedKeyData[_i][ksIdx].initData !== null) {
-                // Create new MediaKeySession with initData
-                createKeySession(pendingNeedKeyData[_i][ksIdx].initData, pendingNeedKeyData[_i][ksIdx].cdmData);
-              }
-
-              break;
-            }
-          }
-        }
-      } else {
-        keySystem = undefined;
-
-        if (!fromManifest) {
-          eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-            data: null,
-            error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
-          });
-        }
-      }
-    };
-
-    eventBus.on(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-    eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-    protectionModel.requestKeySystemAccess(requestedKeySystems);
-  }
-
-  function sendLicenseRequestCompleteEvent(data, error) {
-    eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, {
-      data: data,
-      error: error
-    });
-  }
-
-  function onKeyStatusChanged(e) {
+  function _onKeyStatusChanged(e) {
     if (e.error) {
       eventBus.trigger(events.KEY_STATUSES_CHANGED, {
         data: null,
@@ -52565,8 +52671,14 @@ function ProtectionController(config) {
       logger.debug('DRM: key status = ' + e.status);
     }
   }
+  /**
+   * Event handler for the key message event. Once we have a key message we can issue a license request
+   * @param {object} e
+   * @private
+   */
 
-  function onKeyMessage(e) {
+
+  function _onKeyMessage(e) {
     logger.debug('DRM: onKeyMessage'); // Dispatch event to applications indicating we received a key message
 
     var keyMessage = e.data;
@@ -52576,72 +52688,85 @@ function ProtectionController(config) {
     var messageType = keyMessage.messageType ? keyMessage.messageType : 'license-request';
     var message = keyMessage.message;
     var sessionToken = keyMessage.sessionToken;
-    var protData = getProtData(keySystem);
-    var keySystemString = keySystem ? keySystem.systemString : null;
-    var licenseServerData = protectionKeyController.getLicenseServer(keySystem, protData, messageType);
+
+    var protData = _getProtDataForKeySystem(selectedKeySystem);
+
+    var licenseServerModelInstance = protectionKeyController.getLicenseServerModelInstance(selectedKeySystem, protData, messageType);
     var eventData = {
       sessionToken: sessionToken,
       messageType: messageType
     }; // Ensure message from CDM is not empty
 
     if (!message || message.byteLength === 0) {
-      sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE));
+      _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE));
+
       return;
     } // Message not destined for license server
 
 
-    if (!licenseServerData) {
-      logger.debug('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionID());
-      sendLicenseRequestCompleteEvent(eventData);
+    if (!licenseServerModelInstance) {
+      logger.debug('DRM: License server request not required for this message (type = ' + e.data.messageType + ').  Session ID = ' + sessionToken.getSessionId());
+
+      _sendLicenseRequestCompleteEvent(eventData);
+
       return;
     } // Perform any special handling for ClearKey
 
 
-    if (protectionKeyController.isClearKey(keySystem)) {
-      var clearkeys = protectionKeyController.processClearKeyLicenseRequest(keySystem, protData, message);
+    if (protectionKeyController.isClearKey(selectedKeySystem)) {
+      var clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
 
       if (clearkeys) {
         logger.debug('DRM: ClearKey license request handled by application!');
-        sendLicenseRequestCompleteEvent(eventData);
+
+        _sendLicenseRequestCompleteEvent(eventData);
+
         protectionModel.updateKeySession(sessionToken, clearkeys);
         return;
       }
-    } // All remaining key system scenarios require a request to a remote license server
-    // Determine license server URL
+    } // In all other cases we have to make a license request
 
 
-    var url = null;
-
-    if (protData && protData.serverURL) {
-      var serverURL = protData.serverURL;
-
-      if (typeof serverURL === 'string' && serverURL !== '') {
-        url = serverURL;
-      } else if (_typeof(serverURL) === 'object' && serverURL.hasOwnProperty(messageType)) {
-        url = serverURL[messageType];
-      }
-    } else if (protData && protData.laURL && protData.laURL !== '') {
-      // TODO: Deprecated!
-      url = protData.laURL;
-    } else {
-      // For clearkey use the url defined in the manifest
-      if (protectionKeyController.isClearKey(keySystem)) {
-        url = keySystem.getLicenseServerUrlFromMediaInfo(mediaInfoArr);
-      } else {
-        var psshData = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHData(sessionToken.initData);
-        url = keySystem.getLicenseServerURLFromInitData(psshData);
-
-        if (!url) {
-          url = e.data.laURL;
-        }
-      }
-    } // Possibly update or override the URL based on the message
+    _issueLicenseRequest(keyMessage, licenseServerModelInstance, protData);
+  }
+  /**
+   * Notify other classes that the license request was completed
+   * @param {object} data
+   * @param {object} error
+   * @private
+   */
 
 
-    url = licenseServerData.getServerURLFromMessage(url, message, messageType); // Ensure valid license server URL
+  function _sendLicenseRequestCompleteEvent(data, error) {
+    eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, {
+      data: data,
+      error: error
+    });
+  }
+  /**
+   * Start issuing a license request
+   * @param {object} keyMessage
+   * @param {object} licenseServerData
+   * @param {object} protData
+   * @private
+   */
+
+
+  function _issueLicenseRequest(keyMessage, licenseServerData, protData) {
+    var sessionToken = keyMessage.sessionToken;
+    var messageType = keyMessage.messageType ? keyMessage.messageType : 'license-request';
+    var eventData = {
+      sessionToken: sessionToken,
+      messageType: messageType
+    };
+    var keySystemString = selectedKeySystem ? selectedKeySystem.systemString : null; // Determine license server URL
+
+    var url = _getLicenseServerUrl(protData, messageType, sessionToken, keyMessage, licenseServerData); // Ensure valid license server URL
+
 
     if (!url) {
-      sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE));
+      _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE));
+
       return;
     } // Set optional XMLHttpRequest headers from protection data and message
 
@@ -52649,32 +52774,24 @@ function ProtectionController(config) {
     var reqHeaders = {};
     var withCredentials = false;
 
-    var updateHeaders = function updateHeaders(headers) {
-      if (headers) {
-        for (var key in headers) {
-          if ('authorization' === key.toLowerCase()) {
-            withCredentials = true;
-          }
-
-          reqHeaders[key] = headers[key];
-        }
-      }
-    };
-
     if (protData) {
-      updateHeaders(protData.httpRequestHeaders);
+      _updateHeaders(reqHeaders, protData.httpRequestHeaders);
     }
 
-    updateHeaders(keySystem.getRequestHeadersFromMessage(message)); // Overwrite withCredentials property from protData if present
+    var message = keyMessage.message;
+    var headersFromMessage = selectedKeySystem.getRequestHeadersFromMessage(message);
+
+    _updateHeaders(reqHeaders, headersFromMessage);
+
+    Object.keys(reqHeaders).forEach(function (key) {
+      if ('authorization' === key.toLowerCase()) {
+        withCredentials = true;
+      }
+    }); // Overwrite withCredentials property from protData if present
 
     if (protData && typeof protData.withCredentials == 'boolean') {
       withCredentials = protData.withCredentials;
     }
-
-    var reportError = function reportError(xhr, eventData, keySystemString, messageType) {
-      var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
-      sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
-    };
 
     var onLoad = function onLoad(xhr) {
       if (!protectionModel) {
@@ -52682,44 +52799,58 @@ function ProtectionController(config) {
       }
 
       if (xhr.status >= 200 && xhr.status <= 299) {
-        var licenseResponse = new _vo_LicenseResponse__WEBPACK_IMPORTED_MODULE_6__["default"](xhr.responseURL, _core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null), xhr.response);
-        applyFilters(licenseResponseFilters, licenseResponse).then(function () {
+        var responseHeaders = _core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+        var licenseResponse = new _vo_LicenseResponse__WEBPACK_IMPORTED_MODULE_6__["default"](xhr.responseURL, responseHeaders, xhr.response);
+
+        _applyFilters(licenseResponseFilters, licenseResponse).then(function () {
           var licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
 
           if (licenseMessage !== null) {
-            sendLicenseRequestCompleteEvent(eventData);
+            _sendLicenseRequestCompleteEvent(eventData);
+
             protectionModel.updateKeySession(sessionToken, licenseMessage);
           } else {
-            reportError(xhr, eventData, keySystemString, messageType);
+            _reportError(xhr, eventData, keySystemString, messageType, licenseServerData);
           }
         });
       } else {
-        reportError(xhr, eventData, keySystemString, messageType);
+        _reportError(xhr, eventData, keySystemString, messageType, licenseServerData);
       }
     };
 
     var onAbort = function onAbort(xhr) {
-      sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+      _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
     };
 
     var onError = function onError(xhr) {
-      sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+      _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
     };
 
-    var reqPayload = keySystem.getLicenseRequestFromMessage(message);
+    var reqPayload = selectedKeySystem.getLicenseRequestFromMessage(message);
     var reqMethod = licenseServerData.getHTTPMethod(messageType);
     var responseType = licenseServerData.getResponseType(keySystemString, messageType);
     var timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
-    var sessionId = sessionToken.getSessionID() || null;
+    var sessionId = sessionToken.getSessionId() || null;
     var licenseRequest = new _vo_LicenseRequest__WEBPACK_IMPORTED_MODULE_5__["default"](url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
     var retryAttempts = !isNaN(settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE]) ? settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
-    applyFilters(licenseRequestFilters, licenseRequest).then(function () {
-      doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
+
+    _applyFilters(licenseRequestFilters, licenseRequest).then(function () {
+      _doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
     });
-  } // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
+  }
+  /**
+   * Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
+   * @param {object} request
+   * @param {number} retriesCount
+   * @param {number} timeout
+   * @param {function} onLoad
+   * @param {function} onAbort
+   * @param {function} onError
+   * @private
+   */
 
 
-  function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
+  function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
     var xhr = new XMLHttpRequest();
 
     if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
@@ -52770,12 +52901,12 @@ function ProtectionController(config) {
       }
     }
 
-    var retryRequest = function retryRequest() {
+    var _retryRequest = function _retryRequest() {
       // fail silently and retry
       retriesCount--;
       var retryInterval = !isNaN(settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE]) ? settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
       setTimeout(function () {
-        doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
+        _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
       }, retryInterval);
     };
 
@@ -52784,7 +52915,8 @@ function ProtectionController(config) {
         onLoad(this);
       } else {
         logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);
-        retryRequest();
+
+        _retryRequest();
       }
     };
 
@@ -52793,7 +52925,8 @@ function ProtectionController(config) {
         onError(this);
       } else {
         logger.warn('License request network request failed . Retrying it... Pending retries: ' + retriesCount);
-        retryRequest();
+
+        _retryRequest();
       }
     };
 
@@ -52810,77 +52943,93 @@ function ProtectionController(config) {
     });
     xhr.send(request.data);
   }
+  /**
+   * Returns the url of the license server
+   * @param {object} protData
+   * @param {string} messageType
+   * @param {object} sessionToken
+   * @param {object} keyMessage
+   * @param {object} licenseServerData
+   * @return {*}
+   * @private
+   */
 
-  function onNeedKey(event, retry) {
-    logger.debug('DRM: onNeedKey'); // Ignore non-cenc initData
 
-    if (event.key.initDataType !== 'cenc') {
-      logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
-      return;
-    }
+  function _getLicenseServerUrl(protData, messageType, sessionToken, keyMessage, licenseServerData) {
+    var url = null;
+    var message = keyMessage.message; // Check if the url is defined by the application
 
-    if (mediaInfoArr.length === 0) {
-      logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
-      retry = typeof retry === 'undefined' ? 1 : retry + 1;
+    if (protData && protData.serverURL) {
+      var serverURL = protData.serverURL;
 
-      if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
-        needkeyRetries.push(setTimeout(function () {
-          onNeedKey(event, retry);
-        }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
-        return;
+      if (typeof serverURL === 'string' && serverURL !== '') {
+        url = serverURL;
+      } else if (_typeof(serverURL) === 'object' && serverURL.hasOwnProperty(messageType)) {
+        url = serverURL[messageType];
       }
-    } // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
-    // Convert to ArrayBuffer
+    } // This is the old way of providing the url
+    else if (protData && protData.laURL && protData.laURL !== '') {
+        url = protData.laURL;
+      } // No url provided by the app. Check the manifest and the pssh
+      else {
+          // Check for url defined in the manifest
+          url = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getLicenseServerUrlFromMediaInfo(mediaInfoArr, selectedKeySystem.schemeIdURI); // In case we are not using Clearky we can still get a url from the pssh.
+
+          if (!url && !protectionKeyController.isClearKey(selectedKeySystem)) {
+            var psshData = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHData(sessionToken.initData);
+            url = selectedKeySystem.getLicenseServerURLFromInitData(psshData); // Still no url, check the keymessage
+
+            if (!url) {
+              url = keyMessage.laURL;
+            }
+          }
+        } // Possibly update or override the URL based on the message
 
 
-    var abInitData = event.key.initData;
+    url = licenseServerData.getServerURLFromMessage(url, message, messageType);
+    return url;
+  }
+  /**
+   * Add new headers to the existing ones
+   * @param {array} reqHeaders
+   * @param {object} headers
+   * @private
+   */
 
-    if (ArrayBuffer.isView(abInitData)) {
-      abInitData = abInitData.buffer;
-    } // If key system has already been selected and initData already seen, then do nothing
 
-
-    if (keySystem) {
-      var initDataForKS = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(keySystem, abInitData);
-
-      if (initDataForKS) {
-        // Check for duplicate initData
-        if (_isInitDataDuplicate(initDataForKS)) {
-          return;
-        }
+  function _updateHeaders(reqHeaders, headers) {
+    if (headers) {
+      for (var key in headers) {
+        reqHeaders[key] = headers[key];
       }
     }
-
-    logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-    var supportedKS = protectionKeyController.getSupportedKeySystems(abInitData, protDataSet);
-
-    if (supportedKS.length === 0) {
-      logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
-      return;
-    }
-
-    selectKeySystem(supportedKS, false);
   }
+  /**
+   * Reports an error that might have occured during the license request
+   * @param {object} xhr
+   * @param {object} eventData
+   * @param {string} keySystemString
+   * @param {string} messageType
+   * @param {object} licenseServerData
+   * @private
+   */
 
-  function getKeySystems() {
-    return protectionKeyController ? protectionKeyController.getKeySystems() : [];
+
+  function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
+    var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
+
+    _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
   }
+  /**
+   * Applies custom filters defined by the application
+   * @param {array} filters
+   * @param {object} param
+   * @return {Promise<void>|*}
+   * @private
+   */
 
-  function setKeySystems(keySystems) {
-    if (protectionKeyController) {
-      protectionKeyController.setKeySystems(keySystems);
-    }
-  }
 
-  function setLicenseRequestFilters(filters) {
-    licenseRequestFilters = filters;
-  }
-
-  function setLicenseResponseFilters(filters) {
-    licenseResponseFilters = filters;
-  }
-
-  function applyFilters(filters, param) {
+  function _applyFilters(filters, param) {
     if (!filters) return Promise.resolve();
     return filters.reduce(function (prev, next) {
       return prev.then(function () {
@@ -52888,10 +53037,107 @@ function ProtectionController(config) {
       });
     }, Promise.resolve());
   }
+  /**
+   * Event handler for "needkey" and "encrypted" events
+   * @param {object} event
+   * @param {number} retry
+   */
+
+
+  function _onNeedKey(event, retry) {
+    if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
+      logger.debug('DRM: onNeedKey'); // Ignore non-cenc initData
+
+      if (event.key.initDataType !== 'cenc') {
+        logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+        return;
+      }
+
+      if (mediaInfoArr.length === 0) {
+        logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
+        retry = typeof retry === 'undefined' ? 1 : retry + 1;
+
+        if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
+          needkeyRetries.push(setTimeout(function () {
+            _onNeedKey(event, retry);
+          }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
+          return;
+        }
+      } // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
+      // Convert to ArrayBuffer
+
+
+      var abInitData = event.key.initData;
+
+      if (ArrayBuffer.isView(abInitData)) {
+        abInitData = abInitData.buffer;
+      } // If key system has already been selected and initData already seen, then do nothing
+
+
+      if (selectedKeySystem) {
+        var initDataForKS = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, abInitData);
+
+        if (initDataForKS) {
+          // Check for duplicate initData
+          if (_isInitDataDuplicate(initDataForKS)) {
+            return;
+          }
+        }
+      }
+
+      logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+      var supportedKS = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
+
+      if (supportedKS.length === 0) {
+        logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
+        return;
+      }
+
+      _selectKeySystem(supportedKS, false);
+    }
+  }
+  /**
+   * Returns all available key systems
+   * @return {*|*[]}
+   */
+
+
+  function getKeySystems() {
+    return protectionKeyController ? protectionKeyController.getKeySystems() : [];
+  }
+  /**
+   * Sets all available key systems
+   * @param {array} keySystems
+   */
+
+
+  function setKeySystems(keySystems) {
+    if (protectionKeyController) {
+      protectionKeyController.setKeySystems(keySystems);
+    }
+  }
+  /**
+   * Sets the request filters to be applied before the license request is made
+   * @param {array} filters
+   */
+
+
+  function setLicenseRequestFilters(filters) {
+    licenseRequestFilters = filters;
+  }
+  /**
+   * Sets the response filters to be applied after the license response has been received.
+   * @param {array} filters
+   */
+
+
+  function setLicenseResponseFilters(filters) {
+    licenseResponseFilters = filters;
+  }
 
   instance = {
     initializeForMedia: initializeForMedia,
-    clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
+    clearMediaInfoArray: clearMediaInfoArray,
     createKeySession: createKeySession,
     loadKeySession: loadKeySession,
     removeKeySession: removeKeySession,
@@ -52914,7 +53160,7 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(ProtectionController));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_10__["default"].getClassFactory(ProtectionController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -53134,6 +53380,9 @@ function ProtectionKeyController() {
    *
    * @param {Array.<Object>} cps - array of content protection elements parsed
    * from the manifest
+   * @param {ProtectionData} protDataSet user specified protection data - license server url etc
+   * supported by the content
+   * @param {string} default session type
    * @returns {Array.<Object>} array of objects indicating which supported key
    * systems were found.  Empty array is returned if no
    * supported key systems were found
@@ -53142,7 +53391,7 @@ function ProtectionKeyController() {
    */
 
 
-  function getSupportedKeySystemsFromContentProtection(cps) {
+  function getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType) {
     var cp, ks, ksIdx, cpIdx;
     var supportedKS = [];
 
@@ -53150,7 +53399,9 @@ function ProtectionKeyController() {
       var cencContentProtection = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].findCencContentProtection(cps);
 
       for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-        ks = keySystems[ksIdx];
+        ks = keySystems[ksIdx]; // Get protection data that applies for current key system
+
+        var protData = _getProtDataForKeySystem(ks.systemString, protDataSet);
 
         for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
           cp = cps[cpIdx];
@@ -53160,9 +53411,12 @@ function ProtectionKeyController() {
             var initData = ks.getInitData(cp, cencContentProtection);
             supportedKS.push({
               ks: keySystems[ksIdx],
+              keyId: cp.keyId,
               initData: initData,
-              cdmData: ks.getCDMData(),
-              sessionId: ks.getSessionId(cp)
+              protData: protData,
+              cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+              sessionId: _getSessionId(protData, cp),
+              sessionType: _getSessionType(protData, sessionType)
             });
           }
         }
@@ -53173,14 +53427,14 @@ function ProtectionKeyController() {
   }
   /**
    * Returns key systems supported by this player for the given PSSH
-   * initializationData. Only key systems supported by this player
-   * that have protection data present will be returned.  Key systems are returned in priority order
+   * initializationData. Key systems are returned in priority order
    * (highest priority first)
    *
    * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
    * supported by the content
    * @param {ProtectionData} protDataSet user specified protection data - license server url etc
    * supported by the content
+   * @param {string} default session type
    * @returns {Array.<Object>} array of objects indicating which supported key
    * systems were found.  Empty array is returned if no
    * supported key systems were found
@@ -53189,22 +53443,25 @@ function ProtectionKeyController() {
    */
 
 
-  function getSupportedKeySystems(initData, protDataSet) {
+  function getSupportedKeySystemsFromSegmentPssh(initData, protDataSet, sessionType) {
     var supportedKS = [];
     var pssh = _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].parsePSSHList(initData);
-    var ks, keySystemString, shouldNotFilterOutKeySystem;
+    var ks, keySystemString;
 
     for (var ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
       ks = keySystems[ksIdx];
-      keySystemString = ks.systemString;
-      shouldNotFilterOutKeySystem = protDataSet ? keySystemString in protDataSet : true;
+      keySystemString = ks.systemString; // Get protection data that applies for current key system
 
-      if (ks.uuid in pssh && shouldNotFilterOutKeySystem) {
+      var protData = _getProtDataForKeySystem(keySystemString, protDataSet);
+
+      if (ks.uuid in pssh) {
         supportedKS.push({
           ks: ks,
           initData: pssh[ks.uuid],
-          cdmData: ks.getCDMData(),
-          sessionId: ks.getSessionId()
+          protData: protData,
+          cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+          sessionId: _getSessionId(protData),
+          sessionType: _getSessionType(protData, sessionType)
         });
       }
     }
@@ -53230,7 +53487,7 @@ function ProtectionKeyController() {
    */
 
 
-  function getLicenseServer(keySystem, protData, messageType) {
+  function getLicenseServerModelInstance(keySystem, protData, messageType) {
     // Our default server implementations do not do anything with "license-release" or
     // "individualization-request" messages, so we just send a success event
     if (messageType === 'license-release' || messageType === 'individualization-request') {
@@ -53296,6 +53553,26 @@ function ProtectionKeyController() {
     }
   }
 
+  function _getProtDataForKeySystem(systemString, protDataSet) {
+    if (!protDataSet) return null;
+    return systemString in protDataSet ? protDataSet[systemString] : null;
+  }
+
+  function _getSessionId(protData, cp) {
+    // Get sessionId from protectionData or from manifest (ContentProtection)
+    if (protData && protData.sessionId) {
+      return protData.sessionId;
+    } else if (cp && cp.sessionId) {
+      return cp.sessionId;
+    }
+
+    return null;
+  }
+
+  function _getSessionType(protData, sessionType) {
+    return protData && protData.sessionType ? protData.sessionType : sessionType;
+  }
+
   instance = {
     initialize: initialize,
     setProtectionData: setProtectionData,
@@ -53305,8 +53582,8 @@ function ProtectionKeyController() {
     setKeySystems: setKeySystems,
     getKeySystemBySystemString: getKeySystemBySystemString,
     getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-    getSupportedKeySystems: getSupportedKeySystems,
-    getLicenseServer: getLicenseServer,
+    getSupportedKeySystemsFromSegmentPssh: getSupportedKeySystemsFromSegmentPssh,
+    getLicenseServerModelInstance: getLicenseServerModelInstance,
     processClearKeyLicenseRequest: processClearKeyLicenseRequest,
     setConfig: setConfig
   };
@@ -53374,10 +53651,6 @@ function KeySystemClearKey(config) {
   config = config || {};
   var instance;
   var BASE64 = config.BASE64;
-  var LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
-    attributes: ['Laurl', 'laurl'],
-    prefixes: ['clearkey', 'dashif']
-  };
   /**
    * Returns desired clearkeys (as specified in the CDM message) from protection data
    *
@@ -53465,67 +53738,8 @@ function KeySystemClearKey(config) {
     return null;
   }
 
-  function getLicenseServerUrlFromMediaInfo(mediaInfo) {
-    try {
-      if (!mediaInfo || mediaInfo.length === 0) {
-        return null;
-      }
-
-      var i = 0;
-      var licenseServer = null;
-
-      while (i < mediaInfo.length && !licenseServer) {
-        var info = mediaInfo[i];
-
-        if (info && info.contentProtection && info.contentProtection.length > 0) {
-          var clearkeyProtData = info.contentProtection.filter(function (cp) {
-            return cp.schemeIdUri && cp.schemeIdUri === schemeIdURI;
-          });
-
-          if (clearkeyProtData && clearkeyProtData.length > 0) {
-            var j = 0;
-
-            while (j < clearkeyProtData.length && !licenseServer) {
-              var ckData = clearkeyProtData[j];
-              var k = 0;
-
-              while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
-                var l = 0;
-                var attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
-
-                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
-                  var prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
-
-                  if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
-                    licenseServer = ckData[attribute].__text;
-                  }
-
-                  l += 1;
-                }
-
-                k += 1;
-              }
-
-              j += 1;
-            }
-          }
-        }
-
-        i += 1;
-      }
-
-      return licenseServer;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function getCDMData() {
-    return null;
-  }
-
-  function getSessionId()
-  /*cp*/
+  function getCDMData()
+  /*cdmData*/
   {
     return null;
   }
@@ -53539,8 +53753,6 @@ function KeySystemClearKey(config) {
     getLicenseRequestFromMessage: getLicenseRequestFromMessage,
     getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
     getCDMData: getCDMData,
-    getSessionId: getSessionId,
-    getLicenseServerUrlFromMediaInfo: getLicenseServerUrlFromMediaInfo,
     getClearKeysFromProtectionData: getClearKeysFromProtectionData
   };
   return instance;
@@ -53606,7 +53818,6 @@ var uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 var systemString = _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYREADY_KEYSTEM_STRING;
 var schemeIdURI = 'urn:uuid:' + uuid;
 var PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';
-var protData;
 
 function KeySystemPlayReady(config) {
   config = config || {};
@@ -53790,63 +54001,37 @@ function KeySystemPlayReady(config) {
     messageFormat = format;
   }
   /**
-   * Initialize the Key system with protection data
-   * @param {Object} protectionData the protection data
-   */
-
-
-  function init(protectionData) {
-    if (protectionData) {
-      protData = protectionData;
-    }
-  }
-  /**
    * Get Playready Custom data
    */
 
 
-  function getCDMData() {
+  function getCDMData(_cdmData) {
     var customData, cdmData, cdmDataBytes, i;
     checkConfig();
+    if (!_cdmData) return null; // Convert custom data into multibyte string
 
-    if (protData && protData.cdmData) {
-      // Convert custom data into multibyte string
-      customData = [];
+    customData = [];
 
-      for (i = 0; i < protData.cdmData.length; ++i) {
-        customData.push(protData.cdmData.charCodeAt(i));
-        customData.push(0);
-      }
-
-      customData = String.fromCharCode.apply(null, customData); // Encode in Base 64 the custom data string
-
-      customData = BASE64.encode(customData); // Initialize CDM data with Base 64 encoded custom data
-      // (see https://msdn.microsoft.com/en-us/library/dn457361.aspx)
-
-      cdmData = PRCDMData.replace('%CUSTOMDATA%', customData); // Convert CDM data into multibyte characters
-
-      cdmDataBytes = [];
-
-      for (i = 0; i < cdmData.length; ++i) {
-        cdmDataBytes.push(cdmData.charCodeAt(i));
-        cdmDataBytes.push(0);
-      }
-
-      return new Uint8Array(cdmDataBytes).buffer;
+    for (i = 0; i < _cdmData.length; ++i) {
+      customData.push(_cdmData.charCodeAt(i));
+      customData.push(0);
     }
 
-    return null;
-  }
+    customData = String.fromCharCode.apply(null, customData); // Encode in Base 64 the custom data string
 
-  function getSessionId(cp) {
-    // Get sessionId from protectionData or from manifest
-    if (protData && protData.sessionId) {
-      return protData.sessionId;
-    } else if (cp && cp.sessionId) {
-      return cp.sessionId;
+    customData = BASE64.encode(customData); // Initialize CDM data with Base 64 encoded custom data
+    // (see https://msdn.microsoft.com/en-us/library/dn457361.aspx)
+
+    cdmData = PRCDMData.replace('%CUSTOMDATA%', customData); // Convert CDM data into multibyte characters
+
+    cdmDataBytes = [];
+
+    for (i = 0; i < cdmData.length; ++i) {
+      cdmDataBytes.push(cdmData.charCodeAt(i));
+      cdmDataBytes.push(0);
     }
 
-    return null;
+    return new Uint8Array(cdmDataBytes).buffer;
   }
 
   instance = {
@@ -53858,9 +54043,7 @@ function KeySystemPlayReady(config) {
     getLicenseRequestFromMessage: getLicenseRequestFromMessage,
     getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
     getCDMData: getCDMData,
-    getSessionId: getSessionId,
-    setPlayReadyMessageFormat: setPlayReadyMessageFormat,
-    init: init
+    setPlayReadyMessageFormat: setPlayReadyMessageFormat
   };
   return instance;
 }
@@ -53985,12 +54168,8 @@ function KeySystemW3CClearKey(config) {
     return null;
   }
 
-  function getCDMData() {
-    return null;
-  }
-
-  function getSessionId()
-  /*cp*/
+  function getCDMData()
+  /*cdmData*/
   {
     return null;
   }
@@ -54004,7 +54183,6 @@ function KeySystemW3CClearKey(config) {
     getLicenseRequestFromMessage: getLicenseRequestFromMessage,
     getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
     getCDMData: getCDMData,
-    getSessionId: getSessionId,
     getClearKeysFromProtectionData: getClearKeysFromProtectionData
   };
   return instance;
@@ -54073,14 +54251,7 @@ var schemeIdURI = 'urn:uuid:' + uuid;
 function KeySystemWidevine(config) {
   config = config || {};
   var instance;
-  var protData = null;
   var BASE64 = config.BASE64;
-
-  function init(protectionData) {
-    if (protectionData) {
-      protData = protectionData;
-    }
-  }
 
   function getInitData(cp) {
     return _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__["default"].parseInitDataFromContentProtection(cp, BASE64);
@@ -54102,18 +54273,9 @@ function KeySystemWidevine(config) {
     return null;
   }
 
-  function getCDMData() {
-    return null;
-  }
-
-  function getSessionId(cp) {
-    // Get sessionId from protectionData or from manifest
-    if (protData && protData.sessionId) {
-      return protData.sessionId;
-    } else if (cp && cp.sessionId) {
-      return cp.sessionId;
-    }
-
+  function getCDMData()
+  /*cdmData*/
+  {
     return null;
   }
 
@@ -54121,13 +54283,11 @@ function KeySystemWidevine(config) {
     uuid: uuid,
     schemeIdURI: schemeIdURI,
     systemString: systemString,
-    init: init,
     getInitData: getInitData,
     getRequestHeadersFromMessage: getRequestHeadersFromMessage,
     getLicenseRequestFromMessage: getLicenseRequestFromMessage,
     getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-    getCDMData: getCDMData,
-    getSessionId: getSessionId
+    getCDMData: getCDMData
   };
   return instance;
 }
@@ -54384,15 +54544,15 @@ function ProtectionModel_01b(config) {
   var debug = config.debug;
   var api = config.api;
   var errHandler = config.errHandler;
-  var instance, logger, videoElement, keySystem, protectionKeyController, // With this version of the EME APIs, sessionIDs are not assigned to
+  var instance, logger, videoElement, keySystem, protectionKeyController, // With this version of the EME APIs, sessionIds are not assigned to
   // sessions until the first key message is received.  We are assuming
   // that in the case of multiple sessions, key messages will be received
   // in the order that generateKeyRequest() is called.
   // Holding spot for newly-created sessions until we determine whether or
-  // not the CDM supports sessionIDs
+  // not the CDM supports sessionIds
   pendingSessions, // List of sessions that have been initialized.  Only the first position will
-  // be used in the case that the CDM does not support sessionIDs
-  sessions, // Not all CDMs support the notion of sessionIDs.  Without sessionIDs
+  // be used in the case that the CDM does not support sessionIds
+  sessions, // Not all CDMs support the notion of sessionIds.  Without sessionIds
   // there is no way for us to differentiate between sessions, therefore
   // we must only allow a single session.  Once we receive the first key
   // message we can set this flag to determine if more sessions are allowed
@@ -54423,10 +54583,6 @@ function ProtectionModel_01b(config) {
     eventBus.trigger(events.TEARDOWN_COMPLETE);
   }
 
-  function getKeySystem() {
-    return keySystem;
-  }
-
   function getAllInitData() {
     var retVal = [];
 
@@ -54441,66 +54597,80 @@ function ProtectionModel_01b(config) {
     return retVal;
   }
 
+  function getSessions() {
+    return sessions.concat(pendingSessions);
+  }
+
   function requestKeySystemAccess(ksConfigurations) {
-    var ve = videoElement;
+    return new Promise(function (resolve, reject) {
+      var ve = videoElement;
 
-    if (!ve) {
-      // Must have a video element to do this capability tests
-      ve = document.createElement('video');
-    } // Try key systems in order, first one with supported key system configuration
-    // is used
-
-
-    var found = false;
-
-    for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
-      var systemString = ksConfigurations[ksIdx].ks.systemString;
-      var configs = ksConfigurations[ksIdx].configs;
-      var supportedAudio = null;
-      var supportedVideo = null; // Try key system configs in order, first one with supported audio/video
+      if (!ve) {
+        // Must have a video element to do this capability tests
+        ve = document.createElement('video');
+      } // Try key systems in order, first one with supported key system configuration
       // is used
 
-      for (var configIdx = 0; configIdx < configs.length; configIdx++) {
-        //let audios = configs[configIdx].audioCapabilities;
-        var videos = configs[configIdx].videoCapabilities; // Look for supported video container/codecs
 
-        if (videos && videos.length !== 0) {
-          supportedVideo = []; // Indicates that we have a requested video config
+      var found = false;
 
-          for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== '') {
-              supportedVideo.push(videos[videoIdx]);
+      for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+        var systemString = ksConfigurations[ksIdx].ks.systemString;
+        var configs = ksConfigurations[ksIdx].configs;
+        var supportedAudio = null;
+        var supportedVideo = null; // Try key system configs in order, first one with supported audio/video
+        // is used
+
+        for (var configIdx = 0; configIdx < configs.length; configIdx++) {
+          //let audios = configs[configIdx].audioCapabilities;
+          var videos = configs[configIdx].videoCapabilities; // Look for supported video container/codecs
+
+          if (videos && videos.length !== 0) {
+            supportedVideo = []; // Indicates that we have a requested video config
+
+            for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+              if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== '') {
+                supportedVideo.push(videos[videoIdx]);
+              }
             }
-          }
-        } // No supported audio or video in this configuration OR we have
-        // requested audio or video configuration that is not supported
+          } // No supported audio or video in this configuration OR we have
+          // requested audio or video configuration that is not supported
 
 
-        if (!supportedAudio && !supportedVideo || supportedAudio && supportedAudio.length === 0 || supportedVideo && supportedVideo.length === 0) {
-          continue;
-        } // This configuration is supported
+          if (!supportedAudio && !supportedVideo || supportedAudio && supportedAudio.length === 0 || supportedVideo && supportedVideo.length === 0) {
+            continue;
+          } // This configuration is supported
 
 
-        found = true;
-        var ksConfig = new _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_4__["default"](supportedAudio, supportedVideo);
-        var ks = protectionKeyController.getKeySystemBySystemString(systemString);
-        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-          data: new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_5__["default"](ks, ksConfig)
-        });
-        break;
+          found = true;
+          var ksConfig = new _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_4__["default"](supportedAudio, supportedVideo);
+          var ks = protectionKeyController.getKeySystemBySystemString(systemString);
+          var keySystemAccess = new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_5__["default"](ks, ksConfig);
+          eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+            data: keySystemAccess
+          });
+          resolve({
+            data: keySystemAccess
+          });
+          break;
+        }
       }
-    }
 
-    if (!found) {
-      eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-        error: 'Key system access denied! -- No valid audio/video content configurations detected!'
-      });
-    }
+      if (!found) {
+        var errorMessage = 'Key system access denied! -- No valid audio/video content configurations detected!';
+        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+          error: errorMessage
+        });
+        reject({
+          error: errorMessage
+        });
+      }
+    });
   }
 
   function selectKeySystem(keySystemAccess) {
     keySystem = keySystemAccess.keySystem;
-    eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
+    return Promise.resolve(keySystem);
   }
 
   function setMediaElement(mediaElement) {
@@ -54530,9 +54700,7 @@ function ProtectionModel_01b(config) {
     }
   }
 
-  function createKeySession(initData
-  /*, protData, keySystemType */
-  ) {
+  function createKeySession(ksInfo) {
     if (!keySystem) {
       throw new Error('Can not create sessions until you have selected a key system');
     } // Determine if creating a new session is allowed
@@ -54541,10 +54709,14 @@ function ProtectionModel_01b(config) {
     if (moreSessionsAllowed || sessions.length === 0) {
       var newSession = {
         // Implements SessionToken
-        sessionID: null,
-        initData: initData,
-        getSessionID: function getSessionID() {
-          return this.sessionID;
+        sessionId: null,
+        keyId: ksInfo.keyId,
+        initData: ksInfo.initData,
+        getKeyId: function getKeyId() {
+          return this.keyId;
+        },
+        getSessionId: function getSessionId() {
+          return this.sessionId;
         },
         getExpirationTime: function getExpirationTime() {
           return NaN;
@@ -54555,7 +54727,7 @@ function ProtectionModel_01b(config) {
       };
       pendingSessions.push(newSession); // Send our request to the CDM
 
-      videoElement[api.generateKeyRequest](keySystem.systemString, new Uint8Array(initData));
+      videoElement[api.generateKeyRequest](keySystem.systemString, new Uint8Array(ksInfo.initData));
       return newSession;
     } else {
       throw new Error('Multiple sessions not allowed!');
@@ -54563,15 +54735,15 @@ function ProtectionModel_01b(config) {
   }
 
   function updateKeySession(sessionToken, message) {
-    var sessionID = sessionToken.sessionID;
+    var sessionId = sessionToken.sessionId;
 
     if (!protectionKeyController.isClearKey(keySystem)) {
       // Send our request to the CDM
-      videoElement[api.addKey](keySystem.systemString, new Uint8Array(message), new Uint8Array(sessionToken.initData), sessionID);
+      videoElement[api.addKey](keySystem.systemString, new Uint8Array(message), new Uint8Array(sessionToken.initData), sessionId);
     } else {
       // For clearkey, message is a ClearKeyKeySet
       for (var i = 0; i < message.keyPairs.length; i++) {
-        videoElement[api.addKey](keySystem.systemString, message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
+        videoElement[api.addKey](keySystem.systemString, message.keyPairs[i].key, message.keyPairs[i].keyID, sessionId);
       }
     }
 
@@ -54581,11 +54753,11 @@ function ProtectionModel_01b(config) {
   function closeKeySession(sessionToken) {
     // Send our request to the CDM
     try {
-      videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
+      videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionId);
     } catch (error) {
       eventBus.trigger(events.KEY_SESSION_CLOSED, {
         data: null,
-        error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message
+        error: 'Error closing session (' + sessionToken.sessionId + ') ' + error.message
       });
     }
   }
@@ -54597,7 +54769,7 @@ function ProtectionModel_01b(config) {
   }
 
   function loadKeySession()
-  /*sessionID*/
+  /*ksInfo*/
   {
     /* Not supported */
   }
@@ -54699,15 +54871,15 @@ function ProtectionModel_01b(config) {
             moreSessionsAllowed = event.sessionId !== null && event.sessionId !== undefined; // SessionIDs supported
 
             if (moreSessionsAllowed) {
-              // Attempt to find an uninitialized token with this sessionID
+              // Attempt to find an uninitialized token with this sessionId
               sessionToken = findSessionByID(sessions, event.sessionId);
 
               if (!sessionToken && pendingSessions.length > 0) {
                 // This is the first message for our latest session, so set the
-                // sessionID and add it to our list
+                // sessionId and add it to our list
                 sessionToken = pendingSessions.shift();
                 sessions.push(sessionToken);
-                sessionToken.sessionID = event.sessionId;
+                sessionToken.sessionId = event.sessionId;
                 eventBus.trigger(events.KEY_SESSION_CREATED, {
                   data: sessionToken
                 });
@@ -54742,22 +54914,22 @@ function ProtectionModel_01b(config) {
   }
   /**
    * Helper function to retrieve the stored session token based on a given
-   * sessionID value
+   * sessionId value
    *
    * @param {Array} sessionArray - the array of sessions to search
-   * @param {*} sessionID - the sessionID to search for
-   * @returns {*} the session token with the given sessionID
+   * @param {*} sessionId - the sessionId to search for
+   * @returns {*} the session token with the given sessionId
    */
 
 
-  function findSessionByID(sessionArray, sessionID) {
-    if (!sessionID || !sessionArray) {
+  function findSessionByID(sessionArray, sessionId) {
+    if (!sessionId || !sessionArray) {
       return null;
     } else {
       var len = sessionArray.length;
 
       for (var i = 0; i < len; i++) {
-        if (sessionArray[i].sessionID == sessionID) {
+        if (sessionArray[i].sessionId == sessionId) {
           return sessionArray[i];
         }
       }
@@ -54775,8 +54947,8 @@ function ProtectionModel_01b(config) {
 
   instance = {
     getAllInitData: getAllInitData,
+    getSessions: getSessions,
     requestKeySystemAccess: requestKeySystemAccess,
-    getKeySystem: getKeySystem,
     selectKeySystem: selectKeySystem,
     setMediaElement: setMediaElement,
     createKeySession: createKeySession,
@@ -54912,7 +55084,7 @@ function ProtectionModel_21Jan2015(config) {
             }); // Close the session and handle errors, otherwise promise
             // resolver above will be called
 
-            closeKeySessionInternal(session)["catch"](function () {
+            _closeKeySessionInternal(session)["catch"](function () {
               done(s);
             });
           })(session);
@@ -54931,15 +55103,11 @@ function ProtectionModel_21Jan2015(config) {
       session = sessions[i];
 
       if (!session.getUsable()) {
-        closeKeySessionInternal(session)["catch"](function () {
+        _closeKeySessionInternal(session)["catch"](function () {
           removeSession(session);
         });
       }
     }
-  }
-
-  function getKeySystem() {
-    return keySystem;
   }
 
   function getAllInitData() {
@@ -54954,25 +55122,93 @@ function ProtectionModel_21Jan2015(config) {
     return retVal;
   }
 
-  function requestKeySystemAccess(ksConfigurations) {
-    requestKeySystemAccessInternal(ksConfigurations, 0);
+  function getSessions() {
+    return sessions;
   }
 
-  function selectKeySystem(keySystemAccess) {
-    keySystemAccess.mksa.createMediaKeys().then(function (mkeys) {
-      keySystem = keySystemAccess.keySystem;
-      mediaKeys = mkeys;
+  function requestKeySystemAccess(ksConfigurations) {
+    return new Promise(function (resolve, reject) {
+      _requestKeySystemAccessInternal(ksConfigurations, 0, resolve, reject);
+    });
+  }
+  /**
+   * Initializes access to a key system. Once we found a valid configuration we get a mediaKeySystemAccess object
+   * @param ksConfigurations
+   * @param idx
+   * @param resolve
+   * @param reject
+   * @private
+   */
 
-      if (videoElement) {
-        videoElement.setMediaKeys(mediaKeys).then(function () {
-          eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-        });
+
+  function _requestKeySystemAccessInternal(ksConfigurations, idx, resolve, reject) {
+    if (navigator.requestMediaKeySystemAccess === undefined || typeof navigator.requestMediaKeySystemAccess !== 'function') {
+      var msg = 'Insecure origins are not allowed';
+      eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+        error: msg
+      });
+      reject({
+        error: msg
+      });
+      return;
+    }
+
+    var keySystem = ksConfigurations[idx].ks;
+    var configs = ksConfigurations[idx].configs;
+    var systemString = keySystem.systemString; // Patch to support persistent licenses on Edge browser (see issue #2658)
+
+    if (systemString === _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+      systemString += '.recommendation';
+    }
+
+    navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
+      var configuration = typeof mediaKeySystemAccess.getConfiguration === 'function' ? mediaKeySystemAccess.getConfiguration() : null;
+      var keySystemAccess = new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_5__["default"](keySystem, configuration);
+      keySystemAccess.mksa = mediaKeySystemAccess;
+      eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+        data: keySystemAccess
+      });
+      resolve({
+        data: keySystemAccess
+      });
+    })["catch"](function (error) {
+      if (idx + 1 < ksConfigurations.length) {
+        _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
       } else {
-        eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
+        var errorMessage = 'Key system access denied! ';
+        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+          error: errorMessage + error.message
+        });
+        reject({
+          error: errorMessage + error.message
+        });
       }
-    })["catch"](function () {
-      eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, {
-        error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'
+    });
+  }
+  /**
+   * Selects a key system by creating the mediaKeys and adding them to the video element
+   * @param keySystemAccess
+   * @return {Promise<unknown>}
+   */
+
+
+  function selectKeySystem(keySystemAccess) {
+    return new Promise(function (resolve, reject) {
+      keySystemAccess.mksa.createMediaKeys().then(function (mkeys) {
+        keySystem = keySystemAccess.keySystem;
+        mediaKeys = mkeys;
+
+        if (videoElement) {
+          return videoElement.setMediaKeys(mediaKeys);
+        } else {
+          return Promise.resolve();
+        }
+      }).then(function () {
+        resolve(keySystem);
+      })["catch"](function () {
+        reject({
+          error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'
+        });
       });
     });
   }
@@ -55013,25 +55249,27 @@ function ProtectionModel_21Jan2015(config) {
       });
     });
   }
+  /**
+   * Create a key session, a session token and initialize a request by calling generateRequest
+   * @param ksInfo
+   */
 
-  function createKeySession(initData, protData, sessionType) {
+
+  function createKeySession(ksInfo) {
     if (!keySystem || !mediaKeys) {
       throw new Error('Can not create sessions until you have selected a key system');
     }
 
-    var session = mediaKeys.createSession(sessionType);
-    var sessionToken = createSessionToken(session, initData, sessionType);
-    var ks = this.getKeySystem(); // Generate initial key request.
-    // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
+    var session = mediaKeys.createSession(ksInfo.sessionType);
+    var sessionToken = createSessionToken(session, ksInfo); // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
 
-    var dataType = ks.systemString === _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING && (initData || protData && protData.clearkeys) ? 'keyids' : 'cenc';
-    session.generateRequest(dataType, initData).then(function () {
-      logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+    var dataType = keySystem.systemString === _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING && (ksInfo.initData || ksInfo.protData && ksInfo.protData.clearkeys) ? _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_KEYIDS : _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_CENC;
+    session.generateRequest(dataType, ksInfo.initData).then(function () {
+      logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
       eventBus.trigger(events.KEY_SESSION_CREATED, {
         data: sessionToken
       });
     })["catch"](function (error) {
-      // TODO: Better error string
       removeSession(sessionToken);
       eventBus.trigger(events.KEY_SESSION_CREATED, {
         data: null,
@@ -55056,25 +55294,26 @@ function ProtectionModel_21Jan2015(config) {
     });
   }
 
-  function loadKeySession(sessionID, initData, sessionType) {
+  function loadKeySession(ksInfo) {
     if (!keySystem || !mediaKeys) {
       throw new Error('Can not load sessions until you have selected a key system');
-    } // Check if session Id is not already loaded or loading
+    }
 
+    var sessionId = ksInfo.sessionId; // Check if session Id is not already loaded or loading
 
     for (var i = 0; i < sessions.length; i++) {
-      if (sessionID === sessions[i].sessionId) {
+      if (sessionId === sessions[i].sessionId) {
         logger.warn('DRM: Ignoring session ID because we have already seen it!');
         return;
       }
     }
 
-    var session = mediaKeys.createSession(sessionType);
-    var sessionToken = createSessionToken(session, initData, sessionType, sessionID); // Load persisted session data into our newly created session object
+    var session = mediaKeys.createSession(ksInfo.sessionType);
+    var sessionToken = createSessionToken(session, ksInfo); // Load persisted session data into our newly created session object
 
-    session.load(sessionID).then(function (success) {
+    session.load(sessionId).then(function (success) {
       if (success) {
-        logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
+        logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionId());
         eventBus.trigger(events.KEY_SESSION_CREATED, {
           data: sessionToken
         });
@@ -55082,14 +55321,14 @@ function ProtectionModel_21Jan2015(config) {
         removeSession(sessionToken);
         eventBus.trigger(events.KEY_SESSION_CREATED, {
           data: null,
-          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')
+          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionId + ')')
         });
       }
     })["catch"](function (error) {
       removeSession(sessionToken);
       eventBus.trigger(events.KEY_SESSION_CREATED, {
         data: null,
-        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)
+        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionId + ')! ' + error.name)
       });
     });
   }
@@ -55097,67 +55336,30 @@ function ProtectionModel_21Jan2015(config) {
   function removeKeySession(sessionToken) {
     var session = sessionToken.session;
     session.remove().then(function () {
-      logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
+      logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionId());
       eventBus.trigger(events.KEY_SESSION_REMOVED, {
-        data: sessionToken.getSessionID()
+        data: sessionToken.getSessionId()
       });
     }, function (error) {
       eventBus.trigger(events.KEY_SESSION_REMOVED, {
         data: null,
-        error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name
+        error: 'Error removing session (' + sessionToken.getSessionId() + '). ' + error.name
       });
     });
   }
 
   function closeKeySession(sessionToken) {
     // Send our request to the key session
-    closeKeySessionInternal(sessionToken)["catch"](function (error) {
+    _closeKeySessionInternal(sessionToken)["catch"](function (error) {
       removeSession(sessionToken);
       eventBus.trigger(events.KEY_SESSION_CLOSED, {
         data: null,
-        error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name
+        error: 'Error closing session (' + sessionToken.getSessionId() + ') ' + error.name
       });
     });
   }
 
-  function requestKeySystemAccessInternal(ksConfigurations, idx) {
-    if (navigator.requestMediaKeySystemAccess === undefined || typeof navigator.requestMediaKeySystemAccess !== 'function') {
-      eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-        error: 'Insecure origins are not allowed'
-      });
-      return;
-    }
-
-    (function (i) {
-      var keySystem = ksConfigurations[i].ks;
-      var configs = ksConfigurations[i].configs;
-      var systemString = keySystem.systemString; // PATCH to support persistent licenses on Edge browser (see issue #2658)
-
-      if (systemString === _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
-        systemString += '.recommendation';
-      }
-
-      navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
-        // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
-        var configuration = typeof mediaKeySystemAccess.getConfiguration === 'function' ? mediaKeySystemAccess.getConfiguration() : null;
-        var keySystemAccess = new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_5__["default"](keySystem, configuration);
-        keySystemAccess.mksa = mediaKeySystemAccess;
-        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-          data: keySystemAccess
-        });
-      })["catch"](function (error) {
-        if (++i < ksConfigurations.length) {
-          requestKeySystemAccessInternal(ksConfigurations, i);
-        } else {
-          eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-            error: 'Key system access denied! ' + error.message
-          });
-        }
-      });
-    })(idx);
-  }
-
-  function closeKeySessionInternal(sessionToken) {
+  function _closeKeySessionInternal(sessionToken) {
     var session = sessionToken.session; // Remove event listeners
 
     session.removeEventListener('keystatuseschange', sessionToken);
@@ -55227,12 +55429,14 @@ function ProtectionModel_21Jan2015(config) {
   // MediaKeySession and session-specific event handler
 
 
-  function createSessionToken(session, initData, sessionType, sessionID) {
+  function createSessionToken(session, ksInfo) {
     var token = {
       // Implements SessionToken
       session: session,
-      initData: initData,
-      sessionId: sessionID,
+      keyId: ksInfo.keyId,
+      initData: ksInfo.initData,
+      sessionId: ksInfo.sessionId,
+      sessionType: ksInfo.sessionType,
       // This is our main event handler for all desired MediaKeySession events
       // These events are translated into our API-independent versions of the
       // same events
@@ -55267,8 +55471,14 @@ function ProtectionModel_21Jan2015(config) {
             break;
         }
       },
-      getSessionID: function getSessionID() {
+      getKeyId: function getKeyId() {
+        return this.keyId;
+      },
+      getSessionId: function getSessionId() {
         return session.sessionId;
+      },
+      getSessionType: function getSessionType() {
+        return this.sessionType;
       },
       getExpirationTime: function getExpirationTime() {
         return session.expiration;
@@ -55286,9 +55496,6 @@ function ProtectionModel_21Jan2015(config) {
           }
         });
         return usable;
-      },
-      getSessionType: function getSessionType() {
-        return sessionType;
       }
     }; // Add all event listeners
 
@@ -55297,9 +55504,9 @@ function ProtectionModel_21Jan2015(config) {
 
     session.closed.then(function () {
       removeSession(token);
-      logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionID());
+      logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionId());
       eventBus.trigger(events.KEY_SESSION_CLOSED, {
-        data: token.getSessionID()
+        data: token.getSessionId()
       });
     }); // Add to our session list
 
@@ -55309,8 +55516,8 @@ function ProtectionModel_21Jan2015(config) {
 
   instance = {
     getAllInitData: getAllInitData,
+    getSessions: getSessions,
     requestKeySystemAccess: requestKeySystemAccess,
-    getKeySystem: getKeySystem,
     selectKeySystem: selectKeySystem,
     setMediaElement: setMediaElement,
     setServerCertificate: setServerCertificate,
@@ -55434,10 +55641,6 @@ function ProtectionModel_3Feb2014(config) {
     }
   }
 
-  function getKeySystem() {
-    return keySystem;
-  }
-
   function getAllInitData() {
     var retVal = [];
 
@@ -55448,83 +55651,101 @@ function ProtectionModel_3Feb2014(config) {
     return retVal;
   }
 
+  function getSessions() {
+    return sessions;
+  }
+
   function requestKeySystemAccess(ksConfigurations) {
-    // Try key systems in order, first one with supported key system configuration
-    // is used
-    var found = false;
-
-    for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
-      var systemString = ksConfigurations[ksIdx].ks.systemString;
-      var configs = ksConfigurations[ksIdx].configs;
-      var supportedAudio = null;
-      var supportedVideo = null; // Try key system configs in order, first one with supported audio/video
+    return new Promise(function (resolve, reject) {
+      // Try key systems in order, first one with supported key system configuration
       // is used
+      var found = false;
 
-      for (var configIdx = 0; configIdx < configs.length; configIdx++) {
-        var audios = configs[configIdx].audioCapabilities;
-        var videos = configs[configIdx].videoCapabilities; // Look for supported audio container/codecs
+      for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+        var systemString = ksConfigurations[ksIdx].ks.systemString;
+        var configs = ksConfigurations[ksIdx].configs;
+        var supportedAudio = null;
+        var supportedVideo = null; // Try key system configs in order, first one with supported audio/video
+        // is used
 
-        if (audios && audios.length !== 0) {
-          supportedAudio = []; // Indicates that we have a requested audio config
+        for (var configIdx = 0; configIdx < configs.length; configIdx++) {
+          var audios = configs[configIdx].audioCapabilities;
+          var videos = configs[configIdx].videoCapabilities; // Look for supported audio container/codecs
 
-          for (var audioIdx = 0; audioIdx < audios.length; audioIdx++) {
-            if (window[api.MediaKeys].isTypeSupported(systemString, audios[audioIdx].contentType)) {
-              supportedAudio.push(audios[audioIdx]);
+          if (audios && audios.length !== 0) {
+            supportedAudio = []; // Indicates that we have a requested audio config
+
+            for (var audioIdx = 0; audioIdx < audios.length; audioIdx++) {
+              if (window[api.MediaKeys].isTypeSupported(systemString, audios[audioIdx].contentType)) {
+                supportedAudio.push(audios[audioIdx]);
+              }
             }
-          }
-        } // Look for supported video container/codecs
+          } // Look for supported video container/codecs
 
 
-        if (videos && videos.length !== 0) {
-          supportedVideo = []; // Indicates that we have a requested video config
+          if (videos && videos.length !== 0) {
+            supportedVideo = []; // Indicates that we have a requested video config
 
-          for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-            if (window[api.MediaKeys].isTypeSupported(systemString, videos[videoIdx].contentType)) {
-              supportedVideo.push(videos[videoIdx]);
+            for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+              if (window[api.MediaKeys].isTypeSupported(systemString, videos[videoIdx].contentType)) {
+                supportedVideo.push(videos[videoIdx]);
+              }
             }
-          }
-        } // No supported audio or video in this configuration OR we have
-        // requested audio or video configuration that is not supported
+          } // No supported audio or video in this configuration OR we have
+          // requested audio or video configuration that is not supported
 
 
-        if (!supportedAudio && !supportedVideo || supportedAudio && supportedAudio.length === 0 || supportedVideo && supportedVideo.length === 0) {
-          continue;
-        } // This configuration is supported
+          if (!supportedAudio && !supportedVideo || supportedAudio && supportedAudio.length === 0 || supportedVideo && supportedVideo.length === 0) {
+            continue;
+          } // This configuration is supported
 
 
-        found = true;
-        var ksConfig = new _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_5__["default"](supportedAudio, supportedVideo);
-        var ks = protectionKeyController.getKeySystemBySystemString(systemString);
-        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-          data: new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_6__["default"](ks, ksConfig)
-        });
-        break;
+          found = true;
+          var ksConfig = new _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_5__["default"](supportedAudio, supportedVideo);
+          var ks = protectionKeyController.getKeySystemBySystemString(systemString);
+
+          var _keySystemAccess = new _vo_KeySystemAccess__WEBPACK_IMPORTED_MODULE_6__["default"](ks, ksConfig);
+
+          eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+            data: _keySystemAccess
+          });
+          resolve({
+            data: _keySystemAccess
+          });
+          break;
+        }
       }
-    }
 
-    if (!found) {
-      eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
-        error: 'Key system access denied! -- No valid audio/video content configurations detected!'
-      });
-    }
+      if (!found) {
+        var errorMessage = 'Key system access denied! -- No valid audio/video content configurations detected!';
+        eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {
+          error: errorMessage
+        });
+        reject({
+          error: errorMessage
+        });
+      }
+    });
   }
 
   function selectKeySystem(ksAccess) {
-    try {
-      mediaKeys = ksAccess.mediaKeys = new window[api.MediaKeys](ksAccess.keySystem.systemString);
-      keySystem = ksAccess.keySystem;
-      keySystemAccess = ksAccess;
+    return new Promise(function (resolve, reject) {
+      try {
+        mediaKeys = ksAccess.mediaKeys = new window[api.MediaKeys](ksAccess.keySystem.systemString);
+        keySystem = ksAccess.keySystem;
+        keySystemAccess = ksAccess;
 
-      if (videoElement) {
-        setMediaKeys();
+        if (videoElement) {
+          setMediaKeys();
+        }
+
+        resolve(keySystem);
+      } catch (error) {
+        reject({
+          error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO'
+        });
       }
-
-      eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED);
-    } catch (error) {
-      eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, {
-        error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO'
-      });
-    }
+    });
   }
 
   function setMediaElement(mediaElement) {
@@ -55545,7 +55766,7 @@ function ProtectionModel_3Feb2014(config) {
     }
   }
 
-  function createKeySession(initData, protData, sessionType, cdmData) {
+  function createKeySession(ksInfo) {
     if (!keySystem || !mediaKeys || !keySystemAccess) {
       throw new Error('Can not create sessions until you have selected a key system');
     } // Use the first video capability for the contentType.
@@ -55568,8 +55789,8 @@ function ProtectionModel_3Feb2014(config) {
     }
 
     var contentType = capabilities.contentType;
-    var session = mediaKeys.createSession(contentType, new Uint8Array(initData), cdmData ? new Uint8Array(cdmData) : null);
-    var sessionToken = createSessionToken(session, initData); // Add all event listeners
+    var session = mediaKeys.createSession(contentType, new Uint8Array(ksInfo.initData), ksInfo.cdmData ? new Uint8Array(ksInfo.cdmData) : null);
+    var sessionToken = createSessionToken(session, ksInfo); // Add all event listeners
 
     session.addEventListener(api.error, sessionToken);
     session.addEventListener(api.message, sessionToken);
@@ -55577,7 +55798,7 @@ function ProtectionModel_3Feb2014(config) {
     session.addEventListener(api.close, sessionToken); // Add to our session list
 
     sessions.push(sessionToken);
-    logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+    logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
     eventBus.trigger(events.KEY_SESSION_CREATED, {
       data: sessionToken
     });
@@ -55630,7 +55851,7 @@ function ProtectionModel_3Feb2014(config) {
   }
 
   function loadKeySession()
-  /*sessionID*/
+  /*ksInfo*/
   {
     /* Not supported */
   }
@@ -55681,12 +55902,16 @@ function ProtectionModel_3Feb2014(config) {
   // MediaKeySession and session-specific event handler
 
 
-  function createSessionToken(keySession, initData) {
+  function createSessionToken(keySession, ksInfo) {
     return {
       // Implements SessionToken
       session: keySession,
-      initData: initData,
-      getSessionID: function getSessionID() {
+      keyId: ksInfo.keyId,
+      initData: ksInfo.initData,
+      getKeyId: function getKeyId() {
+        return this.keyId;
+      },
+      getSessionId: function getSessionId() {
         return this.session.sessionId;
       },
       getExpirationTime: function getExpirationTime() {
@@ -55721,9 +55946,9 @@ function ProtectionModel_3Feb2014(config) {
             break;
 
           case api.close:
-            logger.debug('DRM: Session closed.  SessionID = ' + this.getSessionID());
+            logger.debug('DRM: Session closed.  SessionID = ' + this.getSessionId());
             eventBus.trigger(events.KEY_SESSION_CLOSED, {
-              data: this.getSessionID()
+              data: this.getSessionId()
             });
             break;
         }
@@ -55733,8 +55958,8 @@ function ProtectionModel_3Feb2014(config) {
 
   instance = {
     getAllInitData: getAllInitData,
+    getSessions: getSessions,
     requestKeySystemAccess: requestKeySystemAccess,
-    getKeySystem: getKeySystem,
     selectKeySystem: selectKeySystem,
     setMediaElement: setMediaElement,
     createKeySession: createKeySession,
@@ -57537,12 +57762,12 @@ function ThroughputHistory(config) {
     ewmaObj.totalWeight += weight;
   }
 
-  function getSampleSize(isThroughput, mediaType, isLive) {
+  function getSampleSize(isThroughput, mediaType, isDynamic) {
     var arr, sampleSize;
 
     if (isThroughput) {
       arr = throughputDict[mediaType];
-      sampleSize = isLive ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
+      sampleSize = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
     } else {
       arr = latencyDict[mediaType];
       sampleSize = AVERAGE_LATENCY_SAMPLE_AMOUNT;
@@ -58842,7 +59067,8 @@ function InsufficientBufferRule(config) {
     var representationInfo = rulesContext.getRepresentationInfo();
     var fragmentDuration = representationInfo.fragmentDuration;
     var streamInfo = rulesContext.getStreamInfo();
-    var streamId = streamInfo ? streamInfo.id : null; // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+    var streamId = streamInfo ? streamInfo.id : null;
+    var isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic; // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
 
     if (shouldIgnore(mediaType) || !fragmentDuration) {
       return switchRequest;
@@ -58857,7 +59083,7 @@ function InsufficientBufferRule(config) {
       var abrController = rulesContext.getAbrController();
       var throughputHistory = abrController.getThroughputHistory();
       var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-      var throughput = throughputHistory.getAverageThroughput(mediaType);
+      var throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
       var latency = throughputHistory.getAverageLatency(mediaType);
       var bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
       switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
@@ -61917,12 +62143,12 @@ function TextController(config) {
       if (currentTrackInfo.lang === mediaInfo.lang && (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.index === mediaInfo.index)) {
         var currentFragTrack = mediaController.getCurrentTrackFor(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT, streamId);
 
-        if (mediaInfo !== currentFragTrack) {
+        if (mediaInfo.id ? currentFragTrack.id !== mediaInfo.id : currentFragTrack.index !== mediaInfo.index) {
           textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
           textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
         } else if (oldTrackIdx === -1) {
-          //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
-          //no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
+          // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
+          // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
           // For that reason we reactivate the StreamProcessor and the ScheduleController
           eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_7__["default"].SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
             streamId: streamId,
@@ -62820,7 +63046,7 @@ function TextTracks(config) {
       var onMetadataLoaded = function onMetadataLoaded() {
         var track = getTrackByIdx(defaultIndex);
 
-        if (track) {
+        if (track && track.renderingType === 'html') {
           checkVideoSize.call(this, track, true);
         }
 

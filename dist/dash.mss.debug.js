@@ -5028,17 +5028,17 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.METRIC_UPDATED = 'metricUpdated';
     /**
+     * Triggered when a new stream (period) starts.
+     * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+     */
+
+    _this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+    /**
      * Triggered at the stream end of a period.
      * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
      */
 
     _this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
-    /**
-     * Triggered when a new stream (period) starts.
-     * @event MediaPlayerEvents#STREAM_SWITCH_STARTED
-     */
-
-    _this.STREAM_SWITCH_STARTED = 'streamSwitchStarted';
     /**
      * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
      * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED

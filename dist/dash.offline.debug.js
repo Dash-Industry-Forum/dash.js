@@ -6628,6 +6628,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                enableSeekFix: false
  *            },
  *            utcSynchronization: {
+ *                enabled: true,
  *                useManifestDateHeaderTimeSource: true,
  *                backgroundAttempts: 2,
  *                timeBetweenSyncAttempts: 30,
@@ -6898,7 +6899,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} UtcSynchronizationSettings
- *
+ * @property {boolean} [enabled=true]
+ * Enables or disables the UTC clock synchronization
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
@@ -7041,6 +7043,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ * @property {boolean} ignoreEmeEncryptedEvent
+ * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  */
 
 /**
@@ -7295,7 +7299,8 @@ function Settings() {
         applyServiceDescription: true
       },
       protection: {
-        keepProtectionMediaKeys: false
+        keepProtectionMediaKeys: false,
+        ignoreEmeEncryptedEvent: false
       },
       buffer: {
         enableSeekDecorrelationFix: false,
@@ -7321,6 +7326,7 @@ function Settings() {
         enableSeekFix: false
       },
       utcSynchronization: {
+        enabled: true,
         useManifestDateHeaderTimeSource: true,
         backgroundAttempts: 2,
         timeBetweenSyncAttempts: 30,
@@ -17226,17 +17232,17 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.METRIC_UPDATED = 'metricUpdated';
     /**
+     * Triggered when a new stream (period) starts.
+     * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+     */
+
+    _this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+    /**
      * Triggered at the stream end of a period.
      * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
      */
 
     _this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
-    /**
-     * Triggered when a new stream (period) starts.
-     * @event MediaPlayerEvents#STREAM_SWITCH_STARTED
-     */
-
-    _this.STREAM_SWITCH_STARTED = 'streamSwitchStarted';
     /**
      * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
      * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
@@ -20310,19 +20316,22 @@ function URLLoader(cfg) {
   schemeLoaderFactory = Object(_streaming_net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
 
   function load(config) {
-    var loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
-    loader = loaderFactory(context).create({
-      errHandler: cfg.errHandler,
-      mediaPlayerModel: cfg.mediaPlayerModel,
-      requestModifier: cfg.requestModifier,
-      dashMetrics: cfg.dashMetrics,
-      boxParser: cfg.boxParser ? cfg.boxParser : null,
-      constants: cfg.constants ? cfg.constants : null,
-      dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
-      urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
-      requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
-      errors: cfg.errors
-    });
+    if (!loader) {
+      var loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
+      loader = loaderFactory(context).create({
+        errHandler: cfg.errHandler,
+        mediaPlayerModel: cfg.mediaPlayerModel,
+        requestModifier: cfg.requestModifier,
+        dashMetrics: cfg.dashMetrics,
+        boxParser: cfg.boxParser ? cfg.boxParser : null,
+        constants: cfg.constants ? cfg.constants : null,
+        dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
+        urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+        requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
+        errors: cfg.errors
+      });
+    }
+
     loader.load(config);
   }
 
