@@ -1040,7 +1040,7 @@ function ProtectionController(config) {
 
     /**
      * Returns all available key systems
-     * @return {*|*[]}
+     * @return {array}
      */
     function getKeySystems() {
         return protectionKeyController ? protectionKeyController.getKeySystems() : [];
