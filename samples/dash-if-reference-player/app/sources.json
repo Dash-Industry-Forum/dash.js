@@ -116,6 +116,30 @@
                     "provider": "bbc"
                 },
                 {
+                    "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, no encryption",
+                    "url": "https://media.axprod.net/TestVectors/Cmaf/clear_1080p_h264/manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/public-test-vectors",
+                    "provider": "axinom"
+                },
+                {
+                    "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, CMAF, no encryption",
+                    "url": "https://media.axprod.net/TestVectors/H265/clear_cmaf_1080p_h265/manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/public-test-vectors",
+                    "provider": "axinom"
+                },
+                {
+                    "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, DASH, no encryption",
+                    "url": "https://media.axprod.net/TestVectors/Dash/not_protected_dash_1080p_h264/manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/public-test-vectors",
+                    "provider": "axinom"
+                },
+                {
+                    "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, DASH, no encryption",
+                    "url": "https://media.axprod.net/TestVectors/H265/clear_dash_1080p_h265/manifest.mpd",
+                    "moreInfo": "https://github.com/Axinom/public-test-vectors",
+                    "provider": "axinom"
+                },
+                {
                     "name": "1080p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
