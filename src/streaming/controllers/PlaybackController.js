@@ -290,42 +290,48 @@ function PlaybackController() {
             return;
         }
 
-        let llsd = null;
-
         for (let i = 0; i < manifestInfo.serviceDescriptions.length; i++) {
             const sd = manifestInfo.serviceDescriptions[i];
-            if (sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME) {
-                llsd = sd;
-                break;
-            }
-        }
 
-        if (llsd) {
-            if (llsd.latency && llsd.latency.target > 0) {
-                logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
-                settings.update({
-                    streaming: {
-                        delay: {
-                            liveDelay: llsd.latency.target / 1000,
-                        },
-                        liveCatchup: {
-                            minDrift: (llsd.latency.target + 500) / 1000,
-                            maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target + 500) / 1000 : undefined
-                        }
-                    }
-                });
-            }
-            if (llsd.playbackRate && llsd.playbackRate.max > 1.0) {
-                logger.debug('Apply LL properties coming from service description. Max PlaybackRate:', llsd.playbackRate.max);
-                settings.update({
-                    streaming: {
-                        liveCatchup: {
-                            playbackRate: llsd.playbackRate.max - 1.0
-                        }
-                    }
-                });
+            if (!sd.schemeIdUri || sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
+
+                if (sd.latency && sd.latency.target > 0) {
+                    _applyServiceDescriptionLatency(sd);
+                }
+
+                if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+                    _applyServiceDescriptionPlaybackRate(sd);
+                }
             }
         }
+    }
+
+    function _applyServiceDescriptionLatency(sd) {
+        logger.debug('Applying properties coming from service description. Target Latency (ms):', sd.latency.target);
+
+        // Todo minDrift according to DVB spec
+        settings.update({
+            streaming: {
+                delay: {
+                    liveDelay: sd.latency.target / 1000,
+                },
+                liveCatchup: {
+                    minDrift: (sd.latency.max - sd.latency.target) / 1000,
+                    maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
+                }
+            }
+        });
+    }
+
+    function _applyServiceDescriptionPlaybackRate(sd) {
+        logger.debug('Applying properties coming from service description. Max PlaybackRate:', sd.playbackRate.max);
+        settings.update({
+            streaming: {
+                liveCatchup: {
+                    playbackRate: sd.playbackRate.max - 1.0
+                }
+            }
+        });
     }
 
     function getAvailabilityStartTime() {
@@ -764,7 +770,7 @@ function PlaybackController() {
 
             const deltaLatency = currentLiveLatency - liveDelay;
             if (settings.get().streaming.liveCatchup.maxDrift > 0 && !isLowLatencySeekingInProgress &&
-                deltaLatency > settings.get().streaming.liveCatchup.maxDrift) {
+                deltaLatency > settings.get().streaming.liveCatchup.maxDrift && deltaLatency > settings.get().streaming.liveCatchup.latencyThreshold) {
                 logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isLowLatencySeekingInProgress = true;
                 seekToLive();
@@ -972,7 +978,7 @@ function PlaybackController() {
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&
-            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
+            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] === 'true') {
             logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
             settings.update({
                 streaming: {
