@@ -20,8 +20,8 @@ const lodash = require('lodash');
 const NAME = 'BITRATE_MAX_MIN';
 
 // Test constants
-const MAXBITRATE_VIDEO = 1700;
-const MINBITRATE_VIDEO = 1100;
+const MAXBITRATE_VIDEO = 990;
+const MINBITRATE_VIDEO = 980;
  
 /** Initial Bitrate is being set and ABR is being disabled */
 function getSettings(defaultSettings){
@@ -44,27 +44,22 @@ function insideBitrateInterval(bitrateList,qualityIndex, maxBitrate, minBitrate)
     let quality = bitrateList[qualityIndex];
 
     // If minimum bitrate is higher than highest possible quality
-    if(minBitrate * 1000 > bitrateList[bitrateList.length -1].bitrate && qualityIndex == bitrateList.length -1) return true;
+    if(minBitrate * 1000 > bitrateList[bitrateList.length -1].bitrate) return true;
 
     // If maximum bitrate is lower than lowest possible quality
-    if(maxBitrate * 1000 < bitrateList[0].bitrate && qualityIndex == 0) return true;
+    if(maxBitrate * 1000 < bitrateList[0].bitrate) return true;
 
     // If the current quality is inside the interval
     if(minBitrate * 1000 <= quality.bitrate && quality.bitrate <= maxBitrate * 1000) return true;
 
-    // If there is no possible quality in the interval, check if current quality is closest to minimum and below minimum bitrate
+    // If there is no possible quality in the interval, check if any quality could be in boundary
     var insideInterval = false;
-    var minIndex = 0;
     for(let i = bitrateList.length - 1; i >= 0; i--){
         // if any quality is inside the interval, the quality has been selected falsely
         if(minBitrate * 1000 <= bitrateList[i].bitrate && bitrateList[i].bitrate <= maxBitrate * 1000) insideInterval = true;
-        if(bitrateList[i].bitrate <= minBitrate * 1000) {
-            minIndex = bitrateList[i].qualityIndex;
-            break;
-        }
     };
 
-    if(!insideInterval && minIndex === qualityIndex) return true;
+    if(!insideInterval && quality.bitrate < minBitrate * 1000) return true;
 
     return false;
 };
@@ -99,8 +94,9 @@ exports.register = function (stream) {
         test('checkBitrate_0', async () => {
             // get current quality and all possible qualities
             let bitrateInfoList = await command.execute(player.getBitrateInfoListFor,["video"]);
+            console.log(bitrateInfoList);
             let actualQuality = await command.execute(player.getQualityFor,["video"]);
-            
+            console.log(actualQuality);            
             //check if bitrate is inside interval 
             assert.isTrue(insideBitrateInterval(bitrateInfoList,actualQuality, MAXBITRATE_VIDEO, MINBITRATE_VIDEO));
         });
