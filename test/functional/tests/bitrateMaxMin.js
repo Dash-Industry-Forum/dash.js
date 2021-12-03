@@ -52,18 +52,19 @@ function insideBitrateInterval(bitrateList,qualityIndex, maxBitrate, minBitrate)
     // If the current quality is inside the interval
     if(minBitrate * 1000 <= quality.bitrate && quality.bitrate <= maxBitrate * 1000) return true;
 
-    // If there is no possible quality in the interval, check if current quality is closest to minimum
+    // If there is no possible quality in the interval, check if current quality is closest to minimum and below minimum bitrate
     var insideInterval = false;
-    var distanceToMin = {distance: Infinity, index: NaN}
-    bitrateList.forEach(bitrateInfo => {
-        if(minBitrate * 1000 <= bitrateInfo.bitrate && bitrateInfo.bitrate <= maxBitrate * 1000) insideInterval = true;
-        if(distanceToMin.distance > Math.abs(minBitrate * 1000 - bitrateInfo.bitrate)){
-            distanceToMin.distance = Math.abs(minBitrate * 1000 - bitrateInfo.bitrate);
-            distanceToMin.index = bitrateInfo.qualityIndex;
-        };
-    });
+    var minIndex = 0;
+    for(let i = bitrateList.length - 1; i >= 0; i--){
+        // if any quality is inside the interval, the quality has been selected falsely
+        if(minBitrate * 1000 <= bitrateList[i].bitrate && bitrateList[i].bitrate <= maxBitrate * 1000) insideInterval = true;
+        if(bitrateList[i].bitrate <= minBitrate * 1000) {
+            minIndex = bitrateList[i].qualityIndex;
+            break;
+        }
+    };
 
-    if(!insideInterval && distanceToMin.index === qualityIndex) return true;
+    if(!insideInterval && minIndex === qualityIndex) return true;
 
     return false;
 };
