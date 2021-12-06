@@ -35,6 +35,7 @@ import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
+import CatchupController from './controllers/CatchupController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -148,6 +149,7 @@ function MediaPlayer() {
         textController,
         gapController,
         playbackController,
+        catchupController,
         dashMetrics,
         manifestModel,
         cmcdModel,
@@ -214,6 +216,9 @@ function MediaPlayer() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.catchupController) {
+            catchupController = config.catchupController;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
@@ -296,6 +301,10 @@ function MediaPlayer() {
 
             if (!gapController) {
                 gapController = GapController(context).getInstance();
+            }
+
+            if(!catchupController) {
+                catchupController = CatchupController(context).getInstance();
             }
 
             if (!capabilitiesFilter) {
@@ -1919,6 +1928,7 @@ function MediaPlayer() {
         adapter.reset();
         streamController.reset();
         gapController.reset();
+        catchupController.reset();
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
@@ -2005,6 +2015,15 @@ function MediaPlayer() {
             settings
         });
 
+        catchupController.setConfig({
+            streamController,
+            playbackController,
+            dashMetrics,
+            mediaPlayerModel,
+            videoModel,
+            settings
+        })
+
         abrController.setConfig({
             streamController,
             domStorage,
@@ -2026,6 +2045,7 @@ function MediaPlayer() {
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
         gapController.initialize();
+        catchupController.initialize();
         cmcdModel.initialize();
         segmentBaseController.initialize();
     }

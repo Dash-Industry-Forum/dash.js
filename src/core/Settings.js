@@ -98,7 +98,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
- *                setStallState: false
+ *                setStallState: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -298,7 +298,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
- * @property {boolean} [setStallState=false]
+ * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
  */
 
@@ -441,7 +441,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
  *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * Note: Catch-up mechanism is only applied when playing low latency live streams or liveCatchup is enabled.
  * @property {number} [maxDrift=12]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
@@ -829,6 +829,7 @@ function Settings() {
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 12,
+                maxAllowedLatencyDeviationFactor: 0.02,
                 playbackRate: 0.5,
                 latencyThreshold: 60,
                 playbackBufferMin: 0.5,
