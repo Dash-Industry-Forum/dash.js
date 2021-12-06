@@ -245,7 +245,7 @@
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
+                    "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",
                     "provider": "unified"
@@ -1045,7 +1045,7 @@
                 },
                 {
                     "name": "Unified Streaming (Widevine, persistent)",
-                    "url": "//demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+                    "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
                     "protData": {
                         "com.widevine.alpha": {
                             "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
@@ -1253,18 +1253,13 @@
                     "provider": "dashif"
                 },
                 {
-                    "name": "SegmentBase, Single adaption set, 3x4 tiles",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-static.mpd",
-                    "provider": "unified"
-                },
-                {
                     "name": "SegmentTemplate with SegmentTimeline",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd",
+                    "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd",
                     "provider": "unified"
                 },
                 {
                     "name": "SegmentNumber",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd",
+                    "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd",
                     "provider": "unified"
                 }
             ]
