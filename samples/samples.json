@@ -94,6 +94,17 @@
                     "Video",
                     "Audio"
                 ]
+            },            
+            {
+                "title": "Load with url parameters",
+                "description": "A demo page that uses url query parameters to configure the playback.",
+                "href": "getting-started/load-with-url-params.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
