@@ -1157,7 +1157,7 @@ declare namespace dashjs {
         session: MediaKeySession;
         initData: any;
 
-        getSessionID(): string;
+        getSessionId(): string;
 
         getExpirationTime(): number;
 
