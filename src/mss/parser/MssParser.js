@@ -47,7 +47,7 @@ function MssParser(config) {
     const settings = config.settings;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
-    const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
+    const SUPPORTED_CODECS = ['AAC', 'AACL', 'AACH', 'AVC1', 'H264', 'TTML', 'DFXP'];
     // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
     const ROLE = {
         'CAPT': 'main',
