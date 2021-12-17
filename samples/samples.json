@@ -656,6 +656,17 @@
                     "DRM",
                     "Widevine"
                 ]
+            },
+            {
+                "title": "Load with a parsed manifest",
+                "description": "This sample shows how to load the manifest as a parsed object instead of a providing a url to the manifest",
+                "href": "advanced/load_with_manifest.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
