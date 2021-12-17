@@ -168,6 +168,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                playbackController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(13);
@@ -180,6 +181,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                playbackController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.be.NaN
@@ -193,6 +195,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                playbackController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(20);
@@ -206,6 +209,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                playbackController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
 
                 expect(liveDelay).to.equal(10);

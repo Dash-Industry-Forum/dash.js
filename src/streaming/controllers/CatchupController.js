@@ -32,16 +32,15 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Constants from '../constants/Constants';
-import MetricsConstants from '../constants/MetricsConstants';
 import MediaPlayerEvents from "../MediaPlayerEvents";
+import MetricsConstants from "../constants/MetricsConstants";
 
 function CatchupController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        isCatchupInProgress,
-        isLowLatencySeekingInProgress,
+        isCatchupSeekInProgress,
         minPlaybackRateChange,
         videoModel,
         settings,
@@ -49,6 +48,7 @@ function CatchupController() {
         playbackController,
         mediaPlayerModel,
         dashMetrics,
+        playbackStalled,
         logger;
 
     function initialize() {
@@ -86,31 +86,34 @@ function CatchupController() {
     }
 
     function _registerEvents() {
-        eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, _onBufferEmpty, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     function _unregisterEvents() {
-        eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, _onBufferEmpty, instance);
+        eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
+        eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackProgression, instance);
     }
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
 
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
     function reset() {
         _unregisterEvents();
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
-    function resetInitialSettings() {
-        isCatchupInProgress = false;
-        isLowLatencySeekingInProgress = false;
+    function _resetInitialSettings() {
+        isCatchupSeekInProgress = false;
 
         // Detect safari browser (special behavior for low latency streams)
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
@@ -120,20 +123,40 @@ function CatchupController() {
 
 
     function _onPlaybackSeeked() {
-        isLowLatencySeekingInProgress = false;
+        isCatchupSeekInProgress = false;
     }
 
     /**
-     * When the buffer level has changed to empty we stop the catchup
-     * @param e
+     * When the buffer level updated we check if we can remove the stalled state
+     * @param {object} e
      * @private
      */
-    function _onBufferEmpty(e) {
+    function _onBufferLevelUpdated(e) {
+        // do not stop when getting an event from Stream that is not active
+        if (e.streamId !== streamController.getActiveStreamInfo().id || !playbackStalled) {
+            return;
+        }
+
+        // we remove the stalled state once we reach a certain buffer level
+        const liveDelay = mediaPlayerModel.getLiveDelay();
+        const bufferLevel = playbackController.getBufferLevel();
+        if (bufferLevel > liveDelay / 2) {
+            playbackStalled = false;
+        }
+    }
+
+    /**
+     * When the buffer state changed to BUFFER_EMPTY we update the stalled state
+     * @param {object} e
+     * @private
+     */
+    function _onBufferLevelStateChanged(e) {
         // do not stop when getting an event from Stream that is not active
         if (e.streamId !== streamController.getActiveStreamInfo().id) {
             return;
         }
-        stopPlaybackCatchUp();
+
+        playbackStalled = e.state === MetricsConstants.BUFFER_EMPTY;
     }
 
     /**
@@ -141,44 +164,56 @@ function CatchupController() {
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.isDynamic() && (settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled) && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking()) {
+        if (playbackController.getIsDynamic() && (settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled) && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking()) {
             if (_shouldStopCatchUp()) {
-                stopPlaybackCatchUp();
+                _stopPlaybackCatchUp();
             } else if (_shouldStartCatchUp()) {
-                startPlaybackCatchUp();
+                _startPlaybackCatchUp();
             }
         }
     }
 
     /**
-     * Check if we should stop catchup mode
+     * Check if we should stop catchup mode. We stop when we are close enough to the target live delay
      * @private
      */
     function _shouldStopCatchUp() {
+        const latencyDrift = Math.abs(_getLatencyDrift());
+        const currentPlaybackRate = videoModel.getPlaybackRate();
 
-        if (!isCatchupInProgress) {
-            return false;
-        }
-
-        const latencyDrift = _getLatencyDrift();
-
-        return latencyDrift < Math.min(settings.get().streaming.liveCatchup.minDrift, mediaPlayerModel.getLiveDelay() * settings.get().streaming.liveCatchup.maxAllowedLatencyDeviationFactor);
+        return currentPlaybackRate !== 1.0 && latencyDrift < Math.min(settings.get().streaming.liveCatchup.minDrift, mediaPlayerModel.getLiveDelay() * settings.get().streaming.liveCatchup.maxAllowedLatencyDeviationFactor);
     }
 
+    /**
+     * Stops catchup by adjusting playbackrate to 1.0 speed
+     * @private
+     */
+    function _stopPlaybackCatchUp() {
+        if (videoModel) {
+            logger.debug(`[CatchupController]: Stopping catchup, setting playback rate to 1.0`);
+            videoModel.setPlaybackRate(1.0);
+        }
+    }
+
+    /**
+     * Calculates the drift between the current latency and the target latency
+     * @return {number}
+     * @private
+     */
     function _getLatencyDrift() {
         const currentLiveLatency = playbackController.getCurrentLiveLatency();
         const targetLiveDelay = mediaPlayerModel.getLiveDelay();
 
-        return Math.abs(currentLiveLatency - targetLiveDelay);
+        return currentLiveLatency - targetLiveDelay;
     }
 
     /**
-     * Checks whether the catchup mechanism should be enabled
+     * Checks whether the catchup mechanism should be enabled. We use different subfunctions here depending on the catchup mode.
      * @return {boolean}
      */
     function _shouldStartCatchUp() {
         try {
-            if (isCatchupInProgress || !playbackController.getTime() > 0) {
+            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
                 return false;
             }
 
@@ -223,7 +258,7 @@ function CatchupController() {
      */
     function _defaultNeedToCatchUp(currentLiveLatency, liveCatchupLatencyThreshold, liveCatchUpMinDrift) {
         try {
-            const latencyDrift = _getLatencyDrift();
+            const latencyDrift = Math.abs(_getLatencyDrift());
 
             return latencyDrift > liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
         } catch (e) {
@@ -243,7 +278,7 @@ function CatchupController() {
      */
     function _lolpNeedToCatchUpCustom(currentLiveLatency, liveCatchUpMinDrift, currentBuffer, playbackBufferMin, liveCatchupLatencyThreshold) {
         try {
-            const latencyDrift = _getLatencyDrift();
+            const latencyDrift = Math.abs(_getLatencyDrift());
 
             return (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold) && (latencyDrift > liveCatchUpMinDrift || currentBuffer < playbackBufferMin);
         } catch (e) {
@@ -252,50 +287,49 @@ function CatchupController() {
     }
 
     /**
-     * Apply catchup mode
+     * Apply catchup mode. We either seek back to the target live edge or increase the playback rate.
      */
-    function startPlaybackCatchUp() {
+    function _startPlaybackCatchUp() {
 
         // we are seeking dont do anything for now
-        if (isLowLatencySeekingInProgress) {
+        if (isCatchupSeekInProgress) {
             return;
         }
 
         if (videoModel) {
-            let results;
+            let newRate;
             const currentPlaybackRate = videoModel.getPlaybackRate();
             const liveCatchupPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
-            const currentLiveLatency = getCurrentLiveLatency();
-            const liveDelay = mediaPlayerModel.getLiveDelay();
-            const bufferLevel = getBufferLevel();
-            const deltaLatency = currentLiveLatency - liveDelay;
+            const bufferLevel = playbackController.getBufferLevel();
+            const deltaLatency = _getLatencyDrift();
 
             // we reached the maxDrift. Do a seek
             if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0 &&
-                deltaLatency > settings.get().streaming.liveCatchup.maxDrift && deltaLatency > settings.get().streaming.liveCatchup.latencyThreshold) {
-                logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
-                isLowLatencySeekingInProgress = true;
-                seekToLive();
+                deltaLatency > settings.get().streaming.liveCatchup.maxDrift && deltaLatency <= settings.get().streaming.liveCatchup.latencyThreshold) {
+                logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
+                isCatchupSeekInProgress = true;
+                _seekToLive();
             }
 
             // try to reach the target latency by adjusting the playback rate
             else {
+                const currentLiveLatency = playbackController.getCurrentLiveLatency();
+                const targetLiveDelay = mediaPlayerModel.getLiveDelay();
+
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     // Custom playback control: Based on buffer level
                     const liveCatchUpMinDrift = settings.get().streaming.liveCatchup.minDrift;
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-                    results = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, liveDelay, liveCatchUpMinDrift, playbackBufferMin, bufferLevel, currentPlaybackRate);
+                    newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, liveCatchUpMinDrift, playbackBufferMin, bufferLevel, currentPlaybackRate);
                 } else {
                     // Default playback control: Based on target and current latency
-                    results = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate);
+                    newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
                 }
 
                 // Obtain newRate and apply to video model
-                let newRate = results.newRate;
                 if (newRate) {  // non-null
-                    logger.debug(`Starting catchup, setting playback rate to ${newRate}`);
+                    logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
-                    isCatchupInProgress = true;
                 }
             }
         }
@@ -308,10 +342,16 @@ function CatchupController() {
      * @param {number} liveDelay
      * @param {number} bufferLevel
      * @param {number} currentPlaybackRate
-     * @return {{newRate: number}}
+     * @return {number}
      * @private
      */
     function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate) {
+
+        // if we recently ran into an empty buffer we wait for the buffer to recover before applying a new rate
+        if (playbackStalled) {
+            return 1.0;
+        }
+
         const cpr = liveCatchUpPlaybackRate;
         const deltaLatency = currentLiveLatency - liveDelay;
         const d = deltaLatency * 5;
@@ -323,10 +363,8 @@ function CatchupController() {
         // take into account situations in which there are buffer stalls,
         // in which increasing playbackRate to reach target latency will
         // just cause more and more stall situations
-        if (playbackStalled) {
-            if (bufferLevel > liveDelay / 2) {
-                playbackStalled = false;
-            } else if (deltaLatency > 0) {
+        if (playbackController.getPlaybackStalled()) {
+            if (bufferLevel <= liveDelay / 2 && deltaLatency > 0) {
                 newRate = 1.0;
             }
         }
@@ -336,10 +374,7 @@ function CatchupController() {
             newRate = null;
         }
 
-        return {
-            newRate: newRate
-        };
-
+        return newRate;
     }
 
     /**
@@ -351,7 +386,7 @@ function CatchupController() {
      * @param {number} playbackBufferMin
      * @param {number} bufferLevel
      * @param {number} currentPlaybackRate
-     * @return {{newRate: number}}
+     * @return {number}
      * @private
      */
     function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift, playbackBufferMin, bufferLevel, currentPlaybackRate) {
@@ -391,40 +426,24 @@ function CatchupController() {
             logger.debug('[LoL+ playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
         }
 
-        if (playbackStalled) {
-            if (bufferLevel > liveDelay / 2) {
-                playbackStalled = false;
-            }
-        }
-
         // don't change playbackrate for small variations (don't overload element with playbackrate changes)
         if (Math.abs(currentPlaybackRate - newRate) <= minPlaybackRateChange) {
             newRate = null;
         }
 
-        return {
-            newRate: newRate
-        };
-    }
-
-    function stopPlaybackCatchUp() {
-        if (videoModel) {
-            logger.debug(`Stopping catchup, setting playback rate to 1.0`);
-            videoModel.setPlaybackRate(1.0);
-            isCatchupInProgress = false;
-        }
+        return newRate
     }
 
     /**
      * Seek to live edge
      */
-    function seekToLive() {
+    function _seekToLive() {
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         const DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
 
         if (DVRWindow && !isNaN(DVRWindow.end)) {
-            seek(DVRWindow.end - getLiveDelay(), true, false);
+            playbackController.seek(DVRWindow.end - playbackController.getLiveDelay(), true, false);
         }
     }
 

@@ -141,6 +141,14 @@ function PlaybackController() {
     }
 
     /**
+     * Returns stalled state
+     * @return {boolean}
+     */
+    function getPlaybackStalled() {
+        return playbackStalled
+    }
+
+    /**
      * Returns remaining duration of a period
      * @param {object} sInfo
      * @return {number}
@@ -238,7 +246,7 @@ function PlaybackController() {
      * @return {number}
      * @private
      */
-    function _getNormalizedTime() {
+    function getNormalizedTime() {
         let t = getTime();
 
         if (isDynamic && !isNaN(availabilityStartTime)) {
@@ -323,13 +331,12 @@ function PlaybackController() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
         }
-        let currentTime = _getNormalizedTime();
+        let currentTime = getNormalizedTime();
         if (isNaN(currentTime) || currentTime === 0) {
             return 0;
         }
 
-        const now = new Date().getTime() + timelineConverter.getClientTimeOffset() * 1000;
-        return Math.max(((now - availabilityStartTime - currentTime * 1000) / 1000).toFixed(3), 0);
+        return timelineConverter.calcCurrentLiveLatency(currentTime, availabilityStartTime);
     }
 
     /**
@@ -349,12 +356,6 @@ function PlaybackController() {
         const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
-
-
-        // Apply live delay from ServiceDescription
-        if (settings.get().streaming.delay.applyServiceDescription && isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount)) {
-            _applyServiceDescription(manifestInfo);
-        }
 
         if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
@@ -392,7 +393,7 @@ function PlaybackController() {
      * @param {object} manifestInfo
      * @private
      */
-    function _applyServiceDescription(manifestInfo) {
+    function applyServiceDescription(manifestInfo) {
         if (!manifestInfo || !manifestInfo.serviceDescriptions) {
             return;
         }
@@ -402,7 +403,7 @@ function PlaybackController() {
 
             if (!sd.schemeIdUri || sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
 
-                if (sd.latency && sd.latency.target > 0) {
+                if (isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && sd.latency && sd.latency.target > 0) {
                     _applyServiceDescriptionLatency(sd);
                 }
 
@@ -521,7 +522,7 @@ function PlaybackController() {
             mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         }
         // Compare the current time of the video element against the range defined in the DVR window.
-        const currentTime = _getNormalizedTime();
+        const currentTime = getNormalizedTime();
         const actualTime = _getAdjustedPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged && !isSeeking() && (playbackStalled || videoModel.getReadyState() === 1)) {
@@ -889,7 +890,10 @@ function PlaybackController() {
         setConfig,
         getTimeToStreamEnd,
         getBufferLevel,
+        getPlaybackStalled,
         getTime,
+        applyServiceDescription,
+        getNormalizedTime,
         getIsManifestUpdateInProgress,
         getPlaybackRate,
         getPlayedRanges,

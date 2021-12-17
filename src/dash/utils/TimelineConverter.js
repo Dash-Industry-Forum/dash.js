@@ -344,6 +344,12 @@ function TimelineConverter() {
         return mpdRelativeTime - periodStartTime;
     }
 
+    function calcCurrentLiveLatency(currentTime, availabilityStartTime) {
+        const now = new Date().getTime() + getClientTimeOffset() * 1000;
+
+        return Math.max(((now - availabilityStartTime - currentTime * 1000) / 1000).toFixed(3), 0);
+    }
+
     function _onUpdateTimeSyncOffset(e) {
         if (e.offset !== undefined && !isNaN(e.offset)) {
             setClientTimeOffset(e.offset / 1000);
@@ -370,6 +376,7 @@ function TimelineConverter() {
         calcPresentationTimeFromWallTime,
         calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcCurrentLiveLatency,
         calcMediaTimeFromPresentationTime,
         calcWallTimeForSegment,
         calcTimeShiftBufferWindow,

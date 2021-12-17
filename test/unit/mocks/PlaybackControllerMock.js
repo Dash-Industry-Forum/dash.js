@@ -124,6 +124,10 @@ class PlaybackControllerMock {
         return 0;
     }
 
+    applyServiceDescription() {
+    }
 }
+
+
 
 export default PlaybackControllerMock;

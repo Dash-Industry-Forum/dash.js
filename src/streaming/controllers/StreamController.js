@@ -317,7 +317,7 @@ function StreamController() {
 
     /**
      * Initialize playback for the first period.
-     * @param {object} streamsInfo
+     * @param {array} streamsInfo
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
@@ -340,9 +340,14 @@ function StreamController() {
             return;
         }
 
+        // Apply Service description
+        const manifestInfo = streamsInfo[0].manifestInfo;
+        if (settings.get().streaming.delay.applyServiceDescription) {
+            playbackController.applyServiceDescription(manifestInfo);
+        }
+
         // Compute and set the live delay
-        if (adapter.getIsDynamic() && streams.length) {
-            const manifestInfo = streamsInfo[0].manifestInfo;
+        if (adapter.getIsDynamic()) {
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
             playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
