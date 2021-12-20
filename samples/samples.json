@@ -94,7 +94,7 @@
                     "Video",
                     "Audio"
                 ]
-            },            
+            },
             {
                 "title": "Load with url parameters",
                 "description": "A demo page that uses url query parameters to configure the playback.",
@@ -426,7 +426,6 @@
                     "Audio"
                 ]
             }
-            
         ]
     },
     {
@@ -643,7 +642,7 @@
                     "Video",
                     "Audio"
                 ]
-            },            
+            },
             {
                 "title": "Custom initial track selection example",
                 "description": "This sample shows how to define your own initial track selection function.",
@@ -662,6 +661,17 @@
                 "description": "This sample shows how to load the manifest as a parsed object instead of providing a url to the manifest",
                 "href": "advanced/load_with_manifest.html",
                 "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "MPD anchors",
+                "description": "This sample shows how to use MPD anchors to start a presentation at a given time.",
+                "href": "advanced/mpd-anchors.html",
+                "image": "lib/img/bbb-3.jpg",
                 "labels": [
                     "VoD",
                     "Video",
