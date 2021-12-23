@@ -19319,7 +19319,7 @@ function Settings() {
         jumpLargeGaps: true,
         smallGapLimit: 1.5,
         threshold: 0.3,
-        enableSeekFix: false
+        enableSeekFix: true
       },
       utcSynchronization: {
         enabled: true,
@@ -19732,7 +19732,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.2.0';
+var VERSION = '4.2.1';
 function getVersionString() {
   return VERSION;
 }
@@ -24996,7 +24996,7 @@ function DashManifestModel() {
             // to specifying a complete XML element(s) in the Event.
             // It is useful when an event leans itself to a compact
             // string representation'.
-            event.messageData = currentMpdEvent.messageData || currentMpdEvent.__text;
+            event.messageData = currentMpdEvent.messageData || currentMpdEvent.__cdata || currentMpdEvent.__text;
           }
 
           events.push(event);
@@ -28038,7 +28038,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
       // In some cases when requiredMediaTime = actual end time of the last segment
       // it is possible that this time a bit exceeds the declared end time of the last segment.
       // in this case we still need to include the last segment in the segment list.
-      if (requiredMediaTime < scaledTime + frag.d / fTimescale) {
+      if (requiredMediaTime < scaledTime + frag.d / fTimescale && requiredMediaTime >= scaledTime) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
 
@@ -34269,8 +34269,10 @@ function Stream(config) {
       errHandler.error(error);
     } else if (!isInitialized) {
       isInitialized = true;
-      eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZED, {
-        streamInfo: streamInfo
+      videoModel.waitForReadyState(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, function () {
+        eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZED, {
+          streamInfo: streamInfo
+        });
       });
     }
   }
@@ -35019,7 +35021,7 @@ function StreamProcessor(config) {
     var representation = representationController.getCurrentRepresentation(); // If  this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
     // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
 
-    if (settings.get().streaming.gaps.enableSeekFix && !isDynamic && shouldUseExplicitTimeForRequest && playbackController.isSeeking()) {
+    if (settings.get().streaming.gaps.enableSeekFix && !isDynamic && shouldUseExplicitTimeForRequest && (playbackController.isSeeking() || playbackController.getTime() === 0)) {
       var adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
 
       if (!isNaN(adjustedTime)) {
@@ -43264,8 +43266,10 @@ function StreamController() {
         var startTimeFromUri = _getStartTimeFromUriParameters(true);
 
         if (!isNaN(startTimeFromUri)) {
-          logger.info('Start time from URI parameters: ' + startTimeFromUri);
-          startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
+          logger.info('Start time from URI parameters: ' + startTimeFromUri); // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+
+          var offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+          startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start + offset);
         }
       }
     } else {
@@ -49978,6 +49982,7 @@ function VideoModel() {
     getVideoHeight: getVideoHeight,
     getVideoRelativeOffsetTop: getVideoRelativeOffsetTop,
     getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft,
+    waitForReadyState: waitForReadyState,
     reset: reset
   };
   setup();
@@ -53098,7 +53103,7 @@ function ProtectionController(config) {
   }
   /**
    * Returns all available key systems
-   * @return {*|*[]}
+   * @return {array}
    */
 
 

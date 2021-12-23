@@ -4067,7 +4067,7 @@ function MssParser(config) {
   var mediaPlayerModel = config.mediaPlayerModel;
   var settings = config.settings;
   var DEFAULT_TIME_SCALE = 10000000.0;
-  var SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP']; // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
+  var SUPPORTED_CODECS = ['AAC', 'AACL', 'AACH', 'AACP', 'AVC1', 'H264', 'TTML', 'DFXP']; // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
 
   var ROLE = {
     'CAPT': 'main',

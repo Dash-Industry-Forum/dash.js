@@ -7323,7 +7323,7 @@ function Settings() {
         jumpLargeGaps: true,
         smallGapLimit: 1.5,
         threshold: 0.3,
-        enableSeekFix: false
+        enableSeekFix: true
       },
       utcSynchronization: {
         enabled: true,
@@ -10266,7 +10266,7 @@ function DashManifestModel() {
             // to specifying a complete XML element(s) in the Event.
             // It is useful when an event leans itself to a compact
             // string representation'.
-            event.messageData = currentMpdEvent.messageData || currentMpdEvent.__text;
+            event.messageData = currentMpdEvent.messageData || currentMpdEvent.__cdata || currentMpdEvent.__text;
           }
 
           events.push(event);
@@ -12620,7 +12620,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
       // In some cases when requiredMediaTime = actual end time of the last segment
       // it is possible that this time a bit exceeds the declared end time of the last segment.
       // in this case we still need to include the last segment in the segment list.
-      if (requiredMediaTime < scaledTime + frag.d / fTimescale) {
+      if (requiredMediaTime < scaledTime + frag.d / fTimescale && requiredMediaTime >= scaledTime) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
 

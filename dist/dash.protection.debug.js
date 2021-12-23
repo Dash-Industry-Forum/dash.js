@@ -3533,7 +3533,7 @@ function ProtectionController(config) {
   }
   /**
    * Returns all available key systems
-   * @return {*|*[]}
+   * @return {array}
    */
 
 
