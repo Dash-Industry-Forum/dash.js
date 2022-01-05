@@ -1378,7 +1378,7 @@ declare namespace dashjs {
         url: string;
         method: string;
         responseType: string;
-        headers: object;
+        headers: {[key: string]: string};
         withCredentials: boolean;
         messageType: string;
         sessionId: string;
