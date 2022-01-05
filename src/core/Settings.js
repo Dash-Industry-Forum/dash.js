@@ -946,6 +946,8 @@ function Settings() {
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
+                } else {
+                    throw new Error('Settings parameter ' + path + n + ' is not supported');
                 }
             }
         }
