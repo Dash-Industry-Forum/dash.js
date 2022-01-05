@@ -1353,7 +1353,7 @@ declare namespace dashjs {
         uuid: string;
         schemeIdURI: string;
 
-        getInitData(cp: object): ArrayBuffer;
+        getInitData(cp: object): ArrayBuffer | null;
 
         getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
 
