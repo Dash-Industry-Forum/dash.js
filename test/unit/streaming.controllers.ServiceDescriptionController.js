@@ -184,5 +184,24 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.abr.initialBitrate.audio).to.be.equal(5000);
         })
 
+        it('Should update all values if multiple elements are included in the ServiceDescription element', () => {
+            dummyManifestInfo.serviceDescriptions[0].operatingBandwidth.mediaType = 'any';
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.abr.minBitrate.video).to.be.equal(1000);
+            expect(currentSettings.streaming.abr.maxBitrate.video).to.be.equal(9000);
+            expect(currentSettings.streaming.abr.initialBitrate.video).to.be.equal(5000);
+            expect(currentSettings.streaming.abr.minBitrate.audio).to.be.equal(1000);
+            expect(currentSettings.streaming.abr.maxBitrate.audio).to.be.equal(9000);
+            expect(currentSettings.streaming.abr.initialBitrate.audio).to.be.equal(5000);
+            expect(currentSettings.streaming.delay.liveDelay).to.be.equal(5);
+            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(0.5);
+            expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
+            expect(currentSettings.streaming.liveCatchup.playbackRate).to.be.equal(0.4);
+        })
+
+
+
     })
 })
