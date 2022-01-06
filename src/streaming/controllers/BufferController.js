@@ -975,7 +975,7 @@ function BufferController(config) {
             const ranges = sourceBufferSink.getAllBufferRanges();
 
             if (!ranges || ranges.length === 0) {
-                return targetTime;
+                return NaN;
             }
 
             let i = 0;
