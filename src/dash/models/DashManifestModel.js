@@ -869,6 +869,7 @@ function DashManifestModel() {
                         // string representation'.
                         event.messageData =
                             currentMpdEvent.messageData ||
+                            currentMpdEvent.__cdata ||
                             currentMpdEvent.__text;
                     }
 

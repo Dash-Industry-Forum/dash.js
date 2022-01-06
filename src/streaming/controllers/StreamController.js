@@ -1020,7 +1020,9 @@ function StreamController() {
                 const startTimeFromUri = _getStartTimeFromUriParameters(true);
                 if (!isNaN(startTimeFromUri)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
+                    // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+                    const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start + offset);
                 }
             }
         } else {
