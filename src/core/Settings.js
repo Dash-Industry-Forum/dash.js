@@ -579,13 +579,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}]
- * The maximum bitrate that the ABR algorithms will choose.
+ * The maximum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
- * Use NaN for no limit.
+ * Use -1 for no limit.
  * @property {module:Settings~AudioVideoSettings} [minBitrate={audio: -1, video: -1}]
- * The minimum bitrate that the ABR algorithms will choose.
+ * The minimum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
- * Use NaN for no limit.
+ * Use -1 for no limit.
  * @property {module:Settings~AudioVideoSettings} [maxRepresentationRatio={audio: 1, video: 1}]
  * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed, as a proportion of the size of the representation set.
  *
@@ -597,7 +597,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}]
- * Explicitly set the starting bitrate for audio or video.
+ * Explicitly set the starting bitrate for audio or video. This value is specified in kbps.
+ *
+ * Use -1 to let the player decide.
  * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}]
  * Explicitly set the initial representation ratio.
  *
@@ -991,9 +993,9 @@ function Settings() {
     }
 
     instance = {
-        get: get,
-        update: update,
-        reset: reset
+        get,
+        update,
+        reset
     };
 
     return instance;

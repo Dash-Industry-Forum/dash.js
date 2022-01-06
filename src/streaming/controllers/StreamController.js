@@ -91,6 +91,7 @@ function StreamController() {
         mediaSource,
         videoModel,
         playbackController,
+        serviceDescriptionController,
         mediaPlayerModel,
         isPaused,
         initialPlayback,
@@ -343,7 +344,7 @@ function StreamController() {
         // Apply Service description
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.delay.applyServiceDescription) {
-            playbackController.applyServiceDescription(manifestInfo);
+            serviceDescriptionController.applyServiceDescription(manifestInfo);
         }
 
         // Compute and set the live delay
@@ -1388,6 +1389,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.textController) {
             textController = config.textController;

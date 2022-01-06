@@ -1117,30 +1117,30 @@ function DashManifestModel() {
                             schemeIdUri = sd[prop].schemeIdUri;
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_LATENCY) {
                             latency = {
-                                target: sd[prop].target,
-                                max: sd[prop].max,
-                                min: sd[prop].min
+                                target: parseInt(sd[prop].target),
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min)
                             };
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_PLAYBACK_RATE) {
                             playbackRate = {
-                                max: sd[prop].max,
-                                min: sd[prop].min
+                                max: parseFloat(sd[prop].max),
+                                min: parseFloat(sd[prop].min)
                             };
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_OPERATING_QUALITY) {
                             operatingQuality = {
                                 mediaType: sd[prop].mediaType,
-                                max: sd[prop].max,
-                                min: sd[prop].min,
-                                target: sd[prop].target,
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min),
+                                target: parseInt(sd[prop].target),
                                 type: sd[prop].type,
-                                maxQualityDifference: sd[prop].maxQualityDifference
+                                maxQualityDifference: parseInt(sd[prop].maxQualityDifference)
                             }
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH) {
-                            operatingQuality = {
+                            operatingBandwidth = {
                                 mediaType: sd[prop].mediaType,
-                                max: sd[prop].max,
-                                min: sd[prop].min,
-                                target: sd[prop].target
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min),
+                                target: parseInt(sd[prop].target)
                             }
                         }
                     }

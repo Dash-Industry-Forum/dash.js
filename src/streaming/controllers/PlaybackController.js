@@ -388,101 +388,6 @@ function PlaybackController() {
         return ret;
     }
 
-    /**
-     * Check for potential ServiceDescriptor elements in the MPD and update the settings accordingly
-     * @param {object} manifestInfo
-     * @private
-     */
-    function applyServiceDescription(manifestInfo) {
-        if (!manifestInfo || !manifestInfo.serviceDescriptions) {
-            return;
-        }
-
-        for (let i = 0; i < manifestInfo.serviceDescriptions.length; i++) {
-            const sd = manifestInfo.serviceDescriptions[i];
-
-            if (!sd.schemeIdUri || sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
-
-                if (isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && sd.latency && sd.latency.target > 0) {
-                    _applyServiceDescriptionLatency(sd);
-                }
-
-                if (sd.playbackRate && sd.playbackRate.max > 1.0) {
-                    _applyServiceDescriptionPlaybackRate(sd);
-                }
-            }
-        }
-    }
-
-    /**
-     * Apply all playbackrate settings coming from ServiceDescriptor elements
-     * @param {object} sd
-     * @private
-     */
-    function _applyServiceDescriptionPlaybackRate(sd) {
-        logger.debug('Applying properties coming from service description. Max PlaybackRate:', sd.playbackRate.max);
-        settings.update({
-            streaming: {
-                liveCatchup: {
-                    playbackRate: sd.playbackRate.max - 1.0
-                }
-            }
-        });
-    }
-
-    /**
-     * Apply all latency settings coming from ServiceDescriptor elements
-     * @param {object} sd
-     * @private
-     */
-    function _applyServiceDescriptionLatency(sd) {
-        logger.debug('Applying latency properties coming from service description. Target Latency (ms):', sd.latency.target);
-
-        // Distinguish between different schemes
-        const params = sd.schemeIdUri && sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME ? _getDvbServiceDescriptionLatencyParameters(sd) : _getStandardServiceDescriptionLatencyParameters(sd);
-
-        settings.update({
-            streaming: {
-                delay: {
-                    liveDelay: params.liveDelay,
-                },
-                liveCatchup: {
-                    minDrift: params.minDrift,
-                    maxDrift: params.maxDrift
-                }
-            }
-        });
-    }
-
-    /**
-     * Get default parameters for liveDelay,minDrift,maxDrift
-     * @param {object} sd
-     * @return {{minDrift: number, maxDrift: (number|undefined), liveDelay: number}}
-     * @private
-     */
-    function _getStandardServiceDescriptionLatencyParameters(sd) {
-        return {
-            liveDelay: sd.latency.target / 1000,
-            minDrift: (sd.latency.max - sd.latency.target) / 1000,
-            maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
-        }
-    }
-
-    /**
-     * Get DVB DASH parameters for liveDelay,minDrift,maxDrift
-     * @param sd
-     * @return {{minDrift: number, maxDrift: (number|undefined), liveDelay: number}}
-     * @private
-     */
-    function _getDvbServiceDescriptionLatencyParameters(sd) {
-        return {
-            liveDelay: sd.latency.target / 1000,
-            minDrift: 500 / 1000,
-            maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
-        }
-    }
-
-
     function setConfig(config) {
         if (!config) return;
 
@@ -892,7 +797,6 @@ function PlaybackController() {
         getBufferLevel,
         getPlaybackStalled,
         getTime,
-        applyServiceDescription,
         getNormalizedTime,
         getIsManifestUpdateInProgress,
         getPlaybackRate,

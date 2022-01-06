@@ -36,6 +36,7 @@ import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
 import CatchupController from './controllers/CatchupController';
+import ServiceDescriptionController from './controllers/ServiceDescriptionController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -149,6 +150,7 @@ function MediaPlayer() {
         textController,
         gapController,
         playbackController,
+        serviceDescriptionController,
         catchupController,
         dashMetrics,
         manifestModel,
@@ -216,6 +218,9 @@ function MediaPlayer() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -303,8 +308,12 @@ function MediaPlayer() {
                 gapController = GapController(context).getInstance();
             }
 
-            if(!catchupController) {
+            if (!catchupController) {
                 catchupController = CatchupController(context).getInstance();
+            }
+
+            if (!serviceDescriptionController) {
+                serviceDescriptionController = ServiceDescriptionController(context).getInstance();
             }
 
             if (!capabilitiesFilter) {
@@ -1988,6 +1997,7 @@ function MediaPlayer() {
             timelineConverter,
             videoModel,
             playbackController,
+            serviceDescriptionController,
             abrController,
             mediaController,
             settings,
@@ -2021,6 +2031,10 @@ function MediaPlayer() {
             dashMetrics,
             mediaPlayerModel,
             videoModel,
+            settings
+        })
+
+        serviceDescriptionController.setConfig({
             settings
         })
 
