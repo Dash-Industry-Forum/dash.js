@@ -83,6 +83,43 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
         })
 
+        it('Should not update the latency if liveDelay is defined in Settings', () => {
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
+            delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
+            settings.update({
+                streaming: {
+                    delay: {
+                        liveDelay: 10
+                    }
+                }
+            })
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.delay.liveDelay).to.be.equal(10);
+            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
+            expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
+        })
+
+        it('Should not update the latency if liveDelayFragmentCount is defined in Settings', () => {
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
+            delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
+            settings.update({
+                streaming: {
+                    delay: {
+                        liveDelayFragmentCount: 4
+                    }
+                }
+            })
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.delay.liveDelay).to.be.NaN;
+            expect(currentSettings.streaming.delay.liveDelayFragmentCount).to.be.equal(4);
+            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
+            expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
+        })
+
         it('Should update latency parameters using default mechanism when no schemeIdUri defined', () => {
             delete dummyManifestInfo.serviceDescriptions[0].schemeIdUri;
             delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
@@ -182,6 +219,39 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.abr.minBitrate.audio).to.be.equal(1000);
             expect(currentSettings.streaming.abr.maxBitrate.audio).to.be.equal(9000);
             expect(currentSettings.streaming.abr.initialBitrate.audio).to.be.equal(5000);
+        })
+
+        it('Should not update bandwidth parameters if settings already contain values', () => {
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
+            delete dummyManifestInfo.serviceDescriptions[0].latency;
+            dummyManifestInfo.serviceDescriptions[0].operatingBandwidth.mediaType = 'any';
+            settings.update({
+                streaming: {
+                    abr: {
+                        minBitrate: {
+                            audio: 1,
+                            video: 2
+                        },
+                        maxBitrate: {
+                            audio: 3,
+                            video: 4
+                        },
+                        initialBitrate: {
+                            audio: 5,
+                            video: 6
+                        }
+                    }
+                }
+            })
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.abr.minBitrate.video).to.be.equal(2);
+            expect(currentSettings.streaming.abr.maxBitrate.video).to.be.equal(4);
+            expect(currentSettings.streaming.abr.initialBitrate.video).to.be.equal(6);
+            expect(currentSettings.streaming.abr.minBitrate.audio).to.be.equal(1);
+            expect(currentSettings.streaming.abr.maxBitrate.audio).to.be.equal(3);
+            expect(currentSettings.streaming.abr.initialBitrate.audio).to.be.equal(5);
         })
 
         it('Should update all values if multiple elements are included in the ServiceDescription element', () => {

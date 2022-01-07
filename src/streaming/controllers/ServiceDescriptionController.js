@@ -222,12 +222,22 @@ function ServiceDescriptionController() {
     }
 
     function _updateBandwidthSetting(field, mediaType, value) {
-        const adjustedSetting = { streaming: { abr: {} } };
+        try {
+            //Only apply the new settings if nothing specified via the application
+            if (settings.get().streaming.abr[field][mediaType] !== -1) {
+                return;
+            }
 
-        // Service description values are specified in bps. Settings expect the value in kbps
-        adjustedSetting.streaming.abr[field] = {};
-        adjustedSetting.streaming.abr[field][mediaType] = value / 1000;
-        settings.update(adjustedSetting)
+            const adjustedSetting = { streaming: { abr: {} } };
+
+            // Service description values are specified in bps. Settings expect the value in kbps
+            adjustedSetting.streaming.abr[field] = {};
+            adjustedSetting.streaming.abr[field][mediaType] = value / 1000;
+            settings.update(adjustedSetting)
+        }
+        catch(e) {
+            logger.error(e);
+        }
     }
 
 
