@@ -454,7 +454,7 @@ function EventController() {
         const id = event.id;
 
         events[schemeIdUri] = events[schemeIdUri].filter((e) => {
-            return (value && e.eventStream.value && e.eventStream.value !== value) || (e.id !== id && (!isNaN(e.id) || !isNaN(id)));
+            return (value && e.eventStream.value && e.eventStream.value !== value) || e.id !== id;
         });
 
         if (events[schemeIdUri].length === 0) {

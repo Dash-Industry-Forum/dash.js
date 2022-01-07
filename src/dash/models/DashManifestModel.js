@@ -858,6 +858,8 @@ function DashManifestModel() {
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
                         event.id = currentMpdEvent.id;
+                    } else {
+                        event.id = null;
                     }
 
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
