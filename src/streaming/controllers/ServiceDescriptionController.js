@@ -221,6 +221,13 @@ function ServiceDescriptionController() {
         })
     }
 
+    /**
+     * Update the bandwidth settings vor a specific field and media type
+     * @param {string} field
+     * @param {string} mediaType
+     * @param {number} value
+     * @private
+     */
     function _updateBandwidthSetting(field, mediaType, value) {
         try {
             //Only apply the new settings if nothing specified via the application

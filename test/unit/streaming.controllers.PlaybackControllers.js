@@ -10,6 +10,7 @@ import StreamControllerMock from './mocks/StreamControllerMock';
 import StreamMock from './mocks/StreamMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 import AdapterMock from './mocks/AdapterMock';
+import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
 
 const expect = require('chai').expect;
 const context = {};
@@ -20,6 +21,7 @@ const eventBus = EventBus(context).getInstance();
 describe('PlaybackController', function () {
 
     let playbackController,
+        serviceDescriptionController,
         videoModelMock,
         dashMetricsMock,
         mediaPlayerModelMock,
@@ -39,6 +41,7 @@ describe('PlaybackController', function () {
         uriFragmentModelMock = new URIFragmentModelMock();
         adapterMock = new AdapterMock();
         playbackController = PlaybackController(context).getInstance();
+        serviceDescriptionController = ServiceDescriptionController(context).getInstance();
 
         playbackController.setConfig({
             videoModel: videoModelMock,
@@ -47,8 +50,12 @@ describe('PlaybackController', function () {
             streamController: streamControllerMock,
             uriFragmentModel: uriFragmentModelMock,
             adapter: adapterMock,
-            settings: settings
+            settings: settings,
         });
+
+        serviceDescriptionController.setConfig({
+            settings
+        })
 
         streamControllerMock.initialize([streamMock]);
     });
@@ -168,7 +175,8 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                playbackController.applyServiceDescription(manifestInfo);
+
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(13);
@@ -181,7 +189,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                playbackController.applyServiceDescription(manifestInfo);
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.be.NaN
@@ -195,7 +203,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                playbackController.applyServiceDescription(manifestInfo);
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(20);
@@ -209,7 +217,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                playbackController.applyServiceDescription(manifestInfo);
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
 
                 expect(liveDelay).to.equal(10);
