@@ -991,7 +991,7 @@ function BufferController(config) {
                 i += 1;
             }
 
-            return adjustedTime;
+            return adjustedTime === targetTime ? NaN : adjustedTime;
 
         } catch (e) {
 
