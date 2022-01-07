@@ -973,7 +973,7 @@ function BufferController(config) {
             const ranges = sourceBufferSink.getAllBufferRanges();
 
             if (!ranges || ranges.length === 0) {
-                return targetTime;
+                return NaN;
             }
 
             let i = 0;
@@ -989,7 +989,7 @@ function BufferController(config) {
                 i += 1;
             }
 
-            return adjustedTime;
+            return adjustedTime === targetTime ? NaN : adjustedTime;
 
         } catch (e) {
 

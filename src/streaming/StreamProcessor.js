@@ -281,13 +281,14 @@ function StreamProcessor(config) {
                 })
                 .then(() => {
                     // Figure out the correct segment request time.
-                    const targetTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
+                    const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
 
                     // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
-                    if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+                    if (!isNaN(continuousBufferTime) && !isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && continuousBufferTime >= streamInfo.start + streamInfo.duration) {
                         bufferController.setIsBufferingCompleted(true);
                         resolve();
                     } else {
+                        const targetTime = isNaN(continuousBufferTime) ? e.seekTime : continuousBufferTime;
                         setExplicitBufferingTime(targetTime);
                         bufferController.setSeekTarget(targetTime);
 
@@ -1085,7 +1086,8 @@ function StreamProcessor(config) {
 
     function _bufferClearedForNonReplacement() {
         const time = playbackController.getTime();
-        const targetTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+        const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+        const targetTime = isNaN(continuousBufferTime) ? time : continuousBufferTime;
 
         setExplicitBufferingTime(targetTime);
         scheduleController.startScheduleTimer();
