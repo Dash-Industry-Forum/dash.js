@@ -175,7 +175,11 @@ function ServiceDescriptionController() {
         });
     }
 
-    function _applyServiceDescriptionOperatingQuality(sd) {
+    /**
+     * Used to specifiy a quality ranking. We do not support this yet.
+     * @private
+     */
+    function _applyServiceDescriptionOperatingQuality() {
 
     }
 
