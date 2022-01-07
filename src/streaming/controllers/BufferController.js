@@ -354,12 +354,10 @@ function BufferController(config) {
             if (seekTarget <= range.end) {
                 // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
                 playbackController.seek(Math.max(seekTarget, range.start), false, true);
-                seekTarget = NaN;
             }
         } else if (currentTime < range.start) {
             // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
             playbackController.seek(range.start, false, true);
-            seekTarget = NaN;
         }
     }
 
