@@ -176,7 +176,7 @@ function ServiceDescriptionController() {
     }
 
     /**
-     * Used to specifiy a quality ranking. We do not support this yet.
+     * Used to specify a quality ranking. We do not support this yet.
      * @private
      */
     function _applyServiceDescriptionOperatingQuality() {
@@ -189,6 +189,7 @@ function ServiceDescriptionController() {
      * @private
      */
     function _applyServiceDescriptionOperatingBandwidth(sd) {
+
         // Aggregation of media types is not supported yet
         if (!sd || !sd.operatingBandwidth || !sd.operatingBandwidth.mediaType || sd.operatingBandwidth.mediaType === MEDIA_TYPES.ALL) {
             return;
@@ -234,6 +235,7 @@ function ServiceDescriptionController() {
      */
     function _updateBandwidthSetting(field, mediaType, value) {
         try {
+
             //Only apply the new settings if nothing specified via the application
             if (settings.get().streaming.abr[field][mediaType] !== -1) {
                 return;
