@@ -1308,6 +1308,242 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     }
 
+    /** Copy a URL containing the current settings as query Parameters to the Clipboard */
+    $scope.copyQueryUrl = function(){
+        var externalSettingsString = 'loop=' + $scope.loopSelected
+                                   + '&autoPlay=' + $scope.autoPlaySelected
+                                   + '&drmPrioritiesEnabled=' + $scope.prioritiesEnabled 
+                                   + '&';
+        
+        $scope.handleRequestHeaders();
+        $scope.handleClearkeys();
+        var drmList = [$scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey];
+        var currentDrm;
+        for(var drm of drmList){
+            if(drm.isActive){
+              switch(drm.drmKeySystem){
+                case 'com.microsoft.playready':
+                  currentDrm = {'playready': drm};
+                  externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                  break;
+                case 'com.widevine.alpha':
+                  currentDrm = {'widevine': drm};
+                  externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                  break;
+                case 'org.w3.clearkey':
+                  currentDrm = {'clearkey': drm};
+                  externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                  break;
+                }
+            }
+        }
+        var currentSetting = $scope.player.getSettings();
+        var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?';
+        var queryString = url + externalSettingsString + $scope.toQueryString(currentSetting);
+
+        const element = document.createElement('textarea');
+        element.value = queryString;
+        document.body.appendChild(element);
+        element.select();
+        document.execCommand('copy');
+        document.body.removeChild(element);
+    }
+
+    /** Transform the current Settings into a nested query-string format */
+    $scope.toQueryString = function(settings, prefix){
+        var urlString = [];
+        for(var setting in settings){
+            if(settings.hasOwnProperty(setting)){
+                var k = prefix ? prefix + '.' + setting : setting,
+                v = settings[setting];
+                urlString.push((v != null && typeof v === "object") ?
+                this.toQueryString(v,k) :
+                encodeURIComponent(decodeURIComponent(k)) + "=" + encodeURIComponent(decodeURIComponent(v)));
+                //encodeURIComponent(k) + "=" + encodeURIComponent(v));
+            }
+        }
+        return urlString.join("&");
+    }
+
+    /** Resolve nested query parameters */
+    $scope.resolveQueryNesting = function(base, nestedKey, value){
+        var keyList = nestedKey.split(".");
+        var lastProperty = value !== null ? keyList.pop(): false;
+        var obj = base;
+        
+        for(var key = 0; key < keyList.length; key++){
+        base = base[ keyList[key] ] = base [keyList[key]] || {};
+        }
+
+        value = $scope.handleQueryParameters(value);
+
+        if(lastProperty) base = base [lastProperty] = value;
+
+        return obj;
+    }
+    
+    $scope.activeDrms = {};
+
+    /** Transform query-string into Object  */
+    $scope.toSettingsObject = function(queryString){
+        var querySegments = queryString.split("&");
+        var settingsObject = {};
+        var drmObject = {};
+        var prioritiesEnabled = false;
+
+        for(var segment of querySegments){
+        var[key, value] = segment.split("=");
+        $scope.resolveQueryNesting(settingsObject, key, value);
+        }
+
+        for(var settingCategory of Object.keys(settingsObject)){
+            if(settingsObject !== {} && 
+                (settingCategory === 'playready' ||
+                settingCategory === 'widevine' ||
+                settingCategory === 'clearkey') &&
+                settingsObject[settingCategory].isActive){
+                drmObject[settingCategory] = settingsObject[settingCategory];
+                $scope.activeDrms[settingCategory] = settingsObject[settingCategory];
+                delete settingsObject.settingCategory;
+
+            }
+        }
+        prioritiesEnabled = settingsObject.prioritiesEnabled;
+        drmObject = $scope.makeProtectionData(drmObject, prioritiesEnabled);
+        return [settingsObject, drmObject];
+    }
+
+    $scope.makeProtectionData = function(drmObject, prioritiesEnabled){
+        var queryProtectionData = {};
+    
+        for(var drm in drmObject){
+          if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === false){
+            if(drmObject[drm].clearkeys !== {}){
+              queryProtectionData[drmObject[drm].drmKeySystem] = {
+                'clearkeys' : {},
+                'priority' : 0
+              };
+              if(prioritiesEnabled){
+                for(var key in drmObject[drm].clearkeys){
+                  queryProtectionData[drmObject[drm].drmKeySystem]['clearkeys'][key] = drmObject[drm].clearkeys[key];
+                }
+                queryProtectionData[drmObject[drm].drmKeySystem]['priority'] = parseInt(drmObject[drm].priority);
+              }
+            
+    
+              else {
+                for(var key in drmObject[drm].clearkeys){
+                    queryProtectionData[drmObject[drm].drmKeySystem]['clearkeys'][key] = drmObject[drm].clearkeys[key];   
+                }  
+              }
+    
+              for(var key in drmObject[drm]){
+                if(key !== 'isActive' &&
+                    key !== 'drmKeySystem' &&
+                    key !== 'licenseServerUrl' &&
+                    key !== 'httpRequestHeaders' &&
+                    key !== 'priority' &&
+                    key !== 'kid' &&
+                    key !== 'key' &&
+                    key !== 'inputMode'){
+                        queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
+                }
+              }
+    
+              if(drmObject[drm].httpRequestHeaders !== {}){
+                queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders; 
+              }
+            }  
+            else {
+              alert("Kid and Key must be specified!");
+            }      
+            
+          }
+    
+          else{
+            //check if priority is enabled
+            if(prioritiesEnabled){
+              queryProtectionData[drmObject[drm].drmKeySystem] = {
+                "serverURL": decodeURIComponent(drmObject[drm].licenseServerUrl),
+                "priority": parseInt(drmObject[drm].priority)
+              }
+              if(drmObject[drm].httpRequestHeaders !== {})
+              queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
+               
+            }
+            else {
+                queryProtectionData[drmObject[drm].drmKeySystem] = {
+                    "serverURL": decodeURIComponent(drmObject[drm].licenseServerUrl),
+              }  
+            }
+    
+            for(var key in drmObject[drm]){
+                if(key !== 'isActive' &&
+                    key !== 'drmKeySystem' &&
+                    key !== 'licenseServerUrl' &&
+                    key !== 'httpRequestHeaders' &&
+                    key !== 'priority'){
+                        queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
+                    }
+            }
+    
+            // Only set request header if any have been specified
+            if(drmObject[drm].httpRequestHeaders !== {}){
+              queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders; 
+            }
+          }
+        }
+        return queryProtectionData;
+    }
+
+    $scope.setExternalSettings = function(currentQuery){
+        currentQuery = currentQuery.substring(1);
+        var handleExternalSettings = currentQuery.split('&');
+        for(var index = 0; index <4; index++){
+            var [key, value] = handleExternalSettings[index].split('=') || '';
+            switch(key){
+                case 'loop':
+                    $scope.loopSelected = $scope.parseBoolean(value);
+                    break;
+                case 'autoPlay':
+                    $scope.autoPlaySelected = this.parseBoolean(value);
+                    $scope.toggleAutoPlay();
+                    break;
+                case 'drmPrioritiesEnabled':
+                    $scope.prioritiesEnabled = this.parseBoolean(value);
+                    break;
+            }
+        }
+    }
+
+    $scope.setQueryData = function(currentQuery){
+        currentQuery = currentQuery.substring(1);
+        var passedSettings;
+        [passedSettings, $scope.protectionData] = $scope.toSettingsObject(currentQuery);
+        $scope.player.updateSettings(passedSettings);
+        $scope.handleProtectionData($scope.protectionData);
+        $scope.player.setProtectionData($scope.protectionData);
+    }
+    
+    $scope.parseBoolean = function(value){
+        return value === true || value === "true";
+    }
+
+    /** Takes a string value extracted from the query-string and transforms it into the appropriate type */
+    $scope.handleQueryParameters = function(value){
+        var typedValue;
+        var integerRegEx = /^\d+$/;
+        var floatRegEx = /^\d+.\d+$/;
+        if(value === 'true' || value === 'false'){
+        typedValue = this.parseBoolean(value);
+        }
+        else if(value === 'NaN') typedValue = NaN;
+        else integerRegEx.test(value) ? typedValue = parseInt(value) : 
+            (floatRegEx.test(value) ? typedValue = parseFloat(value) : typedValue = value);
+        
+        return typedValue;
+    }
+
     ////////////////////////////////////////
     //
     // Metrics
@@ -1607,6 +1843,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 $scope.doLoad();
             }
         }
+
+        /** Fetch query string and pass it to handling function */
+        var currentQuery = window.location.search;
+        if(currentQuery !== ''){
+            $scope.setExternalSettings(currentQuery);
+            $scope.setQueryData(currentQuery);
+        }
+
+        //TODO: Set loglevel
+
     })();
 
     ////////////////////////////////////////

@@ -131,6 +131,8 @@
                             ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                    <!-- Testbutton -->
+                    <button class="btn btn-default" type="button" ng-click="copyQueryUrl()">Copy URL</button>
                 </span>
         </div>
     </div>
@@ -148,7 +150,7 @@
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables looping of the media once playback has completed">
-                    <input type="checkbox" id="loop-cb" ng-checked="loopSelected">
+                    <input type="checkbox" id="loop-cb" ng-model="loopSelected" ng-checked="loopSelected">
                     Loop
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
