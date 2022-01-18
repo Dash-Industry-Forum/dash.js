@@ -32,7 +32,9 @@
                     'logLevel': dashjs.Debug.LOG_LEVEL_NONE  /* turns off console logging */
                 },
                 'streaming': {
-                    'scheduleWhilePaused': false,   /* stops the player from loading segments while paused */
+                    'scheduling': {
+                        'scheduleWhilePaused': false,   /* stops the player from loading segments while paused */
+                    },
                     'buffer': {
                         'fastSwitchEnabled': true   /* enables buffer replacement when switching bitrates for faster switching */
                     }

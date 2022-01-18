@@ -13,12 +13,15 @@ const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 let protectionController;
-const protectionKeyControllerMock = new ProtectionKeyControllerMock();
 
 describe('ProtectionController', function () {
     describe('Not well initialized', function () {
         beforeEach(function () {
-            protectionController = ProtectionController(context).create({debug: new DebugMock()});
+            protectionController = ProtectionController(context).create({
+                debug: new DebugMock(),
+                events: ProtectionEvents,
+                eventBus
+            });
         });
 
         afterEach(function () {
@@ -66,31 +69,19 @@ describe('ProtectionController', function () {
 
     describe('Well initialized', function () {
         beforeEach(function () {
-            protectionController = ProtectionController(context).create({protectionKeyController: protectionKeyControllerMock,
+            const protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            protectionController = ProtectionController(context).create({
+                protectionKeyController: protectionKeyControllerMock,
                 events: ProtectionEvents,
                 debug: new DebugMock(),
-                protectionModel: new ProtectionModelMock({events: ProtectionEvents, eventBus: eventBus}),
+                protectionModel: new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus }),
                 eventBus: eventBus,
-                constants: Constants});
+                constants: Constants
+            });
         });
 
         afterEach(function () {
             protectionController.reset();
-        });
-
-        it('onKeyMessage behavior', function (done) {
-            let onDRMError = function (data) {
-                eventBus.off(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError);
-                expect(data.error.code).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE); // jshint ignore:line
-                expect(data.error.message).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE); // jshint ignore:line
-                done();
-            };
-
-            eventBus.on(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError, this);
-
-            protectionController.initializeForMedia({type: 'VIDEO'});
-
-            eventBus.trigger(ProtectionEvents.INTERNAL_KEY_MESSAGE, {data: {}});
         });
 
         it('setServerCertificate behavior', function (done) {
@@ -105,6 +96,21 @@ describe('ProtectionController', function () {
             eventBus.on(ProtectionEvents.SERVER_CERTIFICATE_UPDATED, onDRMError, this);
 
             protectionController.setServerCertificate();
+        });
+
+        it('onKeyMessage behavior', function (done) {
+            let onDRMError = function (data) {
+                eventBus.off(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError);
+                expect(data.error.code).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE); // jshint ignore:line
+                expect(data.error.message).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE); // jshint ignore:line
+                done();
+            };
+
+            eventBus.on(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError, this);
+
+            protectionController.initializeForMedia({ type: 'VIDEO' });
+
+            eventBus.trigger(ProtectionEvents.INTERNAL_KEY_MESSAGE, { data: {} });
         });
 
         it('should trigger KEY_SESSION_CREATED event with an error when createKeySession is called without parameter', function (done) {
@@ -125,12 +131,5 @@ describe('ProtectionController', function () {
             expect(keySystems).not.to.be.empty;         // jshint ignore:line
         });
 
-        it('should ????? when setMediaElement is called', function () {
-            protectionController.initializeForMedia({type: 'VIDEO'});
-
-            protectionController.setMediaElement({});
-
-            expect(eventBus.trigger.bind(eventBus, ProtectionEvents.NEED_KEY, {key: {initDataType: 'cenc'}})).not.to.throw();
-        });
     });
 });

@@ -50,13 +50,6 @@ class ProtectionEvents extends EventsBase {
         this.INTERNAL_KEY_MESSAGE = 'internalKeyMessage';
 
         /**
-         * Event ID for events delivered when a key system selection procedure
-         * completes
-         * @ignore
-         */
-        this.INTERNAL_KEY_SYSTEM_SELECTED = 'internalKeySystemSelected';
-
-        /**
          * Event ID for events delivered when the status of one decryption keys has changed
          * @ignore
          */

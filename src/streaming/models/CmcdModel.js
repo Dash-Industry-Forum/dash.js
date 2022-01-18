@@ -188,7 +188,8 @@ function CmcdModel() {
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
-                    cmcdData
+                    cmcdData,
+                    headers
                 });
                 return headers;
             }
@@ -233,7 +234,7 @@ function CmcdModel() {
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.MANIFEST}`;
+        data.ot = OBJECT_TYPES.MANIFEST;
 
         return data;
     }
@@ -269,8 +270,7 @@ function CmcdModel() {
 
         if (nextRequest) {
             if (request.url !== nextRequest.url) {
-                let url = new URL(nextRequest.url);
-                data.nor = url.pathname;
+                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
             } else if (nextRequest.range) {
                 data.nrr = nextRequest.range;
             }
@@ -340,7 +340,7 @@ function CmcdModel() {
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.INIT}`;
+        data.ot = OBJECT_TYPES.INIT;
         data.su = true;
 
         return data;
@@ -349,7 +349,7 @@ function CmcdModel() {
     function _getCmcdDataForOther() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.OTHER}`;
+        data.ot = OBJECT_TYPES.OTHER;
 
         return data;
     }
@@ -460,8 +460,8 @@ function CmcdModel() {
     function _onManifestLoaded(data) {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? `${STREAM_TYPES.LIVE}` : `${STREAM_TYPES.VOD}`;
-            const sf = data.protocol && data.protocol === 'MSS' ? `${STREAMING_FORMATS.MSS}` : `${STREAMING_FORMATS.DASH}`;
+            const st = isDynamic ? STREAM_TYPES.LIVE : STREAM_TYPES.VOD;
+            const sf = data.protocol && data.protocol === 'MSS' ? STREAMING_FORMATS.MSS : STREAMING_FORMATS.DASH;
 
             internalData.st = `${st}`;
             internalData.sf = `${sf}`;
@@ -511,7 +511,7 @@ function CmcdModel() {
 
             let cmcdString = keys.reduce((acc, key, index) => {
                 if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
-                if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
+                if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
                     let string = cmcdData[key].replace(/"/g, '\"');
                     acc += `${key}="${string}"`;
                 } else {
@@ -525,6 +525,9 @@ function CmcdModel() {
             }, '');
 
             cmcdString = cmcdString.replace(/=true/g, '');
+
+            // Remove last comma at the end
+            cmcdString = cmcdString.replace(/,\s*$/, '');
 
             return cmcdString;
         } catch (e) {

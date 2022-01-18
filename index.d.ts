@@ -43,11 +43,11 @@ declare namespace dashjs {
     interface ProtectionController {
         initializeForMedia(mediaInfo: ProtectionMediaInfo): void;
 
-        clearMediaInfoArrayByStreamId(streamId: string): void;
+        clearMediaInfoArray(): void;
 
-        createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
+        createKeySession(ksInfo: KeySystemInfo): void;
 
-        loadKeySession(sessionId: string, initData: ArrayBuffer): void;
+        loadKeySession(ksInfo: KeySystemInfo): void;
 
         removeKeySession(session: SessionToken): void;
 
@@ -63,7 +63,7 @@ declare namespace dashjs {
 
         setProtectionData(protDataSet: ProtectionDataSet): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
+        getSupportedKeySystemsFromContentProtection(cps: any[]): KeySystemInfo[];
 
         getKeySystems(): KeySystem[];
 
@@ -152,6 +152,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
+            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
@@ -174,8 +175,10 @@ declare namespace dashjs {
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
+                ignoreEmeEncryptedEvent?: boolean
             },
             buffer?: {
+                enableSeekDecorrelationFix?: boolean,
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
@@ -194,9 +197,11 @@ declare namespace dashjs {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
-                threshold?: number
+                threshold?: number,
+                enableSeekFix?: boolean
             },
             utcSynchronization?: {
+                enabled?: boolean,
                 useManifestDateHeaderTimeSource?: boolean,
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
@@ -316,6 +321,11 @@ declare namespace dashjs {
                 rtp?: number,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
+            }
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
             }
         }
     }
@@ -708,8 +718,8 @@ declare namespace dashjs {
         OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
         OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
-        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -736,7 +746,6 @@ declare namespace dashjs {
         STREAM_DEACTIVATED: 'streamDeactivated';
         STREAM_INITIALIZED: 'streamInitialized';
         STREAM_INITIALIZING: 'streamInitializing';
-        STREAM_SWITCH_STARTED: 'streamSwitchStarted';
         STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
         STREAM_UPDATED: 'streamUpdated';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
@@ -1148,7 +1157,7 @@ declare namespace dashjs {
         session: MediaKeySession;
         initData: any;
 
-        getSessionID(): string;
+        getSessionId(): string;
 
         getExpirationTime(): number;
 
@@ -1218,7 +1227,7 @@ declare namespace dashjs {
     }
 
     export interface IManifestInfo {
-        DVRWindowSize: number;
+        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
         isDynamic: boolean;
@@ -1262,7 +1271,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo;
+        getCurrentDVRInfo(type?: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
@@ -1283,6 +1292,8 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
+
+        getMpd(externalManifest?: object): object;
     }
 
     export interface ProtectionDataSet {
@@ -1350,16 +1361,17 @@ declare namespace dashjs {
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
-        getCDMData(): ArrayBuffer | null;
-
-        getSessionId(): string | null;
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
     }
 
-    export interface SupportedKeySystem {
+    export interface KeySystemInfo {
         ks: KeySystem;
-        initData: ArrayBuffer;
-        cdmData: ArrayBuffer | null;
-        sessionId: string | null;
+        sessionId?: string,
+        sessionType?: string,
+        keyId?: string,
+        initData?: ArrayBuffer;
+        cdmData?: ArrayBuffer;
+        protData?: ProtectionData
     }
 
     export interface LicenseRequest {
@@ -1470,7 +1482,12 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode =
+        'highestSelectionPriority'
+        | 'highestBitrate'
+        | 'firstTrack'
+        | 'highestEfficiency'
+        | 'widestRange';
 
     export function supportsMediaSource(): boolean;
 

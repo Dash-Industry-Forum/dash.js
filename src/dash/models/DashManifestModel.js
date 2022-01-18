@@ -126,14 +126,16 @@ function DashManifestModel() {
         }
         if (adaptation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
             adaptation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
-            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
             return true;
         }
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
             const representation = adaptation.Representation_asArray[0];
             if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
-                representation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+                representation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
                 return true;
             }
         }
@@ -404,6 +406,16 @@ function DashManifestModel() {
         });
     }
 
+    function getSelectionPriority(realAdaption) {
+        try {
+            const priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+
+            return isNaN(priority) ? 1 : priority;
+        } catch (e) {
+            return 1;
+        }
+    }
+
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
 
@@ -580,6 +592,9 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S_asArray) {
+            return NaN;
+        }
         let s0 = segmentTimeline.S_asArray[0];
         let s1 = segmentTimeline.S_asArray[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
@@ -685,6 +700,10 @@ function DashManifestModel() {
 
                 if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
                     voPeriod.duration = realPeriod.duration;
+                }
+
+                if (voPreviousPeriod) {
+                    voPreviousPeriod.nextPeriodId = voPeriod.id;
                 }
 
                 voPeriods.push(voPeriod);
@@ -830,14 +849,17 @@ function DashManifestModel() {
 
                     if (currentMpdEvent.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
                         event.presentationTime = currentMpdEvent.presentationTime;
-                        const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-                        event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
                     }
+                    const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+                    event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
+
                     if (currentMpdEvent.hasOwnProperty(DashConstants.DURATION)) {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
                         event.id = currentMpdEvent.id;
+                    } else {
+                        event.id = null;
                     }
 
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
@@ -850,6 +872,7 @@ function DashManifestModel() {
                         // string representation'.
                         event.messageData =
                             currentMpdEvent.messageData ||
+                            currentMpdEvent.__cdata ||
                             currentMpdEvent.__text;
                     }
 
@@ -1160,6 +1183,7 @@ function DashManifestModel() {
         getRealPeriods,
         getRealPeriodForIndex,
         getCodec,
+        getSelectionPriority,
         getMimeType,
         getKID,
         getLabelsForAdaptation,

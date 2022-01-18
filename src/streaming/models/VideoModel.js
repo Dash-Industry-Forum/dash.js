@@ -76,9 +76,9 @@ function VideoModel() {
         }
     }
 
-    function setPlaybackRate(value) {
+    function setPlaybackRate(value, ignoreReadyState = false) {
         if (!element) return;
-        if (element.readyState <= 2 && value > 0) {
+        if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
             // If media element hasn't loaded enough data to play yet, wait until it has
             element.addEventListener('canplay', onPlaybackCanPlay);
         } else {
@@ -425,42 +425,43 @@ function VideoModel() {
     }
 
     instance = {
-        initialize: initialize,
-        setCurrentTime: setCurrentTime,
-        play: play,
-        isPaused: isPaused,
-        pause: pause,
+        initialize,
+        setCurrentTime,
+        play,
+        isPaused,
+        pause,
         isStalled,
-        isSeeking: isSeeking,
-        getTime: getTime,
-        getPlaybackRate: getPlaybackRate,
-        setPlaybackRate: setPlaybackRate,
-        getPlayedRanges: getPlayedRanges,
-        getEnded: getEnded,
-        setStallState: setStallState,
-        getElement: getElement,
-        setElement: setElement,
-        setSource: setSource,
-        getSource: getSource,
-        getTTMLRenderingDiv: getTTMLRenderingDiv,
-        setTTMLRenderingDiv: setTTMLRenderingDiv,
-        getPlaybackQuality: getPlaybackQuality,
-        addEventListener: addEventListener,
-        removeEventListener: removeEventListener,
-        getReadyState: getReadyState,
-        getBufferRange: getBufferRange,
-        getClientWidth: getClientWidth,
-        getClientHeight: getClientHeight,
-        getTextTracks: getTextTracks,
-        getTextTrack: getTextTrack,
-        addTextTrack: addTextTrack,
-        appendChild: appendChild,
-        removeChild: removeChild,
-        getVideoWidth: getVideoWidth,
-        getVideoHeight: getVideoHeight,
-        getVideoRelativeOffsetTop: getVideoRelativeOffsetTop,
-        getVideoRelativeOffsetLeft: getVideoRelativeOffsetLeft,
-        reset: reset
+        isSeeking,
+        getTime,
+        getPlaybackRate,
+        setPlaybackRate,
+        getPlayedRanges,
+        getEnded,
+        setStallState,
+        getElement,
+        setElement,
+        setSource,
+        getSource,
+        getTTMLRenderingDiv,
+        setTTMLRenderingDiv,
+        getPlaybackQuality,
+        addEventListener,
+        removeEventListener,
+        getReadyState,
+        getBufferRange,
+        getClientWidth,
+        getClientHeight,
+        getTextTracks,
+        getTextTrack,
+        addTextTrack,
+        appendChild,
+        removeChild,
+        getVideoWidth,
+        getVideoHeight,
+        getVideoRelativeOffsetTop,
+        getVideoRelativeOffsetLeft,
+        waitForReadyState,
+        reset
     };
 
     setup();

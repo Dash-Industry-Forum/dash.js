@@ -1023,11 +1023,15 @@ function DashAdapter() {
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+        mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
         if (mediaInfo.contentProtection) {
-            mediaInfo.contentProtection.forEach(function (item) {
-                item.KID = dashManifestModel.getKID(item);
-            });
+            // Get the default key ID and apply it to all key systems
+            const keyIds = mediaInfo.contentProtection.map(cp => dashManifestModel.getKID(cp)).filter(kid => kid !== null);
+            if (keyIds.length) {
+                const keyId = keyIds[0];
+                mediaInfo.contentProtection.forEach(cp => { cp.keyId = keyId; });
+            }
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
@@ -1071,7 +1075,7 @@ function DashAdapter() {
     function convertMpdToManifestInfo(mpd) {
         let manifestInfo = new ManifestInfo();
 
-        manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
+        manifestInfo.dvrWindowSize = mpd.timeShiftBufferDepth;
         manifestInfo.loadedTime = mpd.manifest.loadedTime;
         manifestInfo.availableFrom = mpd.availabilityStartTime;
         manifestInfo.minBufferTime = mpd.manifest.minBufferTime;

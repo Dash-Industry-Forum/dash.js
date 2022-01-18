@@ -18,7 +18,6 @@ function WebmSegmentBaseLoader() {
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
-        settings,
         errors,
         baseURLController;
 
@@ -94,7 +93,6 @@ function WebmSegmentBaseLoader() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
-            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
             errors: errors
         });
     }
@@ -107,7 +105,6 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
-        settings = config.settings;
         errors = config.errors;
         logger = config.debug.getLogger(instance);
         requestModifier = config.requestModifier;
@@ -394,8 +391,10 @@ function WebmSegmentBaseLoader() {
     }
 
     function reset() {
-        errHandler = null;
-        requestModifier = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
+        }
     }
 
     instance = {
