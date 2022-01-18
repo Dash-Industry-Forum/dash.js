@@ -184,7 +184,8 @@ function ProtectionController(config) {
             const keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
             requestedKeySystems.push({
                 ks: supportedKS[i].ks,
-                configs: [keySystemConfiguration]
+                configs: [keySystemConfiguration],
+                protData: supportedKS[i].protData
             });
         }
 

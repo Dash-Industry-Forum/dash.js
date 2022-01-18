@@ -153,6 +153,8 @@ function ProtectionModel_21Jan2015(config) {
      * @private
      */
     function _requestKeySystemAccessInternal(ksConfigurations, idx, resolve, reject) {
+
+        // In case requestMediaKeySystemAccess is not available we can not proceed and dispatch an error
         if (navigator.requestMediaKeySystemAccess === undefined ||
             typeof navigator.requestMediaKeySystemAccess !== 'function') {
             const msg = 'Insecure origins are not allowed';
@@ -161,32 +163,77 @@ function ProtectionModel_21Jan2015(config) {
             return;
         }
 
-        const keySystem = ksConfigurations[idx].ks;
+        // If a systemStringPriority is defined by the application we use these values. Otherwise we use the default system string
+        // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
+        const protDataSystemStringPriority = ksConfigurations[idx].protData && ksConfigurations[idx].protData.systemStringPriority ? ksConfigurations[idx].protData.systemStringPriority : null;
         const configs = ksConfigurations[idx].configs;
-        let systemString = keySystem.systemString;
+        const currentKeySystem = ksConfigurations[idx].ks;
+        let systemString = currentKeySystem.systemString;
 
-        // Patch to support persistent licenses on Edge browser (see issue #2658)
-        if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+        // Patch to support persistent licenses on Edge browser (see issue #2658). Only apply when protData does not define a systemStringPriority
+        if (!protDataSystemStringPriority && systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
             systemString += '.recommendation';
         }
 
-        navigator.requestMediaKeySystemAccess(systemString, configs)
+        // Use the default system string in case no values are provided by the application
+        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : [systemString];
+
+        // Check all the available system strings and the available configurations for support
+        _checkAccessForKeySystem(systemStringsToApply, configs)
             .then((mediaKeySystemAccess) => {
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
                     mediaKeySystemAccess.getConfiguration() : null;
-                const keySystemAccess = new KeySystemAccess(keySystem, configuration);
+                const keySystemAccess = new KeySystemAccess(currentKeySystem, configuration);
 
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
                 resolve({ data: keySystemAccess });
             })
-            .catch((error) => {
+            .catch((e) => {
                 if (idx + 1 < ksConfigurations.length) {
                     _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
                 } else {
                     const errorMessage = 'Key system access denied! ';
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + error.message });
-                    reject({ error: errorMessage + error.message });
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + e.message });
+                    reject({ error: errorMessage + e.message });
+                }
+            })
+    }
+
+    /**
+     * For a specific key system: Iterate over the possible system strings and resolve once a valid configuration was found
+     * @param {array} systemStringsToApply
+     * @param {object} configs
+     * @return {Promise}
+     * @private
+     */
+    function _checkAccessForKeySystem(systemStringsToApply, configs) {
+        return new Promise((resolve, reject) => {
+            _checkAccessForSystemStrings(systemStringsToApply, configs, 0, resolve, reject);
+        })
+    }
+
+    /**
+     * Recursively iterate over the possible system strings until a supported configuration is found or we ran out of options
+     * @param {array} systemStringsToApply
+     * @param {object} configs
+     * @param {number} idx
+     * @param {function} resolve
+     * @param {function} reject
+     * @private
+     */
+    function _checkAccessForSystemStrings(systemStringsToApply, configs, idx, resolve, reject) {
+        const systemString = systemStringsToApply[idx];
+
+        navigator.requestMediaKeySystemAccess(systemString, configs)
+            .then((mediaKeySystemAccess) => {
+                resolve(mediaKeySystemAccess);
+            })
+            .catch((e) => {
+                if (idx + 1 < systemStringsToApply.length) {
+                    _checkAccessForSystemStrings(systemStringsToApply, configs, idx + 1, resolve, reject);
+                } else {
+                    reject(e);
                 }
             });
     }
