@@ -211,7 +211,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         kid: '',
         key: '',
         clearkeys: {},
-        inputMode: false,
+        inputMode: 'kidKey',
         priority: 2
       }
 
@@ -278,6 +278,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoQualities = [];
     $scope.ABRStrategy = 'abrDynamic';
 
+    $scope.liveCatchupMode = 'liveCatchupModeDefault';
+    $scope.abrThroughputCalculationMode = 'abrFetchThroughputCalculationMoofParsing';
+    $scope.videoTrackSwitchMode = 'alwaysReplace';
+    $scope.audioTrackSwitchMode = 'neverReplace';
+    $scope.currentLogLevel = 'info';
+    $scope.cmcdMode = 'query';
+
     // Persistent license
     $scope.persistentSessionId = {};
     $scope.selectedKeySystem = null;
@@ -332,8 +339,23 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             };
             $scope.player.updateSettings(initialConfig);
         }
+
+         /** Fetch query string and pass it to handling function */
+         var currentQuery = window.location.search;
+         if(currentQuery !== ''){
+             $scope.setExternalSettings(currentQuery);
+             $scope.setQueryData(currentQuery);
+         }
+
         setLatencyAttributes();
         setAbrRules();
+        setAdditionalPlaybackOptions();
+        setAdditionalAbrOptions();
+        setLiveDelayOptions();
+        setInitialSettings();
+        setTrackSwitchModeSettings();
+        setInitialLogLevel();
+        setCMCDSettings();
     };
 
     reqConfig.open('GET', 'dashjs_config.json', true);
@@ -696,6 +718,134 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateInitialLiveDelay = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                delay: {
+                    liveDelay: parseInt($scope.initialLiveDelay)
+                }
+            }
+        });
+    };
+
+    $scope.updateLiveDelayFragmentCount = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                delay: {
+                    liveDelayFragmentCount: parseInt($scope.liveDelayFragmentCount)
+                }
+            }
+        });
+    };
+
+    $scope.updateInitialBitrateVideo = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                abr: {
+                    initialBitrate: {
+                        video: parseInt($scope.initialVideoBitrate)
+                    }
+                }
+            }
+        });
+    };
+
+    $scope.updateMinimumBitrateVideo = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                abr: {
+                    minBitrate: {
+                        video: parseInt($scope.minVideoBitrate)
+                    }
+                }
+            }
+        });
+    };
+
+    $scope.updateMaximumBitrateVideo = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                abr: {
+                    maxBitrate: {
+                        video: parseInt($scope.maxVideoBitrate)
+                    }
+                }
+            }
+        });
+    };
+
+    $scope.updateInitialLanguageAudio = function () {
+        $scope.player.setInitialMediaSettingsFor('audio', {
+            lang: $scope.initialSettings.audio
+        });
+    };
+
+    $scope.updateInitialRoleVideo = function () {
+        $scope.player.setInitialMediaSettingsFor('video', {
+            role: $scope.initialSettings.video
+        });
+    };
+
+    $scope.updateInitialLanguageText = function () {
+        $scope.player.setInitialMediaSettingsFor('text', {
+            lang: $scope.initialSettings.text
+        });
+    };
+
+    $scope.updateInitialRoleText = function () {
+        $scope.player.setInitialMediaSettingsFor('text', {
+            role: $scope.initialSettings.textRole
+        });
+    };
+
+    $scope.toggleText = function () {
+        $scope.player.updateSettings({ streaming: { text: { defaultEnabled: $scope.initialSettings.textEnabled } } });
+    }
+
+    $scope.toggleForcedTextStreaming = function () {
+        $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
+    }
+
+    $scope.updateCmcdSessionId = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmcd: {
+                    sid: $scope.cmcdSessionId
+                }
+            }
+        });
+    }
+
+    $scope.updateCmcdContentId = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmcd: {
+                    cid: $scope.cmcdContentId
+                }
+            }
+        });
+    }
+
+    $scope.updateCmcdRtp = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmcd: {
+                    rtp: $scope.cmcdRtp
+                }
+            }
+        });
+    }
+
+    $scope.updateCmcdRtpSafetyFactor = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmcd: {
+                    rtpSafetyFactor: $scope.cmcdRtpSafetyFactor
+                }
+            }
+        });
+    }
+
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
         $scope.protData = {};
@@ -971,7 +1121,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             if(input.isActive){
 
                 // Check if the provided DRM is Clearkey and whether KID=KEY or LicenseServer + Header is selected; Default is KID=KEY
-               if(input.hasOwnProperty('inputMode') && input.inputMode === false){
+               if(input.hasOwnProperty('inputMode') && input.inputMode === 'kidKey'){
                     //Check clearkeys has at least one entry
                     if(input.clearkeys !== {}){
                         // Check if priority is enabled
@@ -1153,7 +1303,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     /** Handle inherent protection data passed by selectedItem */
     $scope.handleProtectionData = function (protectionData){
         for(let data in protectionData){
-
             switch(data){
                 case 'com.microsoft.playready':
                     // Set DRM to active
@@ -1200,6 +1349,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'org.w3.clearkey':
                     // Set DRM to active
                     $scope.drmClearkey.isActive = true;
+                    $scope.drmClearkey.inputMode = protectionData[data]['inputMode'];
                     // Handle clearkey data if specified using a license server
                     if(protectionData[data]['serverURL'] !== undefined){
                         $scope.drmClearkey.licenseServerUrl = protectionData[data]['serverURL'];
@@ -1250,12 +1400,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.isValidURL = function (str) {
         let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
         return (res !== null)
-      };
-
-    /** Toggle between KID=KEY and Licenseserver Clearkey specification */
-    $scope.toggleInputMode = function (){
-        $scope.drmClearkey.inputMode = !$scope.drmClearkey.inputMode;
-    }    
+      };  
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -1310,9 +1455,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Copy a URL containing the current settings as query Parameters to the Clipboard */
     $scope.copyQueryUrl = function(){
-        var externalSettingsString = 'loop=' + $scope.loopSelected
+        var externalSettingsString = 'mpd=' + encodeURIComponent(decodeURIComponent($scope.selectedItem.url))
+                                   + '&loop=' + $scope.loopSelected
                                    + '&autoPlay=' + $scope.autoPlaySelected
+                                   + '&forceQualitySwitchSelected=' + $scope.forceQualitySwitchSelected
                                    + '&drmPrioritiesEnabled=' + $scope.prioritiesEnabled 
+                                   + '&languageAudio=' + $scope.initialSettings.audio
+                                   + '&roleVideo=' + $scope.initialSettings.video
+                                   + '&languageText=' + $scope.initialSettings.text
+                                   + '&roleText=' + $scope.initialSettings.textRole
+                                   + '&forceTextStreaming=' + $scope.initialSettings.forceTextStreaming
                                    + '&';
         
         $scope.handleRequestHeaders();
@@ -1417,7 +1569,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var queryProtectionData = {};
     
         for(var drm in drmObject){
-          if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === false){
+          if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === 'kidKey'){
             if(drmObject[drm].clearkeys !== {}){
               queryProtectionData[drmObject[drm].drmKeySystem] = {
                 'clearkeys' : {},
@@ -1499,9 +1651,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.setExternalSettings = function(currentQuery){
         currentQuery = currentQuery.substring(1);
         var handleExternalSettings = currentQuery.split('&');
-        for(var index = 0; index <4; index++){
+        for(var index = 0; index <10; index++){
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch(key){
+                case 'mpd':
+                    $scope.selectedItem.url = decodeURIComponent(value);
                 case 'loop':
                     $scope.loopSelected = $scope.parseBoolean(value);
                     break;
@@ -1509,8 +1663,38 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     $scope.autoPlaySelected = this.parseBoolean(value);
                     $scope.toggleAutoPlay();
                     break;
+                case 'forceQualitySwitchSelected':
+                    $scope.forceQualitySwitchSelected = this.parseBoolean(value);
+                    $scope.toggleForceQualitySwitch($scope.forceQualitySwitchSelected);
+                    break;
                 case 'drmPrioritiesEnabled':
                     $scope.prioritiesEnabled = this.parseBoolean(value);
+                    break;
+                case 'languageAudio':
+                    $scope.player.setInitialMediaSettingsFor('audio', {
+                        lang: value
+                    });
+                    break;
+                case 'roleVideo':
+                    $scope.player.setInitialMediaSettingsFor('video', {
+                        role: value
+                    });
+                    break;
+                case 'languageText':
+                    $scope.initialSettings.text = value
+                    $scope.player.setInitialMediaSettingsFor('text', {
+                        lang: $scope.handleQueryParameters(value)
+                    });
+                    break;
+                case 'roleText':
+                    $scope.player.setInitialMediaSettingsFor('text', {
+                        lang: $scope.handleQueryParameters($scope.initialSettings.text),
+                        role: $scope.handleQueryParameters(value)
+                    });
+                    break;
+                case 'forceTextStreaming':
+                    $scope.initialSettings.forceTextStreaming = this.parseBoolean(value);
+                    $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
                     break;
             }
         }
@@ -1538,6 +1722,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         typedValue = this.parseBoolean(value);
         }
         else if(value === 'NaN') typedValue = NaN;
+        else if(value === 'null') typedValue = null;
+        else if(value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) : 
             (floatRegEx.test(value) ? typedValue = parseFloat(value) : typedValue = value);
         
@@ -1772,6 +1958,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
+        $scope.liveCatchupMode = currentConfig.streaming.liveCatchup.mode;
     }
 
     function setAbrRules() {
@@ -1780,6 +1967,109 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.additionalAbrRules.switchHistoryRule;
         $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
         $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
+        $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
+        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.fetchThroughputCalculationMode;
+    }
+
+    function setAdditionalPlaybackOptions(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.scheduleWhilePausedSelected = currentConfig.streaming.scheduling.scheduleWhilePaused;
+        $scope.calcSegmentAvailabilityRangeFromTimelineSelected = currentConfig.streaming.timeShiftBuffer.calcFromSegmentTimeline;
+        $scope.reuseExistingSourceBuffersSelected = currentConfig.streaming.buffer.reuseExistingSourceBuffers;
+        $scope.localStorageSelected = currentConfig.streaming.lastBitrateCachingInfo.enabled;
+        $scope.jumpGapsSelected = currentConfig.streaming.gaps.jumpGaps;
+    }
+
+    function setAdditionalAbrOptions(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
+        $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
+        $scope.customABRRulesSelected = !currentConfig.streaming.abr.useDefaultABRRules;
+    }
+
+    function setLiveDelayOptions(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
+        $scope.liveDelayFragmentCount = currentConfig.streaming.delay.liveDelayFragmentCount;
+        $scope.applyServiceDescription = currentConfig.streaming.delay.applyServiceDescription;
+        $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
+    }
+
+    function setInitialSettings(){
+        var currentConfig = $scope.player.getSettings();
+        if($scope.initialVideoBitrate){
+            $scope.initialVideoBitrate = currentConfig.streaming.abr.initialBitrate.video;
+        }
+        if($scope.minVideoBitrate){
+             $scope.minVideoBitrate = currentConfig.streaming.abr.minBitrate.video;
+        }
+        if($scope.maxVideoBitrate){
+            $scope.maxVideoBitrate = currentConfig.streaming.abr.maxBitrate.video;
+        }
+        if($scope.initialSettings.audio){
+            $scope.initialSettings.audio = $scope.player.getInitialMediaSettingsFor('audio').lang;  
+        }
+        if($scope.initialSettings.video){
+            $scope.initialSettings.video = $scope.player.getInitialMediaSettingsFor('video').role;
+        }
+        if($scope.initialSettings.text){
+            $scope.initialSettings.text = $scope.player.getInitialMediaSettingsFor('text').lang;
+        }
+        if($scope.initialSettings.text){
+            $scope.initialSettings.textRole = $scope.player.getInitialMediaSettingsFor('text').role;
+        }
+
+        $scope.initialSettings.textEnabled = currentConfig.streaming.text.defaultEnabled;
+    }
+
+    function setTrackSwitchModeSettings(){
+        currentConfig = $scope.player.getSettings();
+        initAudioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
+        $scope.audioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
+        initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+        $scope.videoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+    }
+
+    function setInitialLogLevel(){
+        var initialLogLevel = $scope.player.getSettings().debug.logLevel;
+        switch(initialLogLevel){
+            case 0:
+                $scope.currentLogLevel = 'none';
+                break;
+            case 1:
+                $scope.currentLogLevel = 'fatal';
+                break;
+            case 2:
+                $scope.currentLogLevel = 'error';
+                break;
+            case 3:
+                $scope.currentLogLevel = 'warning';
+                break;
+            case 4:
+                $scope.currentLogLevel = 'info';
+                break;
+            case 5:
+                $scope.currentLogLevel = 'debug';
+                break;
+        }        
+    }
+
+    function setCMCDSettings(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.cmcdEnabled = currentConfig.streaming.cmcd.enabled;
+        if(currentConfig.streaming.cmcd.sid){
+            $scope.cmcdSessionId = currentConfig.streaming.cmcd.sid;
+        }
+        if(currentConfig.streaming.cmcd.cid){
+            $scope.cmcdContentId = currentConfig.streaming.cmcd.cid; 
+        }
+        if(currentConfig.streaming.cmcd.rtp){
+            $scope.cmcdRtp = currentConfig.streaming.cmcd.rtp;
+        }
+        if(currentConfig.streaming.cmcd.rtpSafetyFactor){
+            $scope.cmcdRtpSafetyFactor = currentConfig.streaming.cmcd.rtpSafetyFactor;
+        } 
+        $scope.cmcdMode = currentConfig.streaming.cmcd.mode;
     }
 
 
@@ -1851,6 +2141,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.setQueryData(currentQuery);
         }
 
+        setInitialLogLevel();
         //TODO: Set loglevel
 
     })();
