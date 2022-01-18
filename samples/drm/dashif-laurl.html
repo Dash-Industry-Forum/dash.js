@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Clearkey DRM instantiation example</title>
+    <title>License server via MPD example</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -17,21 +17,33 @@
         }
     </style>
 
-    <script  class="code">
+    <script class="code">
         function init() {
-            const protData = {
-                "org.w3.clearkey": {
-                    "clearkeys": {
-                        "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
-                    }
+            var protData = {
+                "com.widevine.alpha": {
+                    "httpRequestHeaders": {
+                        "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
+                    },
+                    priority: 0
+                },
+                "com.microsoft.playready": {
+                    "httpRequestHeaders": {
+                        "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
+                    },
+                    priority: 0
                 }
             };
             var video,
                 player,
-                url = "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_ClearKey.mpd";
+                url = "mpds/laurl.mpd";
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
+            player.updateSettings({
+                debug: {
+                    logLevel: 5
+                }
+            })
             player.initialize(video, url, true);
             player.setProtectionData(protData);
         }
@@ -65,10 +77,12 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Clearkey DRM instantiation example</h3>
-                    <p>This example shows how to use dash.js to play streams with Clearkey DRM protection. </p><p>For a detailed explanation on DRM playback in dash.js checkout the
-                    <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
-                       target="_blank">Wiki</a>.</p>
+                    <h3>License server via MPD example</h3>
+                    <p>This example shows how to specify the license server url as part of the MPD using
+                        'dashif:laurl'. </p>
+                    <p>For a detailed explanation on this checkout the
+                        <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition#licenser-server-url-via-mpd"
+                           target="_blank">Wiki</a>.</p>
                 </div>
             </div>
             <div class="col-md-8">

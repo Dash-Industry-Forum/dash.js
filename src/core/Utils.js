@@ -34,6 +34,8 @@
  * @ignore
  */
 
+import path from 'path-browserify'
+
 class Utils {
     static mixin(dest, source, copy) {
         let s;
@@ -96,7 +98,7 @@ class Utils {
         }
     }
 
-    static parseHttpHeaders (headerStr) {
+    static parseHttpHeaders(headerStr) {
         let headers = {};
         if (!headerStr) {
             return headers;
@@ -138,6 +140,40 @@ class Utils {
             hash |= 0;
         }
         return hash;
+    }
+
+    /**
+     * Compares both urls and returns a relative url (target relative to original)
+     * @param {string} original
+     * @param {string} target
+     * @return {string|*}
+     */
+    static getRelativeUrl(originalUrl, targetUrl) {
+        try {
+            const original = new URL(originalUrl);
+            const target = new URL(targetUrl);
+
+            // Unify the protocol to compare the origins
+            original.protocol = target.protocol;
+            if (original.origin !== target.origin) {
+                return targetUrl;
+            }
+
+            // Use the relative path implementation of the path library. We need to cut off the actual filename in the end to get the relative path
+            let relativePath = path.relative(original.pathname.substr(0, original.pathname.lastIndexOf('/')), target.pathname.substr(0, target.pathname.lastIndexOf('/')));
+
+            // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash in front of the filename
+            const startIndexOffset = relativePath.length === 0 ? 1 : 0;
+            relativePath += target.pathname.substr(target.pathname.lastIndexOf('/') + startIndexOffset, target.pathname.length - 1);
+
+            // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of the two candidates.
+            if (target.pathname.length < relativePath.length) {
+                return target.pathname;
+            }
+            return relativePath;
+        } catch (e) {
+            return targetUrl
+        }
     }
 }
 

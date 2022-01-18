@@ -90,7 +90,7 @@ function Stream(config) {
         boxParser,
         debug,
         isEndedEventSignaled,
-        trackChangedEvent;
+        trackChangedEvents;
 
     /**
      * Setup the stream
@@ -555,6 +555,7 @@ function Stream(config) {
         updateError = {};
         isUpdating = false;
         isEndedEventSignaled = false;
+        trackChangedEvents = [];
     }
 
     function reset(keepBuffers) {
@@ -646,7 +647,6 @@ function Stream(config) {
         if (event.error) {
             errHandler.error(event.error);
             logger.fatal(event.error.message);
-            reset();
         }
     }
 
@@ -670,9 +670,11 @@ function Stream(config) {
 
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
-            logger.debug('Stream -  Refreshing manifest for switch track');
-            trackChangedEvent = e;
-            manifestUpdater.refreshManifest();
+            trackChangedEvents.push(e);
+            if (!manifestUpdater.getIsUpdating()) {
+                logger.debug('Stream -  Refreshing manifest for switch track');
+                manifestUpdater.refreshManifest();
+            }
         } else {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {
@@ -713,7 +715,7 @@ function Stream(config) {
         if (protectionController) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
-            protectionController.clearMediaInfoArrayByStreamId(getId());
+            protectionController.clearMediaInfoArray();
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
                 const type = streamProcessors[i].getType();
                 const mediaInfo = streamProcessors[i].getMediaInfo();
@@ -732,9 +734,11 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isInitialized) {
             isInitialized = true;
-            eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo
-            });
+            videoModel.waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                eventBus.trigger(Events.STREAM_INITIALIZED, {
+                    streamInfo: streamInfo
+                });
+            })
         }
 
     }
@@ -866,13 +870,13 @@ function Stream(config) {
                 .then(() => {
                     promises = [];
 
-                    if (trackChangedEvent) {
+                    while (trackChangedEvents.length > 0) {
+                        let trackChangedEvent = trackChangedEvents.pop();
                         let mediaInfo = trackChangedEvent.newMediaInfo;
                         let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) return;
                         promises.push(processor.prepareTrackSwitch());
                         processor.selectMediaInfo(mediaInfo);
-                        trackChangedEvent = undefined;
                     }
 
                     return Promise.all(promises)

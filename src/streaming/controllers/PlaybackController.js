@@ -63,6 +63,7 @@ function PlaybackController() {
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
+        manifestUpdateInProgress,
         settings;
 
     function setup() {
@@ -102,13 +103,16 @@ function PlaybackController() {
         const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
         minPlaybackRateChange = isSafari ? 0.25 : 0.02;
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
-        eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, this);
-        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
-        eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+        eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
+        eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
+        eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -180,7 +184,9 @@ function PlaybackController() {
         const DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
 
-        seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+        if (DVRWindow && !isNaN(DVRWindow.end)) {
+            seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
+        }
     }
 
     function getTime() {
@@ -218,6 +224,10 @@ function PlaybackController() {
 
     function getStreamController() {
         return streamController;
+    }
+
+    function getIsManifestUpdateInProgress() {
+        return manifestUpdateInProgress;
     }
 
     /**
@@ -344,15 +354,19 @@ function PlaybackController() {
         playOnceInitialized = false;
         liveDelay = 0;
         availabilityStartTime = 0;
+        manifestUpdateInProgress = false;
         seekTarget = NaN;
         if (videoModel) {
-            eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
-            eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, this);
-            eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, this);
-            eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-            eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-            eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this);
-            eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
+            eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+            eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+            eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
+            eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+            eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
+            eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
+            eventBus.off(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
             videoModel.setPlaybackRate(1.0, true);
             stopUpdatingWallclockTime();
             removeAllListeners();
@@ -440,7 +454,7 @@ function PlaybackController() {
      * @param {object} mediaType
      */
     function updateCurrentTime(mediaType = null) {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return;
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) return;
 
         // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
         // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
@@ -451,7 +465,7 @@ function PlaybackController() {
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged && !isSeeking() && (isStalled() || playbackStalled)) {
+        if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
@@ -590,6 +604,7 @@ function PlaybackController() {
         // Updates playback time for paused dynamic streams
         // (video element doesn't call timeupdate when the playback is paused)
         if (getIsDynamic()) {
+            streamController.addDVRMetric();
             if (isPaused()) {
                 _updateLivePlaybackTime();
             } else {
@@ -916,6 +931,45 @@ function PlaybackController() {
         _checkEnableLowLatency(e.mediaInfo);
     }
 
+    /**
+     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false
+     * @param e
+     * @private
+     */
+    function _onRepresentationSwitch(e) {
+        const activeStreamInfo = streamController.getActiveStreamInfo();
+        if (!settings.get().streaming.lowLatencyEnabledByManifest || !e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+            return;
+        }
+
+        const lowLatencyEnabled = !e.currentRepresentation.availabilityTimeComplete;
+
+        if (lowLatencyEnabled) {
+            settings.update({
+                streaming: {
+                    lowLatencyEnabled: lowLatencyEnabled
+                }
+            });
+        }
+    }
+
+    /**
+     * A new manifest has been loaded, updating is still in progress.
+     * @private
+     */
+    function _onManifestUpdated() {
+        manifestUpdateInProgress = true;
+    }
+
+    /**
+     * Manifest update was completed
+     * @private
+     */
+    function _onStreamsComposed() {
+        manifestUpdateInProgress = false;
+    }
+
+
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&
             mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
@@ -973,6 +1027,7 @@ function PlaybackController() {
         getBufferLevel,
         getTime,
         getNormalizedTime,
+        getIsManifestUpdateInProgress,
         getPlaybackRate,
         getPlayedRanges,
         getEnded,

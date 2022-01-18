@@ -187,7 +187,13 @@
                        title="Enable low latency mode">
                     <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected"
                            ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
-                    Low Latency Mode
+                    Low latency mode
+                </label>             
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enable low latency mode by MPD attribute 'availabilityTimeComplete' ">
+                    <input type="checkbox" id="lowLatencyModeEnabledByManifestCB" ng-model="lowLatencyEnabledByManifest"
+                           ng-change="toggleLowLatencyByManifestMode()" ng-checked="lowLatencyEnabledByManifest">
+                    Enable low latency mode by MPD
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable catchup mode for non low latency streams">
@@ -848,6 +854,9 @@
 
         <!-- STATS TAB CONTENT -->
         <div class="col-md-3 tabs-section">
+            <div class="bs-callout bs-callout-danger" id="http-warning-container" style="display: none;">
+                    <span id="http-warning-text"></span>
+            </div>
             <div class="bs-callout bs-callout-information" id="callout-dropdown-positioning">
                 <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                 Additional samples can be found in the <a

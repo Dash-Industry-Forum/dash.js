@@ -406,6 +406,16 @@ function DashManifestModel() {
         });
     }
 
+    function getSelectionPriority(realAdaption) {
+        try {
+            const priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+
+            return isNaN(priority) ? 1 : priority;
+        } catch (e) {
+            return 1;
+        }
+    }
+
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
 
@@ -839,14 +849,17 @@ function DashManifestModel() {
 
                     if (currentMpdEvent.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
                         event.presentationTime = currentMpdEvent.presentationTime;
-                        const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-                        event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
                     }
+                    const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+                    event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
+
                     if (currentMpdEvent.hasOwnProperty(DashConstants.DURATION)) {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
                         event.id = currentMpdEvent.id;
+                    } else {
+                        event.id = null;
                     }
 
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
@@ -859,6 +872,7 @@ function DashManifestModel() {
                         // string representation'.
                         event.messageData =
                             currentMpdEvent.messageData ||
+                            currentMpdEvent.__cdata ||
                             currentMpdEvent.__text;
                     }
 
@@ -1169,6 +1183,7 @@ function DashManifestModel() {
         getRealPeriods,
         getRealPeriodForIndex,
         getCodec,
+        getSelectionPriority,
         getMimeType,
         getKID,
         getLabelsForAdaptation,

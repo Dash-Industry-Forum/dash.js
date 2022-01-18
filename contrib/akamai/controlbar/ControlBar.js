@@ -27,7 +27,7 @@
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- *
+ */
 
  /**
  * @module ControlBar
@@ -439,7 +439,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 element.webkitRequestFullScreen();
             }
         }
-        
+
         videoController.classList.add('video-controller-fullscreen');
         window.addEventListener('mousemove', onFullScreenMouseMove);
         onFullScreenMouseMove();
@@ -462,7 +462,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         clearFullscreenState();
 
         if (document.fullscreenElement) {
-            
+
             if (document.exitFullscreen) {
             document.exitFullscreen();
             } else if (document.mozCancelFullScreen) {

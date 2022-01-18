@@ -94,6 +94,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Load with url parameters",
+                "description": "A demo page that uses url query parameters to configure the playback.",
+                "href": "getting-started/load-with-url-params.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -280,6 +291,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Fast bitrate switch",
+                "description": "Example showing how to aggressively replace segments in the buffer when switching up in quality.",
+                "href": "abr/fastswitch.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -381,6 +403,20 @@
                 "description": "This example shows how to specify a DRM system priority in case the underlying platform supports multiple DRM systems.",
                 "href": "drm/system-priority.html",
                 "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "License server via MPD",
+                "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
+                "href": "drm/dashif-laurl.html",
+                "image": "lib/img/tos-3.jpg",
                 "labels": [
                     "VoD",
                     "DRM",
@@ -601,6 +637,41 @@
                 "description": "This sample shows how to filter representations.",
                 "href": "advanced/custom-capabilities-filters.html",
                 "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Custom initial track selection example",
+                "description": "This sample shows how to define your own initial track selection function.",
+                "href": "advanced/custom-initial-track-selection.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "DRM",
+                    "Widevine"
+                ]
+            },
+            {
+                "title": "Load with a parsed manifest",
+                "description": "This sample shows how to load the manifest as a parsed object instead of providing a url to the manifest",
+                "href": "advanced/load_with_manifest.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "MPD anchors",
+                "description": "This sample shows how to use MPD anchors to start a presentation at a given time.",
+                "href": "advanced/mpd-anchors.html",
+                "image": "lib/img/bbb-3.jpg",
                 "labels": [
                     "VoD",
                     "Video",

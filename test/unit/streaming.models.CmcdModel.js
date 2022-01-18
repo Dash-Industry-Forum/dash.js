@@ -121,7 +121,7 @@ describe('CmcdModel', function () {
             const MEASURED_THROUGHPUT = 8327641;
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
             const VIDEO_OBJECT_TYPE = 'v';
-            const NEXT_OBJECT_URL = '/next_object';
+            const NEXT_OBJECT_URL = 'next_object';
             const NEXT_OBJECT_RANGE = '100-500';
 
             abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
@@ -135,7 +135,8 @@ describe('CmcdModel', function () {
                 mediaType: MEDIA_TYPE,
                 quality: 0,
                 mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
-                duration: DURATION
+                duration: DURATION,
+                url: 'http://test.url/firstRequest'
             };
 
             let headers = cmcdModel.getHeaderParameters(request);
@@ -430,7 +431,7 @@ describe('CmcdModel', function () {
             const MEASURED_THROUGHPUT = 8327641;
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
             const VIDEO_OBJECT_TYPE = 'v';
-            const NEXT_OBJECT_URL = '/next_object';
+            const NEXT_OBJECT_URL = 'next_object';
             const NEXT_OBJECT_RANGE = '100-500';
 
             abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
@@ -444,7 +445,8 @@ describe('CmcdModel', function () {
                 mediaType: MEDIA_TYPE,
                 quality: 0,
                 mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
-                duration: DURATION
+                duration: DURATION,
+                url: 'http://test.url/firstRequest'
             };
 
             let parameters = cmcdModel.getQueryParameter(request);

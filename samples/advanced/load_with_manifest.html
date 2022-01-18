@@ -1,0 +1,2098 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Load with a parsed manifest object</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+
+            var video,
+                player;
+            var parsedManifest = {
+                "BaseURL_asArray": [
+                    "https://dash.akamaized.net/dash264/TestCases/1a/sony/"
+                ],
+                "Period_asArray": [
+                    {
+                        "AdaptationSet_asArray": [
+                            {
+                                "AudioChannelConfiguration_asArray": [
+                                    {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                        "value": "2"
+                                    }
+                                ],
+                                "Role_asArray": [
+                                    {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    }
+                                ],
+                                "Representation_asArray": [
+                                    {
+                                        "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodaudio_Track5.m4a"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                            }
+                                        ],
+                                        "bandwidth": 64000,
+                                        "id": "2_1",
+                                        "audioSamplingRate": 48000,
+                                        "mimeType": "audio/mp4",
+                                        "codecs": "mp4a.40.5",
+                                        "AudioChannelConfiguration": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    }
+                                ],
+                                "__children": [
+                                    {
+                                        "AudioChannelConfiguration": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    },
+                                    {
+                                        "Role": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    },
+                                    {
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodaudio_Track5.m4a"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                }
+                                            ],
+                                            "bandwidth": 64000,
+                                            "id": "2_1",
+                                            "audioSamplingRate": 48000,
+                                            "mimeType": "audio/mp4",
+                                            "codecs": "mp4a.40.5",
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "audioSamplingRate": 48000,
+                                "codecs": "mp4a.40.5",
+                                "contentType": "audio",
+                                "group": 2,
+                                "id": 2,
+                                "lang": "en",
+                                "mimeType": "audio/mp4",
+                                "subsegmentAlignment": "true",
+                                "subsegmentStartsWithSAP": 1
+                            },
+                            {
+                                "Role": {
+                                    "__children": [],
+                                    "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                    "value": "main"
+                                },
+                                "Role_asArray": [
+                                    {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    }
+                                ],
+                                "Representation": [
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track2.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 1005568,
+                                        "height": 480,
+                                        "id": "1_1",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track1.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 1609728,
+                                        "height": 480,
+                                        "id": "1_2",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track3.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 704512,
+                                        "height": 480,
+                                        "id": "1_3",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track4.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 452608,
+                                        "height": 480,
+                                        "id": "1_4",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    }
+                                ],
+                                "Representation_asArray": [
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track2.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 1005568,
+                                        "height": 480,
+                                        "id": "1_1",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track1.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 1609728,
+                                        "height": 480,
+                                        "id": "1_2",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track3.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 704512,
+                                        "height": 480,
+                                        "id": "1_3",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    },
+                                    {
+                                        "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodvideo_Track4.m4v"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                            }
+                                        ],
+                                        "bandwidth": 452608,
+                                        "height": 480,
+                                        "id": "1_4",
+                                        "mediaStreamStructureId": "1",
+                                        "width": 854,
+                                        "sar": "1:1",
+                                        "frameRate": "24000/1001",
+                                        "mimeType": "video/mp4",
+                                        "codecs": "avc1.4D401E",
+                                        "maximumSAPPeriod": 5
+                                    }
+                                ],
+                                "__children": [
+                                    {
+                                        "Role": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    },
+                                    {
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    },
+                                    {
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    },
+                                    {
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    },
+                                    {
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    }
+                                ],
+                                "codecs": "avc1.4D401E",
+                                "contentType": "video",
+                                "frameRate": "24000/1001",
+                                "group": 1,
+                                "id": 1,
+                                "maxBandwidth": 1609728,
+                                "maxHeight": 480,
+                                "maxWidth": 854,
+                                "maximumSAPPeriod": 5,
+                                "mimeType": "video/mp4",
+                                "minBandwidth": 452608,
+                                "minHeight": 480,
+                                "minWidth": 854,
+                                "par": "16:9",
+                                "sar": "1:1",
+                                "subsegmentAlignment": "true",
+                                "subsegmentStartsWithSAP": 1
+                            }
+                        ],
+                        "__children": [
+                            {
+                                "AdaptationSet": {
+                                    "AudioChannelConfiguration": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                        "value": "2"
+                                    },
+                                    "AudioChannelConfiguration_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodaudio_Track5.m4a"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                }
+                                            ],
+                                            "bandwidth": 64000,
+                                            "id": "2_1",
+                                            "audioSamplingRate": 48000,
+                                            "mimeType": "audio/mp4",
+                                            "codecs": "mp4a.40.5",
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        },
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodaudio_Track5.m4a"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                    }
+                                                ],
+                                                "bandwidth": 64000,
+                                                "id": "2_1",
+                                                "audioSamplingRate": 48000,
+                                                "mimeType": "audio/mp4",
+                                                "codecs": "mp4a.40.5",
+                                                "AudioChannelConfiguration": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                    "value": "2"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "audioSamplingRate": 48000,
+                                    "codecs": "mp4a.40.5",
+                                    "contentType": "audio",
+                                    "group": 2,
+                                    "id": 2,
+                                    "lang": "en",
+                                    "mimeType": "audio/mp4",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                }
+                            },
+                            {
+                                "AdaptationSet": {
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track2.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1005568,
+                                                "height": 480,
+                                                "id": "1_1",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track1.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1609728,
+                                                "height": 480,
+                                                "id": "1_2",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track3.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 704512,
+                                                "height": 480,
+                                                "id": "1_3",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track4.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 452608,
+                                                "height": 480,
+                                                "id": "1_4",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        }
+                                    ],
+                                    "codecs": "avc1.4D401E",
+                                    "contentType": "video",
+                                    "frameRate": "24000/1001",
+                                    "group": 1,
+                                    "id": 1,
+                                    "maxBandwidth": 1609728,
+                                    "maxHeight": 480,
+                                    "maxWidth": 854,
+                                    "maximumSAPPeriod": 5,
+                                    "mimeType": "video/mp4",
+                                    "minBandwidth": 452608,
+                                    "minHeight": 480,
+                                    "minWidth": 854,
+                                    "par": "16:9",
+                                    "sar": "1:1",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                }
+                            }
+                        ],
+                        "duration": 597,
+                        "id": "P1"
+                    }
+                ],
+                "__children": [
+                    {
+                        "Period": {
+                            "AdaptationSet": [
+                                {
+                                    "AudioChannelConfiguration": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                        "value": "2"
+                                    },
+                                    "AudioChannelConfiguration_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation": {
+                                        "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodaudio_Track5.m4a"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                            }
+                                        ],
+                                        "bandwidth": 64000,
+                                        "id": "2_1",
+                                        "audioSamplingRate": 48000,
+                                        "mimeType": "audio/mp4",
+                                        "codecs": "mp4a.40.5",
+                                        "AudioChannelConfiguration": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    },
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodaudio_Track5.m4a"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                }
+                                            ],
+                                            "bandwidth": 64000,
+                                            "id": "2_1",
+                                            "audioSamplingRate": 48000,
+                                            "mimeType": "audio/mp4",
+                                            "codecs": "mp4a.40.5",
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        },
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodaudio_Track5.m4a"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                    }
+                                                ],
+                                                "bandwidth": 64000,
+                                                "id": "2_1",
+                                                "audioSamplingRate": 48000,
+                                                "mimeType": "audio/mp4",
+                                                "codecs": "mp4a.40.5",
+                                                "AudioChannelConfiguration": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                    "value": "2"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "audioSamplingRate": 48000,
+                                    "codecs": "mp4a.40.5",
+                                    "contentType": "audio",
+                                    "group": 2,
+                                    "id": 2,
+                                    "lang": "en",
+                                    "mimeType": "audio/mp4",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                },
+                                {
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation": [
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    ],
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track2.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1005568,
+                                                "height": 480,
+                                                "id": "1_1",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track1.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1609728,
+                                                "height": 480,
+                                                "id": "1_2",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track3.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 704512,
+                                                "height": 480,
+                                                "id": "1_3",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track4.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 452608,
+                                                "height": 480,
+                                                "id": "1_4",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        }
+                                    ],
+                                    "codecs": "avc1.4D401E",
+                                    "contentType": "video",
+                                    "frameRate": "24000/1001",
+                                    "group": 1,
+                                    "id": 1,
+                                    "maxBandwidth": 1609728,
+                                    "maxHeight": 480,
+                                    "maxWidth": 854,
+                                    "maximumSAPPeriod": 5,
+                                    "mimeType": "video/mp4",
+                                    "minBandwidth": 452608,
+                                    "minHeight": 480,
+                                    "minWidth": 854,
+                                    "par": "16:9",
+                                    "sar": "1:1",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                }
+                            ],
+                            "AdaptationSet_asArray": [
+                                {
+                                    "AudioChannelConfiguration": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                        "value": "2"
+                                    },
+                                    "AudioChannelConfiguration_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation": {
+                                        "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                        "BaseURL_asArray": [
+                                            "DASH_vodaudio_Track5.m4a"
+                                        ],
+                                        "__children": [
+                                            {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                            }
+                                        ],
+                                        "bandwidth": 64000,
+                                        "id": "2_1",
+                                        "audioSamplingRate": 48000,
+                                        "mimeType": "audio/mp4",
+                                        "codecs": "mp4a.40.5",
+                                        "AudioChannelConfiguration": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        }
+                                    },
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodaudio_Track5.m4a"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                }
+                                            ],
+                                            "bandwidth": 64000,
+                                            "id": "2_1",
+                                            "audioSamplingRate": 48000,
+                                            "mimeType": "audio/mp4",
+                                            "codecs": "mp4a.40.5",
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        },
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodaudio_Track5.m4a"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                    }
+                                                ],
+                                                "bandwidth": 64000,
+                                                "id": "2_1",
+                                                "audioSamplingRate": 48000,
+                                                "mimeType": "audio/mp4",
+                                                "codecs": "mp4a.40.5",
+                                                "AudioChannelConfiguration": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                    "value": "2"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "audioSamplingRate": 48000,
+                                    "codecs": "mp4a.40.5",
+                                    "contentType": "audio",
+                                    "group": 2,
+                                    "id": 2,
+                                    "lang": "en",
+                                    "mimeType": "audio/mp4",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                },
+                                {
+                                    "Role": {
+                                        "__children": [],
+                                        "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                        "value": "main"
+                                    },
+                                    "Role_asArray": [
+                                        {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        }
+                                    ],
+                                    "Representation": [
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    ],
+                                    "Representation_asArray": [
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track2.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1005568,
+                                            "height": 480,
+                                            "id": "1_1",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track1.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 1609728,
+                                            "height": 480,
+                                            "id": "1_2",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track3.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 704512,
+                                            "height": 480,
+                                            "id": "1_3",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        },
+                                        {
+                                            "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodvideo_Track4.m4v"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                }
+                                            ],
+                                            "bandwidth": 452608,
+                                            "height": 480,
+                                            "id": "1_4",
+                                            "mediaStreamStructureId": "1",
+                                            "width": 854,
+                                            "sar": "1:1",
+                                            "frameRate": "24000/1001",
+                                            "mimeType": "video/mp4",
+                                            "codecs": "avc1.4D401E",
+                                            "maximumSAPPeriod": 5
+                                        }
+                                    ],
+                                    "__children": [
+                                        {
+                                            "Role": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track2.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1005568,
+                                                "height": 480,
+                                                "id": "1_1",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track1.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1609728,
+                                                "height": 480,
+                                                "id": "1_2",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track3.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 704512,
+                                                "height": 480,
+                                                "id": "1_3",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        },
+                                        {
+                                            "Representation": {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track4.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 452608,
+                                                "height": 480,
+                                                "id": "1_4",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        }
+                                    ],
+                                    "codecs": "avc1.4D401E",
+                                    "contentType": "video",
+                                    "frameRate": "24000/1001",
+                                    "group": 1,
+                                    "id": 1,
+                                    "maxBandwidth": 1609728,
+                                    "maxHeight": 480,
+                                    "maxWidth": 854,
+                                    "maximumSAPPeriod": 5,
+                                    "mimeType": "video/mp4",
+                                    "minBandwidth": 452608,
+                                    "minHeight": 480,
+                                    "minWidth": 854,
+                                    "par": "16:9",
+                                    "sar": "1:1",
+                                    "subsegmentAlignment": "true",
+                                    "subsegmentStartsWithSAP": 1
+                                }
+                            ],
+                            "__children": [
+                                {
+                                    "AdaptationSet": {
+                                        "AudioChannelConfiguration": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                            "value": "2"
+                                        },
+                                        "AudioChannelConfiguration_asArray": [
+                                            {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        ],
+                                        "Role": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        },
+                                        "Role_asArray": [
+                                            {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        ],
+                                        "Representation": {
+                                            "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                            "BaseURL_asArray": [
+                                                "DASH_vodaudio_Track5.m4a"
+                                            ],
+                                            "__children": [
+                                                {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                }
+                                            ],
+                                            "bandwidth": 64000,
+                                            "id": "2_1",
+                                            "audioSamplingRate": 48000,
+                                            "mimeType": "audio/mp4",
+                                            "codecs": "mp4a.40.5",
+                                            "AudioChannelConfiguration": {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                "value": "2"
+                                            }
+                                        },
+                                        "Representation_asArray": [
+                                            {
+                                                "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodaudio_Track5.m4a"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                    }
+                                                ],
+                                                "bandwidth": 64000,
+                                                "id": "2_1",
+                                                "audioSamplingRate": 48000,
+                                                "mimeType": "audio/mp4",
+                                                "codecs": "mp4a.40.5",
+                                                "AudioChannelConfiguration": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                    "value": "2"
+                                                }
+                                            }
+                                        ],
+                                        "__children": [
+                                            {
+                                                "AudioChannelConfiguration": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                    "value": "2"
+                                                }
+                                            },
+                                            {
+                                                "Role": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                    "value": "main"
+                                                }
+                                            },
+                                            {
+                                                "Representation": {
+                                                    "BaseURL": "DASH_vodaudio_Track5.m4a",
+                                                    "BaseURL_asArray": [
+                                                        "DASH_vodaudio_Track5.m4a"
+                                                    ],
+                                                    "__children": [
+                                                        {
+                                                            "BaseURL": "DASH_vodaudio_Track5.m4a"
+                                                        }
+                                                    ],
+                                                    "bandwidth": 64000,
+                                                    "id": "2_1",
+                                                    "audioSamplingRate": 48000,
+                                                    "mimeType": "audio/mp4",
+                                                    "codecs": "mp4a.40.5",
+                                                    "AudioChannelConfiguration": {
+                                                        "__children": [],
+                                                        "schemeIdUri": "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
+                                                        "value": "2"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "audioSamplingRate": 48000,
+                                        "codecs": "mp4a.40.5",
+                                        "contentType": "audio",
+                                        "group": 2,
+                                        "id": 2,
+                                        "lang": "en",
+                                        "mimeType": "audio/mp4",
+                                        "subsegmentAlignment": "true",
+                                        "subsegmentStartsWithSAP": 1
+                                    }
+                                },
+                                {
+                                    "AdaptationSet": {
+                                        "Role": {
+                                            "__children": [],
+                                            "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                            "value": "main"
+                                        },
+                                        "Role_asArray": [
+                                            {
+                                                "__children": [],
+                                                "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                "value": "main"
+                                            }
+                                        ],
+                                        "Representation": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track2.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1005568,
+                                                "height": 480,
+                                                "id": "1_1",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track1.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1609728,
+                                                "height": 480,
+                                                "id": "1_2",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track3.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 704512,
+                                                "height": 480,
+                                                "id": "1_3",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track4.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 452608,
+                                                "height": 480,
+                                                "id": "1_4",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        ],
+                                        "Representation_asArray": [
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track2.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1005568,
+                                                "height": 480,
+                                                "id": "1_1",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track1.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 1609728,
+                                                "height": 480,
+                                                "id": "1_2",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track3.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 704512,
+                                                "height": 480,
+                                                "id": "1_3",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            },
+                                            {
+                                                "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                "BaseURL_asArray": [
+                                                    "DASH_vodvideo_Track4.m4v"
+                                                ],
+                                                "__children": [
+                                                    {
+                                                        "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                    }
+                                                ],
+                                                "bandwidth": 452608,
+                                                "height": 480,
+                                                "id": "1_4",
+                                                "mediaStreamStructureId": "1",
+                                                "width": 854,
+                                                "sar": "1:1",
+                                                "frameRate": "24000/1001",
+                                                "mimeType": "video/mp4",
+                                                "codecs": "avc1.4D401E",
+                                                "maximumSAPPeriod": 5
+                                            }
+                                        ],
+                                        "__children": [
+                                            {
+                                                "Role": {
+                                                    "__children": [],
+                                                    "schemeIdUri": "urn:mpeg:dash:role:2011",
+                                                    "value": "main"
+                                                }
+                                            },
+                                            {
+                                                "Representation": {
+                                                    "BaseURL": "DASH_vodvideo_Track2.m4v",
+                                                    "BaseURL_asArray": [
+                                                        "DASH_vodvideo_Track2.m4v"
+                                                    ],
+                                                    "__children": [
+                                                        {
+                                                            "BaseURL": "DASH_vodvideo_Track2.m4v"
+                                                        }
+                                                    ],
+                                                    "bandwidth": 1005568,
+                                                    "height": 480,
+                                                    "id": "1_1",
+                                                    "mediaStreamStructureId": "1",
+                                                    "width": 854,
+                                                    "sar": "1:1",
+                                                    "frameRate": "24000/1001",
+                                                    "mimeType": "video/mp4",
+                                                    "codecs": "avc1.4D401E",
+                                                    "maximumSAPPeriod": 5
+                                                }
+                                            },
+                                            {
+                                                "Representation": {
+                                                    "BaseURL": "DASH_vodvideo_Track1.m4v",
+                                                    "BaseURL_asArray": [
+                                                        "DASH_vodvideo_Track1.m4v"
+                                                    ],
+                                                    "__children": [
+                                                        {
+                                                            "BaseURL": "DASH_vodvideo_Track1.m4v"
+                                                        }
+                                                    ],
+                                                    "bandwidth": 1609728,
+                                                    "height": 480,
+                                                    "id": "1_2",
+                                                    "mediaStreamStructureId": "1",
+                                                    "width": 854,
+                                                    "sar": "1:1",
+                                                    "frameRate": "24000/1001",
+                                                    "mimeType": "video/mp4",
+                                                    "codecs": "avc1.4D401E",
+                                                    "maximumSAPPeriod": 5
+                                                }
+                                            },
+                                            {
+                                                "Representation": {
+                                                    "BaseURL": "DASH_vodvideo_Track3.m4v",
+                                                    "BaseURL_asArray": [
+                                                        "DASH_vodvideo_Track3.m4v"
+                                                    ],
+                                                    "__children": [
+                                                        {
+                                                            "BaseURL": "DASH_vodvideo_Track3.m4v"
+                                                        }
+                                                    ],
+                                                    "bandwidth": 704512,
+                                                    "height": 480,
+                                                    "id": "1_3",
+                                                    "mediaStreamStructureId": "1",
+                                                    "width": 854,
+                                                    "sar": "1:1",
+                                                    "frameRate": "24000/1001",
+                                                    "mimeType": "video/mp4",
+                                                    "codecs": "avc1.4D401E",
+                                                    "maximumSAPPeriod": 5
+                                                }
+                                            },
+                                            {
+                                                "Representation": {
+                                                    "BaseURL": "DASH_vodvideo_Track4.m4v",
+                                                    "BaseURL_asArray": [
+                                                        "DASH_vodvideo_Track4.m4v"
+                                                    ],
+                                                    "__children": [
+                                                        {
+                                                            "BaseURL": "DASH_vodvideo_Track4.m4v"
+                                                        }
+                                                    ],
+                                                    "bandwidth": 452608,
+                                                    "height": 480,
+                                                    "id": "1_4",
+                                                    "mediaStreamStructureId": "1",
+                                                    "width": 854,
+                                                    "sar": "1:1",
+                                                    "frameRate": "24000/1001",
+                                                    "mimeType": "video/mp4",
+                                                    "codecs": "avc1.4D401E",
+                                                    "maximumSAPPeriod": 5
+                                                }
+                                            }
+                                        ],
+                                        "codecs": "avc1.4D401E",
+                                        "contentType": "video",
+                                        "frameRate": "24000/1001",
+                                        "group": 1,
+                                        "id": 1,
+                                        "maxBandwidth": 1609728,
+                                        "maxHeight": 480,
+                                        "maxWidth": 854,
+                                        "maximumSAPPeriod": 5,
+                                        "mimeType": "video/mp4",
+                                        "minBandwidth": 452608,
+                                        "minHeight": 480,
+                                        "minWidth": 854,
+                                        "par": "16:9",
+                                        "sar": "1:1",
+                                        "subsegmentAlignment": "true",
+                                        "subsegmentStartsWithSAP": 1
+                                    }
+                                }
+                            ],
+                            "duration": 597,
+                            "id": "P1"
+                        }
+                    }
+                ],
+                "xmlns": "urn:mpeg:dash:schema:mpd:2011",
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "maxSubsegmentDuration": 5,
+                "mediaPresentationDuration": 597,
+                "minBufferTime": 5,
+                "profiles": "urn:mpeg:dash:profile:isoff-on-demand:2011,http://xmlns.sony.net/metadata/mpeg/dash/profile/senvu/2012",
+                "type": "static",
+                "xsi:schemaLocation": "urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd",
+                "protocol": "DASH",
+                "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+                "originalUrl": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+                "baseUri": "https://dash.akamaized.net/dash264/TestCases/1a/sony/",
+                "loadedTime": new Date()
+            }
+
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            
+
+            player.initialize(video, null, false);
+            player.attachSource(parsedManifest);
+            player.play();
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Load with a parsed manifest object</h3>
+                    <p>This sample shows how to load the manifest as a parsed object instead of providing a url to the manifest.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

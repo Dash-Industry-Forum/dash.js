@@ -91,11 +91,7 @@ function KeySystemW3CClearKey(config) {
         return null;
     }
 
-    function getCDMData() {
-        return null;
-    }
-
-    function getSessionId(/*cp*/) {
+    function getCDMData(/*cdmData*/) {
         return null;
     }
 
@@ -108,7 +104,6 @@ function KeySystemW3CClearKey(config) {
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
-        getSessionId: getSessionId,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 

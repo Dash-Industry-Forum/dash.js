@@ -5,15 +5,8 @@ Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Foru
 
 [Join #dashjs on Slack!](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg)
 
-## News
-
-### dash.js awards 2021
-The DASH Industry Forum (DASH-IF) is proud to announce its second dash.js award. Again, we are looking for developers who made contributions of significant benefit to the advancement of the dash.js project. 
-All information can be found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/dash.js-awards-2021).
-
-### Migration from v3.x to v4.0
+## Migration from v3.x to v4.0
 If you are migrating from dash.js v3.x to dash.js v4.x please read the migration document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-to-dash.js-4.0).
-
 
 ## Overview
 A reference client implementation for the playback of MPEG DASH via JavaScript and [compliant browsers](http://caniuse.com/#feat=mediasource). Learn more about DASH IF Reference Client on our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
