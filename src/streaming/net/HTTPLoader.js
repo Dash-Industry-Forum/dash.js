@@ -103,6 +103,40 @@ function HTTPLoader(cfg) {
     }
 
     /**
+     * Aborts any inflight downloads
+     * @memberof module:HTTPLoader
+     * @instance
+     */
+    function abort() {
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
+
+        delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
+        delayedRequests = [];
+
+        httpRequests.forEach(x => {
+            // MSS patch: ignore FragmentInfo requests
+            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                return;
+            }
+
+            // abort will trigger onloadend which we don't want
+            // when deliberately aborting inflight requests -
+            // set them to undefined so they are not called
+            x.onloadend = x.onerror = x.onprogress = undefined;
+            x.loader.abort(x);
+        });
+        httpRequests = [];
+    }
+
+
+    /**
      * Initiates a download of the resource described by config.request.
      * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
      * @memberof module:HTTPLoader
@@ -337,39 +371,6 @@ function HTTPLoader(cfg) {
     }
 
     /**
-     * Aborts any inflight downloads
-     * @memberof module:HTTPLoader
-     * @instance
-     */
-    function abort() {
-        retryRequests.forEach(t => {
-            clearTimeout(t.timeout);
-            // abort request in order to trigger LOADING_ABANDONED event
-            if (t.config.request && t.config.abort) {
-                t.config.abort(t.config.request);
-            }
-        });
-        retryRequests = [];
-
-        delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
-        delayedRequests = [];
-
-        httpRequests.forEach(x => {
-            // MSS patch: ignore FragmentInfo requests
-            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
-                return;
-            }
-
-            // abort will trigger onloadend which we don't want
-            // when deliberately aborting inflight requests -
-            // set them to undefined so they are not called
-            x.onloadend = x.onerror = x.onprogress = undefined;
-            x.loader.abort(x);
-        });
-        httpRequests = [];
-    }
-
-    /**
      * Function to be called after the request has been loaded. Either successfully or unsuccesfully
      * @param success
      * @param requestObject
@@ -383,7 +384,7 @@ function HTTPLoader(cfg) {
         requestObject.endDate = new Date();
         requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
 
-        // If enabled we add information from the ResourceTimingApi to the request object. These values are more accurate and can be used by the ThroughputHistory later
+        // If enabled the ResourceTimingApi we add the corresponding information to the request object. These values are more accurate and can be used by the ThroughputHistory later
         if (settings.get().streaming.abr.useResourceTimingApi) {
             _addResourceTimingValues(requestObject);
         }
@@ -403,13 +404,13 @@ function HTTPLoader(cfg) {
     }
 
     /**
-     * Adjusts the firstByteDate using the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
+     * Adds the values from the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
      * @param request
      * @private
      */
     function _addResourceTimingValues(request) {
         // Check performance support
-        if (performance === undefined) {
+        if (typeof performance === 'undefined') {
             return;
         }
 
@@ -430,7 +431,7 @@ function HTTPLoader(cfg) {
             i += 1;
         }
 
-        request.resource = resource;
+        request.resourceTimingValues = resource;
     }
 
     /**

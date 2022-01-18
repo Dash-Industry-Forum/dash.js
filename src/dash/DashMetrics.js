@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../streaming/constants/Constants';
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
@@ -59,7 +59,7 @@ function DashMetrics(config) {
     let metricsModel = config.metricsModel;
 
     function setup() {
-        metricsModel = metricsModel || MetricsModel(context).getInstance({settings: config.settings});
+        metricsModel = metricsModel || MetricsModel(context).getInstance({ settings: config.settings });
         resetInitialSettings();
     }
 
@@ -154,7 +154,7 @@ function DashMetrics(config) {
      * @instance
      * @ignore
      */
-    function clearAllCurrentMetrics () {
+    function clearAllCurrentMetrics() {
         metricsModel.clearAllCurrentMetrics();
     }
 
@@ -337,7 +337,7 @@ function DashMetrics(config) {
 
     /**
      * @param {object} request
-     * @param {string} responseURL
+     * @param {string} responseUrl
      * @param {number} responseStatus
      * @param {object} responseHeaders
      * @param {object} traces
@@ -345,22 +345,10 @@ function DashMetrics(config) {
      * @instance
      * @ignore
      */
-    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, traces) {
-        metricsModel.addHttpRequest(request.mediaType,
-            null,
-            request.type,
-            request.url,
-            request.quality,
-            responseURL,
-            request.serviceLocation || null,
-            request.range || null,
-            request.startDate,
-            request.firstByteDate,
-            request.endDate,
-            responseStatus,
-            request.duration,
-            responseHeaders,
-            traces);
+    function addHttpRequest(request, responseUrl, responseStatus, responseHeaders, traces) {
+        const response = { status: responseUrl, headers: responseHeaders, url: responseUrl };
+
+        metricsModel.addHttpRequest(request, response, traces);
     }
 
     /**
@@ -492,7 +480,7 @@ function DashMetrics(config) {
      * @ignore
      */
     function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
-        if (playListTraceMetricsClosed === true ) {
+        if (playListTraceMetricsClosed === true) {
             playListTraceMetricsClosed = false;
             playListTraceMetrics = new PlayListTrace();
 
