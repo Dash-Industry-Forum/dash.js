@@ -227,7 +227,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.drmToday = false;
 
-
     $scope.isDynamic = false;
 
     $scope.conformanceViolations = [];
@@ -1445,10 +1444,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
         var currentSetting = $scope.player.getSettings();
         var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?';
-        var queryString = url + externalSettingsString + $scope.toQueryString(currentSetting);
+        var queryString = externalSettingsString + $scope.toQueryString(currentSetting);
+
+        var urlString = url + queryString;
+        
+        $scope.checkQueryLength(urlString);
 
         const element = document.createElement('textarea');
-        element.value = queryString;
+        element.value = urlString;
         document.body.appendChild(element);
         element.select();
         document.execCommand('copy');
@@ -1481,6 +1484,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         base = base[ keyList[key] ] = base [keyList[key]] || {};
         }
 
+        
         value = $scope.handleQueryParameters(value);
 
         if(lastProperty) base = base [lastProperty] = value;
@@ -1496,10 +1500,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var settingsObject = {};
         var drmObject = {};
         var prioritiesEnabled = false;
+        var key, value;
 
         for(var segment of querySegments){
-        var[key, value] = segment.split("=");
-        $scope.resolveQueryNesting(settingsObject, key, value);
+            if(segment.includes('=')){
+                [key, value] = segment.split("=");
+            }  
+            else{
+                value = value + '&' + segment;
+            }
+            $scope.resolveQueryNesting(settingsObject, key, value); 
         }
 
         for(var settingCategory of Object.keys(settingsObject)){
@@ -1603,14 +1613,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setExternalSettings = function(currentQuery){
-        currentQuery = currentQuery.substring(1);
         var handleExternalSettings = currentQuery.split('&');
         for(var index = 0; index <10; index++){
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch(key){
                 case 'mpd':
                     $scope.selectedItem.url = decodeURIComponent(value);
-                    console.log($scope.selectedItem.url);
                 case 'loop':
                     $scope.loopSelected = $scope.parseBoolean(value);
                     break;
@@ -1656,7 +1664,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setQueryData = function(currentQuery){
-        currentQuery = currentQuery.substring(1);
         // var delimiter = '&',
         // start = 10,
         // tokens = currentQuery.split(delimiter).slice(start),
@@ -1676,8 +1683,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     /** Takes a string value extracted from the query-string and transforms it into the appropriate type */
     $scope.handleQueryParameters = function(value){
         var typedValue;
-        var integerRegEx = /^\d+$/;
-        var floatRegEx = /^\d+.\d+$/;
+        var integerRegEx = /^-?\d+$/;
+        var floatRegEx = /^-?\d+.\d+$/;
         if(value === 'true' || value === 'false'){
         typedValue = this.parseBoolean(value);
         }
@@ -1685,9 +1692,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if(value === 'null') typedValue = null;
         else if(value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) : 
-            (floatRegEx.test(value) ? typedValue = parseFloat(value) : typedValue = value);
+            (floatRegEx.test(value) ? typedValue = parseFloat(value) : 
+            typedValue = value);
         
         return typedValue;
+    }
+
+    $scope.checkQueryLength = function(string){
+        var maxUrlLength = 30000;
+        if(window.document.documentMode){
+            maxUrlLength = 2083;
+            //Alt: "Due to the low url character limit on IE, please use the config file method instead."
+            //Alt2: If IE detected, copy settings-file content instead of creating a url, alert userto the change.
+        }
+        if(string.length > maxUrlLength){
+            alert("The length of the URL may exceed the Browser url character limit.")
+        }
     }
 
     ////////////////////////////////////////
@@ -1958,19 +1978,27 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setInitialSettings(){
         var currentConfig = $scope.player.getSettings();
-        $scope.initialVideoBitrate = currentConfig.streaming.abr.initialBitrate.video;
-        $scope.minVideoBitrate = currentConfig.streaming.abr.minBitrate.video;
-        $scope.maxVideoBitrate = currentConfig.streaming.abr.maxBitrate.video;
-        if($scope.player.getInitialMediaSettingsFor('audio').lang){
+        console.log(currentConfig)
+        if(currentConfig.streaming.abr.initialBitrate.video !== -1){
+            $scope.initialVideoBitrate = currentConfig.streaming.abr.initialBitrate.video;
+        }
+        if(currentConfig.streaming.abr.minBitrate.video !== -1){
+            $scope.minVideoBitrate = currentConfig.streaming.abr.minBitrate.video;
+        }
+        if(currentConfig.streaming.abr.maxBitrate.video !== -1){
+            $scope.maxVideoBitrate = currentConfig.streaming.abr.maxBitrate.video;
+        }
+        
+        if($scope.player.getInitialMediaSettingsFor('audio')){
             $scope.initialSettings.audio = $scope.player.getInitialMediaSettingsFor('audio').lang;  
         }
-        if($scope.player.getInitialMediaSettingsFor('video').role){
+        if($scope.player.getInitialMediaSettingsFor('video')){
             $scope.initialSettings.video = $scope.player.getInitialMediaSettingsFor('video').role;
         }
-        if($scope.player.getInitialMediaSettingsFor('text').lang){
+        if($scope.player.getInitialMediaSettingsFor('text')){
             $scope.initialSettings.text = $scope.player.getInitialMediaSettingsFor('text').lang;
         }
-        if($scope.player.getInitialMediaSettingsFor('text').role){
+        if($scope.player.getInitialMediaSettingsFor('text')){
             $scope.initialSettings.textRole = $scope.player.getInitialMediaSettingsFor('text').role;
         }
 
@@ -2072,8 +2100,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
             
             /** Fetch query string and pass it to handling function */
-            var currentQuery = window.location.search;
+            var currentQuery = decodeURIComponent(window.location.search);
             if(currentQuery !== ''){
+                currentQuery = currentQuery.substring(1);
+                $scope.checkQueryLength(window.location.href);
                 $scope.setExternalSettings(currentQuery);
                 $scope.setQueryData(currentQuery);
             }
