@@ -734,9 +734,11 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isInitialized) {
             isInitialized = true;
-            eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo
-            });
+            videoModel.waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                eventBus.trigger(Events.STREAM_INITIALIZED, {
+                    streamInfo: streamInfo
+                });
+            })
         }
 
     }

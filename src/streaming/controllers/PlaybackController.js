@@ -642,14 +642,21 @@ function PlaybackController() {
         return settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled;
     }
 
-    function getBufferLevel() {
+    /**
+     * Returns the combined minimum buffer level of all StreamProcessors. If a filter list is provided the types specified in the filter list are excluded.
+     * @param {array} filterList StreamProcessor types to exclude
+     * @return {null}
+     */
+    function getBufferLevel(filterList = null) {
         let bufferLevel = null;
         streamController.getActiveStreamProcessors().forEach(p => {
-            const bl = p.getBufferLevel();
-            if (bufferLevel === null) {
-                bufferLevel = bl;
-            } else {
-                bufferLevel = Math.min(bufferLevel, bl);
+            if (!filterList || filterList.length === 0 || filterList.indexOf(p.getType()) === -1) {
+                const bl = p.getBufferLevel();
+                if (bufferLevel === null) {
+                    bufferLevel = bl;
+                } else {
+                    bufferLevel = Math.min(bufferLevel, bl);
+                }
             }
         });
 

@@ -302,46 +302,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     // store a ref in window.player to provide an easy way to play with dash.js API
     window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
-    ////////////////////////////////////////
-    //
-    // Configuration file
-    //
-    ////////////////////////////////////////
-    let reqConfig = new XMLHttpRequest();
-    reqConfig.onload = function () {
-        if (reqConfig.status === 200) {
-            let config = JSON.parse(reqConfig.responseText);
-            if ($scope.player) {
-                $scope.player.updateSettings(config);
-            }
-        } else {
-            // Set default initial configuration
-            var initialConfig = {
-                'debug': {
-                    'logLevel': dashjs.Debug.LOG_LEVEL_INFO
-                },
-                'streaming': {
-                    'buffer': {
-                        'fastSwitchEnabled': $scope.fastSwitchSelected,
-                    },
-                    'jumpGaps': true,
-                    'abr': {
-                        'autoSwitchBitrate': {
-                            'video': $scope.videoAutoSwitchSelected
-                        }
-                    }
-                }
-            };
-            $scope.player.updateSettings(initialConfig);
-        }
-        setLatencyAttributes();
-        setAbrRules();
-    };
-
-    reqConfig.open('GET', 'dashjs_config.json', true);
-    reqConfig.setRequestHeader('Content-type', 'application/json');
-    reqConfig.send();
-
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         console.log(e);
         if (!e.event) {
@@ -1257,8 +1217,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Test if provided string is a URL */
     $scope.isValidURL = function (str) {
-        let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
-        return (res !== null)
+        var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+            '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+        return !!pattern.test(str)
     };
 
     /** Toggle between KID=KEY and Licenseserver Clearkey specification */
@@ -1556,69 +1521,111 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
     }
 
+    function getUrlVars() {
+        var vars = {};
+        window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
+
 
     (function init() {
+
+        ////////////////////////////////////////
+        //
+        // Configuration file
+        //
+        ////////////////////////////////////////
+        let reqConfig = new XMLHttpRequest();
+        reqConfig.onload = function () {
+            if (reqConfig.status === 200) {
+                let config = JSON.parse(reqConfig.responseText);
+                if ($scope.player) {
+                    $scope.player.updateSettings(config);
+                }
+            } else {
+                // Set default initial configuration
+                var initialConfig = {
+                    'debug': {
+                        'logLevel': dashjs.Debug.LOG_LEVEL_INFO
+                    },
+                    'streaming': {
+                        'buffer': {
+                            'fastSwitchEnabled': $scope.fastSwitchSelected,
+                        },
+                        'jumpGaps': true,
+                        'abr': {
+                            'autoSwitchBitrate': {
+                                'video': $scope.videoAutoSwitchSelected
+                            }
+                        }
+                    }
+                };
+                $scope.player.updateSettings(initialConfig);
+            }
+            setLatencyAttributes();
+            setAbrRules();
+
+
+            checkLocationProtocol();
+
+            var vars = getUrlVars();
+            var item = {};
+
+            if (vars && vars.hasOwnProperty('url')) {
+                item.url = vars.url;
+            }
+
+            if (vars && vars.hasOwnProperty('mpd')) {
+                item.url = vars.mpd;
+            }
+
+            if (vars && vars.hasOwnProperty('source')) {
+                item.url = vars.source;
+            }
+
+            if (vars && vars.hasOwnProperty('stream')) {
+                try {
+                    item = JSON.parse(atob(vars.stream));
+                } catch (e) {
+                }
+            }
+
+
+            if (vars && vars.hasOwnProperty('targetLatency')) {
+                let targetLatency = parseInt(vars.targetLatency, 10);
+                if (!isNaN(targetLatency)) {
+                    item.bufferConfig = {
+                        lowLatencyMode: true,
+                        liveDelay: targetLatency / 1000
+                    };
+
+                    $scope.lowLatencyModeSelected = true;
+                }
+            }
+
+            if (item.url) {
+                var startPlayback = false;
+
+                $scope.selectedItem = item;
+
+                if (vars.hasOwnProperty('autoplay')) {
+                    startPlayback = (vars.autoplay === 'true');
+                }
+
+                if (startPlayback) {
+                    $scope.doLoad();
+                }
+            }
+        };
+
+        reqConfig.open('GET', 'dashjs_config.json', true);
+        reqConfig.setRequestHeader('Content-type', 'application/json');
+        reqConfig.send();
+
         $scope.initChartingByMediaType('video');
         $scope.initChartingByMediaType('audio');
-
-        function getUrlVars() {
-            var vars = {};
-            window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-                vars[key] = value;
-            });
-            return vars;
-        }
-
-        checkLocationProtocol();
-
-        var vars = getUrlVars();
-        var item = {};
-
-        if (vars && vars.hasOwnProperty('url')) {
-            item.url = vars.url;
-        }
-
-        if (vars && vars.hasOwnProperty('mpd')) {
-            item.url = vars.mpd;
-        }
-
-        if (vars && vars.hasOwnProperty('source')) {
-            item.url = vars.source;
-        }
-
-        if (vars && vars.hasOwnProperty('stream')) {
-            try {
-                item = JSON.parse(atob(vars.stream));
-            } catch (e) {
-            }
-        }
-
-
-        if (vars && vars.hasOwnProperty('targetLatency')) {
-            let targetLatency = parseInt(vars.targetLatency, 10);
-            if (!isNaN(targetLatency)) {
-                item.bufferConfig = {
-                    lowLatencyMode: true,
-                    liveDelay: targetLatency / 1000
-                };
-
-                $scope.lowLatencyModeSelected = true;
-            }
-        }
-
-        if (item.url) {
-            var startPlayback = false;
-
-            $scope.selectedItem = item;
-
-            if (vars.hasOwnProperty('autoplay')) {
-                startPlayback = (vars.autoplay === 'true');
-            }
-
-            if (startPlayback) {
-                $scope.doLoad();
-            }
-        }
     })();
 
     ////////////////////////////////////////
