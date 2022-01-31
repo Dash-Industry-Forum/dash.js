@@ -286,7 +286,6 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
-        customInitialTrackSelectionFunction = null;
         resetInitialSettings();
     }
 
