@@ -229,6 +229,7 @@ function ProtectionModel_21Jan2015(config) {
 
         navigator.requestMediaKeySystemAccess(systemString, configs)
             .then((mediaKeySystemAccess) => {
+                mediaKeySystemAccess.selectedSystemString = systemString;
                 resolve(mediaKeySystemAccess);
             })
             .catch((e) => {

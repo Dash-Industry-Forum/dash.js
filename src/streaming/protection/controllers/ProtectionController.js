@@ -194,7 +194,8 @@ function ProtectionController(config) {
         protectionModel.requestKeySystemAccess(requestedKeySystems)
             .then((event) => {
                 keySystemAccess = event.data;
-                logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                let selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
+                logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
                 return protectionModel.selectKeySystem(keySystemAccess);
             })
             .then((keySystem) => {
