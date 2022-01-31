@@ -694,8 +694,8 @@ function StreamController() {
         // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
-
-            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
+            const excludedStreamProcessors = [Constants.TEXT];
+            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
                 _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();

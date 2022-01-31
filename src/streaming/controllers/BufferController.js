@@ -973,7 +973,7 @@ function BufferController(config) {
             const ranges = sourceBufferSink.getAllBufferRanges();
 
             if (!ranges || ranges.length === 0) {
-                return targetTime;
+                return NaN;
             }
 
             let i = 0;
@@ -989,7 +989,7 @@ function BufferController(config) {
                 i += 1;
             }
 
-            return adjustedTime;
+            return adjustedTime === targetTime ? NaN : adjustedTime;
 
         } catch (e) {
 
@@ -1025,14 +1025,14 @@ function BufferController(config) {
         seekTarget = NaN;
 
         if (sourceBufferSink) {
+            let tmpSourceBufferSinkToReset = sourceBufferSink;
+            sourceBufferSink = null;
             if (!errored && !keepBuffers) {
-                sourceBufferSink.abort()
+                tmpSourceBufferSinkToReset.abort()
                     .then(() => {
-                        sourceBufferSink.reset(keepBuffers);
-                        sourceBufferSink = null;
+                        tmpSourceBufferSinkToReset.reset(keepBuffers);
+                        tmpSourceBufferSinkToReset = null;
                     });
-            } else {
-                sourceBufferSink = null;
             }
         }
 

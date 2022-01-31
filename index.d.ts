@@ -359,6 +359,8 @@ declare namespace dashjs {
 
     export type CapabilitiesFilter = (representation: Representation) => boolean;
 
+    export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
+
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
 
@@ -583,6 +585,10 @@ declare namespace dashjs {
         registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
 
         unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+
+        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
+
+        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
 
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
 
