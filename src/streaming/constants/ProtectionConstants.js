@@ -40,6 +40,7 @@ class ProtectionConstants {
         this.CLEARKEY_KEYSTEM_STRING = 'org.w3.clearkey';
         this.WIDEVINE_KEYSTEM_STRING = 'com.widevine.alpha';
         this.PLAYREADY_KEYSTEM_STRING = 'com.microsoft.playready';
+        this.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING = 'com.microsoft.playready.recommendation';
         this.INITIALIZATION_DATA_TYPE_CENC = 'cenc';
         this.INITIALIZATION_DATA_TYPE_KEYIDS = 'keyids'
         this.INITIALIZATION_DATA_TYPE_WEBM = 'webm'

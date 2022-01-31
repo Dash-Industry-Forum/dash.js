@@ -413,6 +413,20 @@
                 ]
             },
             {
+                "title": "Keysystem string priority",
+                "description": "This example shows how to specify the system string priority for the call to requestMediaKeySystemAccess for the same DRM system. For example, Playready might be supported with the system strings \"com.microsoft.playready.recommendation\" and \"com.microsoft.playready\". ",
+                "href": "drm/system-string-priority.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "License server via MPD",
                 "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
                 "href": "drm/dashif-laurl.html",

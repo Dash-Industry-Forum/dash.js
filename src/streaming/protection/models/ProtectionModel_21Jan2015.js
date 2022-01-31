@@ -45,6 +45,11 @@ import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
 import ProtectionConstants from '../../constants/ProtectionConstants';
 
+const SYSTEM_STRING_PRIORITY = {};
+SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
+
 function ProtectionModel_21Jan2015(config) {
 
     config = config || {};
@@ -170,13 +175,8 @@ function ProtectionModel_21Jan2015(config) {
         const currentKeySystem = ksConfigurations[idx].ks;
         let systemString = currentKeySystem.systemString;
 
-        // Patch to support persistent licenses on Edge browser (see issue #2658). Only apply when protData does not define a systemStringPriority
-        if (!protDataSystemStringPriority && systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
-            systemString += '.recommendation';
-        }
-
-        // Use the default system string in case no values are provided by the application
-        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : [systemString];
+        // Use the default values in case no values are provided by the application
+        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
 
         // Check all the available system strings and the available configurations for support
         _checkAccessForKeySystem(systemStringsToApply, configs)
@@ -224,6 +224,8 @@ function ProtectionModel_21Jan2015(config) {
      */
     function _checkAccessForSystemStrings(systemStringsToApply, configs, idx, resolve, reject) {
         const systemString = systemStringsToApply[idx];
+
+        logger.debug(`Requesting key system access for system string ${systemString}`);
 
         navigator.requestMediaKeySystemAccess(systemString, configs)
             .then((mediaKeySystemAccess) => {
