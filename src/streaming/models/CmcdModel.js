@@ -512,8 +512,7 @@ function CmcdModel() {
             let cmcdString = keys.reduce((acc, key, index) => {
                 if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
                 if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
-                    let string = cmcdData[key].replace(/"/g, '\"');
-                    acc += `${key}="${string}"`;
+                    acc += `${key}=${JSON.stringify(cmcdData[key])}`;
                 } else {
                     acc += `${key}=${cmcdData[key]}`;
                 }
