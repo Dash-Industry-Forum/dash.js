@@ -133,6 +133,88 @@ jobs:
             - store_test_results:
                 path: test/functional/reports
 
+    functional-tests-without-DRM:
+        executor: dashjs-executor
+        steps:
+            - functional_precondition
+            - checkout
+            - dependencies_setup
+            - build_unit_test_steps
+            - functional_test_setup
+            - run:
+                name: Run functional tests (edge / https) VOD (Static MPD)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="VOD (Static MPD)"
+            - run:
+                name: Run functional tests (edge / https) LIVE (Dynamic MPD)
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="LIVE (Dynamic MPD)"
+            - run:
+                name: Run functional tests (edge / https) Live Low Latency
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="Live Low Latency"
+            - run:
+                name: Run functional tests (edge / https) Subtitles and Captions
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="Subtitles and Captions"
+            - run:
+                name: Run functional tests (edge / https) Thumbnails
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="Thumbnails"
+            - run:
+                name: Run functional tests (edge / https) Audio-only
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="Audio-only"
+            - run:
+                name: Run functional tests (edge / https) Smooth Streaming
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="Smooth Streaming"
+            - store_test_results:
+                path: test/functional/reports
+                
+    functional-tests-with-DRM:
+        executor: dashjs-executor
+        steps:
+            - functional_precondition
+            - checkout
+            - dependencies_setup
+            - build_unit_test_steps
+            - functional_test_setup
+            - run:
+                name: Run functional tests (edge / https) DRM (modern)
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="DRM (modern)"
+            - run:
+                name: Run functional tests (edge / https) DRM Content (conservative/legacy)
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https --streams="DRM Content (conservative/legacy)"
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-only-http:
+        executor: dashjs-executor
+        steps:
+            - functional_precondition
+            - checkout
+            - dependencies_setup
+            - build_unit_test_steps
+            - functional_test_setup
+            - run:
+                name: Run functional tests (edge / http) All
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=http
+            - store_test_results:
+                path: test/functional/reports
+
 workflows:
     version: 2
     commit-workflow:
@@ -158,5 +240,7 @@ workflows:
                         only:
                             - development
         jobs:
-            - functional-tests-all
+            - functional-tests-without-DRM
+            - functional-tests-with-DRM
+            - functional-tests-only-http
 
