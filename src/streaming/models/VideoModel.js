@@ -48,7 +48,7 @@ function VideoModel() {
     let instance,
         logger,
         element,
-        seekingTime,
+        _currentTime,
         TTMLRenderingDiv,
         previousPlaybackRate;
 
@@ -60,7 +60,7 @@ function VideoModel() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        seekingTime = NaN;
+        _currentTime = NaN;
     }
 
     function initialize() {
@@ -90,14 +90,12 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
-        seekingTime = currentTime;
+        _currentTime = currentTime;
         waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
             if (element) {
-                //_currentTime = currentTime;
-
                 // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
                 // providing playbackRate property equals to zero.
-                if (element.currentTime === currentTime) {
+                if (element.currentTime === _currentTime) {
                     return;
                 }
 
@@ -107,13 +105,14 @@ function VideoModel() {
                 // set currentTime even if readyState = 0.
                 // setTimeout is used to workaround InvalidStateError in IE11
                 try {
-                    currentTime = stickToBuffered ? stickTimeToBuffered(currentTime) : currentTime;
-                    element.currentTime = currentTime;
-                    seekingTime = NaN;
+                    _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
+                    element.currentTime = _currentTime;
+                    _currentTime = NaN;
                 } catch (e) {
                     if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
                         setTimeout(function () {
-                            element.currentTime = currentTime;
+                            element.currentTime = _currentTime;
+                            _currentTime = NaN;
                         }, 400);
                     }
                 }
@@ -291,11 +290,11 @@ function VideoModel() {
     }
 
     function isSeeking() {
-        return element ? (element.seeking || !isNaN(seekingTime)) : null;
+        return element ? (element.seeking || !isNaN(_currentTime)) : null;
     }
 
     function getTime() {
-        return element ? (!isNaN(seekingTime) ? seekingTime : element.currentTime) : null;
+        return element ? (!isNaN(_currentTime) ? _currentTime : element.currentTime) : null;
     }
 
     function getPlaybackRate() {
