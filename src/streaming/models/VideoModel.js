@@ -48,6 +48,7 @@ function VideoModel() {
     let instance,
         logger,
         element,
+        seekingTime,
         TTMLRenderingDiv,
         previousPlaybackRate;
 
@@ -59,6 +60,7 @@ function VideoModel() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        seekingTime = NaN;
     }
 
     function initialize() {
@@ -88,6 +90,7 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
+        seekingTime = currentTime;
         waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
             if (element) {
                 //_currentTime = currentTime;
@@ -106,6 +109,7 @@ function VideoModel() {
                 try {
                     currentTime = stickToBuffered ? stickTimeToBuffered(currentTime) : currentTime;
                     element.currentTime = currentTime;
+                    seekingTime = NaN;
                 } catch (e) {
                     if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
                         setTimeout(function () {
@@ -287,11 +291,11 @@ function VideoModel() {
     }
 
     function isSeeking() {
-        return element ? element.seeking : null;
+        return element ? (element.seeking || !isNaN(seekingTime)) : null;
     }
 
     function getTime() {
-        return element ? element.currentTime : null;
+        return element ? (!isNaN(seekingTime) ? seekingTime : element.currentTime) : null;
     }
 
     function getPlaybackRate() {
