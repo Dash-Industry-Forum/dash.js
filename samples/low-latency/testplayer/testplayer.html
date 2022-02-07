@@ -58,11 +58,6 @@
                                                step="0.1">
                                     </div>
                                     <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Min drift (sec)</span>
-                                        <input id="min-drift" class="form-control" value="0.02" min="0" max="0.5"
-                                               step="0.01" type="number">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
                                         <span class="input-group-text">Max drift (sec)</span>
                                         <input id="max-drift" class="form-control" value="0"
                                                step="0.5" min="0" type="number">
@@ -71,11 +66,6 @@
                                         <span class="input-group-text">Catch-up playback rate</span>
                                         <input type="number" id="catchup-playback-rate" class="form-control" value="0.1"
                                                step="0.01" max="0.5" min="0.0">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text"> Live catchup latency threshold (sec):</span>
-                                        <input type="number" class="form-control" value="60" min="0"
-                                               id="catchup-threshold">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -253,14 +243,9 @@
                             id="video-max-index"></span></div>
                         <div><span class="metric-value">Video Bitrate Downloading kbits/s: </span><span
                             id="video-bitrate"></span></div>
-                        <div><span class="metric-value">Min. drift: </span> <span
-                            id="mindrift-tag"></span></div>
                         <div><span class="metric-value"> Playback rate: </span><span
                             id="playbackrate-tag"></span>
                         </div>
-                        <div><span
-                            class="metric-value">Live catchup latency threshold: </span><span
-                            id="catchup-threshold-tag"></span></div>
 
                     </div>
                 </div>

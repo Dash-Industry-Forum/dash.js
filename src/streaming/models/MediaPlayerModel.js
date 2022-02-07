@@ -152,30 +152,6 @@ function MediaPlayerModel() {
         return settings.get().streaming.delay.liveDelay;
     }
 
-    function getLiveCatchupLatencyThreshold() {
-        try {
-            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchup.latencyThreshold;
-            const liveDelay = getLiveDelay();
-
-            if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
-                return Math.max(liveCatchupLatencyThreshold, liveDelay);
-            }
-
-
-            const liveCatchupMinDrift = settings.get().streaming.liveCatchup.minDrift;
-            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchup.minDrift + getLiveDelay() : getLiveDelay() : NaN;
-
-            if (maximumLiveDelay && !isNaN(maximumLiveDelay)) {
-                return Math.max(maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR, MINIMUM_LIVE_LATENCY_CATCHUP);
-            }
-
-            return NaN;
-
-        } catch (e) {
-            return NaN;
-        }
-    }
-
     function addUTCTimingSource(schemeIdUri, value) {
         removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
         let vo = new UTCTiming();
@@ -241,7 +217,6 @@ function MediaPlayerModel() {
         getRetryAttemptsForType,
         getRetryIntervalsForType,
         getLiveDelay,
-        getLiveCatchupLatencyThreshold,
         addUTCTimingSource,
         removeUTCTimingSource,
         getUTCTimingSources,

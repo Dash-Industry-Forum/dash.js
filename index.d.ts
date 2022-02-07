@@ -224,7 +224,6 @@ declare namespace dashjs {
                 defaultEnabled?: boolean
             },
             liveCatchup?: {
-                minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
                 latencyThreshold?: number,

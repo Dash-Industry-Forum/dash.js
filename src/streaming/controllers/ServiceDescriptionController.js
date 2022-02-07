@@ -124,7 +124,6 @@ function ServiceDescriptionController() {
                     liveDelay: params.liveDelay,
                 },
                 liveCatchup: {
-                    minDrift: params.minDrift,
                     maxDrift: params.maxDrift
                 }
             }
@@ -132,29 +131,27 @@ function ServiceDescriptionController() {
     }
 
     /**
-     * Get default parameters for liveDelay,minDrift,maxDrift
+     * Get default parameters for liveDelay,maxDrift
      * @param {object} sd
-     * @return {{minDrift: number, maxDrift: (number|undefined), liveDelay: number}}
+     * @return {{ maxDrift: (number|undefined), liveDelay: number}}
      * @private
      */
     function _getStandardServiceDescriptionLatencyParameters(sd) {
         return {
             liveDelay: sd.latency.target / 1000,
-            minDrift: (sd.latency.max - sd.latency.target) / 1000,
             maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
         }
     }
 
     /**
-     * Get DVB DASH parameters for liveDelay,minDrift,maxDrift
+     * Get DVB DASH parameters for liveDelay,maxDrift
      * @param sd
-     * @return {{minDrift: number, maxDrift: (number|undefined), liveDelay: number}}
+     * @return {{maxDrift: (number|undefined), liveDelay: number}}
      * @private
      */
     function _getDvbServiceDescriptionLatencyParameters(sd) {
         return {
             liveDelay: sd.latency.target / 1000,
-            minDrift: 500 / 1000,
             maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
         }
     }
@@ -169,7 +166,7 @@ function ServiceDescriptionController() {
         settings.update({
             streaming: {
                 liveCatchup: {
-                    playbackRate: (Math.round((sd.playbackRate.max - 1.0) * 10) / 10)
+                    playbackRate: (Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000)
                 }
             }
         });

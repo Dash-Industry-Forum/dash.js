@@ -131,10 +131,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                defaultEnabled: true
  *            },
  *            liveCatchup: {
- *                minDrift: 0.02,
  *                maxDrift: 12,
  *                playbackRate: 0.5,
- *                latencyThreshold: 60,
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -434,14 +432,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} LiveCatchupSettings
- * @property {number} [minDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
- *
- * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases playback rate until target latency is reached.
- *
- * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams or liveCatchup is enabled.
  * @property {number} [maxDrift=12]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
@@ -462,18 +452,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Set it to 0 to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=60]
- * Use this parameter to set the maximum threshold for which live catch up is applied.
- *
- * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
- *
- * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified this will be twice the maximum live delay.
- *
- * The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift.
- *
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
@@ -829,11 +807,8 @@ function Settings() {
                 defaultEnabled: true
             },
             liveCatchup: {
-                minDrift: 0.02,
                 maxDrift: 12,
-                maxAllowedLatencyDeviationFactor: 0.02,
                 playbackRate: 0.5,
-                latencyThreshold: 60,
                 playbackBufferMin: 0.5,
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT

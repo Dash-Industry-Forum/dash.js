@@ -90,7 +90,6 @@ function PlaybackController() {
             eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
             eventBus.off(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
             eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-            videoModel.setPlaybackRate(1.0, true);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
