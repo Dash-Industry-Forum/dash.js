@@ -181,6 +181,7 @@ function StreamController() {
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.on(Events.SETTING_UPDATED, _onSettingUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -203,6 +204,7 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.off(Events.SETTING_UPDATED, _onSettingUpdated, instance);
     }
 
     /**
@@ -727,6 +729,22 @@ function StreamController() {
         const stream = getStreamById(e.streamInfo.id);
 
         stream.prepareQualityChange(e);
+    }
+
+    /**
+     * A setting in Settings.js was updated. Check if one of the latency values changed. If so, recalculate the live delay.
+     * @private
+     */
+    function _onSettingUpdated(e) {
+        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0 && e && e.path && (e.path === 'streaming.delay.liveDelay' || e.path === 'streaming.delay.liveDelayFragmentCount')) {
+            const streamsInfo = adapter.getStreamsInfo()
+            if (streamsInfo.length > 0) {
+                const manifestInfo = streamsInfo[0].manifestInfo;
+                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+
+                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+            }
+        }
     }
 
     /**

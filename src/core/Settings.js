@@ -33,6 +33,8 @@ import Utils from './Utils.js';
 import Debug from '../core/Debug';
 import Constants from '../streaming/constants/Constants';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import EventBus from './EventBus';
+import Events from './events/Events';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -721,6 +723,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 function Settings() {
     let instance;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     /**
      * @const {PlayerSettings} defaultSettings
@@ -921,6 +925,7 @@ function Settings() {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
+                        eventBus.trigger(Events.SETTING_UPDATED, { path: path + n });
                     }
                 } else {
                     throw new Error('Settings parameter ' + path + n + ' is not supported');

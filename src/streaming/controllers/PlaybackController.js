@@ -360,8 +360,8 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
-        if (mediaPlayerModel.getLiveDelay()) {
-            delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
+        if (!isNaN(settings.get().streaming.delay.liveDelay)) {
+            delay = settings.get().streaming.delay.liveDelay; // If set by user, this value takes precedence
         } else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * settings.get().streaming.delay.liveDelayFragmentCount;
         } else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
@@ -706,7 +706,7 @@ function PlaybackController() {
         // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
         if (e.stream === false && lowLatencyModeEnabled && !isNaN(e.request.duration)) {
             const minDelay = 1.2 * e.request.duration;
-            if (minDelay > mediaPlayerModel.getLiveDelay()) {
+            if (minDelay > liveDelay) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
                 settings.update({
                     streaming: {
@@ -757,7 +757,6 @@ function PlaybackController() {
     function _onStreamsComposed() {
         manifestUpdateInProgress = false;
     }
-
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&

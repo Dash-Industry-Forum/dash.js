@@ -81,6 +81,7 @@ class CoreEvents extends EventsBase {
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
         this.SEEK_TARGET = 'seekTarget';
+        this.SETTING_UPDATED = 'settingUpdated';
     }
 }
 

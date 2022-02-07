@@ -66,7 +66,6 @@ App.prototype._load = function () {
 
     this.video = document.querySelector('video');
     this.player = dashjs.MediaPlayer().create();
-    this.player.updateSettings({ streaming: { lowLatencyEnabled: true } });
     this._registerDashEventHandler();
     this._applyParameters();
     this.player.initialize(this.video, url, true);

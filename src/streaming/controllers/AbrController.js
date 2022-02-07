@@ -61,6 +61,7 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
+        playbackController,
         topQualities,
         qualityDict,
         streamProcessorDict,
@@ -231,6 +232,9 @@ function AbrController() {
 
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.playbackController) {
+            playbackController = config.playbackController;
         }
         if (config.domStorage) {
             domStorage = config.domStorage;
@@ -816,20 +820,25 @@ function AbrController() {
     }
 
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-        const switchOnThreshold = stableBufferTime;
-        const switchOffThreshold = 0.5 * stableBufferTime;
+        try {
+            const liveDelay = playbackController.getLiveDelay();
+            const stableBufferTime = mediaPlayerModel.getStableBufferTime(liveDelay);
+            const switchOnThreshold = stableBufferTime;
+            const switchOffThreshold = 0.5 * stableBufferTime;
 
-        const useBufferABR = isUsingBufferOccupancyAbrDict[mediaType];
-        const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
-        isUsingBufferOccupancyAbrDict[mediaType] = newUseBufferABR;
+            const useBufferABR = isUsingBufferOccupancyAbrDict[mediaType];
+            const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+            isUsingBufferOccupancyAbrDict[mediaType] = newUseBufferABR;
 
-        if (newUseBufferABR !== useBufferABR) {
-            if (newUseBufferABR) {
-                logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
-            } else {
-                logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+            if (newUseBufferABR !== useBufferABR) {
+                if (newUseBufferABR) {
+                    logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                } else {
+                    logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                }
             }
+        } catch (e) {
+            logger.error(e);
         }
     }
 

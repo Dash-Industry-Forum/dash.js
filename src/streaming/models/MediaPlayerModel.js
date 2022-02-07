@@ -39,7 +39,6 @@ import {checkParameterType} from '../utils/SupervisorTools';
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 
-const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 
@@ -122,13 +121,10 @@ function MediaPlayerModel() {
         return Math.min(getStableBufferTime(), initialBufferLevel);
     }
 
-    function getStableBufferTime() {
-        if (settings.get().streaming.lowLatencyEnabled) {
-            return getLiveDelay();
-        }
+    function getStableBufferTime(liveDelay) {
+        let stableBufferTime =  settings.get().streaming.buffer.stableBufferTime > 0 ?  settings.get().streaming.buffer.stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
 
-        let stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
-        return stableBufferTime > 0 ? stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return !isNaN(liveDelay) ? Math.min(stableBufferTime, liveDelay) : stableBufferTime;
     }
 
     function getRetryAttemptsForType(type) {
@@ -141,13 +137,6 @@ function MediaPlayerModel() {
         const lowLatencyReductionFactor = !isNaN(settings.get().streaming.retryIntervals.lowLatencyReductionFactor) ? settings.get().streaming.retryIntervals.lowLatencyReductionFactor : LOW_LATENCY_REDUCTION_FACTOR;
 
         return settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor : settings.get().streaming.retryIntervals[type];
-    }
-
-    function getLiveDelay() {
-        if (settings.get().streaming.lowLatencyEnabled) {
-            return settings.get().streaming.delay.liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
-        }
-        return settings.get().streaming.delay.liveDelay;
     }
 
     function addUTCTimingSource(schemeIdUri, value) {
@@ -214,7 +203,6 @@ function MediaPlayerModel() {
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
-        getLiveDelay,
         addUTCTimingSource,
         removeUTCTimingSource,
         getUTCTimingSources,
