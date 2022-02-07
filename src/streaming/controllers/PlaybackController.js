@@ -58,6 +58,8 @@ function PlaybackController() {
         playOnceInitialized,
         lastLivePlaybackTime,
         availabilityStartTime,
+        availabilityTimeComplete,
+        lowLatencyModeEnabled,
         seekTarget,
         internalSeek,
         playbackStalled,
@@ -79,6 +81,8 @@ function PlaybackController() {
         liveDelay = 0;
         availabilityStartTime = 0;
         manifestUpdateInProgress = false;
+        availabilityTimeComplete = true;
+        lowLatencyModeEnabled = false;
         seekTarget = NaN;
 
         if (videoModel) {
@@ -461,7 +465,7 @@ function PlaybackController() {
             // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             // Checking also duration of the DVR makes sense. We detected temporary situations in which currentTime
             // is bad reported by the browser which causes playback to jump to start (315360000 = 1 year)
-            if (settings.get().streaming.lowLatencyEnabled) {
+            if (lowLatencyModeEnabled) {
                 actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
             } else {
                 actualTime = DVRWindow.start;
@@ -681,10 +685,26 @@ function PlaybackController() {
         return bufferLevel;
     }
 
+    /**
+     * Returns the value of availabilityTimeComplete
+     * @return {boolean} availabilityTimeComplete
+     */
+    function getAvailabilityTimeComplete() {
+        return availabilityTimeComplete;
+    }
+
+    /**
+     * Returns the value of lowLatencyModeEnabled
+     * @return {boolean} lowLatencyModeEnabled
+     */
+    function getLowLatencyModeEnabled() {
+        return lowLatencyModeEnabled
+    }
+
 
     function _onFragmentLoadProgress(e) {
         // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
-        if (e.stream === false && settings.get().streaming.lowLatencyEnabled && !isNaN(e.request.duration)) {
+        if (e.stream === false && lowLatencyModeEnabled && !isNaN(e.request.duration)) {
             const minDelay = 1.2 * e.request.duration;
             if (minDelay > mediaPlayerModel.getLiveDelay()) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
@@ -714,19 +734,12 @@ function PlaybackController() {
      */
     function _onRepresentationSwitch(e) {
         const activeStreamInfo = streamController.getActiveStreamInfo();
-        if (!settings.get().streaming.lowLatencyEnabledByManifest || !e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+        if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
             return;
         }
 
-        const lowLatencyEnabled = !e.currentRepresentation.availabilityTimeComplete;
-
-        if (lowLatencyEnabled) {
-            settings.update({
-                streaming: {
-                    lowLatencyEnabled: lowLatencyEnabled
-                }
-            });
-        }
+        availabilityTimeComplete = e.currentRepresentation.availabilityTimeComplete;
+        lowLatencyModeEnabled = !availabilityTimeComplete;
     }
 
     /**
@@ -750,11 +763,7 @@ function PlaybackController() {
         if (mediaInfo && mediaInfo.supplementalProperties &&
             mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] === 'true') {
             logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
-            settings.update({
-                streaming: {
-                    lowLatencyEnabled: true
-                }
-            });
+            lowLatencyModeEnabled = true;
         }
     }
 
@@ -804,6 +813,8 @@ function PlaybackController() {
         getPlaybackStalled,
         getTime,
         getNormalizedTime,
+        getAvailabilityTimeComplete,
+        getLowLatencyModeEnabled,
         getIsManifestUpdateInProgress,
         getPlaybackRate,
         getPlayedRanges,

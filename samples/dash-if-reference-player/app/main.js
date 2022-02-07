@@ -640,22 +640,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
-    $scope.togglelowLatencyMode = function () {
-        $scope.player.updateSettings({
-            streaming: {
-                lowLatencyEnabled: $scope.lowLatencyModeSelected
-            }
-        });
-    };
-
-    $scope.toggleLowLatencyByManifestMode = function () {
-        $scope.player.updateSettings({
-            streaming: {
-                lowLatencyEnabledByManifest: $scope.lowLatencyEnabledByManifest
-            }
-        });
-    };
-
     $scope.toggleLiveCatchupEnabled = function () {
         $scope.player.updateSettings({
             streaming: {
@@ -753,8 +737,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 delay: {
                     liveDelay: $scope.defaultLiveDelay
                 },
-                lowLatencyEnabled: $scope.lowLatencyModeSelected,
-                lowLatencyEnabledByManifest: $scope.lowLatencyEnabledByManifest,
                 abr: {},
                 cmcd: {}
             }
@@ -779,9 +761,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 config.streaming.buffer.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
             }
 
-            if (selectedConfig.lowLatencyMode !== undefined) {
-                config.streaming.lowLatencyEnabled = selectedConfig.lowLatencyMode;
-            }
         }
 
         const liveDelayFragmentCount = parseInt($scope.liveDelayFragmentCount);
@@ -1508,8 +1487,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.stableBufferTime;
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
-        $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
-        $scope.lowLatencyEnabledByManifest = currentConfig.streaming.lowLatencyEnabledByManifest;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
     }
 

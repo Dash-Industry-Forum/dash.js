@@ -292,6 +292,10 @@ class Constants {
             HAVE_FUTURE_DATA: 3,
             HAVE_ENOUGH_DATA: 4
         };
+        this.FILE_LOADER_TYPES = {
+            FETCH: 'fetch_loader',
+            XHR: 'xhr_loader'
+        }
     }
 
     constructor() {

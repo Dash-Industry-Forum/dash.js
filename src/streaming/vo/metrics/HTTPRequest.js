@@ -128,6 +128,10 @@ class HTTPRequest {
          * @public
          */
         this._serviceLocation = null;
+        /**
+         * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+         */
+        this._fileLoaderType = null;
     }
 }
 

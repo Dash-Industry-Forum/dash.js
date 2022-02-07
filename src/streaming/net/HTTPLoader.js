@@ -46,7 +46,7 @@ import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
  * @module HTTPLoader
  * @ignore
  * @description Manages download of resources via HTTP.
- * @param {Object} cfg - dependancies from parent
+ * @param {Object} cfg - dependencies from parent
  */
 function HTTPLoader(cfg) {
 
@@ -99,6 +99,7 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
+        let fileLoaderType = null;
         let httpRequest;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
@@ -111,6 +112,7 @@ function HTTPLoader(cfg) {
             request.requestStartDate = requestStartTime;
             request.requestEndDate = new Date();
             request.firstByteDate = request.firstByteDate || requestStartTime;
+            request.fileLoaderType = fileLoaderType;
 
             if (!request.checkExistenceOnly) {
                 const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
@@ -247,8 +249,9 @@ function HTTPLoader(cfg) {
             logger.warn(timeoutMessage);
         };
 
+
         let loader;
-        if (settings.get().streaming.lowLatencyEnabled && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,
                 lowLatencyThroughputModel,
@@ -257,10 +260,12 @@ function HTTPLoader(cfg) {
             loader.setup({
                 dashMetrics
             });
+            fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
         } else {
             loader = XHRLoader(context).create({
                 requestModifier: requestModifier
             });
+            fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
         }
 
         let headers = null;

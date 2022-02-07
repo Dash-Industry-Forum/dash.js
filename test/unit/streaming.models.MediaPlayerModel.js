@@ -87,7 +87,6 @@ describe('MediaPlayerModel', function () {
         const s = {
             streaming:
                 {
-                    lowLatencyEnabled: true,
                     retryAttempts: {
                         lowLatencyMultiplyFactor: 10
                     }
@@ -118,7 +117,6 @@ describe('MediaPlayerModel', function () {
         const s = {
             streaming:
                 {
-                    lowLatencyEnabled: true,
                     retryIntervals: {
                         lowLatencyReductionFactor: 5
                     }

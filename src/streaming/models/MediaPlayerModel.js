@@ -127,7 +127,7 @@ function MediaPlayerModel() {
             return getLiveDelay();
         }
 
-        const stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
+        let stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
         return stableBufferTime > 0 ? stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 

@@ -734,8 +734,6 @@ function Settings() {
         streaming: {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
-            lowLatencyEnabled: false,
-            lowLatencyEnabledByManifest: true,
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
             eventControllerRefreshDelay: 150,
@@ -754,7 +752,7 @@ function Settings() {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
                 useSuggestedPresentationDelay: true,
-                applyServiceDescription: true
+                applyServiceDescription: false
             },
             protection: {
                 keepProtectionMediaKeys: false,

@@ -139,7 +139,7 @@ function CatchupController() {
         }
 
         // we remove the stalled state once we reach a certain buffer level
-        const liveDelay = mediaPlayerModel.getLiveDelay();
+        const liveDelay = playbackController.getLiveDelay();
         const bufferLevel = playbackController.getBufferLevel();
         if (bufferLevel > liveDelay / 2) {
             playbackStalled = false;
@@ -165,7 +165,7 @@ function CatchupController() {
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.getIsDynamic() && (settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled) && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+        if (playbackController.getIsDynamic() && (settings.get().streaming.liveCatchup.enabled || playbackController.getLowLatencyModeEnabled()) && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
             _startPlaybackCatchUp();
         }
     }
@@ -198,7 +198,7 @@ function CatchupController() {
             // try to reach the target latency by adjusting the playback rate
             else {
                 const currentLiveLatency = playbackController.getCurrentLiveLatency();
-                const targetLiveDelay = mediaPlayerModel.getLiveDelay();
+                const targetLiveDelay = playbackController.getLiveDelay();
 
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     // Custom playback control: Based on buffer level
@@ -225,7 +225,7 @@ function CatchupController() {
      */
     function _getLatencyDrift() {
         const currentLiveLatency = playbackController.getCurrentLiveLatency();
-        const targetLiveDelay = mediaPlayerModel.getLiveDelay();
+        const targetLiveDelay = playbackController.getLiveDelay();
 
         return currentLiveLatency - targetLiveDelay;
     }
