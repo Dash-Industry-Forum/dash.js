@@ -132,8 +132,11 @@
                     <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                     <!-- Testbutton -->
-                    <button class="btn btn-default" type="button" ng-click="copyQueryUrl()">Copy Settings URL</button>
+                    <button class="btn btn-default" type="button" ng-click="copyQueryUrl(); copyNotificationShow()">Copy Settings URL</button>
                 </span>
+        </div>
+        <div id='copyNotificationPopup' class='copyPopup'>
+            <div id='copyPopupContent' class='copyPopupContent'> URL Copied! </div>
         </div>
     </div>
 

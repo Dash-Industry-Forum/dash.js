@@ -646,6 +646,29 @@ DRM Header Dialogue
 }
 
 /********************************************************
+Copy Settings URL Popup
+*********************************************************/
+
+.copyPopup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    overflow: auto;
+    text-align: center;
+}
+
+.copyPopupContent {
+    display: inline-block;
+    background-color: #fefefe;
+    padding: 5px;
+    border: 1px solid #888;
+    font-size: large;
+    width: 100%; /* Could be more or less, depending on screen size */
+}
+
+/********************************************************
 BS Information
 *********************************************************/
 

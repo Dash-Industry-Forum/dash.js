@@ -1397,6 +1397,15 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     }
 
+    $scope.copyNotificationShow = function (){
+        document.getElementById('copyNotificationPopup').style.display = 'block';
+        setTimeout($scope.copyNotificationHide, 3000);
+    }
+
+    $scope.copyNotificationHide = function(){
+        document.getElementById('copyNotificationPopup').style.display = 'none';
+    }
+
     window.onclick = function (event) {
         if (event.target == document.getElementById('playreadyRequestHeaderDialogue') ||
             event.target == document.getElementById('widevineRequestHeaderDialogue') ||
@@ -1468,10 +1477,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 urlString.push((v != null && typeof v === "object") ?
                 this.toQueryString(v,k) :
                 encodeURIComponent(decodeURIComponent(k)) + "=" + encodeURIComponent(decodeURIComponent(v)));
-                //encodeURIComponent(k) + "=" + encodeURIComponent(v));
             }
         }
-        return urlString.join("&");
+        // Make the string, then remove all cases of && caused by empty settings
+        return urlString.join("&").split('&&').join('&');
     }
 
     /** Resolve nested query parameters */
@@ -1496,7 +1505,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Transform query-string into Object  */
     $scope.toSettingsObject = function(queryString){
-        var querySegments = queryString.split("&");
+        //Remove double & in case of empty settings field
+        var querySegments = queryString.split('&&').join('&'); 
+        querySegments = queryString.split("&");
         var settingsObject = {};
         var drmObject = {};
         var prioritiesEnabled = false;
