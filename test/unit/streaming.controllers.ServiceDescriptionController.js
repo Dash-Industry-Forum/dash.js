@@ -22,7 +22,6 @@ describe('ServiceDescriptionController', () => {
             minBitrate: currentSettings.streaming.abr.minBitrate,
             maxBitrate: currentSettings.streaming.abr.maxBitrate,
             initialBitrate: currentSettings.streaming.abr.initialBitrate,
-            minDrift: currentSettings.streaming.liveCatchup.minDrift,
             maxDrift: currentSettings.streaming.liveCatchup.maxDrift
         }
     })
@@ -63,7 +62,6 @@ describe('ServiceDescriptionController', () => {
 
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.NaN;
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
             expect(currentSettings.streaming.liveCatchup.playbackRate).to.be.equal(referenceSettings.playbackRate);
             expect(currentSettings.streaming.abr.minBitrate.video).to.be.equal(referenceSettings.minBitrate.video);
@@ -79,7 +77,6 @@ describe('ServiceDescriptionController', () => {
 
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.NaN;
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
         })
 
@@ -97,7 +94,6 @@ describe('ServiceDescriptionController', () => {
 
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.equal(10);
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
         })
 
@@ -116,7 +112,6 @@ describe('ServiceDescriptionController', () => {
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.NaN;
             expect(currentSettings.streaming.delay.liveDelayFragmentCount).to.be.equal(4);
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(referenceSettings.minDrift);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(referenceSettings.maxDrift);
         })
 
@@ -128,7 +123,6 @@ describe('ServiceDescriptionController', () => {
 
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.equal(5);
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(3);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
         })
 
@@ -139,7 +133,6 @@ describe('ServiceDescriptionController', () => {
 
             const currentSettings = settings.get();
             expect(currentSettings.streaming.delay.liveDelay).to.be.equal(5);
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(0.5);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
         })
 
@@ -266,7 +259,6 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.abr.maxBitrate.audio).to.be.equal(9000);
             expect(currentSettings.streaming.abr.initialBitrate.audio).to.be.equal(5000);
             expect(currentSettings.streaming.delay.liveDelay).to.be.equal(5);
-            expect(currentSettings.streaming.liveCatchup.minDrift).to.be.equal(0.5);
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
             expect(currentSettings.streaming.liveCatchup.playbackRate).to.be.equal(0.4);
         })

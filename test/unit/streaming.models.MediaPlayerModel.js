@@ -138,31 +138,4 @@ describe('MediaPlayerModel', function () {
         expect(StableBufferTime).to.equal(50);
     });
 
-    it('should configure liveCatchupLatencyThreshold', function () {
-        settings.update({ streaming: { liveCatchup: { latencyThreshold: NaN } } });
-        let liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.be.NaN; // jshint ignore:line
-
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true,
-                delay: { liveDelay: 3 },
-                liveCatchup: { minDrift: 3 }
-            }
-        });
-
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(24);
-
-        settings.update({ streaming: { liveCatchup: { minDrift: NaN } } });
-
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(12);
-
-        settings.update({ streaming: { liveCatchup: { latencyThreshold: 50 } } });
-
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(50);
-    });
-
 });
