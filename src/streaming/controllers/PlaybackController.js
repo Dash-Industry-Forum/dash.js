@@ -34,7 +34,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import MetricsConstants from "../constants/MetricsConstants";
+import MetricsConstants from '../constants/MetricsConstants';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 
@@ -660,14 +660,21 @@ function PlaybackController() {
         }
     }
 
-    function getBufferLevel() {
+    /**
+     * Returns the combined minimum buffer level of all StreamProcessors. If a filter list is provided the types specified in the filter list are excluded.
+     * @param {array} filterList StreamProcessor types to exclude
+     * @return {null}
+     */
+    function getBufferLevel(filterList = null) {
         let bufferLevel = null;
         streamController.getActiveStreamProcessors().forEach(p => {
-            const bl = p.getBufferLevel();
-            if (bufferLevel === null) {
-                bufferLevel = bl;
-            } else {
-                bufferLevel = Math.min(bufferLevel, bl);
+            if (!filterList || filterList.length === 0 || filterList.indexOf(p.getType()) === -1) {
+                const bl = p.getBufferLevel();
+                if (bufferLevel === null) {
+                    bufferLevel = bl;
+                } else {
+                    bufferLevel = Math.min(bufferLevel, bl);
+                }
             }
         });
 

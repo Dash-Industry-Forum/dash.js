@@ -830,7 +830,7 @@ function Settings() {
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-            fragmentRequestTimeout: 0,
+            fragmentRequestTimeout: 10000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
