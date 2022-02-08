@@ -756,7 +756,7 @@ function Settings() {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
                 useSuggestedPresentationDelay: true,
-                applyServiceDescription: false
+                applyServiceDescription: true
             },
             protection: {
                 keepProtectionMediaKeys: false,

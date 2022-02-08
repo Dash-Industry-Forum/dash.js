@@ -821,8 +821,7 @@ function AbrController() {
 
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
         try {
-            const liveDelay = playbackController.getLiveDelay();
-            const stableBufferTime = mediaPlayerModel.getStableBufferTime(liveDelay);
+            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
             const switchOnThreshold = stableBufferTime;
             const switchOffThreshold = 0.5 * stableBufferTime;
 

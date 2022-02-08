@@ -54,7 +54,6 @@ function PlaybackController() {
         liveDelay,
         streamInfo,
         isDynamic,
-        mediaPlayerModel,
         playOnceInitialized,
         lastLivePlaybackTime,
         availabilityStartTime,
@@ -399,9 +398,6 @@ function PlaybackController() {
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
-        }
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
         }
         if (config.adapter) {
             adapter = config.adapter;

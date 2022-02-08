@@ -370,6 +370,10 @@ function MediaPlayer() {
                 settings: settings
             });
 
+            mediaPlayerModel.setConfig({
+                playbackController
+            });
+
             restoreDefaultUTCTimingSources();
             setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -2018,7 +2022,6 @@ function MediaPlayer() {
         playbackController.setConfig({
             streamController,
             dashMetrics,
-            mediaPlayerModel,
             adapter,
             videoModel,
             timelineConverter,

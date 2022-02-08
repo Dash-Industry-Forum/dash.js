@@ -49,6 +49,7 @@ function MediaPlayerModel() {
     let instance,
         UTCTimingSources,
         xhrWithCredentials,
+        playbackController,
         customABRRule;
 
     const context = this.context;
@@ -60,6 +61,12 @@ function MediaPlayerModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
+    }
+
+    function setConfig(config) {
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -121,10 +128,11 @@ function MediaPlayerModel() {
         return Math.min(getStableBufferTime(), initialBufferLevel);
     }
 
-    function getStableBufferTime(liveDelay) {
-        let stableBufferTime =  settings.get().streaming.buffer.stableBufferTime > 0 ?  settings.get().streaming.buffer.stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    function getStableBufferTime() {
+        let stableBufferTime = settings.get().streaming.buffer.stableBufferTime > 0 ? settings.get().streaming.buffer.stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const liveDelay = playbackController.getLiveDelay();
 
-        return !isNaN(liveDelay) ? Math.min(stableBufferTime, liveDelay) : stableBufferTime;
+        return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(stableBufferTime, liveDelay) : stableBufferTime;
     }
 
     function getRetryAttemptsForType(type) {
@@ -191,8 +199,6 @@ function MediaPlayerModel() {
     }
 
     function reset() {
-        //TODO need to figure out what props to persist across sessions and which to reset if any.
-        //setup();
     }
 
     instance = {
@@ -211,6 +217,7 @@ function MediaPlayerModel() {
         setXHRWithCredentialsForType,
         getXHRWithCredentialsForType,
         getDefaultUtcTimingSource,
+        setConfig,
         reset
     };
 
