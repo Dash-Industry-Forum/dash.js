@@ -195,6 +195,9 @@ function GapController() {
      * @private
      */
     function _shouldCheckForGaps(checkSeekingState = false) {
+        if (!streamController.getActiveStream()) {
+            return false;
+        }
         const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some((key) => {
             return trackSwitchByMediaType[key];
         });
