@@ -136,6 +136,18 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
         })
 
+        it('Should use default maxDrift if no max value is defined in the ServiceDescription', () => {
+            const currentMaxDrift = settings.get().streaming.liveCatchup.maxDrift;
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
+            delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
+            delete dummyManifestInfo.serviceDescriptions[0].latency.max;
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.delay.liveDelay).to.be.equal(5);
+            expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(currentMaxDrift);
+        })
+
         it('Should not update playback rate if max value is below 1', () => {
             delete dummyManifestInfo.serviceDescriptions[0].latency;
             delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
@@ -262,7 +274,6 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.streaming.liveCatchup.maxDrift).to.be.equal(3.5);
             expect(currentSettings.streaming.liveCatchup.playbackRate).to.be.equal(0.4);
         })
-
 
 
     })

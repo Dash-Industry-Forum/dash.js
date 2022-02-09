@@ -63,6 +63,7 @@ function PlaybackController() {
         internalSeek,
         playbackStalled,
         manifestUpdateInProgress,
+        initialCatchupModeActivated,
         settings;
 
     function setup() {
@@ -82,6 +83,7 @@ function PlaybackController() {
         manifestUpdateInProgress = false;
         availabilityTimeComplete = true;
         lowLatencyModeEnabled = false;
+        initialCatchupModeActivated = false;
         seekTarget = NaN;
 
         if (videoModel) {
@@ -736,6 +738,12 @@ function PlaybackController() {
 
         availabilityTimeComplete = e.currentRepresentation.availabilityTimeComplete;
         lowLatencyModeEnabled = !availabilityTimeComplete;
+
+        // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
+        if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
+            initialCatchupModeActivated = true;
+            settings.update({ streaming: { liveCatchup: { enabled: true } } });
+        }
     }
 
     /**

@@ -137,9 +137,12 @@ function ServiceDescriptionController() {
      * @private
      */
     function _getStandardServiceDescriptionLatencyParameters(sd) {
+        const liveDelay = sd.latency.target / 1000;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : settings.get().streaming.liveCatchup.maxDrift;
+
         return {
-            liveDelay: sd.latency.target / 1000,
-            maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
+            liveDelay,
+            maxDrift
         }
     }
 
@@ -150,9 +153,12 @@ function ServiceDescriptionController() {
      * @private
      */
     function _getDvbServiceDescriptionLatencyParameters(sd) {
+        const liveDelay = sd.latency.target / 1000;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : settings.get().streaming.liveCatchup.maxDrift;
+
         return {
-            liveDelay: sd.latency.target / 1000,
-            maxDrift: sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : undefined
+            liveDelay,
+            maxDrift
         }
     }
 
@@ -244,8 +250,7 @@ function ServiceDescriptionController() {
             adjustedSetting.streaming.abr[field] = {};
             adjustedSetting.streaming.abr[field][mediaType] = value / 1000;
             settings.update(adjustedSetting)
-        }
-        catch(e) {
+        } catch (e) {
             logger.error(e);
         }
     }

@@ -165,7 +165,7 @@ function CatchupController() {
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.getIsDynamic() && (settings.get().streaming.liveCatchup.enabled || playbackController.getLowLatencyModeEnabled()) && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+        if (playbackController.getIsDynamic() && settings.get().streaming.liveCatchup.enabled && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
             _startPlaybackCatchUp();
         }
     }
