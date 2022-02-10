@@ -46,7 +46,6 @@ function CatchupController() {
         settings,
         streamController,
         playbackController,
-        mediaPlayerModel,
         dashMetrics,
         playbackStalled,
         logger;
@@ -78,10 +77,6 @@ function CatchupController() {
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
-        }
-
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 

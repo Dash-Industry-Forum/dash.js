@@ -607,6 +607,19 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns a boolean that indicates whether the player is operating in low latency mode.
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyModeEnabled() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getLowLatencyModeEnabled();
+    }
+
+    /**
      * Use this method to set the native Video Element's playback rate.
      * @param {number} value
      * @memberof module:MediaPlayer
@@ -750,6 +763,20 @@ function MediaPlayer() {
         }
 
         return val;
+    }
+
+    /**
+     * Returns the target live delay
+     * @returns {number} The target live delay
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTargetLiveDelay() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        return playbackController.getLiveDelay();
     }
 
     /**
@@ -2032,7 +2059,6 @@ function MediaPlayer() {
             streamController,
             playbackController,
             dashMetrics,
-            mediaPlayerModel,
             videoModel,
             settings
         })
@@ -2279,6 +2305,7 @@ function MediaPlayer() {
         pause,
         isSeeking,
         isDynamic,
+        getLowLatencyModeEnabled,
         seek,
         setPlaybackRate,
         getPlaybackRate,
@@ -2293,6 +2320,7 @@ function MediaPlayer() {
         getActiveStream,
         getDVRWindowSize,
         getDVRSeekOffset,
+        getTargetLiveDelay,
         convertToTimeCode,
         formatUTC,
         getVersion,
