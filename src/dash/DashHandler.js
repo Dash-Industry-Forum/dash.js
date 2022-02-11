@@ -381,6 +381,79 @@ function DashHandler(config) {
         }
     }
 
+    /**
+     * This function returns a time larger than the current time for which we can generate a request.
+     * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
+     * @param {number} time
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @param {number} targetThreshold
+     */
+    function getValidSeekTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
+        try {
+
+            if (isNaN(time) || !mediaInfo || !representation) {
+                return NaN;
+            }
+
+            if (time < 0) {
+                time = 0;
+            }
+
+            if (isNaN(targetThreshold)) {
+                targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+            }
+
+            if (getSegmentRequestForTime(mediaInfo, representation, time)) {
+                return time;
+            }
+
+            // Only look 30 seconda ahead
+            const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+            let currentUpperTime = Math.min(time + targetThreshold, end);
+            let adjustedTime = NaN;
+            let targetRequest = null;
+
+            while (currentUpperTime <= end) {
+                let upperRequest = null;
+
+                if (currentUpperTime <= end) {
+                    upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
+                }
+
+                if (upperRequest) {
+                    adjustedTime = currentUpperTime;
+                    targetRequest = upperRequest;
+                    break;
+                }
+
+                currentUpperTime += targetThreshold;
+            }
+
+            if (targetRequest) {
+                const requestEndTime = targetRequest.startTime + targetRequest.duration;
+
+                // Keep the original start time in case it is covered by a segment
+                if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+                    return time;
+                }
+
+                // If target time is before the start of the request use request starttime
+                if (time < targetRequest.startTime) {
+                    return targetRequest.startTime;
+                }
+
+                return Math.min(requestEndTime - targetThreshold, adjustedTime);
+            }
+
+            return adjustedTime;
+
+
+        } catch (e) {
+            return NaN;
+        }
+    }
+
     function getCurrentIndex() {
         return lastSegment ? lastSegment.index : -1;
     }
@@ -402,7 +475,8 @@ function DashHandler(config) {
         isLastSegmentRequested,
         reset,
         getNextSegmentRequestIdempotent,
-        getValidSeekTimeCloseToTargetTime
+        getValidSeekTimeCloseToTargetTime,
+        getValidSeekTimeAheadOfTargetTime
     };
 
     setup();
