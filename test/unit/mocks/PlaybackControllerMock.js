@@ -69,10 +69,6 @@ class PlaybackControllerMock {
         this.time = time;
     }
 
-    getNormalizedTime() {
-        return null;
-    }
-
     getPlaybackRate() {
         return null;
     }
