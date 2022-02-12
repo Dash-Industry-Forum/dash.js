@@ -441,18 +441,18 @@ function StreamProcessor(config) {
         if (settings.get().streaming.gaps.enableSeekFix && (shouldUseExplicitTimeForRequest || playbackController.getTime() === 0)) {
             let adjustedTime;
             if (!isDynamic) {
-                adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+                adjustedTime = dashHandler.getValidTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
             } else if (isDynamic && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
                 // If we find a valid request ahead of the current time then we are in a gap. Segments are only added at the end of the timeline
-                adjustedTime = dashHandler.getValidSeekTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold,);
+                adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold,);
             }
-            if (!isNaN(adjustedTime)) {
+            if (!isNaN(adjustedTime) && adjustedTime !== bufferingTime) {
                 if (playbackController.isSeeking()) {
                     // If we are seeking then playback is stalled. Do a seek to get out of this situation
-                    logger.warn(`Adjusting buffering time ${adjustedTime} because of gap in the manifest. Adjusting time by ${adjustedTime - bufferingTime}`);
+                    logger.warn(`Adjusting playback time ${adjustedTime} because of gap in the manifest. Seeking by ${adjustedTime - bufferingTime}`);
                     playbackController.seek(adjustedTime, false, false);
                 } else {
-                    // If we are not seeking we should still be playing but we cant find anything to buffer. So we adjust the buffering time and leave the gap jump of the GapController
+                    // If we are not seeking we should still be playing but we cant find anything to buffer. So we adjust the buffering time and leave the gap jump to the GapController
                     logger.warn(`Adjusting buffering time ${adjustedTime} because of gap in the manifest. Adjusting time by ${adjustedTime - bufferingTime}`);
                     setExplicitBufferingTime(adjustedTime)
 

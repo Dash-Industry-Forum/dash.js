@@ -307,7 +307,7 @@ function DashHandler(config) {
      * @param {object} representation
      * @param {number} targetThreshold
      */
-    function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+    function getValidTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
         try {
 
             if (isNaN(time) || !mediaInfo || !representation) {
@@ -389,7 +389,7 @@ function DashHandler(config) {
      * @param {object} representation
      * @param {number} targetThreshold
      */
-    function getValidSeekTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
+    function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
         try {
 
             if (isNaN(time) || !mediaInfo || !representation) {
@@ -408,7 +408,11 @@ function DashHandler(config) {
                 return time;
             }
 
-            // Only look 30 seconda ahead
+            if (representation.adaptation.period.start + representation.adaptation.period.duration < time) {
+                return NaN;
+            }
+
+            // Only look 30 seconds ahead
             const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
@@ -475,8 +479,8 @@ function DashHandler(config) {
         isLastSegmentRequested,
         reset,
         getNextSegmentRequestIdempotent,
-        getValidSeekTimeCloseToTargetTime,
-        getValidSeekTimeAheadOfTargetTime
+        getValidTimeCloseToTargetTime,
+        getValidTimeAheadOfTargetTime
     };
 
     setup();

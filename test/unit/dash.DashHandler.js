@@ -91,7 +91,7 @@ describe('DashHandler', function () {
         expect(mediaSegment).to.be.null; // jshint ignore:line
     });
 
-    describe('getValidSeekTimeCloseToTargetTime()', () => {
+    describe('getValidTimeCloseToTargetTime()', () => {
         let dummyRepresentation;
         let dummyMediaInfo;
         let segRequestStub;
@@ -151,43 +151,43 @@ describe('DashHandler', function () {
         })
 
         it('should return NaN if no parameters are passed', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime()
+            const result = dashHandler.getValidTimeCloseToTargetTime()
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time is not a valid number', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime('a', {}, {}, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime('a', {}, {}, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time if invalid mediainfo is passed', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(3, null, {}, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(3, null, {}, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time if invalid representation is passed', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(3, {}, null, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(3, {}, null, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return valid time if request can be found and segment durations cover whole period', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(3, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(3, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(3);
         })
 
         it('should return valid time if requested time is larger than period end', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(30);
         })
 
         it('should return valid time if requested time is smaller than period start', () => {
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(0);
         })
@@ -206,7 +206,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(29, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(29, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(27.5);
         })
@@ -225,7 +225,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(29.8, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(29.8, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(27.5);
         })
@@ -244,7 +244,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(12, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(12, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(9.5);
         })
@@ -263,7 +263,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(20);
         })
@@ -282,7 +282,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(28.0001, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(28.0001, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(27.5);
         })
@@ -301,7 +301,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(28);
         })
@@ -320,7 +320,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(1.5);
         })
@@ -339,13 +339,13 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeCloseToTargetTime(30.05, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeCloseToTargetTime(30.05, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(29.5);
         })
     })
 
-    describe('getValidSeekTimeAheadOfTargetTime()', () => {
+    describe('getValidTimeAheadOfTargetTime()', () => {
         let dummyRepresentation;
         let dummyMediaInfo;
         let segRequestStub;
@@ -405,43 +405,43 @@ describe('DashHandler', function () {
         })
 
         it('should return NaN if no parameters are passed', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime()
+            const result = dashHandler.getValidTimeAheadOfTargetTime()
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time is not a valid number', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime('a', {}, {}, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime('a', {}, {}, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time if invalid mediainfo is passed', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(3, null, {}, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(3, null, {}, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return NaN if time if invalid representation is passed', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(3, {}, null, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(3, {}, null, 0.5)
 
             expect(result).to.be.NaN;
         })
 
         it('should return valid time if request can be found and segment durations cover whole period', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(3, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(3, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(3);
         })
 
-        it('should return valid time if requested time is larger than period end', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
+        it('should return NaN if requested time is larger than period end', () => {
+            const result = dashHandler.getValidTimeAheadOfTargetTime(32, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.equal(30);
+            expect(result).to.be.NaN;
         })
 
         it('should return valid time if requested time is smaller than period start', () => {
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(0);
         })
@@ -460,7 +460,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(29, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(29, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.NaN;
         })
@@ -480,7 +480,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(26.8, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(26.8, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(28);
         })
@@ -499,7 +499,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(12, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(12, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(20);
         })
@@ -518,7 +518,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(20);
         })
@@ -537,7 +537,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(28.0001, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(28.0001, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.NaN;
         })
@@ -556,7 +556,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(28);
         })
@@ -575,9 +575,15 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-            const result = dashHandler.getValidSeekTimeAheadOfTargetTime(25.5, dummyMediaInfo, dummyRepresentation, 0.5)
+            const result = dashHandler.getValidTimeAheadOfTargetTime(25.5, dummyMediaInfo, dummyRepresentation, 0.5)
 
             expect(result).to.be.equal(26);
+        })
+
+        it('buffering time is outside of period values for some reason. Return original buffering time', () => {
+            const result = dashHandler.getValidTimeAheadOfTargetTime(50, dummyMediaInfo, dummyRepresentation, 0.3)
+
+            expect(result).to.be.NaN;
         })
     })
 });
