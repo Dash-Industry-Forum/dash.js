@@ -685,6 +685,10 @@ BS Information
     border-left-color: #136bfb ;
 }
 
+.bs-callout-success {
+    border-left-color: #5cb85c ;
+}
+
 .bs-callout-danger {
     border-left-color: #CA0B00;
 }
