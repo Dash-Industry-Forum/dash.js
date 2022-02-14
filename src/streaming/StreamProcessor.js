@@ -447,7 +447,7 @@ function StreamProcessor(config) {
                 adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold,);
             }
             if (!isNaN(adjustedTime) && adjustedTime !== bufferingTime) {
-                if (playbackController.isSeeking()) {
+                if (playbackController.isSeeking() || playbackController.getTime() === 0) {
                     // If we are seeking then playback is stalled. Do a seek to get out of this situation
                     logger.warn(`Adjusting playback time ${adjustedTime} because of gap in the manifest. Seeking by ${adjustedTime - bufferingTime}`);
                     playbackController.seek(adjustedTime, false, false);
