@@ -1353,7 +1353,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.isValidURL = function (str) {
         let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
         return (res !== null)
-      };  
+      };
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -1420,15 +1420,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var externalSettingsString = 'mpd=' + encodeURIComponent(decodeURIComponent($scope.selectedItem.url))
                                    + '&loop=' + $scope.loopSelected
                                    + '&autoPlay=' + $scope.autoPlaySelected
+                                   + '&drmToday=' + $scope.drmToday
                                    + '&forceQualitySwitchSelected=' + $scope.forceQualitySwitchSelected
-                                   + '&drmPrioritiesEnabled=' + $scope.prioritiesEnabled 
+                                   + '&drmPrioritiesEnabled=' + $scope.prioritiesEnabled
                                    + '&languageAudio=' + $scope.initialSettings.audio
                                    + '&roleVideo=' + $scope.initialSettings.video
                                    + '&languageText=' + $scope.initialSettings.text
                                    + '&roleText=' + $scope.initialSettings.textRole
                                    + '&forceTextStreaming=' + $scope.initialSettings.forceTextStreaming
                                    + '&';
-        
+
         $scope.handleRequestHeaders();
         $scope.handleClearkeys();
         var drmList = [$scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey];
@@ -1456,7 +1457,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var queryString = externalSettingsString + $scope.toQueryString(currentSetting);
 
         var urlString = url + queryString;
-        
+
         $scope.checkQueryLength(urlString);
 
         const element = document.createElement('textarea');
@@ -1488,25 +1489,25 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var keyList = nestedKey.split(".");
         var lastProperty = value !== null ? keyList.pop(): false;
         var obj = base;
-        
+
         for(var key = 0; key < keyList.length; key++){
         base = base[ keyList[key] ] = base [keyList[key]] || {};
         }
 
-        
+
         value = $scope.handleQueryParameters(value);
 
         if(lastProperty) base = base [lastProperty] = value;
 
         return obj;
     }
-    
+
     $scope.activeDrms = {};
 
     /** Transform query-string into Object  */
     $scope.toSettingsObject = function(queryString){
         //Remove double & in case of empty settings field
-        var querySegments = queryString.split('&&').join('&'); 
+        var querySegments = queryString.split('&&').join('&');
         querySegments = queryString.split("&");
         var settingsObject = {};
         var drmObject = {};
@@ -1516,15 +1517,15 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         for(var segment of querySegments){
             if(segment.includes('=')){
                 [key, value] = segment.split("=");
-            }  
+            }
             else{
                 value = value + '&' + segment;
             }
-            $scope.resolveQueryNesting(settingsObject, key, value); 
+            $scope.resolveQueryNesting(settingsObject, key, value);
         }
 
         for(var settingCategory of Object.keys(settingsObject)){
-            if(settingsObject !== {} && 
+            if(settingsObject !== {} &&
                 (settingCategory === 'playready' ||
                 settingCategory === 'widevine' ||
                 settingCategory === 'clearkey') &&
@@ -1542,7 +1543,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.makeProtectionData = function(drmObject, prioritiesEnabled){
         var queryProtectionData = {};
-    
+
         for(var drm in drmObject){
           if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === 'kidKey'){
             if(drmObject[drm].clearkeys !== {}){
@@ -1556,14 +1557,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
                 queryProtectionData[drmObject[drm].drmKeySystem]['priority'] = parseInt(drmObject[drm].priority);
               }
-            
-    
+
+
               else {
                 for(var key in drmObject[drm].clearkeys){
-                    queryProtectionData[drmObject[drm].drmKeySystem]['clearkeys'][key] = drmObject[drm].clearkeys[key];   
-                }  
+                    queryProtectionData[drmObject[drm].drmKeySystem]['clearkeys'][key] = drmObject[drm].clearkeys[key];
+                }
               }
-    
+
               for(var key in drmObject[drm]){
                 if(key !== 'isActive' &&
                     key !== 'drmKeySystem' &&
@@ -1576,17 +1577,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                 }
               }
-    
+
               if(drmObject[drm].httpRequestHeaders !== {}){
-                queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders; 
+                queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
               }
-            }  
+            }
             else {
               alert("Kid and Key must be specified!");
-            }      
-            
+            }
+
           }
-    
+
           else{
             //check if priority is enabled
             if(prioritiesEnabled){
@@ -1596,14 +1597,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
               }
               if(drmObject[drm].httpRequestHeaders !== {})
               queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
-               
+
             }
             else {
                 queryProtectionData[drmObject[drm].drmKeySystem] = {
                     "serverURL": decodeURIComponent(drmObject[drm].licenseServerUrl),
-              }  
+              }
             }
-    
+
             for(var key in drmObject[drm]){
                 if(key !== 'isActive' &&
                     key !== 'drmKeySystem' &&
@@ -1613,10 +1614,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                     }
             }
-    
+
             // Only set request header if any have been specified
             if(drmObject[drm].httpRequestHeaders !== {}){
-              queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders; 
+              queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
             }
           }
         }
@@ -1636,6 +1637,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'autoPlay':
                     $scope.autoPlaySelected = this.parseBoolean(value);
                     $scope.toggleAutoPlay();
+                    break;
+                case 'drmToday':
+                    $scope.drmToday = this.parseBoolean(value);
                     break;
                 case 'forceQualitySwitchSelected':
                     $scope.forceQualitySwitchSelected = this.parseBoolean(value);
@@ -1686,7 +1690,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.handleProtectionData($scope.protectionData);
         $scope.player.setProtectionData($scope.protectionData);
     }
-    
+
     $scope.parseBoolean = function(value){
         return value === true || value === "true";
     }
@@ -1702,10 +1706,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if(value === 'NaN') typedValue = NaN;
         else if(value === 'null') typedValue = null;
         else if(value === 'undefined') typedValue = undefined;
-        else integerRegEx.test(value) ? typedValue = parseInt(value) : 
-            (floatRegEx.test(value) ? typedValue = parseFloat(value) : 
+        else integerRegEx.test(value) ? typedValue = parseInt(value) :
+            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
             typedValue = value);
-        
+
         return typedValue;
     }
 
@@ -1999,9 +2003,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if(currentConfig.streaming.abr.maxBitrate.video !== -1){
             $scope.maxVideoBitrate = currentConfig.streaming.abr.maxBitrate.video;
         }
-        
+
         if($scope.player.getInitialMediaSettingsFor('audio')){
-            $scope.initialSettings.audio = $scope.player.getInitialMediaSettingsFor('audio').lang;  
+            $scope.initialSettings.audio = $scope.player.getInitialMediaSettingsFor('audio').lang;
         }
         if($scope.player.getInitialMediaSettingsFor('video')){
             $scope.initialSettings.video = $scope.player.getInitialMediaSettingsFor('video').role;
@@ -2045,7 +2049,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             case 5:
                 $scope.currentLogLevel = 'debug';
                 break;
-        }        
+        }
     }
 
     function setCMCDSettings(){
@@ -2055,14 +2059,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.cmcdSessionId = currentConfig.streaming.cmcd.sid;
         }
         if(currentConfig.streaming.cmcd.cid){
-            $scope.cmcdContentId = currentConfig.streaming.cmcd.cid; 
+            $scope.cmcdContentId = currentConfig.streaming.cmcd.cid;
         }
         if(currentConfig.streaming.cmcd.rtp){
             $scope.cmcdRtp = currentConfig.streaming.cmcd.rtp;
         }
         if(currentConfig.streaming.cmcd.rtpSafetyFactor){
             $scope.cmcdRtpSafetyFactor = currentConfig.streaming.cmcd.rtpSafetyFactor;
-        } 
+        }
         $scope.cmcdMode = currentConfig.streaming.cmcd.mode;
     }
 
@@ -2109,7 +2113,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 };
                 $scope.player.updateSettings(initialConfig);
             }
-            
+
             /** Fetch query string and pass it to handling function */
             var currentQuery = decodeURIComponent(window.location.search);
             if(currentQuery !== ''){
@@ -2180,7 +2184,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     $scope.doLoad();
                 }
             }
-        }     
+        }
 
         reqConfig.open('GET', 'dashjs_config.json', true);
         reqConfig.setRequestHeader('Content-type', 'application/json');
