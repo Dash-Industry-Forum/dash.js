@@ -1507,13 +1507,24 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     /** Transform query-string into Object  */
     $scope.toSettingsObject = function(queryString){
         //Remove double & in case of empty settings field
+<<<<<<< Updated upstream
         var querySegments = queryString.split('&&').join('&');
+=======
+        console.log()
+        var querySegments = queryString.split('&&').join('&'); 
+>>>>>>> Stashed changes
         querySegments = queryString.split("&");
         var settingsObject = {};
         var drmObject = {};
         var prioritiesEnabled = false;
         var key, value;
+        var i = 1;
 
+        for(var segment in querySegments){
+            [key, value] = querySegments[segment].split("=");
+            value = decodeURIComponent(value);
+
+<<<<<<< Updated upstream
         for(var segment of querySegments){
             if(segment.includes('=')){
                 [key, value] = segment.split("=");
@@ -1522,6 +1533,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 value = value + '&' + segment;
             }
             $scope.resolveQueryNesting(settingsObject, key, value);
+=======
+            $scope.resolveQueryNesting(settingsObject, key, value); 
+>>>>>>> Stashed changes
         }
 
         for(var settingCategory of Object.keys(settingsObject)){
@@ -1548,7 +1562,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
           if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === 'kidKey'){
             if(drmObject[drm].clearkeys !== {}){
               queryProtectionData[drmObject[drm].drmKeySystem] = {
-                'clearkeys' : {},
+                'clearkeys'   : {},
                 'priority' : 0
               };
               if(prioritiesEnabled){
@@ -2115,7 +2129,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
 
             /** Fetch query string and pass it to handling function */
-            var currentQuery = decodeURIComponent(window.location.search);
+            var currentQuery = window.location.search;
             if(currentQuery !== ''){
                 currentQuery = currentQuery.substring(1);
                 $scope.checkQueryLength(window.location.href);
