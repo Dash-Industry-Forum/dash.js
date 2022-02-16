@@ -201,7 +201,21 @@ workflows:
                     branches:
                         ignore: # as creds are available only for non-forked branches
                             - /pull\/[0-9]+/
-
+            - functional-tests-VOD_LIVE: 
+                  filters:
+                      branches:
+                          only:
+                              - functional-tests 
+            - functional-tests-DRM:
+                  filters:
+                      branches:
+                          only:
+                              - functional-tests
+            - functional-tests-Subtitles_Thumbnails_Audio_Smooth:
+                  filters:
+                      branches:
+                          only:
+                              - functional-tests
     scheduled-workflow:
         triggers:
             - schedule:
