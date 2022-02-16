@@ -1507,12 +1507,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     /** Transform query-string into Object  */
     $scope.toSettingsObject = function(queryString){
         //Remove double & in case of empty settings field
-<<<<<<< Updated upstream
         var querySegments = queryString.split('&&').join('&');
-=======
-        console.log()
-        var querySegments = queryString.split('&&').join('&'); 
->>>>>>> Stashed changes
         querySegments = queryString.split("&");
         var settingsObject = {};
         var drmObject = {};
@@ -1524,18 +1519,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             [key, value] = querySegments[segment].split("=");
             value = decodeURIComponent(value);
 
-<<<<<<< Updated upstream
-        for(var segment of querySegments){
-            if(segment.includes('=')){
-                [key, value] = segment.split("=");
-            }
-            else{
-                value = value + '&' + segment;
-            }
-            $scope.resolveQueryNesting(settingsObject, key, value);
-=======
             $scope.resolveQueryNesting(settingsObject, key, value); 
->>>>>>> Stashed changes
         }
 
         for(var settingCategory of Object.keys(settingsObject)){
