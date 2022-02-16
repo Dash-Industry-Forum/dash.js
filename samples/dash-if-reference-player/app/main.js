@@ -1546,7 +1546,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
           if(drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === 'kidKey'){
             if(drmObject[drm].clearkeys !== {}){
               queryProtectionData[drmObject[drm].drmKeySystem] = {
-                'clearkeys'   : {},
+                'clearkeys' : {},
                 'priority' : 0
               };
               if(prioritiesEnabled){
