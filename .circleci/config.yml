@@ -53,6 +53,30 @@ commands:
                     npm run build
                     npm run test
 
+    functional_steps:
+            steps:
+                - functional_precondition
+                - checkout
+                - dependencies_setup
+                - build_unit_test_steps
+                - functional_test_setup
+
+    run_test_suite:
+        parameters:
+            browser:
+                default: "chrome"
+                type: string
+            protocol:
+                default: "https"
+                type: string
+            streams:
+                default: "all"
+                type: string
+        steps:
+            - run:
+                name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.streams>>
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --streams="<<parameters.streams>>"
 jobs:
     build-and-unit-test:
         executor: dashjs-executor
@@ -113,23 +137,52 @@ jobs:
             - store_test_results:
                 path: test/functional/reports
 
-    functional-tests-all:
+    functional-tests-VOD_LIVE:
         executor: dashjs-executor
         steps:
-            - functional_precondition
-            - checkout
-            - dependencies_setup
-            - build_unit_test_steps
-            - functional_test_setup
-            - run:
-                name: Run functional tests (chrome / https)
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=firefox --protocol=https
-            - run:
-                name: Run functional tests (chrome / http)
-                when: always # run tests even if some previous tests failed
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=firefox --protocol=http
+            - functional_steps
+            - run_test_suite:
+                streams: VOD (Static MPD)
+            - run_test_suite:
+                streams: LIVE (Dynamic MPD)
+            - run_test_suite:
+                streams: Live Low Latency
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-DRM:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                streams: DRM (modern)
+            - run_test_suite:
+                streams: DRM Content (conservative/legacy)
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-Subtitles_Thumbnails_Audio_Smooth:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                streams: Subtitles and Captions
+            - run_test_suite:
+                streams: Thumbnails
+            - run_test_suite:
+                streams: Audio-only
+            - run_test_suite:
+                streams: Smooth Streaming
+            
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-only-http:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                protocol: http
             - store_test_results:
                 path: test/functional/reports
 
@@ -143,18 +196,11 @@ workflows:
                     branches:
                         ignore:
                             - development # skiping redundant job if already on development
-                            - functional-tests
             - functional-tests-smoke:
                 filters:
                     branches:
                         ignore: # as creds are available only for non-forked branches
                             - /pull\/[0-9]+/
-                            - functional-tests
-            - functional-tests-all:  # run unit tests on virtually merged feature branch
-                  filters:
-                      branches:
-                          only:
-                              - functional-tests
 
     scheduled-workflow:
         triggers:
@@ -165,5 +211,8 @@ workflows:
                         only:
                             - development
         jobs:
-            - functional-tests-all
+            - functional-tests-VOD_LIVE
+            - functional-tests-DRM
+            - functional-tests-Subtitles_Thumbnails_Audio_Smooth
+            - functional-tests-only-http
 
