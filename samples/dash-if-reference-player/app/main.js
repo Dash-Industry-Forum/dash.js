@@ -981,9 +981,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
 
                 } else {
-                    // Validate URL. If the provided information is not a valid url, the DRM is skipped.
-                    if (this.isValidURL(input.licenseServerUrl)) {
-
                         // Check if DRM-Priorisation is enabled
                         if (this.prioritiesEnabled) {
                             protectionData[input.drmKeySystem] = {
@@ -1019,11 +1016,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (!angular.equals(input.httpRequestHeaders, {})) {
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
-
-                    } else {
-                        console.log(input.licenseServerUrl, 'is not a valid url!')
-                    }
-
                 }
             }
         }
