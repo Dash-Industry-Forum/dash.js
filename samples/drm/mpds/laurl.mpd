@@ -1,7 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Version information:
+Axinom.MediaProcessing v3.0.0 targeting General Purpose Media Format specification v7
+ffmpeg version N-81423-g61fac0e Copyright (c) 2000-2016 the FFmpeg developers
+x265 [info]: HEVC encoder version 2.0+12-49a0d1176aef5bc6
+x264 0.148.2705 3f5ed56
+MP4Box - GPAC version 0.6.2-DEV-rev683-g7b29fbe-master
+MediaInfoLib - v0.7.87
+
+For more info about this video, see https://github.com/Axinom/dash-test-vectors
+-->
 <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" minBufferTime="PT1.500S" type="static"
      mediaPresentationDuration="PT0H12M14.000S" maxSegmentDuration="PT0H0M4.000S"
      profiles="urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash264"
-     xmlns:cenc="urn:mpeg:cenc:2013" xmlns:dashif="https://dashif.org/">
+     xmlns:dashif="https://dashif.org/"
+     xmlns:cenc="urn:mpeg:cenc:2013">
     <Period duration="PT0H12M14.000S">
         <BaseURL>https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/</BaseURL>
         <AdaptationSet segmentAlignment="true" group="1" maxWidth="1920" maxHeight="1080" maxFrameRate="24" par="16:9"
@@ -15,7 +28,7 @@
                 <pro xmlns="urn:microsoft:playready">
                     xAEAAAEAAQC6ATwAVwBSAE0ASABFAEEARABFAFIAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AcwBjAGgAZQBtAGEAcwAuAG0AaQBjAHIAbwBzAG8AZgB0AC4AYwBvAG0ALwBEAFIATQAvADIAMAAwADcALwAwADMALwBQAGwAYQB5AFIAZQBhAGQAeQBIAGUAYQBkAGUAcgAiACAAdgBlAHIAcwBpAG8AbgA9ACIANAAuADAALgAwAC4AMAAiAD4APABEAEEAVABBAD4APABQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsARQBZAEwARQBOAD4AMQA2ADwALwBLAEUAWQBMAEUATgA+ADwAQQBMAEcASQBEAD4AQQBFAFMAQwBUAFIAPAAvAEEATABHAEkARAA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsASQBEAD4ARABRAFcAMABuAGsAdgBrAEEAawBpAFQATABpAGYAWABVAEkAUABpAFoAZwA9AD0APAAvAEsASQBEAD4APAAvAEQAQQBUAEEAPgA8AC8AVwBSAE0ASABFAEEARABFAFIAPgA=
                 </pro>
-                <dashif:Laurl>https://drm-widevine-licensing.axtest.net/AcquireLicense</dashif:Laurl>
+                <dashif:Laurl>https://drm-playready-licensing.axtest.net/AcquireLicense</dashif:Laurl>
             </ContentProtection>
             <ContentProtection value="Widevine" schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
                 <dashif:Laurl>https://drm-widevine-licensing.axtest.net/AcquireLicense</dashif:Laurl>
@@ -45,20 +58,30 @@
                 <pro xmlns="urn:microsoft:playready">
                     xAEAAAEAAQC6ATwAVwBSAE0ASABFAEEARABFAFIAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AcwBjAGgAZQBtAGEAcwAuAG0AaQBjAHIAbwBzAG8AZgB0AC4AYwBvAG0ALwBEAFIATQAvADIAMAAwADcALwAwADMALwBQAGwAYQB5AFIAZQBhAGQAeQBIAGUAYQBkAGUAcgAiACAAdgBlAHIAcwBpAG8AbgA9ACIANAAuADAALgAwAC4AMAAiAD4APABEAEEAVABBAD4APABQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsARQBZAEwARQBOAD4AMQA2ADwALwBLAEUAWQBMAEUATgA+ADwAQQBMAEcASQBEAD4AQQBFAFMAQwBUAFIAPAAvAEEATABHAEkARAA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsASQBEAD4ARABRAFcAMABuAGsAdgBrAEEAawBpAFQATABpAGYAWABVAEkAUABpAFoAZwA9AD0APAAvAEsASQBEAD4APAAvAEQAQQBUAEEAPgA8AC8AVwBSAE0ASABFAEEARABFAFIAPgA=
                 </pro>
-                <dashif:Laurl>https://drm-widevine-licensing.axtest.net/AcquireLicense</dashif:Laurl>
+                <dashif:Laurl>https://drm-playready-licensing.axtest.net/AcquireLicense</dashif:Laurl>
             </ContentProtection>
             <ContentProtection value="Widevine" schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
-                <cenc:pssh>AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQnrQFDeRLSAKTLifXUIPiZg==</cenc:pssh>
                 <dashif:Laurl>https://drm-widevine-licensing.axtest.net/AcquireLicense</dashif:Laurl>
+                <cenc:pssh>AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQnrQFDeRLSAKTLifXUIPiZg==</cenc:pssh>
             </ContentProtection>
             <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
             <SegmentTemplate timescale="24000" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1"
-                             duration="95232" initialization="$RepresentationID$/init.mp4"/>
+                             duration="95232"
+                             initialization="$RepresentationID$/init.mp4"/>
             <Representation id="15" mimeType="audio/mp4" codecs="mp4a.40.29" audioSamplingRate="48000" startWithSAP="1"
                             bandwidth="134642">
                 <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
                                            value="2"/>
             </Representation>
+        </AdaptationSet>
+        <AdaptationSet segmentAlignment="true" group="3" lang="en">
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle"/>
+            <SegmentTemplate timescale="1000" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1"
+                             duration="4000"
+                             initialization="$RepresentationID$/init.mp4"/>
+            <Representation id="18" mimeType="application/mp4" codecs="wvtt" startWithSAP="1"
+                            bandwidth="428"></Representation>
         </AdaptationSet>
     </Period>
 </MPD>

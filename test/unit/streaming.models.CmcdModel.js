@@ -332,7 +332,7 @@ describe('CmcdModel', function () {
             expect(metrics.sf).to.equal('s');
         });
 
-        it('getHeaderParameters() returns CID in metrics if expicitly set', function () {
+        it('getHeaderParameters() returns CID in metrics if explicitly set', function () {
             const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
             const MEDIA_TYPE = 'video';
             const CID = 'content_id';
@@ -623,7 +623,7 @@ describe('CmcdModel', function () {
             expect(metrics.sf).to.equal('s');
         });
 
-        it('getQueryParameter() returns CID in metrics if expicitly set', function () {
+        it('getQueryParameter() returns CID in metrics if explicitly set', function () {
             const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
             const MEDIA_TYPE = 'video';
             const CID = 'content_id';

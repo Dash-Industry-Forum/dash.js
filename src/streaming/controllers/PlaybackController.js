@@ -193,19 +193,6 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.getTime() : null;
     }
 
-    function getNormalizedTime() {
-        let t = getTime();
-
-        if (isDynamic && !isNaN(availabilityStartTime)) {
-            const timeOffset = availabilityStartTime / 1000;
-            // Fix current time for firefox and safari (returned as an absolute time)
-            if (t > timeOffset) {
-                t -= timeOffset;
-            }
-        }
-        return t;
-    }
-
     function getPlaybackRate() {
         return streamInfo && videoModel ? videoModel.getPlaybackRate() : null;
     }
@@ -340,7 +327,7 @@ function PlaybackController() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
         }
-        let currentTime = getNormalizedTime();
+        let currentTime = getTime();
         if (isNaN(currentTime) || currentTime === 0) {
             return 0;
         }
@@ -462,7 +449,7 @@ function PlaybackController() {
             mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         }
         // Compare the current time of the video element against the range defined in the DVR window.
-        const currentTime = getNormalizedTime();
+        const currentTime = getTime();
         const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
@@ -1033,7 +1020,6 @@ function PlaybackController() {
         getTimeToStreamEnd,
         getBufferLevel,
         getTime,
-        getNormalizedTime,
         getIsManifestUpdateInProgress,
         getPlaybackRate,
         getPlayedRanges,

@@ -195,6 +195,9 @@ function GapController() {
      * @private
      */
     function _shouldCheckForGaps(checkSeekingState = false) {
+        if (!streamController.getActiveStream()) {
+            return false;
+        }
         const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some((key) => {
             return trackSwitchByMediaType[key];
         });
@@ -328,7 +331,7 @@ function GapController() {
 
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
-                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd - (timeToWait / 1000)}`);
+                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - start}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }

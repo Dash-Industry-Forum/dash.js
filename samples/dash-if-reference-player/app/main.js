@@ -1115,9 +1115,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
 
                 } else {
-                    // Validate URL. If the provided information is not a valid url, the DRM is skipped.
-                    if (this.isValidURL(input.licenseServerUrl)) {
-
                         // Check if DRM-Priorisation is enabled
                         if (this.prioritiesEnabled) {
                             protectionData[input.drmKeySystem] = {
@@ -1153,11 +1150,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (!angular.equals(input.httpRequestHeaders, {})) {
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
-
-                    } else {
-                        console.log(input.licenseServerUrl, 'is not a valid url!')
-                    }
-
                 }
             }
         }
@@ -1351,9 +1343,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Test if provided string is a URL */
     $scope.isValidURL = function (str) {
-        let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
-        return (res !== null)
-      };
+        var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+            '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+        return !!pattern.test(str)
+    };
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -1519,7 +1516,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             [key, value] = querySegments[segment].split("=");
             value = decodeURIComponent(value);
 
-            $scope.resolveQueryNesting(settingsObject, key, value); 
+            $scope.resolveQueryNesting(settingsObject, key, value);
         }
 
         for(var settingCategory of Object.keys(settingsObject)){
