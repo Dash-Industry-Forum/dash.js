@@ -281,13 +281,14 @@ function StreamProcessor(config) {
                 })
                 .then(() => {
                     // Figure out the correct segment request time.
-                    const targetTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
+                    const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
 
                     // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
-                    if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+                    if (!isNaN(continuousBufferTime) && !isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && continuousBufferTime >= streamInfo.start + streamInfo.duration) {
                         bufferController.setIsBufferingCompleted(true);
                         resolve();
                     } else {
+                        const targetTime = isNaN(continuousBufferTime) ? e.seekTime : continuousBufferTime;
                         setExplicitBufferingTime(targetTime);
                         bufferController.setSeekTarget(targetTime);
 
@@ -434,12 +435,31 @@ function StreamProcessor(config) {
     function _noMediaRequestGenerated(rescheduleIfNoRequest) {
         const representation = representationController.getCurrentRepresentation();
 
-        // If  this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
+        // If  this statement is true we might be stuck. A static manifest does not change and we did not find a valid request for the target time
         // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
-        if (settings.get().streaming.gaps.enableSeekFix && !isDynamic && shouldUseExplicitTimeForRequest && (playbackController.isSeeking() || playbackController.getTime() === 0)) {
-            const adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
-            if (!isNaN(adjustedTime)) {
-                playbackController.seek(adjustedTime, false, false);
+        // For dynamic manifests this can also happen especially if we jump over the gap in the previous period and are using SegmentTimeline and in case there is a positive eptDelta at the beginning of the period we are stuck.
+        if (settings.get().streaming.gaps.enableSeekFix && (shouldUseExplicitTimeForRequest || playbackController.getTime() === 0)) {
+            let adjustedTime;
+            if (!isDynamic) {
+                adjustedTime = dashHandler.getValidTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+            } else if (isDynamic && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                // If we find a valid request ahead of the current time then we are in a gap. Segments are only added at the end of the timeline
+                adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold,);
+            }
+            if (!isNaN(adjustedTime) && adjustedTime !== bufferingTime) {
+                if (playbackController.isSeeking() || playbackController.getTime() === 0) {
+                    // If we are seeking then playback is stalled. Do a seek to get out of this situation
+                    logger.warn(`Adjusting playback time ${adjustedTime} because of gap in the manifest. Seeking by ${adjustedTime - bufferingTime}`);
+                    playbackController.seek(adjustedTime, false, false);
+                } else {
+                    // If we are not seeking we should still be playing but we cant find anything to buffer. So we adjust the buffering time and leave the gap jump to the GapController
+                    logger.warn(`Adjusting buffering time ${adjustedTime} because of gap in the manifest. Adjusting time by ${adjustedTime - bufferingTime}`);
+                    setExplicitBufferingTime(adjustedTime)
+
+                    if (rescheduleIfNoRequest) {
+                        _noValidRequest();
+                    }
+                }
                 return;
             }
         }
@@ -1085,7 +1105,8 @@ function StreamProcessor(config) {
 
     function _bufferClearedForNonReplacement() {
         const time = playbackController.getTime();
-        const targetTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+        const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+        const targetTime = isNaN(continuousBufferTime) ? time : continuousBufferTime;
 
         setExplicitBufferingTime(targetTime);
         scheduleController.startScheduleTimer();

@@ -1683,8 +1683,7 @@ function MediaPlayer() {
             return;
         }
 
-        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-        return thumbnailController.provide(timeInPeriod, callback);
+        return thumbnailController.provide(s, callback);
     }
 
     /*
