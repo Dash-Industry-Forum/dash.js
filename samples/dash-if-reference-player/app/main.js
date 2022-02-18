@@ -1610,7 +1610,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.setExternalSettings = function(currentQuery){
         var handleExternalSettings = currentQuery.split('&');
-        for(var index = 0; index <10; index++){
+        for(var index = 0; index < handleExternalSettings.length; index++){
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch(key){
                 case 'mpd':
