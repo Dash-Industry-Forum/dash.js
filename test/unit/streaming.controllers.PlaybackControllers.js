@@ -114,49 +114,49 @@ describe('PlaybackController', function () {
             })
 
             it('should return NaN if no values specified', function () {
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.be.NaN;
             })
 
             it('should return live delay if specified in the settings', function () {
                 settings.update({ streaming: { delay: { liveDelay: 20 } } });
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.equal(20);
             })
 
             it('should return live delay based on liveDelayFragmentCount if specified in the settings', function () {
                 settings.update({ streaming: { delay: { liveDelayFragmentCount: 5 } } });
-                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, [], manifestInfo);
 
                 expect(liveDelay).to.equal(10);
             })
 
             it('should return live delay based on suggestedPresentationDelay', function () {
                 const adapterStub = sinon.stub(adapterMock, 'getSuggestedPresentationDelay').returns(12);
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.equal(12);
                 adapterStub.restore();
             })
 
             it('should return live delay based on fragment duration and FRAGMENT_DURATION_FACTOR', function () {
-                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, [], manifestInfo);
 
                 expect(liveDelay).to.equal(8);
             })
 
             it('should return live delay based on minBufferTime', function () {
                 manifestInfo.minBufferTime = 8;
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.equal(32);
             })
 
             it('should prefer live delay based on liveDelay if both liveDelay and liveDelayFragmentCount are specified in the settings', function () {
                 settings.update({ streaming: { delay: { liveDelayFragmentCount: 5, liveDelay: 40 } } });
-                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, [], manifestInfo);
 
                 expect(liveDelay).to.equal(40);
             })
@@ -168,10 +168,38 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.equal(13);
             })
+
+            it('should apply calculated offsets to liveDelay if ServiceDescription id matches ProducerReferenceTime referenceId', function () {
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                    latency: {
+                        referenceId: 7,
+                        target: 13000
+                    }
+                }]
+                const timeOffsets = [{id: 5, to: 3}, {id: 7, to: 4}];
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, timeOffsets, manifestInfo);
+                
+                expect(liveDelay).to.equal(9);
+            });
+
+            it('should apply time offset based on only present ProducerReferenceTime even if ids do not match', function () {
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                    latency: {
+                        referenceId: 7,
+                        target: 13000
+                    }
+                }]
+                const timeOffsets = [{id: 5, to: 3}];
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, timeOffsets, manifestInfo);
+                
+                expect(liveDelay).to.equal(10);
+            });
 
             it('should ignore live delay based on ServiceDescription if wrong scheme id is specified', function () {
                 manifestInfo.serviceDescriptions = [{
@@ -180,7 +208,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.be.NaN
             })
@@ -193,7 +221,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, [], manifestInfo);
 
                 expect(liveDelay).to.equal(20);
             })
@@ -206,7 +234,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
-                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, [], manifestInfo);
 
                 expect(liveDelay).to.equal(10);
             })

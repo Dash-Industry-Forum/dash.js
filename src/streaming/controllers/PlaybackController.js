@@ -224,7 +224,7 @@ function PlaybackController() {
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeAndSetLiveDelay(fragmentDuration, manifestInfo) {
+    function computeAndSetLiveDelay(fragmentDuration, timeOffsets, manifestInfo) {
         let delay,
             ret,
             startTime;
@@ -238,7 +238,7 @@ function PlaybackController() {
 
         // Apply live delay from ServiceDescription
         if (settings.get().streaming.delay.applyServiceDescription && isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount)) {
-            _applyServiceDescription(manifestInfo);
+            _applyServiceDescription(manifestInfo, timeOffsets);
         }
 
         if (mediaPlayerModel.getLiveDelay()) {
@@ -272,7 +272,13 @@ function PlaybackController() {
         return ret;
     }
 
-    function _applyServiceDescription(manifestInfo) {
+    /**
+     * Applys service description Latency and PlaybackRate attributes to liveDelay and catchup settings
+     * @param {Object} manifestInfo
+     * @param {Array} producerReferenceTimes - All ProducerReferencesTimes in MPD
+     * @private
+     */
+    function _applyServiceDescription(manifestInfo, timeOffsets) {
         if (!manifestInfo || !manifestInfo.serviceDescriptions) {
             return;
         }
@@ -293,7 +299,7 @@ function PlaybackController() {
                 settings.update({
                     streaming: {
                         delay: {
-                            liveDelay: llsd.latency.target / 1000
+                            liveDelay: _calculateOffsetLiveDelay(timeOffsets, llsd.latency),
                         }
                     }
                 });
@@ -319,6 +325,32 @@ function PlaybackController() {
                 });
             }
         }
+    }
+
+    /**
+     * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
+     * @param {Array} timeOffsets 
+     * @param {Object} llsdLatency 
+     * @returns {number}
+     * @private
+     */
+    function _calculateOffsetLiveDelay(timeOffsets, llsdLatency) {
+        let to = 0;
+        let offset = timeOffsets.filter(prt => {
+            return prt.id === llsdLatency.referenceId;
+        });
+
+        // If only one ProducerReferenceTime to generate one TO, then use that regardless of matching ids
+        if (offset.length === 0) {
+            to = (timeOffsets.length > 0) ? timeOffsets[0].to : 0;
+        } else {
+            // If multiple id matches, use the first but this should be invalid
+            to = offset[0].to || 0;
+        }
+        
+        // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
+        // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
+        return ((llsdLatency.target / 1000) - to)
     }
 
     function getAvailabilityStartTime() {
