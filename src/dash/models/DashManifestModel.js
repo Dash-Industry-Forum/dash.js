@@ -38,6 +38,7 @@ import UTCTiming from '../vo/UTCTiming';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
+import ProducerReferenceTime from '../vo/ProducerReferenceTime';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -160,6 +161,43 @@ function DashManifestModel() {
 
     function getIsImage(adaptation) {
         return getIsTypeOf(adaptation, Constants.IMAGE);
+    }
+
+    function getProducerReferenceTimesForAdaptation(adaptation) {
+        const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCERREFERENCETIME_ASARRAY) ? adaptation[DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [];
+        const prtsForAdaptation = [];
+
+        // Unlikely to have multiple ProducerReferenceTimes.
+        prtArray.forEach((prt) => {
+            const entry = new ProducerReferenceTime();
+
+            if (prt.hasOwnProperty(DashConstants.ID)) {
+                entry[DashConstants.ID] = prt[DashConstants.ID];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            if (prt.hasOwnProperty(DashConstants.WALL_CLOCK_TIME)) {
+                entry[DashConstants.WALL_CLOCK_TIME] = prt[DashConstants.WALL_CLOCK_TIME];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            if (prt.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
+                entry[DashConstants.PRESENTATION_TIME] = prt[DashConstants.PRESENTATION_TIME];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            // Not intereseted in other attributes for now
+            // UTC element contained must be same as that in the MPD
+            prtsForAdaptation.push(entry);
+        })
+        
+        return prtsForAdaptation;
     }
 
     function getLanguageForAdaptation(adaptation) {
@@ -1122,7 +1160,8 @@ function DashManifestModel() {
                             latency = {
                                 target: parseInt(sd[prop].target),
                                 max: parseInt(sd[prop].max),
-                                min: parseInt(sd[prop].min)
+                                min: parseInt(sd[prop].min),
+                                referenceId: parseInt(sd[prop].referenceId)
                             };
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_PLAYBACK_RATE) {
                             playbackRate = {
@@ -1192,6 +1231,7 @@ function DashManifestModel() {
         getIsTypeOf,
         getIsText,
         getIsFragmented,
+        getProducerReferenceTimesForAdaptation,
         getLanguageForAdaptation,
         getViewpointForAdaptation,
         getRolesForAdaptation,

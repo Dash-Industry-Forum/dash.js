@@ -49,6 +49,7 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import DashConstants from '../../dash/constants/DashConstants';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -355,7 +356,8 @@ function StreamController() {
         // Compute and set the live delay
         if (adapter.getIsDynamic()) {
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+            const timeOffsets = _getLiveDelayTimeOffsets(streamsInfo);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, timeOffsets, manifestInfo);
         }
 
         // Figure out the correct start time and the correct start period
@@ -1176,6 +1178,58 @@ function StreamController() {
             return NaN;
         }
     }
+
+    /**
+     * Calculates an array of time offsets each with matching ProducerReferenceTime id
+     * @param {Array} streamInfos 
+     * @returns {Array} 
+     * @private
+     */
+    function _getLiveDelayTimeOffsets(streamInfos) {
+        try {
+
+            let timeOffsets = [];
+
+            if (streamInfos && streamInfos.length === 1) {
+                const streamInfo = streamInfos[0];
+                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
+                const astInSeconds = adapter.getAvailabilityStartTime() / 1000;
+            
+                timeOffsets = mediaTypes
+                    .reduce((acc, mediaType) => {
+                        acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
+                        return acc;
+                    }, [])
+                    .reduce((acc, mediaInfo) => {
+                        const prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
+                        prts.forEach((prt) => {
+                            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                            if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
+                                const voRep = voRepresentations[0];
+                                const d = new Date(prt[DashConstants.WALL_CLOCK_TIME]);
+                                const wallClockTime = d.getTime() / 1000;
+                                // TS 103 285 Clause 10.20.4
+                                // 1) Calculate PRT0
+                                // i) take the PRT@presentationTime and subtract any ST@presentationTime
+                                // ii) convert this time to seconds by dividing by ST@timescale
+                                // iii) Add this to start time of period that contains PRT.
+                                const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) / voRep[DashConstants.TIMESCALE]) + streamInfo.start); 
+                                // 2) Calculate TO between PRT at the start of MPD timeline and the AST
+                                const to = astInSeconds - prt0;
+                                // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
+                                acc.push({id: prt[DashConstants.ID], to});
+                            }
+                        });
+
+                        return acc;
+                    }, [])
+            }
+
+            return timeOffsets;
+        } catch (e) {
+            return [];
+        }
+    };
 
     /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
