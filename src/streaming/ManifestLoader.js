@@ -110,6 +110,8 @@ function ManifestLoader(config) {
 
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
+        eventBus.trigger(Events.MANIFEST_LOADING_STARTED, { request: request });
+
         urlLoader.load({
             request: request,
             success: function (data, textStatus, responseURL) {
