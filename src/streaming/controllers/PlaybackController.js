@@ -293,14 +293,20 @@ function PlaybackController() {
                 settings.update({
                     streaming: {
                         delay: {
-                            liveDelay: llsd.latency.target / 1000,
-                        },
-                        liveCatchup: {
-                            minDrift: (llsd.latency.target + 500) / 1000,
-                            maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target + 500) / 1000 : undefined
+                            liveDelay: llsd.latency.target / 1000
                         }
                     }
                 });
+                if (llsd.latency.max && llsd.latency.max >  llsd.latency.target ) {
+                    logger.debug('Apply LL properties coming from service description. Max Latency:', llsd.latency.max);
+                    settings.update({
+                        streaming: {
+                            liveCatchup: {
+                                maxDrift: (llsd.latency.max - llsd.latency.target) / 1000
+                            }
+                        }
+                    });
+                }
             }
             if (llsd.playbackRate && llsd.playbackRate.max > 1.0) {
                 logger.debug('Apply LL properties coming from service description. Max PlaybackRate:', llsd.playbackRate.max);
