@@ -1977,7 +1977,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setInitialSettings(){
         var currentConfig = $scope.player.getSettings();
-        console.log(currentConfig)
         if(currentConfig.streaming.abr.initialBitrate.video !== -1){
             $scope.initialVideoBitrate = currentConfig.streaming.abr.initialBitrate.video;
         }
