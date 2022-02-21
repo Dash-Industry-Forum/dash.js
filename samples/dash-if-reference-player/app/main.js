@@ -406,6 +406,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
+        console.log($scope.player.getSettings())
         $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
@@ -808,6 +809,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if ($scope.selectedItem.hasOwnProperty('protData')) {
             $scope.protData = $scope.selectedItem.protData;
             // Handle preset protection data to be reflected in the UI and work with setDrm()
+            console.log($scope.protData);
             $scope.handleProtectionData($scope.protData);
         }
     };
@@ -1294,6 +1296,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'org.w3.clearkey':
                     // Set DRM to active
                     $scope.drmClearkey.isActive = true;
+                    //TODO : Check if any examples are not kid=key method!
+                    if(!protectionData[data].hasOwnProperty('inputMode')){
+                        protectionData[data]['inputMode'] = 'kidKey';
+                    }
                     $scope.drmClearkey.inputMode = protectionData[data]['inputMode'];
                     // Handle clearkey data if specified using a license server
                     if (protectionData[data]['serverURL'] !== undefined) {
@@ -1664,11 +1670,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setQueryData = function(currentQuery){
-        // var delimiter = '&',
-        // start = 10,
-        // tokens = currentQuery.split(delimiter).slice(start),
-        // currentQuery = tokens.join(delimiter);
-        var passedSettings = currentQuery.slice(currentQuery.indexOf('debug'));;
+        if(!currentQuery.includes('&')){
+            return;
+        }
+        var passedSettings = currentQuery.slice(currentQuery.indexOf('debug'));
         passedSettings = $scope.toSettingsObject(passedSettings)[0];
         $scope.protectionData = $scope.toSettingsObject(currentQuery)[1];
         $scope.player.updateSettings(passedSettings);
@@ -1970,6 +1975,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setDrmOptions(){
         var currentConfig = $scope.player.getSettings();
+        console.log('Input Mode: ' + $scope.drmClearkey.inputMode + ', Keys: ' + JSON.stringify($scope.drmClearkey.clearkeys) + ', Priority: ' + $scope.drmClearkey.priority)
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
