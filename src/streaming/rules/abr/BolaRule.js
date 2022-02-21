@@ -258,14 +258,13 @@ function BolaRule(config) {
         checkBolaStateStableBufferTime(bolaState, mediaType);
     }
 
-    function onBufferEmpty() {
+    function onBufferEmpty(e) {
         // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
-        for (const mediaType in bolaStateDict) {
-            if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
-                bolaStateDict[mediaType].placeholderBuffer = 0;
-            }
+        const mediaType = e.mediaType;
+        if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
+            bolaStateDict[mediaType].placeholderBuffer = 0;
         }
-    }
+}
 
     function onPlaybackSeeking() {
         // TODO: 1. Verify what happens if we seek mid-fragment.
