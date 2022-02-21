@@ -385,10 +385,10 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the ProducerReferenceTime as saved in the DashManifestModel if present
+     * Returns the ProducerReferenceTimes as saved in the DashManifestModel if present
      * @param {object} streamInfo
      * @param {object} mediaInfo
-     * @returns {object} producerReferenceTime
+     * @returns {object} producerReferenceTimes
      * @memberOf module:DashAdapter
      * @instance
      */

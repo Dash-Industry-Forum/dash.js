@@ -275,10 +275,10 @@ function PlaybackController() {
     /**
      * Applys service description Latency and PlaybackRate attributes to liveDelay and catchup settings
      * @param {Object} manifestInfo
-     * @param {Array} producerReferenceTimes - All ProducerReferencesTimes in MPD
+     * @param {Array} prftTimeOffsets - Time offests calculated from ProducerReferenceTime elements
      * @private
      */
-    function _applyServiceDescription(manifestInfo, timeOffsets) {
+    function _applyServiceDescription(manifestInfo, prftTimeOffsets) {
         if (!manifestInfo || !manifestInfo.serviceDescriptions) {
             return;
         }
@@ -299,7 +299,7 @@ function PlaybackController() {
                 settings.update({
                     streaming: {
                         delay: {
-                            liveDelay: _calculateOffsetLiveDelay(timeOffsets, llsd.latency),
+                            liveDelay: _calculateDelayFromServiceDescription(prftTimeOffsets, llsd.latency),
                         }
                     }
                 });
@@ -329,20 +329,20 @@ function PlaybackController() {
 
     /**
      * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
-     * @param {Array} timeOffsets 
+     * @param {Array} prftTimeOffsets 
      * @param {Object} llsdLatency 
      * @returns {number}
      * @private
      */
-    function _calculateOffsetLiveDelay(timeOffsets, llsdLatency) {
+    function _calculateDelayFromServiceDescription(prftTimeOffsets, llsdLatency) {
         let to = 0;
-        let offset = timeOffsets.filter(prt => {
+        let offset = prftTimeOffsets.filter(prt => {
             return prt.id === llsdLatency.referenceId;
         });
 
         // If only one ProducerReferenceTime to generate one TO, then use that regardless of matching ids
         if (offset.length === 0) {
-            to = (timeOffsets.length > 0) ? timeOffsets[0].to : 0;
+            to = (prftTimeOffsets.length > 0) ? prftTimeOffsets[0].to : 0;
         } else {
             // If multiple id matches, use the first but this should be invalid
             to = offset[0].to || 0;
