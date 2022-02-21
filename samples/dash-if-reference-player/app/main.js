@@ -406,7 +406,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-
         $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
@@ -1520,8 +1519,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
             }
         }
-        prioritiesEnabled = settingsObject.prioritiesEnabled;
-        drmObject = $scope.makeProtectionData(drmObject, prioritiesEnabled);
+        prioritiesEnabled = settingsObject.drmPrioritiesEnabled;
+        if(prioritiesEnabled !== undefined){
+            drmObject = $scope.makeProtectionData(drmObject, prioritiesEnabled);
+        }
         return [settingsObject, drmObject];
     }
 
@@ -1967,6 +1968,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.customABRRulesSelected = !currentConfig.streaming.abr.useDefaultABRRules;
     }
 
+    function setDrmOptions(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
+        $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
+        $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
+    }
+
     function setLiveDelayOptions(){
         var currentConfig = $scope.player.getSettings();
         $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
@@ -2110,12 +2118,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAbrRules();
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
+            setDrmOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();
             setInitialLogLevel();
             setCMCDSettings();
-
+            
+            console.log($scope.player.getSettings());
 
             checkLocationProtocol();
 
