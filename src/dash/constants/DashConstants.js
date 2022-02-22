@@ -99,6 +99,7 @@ class DashConstants {
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
         this.ROLE_ASARRAY = 'Role_asArray';
+        this.REPRESENTATION_ASARRAY = 'Representation_asArray';
         this.PRODUCERREFERENCETIME_ASARRAY = 'ProducerReferenceTime_asArray';
         this.ACCESSIBILITY_ASARRAY = 'Accessibility_asArray';
         this.AUDIOCHANNELCONFIGURATION_ASARRAY = 'AudioChannelConfiguration_asArray';
