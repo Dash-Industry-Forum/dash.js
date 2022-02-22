@@ -67,6 +67,7 @@ describe('DashConstants', function () {
         expect(DashConstants.LANG).to.equal('lang');
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
         expect(DashConstants.ROLE_ASARRAY).to.equal('Role_asArray');
+        expect(DashConstants.REPRESENTATION_ASARRAY).to.equal('Representation_asArray');
         expect(DashConstants.PRODUCERREFERENCETIME_ASARRAY).to.equal('ProducerReferenceTime_asArray');
         expect(DashConstants.ACCESSIBILITY_ASARRAY).to.equal('Accessibility_asArray');
         expect(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY).to.equal('AudioChannelConfiguration_asArray');

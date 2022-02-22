@@ -1162,24 +1162,63 @@ describe('DashManifestModel', function () {
                 expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
                 /* jshint ignore:end */
             });
+
+            it('returns ProducerReferenceTimes with correct default attribute values', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
+                            [DashConstants.PRESENTATION_TIME]: 0
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+    
+                expect(obj).to.be.instanceOf(Array);        // jshint ignore:line
+                expect(obj).to.have.lengthOf(1);            // jshint ignore:line
+                expect(obj[0].type).to.equal('encoder');    // jshint ignore:line
+            });
+
+            it('returns ProducerReferenceTimes within representations', () => {
+                const node = {
+                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
+                                {
+                                    [DashConstants.ID]: 1,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                                    [DashConstants.PRESENTATION_TIME]: 0
+                                }
+                            ]
+                        },
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 1
+                                }
+                            ]
+                        },
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(0);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                /* jshint ignore:end */
+
+            });
+
         });
 
-        it('returns ProducerReferenceTimes with correct default attribute values', () => {
-            const node = {
-                [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
-                    {
-                        [DashConstants.ID]: 4,
-                        [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
-                        [DashConstants.PRESENTATION_TIME]: 0
-                    }
-                ]
-            };
-            const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
-
-            expect(obj).to.be.instanceOf(Array);        // jshint ignore:line
-            expect(obj).to.have.lengthOf(1);            // jshint ignore:line
-            expect(obj[0].type).to.equal('encoder');    // jshint ignore:line
-        });
 
         describe('getSelectionPriority', () => {
 
