@@ -46,6 +46,7 @@ function GapController() {
         settings,
         wallclockTicked,
         gapHandlerInterval,
+        lastGapStartPosition,
         lastGapJumpPosition,
         playbackController,
         streamController,
@@ -72,6 +73,7 @@ function GapController() {
 
     function resetInitialSettings() {
         gapHandlerInterval = null;
+        lastGapStartPosition = NaN;
         lastGapJumpPosition = NaN;
         wallclockTicked = 0;
         jumpTimeoutHandler = null;
@@ -100,6 +102,7 @@ function GapController() {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, this);
         eventBus.on(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
         eventBus.on(Events.TRACK_CHANGE_RENDERED, _onBufferReplacementEnded, instance);
     }
@@ -108,6 +111,7 @@ function GapController() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_SEEKED, _onPlaybackSeeking, this);
         eventBus.off(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
         eventBus.off(Events.TRACK_CHANGE_RENDERED, _onBufferReplacementEnded, instance);
     }
@@ -120,6 +124,22 @@ function GapController() {
         if (jumpTimeoutHandler) {
             clearTimeout(jumpTimeoutHandler);
             jumpTimeoutHandler = null;
+        }
+    }
+
+    function _onPlaybackSeeked() {
+        const enableLoopFix = settings.get().streaming.gaps.enableLoopFix;
+        const loopSeek = settings.get().streaming.gaps.loopSeek;
+
+        if (enableLoopFix) {
+            const currentTime = videoModel.getTime();
+            if (!isNaN(lastGapJumpPosition) && !isNaN(lastGapStartPosition) && currentTime <= lastGapStartPosition) {
+                logger.warn(`Jump from ${lastGapStartPosition} to ${lastGapJumpPosition} failed, it jumped to ${currentTime}. Jumping ${loopSeek}`);
+                lastGapJumpPosition = lastGapJumpPosition + loopSeek;
+                playbackController.seek(lastGapJumpPosition, true, true);
+            } else {
+                lastGapStartPosition = NaN;
+            }
         }
     }
 
@@ -182,6 +202,7 @@ function GapController() {
                 _jumpGap(currentTime, true);
             } else {
                 lastPlaybackTime = currentTime;
+                lastGapStartPosition = NaN;
                 lastGapJumpPosition = NaN;
             }
             wallclockTicked = 0;
@@ -335,6 +356,7 @@ function GapController() {
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }
+            lastGapStartPosition = currentTime;
             lastGapJumpPosition = seekToPosition;
         }
     }

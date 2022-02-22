@@ -801,7 +801,9 @@ function Settings() {
                 jumpLargeGaps: true,
                 smallGapLimit: 1.5,
                 threshold: 0.3,
-                enableSeekFix: true
+                enableSeekFix: true,
+                enableLoopFix: false,
+                loopSeek: 0.25
             },
             utcSynchronization: {
                 enabled: true,
