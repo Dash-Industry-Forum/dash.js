@@ -406,7 +406,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-        console.log($scope.player.getSettings())
         $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
@@ -809,7 +808,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if ($scope.selectedItem.hasOwnProperty('protData')) {
             $scope.protData = $scope.selectedItem.protData;
             // Handle preset protection data to be reflected in the UI and work with setDrm()
-            console.log($scope.protData);
             $scope.handleProtectionData($scope.protData);
         }
     };
@@ -1058,10 +1056,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.setDrmKeySystem = function (item) {
         $scope.drmKeySystem = item;
     };
-
-    $scope.doLog = function () {
-        console.log($scope.drmPlayready.priority);
-    }
 
     /** Handle form input */
     $scope.setDrm = function () {
@@ -1338,7 +1332,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (parameter !== 'serverURL' &&
                             parameter !== 'httpRequestHeaders' &&
                             parameter !== 'clearkeys') {
-                            $scope.drmWidevine[parameter] = protectionData[data][parameter];
+                            $scope.drmClearkey[parameter] = protectionData[data][parameter];
                         }
                     }
                     break;
@@ -1975,7 +1969,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setDrmOptions(){
         var currentConfig = $scope.player.getSettings();
-        console.log('Input Mode: ' + $scope.drmClearkey.inputMode + ', Keys: ' + JSON.stringify($scope.drmClearkey.clearkeys) + ', Priority: ' + $scope.drmClearkey.priority)
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
@@ -2130,8 +2123,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setTrackSwitchModeSettings();
             setInitialLogLevel();
             setCMCDSettings();
-            
-            console.log($scope.player.getSettings());
 
             checkLocationProtocol();
 
