@@ -251,21 +251,6 @@
                     "provider": "unified"
                 },
                 {
-                    "name": "Clear Dynamic SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
-                    "provider": "wowza"
-                },
-                {
                     "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
                     "provider": "aws"
