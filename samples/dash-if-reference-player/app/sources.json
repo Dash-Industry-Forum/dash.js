@@ -391,11 +391,6 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                },
-                {
-                    "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/2.mpd",
-                    "name": "Subtitles in multi period live",
-                    "provider": "unified"
                 }
             ]
         },
