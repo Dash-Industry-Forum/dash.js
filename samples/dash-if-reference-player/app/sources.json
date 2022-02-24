@@ -1004,26 +1004,6 @@
                     "provider": "microsoft"
                 },
                 {
-                    "name": "Source: XBox One commercial video",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    },
-                    "provider": "microsoft"
-                },
-                {
-                    "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    },
-                    "provider": "microsoft"
-                },
-                {
                     "name": "Unified Streaming (Widevine, persistent)",
                     "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
                     "protData": {
