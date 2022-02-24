@@ -64,7 +64,7 @@ commands:
     run_test_suite:
         parameters:
             browser:
-                default: "chrome"
+                default: "firefox"
                 type: string
             protocol:
                 default: "https"
