@@ -320,7 +320,8 @@ declare namespace dashjs {
                 cid?: string,
                 rtp?: number,
                 rtpSafetyFactor?: number,
-                mode?: 'query' | 'header'
+                mode?: 'query' | 'header',
+                enabledKeys?: Array<string>
             }
         };
         errors?: {
