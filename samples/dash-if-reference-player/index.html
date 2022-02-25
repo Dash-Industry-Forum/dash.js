@@ -795,6 +795,8 @@
                            ng-click="setCmcdMode()">
                     Header
                 </label>
+                <label class="options-label" data-toggle="tooltip" title="List of enabled cmcd keys for http headers">Enabled Header Keys</label>
+                <input type="text" class="form-control" placeholder="e.g. 'br,d,ot,...'" ng-model="cmcdEnabledKeys" ng-change="updateCmcdEnabledKeys()">
             </div>
         </div>
 
