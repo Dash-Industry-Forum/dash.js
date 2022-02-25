@@ -285,6 +285,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioTrackSwitchMode = 'neverReplace';
     $scope.currentLogLevel = 'info';
     $scope.cmcdMode = 'query';
+    $scope.cmcdAllKeys = ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
 
     // Persistent license
     $scope.persistentSessionId = {};
@@ -799,6 +800,28 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     }
 
+    $scope.getFormatedCmcdEnabledKeys = function() {
+        let cmcdEnabledKeys = $scope.cmcdEnabledKeys.split(',');
+        return $scope.cmcdAllKeys.map(key => {
+            let mappedKey = key;
+            if(!cmcdEnabledKeys.includes(key)) mappedKey = "";
+
+            return mappedKey;
+        })
+    }
+
+    $scope.updateCmcdEnabledKeys = function () {
+        let cmcdEnabledKeys = $scope.getFormatedCmcdEnabledKeys()
+        
+        $scope.player.updateSettings({
+            streaming: {
+                cmcd: {
+                    enabledKeys: cmcdEnabledKeys
+                }
+            }
+        });
+    }
+
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
         $scope.protData = {};
@@ -946,6 +969,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
         config.streaming.cmcd.rtp = $scope.cmcdRtp ? $scope.cmcdRtp : null;
         config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
+        config.streaming.cmcd.enabledKeys = $scope.cmcdEnabledKeys ? $scope.getFormatedCmcdEnabledKeys() : [];
 
         $scope.player.updateSettings(config);
 
@@ -2057,7 +2081,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if(currentConfig.streaming.cmcd.rtpSafetyFactor){
             $scope.cmcdRtpSafetyFactor = currentConfig.streaming.cmcd.rtpSafetyFactor;
         }
+
         $scope.cmcdMode = currentConfig.streaming.cmcd.mode;
+
+        if(currentConfig.streaming.cmcd.enabledKeys){
+            $scope.cmcdEnabledKeys = currentConfig.streaming.cmcd.enabledKeys;
+        }
     }
 
     function getUrlVars() {
