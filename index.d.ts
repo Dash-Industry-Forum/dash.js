@@ -1170,6 +1170,8 @@ declare namespace dashjs {
         getKeyStatuses(): MediaKeyStatusMap;
 
         getSessionType(): string;
+
+        getUsable(): boolean;
     }
 
     export interface Stream {
