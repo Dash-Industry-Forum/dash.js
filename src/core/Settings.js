@@ -200,7 +200,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
- *                mode: Constants.CMCD_MODE_QUERY
+ *                mode: Constants.CMCD_MODE_QUERY,
+ *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *            }
  *          },
  *          errors: {
@@ -637,6 +638,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
  * If not specified this value defaults to 'query'.
+ * @property {Array.<string>} [enabledKeys]
+ * This value is used to specify the desired cmcd http headers in an array.
  */
 
 /**
@@ -923,7 +926,8 @@ function Settings() {
                 cid: null,
                 rtp: null,
                 rtpSafetyFactor: 5,
-                mode: Constants.CMCD_MODE_QUERY
+                mode: Constants.CMCD_MODE_QUERY,
+                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
             }
         },
         errors: {

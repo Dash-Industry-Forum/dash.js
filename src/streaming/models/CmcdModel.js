@@ -174,10 +174,10 @@ function CmcdModel() {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
                 const cmcdData = _getCmcdData(request);
-                const cmcdObjectHeader = _copyParameters(cmcdData, ['br', 'd', 'ot', 'tb']);
-                const cmcdRequestHeader = _copyParameters(cmcdData, ['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']);
-                const cmcdStatusHeader = _copyParameters(cmcdData, ['bs', 'rtp']);
-                const cmcdSessionHeader = _copyParameters(cmcdData, ['cid', 'pr', 'sf', 'sid', 'st', 'v']);
+                const cmcdObjectHeader = _copyParameters(cmcdData, _applyEnabledKeysFilter(['br', 'd', 'ot', 'tb']));
+                const cmcdRequestHeader = _copyParameters(cmcdData, _applyEnabledKeysFilter(['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']));
+                const cmcdStatusHeader = _copyParameters(cmcdData, _applyEnabledKeysFilter(['bs', 'rtp']));
+                const cmcdSessionHeader = _copyParameters(cmcdData, _applyEnabledKeysFilter(['cid', 'pr', 'sf', 'sid', 'st', 'v']));
                 const headers = {
                     'CMCD-Object': _buildFinalString(cmcdObjectHeader),
                     'CMCD-Request': _buildFinalString(cmcdRequestHeader),
@@ -198,6 +198,12 @@ function CmcdModel() {
         } catch (e) {
             return null;
         }
+    }
+
+    function _applyEnabledKeysFilter(keys) {
+
+        let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
+        return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
     function _getCmcdData(request) {
