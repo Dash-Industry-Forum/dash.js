@@ -19297,7 +19297,7 @@ function Settings() {
         video: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-      fragmentRequestTimeout: 0,
+      fragmentRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -19367,6 +19367,8 @@ function Settings() {
           } else {
             dest[n] = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(source[n]);
           }
+        } else {
+          console.error('Settings parameter ' + path + n + ' is not supported');
         }
       }
     }
@@ -19659,7 +19661,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.2.1';
+var VERSION = '4.3.0';
 function getVersionString() {
   return VERSION;
 }
@@ -21780,7 +21782,7 @@ function DashHandler(config) {
    */
 
 
-  function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+  function getValidTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
     try {
       if (isNaN(time) || !mediaInfo || !representation) {
         return NaN;
@@ -21851,6 +21853,80 @@ function DashHandler(config) {
       return NaN;
     }
   }
+  /**
+   * This function returns a time larger than the current time for which we can generate a request.
+   * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
+   * @param {number} time
+   * @param {object} mediaInfo
+   * @param {object} representation
+   * @param {number} targetThreshold
+   */
+
+
+  function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
+    try {
+      if (isNaN(time) || !mediaInfo || !representation) {
+        return NaN;
+      }
+
+      if (time < 0) {
+        time = 0;
+      }
+
+      if (isNaN(targetThreshold)) {
+        targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+      }
+
+      if (getSegmentRequestForTime(mediaInfo, representation, time)) {
+        return time;
+      }
+
+      if (representation.adaptation.period.start + representation.adaptation.period.duration < time) {
+        return NaN;
+      } // Only look 30 seconds ahead
+
+
+      var end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+      var currentUpperTime = Math.min(time + targetThreshold, end);
+      var adjustedTime = NaN;
+      var targetRequest = null;
+
+      while (currentUpperTime <= end) {
+        var upperRequest = null;
+
+        if (currentUpperTime <= end) {
+          upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
+        }
+
+        if (upperRequest) {
+          adjustedTime = currentUpperTime;
+          targetRequest = upperRequest;
+          break;
+        }
+
+        currentUpperTime += targetThreshold;
+      }
+
+      if (targetRequest) {
+        var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
+
+        if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+          return time;
+        } // If target time is before the start of the request use request starttime
+
+
+        if (time < targetRequest.startTime) {
+          return targetRequest.startTime;
+        }
+
+        return Math.min(requestEndTime - targetThreshold, adjustedTime);
+      }
+
+      return adjustedTime;
+    } catch (e) {
+      return NaN;
+    }
+  }
 
   function getCurrentIndex() {
     return lastSegment ? lastSegment.index : -1;
@@ -21873,7 +21949,8 @@ function DashHandler(config) {
     isLastSegmentRequested: isLastSegmentRequested,
     reset: reset,
     getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent,
-    getValidSeekTimeCloseToTargetTime: getValidSeekTimeCloseToTargetTime
+    getValidTimeCloseToTargetTime: getValidTimeCloseToTargetTime,
+    getValidTimeAheadOfTargetTime: getValidTimeAheadOfTargetTime
   };
   setup();
   return instance;
@@ -24903,9 +24980,10 @@ function DashManifestModel() {
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME)) {
             event.presentationTime = currentMpdEvent.presentationTime;
-            var presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-            event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
           }
+
+          var presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+          event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
             event.duration = currentMpdEvent.duration / eventStream.timescale;
@@ -24913,6 +24991,8 @@ function DashManifestModel() {
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
             event.id = currentMpdEvent.id;
+          } else {
+            event.id = null;
           }
 
           if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
@@ -31669,8 +31749,7 @@ function MediaPlayer() {
       return;
     }
 
-    var timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-    return thumbnailController.provide(timeInPeriod, callback);
+    return thumbnailController.provide(s, callback);
   }
   /*
   ---------------------------------------------------------------------------
@@ -34644,12 +34723,13 @@ function StreamProcessor(config) {
         return bufferController.clearBuffers(clearRanges);
       }).then(function () {
         // Figure out the correct segment request time.
-        var targetTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime); // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
+        var continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime); // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
 
-        if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+        if (!isNaN(continuousBufferTime) && !isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && continuousBufferTime >= streamInfo.start + streamInfo.duration) {
           bufferController.setIsBufferingCompleted(true);
           resolve();
         } else {
+          var targetTime = isNaN(continuousBufferTime) ? e.seekTime : continuousBufferTime;
           setExplicitBufferingTime(targetTime);
           bufferController.setSeekTarget(targetTime);
           var promises = []; // append window has been reset by abort() operation. Set the correct values again
@@ -34800,14 +34880,35 @@ function StreamProcessor(config) {
 
 
   function _noMediaRequestGenerated(rescheduleIfNoRequest) {
-    var representation = representationController.getCurrentRepresentation(); // If  this statement is true we are stuck. A static manifest does not change and we did not find a valid request for the target time
+    var representation = representationController.getCurrentRepresentation(); // If  this statement is true we might be stuck. A static manifest does not change and we did not find a valid request for the target time
     // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
+    // For dynamic manifests this can also happen especially if we jump over the gap in the previous period and are using SegmentTimeline and in case there is a positive eptDelta at the beginning of the period we are stuck.
 
-    if (settings.get().streaming.gaps.enableSeekFix && !isDynamic && shouldUseExplicitTimeForRequest && (playbackController.isSeeking() || playbackController.getTime() === 0)) {
-      var adjustedTime = dashHandler.getValidSeekTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+    if (settings.get().streaming.gaps.enableSeekFix && (shouldUseExplicitTimeForRequest || playbackController.getTime() === 0)) {
+      var adjustedTime;
 
-      if (!isNaN(adjustedTime)) {
-        playbackController.seek(adjustedTime, false, false);
+      if (!isDynamic) {
+        adjustedTime = dashHandler.getValidTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+      } else if (isDynamic && representation.segmentInfoType === _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) {
+        // If we find a valid request ahead of the current time then we are in a gap. Segments are only added at the end of the timeline
+        adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+      }
+
+      if (!isNaN(adjustedTime) && adjustedTime !== bufferingTime) {
+        if (playbackController.isSeeking() || playbackController.getTime() === 0) {
+          // If we are seeking then playback is stalled. Do a seek to get out of this situation
+          logger.warn("Adjusting playback time ".concat(adjustedTime, " because of gap in the manifest. Seeking by ").concat(adjustedTime - bufferingTime));
+          playbackController.seek(adjustedTime, false, false);
+        } else {
+          // If we are not seeking we should still be playing but we cant find anything to buffer. So we adjust the buffering time and leave the gap jump to the GapController
+          logger.warn("Adjusting buffering time ".concat(adjustedTime, " because of gap in the manifest. Adjusting time by ").concat(adjustedTime - bufferingTime));
+          setExplicitBufferingTime(adjustedTime);
+
+          if (rescheduleIfNoRequest) {
+            _noValidRequest();
+          }
+        }
+
         return;
       }
     } // Check if the media is finished. If so, no need to schedule another request
@@ -35452,7 +35553,8 @@ function StreamProcessor(config) {
 
   function _bufferClearedForNonReplacement() {
     var time = playbackController.getTime();
-    var targetTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+    var continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+    var targetTime = isNaN(continuousBufferTime) ? time : continuousBufferTime;
     setExplicitBufferingTime(targetTime);
     scheduleController.startScheduleTimer();
   }
@@ -37705,16 +37807,17 @@ function BufferController(config) {
 
 
     var currentTime = playbackController.getTime();
-    var range = getRangeAt(seekTarget, 0);
+    var rangeAtCurrenTime = getRangeAt(currentTime, 0);
+    var rangeAtSeekTarget = getRangeAt(seekTarget, 0);
 
-    if (currentTime === seekTarget && range) {
+    if (rangeAtCurrenTime && rangeAtSeekTarget && rangeAtCurrenTime.start === rangeAtSeekTarget.start) {
       seekTarget = NaN;
       return;
     } // Get buffered range corresponding to the seek target
 
 
     var segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
-    range = getRangeAt(seekTarget, segmentDuration);
+    var range = getRangeAt(seekTarget, segmentDuration);
     if (!range) return;
 
     if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
@@ -37724,12 +37827,10 @@ function BufferController(config) {
       if (seekTarget <= range.end) {
         // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
         playbackController.seek(Math.max(seekTarget, range.start), false, true);
-        seekTarget = NaN;
       }
     } else if (currentTime < range.start) {
       // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
       playbackController.seek(range.start, false, true);
-      seekTarget = NaN;
     }
   }
 
@@ -38338,7 +38439,7 @@ function BufferController(config) {
       var ranges = sourceBufferSink.getAllBufferRanges();
 
       if (!ranges || ranges.length === 0) {
-        return targetTime;
+        return NaN;
       }
 
       var i = 0;
@@ -38354,7 +38455,7 @@ function BufferController(config) {
         i += 1;
       }
 
-      return adjustedTime;
+      return adjustedTime === targetTime ? NaN : adjustedTime;
     } catch (e) {}
   }
 
@@ -38390,13 +38491,14 @@ function BufferController(config) {
     seekTarget = NaN;
 
     if (sourceBufferSink) {
+      var tmpSourceBufferSinkToReset = sourceBufferSink;
+      sourceBufferSink = null;
+
       if (!errored && !keepBuffers) {
-        sourceBufferSink.abort().then(function () {
-          sourceBufferSink.reset(keepBuffers);
-          sourceBufferSink = null;
+        tmpSourceBufferSinkToReset.abort().then(function () {
+          tmpSourceBufferSinkToReset.reset(keepBuffers);
+          tmpSourceBufferSinkToReset = null;
         });
-      } else {
-        sourceBufferSink = null;
       }
     }
 
@@ -39468,6 +39570,11 @@ function GapController() {
 
   function _shouldCheckForGaps() {
     var checkSeekingState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    if (!streamController.getActiveStream()) {
+      return false;
+    }
+
     var trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some(function (key) {
       return trackSwitchByMediaType[key];
     });
@@ -39607,7 +39714,7 @@ function GapController() {
         var timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
         jumpTimeoutHandler = window.setTimeout(function () {
           playbackController.seek(seekToPosition, true, true);
-          logger.warn("Jumping gap occuring in period ".concat(streamController.getActiveStream().getStreamId(), " starting at ").concat(_start, " and ending at ").concat(seekToPosition, ". Jumping by: ").concat(timeUntilGapEnd - timeToWait / 1000));
+          logger.warn("Jumping gap occuring in period ".concat(streamController.getActiveStream().getStreamId(), " starting at ").concat(_start, " and ending at ").concat(seekToPosition, ". Jumping by: ").concat(seekToPosition - _start));
           jumpTimeoutHandler = null;
         }, timeToWait);
       }
@@ -39929,7 +40036,6 @@ function MediaController() {
   function reset() {
     tracks = {};
     lastSelectedTracks = {};
-    customInitialTrackSelectionFunction = null;
     resetInitialSettings();
   }
 
@@ -40525,20 +40631,6 @@ function PlaybackController() {
     return streamInfo && videoModel ? videoModel.getTime() : null;
   }
 
-  function getNormalizedTime() {
-    var t = getTime();
-
-    if (isDynamic && !isNaN(availabilityStartTime)) {
-      var timeOffset = availabilityStartTime / 1000; // Fix current time for firefox and safari (returned as an absolute time)
-
-      if (t > timeOffset) {
-        t -= timeOffset;
-      }
-    }
-
-    return t;
-  }
-
   function getPlaybackRate() {
     return streamInfo && videoModel ? videoModel.getPlaybackRate() : null;
   }
@@ -40638,13 +40730,20 @@ function PlaybackController() {
           streaming: {
             delay: {
               liveDelay: llsd.latency.target / 1000
-            },
-            liveCatchup: {
-              minDrift: (llsd.latency.target + 500) / 1000,
-              maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target + 500) / 1000 : undefined
             }
           }
         });
+
+        if (llsd.latency.max && llsd.latency.max > llsd.latency.target) {
+          logger.debug('Apply LL properties coming from service description. Max Latency:', llsd.latency.max);
+          settings.update({
+            streaming: {
+              liveCatchup: {
+                maxDrift: (llsd.latency.max - llsd.latency.target) / 1000
+              }
+            }
+          });
+        }
       }
 
       if (llsd.playbackRate && llsd.playbackRate.max > 1.0) {
@@ -40673,7 +40772,7 @@ function PlaybackController() {
       return NaN;
     }
 
-    var currentTime = getNormalizedTime();
+    var currentTime = getTime();
 
     if (isNaN(currentTime) || currentTime === 0) {
       return 0;
@@ -40804,7 +40903,7 @@ function PlaybackController() {
     } // Compare the current time of the video element against the range defined in the DVR window.
 
 
-    var currentTime = getNormalizedTime();
+    var currentTime = getTime();
     var actualTime = getActualPresentationTime(currentTime, mediaType);
     var timeChanged = !isNaN(actualTime) && actualTime !== currentTime;
 
@@ -40994,16 +41093,25 @@ function PlaybackController() {
   function _isCatchupEnabled() {
     return settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled;
   }
+  /**
+   * Returns the combined minimum buffer level of all StreamProcessors. If a filter list is provided the types specified in the filter list are excluded.
+   * @param {array} filterList StreamProcessor types to exclude
+   * @return {null}
+   */
+
 
   function getBufferLevel() {
+    var filterList = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     var bufferLevel = null;
     streamController.getActiveStreamProcessors().forEach(function (p) {
-      var bl = p.getBufferLevel();
+      if (!filterList || filterList.length === 0 || filterList.indexOf(p.getType()) === -1) {
+        var bl = p.getBufferLevel();
 
-      if (bufferLevel === null) {
-        bufferLevel = bl;
-      } else {
-        bufferLevel = Math.min(bufferLevel, bl);
+        if (bufferLevel === null) {
+          bufferLevel = bl;
+        } else {
+          bufferLevel = Math.min(bufferLevel, bl);
+        }
       }
     });
     return bufferLevel;
@@ -41391,7 +41499,6 @@ function PlaybackController() {
     getTimeToStreamEnd: getTimeToStreamEnd,
     getBufferLevel: getBufferLevel,
     getTime: getTime,
-    getNormalizedTime: getNormalizedTime,
     getIsManifestUpdateInProgress: getIsManifestUpdateInProgress,
     getPlaybackRate: getPlaybackRate,
     getPlayedRanges: getPlayedRanges,
@@ -42122,10 +42229,10 @@ function StreamController() {
       var streamsInfo = adapter.getStreamsInfo();
 
       if (!activeStream && streamsInfo.length === 0) {
-        throw new Error('There are no streams');
+        throw new Error('There are no periods in the MPD');
       }
 
-      if (activeStream) {
+      if (activeStream && streamsInfo.length > 0) {
         dashMetrics.updateManifestUpdateInfo({
           currentTime: playbackController.getTime(),
           buffered: videoModel.getBufferRange(),
@@ -42159,7 +42266,7 @@ function StreamController() {
         throw e;
       });
     } catch (e) {
-      errHandler.error(new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_14__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_15__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
+      errHandler.error(new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_14__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_15__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + ' nostreamscomposed', manifestModel.getValue()));
       hasInitialisationError = true;
       reset();
     }
@@ -42607,8 +42714,9 @@ function StreamController() {
     // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
     if (initialPlayback && autoPlay) {
       var initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
+      var excludedStreamProcessors = [_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT];
 
-      if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay()) {
+      if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) || adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay()) {
         initialPlayback = false;
 
         _createPlaylistMetrics(_vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_7__["PlayList"].INITIAL_PLAYOUT_START_REASON);
@@ -43028,6 +43136,11 @@ function StreamController() {
 
 
   function _filterOutdatedStreams(streamsInfo) {
+    if (streamsInfo.length === 0) {
+      logger.warn("No periods included in the current manifest. Skipping the filtering of outdated stream objects.");
+      return;
+    }
+
     streams = streams.filter(function (stream) {
       var isStillIncluded = streamsInfo.filter(function (sInfo) {
         return sInfo.id === stream.getId();
@@ -45301,8 +45414,7 @@ function CmcdModel() {
         if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
 
         if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
-          var string = cmcdData[key].replace(/"/g, '\"');
-          acc += "".concat(key, "=\"").concat(string, "\"");
+          acc += "".concat(key, "=").concat(JSON.stringify(cmcdData[key]));
         } else {
           acc += "".concat(key, "=").concat(cmcdData[key]);
         }
@@ -46959,7 +47071,8 @@ __webpack_require__.r(__webpack_exports__);
 var READY_STATES_TO_EVENT_NAMES = new Map([[_constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, 'loadedmetadata'], [_constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_CURRENT_DATA, 'loadeddata'], [_constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, 'canplay'], [_constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA, 'canplaythrough']]);
 
 function VideoModel() {
-  var instance, logger, element, TTMLRenderingDiv, previousPlaybackRate;
+  var instance, logger, element, _currentTime, TTMLRenderingDiv, previousPlaybackRate;
+
   var VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
@@ -46967,6 +47080,7 @@ function VideoModel() {
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().getLogger(instance);
+    _currentTime = NaN;
   }
 
   function initialize() {
@@ -46998,12 +47112,13 @@ function VideoModel() {
 
 
   function setCurrentTime(currentTime, stickToBuffered) {
+    _currentTime = currentTime;
     waitForReadyState(_constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, function () {
       if (element) {
-        //_currentTime = currentTime;
         // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
         // providing playbackRate property equals to zero.
-        if (element.currentTime === currentTime) {
+        if (element.currentTime === _currentTime) {
+          _currentTime = NaN;
           return;
         } // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
         // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
@@ -47013,12 +47128,14 @@ function VideoModel() {
 
 
         try {
-          currentTime = stickToBuffered ? stickTimeToBuffered(currentTime) : currentTime;
-          element.currentTime = currentTime;
+          _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
+          element.currentTime = _currentTime;
+          _currentTime = NaN;
         } catch (e) {
           if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
             setTimeout(function () {
-              element.currentTime = currentTime;
+              element.currentTime = _currentTime;
+              _currentTime = NaN;
             }, 400);
           }
         }
@@ -47200,11 +47317,11 @@ function VideoModel() {
   }
 
   function isSeeking() {
-    return element ? element.seeking : null;
+    return element ? element.seeking || !isNaN(_currentTime) : null;
   }
 
   function getTime() {
-    return element ? element.currentTime : null;
+    return element ? !isNaN(_currentTime) ? _currentTime : element.currentTime : null;
   }
 
   function getPlaybackRate() {

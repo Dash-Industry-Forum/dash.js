@@ -7374,7 +7374,7 @@ function Settings() {
         video: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-      fragmentRequestTimeout: 0,
+      fragmentRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -7444,6 +7444,8 @@ function Settings() {
           } else {
             dest[n] = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(source[n]);
           }
+        } else {
+          console.error('Settings parameter ' + path + n + ' is not supported');
         }
       }
     }
@@ -8609,7 +8611,7 @@ function DashHandler(config) {
    */
 
 
-  function getValidSeekTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
+  function getValidTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
     try {
       if (isNaN(time) || !mediaInfo || !representation) {
         return NaN;
@@ -8680,6 +8682,80 @@ function DashHandler(config) {
       return NaN;
     }
   }
+  /**
+   * This function returns a time larger than the current time for which we can generate a request.
+   * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
+   * @param {number} time
+   * @param {object} mediaInfo
+   * @param {object} representation
+   * @param {number} targetThreshold
+   */
+
+
+  function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
+    try {
+      if (isNaN(time) || !mediaInfo || !representation) {
+        return NaN;
+      }
+
+      if (time < 0) {
+        time = 0;
+      }
+
+      if (isNaN(targetThreshold)) {
+        targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
+      }
+
+      if (getSegmentRequestForTime(mediaInfo, representation, time)) {
+        return time;
+      }
+
+      if (representation.adaptation.period.start + representation.adaptation.period.duration < time) {
+        return NaN;
+      } // Only look 30 seconds ahead
+
+
+      var end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+      var currentUpperTime = Math.min(time + targetThreshold, end);
+      var adjustedTime = NaN;
+      var targetRequest = null;
+
+      while (currentUpperTime <= end) {
+        var upperRequest = null;
+
+        if (currentUpperTime <= end) {
+          upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
+        }
+
+        if (upperRequest) {
+          adjustedTime = currentUpperTime;
+          targetRequest = upperRequest;
+          break;
+        }
+
+        currentUpperTime += targetThreshold;
+      }
+
+      if (targetRequest) {
+        var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
+
+        if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+          return time;
+        } // If target time is before the start of the request use request starttime
+
+
+        if (time < targetRequest.startTime) {
+          return targetRequest.startTime;
+        }
+
+        return Math.min(requestEndTime - targetThreshold, adjustedTime);
+      }
+
+      return adjustedTime;
+    } catch (e) {
+      return NaN;
+    }
+  }
 
   function getCurrentIndex() {
     return lastSegment ? lastSegment.index : -1;
@@ -8702,7 +8778,8 @@ function DashHandler(config) {
     isLastSegmentRequested: isLastSegmentRequested,
     reset: reset,
     getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent,
-    getValidSeekTimeCloseToTargetTime: getValidSeekTimeCloseToTargetTime
+    getValidTimeCloseToTargetTime: getValidTimeCloseToTargetTime,
+    getValidTimeAheadOfTargetTime: getValidTimeAheadOfTargetTime
   };
   setup();
   return instance;
@@ -10246,9 +10323,10 @@ function DashManifestModel() {
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME)) {
             event.presentationTime = currentMpdEvent.presentationTime;
-            var presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-            event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
           }
+
+          var presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+          event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
             event.duration = currentMpdEvent.duration / eventStream.timescale;
@@ -10256,6 +10334,8 @@ function DashManifestModel() {
 
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
             event.id = currentMpdEvent.id;
+          } else {
+            event.id = null;
           }
 
           if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
@@ -18457,8 +18537,7 @@ function CmcdModel() {
         if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
 
         if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
-          var string = cmcdData[key].replace(/"/g, '\"');
-          acc += "".concat(key, "=\"").concat(string, "\"");
+          acc += "".concat(key, "=").concat(JSON.stringify(cmcdData[key]));
         } else {
           acc += "".concat(key, "=").concat(cmcdData[key]);
         }
