@@ -1187,44 +1187,44 @@ function StreamController() {
      */
     function _getLiveDelayTimeOffsets(streamInfos) {
         try {
-
             let timeOffsets = [];
-
-            if (streamInfos && streamInfos.length === 1) {
-                const streamInfo = streamInfos[0];
+            if (streamInfos) {
                 const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
                 const astInSeconds = adapter.getAvailabilityStartTime() / 1000;
             
-                timeOffsets = mediaTypes
-                    .reduce((acc, mediaType) => {
-                        acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
-                        return acc;
-                    }, [])
-                    .reduce((acc, mediaInfo) => {
-                        const prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
-                        prts.forEach((prt) => {
-                            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-                            if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
-                                const voRep = voRepresentations[0];
-                                const d = new Date(prt[DashConstants.WALL_CLOCK_TIME]);
-                                const wallClockTime = d.getTime() / 1000;
-                                // TS 103 285 Clause 10.20.4
-                                // 1) Calculate PRT0
-                                // i) take the PRT@presentationTime and subtract any ST@presentationTime
-                                // ii) convert this time to seconds by dividing by ST@timescale
-                                // iii) Add this to start time of period that contains PRT.
-                                const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) / voRep[DashConstants.TIMESCALE]) + streamInfo.start); 
-                                // 2) Calculate TO between PRT at the start of MPD timeline and the AST
-                                const to = astInSeconds - prt0;
-                                // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
-                                acc.push({id: prt[DashConstants.ID], to});
-                            }
-                        });
+                streamInfos.forEach((streamInfo) => {
+                    const offsets = mediaTypes
+                        .reduce((acc, mediaType) => {
+                            acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
+                            return acc;
+                        }, [])
+                        .reduce((acc, mediaInfo) => {
+                            const prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
+                            prts.forEach((prt) => {
+                                const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                                if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
+                                    const voRep = voRepresentations[0];
+                                    const d = new Date(prt[DashConstants.WALL_CLOCK_TIME]);
+                                    const wallClockTime = d.getTime() / 1000;
+                                    // TS 103 285 Clause 10.20.4
+                                    // 1) Calculate PRT0
+                                    // i) take the PRT@presentationTime and subtract any ST@presentationTime
+                                    // ii) convert this time to seconds by dividing by ST@timescale
+                                    // iii) Add this to start time of period that contains PRT.
+                                    // N.B presentationTimeOffset is already divided by timescale at this point
+                                    const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start); 
+                                    // 2) Calculate TO between PRT at the start of MPD timeline and the AST
+                                    const to = astInSeconds - prt0;
+                                    // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
+                                    acc.push({id: prt[DashConstants.ID], to});
+                                }
+                            });
+                            return acc;
+                        }, [])
 
-                        return acc;
-                    }, [])
+                    timeOffsets = timeOffsets.concat(offsets);
+                })
             }
-
             return timeOffsets;
         } catch (e) {
             return [];
