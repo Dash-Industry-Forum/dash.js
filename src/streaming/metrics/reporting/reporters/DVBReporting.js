@@ -49,6 +49,7 @@ function DVBReporting(config) {
     let pendingRequests = [];
 
     const metricsConstants = config.metricsConstants;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     function setup() {
         metricSerialiser = MetricSerialiser(context).getInstance();
@@ -59,6 +60,7 @@ function DVBReporting(config) {
 
     function doGetRequest(url, successCB, failureCB) {
         let req = new XMLHttpRequest();
+        req.withCredentials = mediaPlayerModel.getXHRWithCredentialsForType('DVBReporting');
         const oncomplete = function () {
             let reqIndex = pendingRequests.indexOf(req);
 
