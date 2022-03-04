@@ -494,6 +494,7 @@ function PlaybackController() {
 
     function _onPlaybackPlaying() {
         logger.info('Native video element event: playing');
+        internalSeek = false;
         eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
@@ -505,7 +506,6 @@ function PlaybackController() {
     function _onPlaybackSeeking() {
         // Check if internal seeking to be ignored
         if (internalSeek) {
-            internalSeek = false;
             return;
         }
 
@@ -527,6 +527,7 @@ function PlaybackController() {
 
     function _onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
+        internalSeek = false;
         eventBus.trigger(Events.PLAYBACK_SEEKED);
     }
 
