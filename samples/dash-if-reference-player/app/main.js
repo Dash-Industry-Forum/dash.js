@@ -800,18 +800,25 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     }
 
-    $scope.getFormatedCmcdEnabledKeys = function() {
-        let cmcdEnabledKeys = $scope.cmcdEnabledKeys.split(',');
-        return $scope.cmcdAllKeys.map(key => {
-            let mappedKey = key;
-            if(!cmcdEnabledKeys.includes(key)) mappedKey = "";
+    $scope._getFormatedCmcdEnabledKeys = function() {
+        let formatedKeys;
+        if(!Array.isArray($scope.cmcdEnabledKeys)) {
+            let cmcdEnabledKeys =  $scope.cmcdEnabledKeys.split(',');
+            formatedKeys = $scope.cmcdAllKeys.map(key => {
+                let mappedKey = key;
+                if(!cmcdEnabledKeys.includes(key)) mappedKey = "";
 
-            return mappedKey;
-        })
+                return mappedKey;
+            });
+        } else {
+            formatedKeys = $scope.cmcdEnabledKeys;
+        }
+
+        return formatedKeys
     }
 
     $scope.updateCmcdEnabledKeys = function () {
-        let cmcdEnabledKeys = $scope.getFormatedCmcdEnabledKeys()
+        let cmcdEnabledKeys = $scope.getFormatedCmcdEnabledKeys();
         
         $scope.player.updateSettings({
             streaming: {
@@ -969,7 +976,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
         config.streaming.cmcd.rtp = $scope.cmcdRtp ? $scope.cmcdRtp : null;
         config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
-        config.streaming.cmcd.enabledKeys = $scope.cmcdEnabledKeys ? $scope.getFormatedCmcdEnabledKeys() : [];
+        config.streaming.cmcd.enabledKeys = $scope.cmcdEnabledKeys ? $scope._getFormatedCmcdEnabledKeys() : [];
 
         $scope.player.updateSettings(config);
 
