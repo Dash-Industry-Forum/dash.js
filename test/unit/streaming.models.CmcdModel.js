@@ -373,6 +373,26 @@ describe('CmcdModel', function () {
             expect(metrics.rtp).to.equal(10000);
         });
 
+        it( 'getHeadersParameters() applies enabledKeys filter', function() {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };            
+
+            settings.update({streaming: {cmcd: {enabledKeys: ['d', 'ot', 'tb', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'rtp' , 'pr', 'sf', 'sid', 'st', 'v'] }}});
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers[OBJECT_HEADER_NAME].split(',').map( e => { return e.split('=')[0]})).to.not.include('br');
+            expect(headers[REQUEST_HEADER_NAME].split(',').map( e => { return e.split('=')[0]})).to.not.include('bl');
+            expect(headers[STATUS_HEADER_NAME].split(',').map( e => { return e.split('=')[0]})).to.not.include('bs');
+            expect(headers[SESSION_HEADER_NAME].split(',').map( e => { return e.split('=')[0]})).to.not.include('cid');
+
+            //revert settings
+            settings.update({streaming: {cmcd: {enabledKeys: ['br' , 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v'] }}});
+        });
+
         it('getQueryParameter() returns correct metrics for MPD', function () {
             const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
             const MEDIA_TYPE = 'video';
