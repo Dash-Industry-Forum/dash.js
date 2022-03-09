@@ -818,7 +818,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.updateCmcdEnabledKeys = function () {
-        let cmcdEnabledKeys = $scope.getFormatedCmcdEnabledKeys();
+        let cmcdEnabledKeys = $scope._getFormatedCmcdEnabledKeys();
         
         $scope.player.updateSettings({
             streaming: {
