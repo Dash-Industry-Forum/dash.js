@@ -253,7 +253,7 @@ describe('DashManifestModel', function () {
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getCodec is called and adaptation.Representation_asArray.length is -1', () => {
+        it('should return null when getCodec is called and adaptation.Representation.length is -1', () => {
             const codec = dashManifestModel.getCodec({ Representation: { length: -1 } });
 
             expect(codec).to.be.null;    // jshint ignore:line
@@ -329,7 +329,7 @@ describe('DashManifestModel', function () {
             expect(mimeType).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getMimeType is called and adaptation.Representation_asArray.length is -1', () => {
+        it('should return null when getMimeType is called and adaptation.Representation.length is -1', () => {
             const mimeType = dashManifestModel.getMimeType({ Representation: { length: -1 } });
 
             expect(mimeType).to.be.null;    // jshint ignore:line
@@ -368,7 +368,7 @@ describe('DashManifestModel', function () {
             expect(labels).to.be.empty;                // jshint ignore:line
         });
 
-        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label_asArray', () => {
+        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label', () => {
             const labels = dashManifestModel.getLabelsForAdaptation({ Label: [] });
 
             expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
@@ -394,7 +394,7 @@ describe('DashManifestModel', function () {
             expect(contentProtection).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection_asArray is an empty array', () => {
+        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection is an empty array', () => {
             const adaptation = { ContentProtection: [] };
             const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
 

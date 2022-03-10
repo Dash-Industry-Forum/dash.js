@@ -790,7 +790,6 @@ describe('DashAdapter', function () {
             it('applies add operation to structure with single sibling', function () {
                 let originalPeriod = {id: 'foo'};
                 let addedPeriod = {id: 'bar'};
-                // special case x2js object which omits the _asArray variant
                 let manifest = {
                     Period: [originalPeriod]
                 };

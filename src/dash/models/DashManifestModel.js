@@ -83,10 +83,10 @@ function DashManifestModel() {
         }
 
         // Check ContentComponent.contentType
-        if (adaptation.ContentComponent_asArray && adaptation.ContentComponent_asArray.length > 0) {
-            if (adaptation.ContentComponent_asArray.length > 1) {
+        if (adaptation.ContentComponent && adaptation.ContentComponent.length > 0) {
+            if (adaptation.ContentComponent.length > 1) {
                 return (type === Constants.MUXED);
-            } else if (adaptation.ContentComponent_asArray[0].contentType === type) {
+            } else if (adaptation.ContentComponent[0].contentType === type) {
                 return true;
             }
         }
@@ -94,8 +94,8 @@ function DashManifestModel() {
         const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
 
         // Check codecs
-        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
-            const codecs = adaptation.Representation_asArray[0].codecs;
+        if (adaptation.Representation && adaptation.Representation.length) {
+            const codecs = adaptation.Representation[0].codecs;
             if (mimeTypeRegEx.test(codecs)) {
                 return true;
             }
@@ -130,8 +130,8 @@ function DashManifestModel() {
             adaptation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
             return true;
         }
-        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
-            const representation = adaptation.Representation_asArray[0];
+        if (adaptation.Representation && adaptation.Representation.length > 0) {
+            const representation = adaptation.Representation[0];
             if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||

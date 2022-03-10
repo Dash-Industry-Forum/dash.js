@@ -123,11 +123,11 @@ describe('DashHandler', function () {
                     period: {
                         mpd: {
                             manifest: {
-                                Period_asArray: [
+                                Period: [
                                     {
-                                        AdaptationSet_asArray: [
+                                        AdaptationSet: [
                                             {
-                                                Representation_asArray: [
+                                                Representation: [
                                                     {
                                                         bandwidth: 3000
                                                     }
@@ -377,11 +377,11 @@ describe('DashHandler', function () {
                     period: {
                         mpd: {
                             manifest: {
-                                Period_asArray: [
+                                Period: [
                                     {
-                                        AdaptationSet_asArray: [
+                                        AdaptationSet: [
                                             {
-                                                Representation_asArray: [
+                                                Representation: [
                                                     {
                                                         bandwidth: 3000
                                                     }
