@@ -58,7 +58,7 @@ function LowestBitrateRuleClass() {
         // Get current bitrate
         let streamController = StreamController(context).getInstance();
         let abrController = rulesContext.getAbrController();
-        let current = abrController.getQualityFor(mediaType, streamController.getActiveStreamInfo());
+        let current = abrController.getQualityFor(mediaType, streamController.getActiveStreamInfo().id);
 
         // If already in lowest bitrate, don't do anything
         if (current === 0) {

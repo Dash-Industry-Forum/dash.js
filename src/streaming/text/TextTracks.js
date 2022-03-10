@@ -160,7 +160,7 @@ function TextTracks(config) {
 
             let onMetadataLoaded = function () {
                 const track = getTrackByIdx(defaultIndex);
-                if (track) {
+                if (track && track.renderingType === 'html') {
                     checkVideoSize.call(this, track, true);
                 }
                 eventBus.off(MediaPlayerEvents.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
@@ -417,7 +417,7 @@ function TextTracks(config) {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (currentItem.type === 'html' && captionContainer) {
+            if (currentItem.type === 'html' && captionContainer && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
@@ -465,7 +465,7 @@ function TextTracks(config) {
                     }
                 };
             } else {
-                if (currentItem.data) {
+                if (currentItem.data && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
                     if (currentItem.styles) {
                         if (currentItem.styles.align !== undefined && 'align' in cue) {
@@ -490,7 +490,9 @@ function TextTracks(config) {
             }
             try {
                 if (cue) {
-                    track.addCue(cue);
+                    if (!cueInTrack(track, cue)) {
+                        track.addCue(cue);
+                    }
                 } else {
                     logger.error('impossible to display subtitles.');
                 }
@@ -564,6 +566,17 @@ function TextTracks(config) {
         }
     }
 
+    function cueInTrack(track, cue) {
+        if (!track.cues) return false;
+        for (let i = 0; i < track.cues.length; i++) {
+            if ((track.cues[i].startTime === cue.startTime) &&
+                (track.cues[i].endTime === cue.endTime)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function cueInRange(cue, start, end) {
         return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
     }
@@ -575,6 +588,9 @@ function TextTracks(config) {
 
             for (let r = lastIdx; r >= 0; r--) {
                 if (cueInRange(cues[r], start, end)) {
+                    if (cues[r].onexit) {
+                        cues[r].onexit();
+                    }
                     track.removeCue(cues[r]);
                 }
             }
@@ -593,8 +609,7 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
-                deleteTrackCues.call(this, track);
-                track.mode = 'disabled';
+                deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration);
             }
         }
         nativeTrackElementArr = [];

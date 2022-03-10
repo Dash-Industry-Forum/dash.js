@@ -94,6 +94,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Load with url parameters",
+                "description": "A demo page that uses url query parameters to configure the playback.",
+                "href": "getting-started/load-with-url-params.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -195,6 +206,31 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Low latency with AAST based decisioning",
+                "description": "Example showing how to use dash.js to play very low latency streams using AAST based throughput calculation.",
+                "href": "low-latency/aast_tp_calc.html",
+                "image": "lib/img/akamai-ll-3.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Low latency testplayer",
+                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "href": "low-latency/testplayer/testplayer.html",
+                "image": "lib/img/akamai-ll-4.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Settings",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -250,6 +286,17 @@
                 "description": "Example showing how to set the maximum and minimum bitrate in dash.js.",
                 "href": "abr/max-min-bitrate.html",
                 "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Fast bitrate switch",
+                "description": "Example showing how to aggressively replace segments in the buffer when switching up in quality.",
+                "href": "abr/fastswitch.html",
+                "image": "lib/img/bbb-2.jpg",
                 "labels": [
                     "VoD",
                     "Video",
@@ -364,6 +411,34 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Keysystem string priority",
+                "description": "This example shows how to specify the system string priority for the call to requestMediaKeySystemAccess. For example, Playready might be supported with the system strings \"com.microsoft.playready.recommendation\" and \"com.microsoft.playready\". ",
+                "href": "drm/system-string-priority.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "License server via MPD",
+                "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
+                "href": "drm/dashif-laurl.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -439,7 +514,7 @@
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html",
-                "image": "lib/img/sintel-1.jpg",
+                "image": "lib/img/elephant-1.jpg",
                 "labels": [
                     "VoD",
                     "Fragmented text",
@@ -459,6 +534,20 @@
                 "image": "lib/img/tos-2.jpg",
                 "labels": [
                     "VoD",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Multiple audio tracks with different codecs",
+                "description": "This example shows how content with multiple audio tracks with different codecs can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio-drm-codec-change.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
                     "Multi Audio",
                     "Fragmented Text",
                     "Video",
@@ -488,7 +577,7 @@
         "section": "Audio only",
         "samples": [
             {
-                "title": "Only audio stream",
+                "title": "Audio only stream",
                 "description": "This example shows how to play audio-only streams in dash.js.",
                 "href": "audio-only/index.html",
                 "labels": [
@@ -567,6 +656,41 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Custom initial track selection example",
+                "description": "This sample shows how to define your own initial track selection function.",
+                "href": "advanced/custom-initial-track-selection.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "DRM",
+                    "Widevine"
+                ]
+            },
+            {
+                "title": "Load with a parsed manifest",
+                "description": "This sample shows how to load the manifest as a parsed object instead of providing a url to the manifest",
+                "href": "advanced/load_with_manifest.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "MPD anchors",
+                "description": "This sample shows how to use MPD anchors to start a presentation at a given time.",
+                "href": "advanced/mpd-anchors.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -597,6 +721,22 @@
                 "image": "lib/img/mss-1.jpg",
                 "labels": [
                     "MSS",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Module builds",
+        "samples": [
+            {
+                "title": "Mediaplayer only",
+                "description": "A sample showing how to use the dash.mediaplayer bundle. This bundle does not contain any code for playback of DRM protected content.",
+                "href": "module-builds/mediaplayer-only.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
                     "Video",
                     "Audio"
                 ]

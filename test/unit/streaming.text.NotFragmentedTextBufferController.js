@@ -26,7 +26,7 @@ describe('NotFragmentedTextBufferController', function () {
     let errorHandlerMock = new ErrorHandlerMock();
     let mediaSourceMock;
     let notFragmentedTextBufferController;
-    let mockMediaInfo = { isText: false, codec: '' };
+    let mockMediaInfo = { isFragmented: false, codec: '' };
 
     beforeEach(function () {
         mediaSourceMock = new MediaSourceMock();

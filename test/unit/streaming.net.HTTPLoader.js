@@ -8,6 +8,7 @@ import {
     HTTPRequest
 }
     from '../../src/streaming/vo/metrics/HTTPRequest';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -20,10 +21,12 @@ let dashMetrics;
 let requestModifier;
 let mediaPlayerModelMock;
 let httpLoader;
+let settings = Settings(context).getInstance();
 
 describe('HTTPLoader', function () {
 
     beforeEach(function () {
+        settings.reset();
         mediaPlayerModelMock = new MediaPlayerModelMock();
         errHandler = ErrorHandler(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
@@ -105,12 +108,17 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true
+            }
+        })
+
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true,
             errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
@@ -175,12 +183,17 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true
+            }
+        })
+
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true,
             errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
@@ -197,12 +210,17 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true
+            }
+        })
+
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true,
             errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
@@ -226,12 +244,17 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true
+            }
+        })
+
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true,
             errors: Errors
         });
         // Creating stream
@@ -260,6 +283,12 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true
+            }
+        })
+
         mediaPlayerModelMock.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE ] = 0;
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -267,7 +296,6 @@ describe('HTTPLoader', function () {
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 404 })));
         httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });

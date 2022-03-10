@@ -155,6 +155,11 @@ class HTTPRequestTrace {
          * @public
          */
         this.b = [];
+        /**
+         * Measurement throughput in kbits/s
+         * @public
+         */
+         this.t = null;
     }
 }
 

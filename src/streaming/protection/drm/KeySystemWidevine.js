@@ -47,14 +47,7 @@ function KeySystemWidevine(config) {
 
     config = config || {};
     let instance;
-    let protData = null;
     const BASE64 = config.BASE64;
-
-    function init(protectionData) {
-        if (protectionData) {
-            protData = protectionData;
-        }
-    }
 
     function getInitData(cp) {
         return CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
@@ -72,31 +65,19 @@ function KeySystemWidevine(config) {
         return null;
     }
 
-    function getCDMData() {
-        return null;
-    }
-
-    function getSessionId(cp) {
-        // Get sessionId from protectionData or from manifest
-        if (protData && protData.sessionId) {
-            return protData.sessionId;
-        } else if (cp && cp.sessionId) {
-            return cp.sessionId;
-        }
+    function getCDMData(/*cdmData*/) {
         return null;
     }
 
     instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        init: init,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData,
-        getSessionId: getSessionId
+        uuid,
+        schemeIdURI,
+        systemString,
+        getInitData,
+        getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData,
+        getCDMData
     };
 
     return instance;

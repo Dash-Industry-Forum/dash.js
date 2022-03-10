@@ -131,7 +131,12 @@
                             ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                    <!-- Testbutton -->
+                    <button class="btn btn-default" type="button" ng-click="copyQueryUrl(); copyNotificationShow()">Copy Settings URL</button>
                 </span>
+        </div>
+        <div id='copyNotificationPopup' class='copyPopup'>
+            <div id='copyPopupContent' class='copyPopupContent'> URL Copied! </div>
         </div>
     </div>
 
@@ -148,7 +153,7 @@
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables looping of the media once playback has completed">
-                    <input type="checkbox" id="loop-cb" ng-checked="loopSelected">
+                    <input type="checkbox" id="loop-cb" ng-model="loopSelected" ng-checked="loopSelected">
                     Loop
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
@@ -187,7 +192,13 @@
                        title="Enable low latency mode">
                     <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected"
                            ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
-                    Low Latency Mode
+                    Low latency mode
+                </label>             
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enable low latency mode by MPD attribute 'availabilityTimeComplete' ">
+                    <input type="checkbox" id="lowLatencyModeEnabledByManifestCB" ng-model="lowLatencyEnabledByManifest"
+                           ng-change="toggleLowLatencyByManifestMode()" ng-checked="lowLatencyEnabledByManifest">
+                    Enable low latency mode by MPD
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable catchup mode for non low latency streams">
@@ -200,15 +211,15 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Default catchup mechanism to keep the desired live latency.">
-                            <input type="radio" id="liveCatchupModeDefault" autocomplete="off" checked="checked"
-                                   name="catchupMode"
+                            <input type="radio" id="liveCatchupModeDefault" autocomplete="off" ng-model="liveCatchupMode"
+                                   name="catchupMode" value="liveCatchupModeDefault"
                                    ng-click="changeLiveCatchupMode('liveCatchupModeDefault')">
                             Default
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="LoL+ based catchup mechanism to keep the desired live latency.">
-                            <input type="radio" id="liveCatchupModeLoLP" autocomplete="off" name="catchupMode"
-                                   ng-click="changeLiveCatchupMode('liveCatchupModeLoLP')">
+                            <input type="radio" id="liveCatchupModeLoLP" autocomplete="off" ng-model="liveCatchupMode" name="catchupMode"
+                                   ng-click="changeLiveCatchupMode('liveCatchupModeLoLP')" value="liveCatchupModeLoLP">
                             LoL+ based
                         </label>
                     </div>
@@ -248,20 +259,20 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Dynamically switch between BOLA and Throughput strategies.">
-                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked"
-                                   ng-click="changeABRStrategy('abrDynamic')">
+                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrDynamic')" value="abrDynamic">
                             ABR Strategy: Dynamic
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate based on buffer level.">
-                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy"
-                                   ng-click="changeABRStrategy('abrBola')">
+                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrBola')" value="abrDynamic">
                             ABR Strategy: BOLA
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate based on recent throughput.">
-                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy"
-                                   ng-click="changeABRStrategy('abrThroughput')">
+                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrThroughput')" value="abrThroughput">
                             ABR Strategy: Throughput
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
@@ -296,14 +307,14 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate using the L2A algorithm.">
-                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy"
-                                   ng-click="changeABRStrategy('abrL2A')">
+                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrL2A')" value="abrL2A">
                             ABR Strategy: L2A-LL
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate using the LoL+ algorithm.">
-                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy"
-                                   ng-click="changeABRStrategy('abrLoLP')">
+                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrLoLP')" value="abrLoLP">
                             ABR Strategy: LoL+
                         </label>
                     </div>
@@ -313,17 +324,24 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Default fetch throughput calculation for low latency streaming based on downloaded data chunks.">
-                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off"
-                                   checked="checked" name="abrFetchThroughputCalculation"
+                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off" ng-model="abrThroughputCalculationMode"
+                                    name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationDownloadedData"
                                    ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationDownloadedData')">
                             Data chunks
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="LoL+ fetch throughput calculation for low latency streaming based on moof parsing.">
-                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off"
-                                   name="abrFetchThroughputCalculation"
+                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off" ng-model="abrThroughputCalculationMode"
+                                   checked="checked" name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationMoofParsing"
                                    ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing')">
                             moof parsing
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="Further approach for measurement and estimation (FAME) for fetch throughput calculation for low latency streaming based on AAST decisioning / availability of chunk and optimistic estimation.">
+                            <input type="radio" id="abrFetchThroughputCalculationAAST" autocomplete="off" ng-model="abrThroughputCalculationMode"
+                                name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationAAST"
+                                ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationAAST')">
+                           AST decisioning
                         </label>
                     </div>
                 </div>
@@ -333,20 +351,286 @@
         <div class="options-item">
             <div class="options-item-title">DRM Options</div>
             <div class="options-item-body">
-                <div class="dropdown" data-toggle="tooltip" data-placement="left"
-                     title="Please select a DRM Key System">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">DRM
-                        KeySystem
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-                        <li ng-repeat="item in drmKeySystems"><a ng-click="setDrmKeySystem(item)">{{item}}</a></li>
-                    </ul>
+                <form>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" ng-model="drmPlayready.isActive">
+                        Playready
+                    </label>
+
+                    <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('playready')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('playready')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('playready')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in playreadyRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="playreadyKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="playreadyValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('playready', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="playreadyPriority" id="playreadyPriority" ng-model="drmPlayready.priority"
+                                    ng-init="drmPlayready.priority='1'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" ng-model="drmWidevine.isActive">
+                        Widevine
+                    </label>
+
+                    <div id="drmWidevineLicenseForm" ng-show="drmWidevine.isActive">
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('widevine')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('widevine')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('widevine')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in widevineRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="widevineKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="widevineValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('widevine', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="widevinePriority" id="widevinePriority" ng-model="drmWidevine.priority"
+                                    ng-init="drmWidevine.priority='0'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" ng-model="drmClearkey.isActive">
+                        Clearkey
+                    </label>
+
+                    <div id="drmClearkeyLicenseForm" ng-show="drmClearkey.isActive">
+                        <div id="drmClearkeyKidKeyMode" ng-show="drmClearkey.inputMode === 'kidKey'">
+                            <label class="options-label">Kid:</label>
+                            <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
+                            <label class="options-label">Key:</label>
+                            <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
+                        </div>
+                        <div id="drmClearkeyLicenseserverMode" ng-show="drmClearkey.inputMode === 'licenseServer'">
+                            <label class="options-label">License URL:</label>
+                            <input type="text" class="form-control" placeholder=""
+                                   ng-model="drmClearkey.licenseServerUrl">
+                        </div>
+
+                        <!-- Open KID=KEY Dialogue Window -->
+                        <button id="additionalClearkeysDialogueBtn" class="btn btn-primary dialogue-btn"
+                                ng-click="openDialogue('additionalClearkeys')">
+                            Add additional clearkeys
+                        </button>
+
+                        <!-- KID=KEY Dialogue Window Content -->
+                        <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('additionalClearkeys')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('additionalClearkeys')">Add
+                                    KID=KEY pair
+                                </button>
+
+                                <div ng-repeat="clearkey in additionalClearkeyPairs track by $index"
+                                     ng-value="{{$index}}">
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">KID: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="clearkey.kid" name="clearkeyKID_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">KEY: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="clearkey.key" name="clearkeyKEY_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('additionalClearkeys', $index)">Remove
+                                                KID=KEY
+                                                pair
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="clearkeyRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('clearkey')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('clearkey')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('clearkey')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in clearkeyRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="clearkeyKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="clearkeyValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('clearkey', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="clearkeyPriority" id="clearkeyPriority" ng-model="drmClearkey.priority"
+                                    ng-init="drmClearkey.priority='2'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Priorities</div>
+                    <div class="sub-options-item-body">
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable DRM-Priorisation">
+                            <input type="checkbox" ng-model="prioritiesEnabled">
+                            DRM Priorisation
+                        </label>
+                    </div>
                 </div>
-                <p><label class="options-label">{{drmKeySystem}}</label></p>
-                <div id="drmLicenseForm" ng-show="drmKeySystem">
-                    <label class="options-label">License URL:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmLicenseURL">
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Clearkey Options</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Use KID=Key to specify Clearkey DRM.">
+                            <input type="radio" id="kidKey" autocomplete="off" name="inputMode" ng-model="drmClearkey.inputMode" value="kidKey">
+                            KID=KEY
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Use Licenseserver-URL to specify Clearkey DRM">
+                            <input type="radio" id="licenseServer" autocomplete="off" name="inputMode" ng-model="drmClearkey.inputMode" value="licenseServer">
+                            License Server
+                        </label>
+                    </div>
+                </div>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">License server</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="DRM Today">
+                            <input type="checkbox" id="drmTodayServer" ng-model="drmToday" autocomplete="off" name="inputMode">
+                            DRM Today
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -354,20 +638,20 @@
             <div class="options-item-title">Live delay</div>
             <div class="options-item-body">
                 <label class="options-label">Initial Live delay:</label>
-                <input type="text" class="form-control" placeholder="value seconds" ng-model="initialLiveDelay">
+                <input type="text" class="form-control" placeholder="value seconds" ng-model="initialLiveDelay" ng-change="updateInitialLiveDelay()">
                 <label class="options-label">Initial LiveDelayFragmentCount:</label>
-                <input type="text" class="form-control" placeholder="value number" ng-model="liveDelayFragmentCount">
+                <input type="text" class="form-control" placeholder="value number" ng-model="liveDelayFragmentCount" ng-change="updateLiveDelayFragmentCount()">
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Use latency targets defined in ServiceDescription elements">
                     <input type="checkbox" id="applyServiceDescription" ng-model="applyServiceDescription"
                            ng-change="toggleApplyServiceDescription()" ng-checked="applyServiceDescription">
                     Apply ServiceDescription
-                </label>                
+                </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest">
                     <input type="checkbox" id="useSuggestedPresentationDelay" ng-model="useSuggestedPresentationDelay"
                            ng-change="toggleUseSuggestedPresentationDelay()" ng-checked="useSuggestedPresentationDelay">
-                    Apply SuggestedPresentationDelay
+                    Use SuggestedPresentationDelay
                 </label>
             </div>
         </div>
@@ -375,30 +659,30 @@
             <div class="options-item-title">Initial Settings</div>
             <div class="options-item-body">
                 <label class="options-label">Initial bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate" ng-change="updateInitialBitrateVideo()">
                 <label class="options-label">Minimum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate" ng-change="updateMinimumBitrateVideo()">
                 <label class="options-label">Maximum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate" ng-change="updateMaximumBitrateVideo()">
                 <label class="options-label">Audio:</label>
                 <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'"
-                       ng-model="initialSettings.audio">
+                       ng-model="initialSettings.audio" ng-change="updateInitialLanguageAudio()">
                 <label class="options-label">Video:</label>
                 <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
-                       ng-model="initialSettings.video">
+                       ng-model="initialSettings.video" ng-change="updateInitialRoleVideo()">
                 <label class="options-label">Text:</label>
                 <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'"
-                       ng-model="initialSettings.text">
+                       ng-model="initialSettings.text" ng-change="updateInitialLanguageText()">
                 <input type="text" class="form-control" placeholder="text initial role, e.g. 'caption'"
-                       ng-model="initialSettings.textRole">
+                       ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable subtitle on loading text">
-                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
+                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled" ng-change="toggleText()">
                     Enable Text At Loading
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Force text streaming">
-                    <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming">
+                    <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming" ng-change="toggleForcedTextStreaming()">
                     Force Text Streaming
                 </label>
 
@@ -410,27 +694,27 @@
                 <label class="options-label">Audio:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                    <input type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio"
-                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')">
+                    <input type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio" ng-model='audioTrackSwitchMode'
+                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')" value="alwaysReplace">
                     always replace
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                    <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio"
-                           ng-click="changeTrackSwitchMode('neverReplace', 'audio')">
+                    <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio" ng-model="audioTrackSwitchMode"
+                           ng-click="changeTrackSwitchMode('neverReplace', 'audio')" value="neverReplace">
                     never replace
                 </label>
                 <label class="options-label">Video:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                    <input type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video"
-                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')">
+                    <input type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video" ng-model="videoTrackSwitchMode"
+                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" value="alwaysReplace">
                     always replace
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                    <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video"
-                           ng-click="changeTrackSwitchMode('neverReplace', 'video')">
+                    <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video" ng-model="videoTrackSwitchMode"
+                           ng-click="changeTrackSwitchMode('neverReplace', 'video')" value="neverReplace">
                     never replace
                 </label>
             </div>
@@ -441,37 +725,37 @@
                 <label class="options-label">Log Level:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Don't write any log message in browser console">
-                    <input type="radio" id="log-none" value="none" autocomplete="off" name="log-level"
+                    <input type="radio" id="log-none" value="none" autocomplete="off" name="log-level" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     NONE
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_FATAL">
-                    <input type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level"
+                    <input type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     FATAL
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_ERROR">
-                    <input type="radio" id="log-error" value="error" autocomplete="off" name="log-level"
+                    <input type="radio" id="log-error" value="error" autocomplete="off" name="log-level" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     ERROR
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_WARNING">
-                    <input type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level"
+                    <input type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     WARNING
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_INFO">
-                    <input type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked"
+                    <input type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     INFO
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_DEBUG">
-                    <input type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level"
+                    <input type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level" ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     DEBUG
                 </label>
@@ -487,27 +771,27 @@
                     Enable CMCD Reporting
                 </label>
                 <label class="options-label">Session ID:</label>
-                <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId">
+                <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId" ng-change="updateCmcdSessionId()">
                 <label class="options-label">Content ID:</label>
-                <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId">
+                <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId" ng-change="updateCmcdContentId()">
                 <label class="options-label" data-toggle="tooltip" data-placement="right"
                        title="A static value to be used as RTP parameter">Requested maximum throughput (rtp):</label>
-                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp">
+                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp" ng-change="updateCmcdRtp()">
                 <label class="options-label" data-toggle="tooltip" data-placement="right"
                        title="This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor. If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.">RTP
                     safety factor:</label>
-                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor">
+                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor" ng-change="updateCmcdRtpSafetyFactor()">
                 <label class="options-label" title="Specifies the CMCD data transition mode">Transition Mode:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Send the CMCD metrics via query parameter">
-                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off"
+                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off" ng-model="cmcdMode"
                            name="cmcd-mode"
                            ng-click="setCmcdMode()">
                     Query
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Send the CMCD metrics via custom HTTP header">
-                    <input type="radio" id="cmcd-header" value="header" autocomplete="off" name="cmcd-mode"
+                    <input type="radio" id="cmcd-header" value="header" autocomplete="off" name="cmcd-mode" ng-model="cmcdMode"
                            ng-click="setCmcdMode()">
                     Header
                 </label>
@@ -573,7 +857,15 @@
 
         <!-- STATS TAB CONTENT -->
         <div class="col-md-3 tabs-section">
-            <div class="bs-callout bs-callout-information" id="callout-dropdown-positioning">
+            <div class="bs-callout bs-callout-danger" id="http-warning-container" style="display: none;">
+                    <span id="http-warning-text"></span>
+            </div>
+            <div class="bs-callout bs-callout-success">
+                <h5><span class="label label-success" style="margin-right:3px">New</span>Export settings</h5>
+                Try out our new "export settings" feature and share your current dash.js settings and DRM parameters easily via URL query parameters. 
+                Click on "Copy Settings URL" on the top right and paste the URL in the address bar of your browser.
+            </div>
+            <div class="bs-callout bs-callout-information">
                 <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                 Additional samples can be found in the <a
                 href="../index.html" target="_blank">Sample Section</a>.

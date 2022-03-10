@@ -192,7 +192,8 @@ function ScheduleController(config) {
      */
     function _shouldClearScheduleTimer() {
         try {
-            return (((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()));
+            return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
+                    (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
@@ -235,7 +236,7 @@ function ScheduleController(config) {
             return bufferTarget;
         }
 
-        if (type === Constants.FRAGMENTED_TEXT) {
+        if (type === Constants.TEXT) {
             bufferTarget = _getBufferTargetForFragmentedText();
         } else if (type === Constants.AUDIO && hasVideoTrack) {
             bufferTarget = _getBufferTargetForAudio();
@@ -362,7 +363,7 @@ function ScheduleController(config) {
         logger.debug(`Appended bytes for ${e.mediaType} and stream id ${streamInfo.id}`);
 
         // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
-        if (isNaN(e.index)) {
+        if (isNaN(e.index) || isNaN(lastInitializedQuality)) {
             lastInitializedQuality = e.quality;
             logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
         }

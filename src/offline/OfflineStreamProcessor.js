@@ -312,12 +312,12 @@ function OfflineStreamProcessor(config) {
             return representation.id === bitrate.id;
         });
 
-        if (type !== constants.VIDEO && type !== constants.AUDIO  && type !== constants.TEXT && type !== constants.FRAGMENTED_TEXT) {
+        if (type !== constants.VIDEO && type !== constants.AUDIO  && type !== constants.TEXT) {
             updating = false;
             return;
         }
 
-        representationController.updateData(null, voRepresentations, type, quality);
+        representationController.updateData(null, voRepresentations, type, mediaInfo.isFragmented, quality);
     }
 
     function isUpdating() {
@@ -333,7 +333,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function getAvailableSegmentsNumber() {
-        return representationController.getCurrentRepresentation().availableSegmentsNumber + 1; // do not forget init segment
+        return representationController.getCurrentRepresentation().numberOfSegments + 1; // do not forget init segment
     }
 
     function updateProgression () {

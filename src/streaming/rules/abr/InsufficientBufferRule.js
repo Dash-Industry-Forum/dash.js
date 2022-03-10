@@ -40,12 +40,13 @@ import MediaPlayerEvents from '../../MediaPlayerEvents';
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.7;
+    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
     const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -89,6 +90,7 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
         const streamInfo = rulesContext.getStreamInfo();
         const streamId = streamInfo ? streamInfo.id : null;
+        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
         if (shouldIgnore(mediaType) || !fragmentDuration) {
@@ -103,8 +105,9 @@ function InsufficientBufferRule(config) {
             const mediaInfo = rulesContext.getMediaInfo();
             const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
+
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputHistory.getAverageThroughput(mediaType);
+            const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
             const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
@@ -113,16 +116,17 @@ function InsufficientBufferRule(config) {
         }
 
         return switchRequest;
+
     }
 
     function shouldIgnore(mediaType) {
-        return bufferStateDict[mediaType].ignoreCount > 0;
+        return !settings.get().streaming.lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {
         bufferStateDict = {};
-        bufferStateDict[Constants.VIDEO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
-        bufferStateDict[Constants.AUDIO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
+        bufferStateDict[Constants.VIDEO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
+        bufferStateDict[Constants.AUDIO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
     }
 
     function _onPlaybackSeeking() {
@@ -144,8 +148,8 @@ function InsufficientBufferRule(config) {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex,
-        reset: reset
+        getMaxIndex,
+        reset
     };
 
     setup();

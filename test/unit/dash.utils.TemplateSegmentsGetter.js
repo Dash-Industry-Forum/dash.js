@@ -45,18 +45,25 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = undefined;
 
-            templateSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(1);
+            const mediaFinishedInformation = templateSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.numberOfSegments).to.equal(1);
         });
 
-        it('should calculate representation segment range correctly', () => {
+        it('should calculate availableSegmentsNumber correctly', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
-            templateSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(20);
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
+            let mediaFinishedInformation = templateSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.numberOfSegments).to.equal(20);
+
+            representation.segmentAvailabilityWindow = {start: 0, end: 101};
+            representation.adaptation.period.duration = 101;
+            mediaFinishedInformation = templateSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.numberOfSegments).to.equal(21);
         });
+
+
     });
 
     describe('getSegmentByIndex', () => {
@@ -66,17 +73,17 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = 1;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(1);
 
             seg = templateSegmentsGetter.getSegmentByIndex(representation, 1);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(1);
             expect(seg.duration).to.equal(1);
 
             seg = templateSegmentsGetter.getSegmentByIndex(representation, 2);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(2);
             expect(seg.duration).to.equal(1);
         });
@@ -107,22 +114,22 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(5);
 
             seg = templateSegmentsGetter.getSegmentByTime(representation, 3);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(5);
 
             seg = templateSegmentsGetter.getSegmentByTime(representation, 12);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(10);
             expect(seg.duration).to.equal(5);
 
             seg = templateSegmentsGetter.getSegmentByTime(representation, 17);
-            expect(seg.availabilityIdx).to.equal(3);
+            expect(seg.index).to.equal(3);
             expect(seg.presentationStartTime).to.equal(15);
             expect(seg.duration).to.equal(5);
         });

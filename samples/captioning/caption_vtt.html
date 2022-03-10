@@ -19,8 +19,8 @@
 
     <script class="code">
         function init() {
-            var url = "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
-                video =  video = document.querySelector('video'),
+            var url = "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
+                video = video = document.querySelector('video'),
                 player;
 
             player = dashjs.MediaPlayer({}).create();
@@ -41,7 +41,9 @@
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>WebVTT Dash Demo</h3>
-                    <p>This example shows how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.</p>
+                    <p>This example shows how content with VTT captions can be played back by the dash.js player. First
+                        captions appear at the 15s mark.</p>
+                    <p>Note: This sample will only work when using http as the subtitles are not hosted via https.</p>
                 </div>
             </div>
             <div class="col-md-8">

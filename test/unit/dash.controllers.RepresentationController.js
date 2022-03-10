@@ -99,7 +99,7 @@ describe('RepresentationController', function () {
 
         describe('when data update completed', function () {
             beforeEach(function (done) {
-                representationController.updateData(data, voRepresentations, testType, 0);
+                representationController.updateData(data, voRepresentations, testType, true, 0);
                 setTimeout(function () {
                     done();
                 }, specHelper.getExecutionDelay());

@@ -451,11 +451,11 @@ describe('DashAdapter', function () {
                 expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
             });
 
-            it('should return an empty array when getAllMediaInfoForType is called and, embeddedText type and externalManifest are set', function () {
+            it('should return an empty array when getAllMediaInfoForType is called and, text type and externalManifest are set', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                     id: 'defaultId_0',
                     index: 0
-                }, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
+                }, Constants.TEXT, manifest_with_video_with_embedded_subtitles);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(2);           // jshint ignore:line

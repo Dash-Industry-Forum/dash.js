@@ -55,7 +55,7 @@ class SessionToken {}
  * Returns the unique session ID designated to this session
  *
  * @function
- * @name SessionToken#getSessionID
+ * @name SessionToken#getSessionId
  * @return {string} the session ID or the empty string if the implementation
  * does not support session IDs or the sessionID has not yet been established
  */

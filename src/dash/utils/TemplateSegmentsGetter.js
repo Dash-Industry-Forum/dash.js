@@ -46,6 +46,22 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function getMediaFinishedInformation(representation) {
+        const mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN }
+        if (!representation) {
+            return mediaFinishedInformation
+        }
+
+        const duration = representation.segmentDuration;
+        if (isNaN(duration)) {
+            mediaFinishedInformation.numberOfSegments = 1;
+        } else {
+            mediaFinishedInformation.numberOfSegments = Math.ceil(representation.adaptation.period.duration / duration);
+        }
+
+        return mediaFinishedInformation;
+    }
+
     function getSegmentByIndex(representation, index) {
         checkConfig();
 
@@ -56,24 +72,17 @@ function TemplateSegmentsGetter(config, isDynamic) {
         const template = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
             AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
 
+        // This is the index without @startNumber
         index = Math.max(index, 0);
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
         if (seg) {
-            seg.replacementTime = Math.round((index - 1) * representation.segmentDuration * representation.timescale,10);
+            seg.replacementTime = Math.round((index - 1) * representation.segmentDuration * representation.timescale, 10);
 
             let url = template.media;
             url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
             url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
             seg.media = url;
-        }
-
-        const duration = representation.segmentDuration;
-
-        if (isNaN(duration)) {
-            representation.availableSegmentsNumber = 1;
-        } else {
-            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
         }
 
         return seg;
@@ -92,6 +101,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
+        // Calculate the relative time for the requested time in this period
         let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = Math.floor(periodTime / duration);
 
@@ -100,7 +110,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     instance = {
         getSegmentByIndex,
-        getSegmentByTime
+        getSegmentByTime,
+        getMediaFinishedInformation
     };
 
     return instance;

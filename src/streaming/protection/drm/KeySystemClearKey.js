@@ -43,10 +43,6 @@ function KeySystemClearKey(config) {
     config = config || {};
     let instance;
     const BASE64 = config.BASE64;
-    const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
-        attributes: ['Laurl', 'laurl'],
-        prefixes: ['clearkey', 'dashif']
-    };
 
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
@@ -115,76 +111,27 @@ function KeySystemClearKey(config) {
     }
 
     function getLicenseRequestFromMessage(message) {
-        return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+        return JSON.stringify(JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message))));
     }
 
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
 
-    function getLicenseServerUrlFromMediaInfo(mediaInfo) {
-        try {
-            if (!mediaInfo || mediaInfo.length === 0) {
-                return null;
-            }
-            let i = 0;
-            let licenseServer = null;
-            while (i < mediaInfo.length && !licenseServer) {
-                const info = mediaInfo[i];
-                if (info && info.contentProtection && info.contentProtection.length > 0) {
-                    const clearkeyProtData = info.contentProtection.filter((cp) => {
-                        return cp.schemeIdUri && cp.schemeIdUri === schemeIdURI;
-                    });
-                    if (clearkeyProtData && clearkeyProtData.length > 0) {
-                        let j = 0;
-                        while (j < clearkeyProtData.length && !licenseServer) {
-                            const ckData = clearkeyProtData[j];
-                            let k = 0;
-                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
-                                let l = 0;
-                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
-                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
-                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
-                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
-                                        licenseServer = ckData[attribute].__text;
-                                    }
-                                    l += 1;
-                                }
-                                k += 1;
-                            }
-                            j += 1;
-                        }
-                    }
-                }
-                i += 1;
-            }
-            return licenseServer;
-        } catch
-            (e) {
-            return null;
-        }
-    }
-
-    function getCDMData() {
-        return null;
-    }
-
-    function getSessionId(/*cp*/) {
+    function getCDMData(/*cdmData*/) {
         return null;
     }
 
     instance = {
-        uuid: uuid,
-        schemeIdURI: schemeIdURI,
-        systemString: systemString,
-        getInitData: getInitData,
-        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        getCDMData: getCDMData,
-        getSessionId: getSessionId,
-        getLicenseServerUrlFromMediaInfo,
-        getClearKeysFromProtectionData: getClearKeysFromProtectionData
+        uuid,
+        schemeIdURI,
+        systemString,
+        getInitData,
+        getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData,
+        getCDMData,
+        getClearKeysFromProtectionData
     };
 
     return instance;

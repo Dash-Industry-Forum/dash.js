@@ -66,16 +66,6 @@ function DashManifestModel() {
     }
 
     function getIsTypeOf(adaptation, type) {
-
-        let i,
-            len,
-            representation,
-            col,
-            mimeTypeRegEx,
-            codecs;
-        let result = false;
-        let found = false;
-
         if (!adaptation) {
             throw new Error('adaptation is not defined');
         }
@@ -84,57 +74,72 @@ function DashManifestModel() {
             throw new Error('type is not defined');
         }
 
-        if (adaptation.hasOwnProperty('ContentComponent')) {
-            col = adaptation.ContentComponent;
-        }
-
-        mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
-
-        if (adaptation.Representation && adaptation.Representation.length > 0) {
-            let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
+        // Check for thumbnail images
+        if (adaptation.Representation && adaptation.Representation.length) {
+            const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
             if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
-                return type === Constants.IMAGE;
-            }
-            if (adaptation.Representation[0].hasOwnProperty(DashConstants.CODECS)) {
-                // Just check the start of the codecs string
-                codecs = adaptation.Representation[0].codecs;
-                if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
-                    return type === Constants.FRAGMENTED_TEXT;
-                }
+                return (type === Constants.IMAGE);
             }
         }
 
-        if (col) {
-            if (col.length > 1) {
+        // Check ContentComponent.contentType
+        if (adaptation.ContentComponent_asArray && adaptation.ContentComponent_asArray.length > 0) {
+            if (adaptation.ContentComponent_asArray.length > 1) {
                 return (type === Constants.MUXED);
-            } else if (col[0] && col[0].contentType === type) {
-                result = true;
-                found = true;
+            } else if (adaptation.ContentComponent_asArray[0].contentType === type) {
+                return true;
             }
         }
 
+        const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
+
+        // Check codecs
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
+            const codecs = adaptation.Representation_asArray[0].codecs;
+            if (mimeTypeRegEx.test(codecs)) {
+                return true;
+            }
+        }
+
+        // Check Adaptation's mimeType
         if (adaptation.hasOwnProperty(DashConstants.MIME_TYPE)) {
-            result = mimeTypeRegEx.test(adaptation.mimeType);
-            found = true;
+            return mimeTypeRegEx.test(adaptation.mimeType);
         }
 
-        // couldn't find on adaptationset, so check a representation
-        if (!found) {
-            i = 0;
-            len = adaptation.Representation && adaptation.Representation.length ? adaptation.Representation.length : 0;
-            while (!found && i < len) {
+        // Check Representation's mimeType
+        if (adaptation.Representation) {
+            let representation;
+            for (let i = 0; i < adaptation.Representation.length; i++) {
                 representation = adaptation.Representation[i];
-
                 if (representation.hasOwnProperty(DashConstants.MIME_TYPE)) {
-                    result = mimeTypeRegEx.test(representation.mimeType);
-                    found = true;
+                    return mimeTypeRegEx.test(representation.mimeType);
                 }
-
-                i++;
             }
         }
 
-        return result;
+        return false;
+    }
+
+    function getIsFragmented(adaptation) {
+        if (!adaptation) {
+            throw new Error('adaptation is not defined');
+        }
+        if (adaptation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
+            return true;
+        }
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
+            const representation = adaptation.Representation_asArray[0];
+            if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function getIsAudio(adaptation) {
@@ -145,8 +150,8 @@ function DashManifestModel() {
         return getIsTypeOf(adaptation, Constants.VIDEO);
     }
 
-    function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
+    function getIsText(adaptation) {
+        return getIsTypeOf(adaptation, Constants.TEXT);
     }
 
     function getIsMuxed(adaptation) {
@@ -155,10 +160,6 @@ function DashManifestModel() {
 
     function getIsImage(adaptation) {
         return getIsTypeOf(adaptation, Constants.IMAGE);
-    }
-
-    function getIsTextTrack(type) {
-        return (type === 'text/vtt' || type === 'application/ttml+xml');
     }
 
     function getLanguageForAdaptation(adaptation) {
@@ -405,6 +406,16 @@ function DashManifestModel() {
         });
     }
 
+    function getSelectionPriority(realAdaption) {
+        try {
+            const priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+
+            return isNaN(priority) ? 1 : priority;
+        } catch (e) {
+            return 1;
+        }
+    }
+
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
 
@@ -524,7 +535,10 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE) && getIsTextTrack(realRepresentation.mimeType)) {
+                    } else if (getIsText(processedRealAdaptation) &&
+                        getIsFragmented(processedRealAdaptation) &&
+                        processedRealAdaptation.mimeType &&
+                        processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
                         voRepresentation.range = 0;
                     }
 
@@ -578,6 +592,9 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S) {
+            return NaN;
+        }
         let s0 = segmentTimeline.S[0];
         let s1 = segmentTimeline.S[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
@@ -613,12 +630,12 @@ function DashManifestModel() {
                     voAdaptationSet.type = Constants.AUDIO;
                 } else if (getIsVideo(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.VIDEO;
-                } else if (getIsFragmentedText(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
+                } else if (getIsText(realAdaptationSet)) {
+                    voAdaptationSet.type = Constants.TEXT;
                 } else if (getIsImage(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.IMAGE;
                 } else {
-                    voAdaptationSet.type = Constants.TEXT;
+                    logger.warn('Unknown Adaptation stream type');
                 }
                 voAdaptations.push(voAdaptationSet);
             }
@@ -647,18 +664,18 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period
-            // element contains a @duration attribute then then this new
-            // Period is also a regular Period. The start time of the new
-            // Period PeriodStart is the sum of the start time of the previous
-            // Period PeriodStart and the value of the attribute @duration
+                // If the @start attribute is absent, but the previous Period
+                // element contains a @duration attribute then then this new
+                // Period is also a regular Period. The start time of the new
+                // Period PeriodStart is the sum of the start time of the previous
+                // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element
-            // is the first in the MPD, and (iii) the MPD@type is 'static',
+                // If (i) @start attribute is absent, and (ii) the Period element
+                // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
@@ -683,6 +700,10 @@ function DashManifestModel() {
 
                 if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
                     voPeriod.duration = realPeriod.duration;
+                }
+
+                if (voPreviousPeriod) {
+                    voPreviousPeriod.nextPeriodId = voPeriod.id;
                 }
 
                 voPeriods.push(voPeriod);
@@ -828,14 +849,17 @@ function DashManifestModel() {
 
                     if (currentMpdEvent.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
                         event.presentationTime = currentMpdEvent.presentationTime;
-                        const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-                        event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
                     }
+                    const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+                    event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
+
                     if (currentMpdEvent.hasOwnProperty(DashConstants.DURATION)) {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
                         event.id = currentMpdEvent.id;
+                    } else {
+                        event.id = null;
                     }
 
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
@@ -848,6 +872,7 @@ function DashManifestModel() {
                         // string representation'.
                         event.messageData =
                             currentMpdEvent.messageData ||
+                            currentMpdEvent.__cdata ||
                             currentMpdEvent.__text;
                     }
 
@@ -1139,7 +1164,8 @@ function DashManifestModel() {
 
     instance = {
         getIsTypeOf,
-        getIsTextTrack,
+        getIsText,
+        getIsFragmented,
         getLanguageForAdaptation,
         getViewpointForAdaptation,
         getRolesForAdaptation,
@@ -1153,6 +1179,7 @@ function DashManifestModel() {
         getRealPeriods,
         getRealPeriodForIndex,
         getCodec,
+        getSelectionPriority,
         getMimeType,
         getKID,
         getLabelsForAdaptation,

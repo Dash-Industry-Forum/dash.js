@@ -35,6 +35,7 @@
 class Segment {
     constructor() {
         this.indexRange = null;
+        // The index of the segment in the list of segments. We start at 0
         this.index = null;
         this.mediaRange = null;
         this.media = null;
@@ -52,8 +53,6 @@ class Segment {
         this.availabilityStartTime = NaN;
         // Ignore and  discard this segment after
         this.availabilityEndTime = NaN;
-        // The index of the segment inside the availability window
-        this.availabilityIdx = NaN;
         // For dynamic mpd's, this is the wall clock time that the video
         // element currentTime should be presentationStartTime
         this.wallStartTime = NaN;

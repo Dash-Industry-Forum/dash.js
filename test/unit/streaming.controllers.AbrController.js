@@ -262,8 +262,8 @@ describe('AbrController', function () {
         expect(initialBitrateFor).to.equal(50);
     });
 
-    it('should configure initial bitrate for fragmented text type', function () {
-        let initialBitrateFor = abrCtrl.getInitialBitrateFor(Constants.FRAGMENTED_TEXT);
+    it('should configure initial bitrate for text type', function () {
+        let initialBitrateFor = abrCtrl.getInitialBitrateFor(Constants.TEXT);
         expect(initialBitrateFor).to.be.NaN; // jshint ignore:line
     });
 

@@ -168,7 +168,7 @@ function TimeSyncController() {
      * Does a synchronization in the background in case the last offset should be verified or a 404 occurs
      */
     function _onAttemptBackgroundSync() {
-        if (isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
+        if (!settings.get().streaming.utcSynchronization.enabled || isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
             return;
         }
 
@@ -287,7 +287,7 @@ function TimeSyncController() {
      */
     function _shouldPerformSynchronization(isDynamic) {
         try {
-            if (!isDynamic) {
+            if (!isDynamic || !settings.get().streaming.utcSynchronization.enabled) {
                 return false;
             }
             const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
@@ -547,6 +547,7 @@ function TimeSyncController() {
 
         if (failed) {
             lastTimingSource = null;
+            isSynchronizing = false;
             errHandler.error(new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE));
         }
 

@@ -22,7 +22,8 @@
 
             const protData = {
                 "com.widevine.alpha": {
-                    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense"
+                    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+                    priority: 0
                 }
             };
             var video,
@@ -53,6 +54,15 @@
             player.initialize(video, url, true);
             player.setProtectionData(protData);
         }
+        function check() {
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+                var div = document.getElementById('http-warning');
+                div.innerHTML = out;
+                div.style.display = ''
+            }
+        }
     </script>
 </head>
 <body>
@@ -65,12 +75,21 @@
                  width="200">
         </header>
         <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>License wrapping example</h3>
-                    <p>This example shows how to use dash.js to modify the license request and the license repsonse. </p><p>For a detailed explanation on DRM playback in dash.js checkout the
-                    <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
-                       target="_blank">Wiki</a>.</p>
+                    <p>This example shows how to use dash.js to modify the license request and the license
+                        repsonse. </p>
+                    <p>For a detailed explanation on DRM playback in dash.js checkout the
+                        <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
+                           target="_blank">Wiki</a>.</p>
                 </div>
             </div>
             <div class="col-md-8">
@@ -91,6 +110,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        check();
         init();
     });
 </script>

@@ -24,7 +24,8 @@
                     "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
                     "httpRequestHeaders": {
                         "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
-                    }
+                    },
+                    priority: 0
                 }
             };
             var video,
@@ -35,6 +36,16 @@
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
             player.setProtectionData(protData);
+        }
+
+        function check() {
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+                var div = document.getElementById('http-warning');
+                div.innerHTML = out;
+                div.style.display = ''
+            }
         }
     </script>
 </head>
@@ -48,10 +59,18 @@
                  width="200">
         </header>
         <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>Widevine DRM instantiation example</h3>
-                    <p>This example shows how to use dash.js to play streams with Widevine DRM protection. </p><p>For a detailed explanation on DRM playback in dash.js checkout the
+                    <p>This example shows how to use dash.js to play streams with Widevine DRM protection. </p>
+                    <p>For a detailed explanation on DRM playback in dash.js checkout the
                         <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
                            target="_blank">Wiki</a>.</p>
                 </div>
@@ -74,6 +93,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        check();
         init();
     });
 </script>

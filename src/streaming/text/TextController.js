@@ -130,13 +130,13 @@ function TextController(config) {
      * @param {string|null} mimeType
      * @param {object} fragmentModel
      */
-    function addMediaInfosToBuffer(streamInfo, mInfos, mimeType = null, fragmentModel = null) {
+    function addMediaInfosToBuffer(streamInfo, type, mInfos, fragmentModel = null) {
         const streamId = streamInfo.id;
 
         if (!textSourceBuffers[streamId]) {
             return;
         }
-        textSourceBuffers[streamId].addMediaInfos(mInfos, mimeType, fragmentModel);
+        textSourceBuffers[streamId].addMediaInfos(type, mInfos, fragmentModel);
     }
 
     function getTextSourceBuffer(streamInfo) {
@@ -205,7 +205,7 @@ function TextController(config) {
     function _onCurrentTrackChanged(event) {
         if (!initialSettingsSet && event && event.newMediaInfo) {
             let mediaInfo = event.newMediaInfo;
-            if (mediaInfo.type === Constants.FRAGMENTED_TEXT) {
+            if (mediaInfo.type === Constants.TEXT) {
                 defaultSettings = {
                     lang: mediaInfo.lang,
                     role: mediaInfo.roles[0],
@@ -253,7 +253,7 @@ function TextController(config) {
     }
 
     function setTextTrack(streamId, idx) {
-        //For external time text file, the only action needed to change a track is marking the track mode to showing.
+        // For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         allTracksAreDisabled = idx === -1;
 
@@ -279,6 +279,8 @@ function TextController(config) {
         } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
             _setNonFragmentedTextTrack(streamId, currentTrackInfo);
         }
+
+        mediaController.setTrack(currentTrackInfo);
     }
 
     function _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx) {
@@ -292,20 +294,19 @@ function TextController(config) {
 
         for (let i = 0; i < fragmentedTracks.length; i++) {
             let mediaInfo = fragmentedTracks[i];
-            if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
-                let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamId);
-                if (mediaInfo !== currentFragTrack) {
+            if (currentTrackInfo.lang === mediaInfo.lang &&
+                (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.index === mediaInfo.index)) {
+                let currentFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
+                if (mediaInfo.id ? currentFragTrack.id !== mediaInfo.id : currentFragTrack.index !== mediaInfo.index) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
-                    mediaController.setTrack(mediaInfo);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
                 }  else if (oldTrackIdx === -1) {
-                    //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
-                    //no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
+                    // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
+                    // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
                     // For that reason we reactivate the StreamProcessor and the ScheduleController
                     eventBus.trigger(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
                         streamId,
-                        mediaType: Constants.FRAGMENTED_TEXT
+                        mediaType: Constants.TEXT
                     });
                 }
             }

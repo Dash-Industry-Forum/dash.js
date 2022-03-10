@@ -45,7 +45,8 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
-        domStorage;
+        domStorage,
+        customInitialTrackSelectionFunction;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -135,7 +136,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getCurrentTrackFor(type, streamId) {
-        if (!type || !tracks[streamId]) return null;
+        if (!type || !tracks[streamId] || !tracks[streamId][type]) return null;
         return tracks[streamId][type].current;
     }
 
@@ -171,7 +172,7 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current) {
+        if (tracks[id][type].current && (type !== Constants.TEXT || (type === Constants.TEXT && track.isFragmented))) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
@@ -229,7 +230,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function saveTextSettingsDisabled() {
-        domStorage.setSavedMediaSettings(Constants.FRAGMENTED_TEXT, null);
+        domStorage.setSavedMediaSettings(Constants.TEXT, null);
     }
 
     /**
@@ -238,8 +239,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function _isMultiTrackSupportedByType(type) {
-        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
-            type === Constants.FRAGMENTED_TEXT || type === Constants.IMAGE);
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.IMAGE);
     }
 
     /**
@@ -325,8 +325,30 @@ function MediaController() {
         initialSettings = {
             audio: null,
             video: null,
-            fragmentedText: null
+            text: null
         };
+    }
+
+    function getTracksWithHighestSelectionPriority(trackArr) {
+        let max = 0;
+        let result = [];
+
+        trackArr.forEach((track) => {
+            if(!isNaN(track.selectionPriority)) {
+                // Higher max value. Reset list and add new entry
+                if (track.selectionPriority > max) {
+                    max = track.selectionPriority;
+                    result = [track];
+                }
+                // Same max value add to list
+                else if (track.selectionPriority === max) {
+                    result.push(track);
+                }
+
+            }
+        })
+
+        return result;
     }
 
     function getTracksWithHighestBitrate(trackArr) {
@@ -393,44 +415,94 @@ function MediaController() {
         return result;
     }
 
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        customInitialTrackSelectionFunction = customFunc;
+    }
+
     function selectInitialTrack(type, tracks) {
-        if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
+        if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
-        let tmpArr = [];
+        let tmpArr;
 
-        switch (mode) {
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                tmpArr = getTracksWithHighestBitrate(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithWidestRange(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                tmpArr.push(tracks[0]);
-                break;
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                tmpArr = getTracksWithHighestEfficiency(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithHighestBitrate(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                tmpArr = getTracksWithWidestRange(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithHighestBitrate(tracks);
-                }
-                break;
-            default:
-                logger.warn('Track selection mode is not supported: ' + mode);
-                break;
+        if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
+            tmpArr = customInitialTrackSelectionFunction(tracks);
+        } else {
+            switch (mode) {
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
+                    tmpArr = _trackSelectionModeHighestSelectionPriority(tracks);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
+                    tmpArr = _trackSelectionModeHighestBitrate(tracks);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                    tmpArr = _trackSelectionModeFirstTrack(tracks);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                    tmpArr = _trackSelectionModeHighestEfficiency(tracks);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                    tmpArr = _trackSelectionModeWidestRange(tracks);
+                    break;
+                default:
+                    logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
+                    tmpArr = _trackSelectionModeFirstTrack(tracks);
+                    break;
+            }
         }
 
-        return tmpArr[0];
+        return tmpArr.length > 0 ? tmpArr[0] : tracks[0];
     }
+
+
+    function _trackSelectionModeHighestSelectionPriority(tracks) {
+        let tmpArr = getTracksWithHighestSelectionPriority(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tmpArr);
+        }
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithWidestRange(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeHighestBitrate(tracks) {
+        let tmpArr = getTracksWithHighestBitrate(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithWidestRange(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeFirstTrack(tracks) {
+        return tracks[0];
+    }
+
+    function _trackSelectionModeHighestEfficiency(tracks) {
+        let tmpArr = getTracksWithHighestEfficiency(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeWidestRange(tracks) {
+        let tmpArr = getTracksWithWidestRange(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tracks);
+        }
+
+        return tmpArr;
+    }
+
 
     function createTrackInfo() {
         return {
@@ -445,11 +517,6 @@ function MediaController() {
                 current: null
             },
             text: {
-                list: [],
-                storeLastSettings: true,
-                current: null
-            },
-            fragmentedText: {
                 list: [],
                 storeLastSettings: true,
                 current: null
@@ -470,6 +537,7 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
+        setCustomInitialTrackSelectionFunction,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,

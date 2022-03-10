@@ -67,20 +67,6 @@ class Constants {
         this.TEXT = 'text';
 
         /**
-         *  @constant {string} FRAGMENTED_TEXT Fragmented text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-
-        /**
-         *  @constant {string} EMBEDDED_TEXT Embedded text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.EMBEDDED_TEXT = 'embeddedText';
-
-        /**
          *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
          *  @memberof Constants#
          *  @static
@@ -172,6 +158,13 @@ class Constants {
         this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
 
         /**
+        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
+        *  @memberof Constants#
+        *  @static
+        */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
+
+        /**
          *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
          *  @memberof Constants#
          *  @static
@@ -254,6 +247,13 @@ class Constants {
          *  @static
          */
         this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY = 'highestSelectionPriority';
 
         /**
          *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.

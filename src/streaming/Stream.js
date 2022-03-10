@@ -41,9 +41,10 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 import BoxParser from './utils/BoxParser';
 import URLUtils from './utils/URLUtils';
+import BlacklistController from './controllers/BlacklistController';
 
 
-const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.FRAGMENTED_TEXT, Constants.EMBEDDED_TEXT, Constants.MUXED, Constants.IMAGE];
+const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
 
 
 function Stream(config) {
@@ -84,11 +85,12 @@ function Stream(config) {
         isUpdating,
         fragmentController,
         thumbnailController,
+        segmentBlacklistController,
         preloaded,
         boxParser,
         debug,
         isEndedEventSignaled,
-        trackChangedEvent;
+        trackChangedEvents;
 
     /**
      * Setup the stream
@@ -100,6 +102,11 @@ function Stream(config) {
             resetInitialSettings();
 
             boxParser = BoxParser(context).getInstance();
+
+            segmentBlacklistController = BlacklistController(context).create({
+                updateEventName: Events.SEGMENT_LOCATION_BLACKLIST_CHANGED,
+                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD
+            });
 
             fragmentController = FragmentController(context).create({
                 streamInfo: streamInfo,
@@ -310,7 +317,8 @@ function Stream(config) {
      * @private
      */
     function _initializeMediaForType(type, mediaSource) {
-        const allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        let embeddedMediaInfos = [];
 
         let mediaInfo = null;
         let initialMediaInfo;
@@ -331,20 +339,26 @@ function Stream(config) {
         for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
-            if (type === Constants.EMBEDDED_TEXT) {
+            if (type === Constants.TEXT && !!mediaInfo.isEmbedded) {
                 textController.addEmbeddedTrack(streamInfo, mediaInfo);
-            } else {
-                if (_isMediaSupported(mediaInfo)) {
-                    mediaController.addTrack(mediaInfo);
-                }
+                embeddedMediaInfos.push(mediaInfo);
+            }
+            if (_isMediaSupported(mediaInfo)) {
+                mediaController.addTrack(mediaInfo);
             }
         }
 
-        if (type === Constants.EMBEDDED_TEXT) {
-            textController.addMediaInfosToBuffer(streamInfo, allMediaForType);
+        if (embeddedMediaInfos.length > 0) {
+            mediaController.setInitialMediaSettingsForType(type, streamInfo);
+            textController.setInitialSettings(mediaController.getInitialSettings(type));
+            textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
         }
 
-        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo.id).length === 0) {
+        // Filter out embedded text track before creating StreamProcessor
+        allMediaForType = allMediaForType.filter(mediaInfo => {
+            return !mediaInfo.isEmbedded;
+        });
+        if (allMediaForType.length === 0) {
             return;
         }
 
@@ -365,16 +379,23 @@ function Stream(config) {
             return;
         }
 
-
-        mediaController.setInitialMediaSettingsForType(type, streamInfo);
-        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
-
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,
             mediaInfo: mediaInfo
         });
 
-        _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
+        mediaController.setInitialMediaSettingsForType(type, streamInfo);
+
+        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource);
+
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
+
+        if (initialMediaInfo) {
+            abrController.updateTopQualityIndex(initialMediaInfo);
+            // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
+            streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
+        }
+
     }
 
     function _isMediaSupported(mediaInfo) {
@@ -388,7 +409,7 @@ function Stream(config) {
             return false;
         }
 
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
+        if (type === Constants.TEXT || type === Constants.IMAGE) {
             return true;
         }
 
@@ -407,61 +428,61 @@ function Stream(config) {
      * @param {object} mediaSource
      * @private
      */
-    function _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource) {
+    function _createStreamProcessor(allMediaForType, mediaSource) {
 
-        let fragmentModel = fragmentController.getModel(initialMediaInfo ? initialMediaInfo.type : null);
-        const type = initialMediaInfo ? initialMediaInfo.type : null;
-        const mimeType = initialMediaInfo ? initialMediaInfo.mimeType : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType[0] : null;
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
+        const type = mediaInfo ? mediaInfo.type : null;
+        const mimeType = mediaInfo ? mediaInfo.mimeType : null;
+        const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
 
         let streamProcessor = StreamProcessor(context).create({
-            streamInfo: streamInfo,
-            type: type,
-            mimeType: mimeType,
-            timelineConverter: timelineConverter,
-            adapter: adapter,
-            manifestModel: manifestModel,
-            mediaPlayerModel: mediaPlayerModel,
-            fragmentModel: fragmentModel,
+            streamInfo,
+            type,
+            mimeType,
+            timelineConverter,
+            adapter,
+            manifestModel,
+            mediaPlayerModel,
+            fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             segmentBaseController: config.segmentBaseController,
-            abrController: abrController,
-            playbackController: playbackController,
-            mediaController: mediaController,
-            textController: textController,
-            errHandler: errHandler,
-            settings: settings,
-            boxParser: boxParser
+            abrController,
+            playbackController,
+            mediaController,
+            textController,
+            errHandler,
+            settings,
+            boxParser,
+            segmentBlacklistController
         });
 
-        streamProcessor.initialize(mediaSource, hasVideoTrack);
-        abrController.updateTopQualityIndex(initialMediaInfo);
+        streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
         streamProcessors.push(streamProcessor);
 
         for (let i = 0; i < allMediaForType.length; i++) {
             streamProcessor.addMediaInfo(allMediaForType[i]);
         }
 
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
-            textController.addMediaInfosToBuffer(streamInfo, allMediaForType, mimeType, fragmentModel);
+        if (type === Constants.TEXT) {
+            textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType, fragmentModel);
         }
 
-        if (initialMediaInfo) {
-            streamProcessor.selectMediaInfo(initialMediaInfo);
-        }
+        return streamProcessor;
     }
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param {array} previousBuffers
+     * @param {array} previousBuffersSinks
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousBuffers) {
+    function _createBufferSinks(previousBuffersSinks) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                return sp.createBufferSinks(previousBuffers);
+                return sp.createBufferSinks(previousBuffersSinks);
             });
 
             Promise.all(promises)
@@ -534,6 +555,7 @@ function Stream(config) {
         updateError = {};
         isUpdating = false;
         isEndedEventSignaled = false;
+        trackChangedEvents = [];
     }
 
     function reset(keepBuffers) {
@@ -545,6 +567,11 @@ function Stream(config) {
 
         if (abrController && streamInfo) {
             abrController.clearDataForStream(streamInfo.id);
+        }
+
+        if (segmentBlacklistController) {
+            segmentBlacklistController.reset();
+            segmentBlacklistController = null;
         }
 
         resetInitialSettings(keepBuffers);
@@ -620,7 +647,6 @@ function Stream(config) {
         if (event.error) {
             errHandler.error(event.error);
             logger.fatal(event.error.message);
-            reset();
         }
     }
 
@@ -644,13 +670,15 @@ function Stream(config) {
 
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
-            logger.debug('Stream -  Refreshing manifest for switch track');
-            trackChangedEvent = e;
-            manifestUpdater.refreshManifest();
+            trackChangedEvents.push(e);
+            if (!manifestUpdater.getIsUpdating()) {
+                logger.debug('Stream -  Refreshing manifest for switch track');
+                manifestUpdater.refreshManifest();
+            }
         } else {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {
-                    if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                    if (mediaInfo.type === Constants.VIDEO || mediaInfo.type === Constants.AUDIO) {
                         abrController.updateTopQualityIndex(mediaInfo);
                     }
                     processor.prepareTrackSwitch();
@@ -687,12 +715,13 @@ function Stream(config) {
         if (protectionController) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
-            protectionController.clearMediaInfoArrayByStreamId(getId());
+            protectionController.clearMediaInfoArray();
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
                 const type = streamProcessors[i].getType();
+                const mediaInfo = streamProcessors[i].getMediaInfo();
                 if (type === Constants.AUDIO ||
                     type === Constants.VIDEO ||
-                    type === Constants.FRAGMENTED_TEXT) {
+                    (type === Constants.TEXT && mediaInfo.isFragmented)) {
                     let mediaInfo = streamProcessors[i].getMediaInfo();
                     if (mediaInfo) {
                         protectionController.initializeForMedia(mediaInfo);
@@ -705,9 +734,11 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isInitialized) {
             isInitialized = true;
-            eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo
-            });
+            videoModel.waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                eventBus.trigger(Events.STREAM_INITIALIZED, {
+                    streamInfo: streamInfo
+                });
+            })
         }
 
     }
@@ -790,7 +821,7 @@ function Stream(config) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) {
+            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT) {
                 arr.push(streamProcessor);
             }
         }
@@ -839,14 +870,13 @@ function Stream(config) {
                 .then(() => {
                     promises = [];
 
-                    if (trackChangedEvent) {
+                    while (trackChangedEvents.length > 0) {
+                        let trackChangedEvent = trackChangedEvents.pop();
                         let mediaInfo = trackChangedEvent.newMediaInfo;
-                        if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
-                            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-                            if (!processor) return;
-                            promises.push(processor.prepareTrackSwitch());
-                            trackChangedEvent = undefined;
-                        }
+                        let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                        if (!processor) return;
+                        promises.push(processor.prepareTrackSwitch());
+                        processor.selectMediaInfo(mediaInfo);
                     }
 
                     return Promise.all(promises)
