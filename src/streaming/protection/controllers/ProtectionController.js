@@ -988,6 +988,7 @@ function ProtectionController(config) {
      * Event handler for "needkey" and "encrypted" events
      * @param {object} event
      * @param {number} retry
+     * @private
      */
     function _onNeedKey(event, retry) {
         if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {

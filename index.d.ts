@@ -37,7 +37,95 @@ declare namespace dashjs {
         data: unknown | null;
     }
 
+    export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+
     interface VideoModel {
+        initialize(): void;
+
+        reset(): void;
+
+        onPlaybackCanPlay(): void;
+
+        setPlaybackRate(value: number, ignoreReadyState?: boolean): void;
+
+        setcurrentTime(currentTime: number, stickToBuffered: boolean): void;
+
+        stickTimeToBuffered(time: number): number;
+
+        getElement(): HTMLVideoElement | HTMLAudioElement;
+
+        setElement(value: HTMLVideoElement | HTMLAudioElement): void;
+
+        setSource(source: string): void;
+
+        getSource(): string | null;
+
+        getTTMLRenderingDiv(): HTMLDivElement | null;
+
+        setTTMLRenderingDiv(div: HTMLDivElement): void;
+
+        setStallState(type : MediaType, state: boolean): void; //check actual types; potentially just 'audio', 'video'?
+
+        isStalled(): boolean;
+
+        addStalledStream(type: MediaType): void;
+
+        removeStalledStream(type: MediaType): void;
+
+        stallStream(type: MediaType, isStalled: boolean): void;
+
+        onPlaying(): void;
+
+        getPlaybackQuality(): number;
+
+        play(): void;
+
+        isPaused(): void;
+
+        pause(): void;
+
+        isSeeking(): void;
+
+        getTime(): number | null;
+
+        getPlaybackRate(): number | null;
+
+        getPlayedRanges(): TimeRanges | null;
+
+        getEnded(): boolean | null;
+
+        addEventListener(): void;
+
+        removeEventListener(): void;
+
+        getReadyState(): number;
+
+        getBufferRange(): TimeRanges | null;
+
+        getClientWidth(): number;
+
+        getClientHeight(): number;
+
+        getVideoWidth(): number;
+
+        getVideoHeight(): number;
+
+        getVideoRelativeOffsetTop(): number;
+
+        getVideoRelativeOffsetLeft(): number;
+
+        getTextTracks(): TextTrackList[];
+
+        getTextTrack(kind: TextTrackType, label: string | number | undefined, isTTML: boolean, isEmbedded: boolean): TextTrackInfo | null;
+
+        addTextTrack(kind: TextTrackType, label: string | number | undefined, isTTML: boolean, isEmbedded: boolean): TextTrackInfo;
+
+        appendChild(childElement: any): void;
+
+        removeChild(childElement: any): void;
+
+        waitForReadyState(targetReadyState: number, callback: () => any): void;
+
     }
 
     interface ProtectionController {
@@ -87,6 +175,19 @@ declare namespace dashjs {
     }
 
     interface OfflineController {
+        // // Download List Functions
+        // getDownloadFromId(id: string): object;
+
+        // createDownloadFromId(id: string): object;
+
+        // createDownloadFromStorage(offline: any): object;
+
+        // removeDownloadFromId(id: string): void;
+
+        // generateManifestId(): number;
+
+        // OfflineControllerAPI
+
         loadRecordsFromStorage(): Promise<void>;
 
         getAllRecords(): OfflineRecord[];
@@ -133,9 +234,12 @@ declare namespace dashjs {
         codec: string | null;
         mimeType: string | null;
         contentProtection: any | null;
-        isText: boolean;
+        // isText: boolean; // No longer in MediaInfo.js
         KID: any | null;
         bitrateList: Bitrate[];
+        isFragmented: any | null;
+        isEmbedded: any | null;
+        selectionPriority: number;
     }
 
     export class ProtectionMediaInfo {
@@ -175,7 +279,7 @@ declare namespace dashjs {
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
-                ignoreEmeEncryptedEvent?: boolean
+                //ignoreEmeEncryptedEvent?: boolean // No longer in settings
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -316,9 +420,9 @@ declare namespace dashjs {
             },
             cmcd?: {
                 enabled?: boolean,
-                sid?: string,
-                cid?: string,
-                rtp?: number,
+                sid?: string | null,
+                cid?: string | null,
+                rtp?: number | null,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
             }
@@ -333,20 +437,24 @@ declare namespace dashjs {
     export interface Representation {
         id: string;
         index: number;
-        adaptation: object;
-        segmentInfoType: string;
-        initialization: object;
-        codecs: string;
-        mimeType: string;
-        codecPrivateData: string;
+        adaptation: object | null;
+        segmentInfoType: string | null;
+        initialization: object | null;
+        codecs: string | null;
+        mimeType: string | null;
+        codecPrivateData: string | null;
         segmentDuration: number;
         timescale: number;
         startNumber: number;
-        indexRange: string;
-        range: string;
+        indexRange: string | null;
+        range: string | null;
         presentationTimeOffset: number;
         MSETimeOffset: number;
-        availableSegmentsNumber: number;
+        mediaFinishedInformation: {
+            numberOfSegments: number,
+            mediaTimeOfLastSignaledSegment: number
+        };
+        // availableSegmentsNumber: number; // not in Representation.js, likely replaced by mediaFinishedInformation
         bandwidth: number;
         width: number;
         height: number;
@@ -354,15 +462,19 @@ declare namespace dashjs {
         maxPlayoutRate: number;
         availabilityTimeOffset: number;
         availabilityTimeComplete: boolean;
-        frameRate: number;
+        // frameRate: number; // no longer in Representation.js
     }
+
+    // RepresentationInfo interface? rest of vo?
 
     export type CapabilitiesFilter = (representation: Representation) => boolean;
 
     export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
     export interface MediaPlayerClass {
-        initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
+        setConfig(config: object): void; // Should this be here?
+
+        initialize(view?: HTMLMediaElement, source?: string, AutoPlay?: boolean): void;
 
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
 
@@ -574,21 +686,23 @@ declare namespace dashjs {
 
         setProtectionData(value: ProtectionDataSet): void;
 
-        registerLicenseRequestFilter(filter: RequestFilter): void,
+        registerLicenseRequestFilter(filter: RequestFilter): void;
 
-        registerLicenseResponseFilter(filter: ResponseFilter): void,
+        registerLicenseResponseFilter(filter: ResponseFilter): void;
 
-        unregisterLicenseRequestFilter(filter: RequestFilter): void,
+        unregisterLicenseRequestFilter(filter: RequestFilter): void;
 
-        unregisterLicenseResponseFilter(filter: ResponseFilter): void,
+        unregisterLicenseResponseFilter(filter: ResponseFilter): void;
 
-        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
 
-        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
 
-        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
+        unregisterFilter(filters: any[], filter: any): void;
 
-        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
+        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
+
+        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
 
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
 
@@ -1359,15 +1473,17 @@ declare namespace dashjs {
         uuid: string;
         schemeIdURI: string;
 
-        getInitData(cp: object): ArrayBuffer;
+        getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
 
         getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
 
-        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array;
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
         getCDMData(cdmData: string | null): ArrayBuffer | null;
+
+        getSessionId() : string | null;
     }
 
     export interface KeySystemInfo {
@@ -1384,7 +1500,7 @@ declare namespace dashjs {
         url: string;
         method: string;
         responseType: string;
-        headers: object;
+        headers: {[key: string] : string};
         withCredentials: boolean;
         messageType: string;
         sessionId: string;
@@ -1496,5 +1612,30 @@ declare namespace dashjs {
         | 'widestRange';
 
     export function supportsMediaSource(): boolean;
+
+    export interface ClassConstructor {
+        __dashjs_factory_name: string
+    }
+
+    export type Factory = (context: object) => {
+        create: () => any
+    }
+
+    export type SingletonFactory = (context: object) => {
+        getInstance: () => any
+    }
+
+    export interface FactoryMaker {
+        extend(name: string, childInstance: object, override: boolean, context: object): void;
+        getSingletonInstance(context: object, className: string): any,
+        setSingletonInstance(context: object, className: string, instance: object): void;
+        deleteSingletonInstances(context: object): void;
+        getSingletonFactory(classConstructor: ClassConstructor): SingletonFactory,
+        getSingletonFactoryByName(name: string): SingletonFactory,
+        updateSingletonFactory(name: string, factory: SingletonFactory): void,
+        getClassFactory(classConstructor: ClassConstructor): Factory,
+        getClassFactoryByName(name: string): Factory,
+        updateClassFactory(name: string, factory: Factory): void,
+    }
 
 }

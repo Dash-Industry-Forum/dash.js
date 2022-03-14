@@ -33,7 +33,7 @@
  */
 class LicenseResponse {
     /**
-     * Defines a license request
+     * Defines a license response
      *
      * @class
      * @ignore
