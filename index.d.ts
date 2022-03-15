@@ -1239,7 +1239,7 @@ declare namespace dashjs {
         qualityIndex: number;
     }
 
-    export interface FragmentRequest {
+    export interface FragmentRequest { // potentially add ' | null' as initialized with null?
         action: string;
         availabilityEndTime: number;
         availabilityStartTime: Date;
@@ -1286,7 +1286,7 @@ declare namespace dashjs {
         getSessionType(): string;
     }
 
-    export interface Stream {
+    export interface Stream { // Not sure what this is for; Stream.js has different functions, as do offlinestream.js and streamcontroller.js
         initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
 
         getStreamId(): string;
@@ -1354,6 +1354,9 @@ declare namespace dashjs {
         loadedTime: Date;
         maxFragmentDuration: number;
         minBufferTime: number;
+        serviceDescriptions: object[];
+        //not part of ManifestInfo.js, but gets set in DashManifestModel?
+        //potentially more specific: servicedescriptions: {id: number, schemeIdUri: url, latency: number | null, playbackrate: number | null}[]
         protocol?: string;
     }
 
@@ -1387,6 +1390,8 @@ declare namespace dashjs {
 
         getHttpRequests(type: MediaType): object[];
 
+        getCurrent(metrics: MetricsList, metricName: string): IDroppedFrames;
+
         getCurrentDroppedFrames(): IDroppedFrames;
 
         getCurrentSchedulingInfo(type: MediaType): object;
@@ -1398,9 +1403,106 @@ declare namespace dashjs {
         getLatestFragmentRequestHeaderValueByID(id: string): string;
 
         getLatestMPDRequestHeaderValueByID(type: MediaType, id: string): string;
+
+        resetInitialSettings(): void;
+        
+        // add functions are set as @ignore, so do not add?
     }
 
+    export interface BaseURL {
+        url: string;
+        serviceLocation: string;
+        priority: number;
+        weight: number;
+    }
+
+    export interface Mpd {
+        manifest: object;
+        suggestedPresentationDelay: number;
+        availabiliyStartTime: Date | null;
+        availabilityEndTime: number;
+        timeShiftBufferDepth: number;
+        maxSegmentDuration: number;
+        publishTime: Date | null;
+        minimumUpdatePeriod: number;
+        mediaPresentationDuration: number;
+    }
+
+    export interface Period {
+        id : string | null;
+        index: number;
+        duration: number;
+        start: number;
+        mpd: Mpd;
+        nextPeriodId: string | null;
+    }
+
+    export class AdaptationSet {
+        period: Period | null;
+        index: number;
+        type: string | null;
+    }
+    //Since these are tagged as Ignore, check if needed!
+
+    // Check if "manifest" and "external manifest" relate to IManifestModel! also check why "I"
     export interface DashAdapter {
+        getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
+
+        getIsMain(adaptation: object): boolean;
+
+        getAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): object | null;
+
+        areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
+        // Check if function is supposed to be private or have memberOf and @instance tags!
+
+        getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
+
+        getRealAdaptation(streamInfo: object, mediaInfo: MediaInfo): object;
+        // Check if function should have MediaInfo as type, has object in DashAdapter.js
+
+        getEssentialPropertiesForRepresentation(representation: Representation): any[];
+
+        getRealPeriodByIndex(index: number): object;
+        // Check if function is supposed to be private/ignore or have @memberOf and @instance tags
+
+        getVoRepresentation(mediaInfo: MediaInfo): Representation[];
+        // Check if MediaInfor or object
+
+        getUTCTimingSources(): any[];
+
+        getSuggestedPresentationDelay(): string;
+
+        getAvailabilityStartTime(externalManifest: object): Date;
+        // Looks to be DATE, not string! Check declarations in DashAdapter.js!
+
+        getIsDynamic(externalManifest: object): boolean;
+
+        getDuration(externalManifest: object): number;
+
+        getRegularPeriods(externalManifest: object): any[];
+
+        getMpd(externalManifest?: object): Mpd;
+
+        getLocation(manifest: object): string;
+
+        getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
+
+        getPublishTime(manifest: object): Date | null;
+
+        getPatchLocation(manifest: object): string | null;
+
+        getIsDVB(manifest: object): boolean;
+
+        getIsPatch(manifest: object): boolean;
+
+        getBaseURLsFromElement(node: object): BaseURL[]; 
+        // function just lists array, but call DashManifestModel.getBaseURLsFromelement which makes and array of vo/BaseURL.js
+
+        getRepresentationSortFunction(): number;
+        // function lists *, but calls DashManifestModel.getRepresentationSortFunction() which is a.bandwidth - b.bandwidth
+
+        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+
         getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
 
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
@@ -1413,7 +1515,19 @@ declare namespace dashjs {
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
 
-        getMpd(externalManifest?: object): object;
+        getPeriodbyId(id: string): object | null;
+        // Check if this should have @memberOf and @instance tags!
+
+        getIsTypeOf(adaptation: object, type: string): boolean;
+        // Check if this should have @memberOf and @instance tags!
+
+        reset(): void;
+
+        isPatchValid(manifest: object, patch: object): boolean;
+        // Check if this should have @memberOf and @instance tags!
+
+        applyPatchToManifest(manifest: object, patch: object): void;
+        // Check if this should have @memberOf and @instance tags!
     }
 
     export interface ProtectionDataSet {
@@ -1627,15 +1741,31 @@ declare namespace dashjs {
 
     export interface FactoryMaker {
         extend(name: string, childInstance: object, override: boolean, context: object): void;
+
         getSingletonInstance(context: object, className: string): any,
+       
         setSingletonInstance(context: object, className: string, instance: object): void;
+       
         deleteSingletonInstances(context: object): void;
+
+        getFactoryByName(name: string, factoriesArray: Factory[]): Factory;
+
+        updateFactory(name: string, factoriesArray: Factory[]): void;
+       
         getSingletonFactory(classConstructor: ClassConstructor): SingletonFactory,
-        getSingletonFactoryByName(name: string): SingletonFactory,
-        updateSingletonFactory(name: string, factory: SingletonFactory): void,
-        getClassFactory(classConstructor: ClassConstructor): Factory,
-        getClassFactoryByName(name: string): Factory,
-        updateClassFactory(name: string, factory: Factory): void,
+       
+        getSingletonFactoryByName(name: string): SingletonFactory;
+       
+        updateSingletonFactory(name: string, factory: SingletonFactory): void;
+       
+        getClassFactory(classConstructor: ClassConstructor): Factory;
+       
+        getClassFactoryByName(name: string): Factory;
+       
+        updateClassFactory(name: string, factory: Factory): void;
+
+        merge(classConstructor: ClassConstructor, context: object, args: any[]): object;
+        //not part of instance, so likely remove;
     }
 
 }
