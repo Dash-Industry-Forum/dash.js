@@ -173,7 +173,6 @@ function PlaybackController() {
 
         if (!internalSeek) {
             seekTarget = time;
-            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
         }
         logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
         videoModel.setCurrentTime(time, stickToBuffered);

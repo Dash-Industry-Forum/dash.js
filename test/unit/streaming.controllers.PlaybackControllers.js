@@ -236,17 +236,6 @@ describe('PlaybackController', function () {
                 expect(videoModelMock.time).to.equal(10);
             });
 
-            it('should seek and trigger Events.PLAYBACK_SEEK_ASKED event', function (done) {
-
-                let onSeekedAsked = function () {
-                    eventBus.off(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked);
-                    done();
-                };
-                eventBus.on(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked, this);
-
-                playbackController.seek(10);
-            });
-
             it('should return if video is seeking', function () {
                 videoModelMock.isseeking = true;
                 expect(playbackController.isSeeking()).to.equal(videoModelMock.isseeking);
