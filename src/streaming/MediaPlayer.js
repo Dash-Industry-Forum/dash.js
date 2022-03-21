@@ -2104,6 +2104,7 @@ function MediaPlayer() {
                 mediaElement: getVideoElement(),
                 adapter: adapter,
                 dashMetrics: dashMetrics,
+                mediaPlayerModel: mediaPlayerModel,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants
