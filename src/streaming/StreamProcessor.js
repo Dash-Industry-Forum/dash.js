@@ -699,7 +699,7 @@ function StreamProcessor(config) {
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
 
         // we only need to handle this if we are not seeking, not switching the tracks and not switching the quality
-        if (!playbackController.isSeeking() && !scheduleController.getSwitchStrack() && !qualityChangeInProgress) {
+        if (!playbackController.isSeeking() && !scheduleController.getSwitchTrack() && !qualityChangeInProgress) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');
 
             // in case of an init segment we force the download of an init segment
