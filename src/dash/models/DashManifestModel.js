@@ -202,7 +202,7 @@ function DashManifestModel() {
                 return;
             }
 
-            // Not intereseted in other attributes for now
+            // Not interested in other attributes for now
             // UTC element contained must be same as that in the MPD
             prtsForAdaptation.push(entry);
         })

@@ -1208,7 +1208,7 @@ function StreamController() {
                                     const wallClockTime = d.getTime() / 1000;
                                     // TS 103 285 Clause 10.20.4
                                     // 1) Calculate PRT0
-                                    // i) take the PRT@presentationTime and subtract any ST@presentationTime
+                                    // i) take the PRT@presentationTime and subtract any ST@presentationTimeOffset
                                     // ii) convert this time to seconds by dividing by ST@timescale
                                     // iii) Add this to start time of period that contains PRT.
                                     // N.B presentationTimeOffset is already divided by timescale at this point

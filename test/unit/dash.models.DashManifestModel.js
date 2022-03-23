@@ -1217,6 +1217,40 @@ describe('DashManifestModel', function () {
 
             });
 
+            it('returns ProducerReferenceTimes at both AdaptationSet and Representation level', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
+                        {
+                            [DashConstants.ID]: 1,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                            [DashConstants.PRESENTATION_TIME]: 1
+                        }
+                    ],
+                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 2
+                                }
+                            ]
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(2);
+                /* jshint ignore:end */
+            });
+
         });
 
 
