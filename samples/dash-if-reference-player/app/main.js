@@ -406,7 +406,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-
         $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
@@ -1058,10 +1057,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmKeySystem = item;
     };
 
-    $scope.doLog = function () {
-        console.log($scope.drmPlayready.priority);
-    }
-
     /** Handle form input */
     $scope.setDrm = function () {
 
@@ -1295,6 +1290,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'org.w3.clearkey':
                     // Set DRM to active
                     $scope.drmClearkey.isActive = true;
+                    //TODO : Check if any examples are not kid=key method!
+                    if(!protectionData[data].hasOwnProperty('inputMode')){
+                        protectionData[data]['inputMode'] = 'kidKey';
+                    }
                     $scope.drmClearkey.inputMode = protectionData[data]['inputMode'];
                     // Handle clearkey data if specified using a license server
                     if (protectionData[data]['serverURL'] !== undefined) {
@@ -1333,7 +1332,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (parameter !== 'serverURL' &&
                             parameter !== 'httpRequestHeaders' &&
                             parameter !== 'clearkeys') {
-                            $scope.drmWidevine[parameter] = protectionData[data][parameter];
+                            $scope.drmClearkey[parameter] = protectionData[data][parameter];
                         }
                     }
                     break;
@@ -1520,8 +1519,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
             }
         }
-        prioritiesEnabled = settingsObject.prioritiesEnabled;
-        drmObject = $scope.makeProtectionData(drmObject, prioritiesEnabled);
+        prioritiesEnabled = settingsObject.drmPrioritiesEnabled;
+        if(prioritiesEnabled !== undefined){
+            drmObject = $scope.makeProtectionData(drmObject, prioritiesEnabled);
+        }
         return [settingsObject, drmObject];
     }
 
@@ -1663,11 +1664,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setQueryData = function(currentQuery){
-        // var delimiter = '&',
-        // start = 10,
-        // tokens = currentQuery.split(delimiter).slice(start),
-        // currentQuery = tokens.join(delimiter);
-        var passedSettings = currentQuery.slice(currentQuery.indexOf('debug'));;
+        if(!currentQuery.includes('&')){
+            return;
+        }
+        var passedSettings = currentQuery.slice(currentQuery.indexOf('debug'));
         passedSettings = $scope.toSettingsObject(passedSettings)[0];
         $scope.protectionData = $scope.toSettingsObject(currentQuery)[1];
         $scope.player.updateSettings(passedSettings);
@@ -1967,6 +1967,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.customABRRulesSelected = !currentConfig.streaming.abr.useDefaultABRRules;
     }
 
+    function setDrmOptions(){
+        var currentConfig = $scope.player.getSettings();
+        $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
+        $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
+        $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
+    }
+
     function setLiveDelayOptions(){
         var currentConfig = $scope.player.getSettings();
         $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
@@ -2110,12 +2117,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAbrRules();
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
+            setDrmOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();
             setInitialLogLevel();
             setCMCDSettings();
-
 
             checkLocationProtocol();
 

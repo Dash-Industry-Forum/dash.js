@@ -19,5 +19,6 @@ describe('MetricsConstants', function () {
         expect(MetricsConstants.MANIFEST_UPDATE_TRACK_INFO).to.equal('ManifestUpdateRepresentationInfo');
         expect(MetricsConstants.PLAY_LIST).to.equal('PlayList');
         expect(MetricsConstants.DVB_ERRORS).to.equal('DVBErrors');
+        expect(MetricsConstants.HTTP_REQUEST_DVB_REPORTING_TYPE).to.equal('DVBReporting');
     });
 });

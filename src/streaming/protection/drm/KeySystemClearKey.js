@@ -111,7 +111,7 @@ function KeySystemClearKey(config) {
     }
 
     function getLicenseRequestFromMessage(message) {
-        return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+        return JSON.stringify(JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message))));
     }
 
     function getLicenseServerURLFromInitData(/*initData*/) {
