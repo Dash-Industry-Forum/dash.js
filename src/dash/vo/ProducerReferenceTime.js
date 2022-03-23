@@ -40,6 +40,7 @@
         this.applicationScheme = null;
         this.wallClockTime = null;
         this.presentationTime = NaN;
+        this.UTCTiming = null;
     }
 }
 
