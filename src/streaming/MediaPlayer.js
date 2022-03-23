@@ -1738,6 +1738,16 @@ function MediaPlayer() {
     }
 
     /**
+     * Sets the source to a new manifest URL or object without reloading
+     * Useful for updating CDN tokens
+     * @param urlOrManifest
+     */
+    function updateSource(urlOrManifest) {
+        source = urlOrManifest
+        streamController.load(source);
+    }
+
+    /**
      * Use this method to set a source URL to a valid MPD manifest file OR
      * a previously downloaded and parsed manifest object.  Optionally, can
      * also provide protection information
@@ -2094,6 +2104,7 @@ function MediaPlayer() {
                 mediaElement: getVideoElement(),
                 adapter: adapter,
                 dashMetrics: dashMetrics,
+                mediaPlayerModel: mediaPlayerModel,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants
@@ -2262,6 +2273,7 @@ function MediaPlayer() {
         getTTMLRenderingDiv,
         getVideoElement,
         getSource,
+        updateSource,
         getCurrentLiveLatency,
         getTopBitrateInfoFor,
         setAutoPlay,
