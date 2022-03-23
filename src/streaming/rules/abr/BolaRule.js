@@ -39,6 +39,7 @@ import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
 import MediaPlayerEvents from '../../MediaPlayerEvents';
+import Constants from '../../constants/Constants';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -261,10 +262,14 @@ function BolaRule(config) {
     function onBufferEmpty(e) {
         // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
         const mediaType = e.mediaType;
-        if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
-            bolaStateDict[mediaType].placeholderBuffer = 0;
+        // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
+        const stateDict = mediaType === Constants.AUDIO ? [Constants.AUDIO] : bolaStateDict;
+        for (const mediaType in stateDict) {
+            if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
+                bolaStateDict[mediaType].placeholderBuffer = 0;
+            }
         }
-}
+    }
 
     function onPlaybackSeeking() {
         // TODO: 1. Verify what happens if we seek mid-fragment.
