@@ -337,7 +337,6 @@ function PlaybackController() {
         let delay,
             ret,
             startTime;
-        const END_OF_PLAYLIST_PADDING = 10;
         const MIN_BUFFER_TIME_FACTOR = 4;
         const FRAGMENT_DURATION_FACTOR = 4;
         const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
@@ -363,11 +362,8 @@ function PlaybackController() {
         }
 
         if (manifestInfo && manifestInfo.dvrWindowSize > 0) {
-            // cap target latency to:
-            // - dvrWindowSize / 2 for short playlists
-            // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
-            const targetDelayCapping = Math.max(manifestInfo.dvrWindowSize - END_OF_PLAYLIST_PADDING, manifestInfo.dvrWindowSize / 2);
-            ret = Math.min(delay, targetDelayCapping);
+            // Latency can not be higher than DVR window size
+           ret = Math.min(delay, manifestInfo.dvrWindowSize);
         } else {
             ret = delay;
         }
