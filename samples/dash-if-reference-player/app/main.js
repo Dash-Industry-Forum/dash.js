@@ -2134,7 +2134,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         liveDelay: targetLatency / 1000
                     };
 
-                    $scope.lowLatencyModeSelected = true;
                 }
             }
 

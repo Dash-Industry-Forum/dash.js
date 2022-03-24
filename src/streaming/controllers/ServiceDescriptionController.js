@@ -183,7 +183,7 @@ function ServiceDescriptionController() {
      * @private
      */
     function _applyServiceDescriptionOperatingQuality() {
-
+        return;
     }
 
     /**

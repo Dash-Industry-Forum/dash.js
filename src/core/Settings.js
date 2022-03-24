@@ -61,8 +61,6 @@ import Events from './events/Events';
  *        streaming: {
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
- *            lowLatencyEnabled: false,
- *            lowLatencyEnabledByManifest: true,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
@@ -635,12 +633,6 @@ import Events from './events/Events';
  * This will only take effect after an abandoned fragment event occurs.
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
- * @property {boolean} [lowLatencyEnabled=false]
- * Manually enable or disable low latency mode.
- *
- * @property {boolean} [lowLatencyEnabledByManifest=true]
- * If this value is set to true we enable the low latency mode based on MPD attributes:  Specifically in case "availabilityTimeComplete" of the current representation is set to false.
- *
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
