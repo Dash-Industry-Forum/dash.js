@@ -725,6 +725,11 @@ function Settings() {
     let instance;
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const DISPATCH_KEY_MAP = {
+        'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
+        'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT
+    };
+
 
     /**
      * @const {PlayerSettings} defaultSettings
@@ -925,7 +930,9 @@ function Settings() {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
-                        eventBus.trigger(Events.SETTING_UPDATED, { path: path + n });
+                        if (DISPATCH_KEY_MAP[path + n]) {
+                            eventBus.trigger(DISPATCH_KEY_MAP[path + n]);
+                        }
                     }
                 } else {
                     console.error('Settings parameter ' + path + n + ' is not supported');

@@ -181,7 +181,8 @@ function StreamController() {
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
-        eventBus.on(Events.SETTING_UPDATED, _onSettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -204,7 +205,8 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
-        eventBus.off(Events.SETTING_UPDATED, _onSettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
     }
 
     /**
@@ -732,11 +734,11 @@ function StreamController() {
     }
 
     /**
-     * A setting in Settings.js was updated. Check if one of the latency values changed. If so, recalculate the live delay.
+     * A setting related to the live delay was updated. Check if one of the latency values changed. If so, recalculate the live delay.
      * @private
      */
-    function _onSettingUpdated(e) {
-        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0 && e && e.path && (e.path === 'streaming.delay.liveDelay' || e.path === 'streaming.delay.liveDelayFragmentCount')) {
+    function _onLiveDelaySettingUpdated() {
+        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
