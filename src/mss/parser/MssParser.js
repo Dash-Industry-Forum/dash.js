@@ -43,7 +43,6 @@ function MssParser(config) {
     const debug = config.debug;
     const constants = config.constants;
     const manifestModel = config.manifestModel;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const settings = config.settings;
 
     const DEFAULT_TIME_SCALE = 10000000.0;

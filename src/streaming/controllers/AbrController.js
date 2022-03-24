@@ -61,7 +61,6 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
-        playbackController,
         topQualities,
         qualityDict,
         streamProcessorDict,
@@ -232,9 +231,6 @@ function AbrController() {
 
         if (config.streamController) {
             streamController = config.streamController;
-        }
-        if (config.playbackController) {
-            playbackController = config.playbackController;
         }
         if (config.domStorage) {
             domStorage = config.domStorage;

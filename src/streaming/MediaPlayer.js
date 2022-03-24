@@ -2078,7 +2078,6 @@ function MediaPlayer() {
 
         abrController.setConfig({
             streamController,
-            playbackController,
             domStorage,
             mediaPlayerModel,
             dashMetrics,
