@@ -1732,8 +1732,7 @@ function MediaPlayer() {
             return;
         }
 
-        const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-        return thumbnailController.provide(timeInPeriod, callback);
+        return thumbnailController.provide(s, callback);
     }
 
     /*
@@ -1785,6 +1784,16 @@ function MediaPlayer() {
             throw SOURCE_NOT_ATTACHED_ERROR;
         }
         return source;
+    }
+
+    /**
+     * Sets the source to a new manifest URL or object without reloading
+     * Useful for updating CDN tokens
+     * @param urlOrManifest
+     */
+    function updateSource(urlOrManifest) {
+        source = urlOrManifest
+        streamController.load(source);
     }
 
     /**
@@ -2159,6 +2168,7 @@ function MediaPlayer() {
                 mediaElement: getVideoElement(),
                 adapter: adapter,
                 dashMetrics: dashMetrics,
+                mediaPlayerModel: mediaPlayerModel,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants
@@ -2329,6 +2339,7 @@ function MediaPlayer() {
         getTTMLRenderingDiv,
         getVideoElement,
         getSource,
+        updateSource,
         getCurrentLiveLatency,
         getTopBitrateInfoFor,
         setAutoPlay,

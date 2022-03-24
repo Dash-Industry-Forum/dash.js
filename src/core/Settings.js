@@ -928,7 +928,7 @@ function Settings() {
                         eventBus.trigger(Events.SETTING_UPDATED, { path: path + n });
                     }
                 } else {
-                    throw new Error('Settings parameter ' + path + n + ' is not supported');
+                    console.error('Settings parameter ' + path + n + ' is not supported');
                 }
             }
         }

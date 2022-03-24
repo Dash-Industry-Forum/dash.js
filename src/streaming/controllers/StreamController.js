@@ -232,10 +232,10 @@ function StreamController() {
             const streamsInfo = adapter.getStreamsInfo();
 
             if (!activeStream && streamsInfo.length === 0) {
-                throw new Error('There are no streams');
+                throw new Error('There are no periods in the MPD');
             }
 
-            if (activeStream) {
+            if (activeStream && streamsInfo.length > 0) {
                 dashMetrics.updateManifestUpdateInfo({
                     currentTime: playbackController.getTime(),
                     buffered: videoModel.getBufferRange(),
@@ -271,7 +271,7 @@ function StreamController() {
                 })
 
         } catch (e) {
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + ' nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
         }
@@ -1089,6 +1089,11 @@ function StreamController() {
      * @private
      */
     function _filterOutdatedStreams(streamsInfo) {
+        if (streamsInfo.length === 0) {
+            logger.warn(`No periods included in the current manifest. Skipping the filtering of outdated stream objects.`);
+            return;
+        }
+
         streams = streams.filter((stream) => {
             const isStillIncluded = streamsInfo.filter((sInfo) => {
                 return sInfo.id === stream.getId();

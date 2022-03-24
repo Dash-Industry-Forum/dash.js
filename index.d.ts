@@ -505,6 +505,8 @@ declare namespace dashjs {
 
         getSource(): string | object;
 
+        updateSource(urlOrManifest: string | object): void;
+
         getCurrentLiveLatency(): number;
 
         getTopBitrateInfoFor(type: MediaType): BitrateInfo;
@@ -1169,6 +1171,8 @@ declare namespace dashjs {
         getKeyStatuses(): MediaKeyStatusMap;
 
         getSessionType(): string;
+
+        getUsable(): boolean;
     }
 
     export interface Stream {

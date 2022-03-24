@@ -162,7 +162,7 @@ describe('StreamController', function () {
 
             it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
-                expect(errHandlerMock.errorValue).to.include('There are no streams');
+                expect(errHandlerMock.errorValue).to.include('There are no periods in the MPD');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_ABORTED', function () {

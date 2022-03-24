@@ -246,24 +246,6 @@ function PlaybackController() {
     }
 
     /**
-     * Returns current time. Takes potential differences between browsers into account
-     * @return {number}
-     * @private
-     */
-    function getNormalizedTime() {
-        let t = getTime();
-
-        if (isDynamic && !isNaN(availabilityStartTime)) {
-            const timeOffset = availabilityStartTime / 1000;
-            // Fix current time for firefox and safari (returned as an absolute time)
-            if (t > timeOffset) {
-                t -= timeOffset;
-            }
-        }
-        return t;
-    }
-
-    /**
      * Returns current playback rate of the video element
      * @return {number|null}
      */
@@ -335,12 +317,13 @@ function PlaybackController() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
         }
-        let currentTime = getNormalizedTime();
+        let currentTime = getTime();
         if (isNaN(currentTime) || currentTime === 0) {
             return 0;
         }
 
-        return timelineConverter.calcCurrentLiveLatency(currentTime, availabilityStartTime);
+        const now = new Date().getTime() + timelineConverter.getClientTimeOffset() * 1000;
+        return Math.max(((now - availabilityStartTime - currentTime * 1000) / 1000).toFixed(3), 0);
     }
 
     /**
@@ -499,6 +482,24 @@ function PlaybackController() {
      * @param {object} e
      * @private
      */
+    function updateCurrentTime(mediaType = null) {
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) return;
+
+        // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
+        // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
+        if (!mediaType) {
+            mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        }
+        // Compare the current time of the video element against the range defined in the DVR window.
+        const currentTime = getTime();
+        const actualTime = getActualPresentationTime(currentTime, mediaType);
+        const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
+        if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
+            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
+            seek(actualTime);
+        }
+    }
+
     function _onDataUpdateCompleted(e) {
         const representationInfo = adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation);
         const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
@@ -815,7 +816,6 @@ function PlaybackController() {
         getBufferLevel,
         getPlaybackStalled,
         getTime,
-        getNormalizedTime,
         getAvailabilityTimeComplete,
         getLowLatencyModeEnabled,
         getIsManifestUpdateInProgress,

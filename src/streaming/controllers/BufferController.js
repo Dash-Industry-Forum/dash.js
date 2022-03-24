@@ -335,15 +335,16 @@ function BufferController(config) {
 
         // Check if current buffered range already contains seek target (and current video element time)
         const currentTime = playbackController.getTime();
-        let range = getRangeAt(seekTarget, 0);
-        if (currentTime === seekTarget && range) {
+        const rangeAtCurrenTime = getRangeAt(currentTime, 0);
+        const rangeAtSeekTarget = getRangeAt(seekTarget, 0);
+        if (rangeAtCurrenTime && rangeAtSeekTarget && rangeAtCurrenTime.start === rangeAtSeekTarget.start) {
             seekTarget = NaN;
             return;
         }
 
         // Get buffered range corresponding to the seek target
         const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
-        range = getRangeAt(seekTarget, segmentDuration);
+        const range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
         if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
