@@ -411,10 +411,10 @@ function PlaybackController() {
             mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         }
         // Compare the current time of the video element against the range defined in the DVR window.
-        const currentTime = getNormalizedTime();
+        const currentTime = getTime();
         const actualTime = _getAdjustedPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged && !isSeeking() && (playbackStalled || videoModel.getReadyState() === 1)) {
+        if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime, false, false);
         }
@@ -475,29 +475,6 @@ function PlaybackController() {
     function stopUpdatingWallclockTime() {
         clearInterval(wallclockTimeIntervalId);
         wallclockTimeIntervalId = null;
-    }
-
-    /**
-     * Update the streamInfo after an MPD update
-     * @param {object} e
-     * @private
-     */
-    function updateCurrentTime(mediaType = null) {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) return;
-
-        // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
-        // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
-        if (!mediaType) {
-            mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-        }
-        // Compare the current time of the video element against the range defined in the DVR window.
-        const currentTime = getTime();
-        const actualTime = getActualPresentationTime(currentTime, mediaType);
-        const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged && !isSeeking() && (isStalled() || playbackStalled || videoModel.getReadyState() === 1)) {
-            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
-            seek(actualTime);
-        }
     }
 
     function _onDataUpdateCompleted(e) {
@@ -685,14 +662,6 @@ function PlaybackController() {
     }
 
     /**
-     * Returns the value of availabilityTimeComplete
-     * @return {boolean} availabilityTimeComplete
-     */
-    function getAvailabilityTimeComplete() {
-        return availabilityTimeComplete;
-    }
-
-    /**
      * Returns the value of lowLatencyModeEnabled
      * @return {boolean} lowLatencyModeEnabled
      */
@@ -816,7 +785,6 @@ function PlaybackController() {
         getBufferLevel,
         getPlaybackStalled,
         getTime,
-        getAvailabilityTimeComplete,
         getLowLatencyModeEnabled,
         getIsManifestUpdateInProgress,
         getPlaybackRate,

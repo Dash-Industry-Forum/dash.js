@@ -11,6 +11,7 @@ class PlaybackControllerMock {
         this.playing = false;
         this.seeking = false;
         this.isDynamic = false;
+        this.lowLatencyEnabled = false;
         this.time = 0;
         this.streamController = new StreamControllerMock();
         this.streamController.setup();
@@ -120,8 +121,14 @@ class PlaybackControllerMock {
         return 0;
     }
 
-    applyServiceDescription() {
+    getLowLatencyModeEnabled() {
+        return this.lowLatencyEnabled;
     }
+
+    setLowLatencyModeEnabled(value) {
+        this.lowLatencyEnabled = value;
+    }
+
 }
 
 

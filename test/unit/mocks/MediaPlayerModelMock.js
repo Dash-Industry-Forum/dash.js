@@ -265,6 +265,10 @@ class MediaPlayerModelMock {
     reset() {
         this.setup();
     }
+
+    setConfig() {
+
+    }
 }
 
 export default MediaPlayerModelMock;

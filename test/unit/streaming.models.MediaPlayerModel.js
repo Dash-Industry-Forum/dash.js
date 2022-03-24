@@ -5,17 +5,25 @@ import {
 } from '../../src/streaming/vo/metrics/HTTPRequest';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import Settings from '../../src/core/Settings';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
 
 describe('MediaPlayerModel', function () {
     const context = {};
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+
+    let mediaPlayerModel;
+    let playbackController;
     let settings = Settings(context).getInstance();
 
     beforeEach(() => {
         settings.reset();
+        playbackController = new PlaybackControllerMock();
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        mediaPlayerModel.setConfig({
+            playbackController
+        })
     });
 
     it('Method removeUTCTimingSource should throw an exception', function () {
@@ -93,6 +101,7 @@ describe('MediaPlayerModel', function () {
                 }
         };
         settings.update(s);
+        playbackController.setLowLatencyModeEnabled(true);
 
         manifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MPD_TYPE);
         expect(manifestLoaderRetryAttempts).to.equal(30);
@@ -123,17 +132,18 @@ describe('MediaPlayerModel', function () {
                 }
         };
         settings.update(s);
+        playbackController.setLowLatencyModeEnabled(true);
 
         manifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MPD_TYPE);
         expect(manifestLoaderRetryInterval).to.equal(100);
     });
 
     it('should configure StableBufferTime', function () {
-        const s = { streaming: { buffer: { stableBufferTime: 50 } } };
+        const s = { streaming: { buffer: { stableBufferTime: 10 } } };
         settings.update(s);
 
         let StableBufferTime = mediaPlayerModel.getStableBufferTime();
-        expect(StableBufferTime).to.equal(50);
+        expect(StableBufferTime).to.equal(10);
     });
 
 });
