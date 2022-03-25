@@ -2020,7 +2020,7 @@ function MediaPlayer() {
             playbackController
         });
 
-        // initialises controller
+        // initializes controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
