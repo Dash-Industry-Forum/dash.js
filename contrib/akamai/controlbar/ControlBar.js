@@ -51,7 +51,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var lastVolumeLevel = NaN;
     var seeking = false;
     var videoControllerVisibleTimeout = 0;
-    var liveThresholdSecs = 0.5;
+    var liveThresholdSecs = 1;
     var textTrackList = {};
     var forceQuality = false;
     var video,
@@ -283,7 +283,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (!isNaN(mouseTime)) {
             mouseTime = mouseTime < 0 ? 0 : mouseTime;
             self.player.seek(mouseTime);
-            self.player.updateSettings({ streaming: { liveCatchup: { enabled: false } } });
+            //self.player.updateSettings({ streaming: { liveCatchup: { enabled: false } } });
         }
 
         onSeekBarMouseMoveOut(event);

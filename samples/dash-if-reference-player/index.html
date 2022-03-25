@@ -953,6 +953,14 @@
                                        title="Difference between live time and current playback position in seconds. This latency estimate does not include the time taken by the encoder to encode the content">Live
                                     Latency:</label> {{videoLiveLatency}}
                             </div>
+                            <div class="text-success" ng-show="isDynamic">
+                                <input id="videoPlaybackRateCB" type="checkbox"
+                                       ng-model="chartState.video.playbackRate.selected"
+                                       ng-change="enableChartByName('playbackRate', 'video')">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Playback rate">Playback rate:</label> {{videoPlaybackRate}}
+                            </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="audioStatsTab">
@@ -1033,6 +1041,14 @@
                                        data-placement="top"
                                        title="Number of seconds of difference between the real live and the playing live">Live
                                     Latency:</label> {{audioLiveLatency}}
+                            </div>
+                            <div class="text-success">
+                                <input id="audioPlaybackRateCB" type="checkbox"
+                                       ng-model="chartState.audio.playbackRate.selected"
+                                       ng-change="enableChartByName('playbackRate', 'audio')">
+                                <label class="text-primary" for="audioPlaybackRateCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Playback Rate">Playback Rate:</label> {{audioPlaybackRate}}
                             </div>
                         </div>
                     </div>

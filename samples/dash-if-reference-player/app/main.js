@@ -143,7 +143,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Time (sec)' },
             latency: { data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS' },
-            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' },
+            playbackRate: { data: [], selected: false, color: '#65080c', label: 'Playback Rate' }
         },
         video: {
             buffer: { data: [], selected: true, color: '#00589d', label: 'Video Buffer Level' },
@@ -154,7 +155,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Time (sec)' },
             latency: { data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS' },
-            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' },
+            playbackRate: { data: [], selected: false, color: '#65080c', label: 'Playback Rate' }
         }
     };
 
@@ -246,6 +248,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoRatioCount = 0;
     $scope.videoRatio = '';
     $scope.videoLiveLatency = 0;
+    $scope.videoPlaybackRate = 1.00;
 
     $scope.audioBitrate = 0;
     $scope.audioIndex = 0;
@@ -261,6 +264,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioRatioCount = 0;
     $scope.audioRatio = '';
     $scope.audioLiveLatency = 0;
+    $scope.audioPlaybackRate = 1.00;
 
     // Starting Options
     $scope.autoPlaySelected = true;
@@ -1849,14 +1853,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
             var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
             var liveLatency = 0;
+            var playbackRate = 1.00
             if ($scope.isDynamic) {
                 liveLatency = $scope.player.getCurrentLiveLatency();
+                playbackRate = parseFloat($scope.player.getPlaybackRate().toFixed(2));
             }
 
             $scope[type + 'BufferLength'] = bufferLevel;
             $scope[type + 'MaxIndex'] = maxIndex;
             $scope[type + 'DroppedFrames'] = droppedFPS;
             $scope[type + 'LiveLatency'] = liveLatency;
+            $scope[type + 'PlaybackRate'] = playbackRate;
 
             var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(type));
             if (httpMetrics) {
@@ -1872,6 +1879,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 $scope.plotPoint('bitrate', type, bitrate, time);
                 $scope.plotPoint('droppedFPS', type, droppedFPS, time);
                 $scope.plotPoint('liveLatency', type, liveLatency, time);
+                $scope.plotPoint('playbackRate', type, playbackRate, time);
 
                 if (httpMetrics) {
                     $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2), time);
