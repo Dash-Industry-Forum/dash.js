@@ -1,9 +1,14 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
 
 function CapabilitiesFilter() {
+
     const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+
     let instance,
         adapter,
         capabilities,
@@ -91,6 +96,9 @@ function CapabilitiesFilter() {
                         const supported = as.Representation_asArray && as.Representation_asArray.length > 0;
 
                         if (!supported) {
+                            eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
+                                adaptationSet: as
+                            });
                             logger.warn(`AdaptationSet has been removed because of no supported Representation`);
                         }
 
