@@ -1440,18 +1440,6 @@ declare namespace dashjs {
         role?: string;
     }
 
-    export interface SessionToken {
-        session: MediaKeySession;
-        initData: any;
-
-        getSessionId(): string;
-
-        getExpirationTime(): number;
-
-        getKeyStatuses(): MediaKeyStatusMap;
-
-        getSessionType(): string;
-    }
 
     export interface Stream { // Not sure what this is for; Stream.js has different functions, as do offlinestream.js and streamcontroller.js
         initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
@@ -2624,7 +2612,494 @@ declare namespace dashjs {
      **/
 
     export interface FetchLoader {
+        load(httpRequest: HTTPRequest): void;
+
+        abort(request: HTTPRequest): void;
+
+        calculateDownloadedTime(downloadedData: any, bytesReceived: any): number | null;
+
+        setup(cfg: object): void;
+    }
+
+    export interface HTTPLoader {
+        load(config: object): void;
+
+        abort(): void;
+    }
+
+    export interface SchemeLoaderFactory {
+        getLoader(url: string): HTTPLoader;
+
+        registerLoader(scheme: string, loader: any): void;
+
+        unregisterLoader(scheme: string): void;
+
+        unregisterAllLoader(): void;
+
+        reset(): void;
+    }
+
+    export interface URLLoader {
+        load(config: object): any;
+
+        abort(): void;
+    }
+
+    export interface XHRLoader {
+        load(httpRequest: HTTPRequest): HTTPRequest;
+
+        abort(request: HTTPRequest): void;
+    }
+
+    /**
+     * Streaming - Protection - Controllers
+     **/
+
+    export interface ProtectionController {
+        initializeForMedia(mediaInfo: MediaInfo): void;
+
+        clearMediaInfoArray(): void;
+
+        createKeySession(keySystemInfo: KeySystemInfo): void;
+
+        loadKeySession(keySystemInfo: KeySystemInfo): void;
+
+        removeKeySession(sessionToken: SessionToken): void;
+
+        closeKeySession(sessionToken: SessionToken): void;
+
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        setMediaElement(element: HTMLMediaElement): void;
+
+        setSessionType(value: string): void;
+
+        setRobustnessLevel(level: string): void;
+
+        setProtectionData(data: object): void;
+
+        getSupportedKeySystemsFromContentProtection(cps: object[]): object[]; 
+
+        getKeySystems(): any[];
+
+        setKeySystems(keySystems: KeySystem[]): void;
+
+        setLicenseRequestFilters(filters: any[]): void;
+
+        setLicenseResponseFilters(filters: any[]): void;
+
+        stop(): void;
+
+        reset(): void;
+    }
+
+    export interface ProtectionKeyController {
+        initialize(): void;
+
+        setProtectionData(protectionDataSet: ProtectionDataSet): ProtectionData;
+
+        isClearKey(keySystem: KeySystem): boolean;
+
+        initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
+
+        getKeySystems(): KeySystem[];
+
+        setKeySystems(newKeySystems: KeySystem[]): void;
+
+        getKeySystemBySystemString(systemString: string): KeySystem | null;
+
+        getSupportedKeySystemsFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
+
+        getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
+
+        getLicenseServerModelInstance(keySystem: KeySystem, protData: ProtectionData, messageType: string): any | null; // LicenseServer instead of any
+
+        processClearKeyLicenseRequest(clearKeySystem: KeySystem, ProtectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet | null;
+
+        setConfig(config: object): void;
+    }
+
+    /**
+     * Streaming - Protection - Drm
+     **/
+
+    export interface KeySystem {
+        systemString: string;
+        uuid: string;
+        schemeIdURI: string;
+
+        getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
+
+        getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
+
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+
+        getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
+
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
+
+        getSessionId() : string | null;
+    }
+
+    export interface KeySystemClearKey {
+        uuid: string;
+        systemString: string;
+        schemeIdURI: string;
+
+        getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
         
+        getRequestHeadersFromMessage(): object;
+        
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+
+        getLicenseServerURLFromInitData(): null;
+
+        getCDMData(): null;
+
+        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
+    }
+
+    export interface KeySystemPlayReady {
+        uuid: string;
+        schemeIdURI: string;
+        systemString: string;
+
+        getInitData(cpData: object): ArrayBuffer;
+
+        getRequestHeadersFromMessage(message: ArrayBuffer): object;
+
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+
+        getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
+
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
+
+        setPlayReadyMessageFormat(format: string): void;
+    }
+
+    export interface KeySystemW3CClearKey {
+        uuid: string;
+        systemString: string;
+        schemeIdURI: string;
+
+        getInitData(cp: object): ArrayBuffer | null;
+        
+        getRequestHeadersFromMessage(): null;
+        
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+
+        getLicenseServerURLFromInitData(): null;
+
+        getCDMData(): null;
+
+        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
+    }
+
+    export interface KeySystemWidevine {
+        uuid: string;
+        schemeIdURI: string;
+        systemString: string;
+
+        getInitData(cp: object): ArrayBuffer | null;
+
+        getRequestHeadersFromMessage(): null;
+
+        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+
+        getLicenseServerURLFromInitData(): null;
+
+        getCDMData(): null;
+    }
+
+    /**
+     * Streaming - Protection - Errors
+     **/
+
+    interface ProtectionErrors {
+        MEDIA_KEYERR_CODE: 100;
+        MEDIA_KEYERR_UNKNOWN_CODE: 101;
+        MEDIA_KEYERR_CLIENT_CODE: 102;
+        MEDIA_KEYERR_SERVICE_CODE: 103;
+        MEDIA_KEYERR_OUTPUT_CODE: 104;
+        MEDIA_KEYERR_HARDWARECHANGE_CODE: 105;
+        MEDIA_KEYERR_DOMAIN_CODE: 106;
+        MEDIA_KEY_MESSAGE_ERROR_CODE: 107;
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE: 108;
+        SERVER_CERTIFICATE_UPDATED_ERROR_CODE: 109;
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE: 110;
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE: 112;
+        KEY_SESSION_CREATED_ERROR_CODE: 113;
+        MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE: 114;
+
+        MEDIA_KEYERR_UNKNOWN_MESSAGE: 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
+        MEDIA_KEYERR_CLIENT_MESSAGE: 'The Key System could not be installed or updated.';
+        MEDIA_KEYERR_SERVICE_MESSAGE: 'The message passed into update indicated an error from the license service.';
+        MEDIA_KEYERR_OUTPUT_MESSAGE: 'There is no available output device with the required characteristics for the content protection system.';
+        MEDIA_KEYERR_HARDWARECHANGE_MESSAGE: 'A hardware configuration change caused a content protection error.';
+        MEDIA_KEYERR_DOMAIN_MESSAGE: 'An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
+        MEDIA_KEY_MESSAGE_ERROR_MESSAGE: 'Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!';
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE: 'DRM: Empty key message from CDM';
+        SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE: 'Error updating server certificate -- ';
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE: 'DRM: KeyStatusChange error! -- License has expired';
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE: 'DRM: No license server URL specified!';
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE: 'DRM: KeySystem Access Denied! -- ';
+        KEY_SESSION_CREATED_ERROR_MESSAGE: 'DRM: unable to create session! --';
+        MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE: 'DRM: licenser error! --';
+    }
+
+    /**
+     * Streaming - Protection - Models
+     **/
+
+    export interface ProtectionModel_01b {
+        getAllInitData(): ArrayBuffer[];
+
+        getSessions(): any[]; // Is this MediaSession[] ?
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        selectKeySystem(keySystemAccess: any): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        createKeySession(ksInfo: KeySystemInfo): any;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+
+        closeKeySession(sessionToken: SessionToken): void;
+
+        setServerCertificate(): void; // Not supproted
+
+        loadKeySession(): void; // Not supproted
+
+        removeKeySession(): void; // Not supproted
+
+        stop(): void;
+
+        reset(): void;
+    }
+
+    export interface ProtectionModel_3Fe2014 {
+        getAllInitData(): ArrayBuffer[];
+
+        getSessions(): any[]; // Is this MediaSession[] ?
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        selectKeySystem(keySystemAccess: any): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        createKeySession(ksInfo: KeySystemInfo): any;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+
+        closeKeySession(sessionToken: SessionToken): void;
+
+        setServerCertificate(): void; // Not supproted
+
+        loadKeySession(): void; // Not supproted
+
+        removeKeySession(): void; // Not supproted
+
+        stop(): void;
+
+        reset(): void;
+    }
+
+    export interface ProtectionModel_21Jan2015 {
+        getAllInitData(): ArrayBuffer[];
+
+        getSessions(): any[]; // Is this MediaSession[] ?
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        selectKeySystem(keySystemAccess: KeySystemAccess): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        createKeySession(ksInfo: KeySystemInfo): any;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+
+        closeKeySession(sessionToken: SessionToken): void;
+
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        loadKeySession(ksInfo: KeySystemInfo): void;
+
+        removeKeySession(sessionToken: SessionToken): void;
+
+        stop(): void;
+
+        reset(): void;
+    }
+
+    export interface ProtectionModel {
+        getAllInitData(): ArrayBuffer[];
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        selectKeySystem(keySystemAccess: KeySystemAccess): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        createKeySession(initData: ArrayBuffer, protData: ProtectionData, sessionType: string): void;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+
+        closeKeySession(sessionToken: SessionToken): void;
+
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        loadKeySession(sessionId: string, initData: ArrayBuffer): void;
+
+        removeKeySession(sessionToken: SessionToken): void;
+
+        stop(): void;
+
+        reset(): void;
+    }
+
+    /**
+     * Streaming - Protection - Server
+     **/
+
+    export interface ClearKey {
+        getServerURLFromMessage(url: string): string;
+
+        getHTTPMethod(): 'POST';
+
+        getResponseType(): 'json';
+
+        getLicenseMessage(serverResponse: object): ClearKeyKeySet;
+
+        getErrorResponse(serverResponse: object): string;
+    }
+
+    export interface DRMToday {
+        getServerURLFromMessage(url: string): string;
+
+        getHTTPMethod(): 'POST';
+
+        getResponseType(keySystemStr: string): string;
+
+        getLicenseMessage(serverResponse: object, keySystemStr: string): any;
+
+        getErrorResponse(serverResponse: object): string;
+    }
+
+    export interface LicenseServer {
+        getServerURLFromMessage(url: string, message: ArrayBuffer, messageType: string): string;
+
+        getHTTPMethod(messageType: string): string;
+
+        getResponseType(keySystemStr: string, messageType: string): string;
+
+        getLicenseMessage(serverResponse: object, keySystemStr: string): ArrayBuffer | null;
+
+        getErrorResponse(serverResponse: object): string;
+    }
+
+    export interface PlayReady {
+        getServerURLFromMessage(url: string): string;
+
+        getHTTPMethod(): 'POST';
+
+        getResponseType(): 'arraybuffer';
+
+        getLicenseMessage(serverResponse: object): any;
+
+        getErrorResponse(serverResponse: object): string;
+    }
+
+    export interface Widevine {
+        getServerURLFromMessage(url: string): string;
+
+        getHTTPMethod(): 'POST';
+
+        getResponseType(): 'arraybuffer';
+
+        getLicenseMessage(serverResponse: object): object;
+
+        getErrorResponse(serverResponse: object): string;
+    }
+
+    /**
+     * Streaming - Protection - Vo
+     **/
+
+    export interface ClearKeyKeySet {
+        keyPairs: KeyPair[];
+        type: string;
+    }
+
+    export class KeyPair {
+        constructor(keyId: string, key: string)
+
+        keyId: string;
+        key: string;
+    }
+
+    export class KeySystemAccess {
+        constructor(keySystem: KeySystem, ksConfiguration: KeySystemConfiguration)
+
+        keySystem: KeySystem;
+        ksConfiguration: KeySystemConfiguration;
+    }
+
+    export class KeySystemConfiguration{
+        constructor(audioCapabilities: MediaCapability[], videoCapabilities: MediaCapability[], distinctiveIdentifier: string, persistentState: string, sessionTypes: string[])
+
+        audioCapabilities: MediaCapability[];
+        videoCapabilities: MediaCapability[];
+        distinctiveIdentifier: string;
+        persistentState: string;
+        sessionTypes: string[];
+    }
+
+    export class LicenseRequest {
+        constructor(url: string, method: string, responseType: string, headers: {[key: string] : string}, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
+
+        url: string;
+        method: string;
+        responseType: string;
+        headers: {[key: string] : string};
+        withCredentials: boolean;
+        messageType: string;
+        sessionId: string;
+        data: ArrayBuffer;
+    }
+
+    export class LicenseRequestComplete {
+        constructor(message: Uint8Array, sessionToken: SessionToken, messageType: string)
+
+        message: Uint8Array;
+        sessionToken: SessionToken;
+        messageType: string;
+    }
+
+    export class LicenseResponse {
+        constructor(url: string, headers: object, data: ArrayBuffer)
+
+        url: string;
+        headers: object;
+        data: ArrayBuffer;
+    }
+
+    export class MediaCapability {
+        constructor(contentType: string, robustness: string)
+
+        contentType: string;
+        robustness: string;
+    }
+
+    export class NeedKey {
+        constructor(initData: ArrayBuffer, initDataType: string)
+
+        initData: ArrayBuffer;
+        initDataType: string;
     }
 
     export interface ProtectionDataSet {
@@ -2679,22 +3154,29 @@ declare namespace dashjs {
         priority?: number;
     }
 
-    export interface KeySystem {
-        systemString: string;
-        uuid: string;
-        schemeIdURI: string;
+    export interface SessionToken {
+        session: MediaKeySession;
+        initData: any;
 
-        getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
+        getSessionId(): string;
 
-        getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
+        getExpirationTime(): number;
 
-        getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
+        getKeyStatuses(): MediaKeyStatusMap;
 
-        getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
+        getSessionType(): string;
+    }
 
-        getCDMData(cdmData: string | null): ArrayBuffer | null;
+    /**
+     * Streaming - Protection
+     **/
 
-        getSessionId() : string | null;
+    export interface CommonEncryption {
+        // Does not export anything
+    }
+
+    export interface Protection {
+        createProtectionSystem(config: object): void;
     }
 
     export interface KeySystemInfo {
@@ -2705,23 +3187,6 @@ declare namespace dashjs {
         initData?: ArrayBuffer;
         cdmData?: ArrayBuffer;
         protData?: ProtectionData
-    }
-
-    export interface LicenseRequest {
-        url: string;
-        method: string;
-        responseType: string;
-        headers: {[key: string] : string};
-        withCredentials: boolean;
-        messageType: string;
-        sessionId: string;
-        data: ArrayBuffer;
-    }
-
-    export interface LicenseResponse {
-        url: string;
-        headers: object;
-        data: ArrayBuffer;
     }
 
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
