@@ -263,7 +263,7 @@ function StreamProcessor(config) {
     /**
      * When a seek within the corresponding period occurs this function initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
-     * @private
+     * @returns {Promise<any>}
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
         return new Promise((resolve) => {
@@ -593,7 +593,6 @@ function StreamProcessor(config) {
      * The quality has changed which means we have switched to a different representation.
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is higher than the already buffered one.
      * @param {object} e
-     * @private
      */
     function prepareQualityChange(e) {
         logger.debug(`Preparing quality switch for type ${type}`);
