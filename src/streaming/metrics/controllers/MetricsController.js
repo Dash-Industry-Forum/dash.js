@@ -53,7 +53,8 @@ function MetricsController(config) {
 
             reportingController = ReportingController(context).create({
                 debug: config.debug,
-                metricsConstants: config.metricsConstants
+                metricsConstants: config.metricsConstants,
+                mediaPlayerModel: config.mediaPlayerModel
             });
 
             reportingController.initialize(metricsEntry.Reporting, rangeController);
