@@ -57,7 +57,7 @@ function ABRRulesCollection(config) {
         qualitySwitchRules,
         abandonFragmentRules;
 
-    function initialize() {
+    function initialize(customRules = []) {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
@@ -68,7 +68,6 @@ function ABRRulesCollection(config) {
                 qualitySwitchRules.push(
                     L2ARule(context).create({
                         dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel,
                         settings: settings
                     })
                 );
@@ -131,7 +130,6 @@ function ABRRulesCollection(config) {
         }
 
         // add custom ABR rules if any
-        const customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
             if (rule.type === QUALITY_SWITCH_RULES) {
                 qualitySwitchRules.push(rule.rule(context).create());

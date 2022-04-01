@@ -30,11 +30,8 @@
  */
 import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../constants/Constants';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
 import {checkParameterType} from '../utils/SupervisorTools';
-
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
@@ -49,8 +46,7 @@ function MediaPlayerModel() {
     let instance,
         UTCTimingSources,
         xhrWithCredentials,
-        playbackController,
-        customABRRule;
+        playbackController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
@@ -60,7 +56,6 @@ function MediaPlayerModel() {
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
-        customABRRule = [];
     }
 
     function setConfig(config) {
@@ -69,54 +64,6 @@ function MediaPlayerModel() {
         }
     }
 
-    //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    function findABRCustomRuleIndex(rulename) {
-        let i;
-        for (i = 0; i < customABRRule.length; i++) {
-            if (customABRRule[i].rulename === rulename) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    function getABRCustomRules() {
-        return customABRRule;
-    }
-
-    function addABRCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
-            typeof rulename !== 'string') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-        let index = findABRCustomRuleIndex(rulename);
-        if (index === -1) {
-            // add rule
-            customABRRule.push({
-                type: type,
-                rulename: rulename,
-                rule: rule
-            });
-        } else {
-            // update rule
-            customABRRule[index].type = type;
-            customABRRule[index].rule = rule;
-        }
-    }
-
-    function removeABRCustomRule(rulename) {
-        if (rulename) {
-            let index = findABRCustomRuleIndex(rulename);
-            //if no rulename custom rule has been found, do nothing
-            if (index !== -1) {
-                // remove rule
-                customABRRule.splice(index, 1);
-            }
-        } else {
-            //if no rulename is defined, remove all ABR custome rules
-            customABRRule = [];
-        }
-    }
 
     function getInitialBufferLevel() {
         const initialBufferLevel = settings.get().streaming.buffer.initialBufferLevel;
@@ -202,9 +149,6 @@ function MediaPlayerModel() {
     }
 
     instance = {
-        getABRCustomRules,
-        addABRCustomRule,
-        removeABRCustomRule,
         getStableBufferTime,
         getInitialBufferLevel,
         getRetryAttemptsForType,

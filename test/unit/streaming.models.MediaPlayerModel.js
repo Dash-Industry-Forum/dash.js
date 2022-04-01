@@ -3,7 +3,6 @@ import Constants from '../../src/streaming/constants/Constants';
 import {
     HTTPRequest
 } from '../../src/streaming/vo/metrics/HTTPRequest';
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import Settings from '../../src/core/Settings';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
@@ -42,14 +41,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method addABRCustomRule should throw an exception', function () {
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
     it('should configure FragmentLoaderRetryAttempts', function () {

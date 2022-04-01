@@ -11,6 +11,7 @@ import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
 import Settings from '../../src/core/Settings';
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -657,29 +658,37 @@ describe('MediaPlayer', function () {
             expect(useDefaultABRRules).to.be.false; // jshint ignore:line
         });
 
+        it('Method addABRCustomRule should throw an exception', function () {
+            expect(player.addABRCustomRule.bind(player, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        });
+
         it('should manage custom ABR rules', function () {
-            let customRules = mediaPlayerModel.getABRCustomRules();
+            let customRules = player.getABRCustomRules();
             expect(customRules.length).to.equal(0);
 
-            player.addABRCustomRule('custom', 'testRule', {});
+            player.addABRCustomRule('qualitySwitchRules', 'testRule', {});
 
-            customRules = mediaPlayerModel.getABRCustomRules();
+            customRules = player.getABRCustomRules();
             expect(customRules.length).to.equal(1);
             expect(customRules[0].rulename).to.equal('testRule');
 
-            player.addABRCustomRule('custom', 'testRule2', {});
-            player.addABRCustomRule('custom', 'testRule3', {});
-            customRules = mediaPlayerModel.getABRCustomRules();
+            player.addABRCustomRule('qualitySwitchRules', 'testRule2', {});
+            player.addABRCustomRule('qualitySwitchRules', 'testRule3', {});
+            customRules = player.getABRCustomRules();
             expect(customRules.length).to.equal(3);
 
             player.removeABRCustomRule('testRule');
 
-            customRules = mediaPlayerModel.getABRCustomRules();
+            customRules = player.getABRCustomRules();
             expect(customRules.length).to.equal(2);
 
             player.removeABRCustomRule();
 
-            customRules = mediaPlayerModel.getABRCustomRules();
+            customRules = player.getABRCustomRules();
             expect(customRules.length).to.equal(0);
         });
 

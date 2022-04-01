@@ -80,6 +80,7 @@ import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
+import ABRRulesCollection from './rules/abr/ABRRulesCollection';
 
 /**
  * The media types
@@ -161,7 +162,8 @@ function MediaPlayer() {
         segmentBaseController,
         licenseRequestFilters,
         licenseResponseFilters,
-        customCapabilitiesFilters;
+        customCapabilitiesFilters,
+        customAbrRules;
 
     /*
     ---------------------------------------------------------------------------
@@ -188,6 +190,7 @@ function MediaPlayer() {
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
+        customAbrRules = [];
     }
 
     /**
@@ -434,6 +437,7 @@ function MediaPlayer() {
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
+        customAbrRules = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -1011,6 +1015,21 @@ function MediaPlayer() {
     }
 
     /**
+     * Iterate through the list of custom ABR rules and find the right rule by name
+     * @param {string} rulename
+     * @return {number} rule number
+     */
+    function _findABRCustomRuleIndex(rulename) {
+        let i;
+        for (i = 0; i < customAbrRules.length; i++) {
+            if (customAbrRules[i].rulename === rulename) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Add a custom ABR Rule
      * Rule will be apply on next stream if a stream is being played
      *
@@ -1022,7 +1041,23 @@ function MediaPlayer() {
      * @instance
      */
     function addABRCustomRule(type, rulename, rule) {
-        mediaPlayerModel.addABRCustomRule(type, rulename, rule);
+        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+            typeof rulename !== 'string') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+        let index = _findABRCustomRuleIndex(rulename);
+        if (index === -1) {
+            // add rule
+            customAbrRules.push({
+                type: type,
+                rulename: rulename,
+                rule: rule
+            });
+        } else {
+            // update rule
+            customAbrRules[index].type = type;
+            customAbrRules[index].rule = rule;
+        }
     }
 
     /**
@@ -1033,7 +1068,17 @@ function MediaPlayer() {
      * @instance
      */
     function removeABRCustomRule(rulename) {
-        mediaPlayerModel.removeABRCustomRule(rulename);
+        if (rulename) {
+            let index = _findABRCustomRuleIndex(rulename);
+            //if no rulename custom rule has been found, do nothing
+            if (index !== -1) {
+                // remove rule
+                customAbrRules.splice(index, 1);
+            }
+        } else {
+            //if no rulename is defined, remove all ABR custome rules
+            customAbrRules = [];
+        }
     }
 
     /**
@@ -1042,7 +1087,15 @@ function MediaPlayer() {
      * @instance
      */
     function removeAllABRCustomRule() {
-        mediaPlayerModel.removeABRCustomRule();
+        customAbrRules = [];
+    }
+
+    /**
+     * Return all ABR custom rules
+     * @return {array}
+     */
+    function getABRCustomRules() {
+        return customAbrRules;
     }
 
     /**
@@ -2093,7 +2146,7 @@ function MediaPlayer() {
         });
 
         // initialises controller
-        abrController.initialize();
+        abrController.initialize(customAbrRules);
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
         gapController.initialize();
@@ -2362,6 +2415,7 @@ function MediaPlayer() {
         addABRCustomRule,
         removeABRCustomRule,
         removeAllABRCustomRule,
+        getABRCustomRules,
         getAverageThroughput,
         retrieveManifest,
         addUTCTimingSource,

@@ -91,7 +91,7 @@ function AbrController() {
     /**
      * Initialize everything that is not Stream specific. We only have one instance of the ABR Controller for all periods.
      */
-    function initialize() {
+    function initialize(customAbrRules = []) {
         droppedFramesHistory = DroppedFramesHistory(context).create();
         throughputHistory = ThroughputHistory(context).create({
             settings: settings
@@ -103,7 +103,7 @@ function AbrController() {
             settings: settings
         });
 
-        abrRulesCollection.initialize();
+        abrRulesCollection.initialize(customAbrRules);
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
