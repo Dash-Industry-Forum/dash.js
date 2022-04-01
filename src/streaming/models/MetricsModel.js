@@ -122,7 +122,7 @@ function MetricsModel(config) {
         vo.s = s;
         vo.d = d;
         vo.b = b;
-        vo.t = t;
+        vo._t = t;
 
         httpRequest.trace.push(vo);
 
