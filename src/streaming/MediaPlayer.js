@@ -372,8 +372,7 @@ function MediaPlayer() {
             });
 
             mediaPlayerModel.setConfig({
-                playbackController,
-                serviceDescriptionController
+                playbackController
             });
 
             restoreDefaultUTCTimingSources();

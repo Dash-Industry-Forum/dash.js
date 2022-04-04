@@ -47,8 +47,7 @@ const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 function MediaPlayerModel() {
 
     let instance,
-        playbackController,
-        serviceDescriptionController;
+        playbackController
 
     const context = this.context;
     const settings = Settings(context).getInstance();
