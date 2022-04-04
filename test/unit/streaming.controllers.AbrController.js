@@ -11,6 +11,7 @@ import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
 const expect = require('chai').expect;
 
@@ -31,6 +32,7 @@ describe('AbrController', function () {
     const dashMetricsMock = new DashMetricsMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const streamControllerMock = new StreamControllerMock();
+    const customParametersModel = CustomParametersModel(context).getInstance();
 
     beforeEach(function () {
         abrCtrl.setConfig({
@@ -40,7 +42,8 @@ describe('AbrController', function () {
             domStorage: domStorageMock,
             mediaPlayerModel: mediaPlayerModelMock,
             settings: settings,
-            streamController: streamControllerMock
+            streamController: streamControllerMock,
+            customParametersModel
         });
         abrCtrl.initialize();
         abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);

@@ -72,6 +72,7 @@ function AbrController() {
         adapter,
         videoModel,
         mediaPlayerModel,
+        customParametersModel,
         domStorage,
         playbackIndex,
         switchHistoryDict,
@@ -91,19 +92,20 @@ function AbrController() {
     /**
      * Initialize everything that is not Stream specific. We only have one instance of the ABR Controller for all periods.
      */
-    function initialize(customAbrRules = []) {
+    function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
         throughputHistory = ThroughputHistory(context).create({
-            settings: settings
+            settings
         });
 
         abrRulesCollection = ABRRulesCollection(context).create({
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            settings: settings
+            dashMetrics,
+            customParametersModel,
+            mediaPlayerModel,
+            settings
         });
 
-        abrRulesCollection.initialize(customAbrRules);
+        abrRulesCollection.initialize();
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
@@ -237,6 +239,9 @@ function AbrController() {
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;

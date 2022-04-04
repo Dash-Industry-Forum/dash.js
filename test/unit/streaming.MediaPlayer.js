@@ -12,6 +12,7 @@ import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
 import Settings from '../../src/core/Settings';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -42,6 +43,7 @@ describe('MediaPlayer', function () {
     const mediaControllerMock = new MediaControllerMock();
     const objectUtils = ObjectUtils(context).getInstance();
     const settings = Settings(context).getInstance();
+    const customParametersModel = CustomParametersModel(context).getInstance();
     let player;
 
     beforeEach(function () {
@@ -58,7 +60,8 @@ describe('MediaPlayer', function () {
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrControllerMock,
             mediaController: mediaControllerMock,
-            settings: settings
+            settings: settings,
+            customParametersModel
         });
     });
 
@@ -583,6 +586,9 @@ describe('MediaPlayer', function () {
     });
 
     describe('Media Player Configuration Functions', function () {
+        beforeEach(function () {
+            customParametersModel.reset();
+        })
         afterEach(function () {
             mediaPlayerModel.reset();
             settings.reset();
@@ -693,26 +699,26 @@ describe('MediaPlayer', function () {
         });
 
         it('should manage UTC timing sources', function () {
-            let utcTimingSources = mediaPlayerModel.getUTCTimingSources();
+            let utcTimingSources = customParametersModel.getUTCTimingSources();
             expect(utcTimingSources.length).to.equal(0);
 
             player.addUTCTimingSource('urn:mpeg:dash:utc:http-head:2014', 'http://time.akamai.com');
             player.addUTCTimingSource('urn:mpeg:dash:utc:http-iso:2014', 'http://time.akamai.com');
 
-            utcTimingSources = mediaPlayerModel.getUTCTimingSources();
+            utcTimingSources = customParametersModel.getUTCTimingSources();
             expect(utcTimingSources.length).to.equal(2);
 
             player.removeUTCTimingSource('urn:mpeg:dash:utc:http-head:2014', 'http://time.akamai.com');
 
-            utcTimingSources = mediaPlayerModel.getUTCTimingSources();
+            utcTimingSources = customParametersModel.getUTCTimingSources();
             expect(utcTimingSources.length).to.equal(1);
 
             player.clearDefaultUTCTimingSources();
-            utcTimingSources = mediaPlayerModel.getUTCTimingSources();
+            utcTimingSources = customParametersModel.getUTCTimingSources();
             expect(utcTimingSources.length).to.equal(0);
 
             player.restoreDefaultUTCTimingSources();
-            utcTimingSources = mediaPlayerModel.getUTCTimingSources();
+            utcTimingSources = customParametersModel.getUTCTimingSources();
             expect(utcTimingSources.length).to.equal(1);
         });
 
@@ -866,7 +872,7 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure XHRWithCredentials', function () {
-            let XHRWithCredentials = mediaPlayerModel.getXHRWithCredentialsForType('GET');
+            let XHRWithCredentials = customParametersModel.getXHRWithCredentialsForType('GET');
             expect(XHRWithCredentials).to.equal(false);
 
             XHRWithCredentials = player.getXHRWithCredentialsForType('GET');
@@ -874,7 +880,7 @@ describe('MediaPlayer', function () {
 
             player.setXHRWithCredentialsForType('GET', true);
 
-            XHRWithCredentials = mediaPlayerModel.getXHRWithCredentialsForType('GET');
+            XHRWithCredentials = customParametersModel.getXHRWithCredentialsForType('GET');
             expect(XHRWithCredentials).to.equal(true);
 
             XHRWithCredentials = player.getXHRWithCredentialsForType('GET');

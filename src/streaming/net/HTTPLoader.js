@@ -41,6 +41,7 @@ import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
 import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
+import CustomParametersModel from '../models/CustomParametersModel';
 
 /**
  * @module HTTPLoader
@@ -69,6 +70,7 @@ function HTTPLoader(cfg) {
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
+        customParametersModel,
         lowLatencyThroughputModel,
         logger;
 
@@ -79,6 +81,7 @@ function HTTPLoader(cfg) {
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
         lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -281,7 +284,7 @@ function HTTPLoader(cfg) {
         }
         request.url = modifiedUrl;
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
-        const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
+        const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
 
         httpRequest = {

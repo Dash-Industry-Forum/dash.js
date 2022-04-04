@@ -98,7 +98,7 @@
             {
                 "title": "Load with url parameters",
                 "description": "A demo page that uses url query parameters to configure the playback.",
-                "href": "getting-started/load-with-url-params.html",
+                "href": "getting-started/load-with-url-params.html?autoplay=true&url=https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",

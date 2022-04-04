@@ -28,10 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
-import {checkParameterType} from '../utils/SupervisorTools';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
@@ -39,23 +37,23 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 
-const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
+/**
+ * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
+ * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
+ * @class
+ * @constructor
+ */
 function MediaPlayerModel() {
 
     let instance,
-        UTCTimingSources,
-        xhrWithCredentials,
-        playbackController;
+        playbackController,
+        serviceDescriptionController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
 
     function setup() {
-        UTCTimingSources = [];
-        xhrWithCredentials = {
-            default: DEFAULT_XHR_WITH_CREDENTIALS
-        };
     }
 
     function setConfig(config) {
@@ -63,7 +61,6 @@ function MediaPlayerModel() {
             playbackController = config.playbackController;
         }
     }
-
 
     function getInitialBufferLevel() {
         const initialBufferLevel = settings.get().streaming.buffer.initialBufferLevel;
@@ -94,57 +91,6 @@ function MediaPlayerModel() {
         return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor : settings.get().streaming.retryIntervals[type];
     }
 
-    function addUTCTimingSource(schemeIdUri, value) {
-        removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
-        let vo = new UTCTiming();
-        vo.schemeIdUri = schemeIdUri;
-        vo.value = value;
-        UTCTimingSources.push(vo);
-    }
-
-    function getUTCTimingSources() {
-        return UTCTimingSources;
-    }
-
-    function removeUTCTimingSource(schemeIdUri, value) {
-        checkParameterType(schemeIdUri, 'string');
-        checkParameterType(value, 'string');
-        UTCTimingSources.forEach(function (obj, idx) {
-            if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
-                UTCTimingSources.splice(idx, 1);
-            }
-        });
-    }
-
-    function clearDefaultUTCTimingSources() {
-        UTCTimingSources = [];
-    }
-
-    function restoreDefaultUTCTimingSources() {
-        let defaultUtcTimingSource = settings.get().streaming.utcSynchronization.defaultTimingSource;
-        addUTCTimingSource(defaultUtcTimingSource.scheme, defaultUtcTimingSource.value);
-    }
-
-    function setXHRWithCredentialsForType(type, value) {
-        if (!type) {
-            Object.keys(xhrWithCredentials).forEach(key => {
-                setXHRWithCredentialsForType(key, value);
-            });
-        } else {
-            xhrWithCredentials[type] = !!value;
-        }
-    }
-
-    function getXHRWithCredentialsForType(type) {
-        const useCreds = xhrWithCredentials[type];
-
-        return useCreds === undefined ? xhrWithCredentials.default : useCreds;
-    }
-
-    function getDefaultUtcTimingSource() {
-        return settings.get().streaming.utcSynchronization.defaultTimingSource;
-    }
-
     function reset() {
     }
 
@@ -153,14 +99,6 @@ function MediaPlayerModel() {
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
-        addUTCTimingSource,
-        removeUTCTimingSource,
-        getUTCTimingSources,
-        clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType,
-        getXHRWithCredentialsForType,
-        getDefaultUtcTimingSource,
         setConfig,
         reset
     };
@@ -170,6 +108,5 @@ function MediaPlayerModel() {
     return instance;
 }
 
-//TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
 export default FactoryMaker.getSingletonFactory(MediaPlayerModel);

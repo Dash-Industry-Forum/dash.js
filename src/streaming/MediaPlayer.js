@@ -80,7 +80,7 @@ import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
-import ABRRulesCollection from './rules/abr/ABRRulesCollection';
+import CustomParametersModel from './models/CustomParametersModel';
 
 /**
  * The media types
@@ -143,6 +143,7 @@ function MediaPlayer() {
         offlineController,
         adapter,
         mediaPlayerModel,
+        customParametersModel,
         errHandler,
         baseURLController,
         capabilities,
@@ -159,11 +160,7 @@ function MediaPlayer() {
         videoModel,
         uriFragmentModel,
         domStorage,
-        segmentBaseController,
-        licenseRequestFilters,
-        licenseResponseFilters,
-        customCapabilitiesFilters,
-        customAbrRules;
+        segmentBaseController;
 
     /*
     ---------------------------------------------------------------------------
@@ -185,12 +182,9 @@ function MediaPlayer() {
         segmentBaseController = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
-        customCapabilitiesFilters = [];
-        customAbrRules = [];
     }
 
     /**
@@ -230,6 +224,9 @@ function MediaPlayer() {
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
         }
         if (config.abrController) {
             abrController = config.abrController;
@@ -369,12 +366,14 @@ function MediaPlayer() {
 
             // configure controllers
             mediaController.setConfig({
-                domStorage: domStorage,
-                settings: settings
+                domStorage,
+                settings,
+                customParametersModel
             });
 
             mediaPlayerModel.setConfig({
-                playbackController
+                playbackController,
+                serviceDescriptionController
             });
 
             restoreDefaultUTCTimingSources();
@@ -417,6 +416,10 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+        if (customParametersModel) {
+            customParametersModel.reset();
+            customParametersModel = null;
+        }
 
         settings.reset();
 
@@ -434,10 +437,6 @@ function MediaPlayer() {
      */
     function destroy() {
         reset();
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
-        customCapabilitiesFilters = [];
-        customAbrRules = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -1015,21 +1014,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Iterate through the list of custom ABR rules and find the right rule by name
-     * @param {string} rulename
-     * @return {number} rule number
-     */
-    function _findABRCustomRuleIndex(rulename) {
-        let i;
-        for (i = 0; i < customAbrRules.length; i++) {
-            if (customAbrRules[i].rulename === rulename) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
      * Add a custom ABR Rule
      * Rule will be apply on next stream if a stream is being played
      *
@@ -1041,23 +1025,7 @@ function MediaPlayer() {
      * @instance
      */
     function addABRCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
-            typeof rulename !== 'string') {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-        let index = _findABRCustomRuleIndex(rulename);
-        if (index === -1) {
-            // add rule
-            customAbrRules.push({
-                type: type,
-                rulename: rulename,
-                rule: rule
-            });
-        } else {
-            // update rule
-            customAbrRules[index].type = type;
-            customAbrRules[index].rule = rule;
-        }
+        customParametersModel.addAbrCustomRule(type, rulename, rule);
     }
 
     /**
@@ -1068,34 +1036,24 @@ function MediaPlayer() {
      * @instance
      */
     function removeABRCustomRule(rulename) {
-        if (rulename) {
-            let index = _findABRCustomRuleIndex(rulename);
-            //if no rulename custom rule has been found, do nothing
-            if (index !== -1) {
-                // remove rule
-                customAbrRules.splice(index, 1);
-            }
-        } else {
-            //if no rulename is defined, remove all ABR custome rules
-            customAbrRules = [];
-        }
+        customParametersModel.removeAbrCustomRule(rulename);
     }
 
     /**
-     * Remove all custom rules
+     * Remove all ABR custom rules
      * @memberof module:MediaPlayer
      * @instance
      */
     function removeAllABRCustomRule() {
-        customAbrRules = [];
+        customParametersModel.removeAllAbrCustomRule();
     }
 
     /**
-     * Return all ABR custom rules
-     * @return {array}
+     * Returns all ABR custom rules
+     * @return {Array}
      */
     function getABRCustomRules() {
-        return customAbrRules;
+        return customParametersModel.getAbrCustomRules();
     }
 
     /**
@@ -1128,7 +1086,7 @@ function MediaPlayer() {
      * @instance
      */
     function addUTCTimingSource(schemeIdUri, value) {
-        mediaPlayerModel.addUTCTimingSource(schemeIdUri, value);
+        customParametersModel.addUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1142,7 +1100,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
-        mediaPlayerModel.removeUTCTimingSource(schemeIdUri, value);
+        customParametersModel.removeUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1157,7 +1115,7 @@ function MediaPlayer() {
      * @instance
      */
     function clearDefaultUTCTimingSources() {
-        mediaPlayerModel.clearDefaultUTCTimingSources();
+        customParametersModel.clearDefaultUTCTimingSources();
     }
 
     /**
@@ -1174,7 +1132,7 @@ function MediaPlayer() {
      * @instance
      */
     function restoreDefaultUTCTimingSources() {
-        mediaPlayerModel.restoreDefaultUTCTimingSources();
+        customParametersModel.restoreDefaultUTCTimingSources();
     }
 
     /**
@@ -1203,7 +1161,7 @@ function MediaPlayer() {
      * @instance
      */
     function setXHRWithCredentialsForType(type, value) {
-        mediaPlayerModel.setXHRWithCredentialsForType(type, value);
+        customParametersModel.setXHRWithCredentialsForType(type, value);
     }
 
     /**
@@ -1216,7 +1174,7 @@ function MediaPlayer() {
      * @instance
      */
     function getXHRWithCredentialsForType(type) {
-        return mediaPlayerModel.getXHRWithCredentialsForType(type);
+        return customParametersModel.getXHRWithCredentialsForType(type);
     }
 
     /*
@@ -1588,6 +1546,95 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
+        Custom filter and callback functions
+
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCustomCapabilitiesFilter(filter) {
+        customParametersModel.registerCustomCapabilitiesFilter(filter);
+    }
+
+    /**
+     * Unregisters a custom capabilities filter.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCustomCapabilitiesFilter(filter) {
+        customParametersModel.unregisterCustomCapabilitiesFilter(filter);
+    }
+
+    /**
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * @param {function} customFunc - the custom function that returns the initial track
+     */
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
+    }
+
+    /**
+     * Resets the custom initial track selection
+     */
+    function resetCustomInitialTrackSelectionFunction() {
+        customParametersModel.resetCustomInitialTrackSelectionFunction(null);
+
+    }
+
+    /**
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseRequestFilter(filter) {
+        customParametersModel.registerLicenseRequestFilter(filter);
+    }
+
+    /**
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseResponseFilter(filter) {
+        customParametersModel.registerLicenseResponseFilter(filter);
+    }
+
+    /**
+     * Unregisters a license request filter.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseRequestFilter(filter) {
+        customParametersModel.unregisterLicenseRequestFilter(filter);
+    }
+
+    /**
+     * Unregisters a license response filter.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseResponseFilter(filter) {
+        customParametersModel.unregisterLicenseResponseFilter(filter);
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
         PROTECTION MANAGEMENT
 
     ---------------------------------------------------------------------------
@@ -1631,122 +1678,6 @@ function MediaPlayer() {
             streamController.setProtectionData(protectionData);
         }
     }
-
-    /**
-     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the license request filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerLicenseRequestFilter(filter) {
-        licenseRequestFilters.push(filter);
-        if (protectionController) {
-            protectionController.setLicenseRequestFilters(licenseRequestFilters);
-        }
-    }
-
-    /**
-     * Registers a license response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the license response filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerLicenseResponseFilter(filter) {
-        licenseResponseFilters.push(filter);
-        if (protectionController) {
-            protectionController.setLicenseResponseFilters(licenseResponseFilters);
-        }
-    }
-
-    /**
-     * Unregisters a license request filter.
-     * @param {function} filter - the license request filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterLicenseRequestFilter(filter) {
-        unregisterFilter(licenseRequestFilters, filter);
-        if (protectionController) {
-            protectionController.setLicenseRequestFilters(licenseRequestFilters);
-        }
-    }
-
-    /**
-     * Unregisters a license response filter.
-     * @param {function} filter - the license response filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterLicenseResponseFilter(filter) {
-        unregisterFilter(licenseResponseFilters, filter);
-        if (protectionController) {
-            protectionController.setLicenseResponseFilters(licenseResponseFilters);
-        }
-    }
-
-    /**
-     * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return a boolean based on whether or not to use the representation.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the custom capabilities filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerCustomCapabilitiesFilter(filter) {
-        customCapabilitiesFilters.push(filter);
-        if (capabilitiesFilter) {
-            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
-        }
-    }
-
-    /**
-     * Unregisters a custom capabilities filter.
-     * @param {function} filter - the custom capabilities filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterCustomCapabilitiesFilter(filter) {
-        unregisterFilter(customCapabilitiesFilters, filter);
-        if (capabilitiesFilter) {
-            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
-        }
-    }
-
-    function unregisterFilter(filters, filter) {
-        let index = -1;
-        filters.some((item, i) => {
-            if (item === filter) {
-                index = i;
-                return true;
-            }
-        });
-        if (index < 0) return;
-        filters.splice(index, 1);
-    }
-
-    /**
-     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
-     * @param {function} customFunc - the custom function that returns the initial track
-     */
-    function setCustomInitialTrackSelectionFunction(customFunc) {
-        if (mediaController) {
-            mediaController.setCustomInitialTrackSelectionFunction(customFunc);
-        }
-    }
-
-    /**
-     * Resets the custom initial track selection
-     */
-    function resetCustomInitialTrackSelectionFunction() {
-        if (mediaController) {
-            mediaController.setCustomInitialTrackSelectionFunction(null);
-        }
-    }
-
 
     /*
     ---------------------------------------------------------------------------
@@ -2069,12 +2000,12 @@ function MediaPlayer() {
 
         capabilitiesFilter.setConfig({
             capabilities,
+            customParametersModel,
             adapter,
             settings,
             manifestModel,
             errHandler
         });
-        capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
 
         streamController.setConfig({
             capabilities,
@@ -2082,6 +2013,7 @@ function MediaPlayer() {
             manifestLoader,
             manifestModel,
             mediaPlayerModel,
+            customParametersModel,
             protectionController,
             textController,
             adapter,
@@ -2133,6 +2065,7 @@ function MediaPlayer() {
             streamController,
             domStorage,
             mediaPlayerModel,
+            customParametersModel,
             dashMetrics,
             adapter,
             videoModel,
@@ -2146,7 +2079,7 @@ function MediaPlayer() {
         });
 
         // initialises controller
-        abrController.initialize(customAbrRules);
+        abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
         gapController.initialize();
@@ -2184,21 +2117,19 @@ function MediaPlayer() {
                 capabilities = Capabilities(context).getInstance();
             }
             protectionController = protection.createProtectionSystem({
-                debug: debug,
-                errHandler: errHandler,
-                videoModel: videoModel,
-                capabilities: capabilities,
-                eventBus: eventBus,
+                debug,
+                errHandler,
+                videoModel,
+                customParametersModel,
+                capabilities,
+                eventBus,
                 events: Events,
-                BASE64: BASE64,
+                BASE64,
                 constants: Constants,
-                cmcdModel: cmcdModel,
-                settings: settings
+                cmcdModel,
+                settings
             });
-            if (protectionController) {
-                protectionController.setLicenseRequestFilters(licenseRequestFilters);
-                protectionController.setLicenseResponseFilters(licenseResponseFilters);
-            }
+
             return protectionController;
         }
 
