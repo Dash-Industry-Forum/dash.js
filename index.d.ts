@@ -628,6 +628,12 @@ declare namespace dashjs {
         getStreamId(): string;
 
         getType(): string;
+        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
+        
+        on(type: string, listener: (e: Event) => void, scope?: object): void;
+
+        
+        off(type: string, listener: (e: any) => void, scope?: object): void;
 
         getStreamInfo():StreamInfo;
 
@@ -696,6 +702,10 @@ declare namespace dashjs {
         addHttpRequest(request: HTTPRequest, responseURL: string, responseStatus: number, responseHeaders: object, traces: object): void;
 
         addManifestUpdateRepresentationInfo(representation: Representation, mediaType: MediaType): void;
+        
+        updateSource(urlOrManifest: string | object): void;
+
+        getCurrentLiveLatency(): number;
 
         getLatestFragmentRequestHeaderValueByID(id: string): string;
 
@@ -1376,6 +1386,85 @@ declare namespace dashjs {
         INDEXEDDB_UNKNOWN_ERROR: 11013;
     }
 
+    interface MediaPlayerEvents {
+        AST_IN_FUTURE: 'astInFuture';
+        BUFFER_EMPTY: 'bufferStalled';
+        BUFFER_LOADED: 'bufferLoaded';
+        BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
+        BUFFER_LEVEL_UPDATED: 'bufferLevelUpdated';
+        CAN_PLAY: 'canPlay';
+        CAN_PLAY_THROUGH: 'canPlayThrough';
+        CAPTION_RENDERED: 'captionRendered';
+        CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        CONFORMANCE_VIOLATION: 'conformanceViolation'
+        DYNAMIC_TO_STATIC: 'dynamicToStatic';
+        ERROR: 'error';
+        EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
+        EVENT_MODE_ON_START: 'eventModeOnStart';
+        FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
+        FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
+        FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
+        FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
+        KEY_ADDED: 'public_keyAdded';
+        KEY_ERROR: 'public_keyError';
+        KEY_MESSAGE: 'public_keyMessage';
+        KEY_SESSION_CLOSED: 'public_keySessionClosed';
+        KEY_SESSION_CREATED: 'public_keySessionCreated';
+        KEY_SESSION_REMOVED: 'public_keySessionRemoved';
+        KEY_STATUSES_CHANGED: 'public_keyStatusesChanged';
+        KEY_SYSTEM_SELECTED: 'public_keySystemSelected';
+        KEY_SYSTEM_ACCESS_COMPLETE: 'public_keySystemAccessComplete';
+        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
+        LICENSE_REQUEST_COMPLETE: 'public_licenseRequestComplete';
+        LICENSE_REQUEST_SENDING: 'public_licenseRequestSending';
+        LOG: 'log';
+        MANIFEST_LOADED: 'manifestLoaded';
+        MANIFEST_VALIDITY_CHANGED: 'manifestValidityChanged';
+        METRICS_CHANGED: 'metricsChanged';
+        METRIC_ADDED: 'metricAdded';
+        METRIC_CHANGED: 'metricChanged';
+        METRIC_UPDATED: 'metricUpdated';
+        OFFLINE_RECORD_FINISHED: 'public_offlineRecordFinished';
+        OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
+        OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
+        OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
+        PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
+        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
+        ADAPTATION_SET_REMOVED_NO_CAPABILITIES: 'adaptationSetRemovedNoCapabilities';
+        PLAYBACK_ENDED: 'playbackEnded';
+        PLAYBACK_ERROR: 'playbackError';
+        PLAYBACK_LOADED_DATA: 'playbackLoadedData';
+        PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';
+        PLAYBACK_NOT_ALLOWED: 'playbackNotAllowed';
+        PLAYBACK_PAUSED: 'playbackPaused';
+        PLAYBACK_PLAYING: 'playbackPlaying';
+        PLAYBACK_PROGRESS: 'playbackProgress';
+        PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
+        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
+        PLAYBACK_SEEKED: 'playbackSeeked';
+        PLAYBACK_SEEKING: 'playbackSeeking';
+        PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_STARTED: 'playbackStarted';
+        PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
+        PLAYBACK_WAITING: 'playbackWaiting';
+        PROTECTION_CREATED: 'public_protectioncreated';
+        PROTECTION_DESTROYED: 'public_protectiondestroyed';
+        REPRESENTATION_SWITCH: 'representationSwitch';
+        TRACK_CHANGE_RENDERED: 'trackChangeRendered';
+        QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
+        QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
+        STREAM_ACTIVATED: 'streamActivated'
+        STREAM_DEACTIVATED: 'streamDeactivated';
+        STREAM_INITIALIZED: 'streamInitialized';
+        STREAM_INITIALIZING: 'streamInitializing';
+        STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
+        STREAM_UPDATED: 'streamUpdated';
+        TEXT_TRACKS_ADDED: 'allTextTracksAdded';
+        TEXT_TRACK_ADDED: 'textTrackAdded';
+        TTML_PARSED: 'ttmlParsed';
+        TTML_TO_PARSE: 'ttmlToParse';
+    }
+
     export interface AstInFutureEvent extends Event {
         type: MediaPlayerEvents['AST_IN_FUTURE'];
         delay: number;
@@ -1726,6 +1815,16 @@ declare namespace dashjs {
     export interface TtmlToParseEvent extends Event {
         type: MediaPlayerEvents['TTML_TO_PARSE'];
         content: object;
+    }
+
+    export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
+        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
+        adaptationSet: object;
+    }
+
+    export interface PlaybackErrorEvent extends Event {
+        type: MediaPlayerEvents['PLAYBACK_ERROR'];
+        error: string;
     }
 
     export interface MediaSettings {
@@ -4105,6 +4204,9 @@ declare namespace dashjs {
         updateAppendWindow(sInfo: StreamInfo): void;
 
         changeType(codec: string): Promise<any>;
+        getSessionType(): string;
+
+        getUsable(): boolean;
     }
 
     export interface Stream { 

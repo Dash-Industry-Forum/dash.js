@@ -251,21 +251,6 @@
                     "provider": "unified"
                 },
                 {
-                    "name": "Clear Dynamic SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
-                    "provider": "wowza"
-                },
-                {
                     "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
                     "provider": "aws"
@@ -406,11 +391,6 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                },
-                {
-                    "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/2.mpd",
-                    "name": "Subtitles in multi period live",
-                    "provider": "unified"
                 }
             ]
         },
@@ -1019,26 +999,6 @@
                         "com.microsoft.playready": {
                             "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
                             "sessionType": "persistent-license"
-                        }
-                    },
-                    "provider": "microsoft"
-                },
-                {
-                    "name": "Source: XBox One commercial video",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    },
-                    "provider": "microsoft"
-                },
-                {
-                    "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
                         }
                     },
                     "provider": "microsoft"
