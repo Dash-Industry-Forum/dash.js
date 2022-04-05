@@ -1438,10 +1438,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         }
         var currentSetting = $scope.player.getSettings();
+        currentSetting = $scope.makeSettingDifferencesObject(currentSetting, defaultSettings);
+
         var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?';
         var queryString = externalSettingsString + $scope.toQueryString(currentSetting);
 
         var urlString = url + queryString;
+
+        if(urlString.slice(-1) === '&') urlString = urlString.slice(0,- 1);
 
         $scope.checkQueryLength(urlString);
 
@@ -1451,6 +1455,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         element.select();
         document.execCommand('copy');
         document.body.removeChild(element);
+    }
+
+    $scope.makeSettingDifferencesObject = function(settings, defaultSettings, isRecursionEnd = true){
+        var settingDifferencesObject = {};
+
+        if (Array.isArray(settings)){
+            return settings;
+        }
+
+        for(var setting in settings){
+            console.log(defaultSettings[setting]);
+            if(typeof defaultSettings[setting] === "object" && defaultSettings[setting] !== null){
+                settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
+            }
+            else if(settings[setting] !== defaultSettings[setting]){
+                settingDifferencesObject[setting] = settings[setting];
+            }
+        }
+
+        return settingDifferencesObject;
     }
 
     /** Transform the current Settings into a nested query-string format */
@@ -1466,7 +1490,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         }
         // Make the string, then remove all cases of && caused by empty settings
-        return urlString.join("&").split('&&').join('&');
+        return urlString.join("&").split(/&&*/).join('&');
     }
 
     /** Resolve nested query parameters */
