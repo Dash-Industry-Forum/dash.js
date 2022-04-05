@@ -308,6 +308,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     // store a ref in window.player to provide an easy way to play with dash.js API
     window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
+    const defaultSettings = JSON.parse(JSON.stringify($scope.player.getSettings()));
+
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         console.log(e);
         if (!e.event) {
@@ -1457,7 +1459,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         document.body.removeChild(element);
     }
 
-    $scope.makeSettingDifferencesObject = function(settings, defaultSettings, isRecursionEnd = true){
+    $scope.makeSettingDifferencesObject = function(settings, defaultSettings){
         var settingDifferencesObject = {};
 
         if (Array.isArray(settings)){
@@ -1465,7 +1467,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
 
         for(var setting in settings){
-            console.log(defaultSettings[setting]);
             if(typeof defaultSettings[setting] === "object" && defaultSettings[setting] !== null){
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
             }
