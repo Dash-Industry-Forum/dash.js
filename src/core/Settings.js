@@ -134,6 +134,7 @@ import Events from './events/Events';
  *                maxDrift: NaN,
  *                playbackRate: NaN,
  *                playbackBufferMin: 0.5,
+ *                latencyThreshold: 60,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -452,6 +453,15 @@ import Events from './events/Events';
  * Set it to 0 to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [latencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied.
+ *
+ * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
+ *
+ * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified catchup mode will always be applied
+ *
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
@@ -719,7 +729,8 @@ function Settings() {
     const eventBus = EventBus(context).getInstance();
     const DISPATCH_KEY_MAP = {
         'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
-        'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT
+        'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
+        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED
     };
 
 
@@ -809,7 +820,8 @@ function Settings() {
                 maxDrift: NaN,
                 playbackRate: NaN,
                 playbackBufferMin: 0.5,
-                enabled: false,
+                enabled: null,
+                latencyThreshold: 60,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
             lastBitrateCachingInfo: {

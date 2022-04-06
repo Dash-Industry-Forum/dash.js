@@ -729,8 +729,11 @@ function PlaybackController() {
         // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
         if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
             initialCatchupModeActivated = true;
-            settings.update({ streaming: { liveCatchup: { enabled: true } } });
         }
+    }
+
+    function getInitialCatchupModeActivated() {
+        return initialCatchupModeActivated;
     }
 
     /**
@@ -803,6 +806,7 @@ function PlaybackController() {
         getPlaybackStalled,
         getTime,
         getLowLatencyModeEnabled,
+        getInitialCatchupModeActivated,
         getIsManifestUpdateInProgress,
         getPlaybackRate,
         getPlayedRanges,

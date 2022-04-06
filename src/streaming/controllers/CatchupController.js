@@ -32,7 +32,8 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Constants from '../constants/Constants';
-import MediaPlayerEvents from "../MediaPlayerEvents";
+import MediaPlayerEvents from '../MediaPlayerEvents';
+import Events from '../../core/events/Events';
 import MetricsConstants from "../constants/MetricsConstants";
 
 function CatchupController() {
@@ -91,6 +92,7 @@ function CatchupController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.on(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
     }
 
     function _unregisterEvents() {
@@ -99,6 +101,7 @@ function CatchupController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackProgression, instance);
+        eventBus.off(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
     }
 
     function setup() {
@@ -161,11 +164,21 @@ function CatchupController() {
     }
 
     /**
+     * If the catchup mode is disabled in the settings we reset playback rate to 1.0
+     * @private
+     */
+    function _onCatchupSettingUpdated() {
+        if (!mediaPlayerModel.getCatchupModeEnabled()) {
+            videoModel.setPlaybackRate(1.0);
+        }
+    }
+
+    /**
      * While playback is progressing we check if we need to start or stop the catchup mechanism to reach the target latency
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.getIsDynamic() && settings.get().streaming.liveCatchup.enabled && mediaPlayerModel.getCatchupPlaybackRate() > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+        if (playbackController.getIsDynamic() && mediaPlayerModel.getCatchupModeEnabled() && mediaPlayerModel.getCatchupPlaybackRate() > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
             _startPlaybackCatchUp();
         }
     }
@@ -237,7 +250,8 @@ function CatchupController() {
      */
     function _shouldStartCatchUp() {
         try {
-            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
+            const latencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress || (!isNaN(latencyThreshold) && playbackController.getCurrentLiveLatency() >= latencyThreshold)) {
                 return false;
             }
 

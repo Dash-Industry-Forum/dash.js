@@ -283,7 +283,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (!isNaN(mouseTime)) {
             mouseTime = mouseTime < 0 ? 0 : mouseTime;
             self.player.seek(mouseTime);
-            //self.player.updateSettings({ streaming: { liveCatchup: { enabled: false } } });
         }
 
         onSeekBarMouseMoveOut(event);
@@ -361,11 +360,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var seekLive = function () {
         self.player.seek(self.player.duration());
-
-        //Enable catchup mode for low latency streams again since the user wants to play at the live edge
-        if (self.player.getLowLatencyModeEnabled()) {
-            self.player.updateSettings({ streaming: { liveCatchup: { enabled: true } } });
-        }
     };
 
     //************************************************************************************
