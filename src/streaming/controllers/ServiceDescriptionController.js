@@ -44,22 +44,36 @@ function ServiceDescriptionController() {
     const context = this.context;
 
     let instance,
-        settings,
+        serviceDescriptionSettings,
         logger;
-
-    function setConfig(config) {
-        if (!config) {
-            return;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-    }
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        _resetInitialSettings();
+    }
+
+    function reset() {
+        _resetInitialSettings();
+    }
+
+    function _resetInitialSettings() {
+        serviceDescriptionSettings = {
+            liveDelay: NaN,
+            liveCatchup: {
+                maxDrift: NaN,
+                playbackRate: NaN
+            },
+            minBitrate: {},
+            maxBitrate: {},
+            initialBitrate: {}
+        };
+    }
+
+    /**
+     * Returns the service description settings for latency, catchup and bandwidth
+     */
+    function getServiceDescriptionSettings() {
+        return serviceDescriptionSettings
     }
 
     /**
@@ -102,14 +116,6 @@ function ServiceDescriptionController() {
      * @private
      */
     function _applyServiceDescriptionLatency(sd) {
-
-        // Only apply the latency values from the ServiceDescriptor if the app has not specified any live delay
-        if (!isNaN(settings.get().streaming.delay.liveDelay) || !isNaN(settings.get().streaming.delay.liveDelayFragmentCount)) {
-            return;
-        }
-
-        logger.debug('Applying latency properties coming from service description. Target Latency (ms):', sd.latency.target);
-
         let params;
 
         if (sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
@@ -118,16 +124,10 @@ function ServiceDescriptionController() {
             params = _getStandardServiceDescriptionLatencyParameters(sd);
         }
 
-        settings.update({
-            streaming: {
-                delay: {
-                    liveDelay: params.liveDelay,
-                },
-                liveCatchup: {
-                    maxDrift: params.maxDrift
-                }
-            }
-        });
+        serviceDescriptionSettings.liveDelay = params.liveDelay;
+        serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+
+        logger.debug(`Found latency properties coming from service description: Live Delay: ${params.liveDelay}, Live catchup max drift: ${params.maxDrift}`);
     }
 
     /**
@@ -138,7 +138,7 @@ function ServiceDescriptionController() {
      */
     function _getStandardServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
-        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : settings.get().streaming.liveCatchup.maxDrift;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
 
         return {
             liveDelay,
@@ -154,7 +154,7 @@ function ServiceDescriptionController() {
      */
     function _getDvbServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
-        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : settings.get().streaming.liveCatchup.maxDrift;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
 
         return {
             liveDelay,
@@ -168,14 +168,11 @@ function ServiceDescriptionController() {
      * @private
      */
     function _applyServiceDescriptionPlaybackRate(sd) {
-        logger.debug('Applying properties coming from service description. Max PlaybackRate:', sd.playbackRate.max);
-        settings.update({
-            streaming: {
-                liveCatchup: {
-                    playbackRate: (Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000)
-                }
-            }
-        });
+        const playbackRate = (Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000)
+
+        serviceDescriptionSettings.liveCatchup.playbackRate = playbackRate;
+        logger.debug(`Found latency properties coming from service description: Live catchup playback rate: ${playbackRate}`);
+
     }
 
     /**
@@ -238,18 +235,8 @@ function ServiceDescriptionController() {
      */
     function _updateBandwidthSetting(field, mediaType, value) {
         try {
-
-            //Only apply the new settings if nothing specified via the application
-            if (settings.get().streaming.abr[field][mediaType] !== -1) {
-                return;
-            }
-
-            const adjustedSetting = { streaming: { abr: {} } };
-
             // Service description values are specified in bps. Settings expect the value in kbps
-            adjustedSetting.streaming.abr[field] = {};
-            adjustedSetting.streaming.abr[field][mediaType] = value / 1000;
-            settings.update(adjustedSetting)
+            serviceDescriptionSettings[field][mediaType] = value / 1000;
         } catch (e) {
             logger.error(e);
         }
@@ -257,8 +244,9 @@ function ServiceDescriptionController() {
 
 
     instance = {
-        setConfig,
-        applyServiceDescription
+        getServiceDescriptionSettings,
+        applyServiceDescription,
+        reset
     };
 
     setup();

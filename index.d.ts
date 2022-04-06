@@ -152,6 +152,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
+            applyServiceDescription?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             capabilities?: {
@@ -168,8 +169,7 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean,
-                applyServiceDescription?: boolean
+                useSuggestedPresentationDelay?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,

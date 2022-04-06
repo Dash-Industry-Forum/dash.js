@@ -242,9 +242,7 @@ describe('StreamController', function () {
                 videoModelMock.time = -1;
                 dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
                 const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
-                serviceDescriptionController.setConfig({
-                    settings
-                })
+
                 streamController.setConfig({
                     adapter: adapterMock,
                     manifestLoader: manifestLoaderMock,

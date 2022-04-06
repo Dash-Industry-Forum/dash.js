@@ -346,9 +346,9 @@ function StreamController() {
             return;
         }
 
-        // Apply Service description
+        // Apply Service description parameters.
         const manifestInfo = streamsInfo[0].manifestInfo;
-        if (settings.get().streaming.delay.applyServiceDescription) {
+        if (settings.get().streaming.applyServiceDescription) {
             serviceDescriptionController.applyServiceDescription(manifestInfo);
         }
 

@@ -372,7 +372,8 @@ function MediaPlayer() {
             });
 
             mediaPlayerModel.setConfig({
-                playbackController
+                playbackController,
+                serviceDescriptionController
             });
 
             restoreDefaultUTCTimingSources();
@@ -1962,6 +1963,7 @@ function MediaPlayer() {
         gapController.reset();
         catchupController.reset();
         playbackController.reset();
+        serviceDescriptionController.reset();
         abrController.reset();
         mediaController.reset();
         segmentBaseController.reset();
@@ -2041,6 +2043,7 @@ function MediaPlayer() {
 
         playbackController.setConfig({
             streamController,
+            serviceDescriptionController,
             dashMetrics,
             adapter,
             videoModel,
@@ -2051,12 +2054,9 @@ function MediaPlayer() {
         catchupController.setConfig({
             streamController,
             playbackController,
+            mediaPlayerModel,
             dashMetrics,
             videoModel,
-            settings
-        })
-
-        serviceDescriptionController.setConfig({
             settings
         })
 

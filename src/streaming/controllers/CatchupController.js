@@ -46,6 +46,7 @@ function CatchupController() {
         settings,
         streamController,
         playbackController,
+        mediaPlayerModel,
         dashMetrics,
         playbackStalled,
         logger;
@@ -77,6 +78,10 @@ function CatchupController() {
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
+        }
+
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
         }
     }
 
@@ -160,7 +165,7 @@ function CatchupController() {
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.getIsDynamic() && settings.get().streaming.liveCatchup.enabled && settings.get().streaming.liveCatchup.playbackRate > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+        if (playbackController.getIsDynamic() && settings.get().streaming.liveCatchup.enabled && mediaPlayerModel.getCatchupPlaybackRate() > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
             _startPlaybackCatchUp();
         }
     }
@@ -178,13 +183,14 @@ function CatchupController() {
         if (videoModel) {
             let newRate;
             const currentPlaybackRate = videoModel.getPlaybackRate();
-            const liveCatchupPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
+            const liveCatchupPlaybackRate = mediaPlayerModel.getCatchupPlaybackRate();
             const bufferLevel = playbackController.getBufferLevel();
             const deltaLatency = _getLatencyDrift();
 
             // we reached the maxDrift. Do a seek
-            if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0 &&
-                deltaLatency > settings.get().streaming.liveCatchup.maxDrift) {
+            const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+            if (!isNaN(maxDrift) && maxDrift > 0 &&
+                deltaLatency > maxDrift) {
                 logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isCatchupSeekInProgress = true;
                 _seekToLive();
@@ -272,7 +278,7 @@ function CatchupController() {
         try {
             const latencyDrift = Math.abs(_getLatencyDrift());
 
-            return latencyDrift > 0 ;
+            return latencyDrift > 0;
         } catch (e) {
             return false;
         }

@@ -131,8 +131,8 @@ import Events from './events/Events';
  *                defaultEnabled: true
  *            },
  *            liveCatchup: {
- *                maxDrift: 12,
- *                playbackRate: 0.5,
+ *                maxDrift: NaN,
+ *                playbackRate: NaN,
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -236,7 +236,7 @@ import Events from './events/Events';
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
  * @property {boolean} [applyServiceDescription=true]
- * Set to true if dash.js should use latency targets defined in ServiceDescription elements
+ * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  */
 
 /**
@@ -432,7 +432,7 @@ import Events from './events/Events';
 
 /**
  * @typedef {Object} LiveCatchupSettings
- * @property {number} [maxDrift=12]
+ * @property {number} [maxDrift=NaN]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
  * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
@@ -442,7 +442,7 @@ import Events from './events/Events';
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=0.5]
+ * @property {number} [playbackRate=NaN]
  * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
@@ -737,6 +737,7 @@ function Settings() {
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
+            applyServiceDescription: true,
             eventControllerRefreshDelay: 150,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -752,8 +753,7 @@ function Settings() {
             delay: {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
-                useSuggestedPresentationDelay: true,
-                applyServiceDescription: true
+                useSuggestedPresentationDelay: true
             },
             protection: {
                 keepProtectionMediaKeys: false,
@@ -806,8 +806,8 @@ function Settings() {
                 defaultEnabled: true
             },
             liveCatchup: {
-                maxDrift: 12,
-                playbackRate: 0.5,
+                maxDrift: NaN,
+                playbackRate: NaN,
                 playbackBufferMin: 0.5,
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT

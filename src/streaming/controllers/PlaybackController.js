@@ -46,6 +46,7 @@ function PlaybackController() {
     let instance,
         logger,
         streamController,
+        serviceDescriptionController,
         dashMetrics,
         adapter,
         videoModel,
@@ -342,28 +343,45 @@ function PlaybackController() {
         const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
+        const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
 
+        // Live delay specified by the user
         if (!isNaN(settings.get().streaming.delay.liveDelay)) {
-            delay = settings.get().streaming.delay.liveDelay; // If set by user, this value takes precedence
-        } else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+            delay = settings.get().streaming.delay.liveDelay;
+        }
+
+        // Live delay fragment count specified by the user
+        else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * settings.get().streaming.delay.liveDelayFragmentCount;
-        } else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
+        }
+
+        // Live delay set via ServiceDescription element
+        else if (serviceDescriptionSettings && !isNaN(serviceDescriptionSettings.liveDelay) && serviceDescriptionSettings.liveDelay > 0) {
+            delay = serviceDescriptionSettings.liveDelay;
+        }
+        // Live delay set in the manifest using @suggestedPresentation Delay
+        else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
-        } else if (!isNaN(adjustedFragmentDuration)) {
+        }
+
+        // We found a fragment duration, use that to calculcate live delay
+        else if (!isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
-        } else {
+        }
+
+        // Fall back to @minBufferTime to calculate the live delay
+        else {
             delay = manifestInfo && !isNaN(manifestInfo.minBufferTime) ? manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
 
         startTime = adapter.getAvailabilityStartTime();
-
         if (startTime !== null) {
             availabilityStartTime = startTime;
         }
 
         if (manifestInfo && manifestInfo.dvrWindowSize > 0) {
             // Latency can not be higher than DVR window size
-           ret = Math.min(delay, manifestInfo.dvrWindowSize);
+            ret = Math.min(delay, manifestInfo.dvrWindowSize);
         } else {
             ret = delay;
         }
@@ -376,6 +394,9 @@ function PlaybackController() {
 
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;

@@ -33,9 +33,10 @@ import Settings from '../../core/Settings';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
+const DEFAULT_CATCHUP_MAX_DRIFT = 12;
+const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
 
 
 /**
@@ -47,7 +48,8 @@ const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 function MediaPlayerModel() {
 
     let instance,
-        playbackController
+        playbackController,
+        serviceDescriptionController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
@@ -59,8 +61,73 @@ function MediaPlayerModel() {
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
+        }
     }
 
+    /**
+     * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
+     * @return {number}
+     */
+    function getCatchupMaxDrift() {
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
+            return settings.get().streaming.liveCatchup.maxDrift;
+        }
+
+        const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift > 0) {
+            return serviceDescriptionSettings.liveCatchup.maxDrift;
+        }
+
+        return DEFAULT_CATCHUP_MAX_DRIFT;
+    }
+
+    /**
+     * Returns the maximum playback rate to be used when applying the catchup mechanism
+     * @return {number}
+     */
+    function getCatchupPlaybackRate() {
+        if (!isNaN(settings.get().streaming.liveCatchup.playbackRate) && settings.get().streaming.liveCatchup.playbackRate > 0) {
+            return settings.get().streaming.liveCatchup.playbackRate;
+        }
+
+        const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate) && serviceDescriptionSettings.liveCatchup.playbackRate > 0) {
+            return serviceDescriptionSettings.liveCatchup.playbackRate;
+        }
+
+        return DEFAULT_CATCHUP_PLAYBACK_RATE;
+    }
+
+    /**
+     * Returns the min,max or initial bitrate for a specific media type.
+     * @param {string} field
+     * @param {string} mediaType
+     */
+    function getAbrBitrateParameter(field, mediaType) {
+        try {
+            const setting = settings.get().streaming.abr[field][mediaType];
+            if(!isNaN(setting) && setting !== -1) {
+                return setting;
+            }
+
+            const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            if(serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
+                return serviceDescriptionSettings[field][mediaType];
+            }
+
+            return -1;
+        }
+        catch(e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Returns the initial buffer level taking the stable buffer time into account
+     * @return {number}
+     */
     function getInitialBufferLevel() {
         const initialBufferLevel = settings.get().streaming.buffer.initialBufferLevel;
 
@@ -71,6 +138,10 @@ function MediaPlayerModel() {
         return Math.min(getStableBufferTime(), initialBufferLevel);
     }
 
+    /**
+     * Returns the stable buffer time taking the live delay into account
+     * @return {number}
+     */
     function getStableBufferTime() {
         let stableBufferTime = settings.get().streaming.buffer.stableBufferTime > 0 ? settings.get().streaming.buffer.stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
         const liveDelay = playbackController.getLiveDelay();
@@ -78,12 +149,22 @@ function MediaPlayerModel() {
         return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(stableBufferTime, liveDelay) : stableBufferTime;
     }
 
+    /**
+     * Returns the number of retry attempts for a specific media type
+     * @param type
+     * @return {number}
+     */
     function getRetryAttemptsForType(type) {
         const lowLatencyMultiplyFactor = !isNaN(settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor) ? settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor : LOW_LATENCY_MULTIPLY_FACTOR;
 
         return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryAttempts[type] * lowLatencyMultiplyFactor : settings.get().streaming.retryAttempts[type];
     }
 
+    /**
+     * Returns the retry interbal for a specific media type
+     * @param type
+     * @return {number}
+     */
     function getRetryIntervalsForType(type) {
         const lowLatencyReductionFactor = !isNaN(settings.get().streaming.retryIntervals.lowLatencyReductionFactor) ? settings.get().streaming.retryIntervals.lowLatencyReductionFactor : LOW_LATENCY_REDUCTION_FACTOR;
 
@@ -94,10 +175,13 @@ function MediaPlayerModel() {
     }
 
     instance = {
+        getCatchupMaxDrift,
         getStableBufferTime,
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
+        getCatchupPlaybackRate,
+        getAbrBitrateParameter,
         setConfig,
         reset
     };

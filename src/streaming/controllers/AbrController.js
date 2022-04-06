@@ -397,7 +397,7 @@ function AbrController() {
      */
     function _getMaxIndexBasedOnBitrateFor(type, streamId) {
         try {
-            const maxBitrate = settings.get().streaming.abr.maxBitrate[type];
+            const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
             if (maxBitrate > -1) {
                 return getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxBitrate, streamId);
             } else {
@@ -416,7 +416,7 @@ function AbrController() {
      */
     function _getMinIndexBasedOnBitrateFor(type, streamId) {
         try {
-            const minBitrate = settings.get().streaming.abr.minBitrate[type];
+            const minBitrate = mediaPlayerModel.getAbrBitrateParameter('minBitrate', type);
 
             if (minBitrate > -1) {
                 const mediaInfo = streamProcessorDict[streamId][type].getMediaInfo();
@@ -552,7 +552,7 @@ function AbrController() {
         }
 
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
-        let configBitrate = settings.get().streaming.abr.initialBitrate[type];
+        let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
         if (configBitrate === -1) {

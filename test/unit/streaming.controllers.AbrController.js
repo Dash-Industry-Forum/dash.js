@@ -9,9 +9,11 @@ import VideoModelMock from './mocks/VideoModelMock';
 import DomStorageMock from './mocks/DomStorageMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
+import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const expect = require('chai').expect;
 
@@ -30,9 +32,16 @@ describe('AbrController', function () {
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
     const dashMetricsMock = new DashMetricsMock();
-    const mediaPlayerModelMock = new MediaPlayerModelMock();
     const streamControllerMock = new StreamControllerMock();
     const customParametersModel = CustomParametersModel(context).getInstance();
+    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+    const playbackControllerMock = new PlaybackControllerMock();
+
+    mediaPlayerModel.setConfig({
+        serviceDescriptionController,
+        playbackController: playbackControllerMock
+    })
 
     beforeEach(function () {
         abrCtrl.setConfig({
@@ -40,7 +49,7 @@ describe('AbrController', function () {
             videoModel: videoModelMock,
             adapter: adapterMock,
             domStorage: domStorageMock,
-            mediaPlayerModel: mediaPlayerModelMock,
+            mediaPlayerModel,
             settings: settings,
             streamController: streamControllerMock,
             customParametersModel

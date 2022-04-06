@@ -46,12 +46,9 @@ describe('PlaybackController', function () {
             streamController: streamControllerMock,
             uriFragmentModel: uriFragmentModelMock,
             adapter: adapterMock,
+            serviceDescriptionController,
             settings: settings,
         });
-
-        serviceDescriptionController.setConfig({
-            settings
-        })
 
         streamControllerMock.initialize([streamMock]);
     });
@@ -113,6 +110,7 @@ describe('PlaybackController', function () {
 
             beforeEach(function () {
                 settings.reset();
+                serviceDescriptionController.reset();
                 manifestInfo = {}
             })
 
@@ -134,6 +132,22 @@ describe('PlaybackController', function () {
                 const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
 
                 expect(liveDelay).to.equal(10);
+            })
+
+            it('should return live delay based on Service Description', function () {
+                let dummyManifestInfo = {
+                    serviceDescriptions: [{
+                        latency: {
+                            target: 5000,
+                            max: 8000,
+                            min: 3000
+                        }
+                    }]
+                }
+                serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(5);
             })
 
             it('should return live delay based on suggestedPresentationDelay', function () {
