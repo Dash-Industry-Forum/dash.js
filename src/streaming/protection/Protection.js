@@ -131,6 +131,7 @@ function Protection() {
                 BASE64: config.BASE64,
                 constants: config.constants,
                 cmcdModel: config.cmcdModel,
+                customParametersModel : config.customParametersModel,
                 settings: config.settings
             });
             config.capabilities.setEncryptedMediaSupported(true);
