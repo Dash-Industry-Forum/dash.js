@@ -151,9 +151,8 @@ declare namespace dashjs {
         streaming?: {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
-            lowLatencyEnabled?: boolean,
-            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
+            applyServiceDescription?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             capabilities?: {
@@ -170,8 +169,7 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean,
-                applyServiceDescription?: boolean
+                useSuggestedPresentationDelay?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
@@ -224,7 +222,6 @@ declare namespace dashjs {
                 defaultEnabled?: boolean
             },
             liveCatchup?: {
-                minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
                 latencyThreshold?: number,

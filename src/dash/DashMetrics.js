@@ -360,7 +360,8 @@ function DashMetrics(config) {
             responseStatus,
             request.duration,
             responseHeaders,
-            traces);
+            traces,
+            request.fileLoaderType);
     }
 
     /**
