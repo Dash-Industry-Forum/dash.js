@@ -438,8 +438,11 @@ declare namespace dashjs {
 
         on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
 
+        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
+        
         on(type: string, listener: (e: Event) => void, scope?: object): void;
 
+        
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
         extend(parentNameString: string, childInstance: object, override: boolean): void;
@@ -505,6 +508,8 @@ declare namespace dashjs {
         getVideoElement(): HTMLVideoElement;
 
         getSource(): string | object;
+
+        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -726,6 +731,7 @@ declare namespace dashjs {
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
+        ADAPTATION_SET_REMOVED_NO_CAPABILITIES: 'adaptationSetRemovedNoCapabilities';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -1015,6 +1021,11 @@ declare namespace dashjs {
         fromStreamInfo?: StreamInfo | null;
     }
 
+    export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
+        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
+        adaptationSet: object;
+    }
+
     export interface PlaybackErrorEvent extends Event {
         type: MediaPlayerEvents['PLAYBACK_ERROR'];
         error: string;
@@ -1170,6 +1181,8 @@ declare namespace dashjs {
         getKeyStatuses(): MediaKeyStatusMap;
 
         getSessionType(): string;
+
+        getUsable(): boolean;
     }
 
     export interface Stream {
