@@ -31,7 +31,6 @@ App.prototype._setDomElements = function () {
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
     this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
     this.domElements.settings.liveCatchupLatencyThreshold = document.getElementById('catchup-threshold');
-    this.domElements.settings.catchupModeEnabled = document.getElementById('abr-additional-insufficient');
     this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
     this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
     this.domElements.settings.abrAdditionalAbandonRequestRule = document.getElementById('abr-additional-abandon');
