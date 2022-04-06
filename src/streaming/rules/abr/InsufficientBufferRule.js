@@ -46,7 +46,6 @@ function InsufficientBufferRule(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
-    const settings = config.settings;
 
     let instance,
         logger,
