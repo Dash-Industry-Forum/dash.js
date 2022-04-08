@@ -396,6 +396,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#REPRESENTATION_SWITCH
          */
         this.REPRESENTATION_SWITCH = 'representationSwitch';
+
+        /**
+         * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
+         * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
+         */
+        this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
     }
 }
 

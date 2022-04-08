@@ -33,6 +33,8 @@ import Utils from './Utils.js';
 import Debug from '../core/Debug';
 import Constants from '../streaming/constants/Constants';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import EventBus from './EventBus';
+import Events from './events/Events';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -59,8 +61,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *        streaming: {
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
- *            lowLatencyEnabled: false,
- *            lowLatencyEnabledByManifest: true,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
@@ -98,7 +98,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
- *                setStallState: false
+ *                setStallState: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -131,11 +131,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                defaultEnabled: true
  *            },
  *            liveCatchup: {
- *                minDrift: 0.02,
- *                maxDrift: 12,
- *                playbackRate: 0.5,
- *                latencyThreshold: 60,
+ *                maxDrift: NaN,
+ *                playbackRate: NaN,
  *                playbackBufferMin: 0.5,
+ *                latencyThreshold: 60,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -239,7 +238,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
  * @property {boolean} [applyServiceDescription=true]
- * Set to true if dash.js should use latency targets defined in ServiceDescription elements
+ * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  */
 
 /**
@@ -299,7 +298,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
- * @property {boolean} [setStallState=false]
+ * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
  */
 
@@ -435,15 +434,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} LiveCatchupSettings
- * @property {number} [minDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
- *
- * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases playback rate until target latency is reached.
- *
- * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [maxDrift=12]
+ * @property {number} [maxDrift=NaN]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
  * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
@@ -453,7 +444,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=0.5]
+ * @property {number} [playbackRate=NaN]
  * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
@@ -470,10 +461,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
  *
- * If no value is specified this will be twice the maximum live delay.
- *
- * The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift.
+ * If no value is specified catchup mode will always be applied
  *
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
@@ -580,13 +568,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}]
- * The maximum bitrate that the ABR algorithms will choose.
+ * The maximum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
- * Use NaN for no limit.
+ * Use -1 for no limit.
  * @property {module:Settings~AudioVideoSettings} [minBitrate={audio: -1, video: -1}]
- * The minimum bitrate that the ABR algorithms will choose.
+ * The minimum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
- * Use NaN for no limit.
+ * Use -1 for no limit.
  * @property {module:Settings~AudioVideoSettings} [maxRepresentationRatio={audio: 1, video: 1}]
  * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed, as a proportion of the size of the representation set.
  *
@@ -598,7 +586,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}]
- * Explicitly set the starting bitrate for audio or video.
+ * Explicitly set the starting bitrate for audio or video. This value is specified in kbps.
+ *
+ * Use -1 to let the player decide.
  * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}]
  * Explicitly set the initial representation ratio.
  *
@@ -656,12 +646,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This will only take effect after an abandoned fragment event occurs.
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
- * @property {boolean} [lowLatencyEnabled=false]
- * Manually enable or disable low latency mode.
- *
- * @property {boolean} [lowLatencyEnabledByManifest=true]
- * If this value is set to true we enable the low latency mode based on MPD attributes:  Specifically in case "availabilityTimeComplete" of the current representation is set to false.
- *
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
@@ -744,6 +728,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 function Settings() {
     let instance;
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
+    const DISPATCH_KEY_MAP = {
+        'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
+        'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
+        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED
+    };
+
 
     /**
      * @const {PlayerSettings} defaultSettings
@@ -757,10 +749,9 @@ function Settings() {
         streaming: {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
-            lowLatencyEnabled: false,
-            lowLatencyEnabledByManifest: true,
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
+            applyServiceDescription: true,
             eventControllerRefreshDelay: 150,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -776,8 +767,7 @@ function Settings() {
             delay: {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
-                useSuggestedPresentationDelay: true,
-                applyServiceDescription: true
+                useSuggestedPresentationDelay: true
             },
             protection: {
                 keepProtectionMediaKeys: false,
@@ -830,12 +820,11 @@ function Settings() {
                 defaultEnabled: true
             },
             liveCatchup: {
-                minDrift: 0.02,
-                maxDrift: 12,
-                playbackRate: 0.5,
-                latencyThreshold: 60,
+                maxDrift: NaN,
+                playbackRate: NaN,
                 playbackBufferMin: 0.5,
-                enabled: false,
+                enabled: null,
+                latencyThreshold: 60,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
             lastBitrateCachingInfo: {
@@ -949,6 +938,9 @@ function Settings() {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
+                        if (DISPATCH_KEY_MAP[path + n]) {
+                            eventBus.trigger(DISPATCH_KEY_MAP[path + n]);
+                        }
                     }
                 } else {
                     console.error('Settings parameter ' + path + n + ' is not supported');
@@ -994,9 +986,9 @@ function Settings() {
     }
 
     instance = {
-        get: get,
-        update: update,
-        reset: reset
+        get,
+        update,
+        reset
     };
 
     return instance;
