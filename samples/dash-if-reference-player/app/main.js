@@ -786,13 +786,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     }
 
-    $scope._getFormatedCmcdEnabledKeys = function() {
+    $scope._getFormatedCmcdEnabledKeys = function () {
         let formatedKeys;
-        if(!Array.isArray($scope.cmcdEnabledKeys)) {
-            let cmcdEnabledKeys =  $scope.cmcdEnabledKeys.split(',');
+        if (!Array.isArray($scope.cmcdEnabledKeys)) {
+            let cmcdEnabledKeys = $scope.cmcdEnabledKeys.split(',');
             formatedKeys = $scope.cmcdAllKeys.map(key => {
                 let mappedKey = key;
-                if(!cmcdEnabledKeys.includes(key)) mappedKey = "";
+                if (!cmcdEnabledKeys.includes(key)) mappedKey = '';
 
                 return mappedKey;
             });
@@ -805,7 +805,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.updateCmcdEnabledKeys = function () {
         let cmcdEnabledKeys = $scope._getFormatedCmcdEnabledKeys();
-        
+
         $scope.player.updateSettings({
             streaming: {
                 cmcd: {
@@ -1472,18 +1472,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             if (settings.hasOwnProperty(setting)) {
                 var k = prefix ? prefix + '.' + setting : setting,
                     v = settings[setting];
-                urlString.push((v != null && typeof v === "object") ?
+                urlString.push((v != null && typeof v === 'object') ?
                     this.toQueryString(v, k) :
-                    encodeURIComponent(decodeURIComponent(k)) + "=" + encodeURIComponent(decodeURIComponent(v)));
+                    encodeURIComponent(decodeURIComponent(k)) + '=' + encodeURIComponent(decodeURIComponent(v)));
             }
         }
         // Make the string, then remove all cases of && caused by empty settings
-        return urlString.join("&").split('&&').join('&');
+        return urlString.join('&').split('&&').join('&');
     }
 
     /** Resolve nested query parameters */
     $scope.resolveQueryNesting = function (base, nestedKey, value) {
-        var keyList = nestedKey.split(".");
+        var keyList = nestedKey.split('.');
         var lastProperty = value !== null ? keyList.pop() : false;
         var obj = base;
 
@@ -1505,7 +1505,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.toSettingsObject = function (queryString) {
         //Remove double & in case of empty settings field
         var querySegments = queryString.split('&&').join('&');
-        querySegments = queryString.split("&");
+        querySegments = queryString.split('&');
         var settingsObject = {};
         var drmObject = {};
         var prioritiesEnabled = false;
@@ -1513,7 +1513,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var i = 1;
 
         for (var segment in querySegments) {
-            [key, value] = querySegments[segment].split("=");
+            [key, value] = querySegments[segment].split('=');
             value = decodeURIComponent(value);
 
             $scope.resolveQueryNesting(settingsObject, key, value);
@@ -1576,22 +1576,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
                     }
                 } else {
-                    alert("Kid and Key must be specified!");
+                    alert('Kid and Key must be specified!');
                 }
 
             } else {
                 //check if priority is enabled
                 if (prioritiesEnabled) {
                     queryProtectionData[drmObject[drm].drmKeySystem] = {
-                        "serverURL": decodeURIComponent(drmObject[drm].licenseServerUrl),
-                        "priority": parseInt(drmObject[drm].priority)
+                        'serverURL': decodeURIComponent(drmObject[drm].licenseServerUrl),
+                        'priority': parseInt(drmObject[drm].priority)
                     }
                     if (drmObject[drm].httpRequestHeaders !== {})
                         queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
 
                 } else {
                     queryProtectionData[drmObject[drm].drmKeySystem] = {
-                        "serverURL": decodeURIComponent(drmObject[drm].licenseServerUrl),
+                        'serverURL': decodeURIComponent(drmObject[drm].licenseServerUrl),
                     }
                 }
 
@@ -1681,7 +1681,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.parseBoolean = function (value) {
-        return value === true || value === "true";
+        return value === true || value === 'true';
     }
 
     /** Takes a string value extracted from the query-string and transforms it into the appropriate type */
@@ -1709,7 +1709,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             //Alt2: If IE detected, copy settings-file content instead of creating a url, alert userto the change.
         }
         if (string.length > maxUrlLength) {
-            alert("The length of the URL may exceed the Browser url character limit.")
+            alert('The length of the URL may exceed the Browser url character limit.')
         }
     }
 
@@ -2066,7 +2066,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         $scope.cmcdMode = currentConfig.streaming.cmcd.mode;
 
-        if(currentConfig.streaming.cmcd.enabledKeys){
+        if (currentConfig.streaming.cmcd.enabledKeys) {
             $scope.cmcdEnabledKeys = currentConfig.streaming.cmcd.enabledKeys;
         }
     }
