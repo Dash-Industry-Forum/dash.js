@@ -1469,7 +1469,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
             }
             else if(settings[setting] !== defaultSettings[setting]){
-                settingDifferencesObject[setting] = settings[setting];
+                if(isNaN(settings[setting])){
+                    // do nothing
+                }
+                else {
+                    settingDifferencesObject[setting] = settings[setting];
+                }
+                
             }
         }
 
