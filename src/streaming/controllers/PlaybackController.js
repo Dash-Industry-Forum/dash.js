@@ -273,7 +273,7 @@ function PlaybackController() {
     }
 
     /**
-     * Applys service description Latency and PlaybackRate attributes to liveDelay and catchup settings
+     * Applies service description Latency and PlaybackRate attributes to liveDelay and catchup settings
      * @param {Object} manifestInfo
      * @param {Array} prftTimeOffsets - Time offests calculated from ProducerReferenceTime elements
      * @private
@@ -296,19 +296,32 @@ function PlaybackController() {
         if (llsd) {
             if (llsd.latency && llsd.latency.target > 0) {
                 logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
+                let to = _calculateOffsetFromServiceDescription(prftTimeOffsets, llsd.latency);
                 settings.update({
                     streaming: {
                         delay: {
-                            liveDelay: _calculateDelayFromServiceDescription(prftTimeOffsets, llsd.latency),
+                            // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
+                            // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
+                            liveDelay: ((llsd.latency.target / 1000) - to)
                         }
                     }
                 });
-                if (llsd.latency.max && llsd.latency.max >  llsd.latency.target ) {
+                if (llsd.latency.max && llsd.latency.max > llsd.latency.target ) {
                     logger.debug('Apply LL properties coming from service description. Max Latency:', llsd.latency.max);
                     settings.update({
                         streaming: {
                             liveCatchup: {
-                                maxDrift: (llsd.latency.max - llsd.latency.target) / 1000
+                                maxDrift: (((llsd.latency.max - llsd.latency.target) / 1000) - to)
+                            }
+                        }
+                    });
+                }
+                if (llsd.latency.min && llsd.latency.min < llsd.latency.target) {
+                    logger.debug('Apply LL properties coming from service description. Min Latency:', llsd.latency.min);
+                    settings.update({
+                        streaming: {
+                            liveCatchup: {
+                                minDrift: (((llsd.latency.min - llsd.latency.target) / 1000) - to)
                             }
                         }
                     });
@@ -328,14 +341,16 @@ function PlaybackController() {
     }
 
     /**
-     * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
+     * Calculates offset to apply to latency values as described in TS 103 285 Clause 10.20.4
      * @param {Array} prftTimeOffsets 
      * @param {Object} llsdLatency 
      * @returns {number}
      * @private
      */
-    function _calculateDelayFromServiceDescription(prftTimeOffsets, llsdLatency) {
+    function _calculateOffsetFromServiceDescription(prftTimeOffsets, llsdLatency) {
         let to = 0;
+        if (!('referenceId' in llsdLatency) || prftTimeOffsets.length < 1) return to;
+
         let offset = prftTimeOffsets.filter(prt => {
             return prt.id === llsdLatency.referenceId;
         });
@@ -348,9 +363,7 @@ function PlaybackController() {
             to = offset[0].to || 0;
         }
         
-        // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
-        // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
-        return ((llsdLatency.target / 1000) - to)
+        return to;
     }
 
     function getAvailabilityStartTime() {
