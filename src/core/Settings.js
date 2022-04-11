@@ -199,7 +199,8 @@ import Events from './events/Events';
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
- *                mode: Constants.CMCD_MODE_QUERY
+ *                mode: Constants.CMCD_MODE_QUERY,
+ *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *            }
  *          },
  *          errors: {
@@ -627,6 +628,8 @@ import Events from './events/Events';
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
  * If not specified this value defaults to 'query'.
+ * @property {Array.<string>} [enabledKeys]
+ * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
  */
 
 /**
@@ -912,7 +915,8 @@ function Settings() {
                 cid: null,
                 rtp: null,
                 rtpSafetyFactor: 5,
-                mode: Constants.CMCD_MODE_QUERY
+                mode: Constants.CMCD_MODE_QUERY,
+                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
             }
         },
         errors: {
@@ -930,7 +934,7 @@ function Settings() {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
-                    if (typeof source[n] === 'object' && source[n] !== null) {
+                    if (typeof source[n] === 'object' && !(source[n] instanceof Array) && source[n] !== null) {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
