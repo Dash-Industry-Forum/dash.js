@@ -1,48 +1,150 @@
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
-import Constants from '../../src/streaming/constants/Constants';
 import {
     HTTPRequest
 } from '../../src/streaming/vo/metrics/HTTPRequest';
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import Settings from '../../src/core/Settings';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
 
 const chai = require('chai');
 const expect = chai.expect;
 
 describe('MediaPlayerModel', function () {
     const context = {};
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+
+    let mediaPlayerModel;
+    let playbackController;
+    let serviceDescriptionController = ServiceDescriptionController(context).getInstance();
     let settings = Settings(context).getInstance();
+    let dummyManifestInfo;
 
     beforeEach(() => {
         settings.reset();
+        playbackController = new PlaybackControllerMock();
+        serviceDescriptionController.reset();
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        mediaPlayerModel.setConfig({
+            playbackController,
+            serviceDescriptionController
+        })
+        dummyManifestInfo = {
+            serviceDescriptions: [{
+                latency: {
+                    target: 5000,
+                    max: 8000,
+                    min: 3000
+                },
+                playbackRate: {
+                    max: 1.4,
+                    min: 0.5
+                },
+                operatingBandwidth: {
+                    mediaType: 'any',
+                    max: 9000000,
+                    min: 1000000,
+                    target: 5000000
+                }
+            }]
+        }
     });
 
-    it('Method removeUTCTimingSource should throw an exception', function () {
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
+    it('Should return max drift if specified in the settings', () => {
+        settings.update({ streaming: { liveCatchup: { maxDrift: 30 } } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
 
-    it('Method addUTCTimingSource should throw an exception', function () {
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
+        expect(maxDrift).to.be.equal(30);
+    })
 
-    it('Method addABRCustomRule should throw an exception', function () {
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
+    it('Should return max drift if specified in Service Description', () => {
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+
+        expect(maxDrift).to.be.equal(3.5);
+    })
+
+    it('Should return default max drift', () => {
+        const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+
+        expect(maxDrift).to.not.be.NaN;
+    })
+
+    it('Should return catchup playback rate if specified in the settings', () => {
+        settings.update({ streaming: { liveCatchup: { playbackRate: 0.3 } } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const value = mediaPlayerModel.getCatchupPlaybackRate();
+
+        expect(value).to.be.equal(0.3);
+    })
+
+    it('Should return catchup playback rate if specified in Service Description', () => {
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const value = mediaPlayerModel.getCatchupPlaybackRate();
+
+        expect(value).to.be.equal(0.4);
+    })
+
+    it('Should return default catchup playback rate', () => {
+        const value = mediaPlayerModel.getCatchupPlaybackRate();
+
+        expect(value).to.not.be.NaN;
+    })
+
+    it('Should return abr bitrate parameter if specified in the settings', () => {
+        settings.update({
+            streaming: {
+                abr: {
+                    maxBitrate: { audio: 1, video: 2 },
+                    minBitrate: { audio: 3, video: 4 },
+                    initialBitrate: { audio: 5, video: 6 }
+                }
+            }
+        });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        expect(value).to.be.equal(1);
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        expect(value).to.be.equal(2);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        expect(value).to.be.equal(3);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        expect(value).to.be.equal(4);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        expect(value).to.be.equal(5);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        expect(value).to.be.equal(6);
+    })
+
+    it('Should return abr bitrate parameter if specified via Service Description', () => {
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        expect(value).to.be.equal(9000);
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        expect(value).to.be.equal(9000);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        expect(value).to.be.equal(1000);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        expect(value).to.be.equal(1000);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        expect(value).to.be.equal(5000);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        expect(value).to.be.equal(5000);
+    })
+
+    it('Should return -1 for abr bitrate parameters if not specified', () => {
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        expect(value).to.be.equal(-1);
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        expect(value).to.be.equal(-1);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        expect(value).to.be.equal(-1);
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        expect(value).to.be.equal(-1);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        expect(value).to.be.equal(-1);
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        expect(value).to.be.equal(-1);
+    })
 
     it('should configure FragmentLoaderRetryAttempts', function () {
         let FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
@@ -87,13 +189,13 @@ describe('MediaPlayerModel', function () {
         const s = {
             streaming:
                 {
-                    lowLatencyEnabled: true,
                     retryAttempts: {
                         lowLatencyMultiplyFactor: 10
                     }
                 }
         };
         settings.update(s);
+        playbackController.setLowLatencyModeEnabled(true);
 
         manifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MPD_TYPE);
         expect(manifestLoaderRetryAttempts).to.equal(30);
@@ -118,51 +220,41 @@ describe('MediaPlayerModel', function () {
         const s = {
             streaming:
                 {
-                    lowLatencyEnabled: true,
                     retryIntervals: {
                         lowLatencyReductionFactor: 5
                     }
                 }
         };
         settings.update(s);
+        playbackController.setLowLatencyModeEnabled(true);
 
         manifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MPD_TYPE);
         expect(manifestLoaderRetryInterval).to.equal(100);
     });
 
     it('should configure StableBufferTime', function () {
-        const s = { streaming: { buffer: { stableBufferTime: 50 } } };
+        const s = { streaming: { buffer: { stableBufferTime: 10 } } };
         settings.update(s);
 
-        let StableBufferTime = mediaPlayerModel.getStableBufferTime();
-        expect(StableBufferTime).to.equal(50);
+        let stableBufferTime = mediaPlayerModel.getStableBufferTime();
+        expect(stableBufferTime).to.equal(10);
     });
 
-    it('should configure liveCatchupLatencyThreshold', function () {
-        settings.update({ streaming: { liveCatchup: { latencyThreshold: NaN } } });
-        let liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.be.NaN; // jshint ignore:line
+    it('should configure initial buffer level', function () {
+        const s = { streaming: { buffer: { initialBufferLevel: 8 } } };
+        settings.update(s);
 
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true,
-                delay: { liveDelay: 3 },
-                liveCatchup: { minDrift: 3 }
-            }
-        });
+        let value = mediaPlayerModel.getInitialBufferLevel();
+        expect(value).to.equal(8);
+    });
 
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(24);
+    it('should configure initial buffer level with stable buffer time lower than initial buffer level', function () {
+        const stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
+        const s = { streaming: { buffer: { initialBufferLevel: stableBufferTime + 10 } } };
+        settings.update(s);
 
-        settings.update({ streaming: { liveCatchup: { minDrift: NaN } } });
-
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(12);
-
-        settings.update({ streaming: { liveCatchup: { latencyThreshold: 50 } } });
-
-        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(50);
+        let value = mediaPlayerModel.getInitialBufferLevel();
+        expect(value).to.equal(stableBufferTime);
     });
 
 });

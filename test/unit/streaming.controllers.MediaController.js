@@ -6,6 +6,7 @@ import Events from '../../src/core/events/Events';
 import Settings from '../../src/core/Settings';
 
 import DomStorageMock from './mocks/DomStorageMock';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
 const expect = require('chai').expect;
 const context = {};
@@ -17,6 +18,7 @@ describe('MediaController', function () {
     let domStorageMock;
     const trackType = Constants.AUDIO;
     const settings = Settings(context).getInstance();
+    const customParametersModel = CustomParametersModel(context).getInstance();
 
     beforeEach(function () {
 
@@ -24,7 +26,8 @@ describe('MediaController', function () {
         mediaController = MediaController(context).getInstance();
         mediaController.setConfig({
             domStorage: domStorageMock,
-            settings: settings
+            settings: settings,
+            customParametersModel
         });
 
     });
@@ -629,6 +632,10 @@ describe('MediaController', function () {
 
         describe('custom initial track selection function', function () {
             beforeEach(function () {
+
+            });
+
+            it('should return the track with the lowest bitrate', function () {
                 settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
 
                 function getTrackWithLowestBitrate(trackArr) {
@@ -650,17 +657,13 @@ describe('MediaController', function () {
                     return result;
                 }
 
-                mediaController.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
-            });
-
-            it('should return the track with the lowest bitrate', function () {
+                customParametersModel.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
                 testSelectInitialTrack(
                     'video',
                     { bitrateList: [{ bandwidth: 1000 }, { bandwidth: 5000 }] },
                     { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 8000 }] }
                 )
             });
-
         });
     });
 
