@@ -629,7 +629,7 @@ import Events from './events/Events';
  *
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
- * This value is used to specify the desired cmcd http headers in an array.
+ * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
  */
 
 /**
@@ -934,7 +934,7 @@ function Settings() {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
-                    if (typeof source[n] === 'object' && source[n] !== null) {
+                    if (typeof source[n] === 'object' && !(source[n] instanceof Array) && source[n] !== null) {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);
