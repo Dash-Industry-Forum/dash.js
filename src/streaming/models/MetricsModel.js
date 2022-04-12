@@ -151,16 +151,25 @@ function MetricsModel(config) {
                 type: request.type,
                 url: request.url,
                 quality: request.quality,
+                serviceLocation: null,
                 range: request.range,
                 startDate: request.startDate,
+                firstByteDate: null,
+                endDate: null,
                 duration: request.duration,
                 fileLoaderType: request.fileLoaderType
+            }
+            const adjustedResponse = {
+                url: null,
+                status: null,
+                headers: null,
+
             }
             // given the above, add an entry for the original request
             addHttpRequest(
                 adjustedRequest,
-                response,
-                traces
+                adjustedResponse,
+                null
             );
 
             vo.actualurl = response.url;

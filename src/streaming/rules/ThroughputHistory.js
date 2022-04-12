@@ -136,7 +136,7 @@ function ThroughputHistory(config) {
         let throughputMeasureTime = 0;
         let throughput = 0;
 
-        const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
+        const downloadBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
 
         // Low latency is enabled, we used the fetch API and received chunks
         if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
@@ -146,7 +146,7 @@ function ThroughputHistory(config) {
                 throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
             }
             if (throughput === 0) {
-                throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
+                throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
             }
         }
 

@@ -385,7 +385,8 @@ function HTTPLoader(cfg) {
         requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
         requestObject.fileLoaderType = fileLoaderType;
 
-        // If enabled the ResourceTimingApi we add the corresponding information to the request object. These values are more accurate and can be used by the ThroughputHistory later
+        // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+        // These values are more accurate and can be used by the ThroughputHistory later
         if (settings.get().streaming.abr.useResourceTimingApi) {
             _addResourceTimingValues(requestObject);
         }
