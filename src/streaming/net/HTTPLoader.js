@@ -91,18 +91,6 @@ function HTTPLoader(cfg) {
             [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
             [HTTPRequest.OTHER_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
-
-        xhrLoader = XHRLoader(context).create({
-            requestModifier
-        });
-
-        fetchLoader = FetchLoader(context).create({
-            requestModifier,
-            boxParser
-        });
-        fetchLoader.setup({
-            dashMetrics
-        });
     }
 
     /**
@@ -184,6 +172,7 @@ function HTTPLoader(cfg) {
          * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
          */
         const _onloadend = function () {
+            // Remove the request from our list of requests
             if (httpRequests.indexOf(httpRequest) !== -1) {
                 httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
             }
@@ -200,7 +189,7 @@ function HTTPLoader(cfg) {
             if (firstProgress) {
                 firstProgress = false;
                 // event.loaded: the amount of data currently transferred
-                // event.total:the total amount of data to be transferred.
+                // event.total: the total amount of data to be transferred.
                 // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
                 if (!event.lengthComputable ||
                     (event.lengthComputable && event.total !== event.loaded)) {
@@ -457,9 +446,22 @@ function HTTPLoader(cfg) {
         let fileLoaderType;
 
         if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            if (!fetchLoader) {
+                fetchLoader = FetchLoader(context).create();
+                fetchLoader.setConfig({
+                    dashMetrics,
+                    requestModifier,
+                    boxParser
+                });
+            }
             loader = fetchLoader;
             fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
         } else {
+            if (!xhrLoader) {
+                xhrLoader = XHRLoader(context).create({
+                    requestModifier
+                });
+            }
             loader = xhrLoader;
             fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
         }

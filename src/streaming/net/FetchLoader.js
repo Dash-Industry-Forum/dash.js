@@ -40,18 +40,17 @@ import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
  * @description Manages download of resources via HTTP using fetch.
  * @param {Object} cfg - dependencies from parent
  */
-function FetchLoader(cfg) {
+function FetchLoader() {
 
-    cfg = cfg || {};
     const context = this.context;
-    const requestModifier = cfg.requestModifier;
     const lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
-    const boxParser = cfg.boxParser;
     const settings = Settings(context).getInstance();
-    let instance, dashMetrics;
+    let instance, dashMetrics, requestModifier, boxParser;
 
-    function setup(cfg) {
+    function setConfig(cfg) {
         dashMetrics = cfg.dashMetrics;
+        requestModifier = cfg.requestModifier;
+        boxParser = cfg.boxParser
     }
 
     function load(httpRequest) {
@@ -441,10 +440,10 @@ function FetchLoader(cfg) {
     }
 
     instance = {
-        load: load,
-        abort: abort,
-        calculateDownloadedTime: calculateDownloadedTime,
-        setup
+        load,
+        abort,
+        calculateDownloadedTime,
+        setConfig
     };
 
     return instance;

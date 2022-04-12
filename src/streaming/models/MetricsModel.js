@@ -158,7 +158,9 @@ function MetricsModel(config) {
             }
             // given the above, add an entry for the original request
             addHttpRequest(
-                adjustedRequest
+                adjustedRequest,
+                response,
+                traces
             );
 
             vo.actualurl = response.url;

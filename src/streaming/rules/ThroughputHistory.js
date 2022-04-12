@@ -65,17 +65,18 @@ function ThroughputHistory(config) {
      * @param {object} httpRequest
      * @param {boolean} useDeadTimeLatency
      */
-    function push(mediaType, httpRequest, useDeadTimeLatency) {
+    function push(mediaType, httpRequest) {
         if (!httpRequest.trace || !httpRequest.trace.length) {
             return;
         }
 
-        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1; // Time between first byte received and start time of the request
-        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
+        const useDeadTimeLatency = settings.get().streaming.abr.useDeadTimeLatency;
+        // Time between first byte received and start time of the request
+        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
+        // Make sure never 0 we divide by this value. Avoid infinity!
+        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1;
 
         let throughput = _calculateThroughput(httpRequest, useDeadTimeLatency, latencyTimeInMilliseconds, downloadTimeInMilliseconds);
-
-
         _createSettingsForMediaType(mediaType);
 
         if (_isCachedResponse(mediaType, downloadTimeInMilliseconds)) {
