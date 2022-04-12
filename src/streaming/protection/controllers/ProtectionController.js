@@ -76,6 +76,7 @@ function ProtectionController(config) {
     let needkeyRetries = [];
     const cmcdModel = config.cmcdModel;
     const settings = config.settings;
+    const customParametersModel = config.customParametersModel;
 
     let instance,
         logger,
@@ -85,9 +86,7 @@ function ProtectionController(config) {
         sessionType,
         robustnessLevel,
         selectedKeySystem,
-        keySystemSelectionInProgress,
-        licenseRequestFilters,
-        licenseResponseFilters;
+        keySystemSelectionInProgress;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -95,8 +94,6 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     }
@@ -184,7 +181,8 @@ function ProtectionController(config) {
             const keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
             requestedKeySystems.push({
                 ks: supportedKS[i].ks,
-                configs: [keySystemConfiguration]
+                configs: [keySystemConfiguration],
+                protData: supportedKS[i].protData
             });
         }
 
@@ -193,7 +191,8 @@ function ProtectionController(config) {
         protectionModel.requestKeySystemAccess(requestedKeySystems)
             .then((event) => {
                 keySystemAccess = event.data;
-                logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                let selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
+                logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
                 return protectionModel.selectKeySystem(keySystemAccess);
             })
             .then((keySystem) => {
@@ -576,9 +575,6 @@ function ProtectionController(config) {
 
         checkConfig();
 
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
-
         setMediaElement(null);
 
         selectedKeySystem = null;
@@ -746,6 +742,7 @@ function ProtectionController(config) {
             if (xhr.status >= 200 && xhr.status <= 299) {
                 const responseHeaders = Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
                 let licenseResponse = new LicenseResponse(xhr.responseURL, responseHeaders, xhr.response);
+                const licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
                 _applyFilters(licenseResponseFilters, licenseResponse)
                     .then(() => {
                         const licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
@@ -781,6 +778,7 @@ function ProtectionController(config) {
 
         let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
         const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE]) ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
+        const licenseRequestFilters = customParametersModel.getLicenseRequestFilters();
         _applyFilters(licenseRequestFilters, licenseRequest)
             .then(() => {
                 _doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
@@ -1056,22 +1054,6 @@ function ProtectionController(config) {
         }
     }
 
-    /**
-     * Sets the request filters to be applied before the license request is made
-     * @param {array} filters
-     */
-    function setLicenseRequestFilters(filters) {
-        licenseRequestFilters = filters;
-    }
-
-    /**
-     * Sets the response filters to be applied after the license response has been received.
-     * @param {array} filters
-     */
-    function setLicenseResponseFilters(filters) {
-        licenseResponseFilters = filters;
-    }
-
     instance = {
         initializeForMedia,
         clearMediaInfoArray,
@@ -1087,8 +1069,6 @@ function ProtectionController(config) {
         getSupportedKeySystemsFromContentProtection,
         getKeySystems,
         setKeySystems,
-        setLicenseRequestFilters,
-        setLicenseResponseFilters,
         stop,
         reset
     };

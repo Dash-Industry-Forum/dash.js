@@ -1105,7 +1105,13 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.SERVICE_DESCRIPTION)) {
             for (const sd of manifest.ServiceDescription_asArray) {
                 // Convert each of the properties defined in
-                let id, schemeIdUri, latency, playbackRate;
+                let id = null,
+                    schemeIdUri = null,
+                    latency = null,
+                    playbackRate = null,
+                    operatingQuality = null,
+                    operatingBandwidth = null;
+
                 for (const prop in sd) {
                     if (sd.hasOwnProperty(prop)) {
                         if (prop === DashConstants.ID) {
@@ -1114,27 +1120,43 @@ function DashManifestModel() {
                             schemeIdUri = sd[prop].schemeIdUri;
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_LATENCY) {
                             latency = {
-                                target: sd[prop].target,
-                                max: sd[prop].max,
-                                min: sd[prop].min
+                                target: parseInt(sd[prop].target),
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min)
                             };
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_PLAYBACK_RATE) {
                             playbackRate = {
-                                max: sd[prop].max,
-                                min: sd[prop].min
+                                max: parseFloat(sd[prop].max),
+                                min: parseFloat(sd[prop].min)
                             };
+                        } else if (prop === DashConstants.SERVICE_DESCRIPTION_OPERATING_QUALITY) {
+                            operatingQuality = {
+                                mediaType: sd[prop].mediaType,
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min),
+                                target: parseInt(sd[prop].target),
+                                type: sd[prop].type,
+                                maxQualityDifference: parseInt(sd[prop].maxQualityDifference)
+                            }
+                        } else if (prop === DashConstants.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH) {
+                            operatingBandwidth = {
+                                mediaType: sd[prop].mediaType,
+                                max: parseInt(sd[prop].max),
+                                min: parseInt(sd[prop].min),
+                                target: parseInt(sd[prop].target)
+                            }
                         }
                     }
                 }
-                // we have a ServiceDescription for low latency. Add it if it really has parameters defined
-                if (schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME && (latency || playbackRate)) {
-                    serviceDescriptions.push({
-                        id,
-                        schemeIdUri,
-                        latency,
-                        playbackRate
-                    });
-                }
+
+                serviceDescriptions.push({
+                    id,
+                    schemeIdUri,
+                    latency,
+                    playbackRate,
+                    operatingQuality,
+                    operatingBandwidth
+                });
             }
         }
 

@@ -122,7 +122,7 @@ function MetricsModel(config) {
         vo.s = s;
         vo.d = d;
         vo.b = b;
-        vo.t = t;
+        vo._t = t;
 
         httpRequest.trace.push(vo);
 
@@ -171,7 +171,8 @@ function MetricsModel(config) {
                 null, // unknown, probably a 302
                 mediaduration,
                 null,
-                null
+                null,
+                fileLoaderType
             );
 
             vo.actualurl = response.url;
@@ -191,6 +192,7 @@ function MetricsModel(config) {
         vo._quality = request.quality;
         vo._responseHeaders = response.headers;
         vo._serviceLocation = request.serviceLocation || null;
+        vo._fileLoaderType = request.fileLoaderType;
 
         if (traces) {
             traces.forEach(trace => {

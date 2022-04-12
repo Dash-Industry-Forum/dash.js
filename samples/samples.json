@@ -98,7 +98,7 @@
             {
                 "title": "Load with url parameters",
                 "description": "A demo page that uses url query parameters to configure the playback.",
-                "href": "getting-started/load-with-url-params.html",
+                "href": "getting-started/load-with-url-params.html?autoplay=true&url=https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",
@@ -172,56 +172,8 @@
         "section": "Live Low Latency",
         "samples": [
             {
-                "title": "Low latency",
-                "description": "Example showing how to use dash.js to play low latency streams.",
-                "href": "low-latency/index.html",
-                "image": "lib/img/livesim-1.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with L2ALL",
-                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
-                "href": "low-latency/l2all_index.html",
-                "image": "lib/img/akamai-ll-1.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with LoL+",
-                "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
-                "href": "low-latency/lolp_index.html",
-                "image": "lib/img/akamai-ll-2.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with AAST based decisioning",
-                "description": "Example showing how to use dash.js to play very low latency streams using AAST based throughput calculation.",
-                "href": "low-latency/aast_tp_calc.html",
-                "image": "lib/img/akamai-ll-3.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
                 "title": "Low latency testplayer",
-                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "description": "Example showing how to use dash.js to play low latency streams. All low latency related settings such as the different ABR algorithms(LoL+,L2A) are selectable.",
                 "href": "low-latency/testplayer/testplayer.html",
                 "image": "lib/img/akamai-ll-4.jpg",
                 "labels": [
@@ -403,6 +355,20 @@
                 "description": "This example shows how to specify a DRM system priority in case the underlying platform supports multiple DRM systems.",
                 "href": "drm/system-priority.html",
                 "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Keysystem string priority",
+                "description": "This example shows how to specify the system string priority for the call to requestMediaKeySystemAccess. For example, Playready might be supported with the system strings \"com.microsoft.playready.recommendation\" and \"com.microsoft.playready\". ",
+                "href": "drm/system-string-priority.html",
+                "image": "lib/img/tos-1.jpg",
                 "labels": [
                     "VoD",
                     "DRM",

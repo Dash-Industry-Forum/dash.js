@@ -45,8 +45,8 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
-        domStorage,
-        customInitialTrackSelectionFunction;
+        customParametersModel,
+        domStorage;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -278,7 +278,12 @@ function MediaController() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
     }
+
 
     /**
      * @memberof MediaController#
@@ -286,7 +291,6 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
-        customInitialTrackSelectionFunction = null;
         resetInitialSettings();
     }
 
@@ -335,7 +339,7 @@ function MediaController() {
         let result = [];
 
         trackArr.forEach((track) => {
-            if(!isNaN(track.selectionPriority)) {
+            if (!isNaN(track.selectionPriority)) {
                 // Higher max value. Reset list and add new entry
                 if (track.selectionPriority > max) {
                     max = track.selectionPriority;
@@ -416,15 +420,12 @@ function MediaController() {
         return result;
     }
 
-    function setCustomInitialTrackSelectionFunction(customFunc) {
-        customInitialTrackSelectionFunction = customFunc;
-    }
-
     function selectInitialTrack(type, tracks) {
         if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr;
+        const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();
 
         if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
             tmpArr = customInitialTrackSelectionFunction(tracks);
@@ -538,7 +539,6 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
-        setCustomInitialTrackSelectionFunction,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,

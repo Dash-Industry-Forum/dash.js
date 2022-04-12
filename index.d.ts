@@ -151,9 +151,8 @@ declare namespace dashjs {
         streaming?: {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
-            lowLatencyEnabled?: boolean,
-            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
+            applyServiceDescription?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             capabilities?: {
@@ -170,8 +169,7 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean,
-                applyServiceDescription?: boolean
+                useSuggestedPresentationDelay?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
@@ -224,7 +222,6 @@ declare namespace dashjs {
                 defaultEnabled?: boolean
             },
             liveCatchup?: {
-                minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
                 latencyThreshold?: number,
@@ -320,7 +317,8 @@ declare namespace dashjs {
                 cid?: string,
                 rtp?: number,
                 rtpSafetyFactor?: number,
-                mode?: 'query' | 'header'
+                mode?: 'query' | 'header',
+                enabledKeys?: Array<string>
             }
         };
         errors?: {
@@ -358,6 +356,8 @@ declare namespace dashjs {
     }
 
     export type CapabilitiesFilter = (representation: Representation) => boolean;
+
+    export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
@@ -436,8 +436,11 @@ declare namespace dashjs {
 
         on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
 
+        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
+        
         on(type: string, listener: (e: Event) => void, scope?: object): void;
 
+        
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
         extend(parentNameString: string, childInstance: object, override: boolean): void;
@@ -503,6 +506,8 @@ declare namespace dashjs {
         getVideoElement(): HTMLVideoElement;
 
         getSource(): string | object;
+
+        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -583,6 +588,10 @@ declare namespace dashjs {
         registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
 
         unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+
+        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
+
+        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void,
 
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
 
@@ -720,6 +729,7 @@ declare namespace dashjs {
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
+        ADAPTATION_SET_REMOVED_NO_CAPABILITIES: 'adaptationSetRemovedNoCapabilities';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -1009,6 +1019,11 @@ declare namespace dashjs {
         fromStreamInfo?: StreamInfo | null;
     }
 
+    export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
+        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
+        adaptationSet: object;
+    }
+
     export interface PlaybackErrorEvent extends Event {
         type: MediaPlayerEvents['PLAYBACK_ERROR'];
         error: string;
@@ -1164,6 +1179,8 @@ declare namespace dashjs {
         getKeyStatuses(): MediaKeyStatusMap;
 
         getSessionType(): string;
+
+        getUsable(): boolean;
     }
 
     export interface Stream {

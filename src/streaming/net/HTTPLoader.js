@@ -40,12 +40,13 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import CustomParametersModel from '../models/CustomParametersModel';
 
 /**
  * @module HTTPLoader
  * @ignore
  * @description Manages download of resources via HTTP.
- * @param {Object} cfg - dependancies from parent
+ * @param {Object} cfg - dependencies from parent
  */
 function HTTPLoader(cfg) {
 
@@ -70,6 +71,7 @@ function HTTPLoader(cfg) {
         cmcdModel,
         xhrLoader,
         fetchLoader,
+        customParametersModel,
         logger;
 
     function setup() {
@@ -78,6 +80,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -166,6 +169,7 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
+        let fileLoaderType = null;
         let httpRequest;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
@@ -323,7 +327,7 @@ function HTTPLoader(cfg) {
 
         requestObject.url = modifiedRequestParams.url;
         const method = requestObject.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
-        const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(requestObject.type);
+        const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
 
 
         httpRequest = {

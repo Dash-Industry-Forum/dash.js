@@ -45,6 +45,11 @@ import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
 import ProtectionConstants from '../../constants/ProtectionConstants';
 
+const SYSTEM_STRING_PRIORITY = {};
+SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
+
 function ProtectionModel_21Jan2015(config) {
 
     config = config || {};
@@ -153,40 +158,85 @@ function ProtectionModel_21Jan2015(config) {
      * @private
      */
     function _requestKeySystemAccessInternal(ksConfigurations, idx, resolve, reject) {
+
+        // In case requestMediaKeySystemAccess is not available we can not proceed and dispatch an error
         if (navigator.requestMediaKeySystemAccess === undefined ||
             typeof navigator.requestMediaKeySystemAccess !== 'function') {
             const msg = 'Insecure origins are not allowed';
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: msg });
-            reject({ error: msg });
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: msg});
+            reject({error: msg});
             return;
         }
 
-        const keySystem = ksConfigurations[idx].ks;
+        // If a systemStringPriority is defined by the application we use these values. Otherwise we use the default system string
+        // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
+        const protDataSystemStringPriority = ksConfigurations[idx].protData && ksConfigurations[idx].protData.systemStringPriority ? ksConfigurations[idx].protData.systemStringPriority : null;
         const configs = ksConfigurations[idx].configs;
-        let systemString = keySystem.systemString;
+        const currentKeySystem = ksConfigurations[idx].ks;
+        let systemString = currentKeySystem.systemString;
 
-        // Patch to support persistent licenses on Edge browser (see issue #2658)
-        if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
-            systemString += '.recommendation';
-        }
+        // Use the default values in case no values are provided by the application
+        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
 
-        navigator.requestMediaKeySystemAccess(systemString, configs)
+        // Check all the available system strings and the available configurations for support
+        _checkAccessForKeySystem(systemStringsToApply, configs)
             .then((mediaKeySystemAccess) => {
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
                     mediaKeySystemAccess.getConfiguration() : null;
-                const keySystemAccess = new KeySystemAccess(keySystem, configuration);
+                const keySystemAccess = new KeySystemAccess(currentKeySystem, configuration);
 
                 keySystemAccess.mksa = mediaKeySystemAccess;
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
-                resolve({ data: keySystemAccess });
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
+                resolve({data: keySystemAccess});
             })
-            .catch((error) => {
+            .catch((e) => {
                 if (idx + 1 < ksConfigurations.length) {
                     _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
                 } else {
                     const errorMessage = 'Key system access denied! ';
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + error.message });
-                    reject({ error: errorMessage + error.message });
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: errorMessage + e.message});
+                    reject({error: errorMessage + e.message});
+                }
+            })
+    }
+
+    /**
+     * For a specific key system: Iterate over the possible system strings and resolve once a valid configuration was found
+     * @param {array} systemStringsToApply
+     * @param {object} configs
+     * @return {Promise}
+     * @private
+     */
+    function _checkAccessForKeySystem(systemStringsToApply, configs) {
+        return new Promise((resolve, reject) => {
+            _checkAccessForSystemStrings(systemStringsToApply, configs, 0, resolve, reject);
+        })
+    }
+
+    /**
+     * Recursively iterate over the possible system strings until a supported configuration is found or we ran out of options
+     * @param {array} systemStringsToApply
+     * @param {object} configs
+     * @param {number} idx
+     * @param {function} resolve
+     * @param {function} reject
+     * @private
+     */
+    function _checkAccessForSystemStrings(systemStringsToApply, configs, idx, resolve, reject) {
+        const systemString = systemStringsToApply[idx];
+
+        logger.debug(`Requesting key system access for system string ${systemString}`);
+
+        navigator.requestMediaKeySystemAccess(systemString, configs)
+            .then((mediaKeySystemAccess) => {
+                mediaKeySystemAccess.selectedSystemString = systemString;
+                resolve(mediaKeySystemAccess);
+            })
+            .catch((e) => {
+                if (idx + 1 < systemStringsToApply.length) {
+                    _checkAccessForSystemStrings(systemStringsToApply, configs, idx + 1, resolve, reject);
+                } else {
+                    reject(e);
                 }
             });
     }
@@ -212,7 +262,7 @@ function ProtectionModel_21Jan2015(config) {
                     resolve(keySystem);
                 })
                 .catch(function () {
-                    reject({ error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
+                    reject({error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
                 });
         })
     }
@@ -248,7 +298,7 @@ function ProtectionModel_21Jan2015(config) {
             logger.info('DRM: License server certificate successfully updated.');
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
+            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name)});
         });
     }
 
@@ -270,7 +320,7 @@ function ProtectionModel_21Jan2015(config) {
 
         session.generateRequest(dataType, ksInfo.initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -292,7 +342,7 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_UPDATED);
             })
             .catch(function (error) {
-                eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken) });
+                eventBus.trigger(events.KEY_ERROR, {error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
             });
     }
 
@@ -318,7 +368,7 @@ function ProtectionModel_21Jan2015(config) {
         session.load(sessionId).then(function (success) {
             if (success) {
                 logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionId());
-                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
+                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
                 removeSession(sessionToken);
                 eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -340,7 +390,7 @@ function ProtectionModel_21Jan2015(config) {
 
         session.remove().then(function () {
             logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionId() });
+            eventBus.trigger(events.KEY_SESSION_REMOVED, {data: sessionToken.getSessionId()});
         }, function (error) {
             eventBus.trigger(events.KEY_SESSION_REMOVED, {
                 data: null,
@@ -382,7 +432,7 @@ function ProtectionModel_21Jan2015(config) {
                     case 'encrypted':
                         if (event.initData) {
                             let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, event.initDataType) });
+                            eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, event.initDataType)});
                         }
                         break;
                 }
@@ -442,12 +492,12 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
+                        eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
                         event.target.keyStatuses.forEach(function () {
                             let keyStatus = parseKeyStatus(arguments);
                             switch (keyStatus.status) {
                                 case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)});
                                     break;
                                 default:
                                     eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
@@ -458,7 +508,7 @@ function ProtectionModel_21Jan2015(config) {
 
                     case 'message':
                         let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
+                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(this, message, undefined, event.messageType)});
                         break;
                 }
             },
@@ -503,7 +553,7 @@ function ProtectionModel_21Jan2015(config) {
         session.closed.then(() => {
             removeSession(token);
             logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionId() });
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: token.getSessionId()});
         });
 
         // Add to our session list

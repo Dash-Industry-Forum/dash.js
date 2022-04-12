@@ -18,6 +18,7 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
 import TextControllerMock from './mocks/TextControllerMock';
+import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -161,7 +162,7 @@ describe('StreamController', function () {
 
             it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
-                expect(errHandlerMock.errorValue).to.include('There are no streams');
+                expect(errHandlerMock.errorValue).to.include('There are no periods in the MPD');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_ABORTED', function () {
@@ -240,6 +241,8 @@ describe('StreamController', function () {
             beforeEach(function () {
                 videoModelMock.time = -1;
                 dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+                const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+
                 streamController.setConfig({
                     adapter: adapterMock,
                     manifestLoader: manifestLoaderMock,
@@ -252,7 +255,8 @@ describe('StreamController', function () {
                     playbackController: playbackControllerMock,
                     baseURLController: baseUrlControllerMock,
                     settings: settings,
-                    uriFragmentModel: uriFragmentModelMock
+                    uriFragmentModel: uriFragmentModelMock,
+                    serviceDescriptionController
                 });
 
                 streamController.initialize(false);
