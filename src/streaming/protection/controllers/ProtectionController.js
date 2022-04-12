@@ -40,6 +40,7 @@ import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
 import Constants from '../../constants/Constants';
 import FactoryMaker from '../../../core/FactoryMaker';
+import ProtectionConstants from '../../constants/ProtectionConstants';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -326,7 +327,19 @@ function ProtectionController(config) {
      * @ignore
      */
     function createKeySession(keySystemInfo) {
-        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
+        let initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
+
+        if(
+            settings.get().streaming.protection.downgradePlayReadyPSSH &&
+            keySystemInfo && keySystemInfo.ks.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING
+        ) {
+            if (initDataForKS) {
+                initDataForKS = _downgradePlayReadyPSSH(initDataForKS);
+            }
+            if (keySystemInfo && keySystemInfo.initData) {
+                keySystemInfo.initData = _downgradePlayReadyPSSH(keySystemInfo.initData);
+            }
+        }
 
         if (initDataForKS) {
 
@@ -358,6 +371,48 @@ function ProtectionController(config) {
             });
         }
     }
+
+    /**
+     * Rewrites v1 PlayReady PSSH boxes to v0.
+     *
+     * @param {ArrayBuffer} initData
+     * @returns {ArrayBuffer}
+     */
+    function _downgradePlayReadyPSSH(initData) {
+        try {
+            const dataView = new DataView(initData);
+
+            // Check if file header is 'pssh'
+            if (dataView.getUint32(4) !== 0x70737368) {
+                throw new Error('initData is not PlayReady PSSH');
+            }
+
+            const version = dataView.getUint8(8);
+            if (version > 0) {
+                const keyIdCount = dataView.getUint32(28);
+                const bytesToRemove = 4 + keyIdCount * 16;
+                const newSize = initData.byteLength - bytesToRemove;
+
+                // Set new size without key IDs
+                dataView.setUint32(0, newSize);
+                // Change version to 0
+                dataView.setUint8(8, 0);
+
+                // Create new PSSH
+                const initDataArray = new Uint8Array(initData);
+                const pssh = new Uint8Array(newSize);
+                pssh.set(initDataArray.subarray(0, 28));
+                pssh.set(initDataArray.subarray(28 + bytesToRemove), 28);
+
+                logger.info('PlayReady PSSH downgraded to version 0');
+                return pssh.buffer;
+            }
+        } catch (e) {
+            logger.warn('Failed to downgrade PlayReady PSSH! ' + e.message);
+        }
+        return initData;
+    };
+
 
     /**
      * Returns the protectionData for a specific keysystem as specified by the application.
