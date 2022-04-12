@@ -169,12 +169,16 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
-        let fileLoaderType = null;
+        let fileLoaderType = '';
         let httpRequest;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
+
+        const loaderInformation = _getLoader(requestObject);
+        const loader = loaderInformation.loader;
+        fileLoaderType = loaderInformation.fileLoaderType;
 
         /**
          * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
@@ -228,11 +232,12 @@ function HTTPLoader(cfg) {
         };
 
         /**
-         * Fired when an XMLHttpRequest transaction completes successfully.
+         * Fired when an XMLHttpRequest transaction completes.
+         * This includes status codes such as 404. We handle errors in the _onError function.
          */
         const _onload = function () {
             if (httpRequest.response.status >= 200 && httpRequest.response.status <= 299) {
-                _handleLoaded(true, requestObject, httpRequest, traces, requestStartTime);
+                _handleLoaded(true, requestObject, httpRequest, traces, requestStartTime, fileLoaderType);
 
                 if (config.success) {
                     config.success(httpRequest.response.response, httpRequest.response.statusText, httpRequest.response.responseURL);
@@ -241,6 +246,7 @@ function HTTPLoader(cfg) {
                 if (config.complete) {
                     config.complete(requestObject, httpRequest.response.statusText);
                 }
+
             } else {
                 _onerror();
             }
@@ -274,7 +280,7 @@ function HTTPLoader(cfg) {
          * Fired when the request encountered an error.
          */
         const _onerror = function () {
-            _handleLoaded(false, requestObject, httpRequest, traces, requestStartTime);
+            _handleLoaded(false, requestObject, httpRequest, traces, requestStartTime, fileLoaderType);
 
             if (remainingAttempts > 0) {
 
@@ -322,8 +328,8 @@ function HTTPLoader(cfg) {
             }
         }
 
-        let loader = _getLoader(requestObject);
-        let modifiedRequestParams = _getModifiedRequestHeaderAndUrl(requestObject);
+
+        const modifiedRequestParams = _getModifiedRequestHeaderAndUrl(requestObject);
 
         requestObject.url = modifiedRequestParams.url;
         const method = requestObject.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
@@ -376,17 +382,19 @@ function HTTPLoader(cfg) {
 
     /**
      * Function to be called after the request has been loaded. Either successfully or unsuccesfully
-     * @param success
-     * @param requestObject
-     * @param httpRequest
-     * @param traces
-     * @param requestStartTime
+     * @param {boolean} success
+     * @param {object} requestObject
+     * @param {object} httpRequest
+     * @param {array} traces
+     * @param {date} requestStartTime
+     * @param {string} fileLoaderType
      * @private
      */
-    function _handleLoaded(success, requestObject, httpRequest, traces, requestStartTime) {
+    function _handleLoaded(success, requestObject, httpRequest, traces, requestStartTime, fileLoaderType) {
         requestObject.startDate = requestStartTime;
         requestObject.endDate = new Date();
         requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+        requestObject.fileLoaderType = fileLoaderType;
 
         // If enabled the ResourceTimingApi we add the corresponding information to the request object. These values are more accurate and can be used by the ThroughputHistory later
         if (settings.get().streaming.abr.useResourceTimingApi) {
@@ -446,14 +454,17 @@ function HTTPLoader(cfg) {
      */
     function _getLoader(request) {
         let loader;
+        let fileLoaderType;
 
-        if (settings.get().streaming.lowLatencyEnabled && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = fetchLoader;
+            fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
         } else {
             loader = xhrLoader;
+            fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
         }
 
-        return loader;
+        return { loader, fileLoaderType };
     }
 
     /**

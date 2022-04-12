@@ -132,6 +132,7 @@ function FetchLoader(cfg) {
 
                     if (!response.ok) {
                         httpRequest.onerror();
+                        return;
                     }
 
                     let responseHeaders = '';

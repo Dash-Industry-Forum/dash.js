@@ -46,7 +46,7 @@ describe('XHRLoader', function () {
                 checkExistenceOnly: true
             },
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -74,7 +74,7 @@ describe('XHRLoader', function () {
                 checkExistenceOnly: true
             },
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -103,7 +103,7 @@ describe('XHRLoader', function () {
                 checkExistenceOnly: true
             },
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -131,7 +131,7 @@ describe('XHRLoader', function () {
                 checkExistenceOnly: true
             },
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };

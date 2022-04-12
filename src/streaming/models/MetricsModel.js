@@ -147,32 +147,18 @@ function MetricsModel(config) {
         // entry with the same url value.
         if (response.url && (response.url !== request.url)) {
             const adjustedRequest = {
-                mediaType : request.mediaType,
+                mediaType: request.mediaType,
                 type: request.type,
                 url: request.url,
                 quality: request.quality,
                 range: request.range,
                 startDate: request.startDate,
-                duration: request.duration
+                duration: request.duration,
+                fileLoaderType: request.fileLoaderType
             }
             // given the above, add an entry for the original request
             addHttpRequest(
-                mediaType,
-                null,
-                type,
-                url,
-                quality,
-                null,
-                null,
-                range,
-                trequest,
-                null, // unknown
-                null, // unknown
-                null, // unknown, probably a 302
-                mediaduration,
-                null,
-                null,
-                fileLoaderType
+                adjustedRequest
             );
 
             vo.actualurl = response.url;
@@ -181,7 +167,7 @@ function MetricsModel(config) {
         vo.tcpid = null;
         vo.type = request.type;
         vo.url = request.url;
-        vo.range = request.range || null ;
+        vo.range = request.range || null;
         vo.trequest = request.startDate;
         vo.tresponse = request.firstByteDate;
         vo.responsecode = response.status;
