@@ -263,6 +263,7 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
+            _retriggerRequest();
         };
 
         /**
@@ -271,21 +272,28 @@ function HTTPLoader(cfg) {
         const _onerror = function () {
             _handleLoaded(false, requestObject, httpRequest, traces, requestStartTime, fileLoaderType);
 
-            if (remainingAttempts > 0) {
-
-                // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
-                try {
-                    if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                        // Only trigger a sync if the loading failed for the first time
-                        const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
-                        if (initialNumberOfAttempts === remainingAttempts) {
-                            eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
-                        }
+            // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+            try {
+                if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    // Only trigger a sync if the loading failed for the first time
+                    const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                    if (initialNumberOfAttempts === remainingAttempts) {
+                        eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
                     }
-                } catch (e) {
-
                 }
+            } catch (e) {
 
+            }
+
+            _retriggerRequest();
+        }
+
+        /**
+         * Retriggers the request in case we did not exceed the number of retry attempts
+         * @private
+         */
+        const _retriggerRequest = function () {
+            if (remainingAttempts > 0) {
                 remainingAttempts--;
                 let retryRequest = { config: config };
                 retryRequests.push(retryRequest);
