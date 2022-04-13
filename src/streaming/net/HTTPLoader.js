@@ -407,12 +407,12 @@ function HTTPLoader(cfg) {
 
     /**
      * Adds the values from the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
-     * @param request
+     * @param requestObject
      * @private
      */
-    function _addResourceTimingValues(request) {
-        // Check performance support
-        if (typeof performance === 'undefined') {
+    function _addResourceTimingValues(requestObject) {
+        // Check performance support. We do not support range requests, needs to figure out how to find the right resource here.
+        if (typeof performance === 'undefined' || requestObject.range) {
             return;
         }
 
@@ -426,14 +426,14 @@ function HTTPLoader(cfg) {
         let i = 0;
         let resource = null;
         while (i < resources.length) {
-            if (resources[i].name === request.url) {
+            if (resources[i].name === requestObject.url) {
                 resource = resources[i];
                 break;
             }
             i += 1;
         }
 
-        request.resourceTimingValues = resource;
+        requestObject.resourceTimingValues = resource;
     }
 
     /**

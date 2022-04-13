@@ -157,7 +157,8 @@ function MetricsModel(config) {
                 firstByteDate: null,
                 endDate: null,
                 duration: request.duration,
-                fileLoaderType: request.fileLoaderType
+                fileLoaderType: request.fileLoaderType,
+                resourceTimingValues: request.resourceTimingValues
             }
             const adjustedResponse = {
                 url: null,
@@ -190,6 +191,7 @@ function MetricsModel(config) {
         vo._responseHeaders = response.headers;
         vo._serviceLocation = request.serviceLocation || null;
         vo._fileLoaderType = request.fileLoaderType;
+        vo._resourceTimingValues = request.resourceTimingValues;
 
         if (traces) {
             traces.forEach(trace => {

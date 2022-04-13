@@ -31,6 +31,7 @@
 
 import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug';
 
 // throughput generally stored in kbit/s
 // latency generally stored in ms
@@ -38,22 +39,28 @@ import FactoryMaker from '../../core/FactoryMaker';
 function ThroughputHistory(config) {
 
     config = config || {};
-
+    const context = this.context;
     const settings = config.settings;
+    const debug = Debug(context).getInstance();
 
     let throughputDict,
         latencyDict,
         ewmaThroughputDict,
         ewmaLatencyDict,
+        logger,
         ewmaHalfLife;
 
     function setup() {
+        logger = debug.getLogger(instance);
         ewmaHalfLife = {
             throughputHalfLife: {
                 fast: settings.get().streaming.abr.throughputHistory.ewma.throughputFastHalfLifeSeconds,
                 slow: settings.get().streaming.abr.throughputHistory.ewma.throughputSlowHalfLifeSeconds
             },
-            latencyHalfLife: { fast: settings.get().streaming.abr.throughputHistory.ewma.latencyFastHalfLifeCount, slow: settings.get().streaming.abr.throughputHistory.ewma.latencySlowHalfLifeCount }
+            latencyHalfLife: {
+                fast: settings.get().streaming.abr.throughputHistory.ewma.latencyFastHalfLifeCount,
+                slow: settings.get().streaming.abr.throughputHistory.ewma.latencySlowHalfLifeCount
+            }
         };
 
         reset();
@@ -63,23 +70,27 @@ function ThroughputHistory(config) {
      * Use the provided request to add new entries for throughput and latency. Update the Ewma state as well.
      * @param {MediaType} mediaType
      * @param {object} httpRequest
-     * @param {boolean} useDeadTimeLatency
      */
     function push(mediaType, httpRequest) {
         if (!httpRequest.trace || !httpRequest.trace.length) {
             return;
         }
 
-        const useDeadTimeLatency = settings.get().streaming.abr.useDeadTimeLatency;
-        // Time between first byte received and start time of the request
-        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
-        // Make sure never 0 we divide by this value. Avoid infinity!
-        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1;
+        const latencyInMs = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
 
-        let throughput = _calculateThroughput(httpRequest, useDeadTimeLatency, latencyTimeInMilliseconds, downloadTimeInMilliseconds);
+        let values = _calculateThroughputAndDownloadTime(httpRequest, latencyInMs);
+        const throughput = values.throughput;
+        const downloadTimeInMs = values.downloadTimeInMs;
+
+        if (isNaN(throughput) || !isFinite(throughput)) {
+            return;
+        }
+
         _createSettingsForMediaType(mediaType);
 
-        if (_isCachedResponse(mediaType, downloadTimeInMilliseconds)) {
+        const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime());
+        if (_isCachedResponse(mediaType, cacheReferenceTime)) {
+            logger.debug(`${mediaType} Assuming segment ${httpRequest.url} came from cache`);
             if (throughputDict[mediaType].length > 0 && !throughputDict[mediaType].hasCachedEntries) {
                 // already have some entries which are not cached entries
                 // prevent cached fragment loads from skewing the average values
@@ -99,67 +110,104 @@ function ThroughputHistory(config) {
             throughputDict[mediaType].shift();
         }
 
-        latencyDict[mediaType].push(latencyTimeInMilliseconds);
+        latencyDict[mediaType].push(latencyInMs);
         if (latencyDict[mediaType].length > settings.get().streaming.abr.throughputHistory.maxMeasurementsToKeep) {
             latencyDict[mediaType].shift();
         }
 
-        _updateEwmaEstimate(ewmaThroughputDict[mediaType], throughput, 0.001 * downloadTimeInMilliseconds, ewmaHalfLife.throughputHalfLife);
-        _updateEwmaEstimate(ewmaLatencyDict[mediaType], latencyTimeInMilliseconds, 1, ewmaHalfLife.latencyHalfLife);
+        _updateEwmaEstimate(ewmaThroughputDict[mediaType], throughput, 0.001 * downloadTimeInMs, ewmaHalfLife.throughputHalfLife);
+        _updateEwmaEstimate(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
+    }
+
+    /**
+     * Returns the throughput in kbit/s and the download time in ms for an HTTP request
+     * @param {object} httpRequest
+     * @return {number}
+     * @private
+     */
+    function _calculateThroughputAndDownloadTime(httpRequest, latencyInMs) {
+        // Low latency is enabled, we used the fetch API and received chunks
+        if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
+            return _calculateThroughputAndDownloadTimeForFetch(httpRequest);
+        }
+        // Standard case, we used standard XHR requests
+        else {
+            return _calculateThroughputAndDownloadTimeForXhr(httpRequest, latencyInMs);
+        }
+    }
+
+    /**
+     * Calculates the throughput for requests using the Fetch API
+     * @param {object} httpRequest
+     * @return {number}
+     * @private
+     */
+    function _calculateThroughputAndDownloadTimeForFetch(httpRequest) {
+        const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
+        const downloadBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
+
+        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+            const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b._t, 0);
+            return Math.round(sumOfThroughputValues / httpRequest.trace.length);
+        } else {
+            let throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
+            return Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        }
+
+    }
+
+    /**
+     * Returns the throughput in kbit/s and the download time in ms for requests using XHR
+     * @param {object} httpRequest
+     * @param {number} latencyInMs
+     * @return {number}
+     * @private
+     */
+    function _calculateThroughputAndDownloadTimeForXhr(httpRequest, latencyInMs) {
+        let downloadBytes;
+        let downloadTimeInMs = NaN;
+
+        // Calculate the throughput using the ResourceTimingAPI if we got useful values
+        if (httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0) {
+            downloadBytes = httpRequest._resourceTimingValues.transferSize;
+            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
+        }
+
+        // Use the standard throughput calculation if we can not use the Resource Timing API
+        else {
+            // We need at least two entries in the traces. The first entry includes the latency and the XHR progress event was thrown once bytes have already been received.
+            // The second progress event can be set in relation to the first progress event and therefor gives us more accurate values
+            if (httpRequest.trace.length <= 1) {
+                return { throughput: NaN, downloadTimeInMs: NaN }
+            }
+            downloadBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0) - httpRequest.trace[0].b[0];
+            downloadTimeInMs = Math.max(httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0) - httpRequest.trace[0].d, 1);
+        }
+        const referenceTimeInMs = settings.get().streaming.abr.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
+
+        return {
+            throughput: Math.round((8 * downloadBytes) / referenceTimeInMs), // bits/ms = kbits/s
+            downloadTimeInMs
+        };
     }
 
     /**
      * Check if the response was cached.
      * @param {MediaType} mediaType
-     * @param {number} downloadTimeMs
+     * @param {number} cacheReferenceTime
      * @return {boolean}
      * @private
      */
-    function _isCachedResponse(mediaType, downloadTimeMs) {
+    function _isCachedResponse(mediaType, cacheReferenceTime) {
+        if (isNaN(cacheReferenceTime)) {
+            return false;
+        }
         if (mediaType === Constants.VIDEO) {
-            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
+            return cacheReferenceTime < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
         } else if (mediaType === Constants.AUDIO) {
-            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
+            return cacheReferenceTime < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
         }
-    }
-
-    /**
-     * Calculates the throughput for an HTTP request
-     * @param {object} httpRequest
-     * @param {boolean} useDeadTimeLatency
-     * @param {number} latencyTimeInMilliseconds
-     * @param {number} downloadTimeInMilliseconds
-     * @return {number}
-     * @private
-     */
-    function _calculateThroughput(httpRequest, useDeadTimeLatency, latencyTimeInMilliseconds, downloadTimeInMilliseconds) {
-        let throughputMeasureTime = 0;
-        let throughput = 0;
-
-        const downloadBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
-
-        // Low latency is enabled, we used the fetch API and received chunks
-        if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
-            const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
-            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-                const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b._t, 0);
-                throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
-            }
-            if (throughput === 0) {
-                throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
-            }
-        }
-
-        // Standard case, we used standard XHR requests
-        else {
-            throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
-        }
-
-        if (throughputMeasureTime !== 0) {
-            throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
-        }
-
-        return throughput;
     }
 
     /**

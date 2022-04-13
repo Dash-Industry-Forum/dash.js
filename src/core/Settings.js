@@ -180,6 +180,7 @@ import Events from './events/Events';
  *                   droppedFramesRule: true,
  *                   abandonRequestsRule: false
  *                },
+ *                useResourceTimingApi: true,
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
@@ -551,6 +552,8 @@ import Events from './events/Events';
  * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
  * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
  * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {boolean} [useResourceTimingApi=true]
+ * If available: Use the Resource Timing API to calculate the throughput
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
