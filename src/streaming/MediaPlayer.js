@@ -349,6 +349,10 @@ function MediaPlayer() {
                 adapter: adapter
             });
 
+            serviceDescriptionController.setConfig({
+                adapter: adapter
+            });
+
             if (!segmentBaseController) {
                 segmentBaseController = SegmentBaseController(context).getInstance({
                     dashMetrics: dashMetrics,
