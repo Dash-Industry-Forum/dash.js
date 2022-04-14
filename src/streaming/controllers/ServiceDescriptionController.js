@@ -137,7 +137,7 @@ function ServiceDescriptionController() {
         }
 
         if (prftOffsets.length > 0) {
-            let {to, id} = _calculateTimeOffset(params);
+            let { to, id } = _calculateTimeOffset(params);
 
             // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
             // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
@@ -152,7 +152,7 @@ function ServiceDescriptionController() {
         } else {
             serviceDescriptionSettings.liveDelay = params.liveDelay;
             serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
-    
+
             logger.debug(`Found latency properties coming from service description: Live Delay: ${params.liveDelay}, Live catchup max drift: ${params.maxDrift}`);
         }
     }
@@ -281,11 +281,11 @@ function ServiceDescriptionController() {
         return prftOffsets;
     }
 
-     /**
+    /**
      * Calculates an array of time offsets each with matching ProducerReferenceTime id.
      * Call before applyServiceDescription if producer reference time elements should be considered.
-     * @param {array} streamInfos 
-     * @returns {array} 
+     * @param {array} streamInfos
+     * @returns {array}
      * @private
      */
     function calculateProducerReferenceTimeOffsets(streamInfos) {
@@ -294,7 +294,7 @@ function ServiceDescriptionController() {
             if (streamInfos && streamInfos.length > 0) {
                 const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
                 const astInSeconds = adapter.getAvailabilityStartTime() / 1000;
-            
+
                 streamInfos.forEach((streamInfo) => {
                     const offsets = mediaTypes
                         .reduce((acc, mediaType) => {
@@ -315,11 +315,11 @@ function ServiceDescriptionController() {
                                     // ii) convert this time to seconds by dividing by ST@timescale
                                     // iii) Add this to start time of period that contains PRT.
                                     // N.B presentationTimeOffset is already divided by timescale at this point
-                                    const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start); 
+                                    const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start);
                                     // 2) Calculate TO between PRT at the start of MPD timeline and the AST
                                     const to = astInSeconds - prt0;
                                     // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
-                                    acc.push({id: prt[DashConstants.ID], to});
+                                    acc.push({ id: prt[DashConstants.ID], to });
                                 }
                             });
                             return acc;
@@ -356,8 +356,8 @@ function ServiceDescriptionController() {
             to = offset[0].to || 0;
             id = offset[0].id || NaN;
         }
-        
-        return {to, id}
+
+        return { to, id }
     }
 
     instance = {

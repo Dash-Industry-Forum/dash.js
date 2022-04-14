@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
- class ProducerReferenceTime {
+class ProducerReferenceTime {
     constructor() {
         this.id = null;
         this.inband = false;
