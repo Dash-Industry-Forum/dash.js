@@ -1429,7 +1429,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     /** Copy a URL containing the current settings as query Parameters to the Clipboard */
-    $scope.copyQueryUrl = function(){
+    $scope.copyQueryUrl = function () {
         var currentExternalSettings = {
             mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
             loop: $scope.loopSelected,
@@ -1476,7 +1476,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         var urlString = url + queryString;
 
-        if(urlString.slice(-1) === '&') urlString = urlString.slice(0,- 1);
+        if (urlString.slice(-1) === '&') urlString = urlString.slice(0, -1);
 
         $scope.checkQueryLength(urlString);
 
@@ -1488,22 +1488,25 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         document.body.removeChild(element);
     }
 
-    $scope.makeSettingDifferencesObject = function(settings, defaultSettings){
+    $scope.makeSettingDifferencesObject = function (settings, defaultSettings) {
         var settingDifferencesObject = {};
 
-        if (Array.isArray(settings)){
+        if (Array.isArray(settings)) {
             return settings;
         }
 
-        for(var setting in settings){
-            if(typeof defaultSettings[setting] === "object" && defaultSettings[setting] !== null){
+        for (var setting in settings) {
+            if (typeof defaultSettings[setting] === 'object' && defaultSettings[setting] !== null && !(defaultSettings[setting] instanceof Array)) {
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
-            }
-            else if(settings[setting] !== defaultSettings[setting]){
-                if(isNaN(settings[setting])){
-                    // do nothing
+            } else if (settings[setting] instanceof Array) {
+                // Check if there is any difference in the array. If so, copy whole array
+                if (!_arraysEqual(settings[setting], defaultSettings[setting])) {
+                    settingDifferencesObject[setting] = settings[setting];
                 }
-                else {
+            } else if (settings[setting] !== defaultSettings[setting]) {
+                if (isNaN(settings[setting])) {
+                    // do nothing
+                } else {
                     settingDifferencesObject[setting] = settings[setting];
                 }
 
@@ -1511,6 +1514,31 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
 
         return settingDifferencesObject;
+    }
+
+    function _arraysEqual(a, b) {
+        if (a === b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+        // Please note that calling sort on an array will modify that array.
+        // you might want to clone your array first.
+
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** Transform the current Settings into a nested query-string format */
@@ -1526,7 +1554,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         }
         // Make the string, then remove all cases of && caused by empty settings
-        return urlString.join("&").split(/&&*/).join('&');
+        return urlString.join('&').split(/&&*/).join('&');
     }
 
     /** Resolve nested query parameters */
