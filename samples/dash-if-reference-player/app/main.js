@@ -1493,7 +1493,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         if (Array.isArray(settings)) {
             console.log(settings)
-            return _arraysEqual(settings, defaultSettings) ? settings : {};
+            return _arraysEqual(settings, defaultSettings) ? {} : settings;
         }
 
         for (var setting in settings) {
@@ -1502,7 +1502,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
             else if(settings[setting] !== defaultSettings[setting]){
                 if(Array.isArray(settings[setting])){
-                    _arraysEqual(settings[setting], defaultSettings[setting]) ? settingDifferencesObject[setting] = {} : settingDifferencesObject[setting] = settings[setting];
+                    settingDifferencesObject[setting] = _arraysEqual(settings[setting], defaultSettings[setting]) ? {} : settings[setting];
                 }
                 else {
                     settingDifferencesObject[setting] = settings[setting];
