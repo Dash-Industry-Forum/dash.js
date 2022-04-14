@@ -1455,15 +1455,15 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 switch (drm.drmKeySystem) {
                     case 'com.microsoft.playready':
                         currentDrm = { 'playready': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                     case 'com.widevine.alpha':
                         currentDrm = { 'widevine': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                     case 'org.w3.clearkey':
                         currentDrm = { 'clearkey': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                 }
             }
@@ -1488,28 +1488,30 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         document.body.removeChild(element);
     }
 
+    $scope.compareArrays = function(array1, array2) {
+        if(array1.length !== array2.length) return false;
+
+        for(var index in array1) {
+            if(array1[index] !== array2[index]) return false;
+        }
+
+        return true;
+    }
+
     $scope.makeSettingDifferencesObject = function (settings, defaultSettings) {
         var settingDifferencesObject = {};
 
         if (Array.isArray(settings)) {
-            return settings;
+           // return compareArrays(settings, defaultSettings) ? settings : {};
+           return settings;
         }
 
         for (var setting in settings) {
             if (typeof defaultSettings[setting] === 'object' && defaultSettings[setting] !== null && !(defaultSettings[setting] instanceof Array)) {
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
-            } else if (settings[setting] instanceof Array) {
-                // Check if there is any difference in the array. If so, copy whole array
-                if (!_arraysEqual(settings[setting], defaultSettings[setting])) {
-                    settingDifferencesObject[setting] = settings[setting];
-                }
-            } else if (settings[setting] !== defaultSettings[setting]) {
-                if (isNaN(settings[setting])) {
-                    // do nothing
-                } else {
-                    settingDifferencesObject[setting] = settings[setting];
-                }
-
+            }
+            else if(settings[setting] !== defaultSettings[setting]){
+                settingDifferencesObject[setting] = settings[setting];
             }
         }
 
