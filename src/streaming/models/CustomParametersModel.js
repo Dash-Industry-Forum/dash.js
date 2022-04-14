@@ -88,7 +88,7 @@ function CustomParametersModel() {
      * Resets the custom initial track selection
      */
     function resetCustomInitialTrackSelectionFunction() {
-      customInitialTrackSelectionFunction = null;
+        customInitialTrackSelectionFunction = null;
     }
 
     /**
