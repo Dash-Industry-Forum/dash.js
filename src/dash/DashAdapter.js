@@ -392,10 +392,10 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-     function getProducerReferenceTimes(streamInfo, mediaInfo) {
+    function getProducerReferenceTimes(streamInfo, mediaInfo) {
         let id, realAdaptation;
 
-        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods); 
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
         id = mediaInfo ? mediaInfo.id : null;
 
         if (voPeriods.length > 0 && selectedVoPeriod) {
@@ -1052,7 +1052,9 @@ function DashAdapter() {
             const keyIds = mediaInfo.contentProtection.map(cp => dashManifestModel.getKID(cp)).filter(kid => kid !== null);
             if (keyIds.length) {
                 const keyId = keyIds[0];
-                mediaInfo.contentProtection.forEach(cp => { cp.keyId = keyId; });
+                mediaInfo.contentProtection.forEach(cp => {
+                    cp.keyId = keyId;
+                });
             }
         }
 

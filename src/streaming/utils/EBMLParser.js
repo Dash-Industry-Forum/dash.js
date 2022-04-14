@@ -206,14 +206,14 @@ function EBMLParser(config) {
         let outFloat;
 
         switch (size) {
-        case 4:
-            outFloat = data.getFloat32(pos);
-            pos += 4;
-            break;
-        case 8:
-            outFloat = data.getFloat64(pos);
-            pos += 8;
-            break;
+            case 4:
+                outFloat = data.getFloat32(pos);
+                pos += 4;
+                break;
+            case 8:
+                outFloat = data.getFloat64(pos);
+                pos += 8;
+                break;
         }
         return outFloat;
     }

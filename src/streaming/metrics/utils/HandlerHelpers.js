@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @ignore
-  */
+/**
+ * @ignore
+ */
 function HandlerHelpers() {
     return {
         reconstructFullMetricName: function (key, n, type) {

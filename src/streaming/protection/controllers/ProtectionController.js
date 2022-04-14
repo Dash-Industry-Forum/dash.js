@@ -390,7 +390,7 @@ function ProtectionController(config) {
      * @return {boolean}
      * @private
      */
-     function _isKeyIdDuplicate(keyId) {
+    function _isKeyIdDuplicate(keyId) {
 
         if (!keyId) {
             return false;
