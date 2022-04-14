@@ -453,7 +453,7 @@ import Events from './events/Events';
  * Set it to 0 to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=NaN]
+ * @property {number} [latencyThreshold=60]
  * Use this parameter to set the maximum threshold for which live catch up is applied.
  *
  * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
