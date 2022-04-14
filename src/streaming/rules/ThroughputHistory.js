@@ -33,9 +33,13 @@ import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-// throughput generally stored in kbit/s
-// latency generally stored in ms
 
+/**
+ * Throughput generally stored in kbit/s
+ * Latency generally stored in ms
+ * @param {object} config
+ * @constructor
+ */
 function ThroughputHistory(config) {
 
     config = config || {};
@@ -234,14 +238,70 @@ function ThroughputHistory(config) {
     }
 
     /**
-     *
-     * @param isThroughput
-     * @param mediaType
-     * @param isLive
+     * Get average value
+     * @param {boolean} isThroughput
+     * @param {string} mediaType
+     * @param {boolean} isDynamic
      * @return {number}
      * @private
      */
-    function _getSampleSize(isThroughput, mediaType, isDynamic) {
+    function _getAverage(isThroughput, mediaType, isDynamic) {
+        // only two moving average methods defined at the moment
+        return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
+            _getAverageEwma(isThroughput, mediaType) : _getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
+    }
+
+    /**
+     *
+     * @param {boolean} isThroughput
+     * @param {string} mediaType
+     * @return {number}
+     * @private
+     */
+    function _getAverageEwma(isThroughput, mediaType) {
+        const halfLife = isThroughput ? ewmaHalfLife.throughputHalfLife : ewmaHalfLife.latencyHalfLife;
+        const ewmaObj = isThroughput ? ewmaThroughputDict[mediaType] : ewmaLatencyDict[mediaType];
+
+        if (!ewmaObj || ewmaObj.totalWeight <= 0) {
+            return NaN;
+        }
+
+        // to correct for startup, divide by zero factor = 1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
+        const fastEstimate = ewmaObj.fastEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.fast));
+        const slowEstimate = ewmaObj.slowEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.slow));
+        return isThroughput ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
+    }
+
+    /**
+     *
+     * @param {boolean} isThroughput
+     * @param {string} mediaType
+     * @param {boolean} isDynamic
+     * @return {number}
+     * @private
+     */
+    function _getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
+        const sampleSize = _getDefaultSampleSize(isThroughput, mediaType, isDynamic);
+        const dict = isThroughput ? throughputDict : latencyDict;
+        let arr = dict[mediaType];
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        arr = arr.slice(-sampleSize); // still works if sampleSize too large
+        // arr.length >= 1
+        return arr.reduce((total, elem) => total + elem) / arr.length;
+    }
+
+    /**
+     * @param {boolean} isThroughput
+     * @param {string} mediaType
+     * @param {boolean} isLive
+     * @return {number}
+     * @private
+     */
+    function _getDefaultSampleSize(isThroughput, mediaType, isDynamic) {
         let arr,
             sampleSize;
 
@@ -271,40 +331,6 @@ function ThroughputHistory(config) {
         }
 
         return sampleSize;
-    }
-
-    function _getAverage(isThroughput, mediaType, isDynamic) {
-        // only two moving average methods defined at the moment
-        return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
-            _getAverageEwma(isThroughput, mediaType) : _getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
-    }
-
-    function _getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
-        const sampleSize = _getSampleSize(isThroughput, mediaType, isDynamic);
-        const dict = isThroughput ? throughputDict : latencyDict;
-        let arr = dict[mediaType];
-
-        if (sampleSize === 0 || !arr || arr.length === 0) {
-            return NaN;
-        }
-
-        arr = arr.slice(-sampleSize); // still works if sampleSize too large
-        // arr.length >= 1
-        return arr.reduce((total, elem) => total + elem) / arr.length;
-    }
-
-    function _getAverageEwma(isThroughput, mediaType) {
-        const halfLife = isThroughput ? ewmaHalfLife.throughputHalfLife : ewmaHalfLife.latencyHalfLife;
-        const ewmaObj = isThroughput ? ewmaThroughputDict[mediaType] : ewmaLatencyDict[mediaType];
-
-        if (!ewmaObj || ewmaObj.totalWeight <= 0) {
-            return NaN;
-        }
-
-        // to correct for startup, divide by zero factor = 1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
-        const fastEstimate = ewmaObj.fastEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.fast));
-        const slowEstimate = ewmaObj.slowEstimate / (1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife.slow));
-        return isThroughput ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
     }
 
     function getAverageThroughput(mediaType, isDynamic) {
