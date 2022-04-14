@@ -193,6 +193,17 @@ function AdapterMock() {
         this.regularPeriods = periods;
     };
 
+    this.getProducerReferenceTimes = function () {
+        return [{
+            UTCTiming: null,
+            applicationScheme: null,
+            id: 7,
+            inband: false,
+            presentationTime: 10000,
+            type: "encoder",
+            wallClockTime: "1970-01-01T00:00:04Z"
+        }];
+    };
 
 }
 
