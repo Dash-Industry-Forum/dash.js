@@ -38,6 +38,7 @@ import UTCTiming from '../vo/UTCTiming';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
+import ProducerReferenceTime from '../vo/ProducerReferenceTime';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -160,6 +161,53 @@ function DashManifestModel() {
 
     function getIsImage(adaptation) {
         return getIsTypeOf(adaptation, Constants.IMAGE);
+    }
+
+    function getProducerReferenceTimesForAdaptation(adaptation) {
+        const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCERREFERENCETIME_ASARRAY) ? adaptation[DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [];
+        
+        // ProducerReferenceTime elements can also be contained in Representations
+        const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.REPRESENTATION_ASARRAY) ? adaptation[DashConstants.REPRESENTATION_ASARRAY] : [];
+
+        representationsArray.forEach((rep) => {
+            if (rep.hasOwnProperty(DashConstants.PRODUCERREFERENCETIME_ASARRAY)) {
+                prtArray.push(...rep[DashConstants.PRODUCERREFERENCETIME_ASARRAY]);
+            }
+        });
+
+        const prtsForAdaptation = [];
+
+        // Unlikely to have multiple ProducerReferenceTimes.
+        prtArray.forEach((prt) => {
+            const entry = new ProducerReferenceTime();
+
+            if (prt.hasOwnProperty(DashConstants.ID)) {
+                entry[DashConstants.ID] = prt[DashConstants.ID];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            if (prt.hasOwnProperty(DashConstants.WALL_CLOCK_TIME)) {
+                entry[DashConstants.WALL_CLOCK_TIME] = prt[DashConstants.WALL_CLOCK_TIME];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            if (prt.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
+                entry[DashConstants.PRESENTATION_TIME] = prt[DashConstants.PRESENTATION_TIME];
+            } else {
+                // Ignore. Missing mandatory attribute
+                return;
+            }
+
+            // Not interested in other attributes for now
+            // UTC element contained must be same as that in the MPD
+            prtsForAdaptation.push(entry);
+        })
+        
+        return prtsForAdaptation;
     }
 
     function getLanguageForAdaptation(adaptation) {
@@ -664,18 +712,18 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-                // If the @start attribute is absent, but the previous Period
-                // element contains a @duration attribute then then this new
-                // Period is also a regular Period. The start time of the new
-                // Period PeriodStart is the sum of the start time of the previous
-                // Period PeriodStart and the value of the attribute @duration
+            // If the @start attribute is absent, but the previous Period
+            // element contains a @duration attribute then then this new
+            // Period is also a regular Period. The start time of the new
+            // Period PeriodStart is the sum of the start time of the previous
+            // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-                // If (i) @start attribute is absent, and (ii) the Period element
-                // is the first in the MPD, and (iii) the MPD@type is 'static',
+            // If (i) @start attribute is absent, and (ii) the Period element
+            // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
@@ -1122,7 +1170,8 @@ function DashManifestModel() {
                             latency = {
                                 target: parseInt(sd[prop].target),
                                 max: parseInt(sd[prop].max),
-                                min: parseInt(sd[prop].min)
+                                min: parseInt(sd[prop].min),
+                                referenceId: parseInt(sd[prop].referenceId)
                             };
                         } else if (prop === DashConstants.SERVICE_DESCRIPTION_PLAYBACK_RATE) {
                             playbackRate = {
@@ -1192,6 +1241,7 @@ function DashManifestModel() {
         getIsTypeOf,
         getIsText,
         getIsFragmented,
+        getProducerReferenceTimesForAdaptation,
         getLanguageForAdaptation,
         getViewpointForAdaptation,
         getRolesForAdaptation,

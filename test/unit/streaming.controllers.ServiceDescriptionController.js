@@ -1,15 +1,37 @@
+import AdapterMock from './mocks/AdapterMock';
+
 const ServiceDescriptionController = require('../../src/streaming/controllers/ServiceDescriptionController');
 const expect = require('chai').expect;
 
 describe('ServiceDescriptionController', () => {
 
-    let serviceDescriptionController;
-    let dummyManifestInfo;
+    let serviceDescriptionController,
+        dummyStreamsInfo,
+        dummyVoRep,
+        dummyManifestInfo,
+        adapterMock;
 
     before(() => {
         const context = {};
+        dummyStreamsInfo = [{
+            index: 0,
+            start: 0
+        }]
+        dummyVoRep = {
+            adaptation: {},
+            presentationTimeOffset: 3,
+            segmentDuration: 3.84,
+            segmentInfoType: 'SegmentTemplate',
+            timescale: 1000,
+        };
 
+        adapterMock = new AdapterMock();
+        adapterMock.setRepresentation(dummyVoRep);
         serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+
+        serviceDescriptionController.setConfig({
+            adapter: adapterMock
+        });
     })
 
     beforeEach(() => {
@@ -19,7 +41,8 @@ describe('ServiceDescriptionController', () => {
                 latency: {
                     target: 5000,
                     max: 8000,
-                    min: 3000
+                    min: 3000,
+                    referenceId: 7 // Matches PRFT in AdapterMock
                 },
                 playbackRate: {
                     max: 1.4,
@@ -35,6 +58,23 @@ describe('ServiceDescriptionController', () => {
         }
         serviceDescriptionController.reset();
     })
+
+    describe('calculateProducerReferenceTimeOffsets()', () => {
+        it('Should not throw an error if no streamsInfo provided', () => {
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets([]);
+            const prftTimeOffsets = serviceDescriptionController.getProducerReferenceTimeOffsets();
+            expect(prftTimeOffsets).to.be.an('array').that.is.empty;
+        });
+
+        it('Should calculate expected prtf time offsets', () => {
+            // Inner workings mostly covered in adapter tests
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets(dummyStreamsInfo);
+            const prftTimeOffsets = serviceDescriptionController.getProducerReferenceTimeOffsets();
+            expect(prftTimeOffsets).to.be.an('array');
+            expect(prftTimeOffsets[0].id).to.equal(7);
+            expect(prftTimeOffsets[0].to).to.equal(3);
+        });
+    });
 
     describe('applyServiceDescription()', () => {
 
@@ -97,6 +137,15 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.liveDelay).to.be.equal(5);
             expect(currentSettings.liveCatchup.maxDrift).to.be.NaN;
         })
+
+        it('Should apply ProducerReferenceTime offsets to latency parameters defined in the ServiceDescription', () => {
+            // N.B latency@min is not used
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets(dummyStreamsInfo);
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+            const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            expect(currentSettings.liveDelay).to.be.equal(2);
+            expect(currentSettings.liveCatchup.maxDrift).to.be.equal(3.5);
+        });
 
         it('Should not update playback rate if max value is below 1', () => {
             delete dummyManifestInfo.serviceDescriptions[0].latency;

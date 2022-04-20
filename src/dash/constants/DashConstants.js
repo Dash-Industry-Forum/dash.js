@@ -90,6 +90,7 @@ class DashConstants {
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
+        this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
         this.ACCESSIBILITY = 'Accessibility';
         this.ROLE = 'Role';
         this.RATING = 'Rating';
@@ -98,6 +99,8 @@ class DashConstants {
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
         this.ROLE_ASARRAY = 'Role_asArray';
+        this.REPRESENTATION_ASARRAY = 'Representation_asArray';
+        this.PRODUCERREFERENCETIME_ASARRAY = 'ProducerReferenceTime_asArray';
         this.ACCESSIBILITY_ASARRAY = 'Accessibility_asArray';
         this.AUDIOCHANNELCONFIGURATION_ASARRAY = 'AudioChannelConfiguration_asArray';
         this.CONTENTPROTECTION_ASARRAY = 'ContentProtection_asArray';
@@ -137,6 +140,8 @@ class DashConstants {
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
         this.ORIGINAL_MPD_ID = 'mpdId';
+        this.WALL_CLOCK_TIME = 'wallClockTime';
+        this.PRESENTATION_TIME = 'presentationTime';
     }
 
     constructor () {

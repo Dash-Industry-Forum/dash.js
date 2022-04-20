@@ -29,12 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ErrorsBase from '../../core/errors/ErrorsBase';
+
 /**
  * @class
  *
  */
 class MssErrors extends ErrorsBase {
-	constructor () {
+    constructor() {
         super();
         /**
          * Error code returned when no tfrf box is detected in MSS live stream

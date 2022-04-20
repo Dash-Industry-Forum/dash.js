@@ -63,6 +63,8 @@ import Events from './events/Events';
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
+ *            applyServiceDescription: true,
+ *            applyProducerReferenceTime: true,
  *            eventControllerRefreshDelay: 100,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
@@ -78,11 +80,12 @@ import Events from './events/Events';
  *            delay: {
  *                liveDelayFragmentCount: NaN,
  *                liveDelay: NaN,
- *                useSuggestedPresentationDelay: true,
- *                applyServiceDescription: true
+ *                useSuggestedPresentationDelay: true
  *            },
  *            protection: {
- *                keepProtectionMediaKeys: false
+ *                keepProtectionMediaKeys: false,
+ *                ignoreEmeEncryptedEvent: false,
+ *                detectPlayreadyMessageFormat: true,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: true,
@@ -237,8 +240,6 @@ import Events from './events/Events';
  * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
- * @property {boolean} [applyServiceDescription=true]
- * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  */
 
 /**
@@ -454,7 +455,7 @@ import Events from './events/Events';
  * Set it to 0 to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=NaN]
+ * @property {number} [latencyThreshold=60]
  * Use this parameter to set the maximum threshold for which live catch up is applied.
  *
  * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
@@ -514,6 +515,9 @@ import Events from './events/Events';
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  * @property {boolean} ignoreEmeEncryptedEvent
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
+ *
+ * @property {boolean} detectPlayreadyMessageFormat
+ * If set to true the player will use the raw unwrapped message from the Playready CDM
  */
 
 /**
@@ -650,6 +654,10 @@ import Events from './events/Events';
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
+ * @property {boolean} [applyServiceDescription=true]
+ * Set to true if dash.js should use the parameters defined in ServiceDescription elements
+ * @property {boolean} [applyProducerReferenceTime=true]
+ * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~Metrics} metrics Metric settings
@@ -752,6 +760,7 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
             applyServiceDescription: true,
+            applyProducerReferenceTime: true,
             eventControllerRefreshDelay: 150,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -771,7 +780,8 @@ function Settings() {
             },
             protection: {
                 keepProtectionMediaKeys: false,
-                ignoreEmeEncryptedEvent: false
+                ignoreEmeEncryptedEvent: false,
+                detectPlayreadyMessageFormat: true,
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
