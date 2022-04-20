@@ -83,7 +83,9 @@ import Events from './events/Events';
  *                useSuggestedPresentationDelay: true
  *            },
  *            protection: {
- *                keepProtectionMediaKeys: false
+ *                keepProtectionMediaKeys: false,
+ *                ignoreEmeEncryptedEvent: false,
+ *                detectPlayreadyMessageFormat: true,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: true,
@@ -513,6 +515,9 @@ import Events from './events/Events';
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  * @property {boolean} ignoreEmeEncryptedEvent
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
+ *
+ * @property {boolean} detectPlayreadyMessageFormat
+ * If set to true the player will use the raw unwrapped message from the Playready CDM
  */
 
 /**
@@ -775,7 +780,8 @@ function Settings() {
             },
             protection: {
                 keepProtectionMediaKeys: false,
-                ignoreEmeEncryptedEvent: false
+                ignoreEmeEncryptedEvent: false,
+                detectPlayreadyMessageFormat: true,
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
