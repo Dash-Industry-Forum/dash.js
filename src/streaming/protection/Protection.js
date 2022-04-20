@@ -116,7 +116,7 @@ function Protection() {
         let controller = null;
 
         const protectionKeyController = ProtectionKeyController(context).getInstance();
-        protectionKeyController.setConfig({ debug: config.debug, BASE64: config.BASE64 });
+        protectionKeyController.setConfig({ debug: config.debug, BASE64: config.BASE64, settings: config.settings });
         protectionKeyController.initialize();
 
         let protectionModel =  _getProtectionModel(config);

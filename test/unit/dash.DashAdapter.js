@@ -44,7 +44,7 @@ const manifest_with_ll_service_description = {
     ServiceDescription: {},
     ServiceDescription_asArray: [{
         Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' },
-        Latency: { target: 3000, max: 5000, min: 2000 },
+        Latency: { target: 3000, max: 5000, min: 2000, referenceId: 7 },
         PlaybackRate: { max: 1.5, min: 0.5 }
     }],
     Period_asArray: [{
@@ -233,6 +233,20 @@ describe('DashAdapter', function () {
             const realAdaptation = dashAdapter.getRealAdaptation(voHelper.getDummyStreamInfo(), null);
 
             expect(realAdaptation).to.be.undefined; // jshint ignore:line
+        });
+
+        it('should return empty array when getProducerReferenceTimes is called and streamInfo parameter is null or undefined', () => {
+            const producerReferenceTimes = dashAdapter.getProducerReferenceTimes(null, voHelper.getDummyMediaInfo());
+
+            expect(producerReferenceTimes).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(producerReferenceTimes).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return empty array when getProducerReferenceTimes is called and mediaInfo parameter is null or undefined', () => {
+            const producerReferenceTimes = dashAdapter.getProducerReferenceTimes(voHelper.getDummyStreamInfo(), null);
+
+            expect(producerReferenceTimes).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(producerReferenceTimes).to.be.empty;                // jshint ignore:line
         });
 
         it('should return empty array when getUTCTimingSources is called and no period is defined', function () {
@@ -470,6 +484,7 @@ describe('DashAdapter', function () {
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.target).equals(3000);        // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.max).equals(5000);           // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.min).equals(2000);           // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.referenceId).equals(7);      // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.max).equals(1.5);       // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);       // jshint ignore:line
             });

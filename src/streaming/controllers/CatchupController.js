@@ -34,7 +34,7 @@ import EventBus from '../../core/EventBus';
 import Constants from '../constants/Constants';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import Events from '../../core/events/Events';
-import MetricsConstants from "../constants/MetricsConstants";
+import MetricsConstants from '../constants/MetricsConstants';
 
 function CatchupController() {
     const context = this.context;

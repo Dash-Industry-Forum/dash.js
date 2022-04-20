@@ -2,13 +2,15 @@ import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
 
 function switchRequestHistoryMock() {
     this.getSwitchRequests = function () {
-        return [{drops: 7,
-                noDrops: 0,
-                dropSize: 4}];
+        return [{
+            drops: 7,
+            noDrops: 0,
+            dropSize: 4
+        }];
     };
 }
 
-function RulesContextMock () {
+function RulesContextMock() {
     this.getMediaInfo = function () {
     };
 
@@ -17,15 +19,17 @@ function RulesContextMock () {
     };
 
     this.getCurrentRequest = function () {
-        let fragRequest =  new FragmentRequest();
+        let fragRequest = new FragmentRequest();
         fragRequest.index = 1;
 
         return fragRequest;
     };
-    this.getRepresentationInfo = function () {};
+    this.getRepresentationInfo = function () {
+    };
     this.getAbrController = function () {
         return {
-            getThroughputHistory: function () {}
+            getThroughputHistory: function () {
+            }
         };
     };
     this.getSwitchHistory = function () {
@@ -39,7 +43,8 @@ function RulesContextMock () {
 
     this.getScheduleController = function () {
         return {
-            start: function () {}
+            start: function () {
+            }
         };
     };
 

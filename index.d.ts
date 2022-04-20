@@ -173,7 +173,8 @@ declare namespace dashjs {
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
-                ignoreEmeEncryptedEvent?: boolean
+                ignoreEmeEncryptedEvent?: boolean,
+                detectPlayreadyMessageFormat?: boolean,
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -739,7 +740,6 @@ declare namespace dashjs {
         PLAYBACK_PLAYING: 'playbackPlaying';
         PLAYBACK_PROGRESS: 'playbackProgress';
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
-        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';

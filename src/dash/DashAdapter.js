@@ -385,6 +385,28 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the ProducerReferenceTimes as saved in the DashManifestModel if present
+     * @param {object} streamInfo
+     * @param {object} mediaInfo
+     * @returns {object} producerReferenceTimes
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getProducerReferenceTimes(streamInfo, mediaInfo) {
+        let id, realAdaptation;
+
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+        id = mediaInfo ? mediaInfo.id : null;
+
+        if (voPeriods.length > 0 && selectedVoPeriod) {
+            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
+        }
+
+        if (!realAdaptation) return [];
+        return dashManifestModel.getProducerReferenceTimesForAdaptation(realAdaptation);
+    }
+
+    /**
      * Return all EssentialProperties of a Representation
      * @param {object} representation
      * @return {array}
@@ -1030,7 +1052,9 @@ function DashAdapter() {
             const keyIds = mediaInfo.contentProtection.map(cp => dashManifestModel.getKID(cp)).filter(kid => kid !== null);
             if (keyIds.length) {
                 const keyId = keyIds[0];
-                mediaInfo.contentProtection.forEach(cp => { cp.keyId = keyId; });
+                mediaInfo.contentProtection.forEach(cp => {
+                    cp.keyId = keyId;
+                });
             }
         }
 
@@ -1165,6 +1189,7 @@ function DashAdapter() {
         getAllMediaInfoForType,
         getAdaptationForType,
         getRealAdaptation,
+        getProducerReferenceTimes,
         getRealPeriodByIndex,
         getEssentialPropertiesForRepresentation,
         getVoRepresentations,
