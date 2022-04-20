@@ -95,6 +95,35 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.initialBitrate).to.be.empty;
         })
 
+        it('Should use supported scheme in preference of no provided schemeIdUri', () => {
+            dummyManifestInfo.serviceDescriptions.push({
+                latency: {
+                    target: 10000,
+                }
+            });
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+            const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            expect(currentSettings.liveDelay).to.be.equal(5);
+        })
+
+        it('Should use ServiceDescription that appears last if multiple applicable ServiceDescriptions', () => {
+            // Also ensures only parameters from a single ServiceDescription element are used
+            dummyManifestInfo.serviceDescriptions.push({
+                schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                latency: {
+                    target: 10000,
+                }
+            });
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+            const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            expect(currentSettings.liveDelay).to.be.equal(10);
+            expect(currentSettings.liveCatchup.maxDrift).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate).to.be.NaN;
+            expect(currentSettings.minBitrate).to.be.empty;
+            expect(currentSettings.maxBitrate).to.be.empty;
+            expect(currentSettings.initialBitrate).to.be.empty;
+        });
+
         it('Should not update the latency if target latency is equal to 0', () => {
             dummyManifestInfo.serviceDescriptions[0].latency.target = 0;
             delete dummyManifestInfo.serviceDescriptions[0].playbackRate;
