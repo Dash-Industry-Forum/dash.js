@@ -95,7 +95,15 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.initialBitrate).to.be.empty;
         })
 
-        it('Should use supported scheme in preference of no provided schemeIdUri', () => {
+        it('Should use SD if no provided schemeIdUri', () => {
+            delete dummyManifestInfo.serviceDescriptions[0].schemeIdUri;
+            dummyManifestInfo.serviceDescriptions[0].latency.target = 8000;
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+            const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            expect(currentSettings.liveDelay).to.be.equal(8);
+        })
+
+        it('Should use supported scheme in preference if no provided schemeIdUri', () => {
             dummyManifestInfo.serviceDescriptions.push({
                 latency: {
                     target: 10000,
