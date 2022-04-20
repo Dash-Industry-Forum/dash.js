@@ -99,7 +99,7 @@ function ServiceDescriptionController() {
         }
 
         const supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
-        const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => !('schemeIdUri' in sd));
+        const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => sd.schemeIdUri == null);
         let sd = (supportedServiceDescriptions.length > 0) 
             ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
             : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
