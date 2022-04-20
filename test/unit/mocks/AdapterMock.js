@@ -200,8 +200,8 @@ function AdapterMock() {
             id: 7,
             inband: false,
             presentationTime: 10000,
-            type: "encoder",
-            wallClockTime: "1970-01-01T00:00:04Z"
+            type: 'encoder',
+            wallClockTime: '1970-01-01T00:00:04Z'
         }];
     };
 
