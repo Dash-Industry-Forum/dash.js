@@ -13,7 +13,7 @@ describe('ServiceDescriptionController', () => {
 
     before(() => {
         const context = {};
-        dummyStreamsInfo = [{ 
+        dummyStreamsInfo = [{
             index: 0,
             start: 0
         }]
@@ -21,7 +21,7 @@ describe('ServiceDescriptionController', () => {
             adaptation: {},
             presentationTimeOffset: 3,
             segmentDuration: 3.84,
-            segmentInfoType: "SegmentTemplate",
+            segmentInfoType: 'SegmentTemplate',
             timescale: 1000,
         };
 

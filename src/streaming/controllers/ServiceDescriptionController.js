@@ -30,7 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import Constants from "../constants/Constants";
+import Constants from '../constants/Constants';
 import DashConstants from '../../dash/constants/DashConstants';
 
 const SUPPORTED_SCHEMES = [Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME];

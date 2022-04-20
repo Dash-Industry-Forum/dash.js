@@ -1,6 +1,6 @@
 import KeySystemPlayReady from '../../src/streaming/protection/drm/KeySystemPlayReady.js';
 import BASE64 from '../../externals/base64';
-import Settings from "../../src/core/Settings";
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 const jsdom = require('jsdom').JSDOM;

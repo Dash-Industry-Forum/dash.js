@@ -21,6 +21,13 @@
         "no-use-before-define": 0,
         "strict": 0,
         "no-loop-func": 0,
+        "quotes": [
+            "error",
+            "single",
+            {
+                "allowTemplateLiterals": true
+            }
+        ],
         "indent": [
             "error",
             4,
