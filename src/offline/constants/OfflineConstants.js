@@ -36,19 +36,19 @@
  */
 class OfflineConstants {
 
-  init() {
-      this.OFFLINE_SCHEME = 'offline_indexeddb';
-      this.OFFLINE_URL_REGEX = /^offline_indexeddb:\/\//i;
-      this.OFFLINE_STATUS_CREATED = 'created';
-      this.OFFLINE_STATUS_STARTED = 'started';
-      this.OFFLINE_STATUS_STOPPED = 'stopped';
-      this.OFFLINE_STATUS_FINISHED = 'finished';
-      this.OFFLINE_STATUS_ERROR = 'error';
-  }
+    init() {
+        this.OFFLINE_SCHEME = 'offline_indexeddb';
+        this.OFFLINE_URL_REGEX = /^offline_indexeddb:\/\//i;
+        this.OFFLINE_STATUS_CREATED = 'created';
+        this.OFFLINE_STATUS_STARTED = 'started';
+        this.OFFLINE_STATUS_STOPPED = 'stopped';
+        this.OFFLINE_STATUS_FINISHED = 'finished';
+        this.OFFLINE_STATUS_ERROR = 'error';
+    }
 
-  constructor () {
-      this.init();
-  }
+    constructor() {
+        this.init();
+    }
 }
 
 let constants = new OfflineConstants();

@@ -28,8 +28,8 @@ function MediaPlayerFactory() {
         let videoID = (video.id || video.name || 'video element');
 
         source = source || [].slice.call(video.querySelectorAll('source')).filter(function (s) {
-                return s.type == SUPPORTED_MIME_TYPE;
-            })[0];
+            return s.type == SUPPORTED_MIME_TYPE;
+        })[0];
         if (!source && video.src) {
             source = document.createElement('source');
             source.src = video.src;

@@ -73,8 +73,8 @@ function RangeController(config) {
         // When not present, DASH Metrics reporting is requested
         // for the whole duration of the content.
         time = useWallClockTime ?
-                (new Date().getTime() / 1000) :
-                mediaElement.currentTime;
+            (new Date().getTime() / 1000) :
+            mediaElement.currentTime;
 
         for (let i = 0; i < numRanges; i += 1) {
             let start = ranges.start(i);
@@ -90,8 +90,8 @@ function RangeController(config) {
 
     instance = {
         initialize: initialize,
-        reset:      reset,
-        isEnabled:  isEnabled
+        reset: reset,
+        isEnabled: isEnabled
     };
 
     setup();
