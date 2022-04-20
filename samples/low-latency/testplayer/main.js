@@ -28,7 +28,6 @@ App.prototype.init = function () {
 
 App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
-    this.domElements.settings.minDrift = document.getElementById('min-drift');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
     this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
     this.domElements.settings.liveCatchupLatencyThreshold = document.getElementById('catchup-threshold');
@@ -45,7 +44,6 @@ App.prototype._setDomElements = function () {
     this.domElements.chart.numberOfEntries = document.getElementById('chart-number-of-entries');
 
     this.domElements.metrics.latencyTag = document.getElementById('latency-tag');
-    this.domElements.metrics.mindriftTag = document.getElementById('mindrift-tag');
     this.domElements.metrics.playbackrateTag = document.getElementById('playbackrate-tag');
     this.domElements.metrics.bufferTag = document.getElementById('buffer-tag');
     this.domElements.metrics.catchupThresholdTag = document.getElementById('catchup-threshold-tag');
@@ -70,7 +68,6 @@ App.prototype._load = function () {
 
     this.video = document.querySelector('video');
     this.player = dashjs.MediaPlayer().create();
-    this.player.updateSettings({ streaming: { lowLatencyEnabled: true } });
     this._registerDashEventHandler();
     this._applyParameters();
     this.player.initialize(this.video, url, true);
@@ -90,7 +87,6 @@ App.prototype._applyParameters = function () {
                 liveDelay: settings.targetLatency
             },
             liveCatchup: {
-                minDrift: settings.minDrift,
                 maxDrift: settings.maxDrift,
                 playbackRate: settings.catchupPlaybackRate,
                 latencyThreshold: settings.liveCatchupLatencyThreshold,
@@ -134,9 +130,6 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxDrift !== undefined) {
             this.domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
         }
-        if (params.minDrift !== undefined) {
-            this.domElements.settings.minDrift.value = parseFloat(params.minDrift).toFixed(2);
-        }
         if (params.catchupPlaybackRate !== undefined) {
             this.domElements.settings.catchupPlaybackRate.value = parseFloat(params.catchupPlaybackRate).toFixed(1);
         }
@@ -170,7 +163,6 @@ App.prototype._adjustSettingsByUrlParameters = function () {
 
 App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
-    var minDrift = parseFloat(this.domElements.settings.minDrift.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
     var catchupPlaybackRate = parseFloat(this.domElements.settings.catchupPlaybackRate.value, 10);
     var liveCatchupLatencyThreshold = parseFloat(this.domElements.settings.liveCatchupLatencyThreshold.value, 10);
@@ -184,7 +176,6 @@ App.prototype._getCurrentSettings = function () {
 
     return {
         targetLatency,
-        minDrift,
         maxDrift,
         catchupPlaybackRate,
         liveCatchupLatencyThreshold,
@@ -346,8 +337,6 @@ App.prototype._startIntervalHandler = function () {
 
             var currentLatency = parseFloat(self.player.getCurrentLiveLatency(), 10);
             self.domElements.metrics.latencyTag.innerHTML = currentLatency + ' secs';
-
-            self.domElements.metrics.mindriftTag.innerHTML = settings.streaming.liveCatchup.minDrift + ' secs';
 
             var currentPlaybackRate = self.player.getPlaybackRate();
             self.domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 100) / 100;

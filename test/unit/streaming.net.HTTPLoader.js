@@ -36,7 +36,8 @@ describe('HTTPLoader', function () {
     beforeEach(function () {
         if (typeof window === 'undefined') {
             global.window = {
-                fetch: function () { }
+                fetch: function () {
+                }
             };
         }
 
@@ -73,8 +74,10 @@ describe('HTTPLoader', function () {
             };
         };
 
-        global.Headers = function () { };
-        global.fetch = function () { };
+        global.Headers = function () {
+        };
+        global.fetch = function () {
+        };
         sinon.stub(global, 'fetch');
 
         global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
@@ -102,17 +105,11 @@ describe('HTTPLoader', function () {
         expect(httpLoader.load.bind(httpLoader, { request: {} })).to.throw('config object is not correct or missing');
     });
 
-    it('should use XHRLoader if it is not an arraybuffer request even if useFetch is set to true', () => {
+    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
-
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true
-            }
-        })
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -123,7 +120,14 @@ describe('HTTPLoader', function () {
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
-        httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'json', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: {
+                checkExistenceOnly: true,
+                responseType: 'json',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                availabilityTimeComplete: false
+            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        });
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);
@@ -144,7 +148,12 @@ describe('HTTPLoader', function () {
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
-        httpLoader.load({ request: { checkExistenceOnly: true }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: { checkExistenceOnly: true },
+            success: callbackSucceeded,
+            complete: callbackCompleted,
+            error: callbackError
+        });
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);
@@ -168,7 +177,12 @@ describe('HTTPLoader', function () {
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
-        httpLoader.load({ request: { checkExistenceOnly: true }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: { checkExistenceOnly: true },
+            success: callbackSucceeded,
+            complete: callbackCompleted,
+            error: callbackError
+        });
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);
         sinon.assert.calledOnce(callbackError);
@@ -177,17 +191,11 @@ describe('HTTPLoader', function () {
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if useFetch is set to true and it is an arraybuffer request', () => {
+    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
-
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true
-            }
-        })
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -198,23 +206,25 @@ describe('HTTPLoader', function () {
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
-        httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.INIT_SEGMENT_TYPE}, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: {
+                checkExistenceOnly: true,
+                responseType: 'arraybuffer',
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                availabilityTimeComplete: false
+            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        });
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);
     });
 
-    it('should use XHRLoader if it is an arraybuffer and  MEDIA_SEGMENT_TYPE request, useFetch is true and body is not an Stream. It should call success and complete callback when load is called successfully', (done) => {
+    it('should use XHRLoader if it is an arraybuffer and  MEDIA_SEGMENT_TYPE request, availabilityTimeComplete is false and body is not an Stream. It should call success and complete callback when load is called successfully', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true
-            }
-        })
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -224,7 +234,14 @@ describe('HTTPLoader', function () {
             errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
-        httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: {
+                checkExistenceOnly: true,
+                responseType: 'arraybuffer',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                availabilityTimeComplete: false
+            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        });
 
         // Added a setTimeout as fetch uses promises (finishing method load) and it doesn't call callbacks immediately
         setTimeout(function () {
@@ -238,17 +255,11 @@ describe('HTTPLoader', function () {
         }, 10);
     });
 
-    it('should use FetchLoader if it is an arraybuffer and MEDIA_SEGMENT_TYPE request, useFetch is true and body is an Stream. It should call success and complete callback when load is called successfully', (done) => {
+    it('should use FetchLoader if it is an arraybuffer and MEDIA_SEGMENT_TYPE request, availabilityTimeComplete is false and body is an Stream. It should call success and complete callback when load is called successfully', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
-
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true
-            }
-        })
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
@@ -264,7 +275,14 @@ describe('HTTPLoader', function () {
         stream.push(null);
 
         global.fetch.returns(Promise.resolve(new global.Response(stream, { status: 200 })));
-        httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: {
+                checkExistenceOnly: true,
+                responseType: 'arraybuffer',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                availabilityTimeComplete: false
+            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        });
 
         setTimeout(function () {
             expect(self.requests.length).to.equal(0);
@@ -283,13 +301,7 @@ describe('HTTPLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
 
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: true
-            }
-        })
-
-        mediaPlayerModelMock.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE ] = 0;
+        mediaPlayerModelMock.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = 0;
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             errors: Errors,
@@ -298,7 +310,14 @@ describe('HTTPLoader', function () {
             mediaPlayerModel: mediaPlayerModelMock,
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 404 })));
-        httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
+        httpLoader.load({
+            request: {
+                checkExistenceOnly: true,
+                responseType: 'arraybuffer',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                availabilityTimeComplete: false
+            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        });
         setTimeout(function () {
             expect(self.requests.length).to.equal(0);
             sinon.assert.calledOnce(global.fetch);
