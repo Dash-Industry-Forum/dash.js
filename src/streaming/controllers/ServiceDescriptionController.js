@@ -30,7 +30,8 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import Constants from "../constants/Constants";
+import Constants from '../constants/Constants';
+import DashConstants from '../../dash/constants/DashConstants';
 
 const SUPPORTED_SCHEMES = [Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME];
 const MEDIA_TYPES = {
@@ -45,11 +46,21 @@ function ServiceDescriptionController() {
 
     let instance,
         serviceDescriptionSettings,
-        logger;
+        prftOffsets,
+        logger,
+        adapter;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         _resetInitialSettings();
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
     }
 
     function reset() {
@@ -67,6 +78,7 @@ function ServiceDescriptionController() {
             maxBitrate: {},
             initialBitrate: {}
         };
+        prftOffsets = [];
     }
 
     /**
@@ -86,33 +98,33 @@ function ServiceDescriptionController() {
             return;
         }
 
-        for (let i = 0; i < manifestInfo.serviceDescriptions.length; i++) {
-            const sd = manifestInfo.serviceDescriptions[i];
+        const supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
+        const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => sd.schemeIdUri == null);
+        let sd = (supportedServiceDescriptions.length > 0) 
+            ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
+            : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
+        if (!sd) return;
 
-            if (!sd.schemeIdUri || SUPPORTED_SCHEMES.includes(sd.schemeIdUri)) {
+        if (sd.latency && sd.latency.target > 0) {
+            _applyServiceDescriptionLatency(sd);
+        }
 
-                if (sd.latency && sd.latency.target > 0) {
-                    _applyServiceDescriptionLatency(sd);
-                }
+        if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+            _applyServiceDescriptionPlaybackRate(sd);
+        }
 
-                if (sd.playbackRate && sd.playbackRate.max > 1.0) {
-                    _applyServiceDescriptionPlaybackRate(sd);
-                }
+        if (sd.operatingQuality) {
+            _applyServiceDescriptionOperatingQuality(sd);
+        }
 
-                if (sd.operatingQuality) {
-                    _applyServiceDescriptionOperatingQuality(sd);
-                }
-
-                if (sd.operatingBandwidth) {
-                    _applyServiceDescriptionOperatingBandwidth(sd);
-                }
-            }
+        if (sd.operatingBandwidth) {
+            _applyServiceDescriptionOperatingBandwidth(sd);
         }
     }
 
     /**
      * Adjust the latency targets for the service.
-     * @param {object} sd
+     * @param {object} sd - service description element
      * @private
      */
     function _applyServiceDescriptionLatency(sd) {
@@ -124,41 +136,60 @@ function ServiceDescriptionController() {
             params = _getStandardServiceDescriptionLatencyParameters(sd);
         }
 
-        serviceDescriptionSettings.liveDelay = params.liveDelay;
-        serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+        if (prftOffsets.length > 0) {
+            let { to, id } = _calculateTimeOffset(params);
 
-        logger.debug(`Found latency properties coming from service description: Live Delay: ${params.liveDelay}, Live catchup max drift: ${params.maxDrift}`);
+            // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
+            // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
+            // Since maxDrift is a difference rather than absolute it does not need offset applied
+            serviceDescriptionSettings.liveDelay = params.liveDelay - to;
+            serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+
+            logger.debug(`
+                Found latency properties coming from service description. Applied time offset of ${to} from ProducerReferenceTime element with id ${id}.
+                Live Delay: ${params.liveDelay - to}, Live catchup max drift: ${params.maxDrift}
+            `);
+        } else {
+            serviceDescriptionSettings.liveDelay = params.liveDelay;
+            serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+
+            logger.debug(`Found latency properties coming from service description: Live Delay: ${params.liveDelay}, Live catchup max drift: ${params.maxDrift}`);
+        }
     }
 
     /**
      * Get default parameters for liveDelay,maxDrift
      * @param {object} sd
-     * @return {{ maxDrift: (number|undefined), liveDelay: number}}
+     * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
      * @private
      */
     function _getStandardServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
         let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+        const referenceId = sd.latency.referenceId || NaN;
 
         return {
             liveDelay,
-            maxDrift
+            maxDrift,
+            referenceId
         }
     }
 
     /**
      * Get DVB DASH parameters for liveDelay,maxDrift
      * @param sd
-     * @return {{maxDrift: (number|undefined), liveDelay: number}}
+     * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
      * @private
      */
     function _getDvbServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
         let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+        const referenceId = sd.latency.referenceId || NaN;
 
         return {
             liveDelay,
-            maxDrift
+            maxDrift,
+            referenceId
         }
     }
 
@@ -242,11 +273,100 @@ function ServiceDescriptionController() {
         }
     }
 
+    /**
+     * Returns the current calculated time offsets based on ProducerReferenceTime elements
+     * @returns {array}
+     */
+    function getProducerReferenceTimeOffsets() {
+        return prftOffsets;
+    }
+
+    /**
+     * Calculates an array of time offsets each with matching ProducerReferenceTime id.
+     * Call before applyServiceDescription if producer reference time elements should be considered.
+     * @param {array} streamInfos
+     * @returns {array}
+     * @private
+     */
+    function calculateProducerReferenceTimeOffsets(streamInfos) {
+        try {
+            let timeOffsets = [];
+            if (streamInfos && streamInfos.length > 0) {
+                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
+                const astInSeconds = adapter.getAvailabilityStartTime() / 1000;
+
+                streamInfos.forEach((streamInfo) => {
+                    const offsets = mediaTypes
+                        .reduce((acc, mediaType) => {
+                            acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
+                            return acc;
+                        }, [])
+                        .reduce((acc, mediaInfo) => {
+                            const prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
+                            prts.forEach((prt) => {
+                                const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                                if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
+                                    const voRep = voRepresentations[0];
+                                    const d = new Date(prt[DashConstants.WALL_CLOCK_TIME]);
+                                    const wallClockTime = d.getTime() / 1000;
+                                    // TS 103 285 Clause 10.20.4
+                                    // 1) Calculate PRT0
+                                    // i) take the PRT@presentationTime and subtract any ST@presentationTimeOffset
+                                    // ii) convert this time to seconds by dividing by ST@timescale
+                                    // iii) Add this to start time of period that contains PRT.
+                                    // N.B presentationTimeOffset is already divided by timescale at this point
+                                    const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start);
+                                    // 2) Calculate TO between PRT at the start of MPD timeline and the AST
+                                    const to = astInSeconds - prt0;
+                                    // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
+                                    acc.push({ id: prt[DashConstants.ID], to });
+                                }
+                            });
+                            return acc;
+                        }, [])
+
+                    timeOffsets = timeOffsets.concat(offsets);
+                })
+            }
+            prftOffsets = timeOffsets;
+        } catch (e) {
+            logger.error(e);
+            prftOffsets = [];
+        }
+    };
+
+    /**
+     * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
+     * @param {object} sdLatency - service description latency element
+     * @returns {number}
+     * @private
+     */
+    function _calculateTimeOffset(sdLatency) {
+        let to = 0, id;
+        let offset = prftOffsets.filter(prt => {
+            return prt.id === sdLatency.referenceId;
+        });
+
+        // If only one ProducerReferenceTime to generate one TO, then use that regardless of matching ids
+        if (offset.length === 0) {
+            to = (prftOffsets.length > 0) ? prftOffsets[0].to : 0;
+            id = prftOffsets[0].id || NaN;
+        } else {
+            // If multiple id matches, use the first but this should be invalid
+            to = offset[0].to || 0;
+            id = offset[0].id || NaN;
+        }
+
+        return { to, id }
+    }
 
     instance = {
         getServiceDescriptionSettings,
+        getProducerReferenceTimeOffsets,
+        calculateProducerReferenceTimeOffsets,
         applyServiceDescription,
-        reset
+        reset,
+        setConfig
     };
 
     setup();

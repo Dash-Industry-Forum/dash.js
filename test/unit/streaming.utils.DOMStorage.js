@@ -30,7 +30,7 @@ describe('DOMStorage', function () {
 
     describe('Well initialized and window is unknown', function () {
         beforeEach(function () {
-            domStorage = DOMStorage(context).getInstance({settings: settings});
+            domStorage = DOMStorage(context).getInstance({ settings: settings });
         });
 
         afterEach(function () {
@@ -53,17 +53,28 @@ describe('DOMStorage', function () {
         beforeEach(function () {
             if (typeof window === 'undefined') {
                 global.window = {
-                    localStorage: {setItem() {},
-                                   removeItem() {},
-                                   getItem() {return null;}}
+                    localStorage: {
+                        setItem() {
+                        },
+                        removeItem() {
+                        },
+                        getItem() {
+                            return null;
+                        }
+                    }
                 };
 
-                global.localStorage = {setItem() {},
-                    removeItem() {},
-                    getItem() {return null;}
+                global.localStorage = {
+                    setItem() {
+                    },
+                    removeItem() {
+                    },
+                    getItem() {
+                        return null;
+                    }
                 };
             }
-            domStorage = DOMStorage(context).getInstance({settings: settings});
+            domStorage = DOMStorage(context).getInstance({ settings: settings });
         });
 
         afterEach(function () {

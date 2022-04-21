@@ -347,6 +347,10 @@ function StreamController() {
         }
 
         // Apply Service description parameters.
+        if (settings.get().streaming.applyProducerReferenceTime) {
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
+        };
+
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.applyServiceDescription) {
             serviceDescriptionController.applyServiceDescription(manifestInfo);

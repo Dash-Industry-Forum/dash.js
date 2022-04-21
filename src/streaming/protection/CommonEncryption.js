@@ -30,7 +30,7 @@
  */
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
-    attributes: ['Laurl','laurl'],
+    attributes: ['Laurl', 'laurl'],
     prefixes: ['clearkey', 'dashif']
 };
 
@@ -259,8 +259,7 @@ class CommonEncryption {
                 i += 1;
             }
             return licenseServer;
-        } catch
-            (e) {
+        } catch (e) {
             return null;
         }
     }
