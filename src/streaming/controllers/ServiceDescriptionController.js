@@ -98,27 +98,27 @@ function ServiceDescriptionController() {
             return;
         }
 
-        for (let i = 0; i < manifestInfo.serviceDescriptions.length; i++) {
-            const sd = manifestInfo.serviceDescriptions[i];
+        const supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
+        const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => sd.schemeIdUri == null);
+        let sd = (supportedServiceDescriptions.length > 0) 
+            ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
+            : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
+        if (!sd) return;
 
-            if (!sd.schemeIdUri || SUPPORTED_SCHEMES.includes(sd.schemeIdUri)) {
+        if (sd.latency && sd.latency.target > 0) {
+            _applyServiceDescriptionLatency(sd);
+        }
 
-                if (sd.latency && sd.latency.target > 0) {
-                    _applyServiceDescriptionLatency(sd);
-                }
+        if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+            _applyServiceDescriptionPlaybackRate(sd);
+        }
 
-                if (sd.playbackRate && sd.playbackRate.max > 1.0) {
-                    _applyServiceDescriptionPlaybackRate(sd);
-                }
+        if (sd.operatingQuality) {
+            _applyServiceDescriptionOperatingQuality(sd);
+        }
 
-                if (sd.operatingQuality) {
-                    _applyServiceDescriptionOperatingQuality(sd);
-                }
-
-                if (sd.operatingBandwidth) {
-                    _applyServiceDescriptionOperatingBandwidth(sd);
-                }
-            }
+        if (sd.operatingBandwidth) {
+            _applyServiceDescriptionOperatingBandwidth(sd);
         }
     }
 
