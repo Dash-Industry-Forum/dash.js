@@ -128,6 +128,10 @@ class HTTPRequest {
          * @public
          */
         this._serviceLocation = null;
+        /**
+         * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+         */
+        this._fileLoaderType = null;
     }
 }
 
@@ -137,8 +141,8 @@ class HTTPRequest {
  */
 class HTTPRequestTrace {
     /**
-    * @class
-    */
+     * @class
+     */
     constructor() {
         /**
          * Real-Time | Measurement stream start.
@@ -159,7 +163,7 @@ class HTTPRequestTrace {
          * Measurement throughput in kbits/s
          * @public
          */
-         this._t = null;
+        this._t = null;
     }
 }
 
@@ -176,4 +180,4 @@ HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 
-export { HTTPRequest, HTTPRequestTrace };
+export {HTTPRequest, HTTPRequestTrace};

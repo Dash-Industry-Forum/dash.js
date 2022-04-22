@@ -91,7 +91,9 @@ function StreamController() {
         mediaSource,
         videoModel,
         playbackController,
+        serviceDescriptionController,
         mediaPlayerModel,
+        customParametersModel,
         isPaused,
         initialPlayback,
         playbackEndedTimerInterval,
@@ -180,6 +182,8 @@ function StreamController() {
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -202,6 +206,8 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
     }
 
     /**
@@ -317,7 +323,7 @@ function StreamController() {
 
     /**
      * Initialize playback for the first period.
-     * @param {object} streamsInfo
+     * @param {array} streamsInfo
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
@@ -340,9 +346,18 @@ function StreamController() {
             return;
         }
 
+        // Apply Service description parameters.
+        if (settings.get().streaming.applyProducerReferenceTime) {
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
+        };
+
+        const manifestInfo = streamsInfo[0].manifestInfo;
+        if (settings.get().streaming.applyServiceDescription) {
+            serviceDescriptionController.applyServiceDescription(manifestInfo);
+        }
+
         // Compute and set the live delay
-        if (adapter.getIsDynamic() && streams.length) {
-            const manifestInfo = streamsInfo[0].manifestInfo;
+        if (adapter.getIsDynamic()) {
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
             playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
@@ -721,6 +736,22 @@ function StreamController() {
         const stream = getStreamById(e.streamInfo.id);
 
         stream.prepareQualityChange(e);
+    }
+
+    /**
+     * A setting related to the live delay was updated. Check if one of the latency values changed. If so, recalculate the live delay.
+     * @private
+     */
+    function _onLiveDelaySettingUpdated() {
+        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0) {
+            const streamsInfo = adapter.getStreamsInfo()
+            if (streamsInfo.length > 0) {
+                const manifestInfo = streamsInfo[0].manifestInfo;
+                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+
+                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+            }
+        }
     }
 
     /**
@@ -1173,12 +1204,12 @@ function StreamController() {
                 });
             }
 
-            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {
-                if (item.value.replace(/.*?:\/\//g, '') === mediaPlayerModel.getDefaultUtcTimingSource().value.replace(/.*?:\/\//g, '')) {
+                if (item.value.replace(/.*?:\/\//g, '') === settings.get().streaming.utcSynchronization.defaultTimingSource.value.replace(/.*?:\/\//g, '')) {
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
                     logger.debug('Matching default timing source protocol to manifest protocol: ', item.value);
                 }
@@ -1368,6 +1399,9 @@ function StreamController() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
         if (config.protectionController) {
             protectionController = config.protectionController;
         }
@@ -1388,6 +1422,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.textController) {
             textController = config.textController;

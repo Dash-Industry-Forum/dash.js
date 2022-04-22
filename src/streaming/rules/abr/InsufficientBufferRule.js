@@ -46,7 +46,6 @@ function InsufficientBufferRule(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
-    const settings = config.settings;
 
     let instance,
         logger,
@@ -90,10 +89,14 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
         const streamInfo = rulesContext.getStreamInfo();
         const streamId = streamInfo ? streamInfo.id : null;
+        const scheduleController = rulesContext.getScheduleController();
         const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
+        const playbackController = scheduleController.getPlaybackController();
+
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        if (shouldIgnore(mediaType) || !fragmentDuration) {
+        const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
+        if (shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
             return switchRequest;
         }
 
@@ -119,8 +122,8 @@ function InsufficientBufferRule(config) {
 
     }
 
-    function shouldIgnore(mediaType) {
-        return !settings.get().streaming.lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
+    function shouldIgnore(lowLatencyEnabled, mediaType) {
+        return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {
