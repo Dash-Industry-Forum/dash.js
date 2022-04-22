@@ -197,7 +197,9 @@ declare namespace dashjs {
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
                 threshold?: number,
-                enableSeekFix?: boolean
+                enableSeekFix?: boolean,
+                enableStallFix?: boolean,
+                stallSeek?: number
             },
             utcSynchronization?: {
                 enabled?: boolean,

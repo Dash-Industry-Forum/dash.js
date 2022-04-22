@@ -108,7 +108,9 @@ import Events from './events/Events';
  *                jumpLargeGaps: true,
  *                smallGapLimit: 1.5,
  *                threshold: 0.3,
- *                enableSeekFix: false
+ *                enableSeekFix: true,
+ *                enableStallFix: false,
+ *                stallSeek: 0.1
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -374,8 +376,12 @@ import Events from './events/Events';
  * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
  * For live stream the jump might be delayed to keep a consistent live edge.
  * Note that the amount of buffer at which platforms automatically stall might differ.
- * @property {boolean} [enableSeekFix=false]
+ * @property {boolean} [enableSeekFix=true]
  * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
+ * @property {boolean} [enableStallFix=false]
+ * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
+ * @property {number} [stallSeek=0.1]
+ * Value to be used in case enableStallFix is set to true
  */
 
 /**
