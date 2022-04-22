@@ -233,6 +233,20 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.conformanceViolations = [];
 
+    var defaultExternalSettings = {
+        mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
+        loop: true,
+        autoPlay: true,
+        drmToday: false,
+        forceQualitySwitchSelected: false,
+        drmPrioritiesEnabled: false,
+        languageAudio: null,
+        roleVideo: null,
+        languageText: null,
+        roleText: undefined,
+        forceTextStreaming: false
+    }
+
     // metrics
     $scope.videoBitrate = 0;
     $scope.videoIndex = 0;
@@ -312,6 +326,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.video = document.querySelector('.dash-video-player video');
     // store a ref in window.player to provide an easy way to play with dash.js API
     window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+
+    const defaultSettings = JSON.parse(JSON.stringify($scope.player.getSettings()));
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         console.log(e);
@@ -1414,18 +1430,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Copy a URL containing the current settings as query Parameters to the Clipboard */
     $scope.copyQueryUrl = function () {
-        var externalSettingsString = 'mpd=' + encodeURIComponent(decodeURIComponent($scope.selectedItem.url))
-            + '&loop=' + $scope.loopSelected
-            + '&autoPlay=' + $scope.autoPlaySelected
-            + '&drmToday=' + $scope.drmToday
-            + '&forceQualitySwitchSelected=' + $scope.forceQualitySwitchSelected
-            + '&drmPrioritiesEnabled=' + $scope.prioritiesEnabled
-            + '&languageAudio=' + $scope.initialSettings.audio
-            + '&roleVideo=' + $scope.initialSettings.video
-            + '&languageText=' + $scope.initialSettings.text
-            + '&roleText=' + $scope.initialSettings.textRole
-            + '&forceTextStreaming=' + $scope.initialSettings.forceTextStreaming
-            + '&';
+        var currentExternalSettings = {
+            mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
+            loop: $scope.loopSelected,
+            autoPlay: $scope.autoPlaySelected,
+            drmToday: $scope.drmToday,
+            forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
+            drmPrioritiesEnabled: $scope.prioritiesEnabled,
+            languageAudio: $scope.initialSettings.audio,
+            roleVideo: $scope.initialSettings.video,
+            languageText: $scope.initialSettings.text,
+            roleText: $scope.textRole,
+            forceTextStreaming: $scope.initialSettings.forceTextStreaming
+        }
+
+        var externalSettingsString = $scope.toQueryString($scope.makeSettingDifferencesObject(currentExternalSettings, defaultExternalSettings));
 
         $scope.handleRequestHeaders();
         $scope.handleClearkeys();
@@ -1436,24 +1455,28 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 switch (drm.drmKeySystem) {
                     case 'com.microsoft.playready':
                         currentDrm = { 'playready': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                     case 'com.widevine.alpha':
                         currentDrm = { 'widevine': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                     case 'org.w3.clearkey':
                         currentDrm = { 'clearkey': drm };
-                        externalSettingsString += $scope.toQueryString(currentDrm) + '&';
+                        externalSettingsString += '&' + $scope.toQueryString(currentDrm);
                         break;
                 }
             }
         }
         var currentSetting = $scope.player.getSettings();
+        currentSetting = $scope.makeSettingDifferencesObject(currentSetting, defaultSettings);
+
         var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?';
-        var queryString = externalSettingsString + $scope.toQueryString(currentSetting);
+        var queryString = externalSettingsString + '+&' + $scope.toQueryString(currentSetting);
 
         var urlString = url + queryString;
+
+        if (urlString.slice(-1) === '&') urlString = urlString.slice(0, -1);
 
         $scope.checkQueryLength(urlString);
 
@@ -1463,6 +1486,57 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         element.select();
         document.execCommand('copy');
         document.body.removeChild(element);
+    }
+
+    $scope.makeSettingDifferencesObject = function (settings, defaultSettings) {
+        var settingDifferencesObject = {};
+
+        if (Array.isArray(settings)) {
+            console.log(settings)
+            return _arraysEqual(settings, defaultSettings) ? {} : settings;
+        }
+
+        for (var setting in settings) {
+            if (typeof defaultSettings[setting] === 'object' && defaultSettings[setting] !== null && !(defaultSettings[setting] instanceof Array)) {
+                settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
+            }
+            else if(settings[setting] !== defaultSettings[setting]){
+                if(Array.isArray(settings[setting])){
+                    settingDifferencesObject[setting] = _arraysEqual(settings[setting], defaultSettings[setting]) ? {} : settings[setting];
+                }
+                else {
+                    settingDifferencesObject[setting] = settings[setting];
+                }
+                
+            }
+        }
+
+        return settingDifferencesObject;
+    }
+
+    function _arraysEqual(a, b) {
+        if (a === b) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+        // Please note that calling sort on an array will modify that array.
+        // you might want to clone your array first.
+
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** Transform the current Settings into a nested query-string format */
@@ -1478,7 +1552,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         }
         // Make the string, then remove all cases of && caused by empty settings
-        return urlString.join('&').split('&&').join('&');
+        return urlString.join('&').split(/&&*/).join('&');
     }
 
     /** Resolve nested query parameters */
@@ -1620,9 +1694,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch (key) {
                 case 'mpd':
-                    $scope.selectedItem.url = decodeURIComponent(value);
+                    $scope.selectedItem.url = decodeURIComponent(value).slice(0, -1);
+                    break;
                 case 'loop':
-                    $scope.loopSelected = $scope.parseBoolean(value);
+                    $scope.loopSelected = this.parseBoolean(value);
                     break;
                 case 'autoPlay':
                     $scope.autoPlaySelected = this.parseBoolean(value);
@@ -1672,7 +1747,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if (!currentQuery.includes('&')) {
             return;
         }
-        var passedSettings = currentQuery.slice(currentQuery.indexOf('debug'));
+        var passedSettings = currentQuery.slice(currentQuery.indexOf('+')).substring(1);
         passedSettings = $scope.toSettingsObject(passedSettings)[0];
         $scope.protectionData = $scope.toSettingsObject(currentQuery)[1];
         $scope.player.updateSettings(passedSettings);
