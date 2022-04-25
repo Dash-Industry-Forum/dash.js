@@ -1273,6 +1273,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.handleProtectionData = function (protectionData) {
         for (let data in protectionData) {
             switch (data) {
+                case 'playready':
                 case 'com.microsoft.playready':
                     // Set DRM to active
                     $scope.drmPlayready.isActive = true;
@@ -1294,6 +1295,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
                     break;
 
+                case 'widevine':
                 case 'com.widevine.alpha':
                     // Set DRM to active
                     $scope.drmWidevine.isActive = true;
@@ -1315,6 +1317,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
                     break;
 
+                case 'clearkey':
                 case 'org.w3.clearkey':
                     // Set DRM to active
                     $scope.drmClearkey.isActive = true;
@@ -1440,7 +1443,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             languageAudio: $scope.initialSettings.audio,
             roleVideo: $scope.initialSettings.video,
             languageText: $scope.initialSettings.text,
-            roleText: $scope.textRole,
+            roleText: $scope.initialSettings.textRole,
             forceTextStreaming: $scope.initialSettings.forceTextStreaming
         }
 
@@ -1689,7 +1692,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setExternalSettings = function (currentQuery) {
-        var handleExternalSettings = currentQuery.split('&');
+        var handleExternalSettings = currentQuery.split('+').join('').split('&');
         for (var index = 0; index < handleExternalSettings.length; index++) {
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch (key) {
