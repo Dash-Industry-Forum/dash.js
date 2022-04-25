@@ -623,6 +623,7 @@ function TextTracks(config) {
             resizeObserver = null;
         }
         currentTrackIdx = -1;
+        captionContainer = null;
         clearCaptionContainer.call(this);
     }
 
