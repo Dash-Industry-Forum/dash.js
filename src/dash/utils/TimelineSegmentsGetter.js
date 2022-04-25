@@ -250,7 +250,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
-            const scaledMediaTime = requiredMediaTime * fTimescale;
+            const scaledMediaTime = precisionRound(requiredMediaTime * fTimescale);
             if (scaledMediaTime < (time + frag.d) && scaledMediaTime >= time) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
@@ -281,6 +281,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return segment;
     }
 
+    function precisionRound(number) {
+        return parseFloat(number.toPrecision(15));
+    }
 
     instance = {
         getSegmentByIndex,
