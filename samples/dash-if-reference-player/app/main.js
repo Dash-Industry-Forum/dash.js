@@ -1433,7 +1433,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Copy a URL containing the current settings as query Parameters to the Clipboard */
     $scope.copyQueryUrl = function () {
-        console.log($scope.protData, $scope.protectionData);
         var currentExternalSettings = {
             mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
             loop: $scope.loopSelected,
@@ -1496,7 +1495,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var settingDifferencesObject = {};
 
         if (Array.isArray(settings)) {
-            console.log(settings)
             return _arraysEqual(settings, defaultSettings) ? {} : settings;
         }
 
@@ -1511,7 +1509,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 else {
                     settingDifferencesObject[setting] = settings[setting];
                 }
-                
+
             }
         }
 
