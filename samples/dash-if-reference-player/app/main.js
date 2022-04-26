@@ -1697,7 +1697,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch (key) {
                 case 'mpd':
-                    $scope.selectedItem.url = decodeURIComponent(value).slice(0, -1);
+                    $scope.selectedItem.url = decodeURIComponent(value);
                     break;
                 case 'loop':
                     $scope.loopSelected = this.parseBoolean(value);
