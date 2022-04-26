@@ -1273,6 +1273,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.handleProtectionData = function (protectionData) {
         for (let data in protectionData) {
             switch (data) {
+                case 'playready':
                 case 'com.microsoft.playready':
                     // Set DRM to active
                     $scope.drmPlayready.isActive = true;
@@ -1294,6 +1295,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
                     break;
 
+                case 'widevine':
                 case 'com.widevine.alpha':
                     // Set DRM to active
                     $scope.drmWidevine.isActive = true;
@@ -1315,6 +1317,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     }
                     break;
 
+                case 'clearkey':
                 case 'org.w3.clearkey':
                     // Set DRM to active
                     $scope.drmClearkey.isActive = true;
@@ -1440,7 +1443,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             languageAudio: $scope.initialSettings.audio,
             roleVideo: $scope.initialSettings.video,
             languageText: $scope.initialSettings.text,
-            roleText: $scope.textRole,
+            roleText: $scope.initialSettings.textRole,
             forceTextStreaming: $scope.initialSettings.forceTextStreaming
         }
 
@@ -1492,7 +1495,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var settingDifferencesObject = {};
 
         if (Array.isArray(settings)) {
-            console.log(settings)
             return _arraysEqual(settings, defaultSettings) ? {} : settings;
         }
 
@@ -1507,7 +1509,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 else {
                     settingDifferencesObject[setting] = settings[setting];
                 }
-                
+
             }
         }
 
@@ -1689,12 +1691,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     $scope.setExternalSettings = function (currentQuery) {
-        var handleExternalSettings = currentQuery.split('&');
+        var handleExternalSettings = currentQuery.split('+').join('').split('&');
         for (var index = 0; index < handleExternalSettings.length; index++) {
             var [key, value] = handleExternalSettings[index].split('=') || '';
             switch (key) {
                 case 'mpd':
-                    $scope.selectedItem.url = decodeURIComponent(value).slice(0, -1);
+                    $scope.selectedItem.url = decodeURIComponent(value);
                     break;
                 case 'loop':
                     $scope.loopSelected = this.parseBoolean(value);
@@ -1749,7 +1751,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
         var passedSettings = currentQuery.slice(currentQuery.indexOf('+')).substring(1);
         passedSettings = $scope.toSettingsObject(passedSettings)[0];
-        $scope.protectionData = $scope.toSettingsObject(currentQuery)[1];
+        $scope.protectionData = $scope.toSettingsObject(currentQuery.split('+').join(''))[1];
         $scope.player.updateSettings(passedSettings);
         $scope.handleProtectionData($scope.protectionData);
         $scope.player.setProtectionData($scope.protectionData);
