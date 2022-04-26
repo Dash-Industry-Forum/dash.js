@@ -19,10 +19,18 @@
             "platform": "WINDOWS",
             "os": "WINDOWS",
             "os_version": "10",
+            "firefox_profile":"root_profile",
             "keySystems": {
                 "com.widevine.alpha": true,
                 "com.microsoft.playready": false,
-                "org.w3.clearkey": true
+                "org.w3.clearkey": true,
+                "media.eme.enabled":true,
+                "media.gmp-manager.updateEnabled":true
+            },
+            "moz:firefoxOptions":{
+                "profile":"root_profile",
+                "media.eme.enabled":true,
+                "media.gmp-manager.updateEnabled":true
             }
         },
         "edge": {
