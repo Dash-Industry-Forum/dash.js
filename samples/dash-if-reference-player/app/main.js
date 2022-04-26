@@ -1433,6 +1433,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Copy a URL containing the current settings as query Parameters to the Clipboard */
     $scope.copyQueryUrl = function () {
+        console.log($scope.protData, $scope.protectionData);
         var currentExternalSettings = {
             mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
             loop: $scope.loopSelected,
@@ -1752,7 +1753,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
         var passedSettings = currentQuery.slice(currentQuery.indexOf('+')).substring(1);
         passedSettings = $scope.toSettingsObject(passedSettings)[0];
-        $scope.protectionData = $scope.toSettingsObject(currentQuery)[1];
+        $scope.protectionData = $scope.toSettingsObject(currentQuery.split('+').join(''))[1];
         $scope.player.updateSettings(passedSettings);
         $scope.handleProtectionData($scope.protectionData);
         $scope.player.setProtectionData($scope.protectionData);
