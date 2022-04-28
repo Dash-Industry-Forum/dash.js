@@ -391,6 +391,20 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "DRM - Keep MediaKeySession",
+                "description": "This example shows how the ProtectionController and the created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime leading to less license requests.",
+                "href": "drm/keepProtectionKeys.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
