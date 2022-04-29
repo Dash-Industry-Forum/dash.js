@@ -128,13 +128,6 @@ function ProtectionController(config) {
         // and video will be the same. Just use one valid MediaInfo object
         let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
 
-        // Reorder key systems according to priority order provided in protectionData
-        supportedKS = supportedKS.sort((ksA, ksB) => {
-            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-            return indexA - indexB;
-        });
-
         if (supportedKS && supportedKS.length > 0) {
             _selectKeySystem(supportedKS, true);
         }
@@ -173,6 +166,13 @@ function ProtectionController(config) {
     function _selectInitialKeySystem(supportedKS, fromManifest) {
         keySystemSelectionInProgress = true;
         const requestedKeySystems = [];
+
+        // Reorder key systems according to priority order provided in protectionData
+        supportedKS = supportedKS.sort((ksA, ksB) => {
+            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
+            return indexA - indexB;
+        });
 
         pendingKeySystemData.push(supportedKS);
 
