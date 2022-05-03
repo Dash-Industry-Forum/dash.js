@@ -577,17 +577,17 @@ function TextTracks(config) {
         return false;
     }
 
-    function cueInRange(cue, start, end) {
-        return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
+    function cueInRange(cue, start, end, strict = true) {
+        return (isNaN(start) || (strict ? cue.startTime : cue.endTime) >= start) && (isNaN(end) || (strict ? cue.endTime : cue.startTime) <= end);
     }
 
-    function deleteTrackCues(track, start, end) {
+    function deleteTrackCues(track, start, end, strict = true) {
         if (track.cues) {
             const cues = track.cues;
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0; r--) {
-                if (cueInRange(cues[r], start, end)) {
+                if (cueInRange(cues[r], start, end, strict)) {
                     if (cues[r].onexit) {
                         cues[r].onexit();
                     }
@@ -609,7 +609,7 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
-                deleteTrackCues.call(this, track);
+                deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
             }
         }
         nativeTrackElementArr = [];
