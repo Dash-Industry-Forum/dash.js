@@ -86,7 +86,9 @@ function ProtectionController(config) {
         sessionType,
         robustnessLevel,
         selectedKeySystem,
-        keySystemSelectionInProgress;
+        keySystemSelectionInProgress,
+        licenseXhrRequest,
+        licenseRequestRetryTimeout;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -94,6 +96,8 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
+        licenseXhrRequest = null;
+        licenseRequestRetryTimeout = null;
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     }
@@ -553,11 +557,11 @@ function ProtectionController(config) {
      * @instance
      */
     function stop() {
+        _abortLicenseRequest();
         if (protectionModel) {
             protectionModel.stop();
         }
     }
-
 
     /**
      * Destroys all protection data associated with this protection set.  This includes
@@ -574,6 +578,8 @@ function ProtectionController(config) {
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
 
         checkConfig();
+
+        _abortLicenseRequest();
 
         setMediaElement(null);
 
@@ -845,12 +851,13 @@ function ProtectionController(config) {
             // fail silently and retry
             retriesCount--;
             const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
-            setTimeout(function () {
+            licenseRequestRetryTimeout = setTimeout(function () {
                 _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
             }, retryInterval);
         };
 
         xhr.onload = function () {
+            licenseXhrRequest = null;
             if (this.status >= 200 && this.status <= 299 || retriesCount <= 0) {
                 onLoad(this);
             } else {
@@ -860,6 +867,7 @@ function ProtectionController(config) {
         };
 
         xhr.ontimeout = xhr.onerror = function () {
+            licenseXhrRequest = null;
             if (retriesCount <= 0) {
                 onError(this);
             } else {
@@ -880,7 +888,25 @@ function ProtectionController(config) {
             sessionId: request.sessionId
         });
 
+        licenseXhrRequest = xhr;
         xhr.send(request.data);
+    }
+
+    /**
+     * Aborts license request
+     * @private
+     */
+    function _abortLicenseRequest() {
+        if (licenseXhrRequest) {
+            licenseXhrRequest.onloadend = licenseXhrRequest.onerror = licenseXhrRequest.onprogress = undefined; //Ignore events from aborted requests.
+            licenseXhrRequest.abort();
+            licenseXhrRequest = null;
+        }
+
+        if (licenseRequestRetryTimeout) {
+            clearTimeout(licenseRequestRetryTimeout);
+            licenseRequestRetryTimeout = null;
+        }
     }
 
     /**
