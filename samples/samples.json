@@ -98,7 +98,7 @@
             {
                 "title": "Load with url parameters",
                 "description": "A demo page that uses url query parameters to configure the playback.",
-                "href": "getting-started/load-with-url-params.html",
+                "href": "getting-started/load-with-url-params.html?autoplay=true&url=https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",
@@ -172,56 +172,8 @@
         "section": "Live Low Latency",
         "samples": [
             {
-                "title": "Low latency",
-                "description": "Example showing how to use dash.js to play low latency streams.",
-                "href": "low-latency/index.html",
-                "image": "lib/img/livesim-1.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with L2ALL",
-                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
-                "href": "low-latency/l2all_index.html",
-                "image": "lib/img/akamai-ll-1.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with LoL+",
-                "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
-                "href": "low-latency/lolp_index.html",
-                "image": "lib/img/akamai-ll-2.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Low latency with AAST based decisioning",
-                "description": "Example showing how to use dash.js to play very low latency streams using AAST based throughput calculation.",
-                "href": "low-latency/aast_tp_calc.html",
-                "image": "lib/img/akamai-ll-3.jpg",
-                "labels": [
-                    "Live",
-                    "Low Latency",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
                 "title": "Low latency testplayer",
-                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "description": "Example showing how to use dash.js to play low latency streams. All low latency related settings such as the different ABR algorithms(LoL+,L2A) are selectable.",
                 "href": "low-latency/testplayer/testplayer.html",
                 "image": "lib/img/akamai-ll-4.jpg",
                 "labels": [
@@ -431,6 +383,20 @@
                 "description": "This example shows how to specify the license server url as part of the MPD using 'dashif:laurl'",
                 "href": "drm/dashif-laurl.html",
                 "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "DRM - Keep MediaKeySession",
+                "description": "This example shows how the ProtectionController and the created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime leading to less license requests.",
+                "href": "drm/keepProtectionKeys.html",
+                "image": "lib/img/tos-2.jpg",
                 "labels": [
                     "VoD",
                     "DRM",

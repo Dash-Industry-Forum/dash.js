@@ -31,6 +31,7 @@
 
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
+import CustomParametersModel from '../../../models/CustomParametersModel';
 
 function DVBReporting(config) {
     config = config || {};
@@ -38,6 +39,7 @@ function DVBReporting(config) {
 
     let context = this.context;
     let metricSerialiser,
+        customParametersModel,
         randomNumberGenerator,
         reportingPlayerStatusDecided,
         isReportingPlayer,
@@ -53,12 +55,14 @@ function DVBReporting(config) {
     function setup() {
         metricSerialiser = MetricSerialiser(context).getInstance();
         randomNumberGenerator = RNG(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
 
         resetInitialSettings();
     }
 
     function doGetRequest(url, successCB, failureCB) {
         let req = new XMLHttpRequest();
+        req.withCredentials = customParametersModel.getXHRWithCredentialsForType(metricsConstants.HTTP_REQUEST_DVB_REPORTING_TYPE);
         const oncomplete = function () {
             let reqIndex = pendingRequests.indexOf(req);
 

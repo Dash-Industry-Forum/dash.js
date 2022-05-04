@@ -335,12 +335,6 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_SEEKING = 'playbackSeeking';
 
         /**
-         * Sent when a seek operation has been asked.
-         * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
-         */
-        this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
-
-        /**
          * Sent when the video element reports stalled
          * @event MediaPlayerEvents#PLAYBACK_STALLED
          */
@@ -396,6 +390,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#REPRESENTATION_SWITCH
          */
         this.REPRESENTATION_SWITCH = 'representationSwitch';
+
+        /**
+         * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
+         * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
+         */
+        this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
     }
 }
 

@@ -5,6 +5,7 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import DashMetricsMock from './mocks/DashMetricsMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
 const expect = require('chai').expect;
 
@@ -15,6 +16,7 @@ describe('ABRRulesCollection', function () {
 
     describe('should initialize correctly', function () {
         let settings = Settings(context).getInstance();
+        let customParametersModel = CustomParametersModel(context).getInstance();
 
         beforeEach(() => {
             settings.reset();
@@ -32,7 +34,8 @@ describe('ABRRulesCollection', function () {
             abrRulesCollection = ABRRulesCollection(context).create({
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                settings: Settings(context).getInstance()
+                settings: Settings(context).getInstance(),
+                customParametersModel
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
@@ -44,7 +47,8 @@ describe('ABRRulesCollection', function () {
             abrRulesCollection = ABRRulesCollection(context).create({
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                settings: Settings(context).getInstance()
+                settings: Settings(context).getInstance(),
+                customParametersModel
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
@@ -55,12 +59,14 @@ describe('ABRRulesCollection', function () {
     });
 
     describe('should return correct switch requests', function () {
+        let customParametersModel = CustomParametersModel(context).getInstance();
 
         beforeEach(function () {
             abrRulesCollection = ABRRulesCollection(context).create({
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                settings: Settings(context).getInstance()
+                settings: Settings(context).getInstance(),
+                customParametersModel
             });
             abrRulesCollection.initialize();
         });

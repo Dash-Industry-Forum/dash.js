@@ -76,6 +76,7 @@ function ProtectionController(config) {
     let needkeyRetries = [];
     const cmcdModel = config.cmcdModel;
     const settings = config.settings;
+    const customParametersModel = config.customParametersModel;
 
     let instance,
         logger,
@@ -86,8 +87,8 @@ function ProtectionController(config) {
         robustnessLevel,
         selectedKeySystem,
         keySystemSelectionInProgress,
-        licenseRequestFilters,
-        licenseResponseFilters;
+        licenseXhrRequest,
+        licenseRequestRetryTimeout;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -95,8 +96,8 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
+        licenseXhrRequest = null;
+        licenseRequestRetryTimeout = null;
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     }
@@ -130,13 +131,6 @@ function ProtectionController(config) {
         // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
         // and video will be the same. Just use one valid MediaInfo object
         let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
-
-        // Reorder key systems according to priority order provided in protectionData
-        supportedKS = supportedKS.sort((ksA, ksB) => {
-            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-            return indexA - indexB;
-        });
 
         if (supportedKS && supportedKS.length > 0) {
             _selectKeySystem(supportedKS, true);
@@ -176,6 +170,13 @@ function ProtectionController(config) {
     function _selectInitialKeySystem(supportedKS, fromManifest) {
         keySystemSelectionInProgress = true;
         const requestedKeySystems = [];
+
+        // Reorder key systems according to priority order provided in protectionData
+        supportedKS = supportedKS.sort((ksA, ksB) => {
+            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
+            return indexA - indexB;
+        });
 
         pendingKeySystemData.push(supportedKS);
 
@@ -393,7 +394,7 @@ function ProtectionController(config) {
      * @return {boolean}
      * @private
      */
-     function _isKeyIdDuplicate(keyId) {
+    function _isKeyIdDuplicate(keyId) {
 
         if (!keyId) {
             return false;
@@ -556,11 +557,11 @@ function ProtectionController(config) {
      * @instance
      */
     function stop() {
+        _abortLicenseRequest();
         if (protectionModel) {
             protectionModel.stop();
         }
     }
-
 
     /**
      * Destroys all protection data associated with this protection set.  This includes
@@ -578,8 +579,7 @@ function ProtectionController(config) {
 
         checkConfig();
 
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
+        _abortLicenseRequest();
 
         setMediaElement(null);
 
@@ -748,6 +748,7 @@ function ProtectionController(config) {
             if (xhr.status >= 200 && xhr.status <= 299) {
                 const responseHeaders = Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
                 let licenseResponse = new LicenseResponse(xhr.responseURL, responseHeaders, xhr.response);
+                const licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
                 _applyFilters(licenseResponseFilters, licenseResponse)
                     .then(() => {
                         const licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
@@ -783,6 +784,7 @@ function ProtectionController(config) {
 
         let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
         const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE]) ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
+        const licenseRequestFilters = customParametersModel.getLicenseRequestFilters();
         _applyFilters(licenseRequestFilters, licenseRequest)
             .then(() => {
                 _doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
@@ -849,12 +851,13 @@ function ProtectionController(config) {
             // fail silently and retry
             retriesCount--;
             const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
-            setTimeout(function () {
+            licenseRequestRetryTimeout = setTimeout(function () {
                 _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
             }, retryInterval);
         };
 
         xhr.onload = function () {
+            licenseXhrRequest = null;
             if (this.status >= 200 && this.status <= 299 || retriesCount <= 0) {
                 onLoad(this);
             } else {
@@ -864,6 +867,7 @@ function ProtectionController(config) {
         };
 
         xhr.ontimeout = xhr.onerror = function () {
+            licenseXhrRequest = null;
             if (retriesCount <= 0) {
                 onError(this);
             } else {
@@ -884,7 +888,25 @@ function ProtectionController(config) {
             sessionId: request.sessionId
         });
 
+        licenseXhrRequest = xhr;
         xhr.send(request.data);
+    }
+
+    /**
+     * Aborts license request
+     * @private
+     */
+    function _abortLicenseRequest() {
+        if (licenseXhrRequest) {
+            licenseXhrRequest.onloadend = licenseXhrRequest.onerror = licenseXhrRequest.onprogress = undefined; //Ignore events from aborted requests.
+            licenseXhrRequest.abort();
+            licenseXhrRequest = null;
+        }
+
+        if (licenseRequestRetryTimeout) {
+            clearTimeout(licenseRequestRetryTimeout);
+            licenseRequestRetryTimeout = null;
+        }
     }
 
     /**
@@ -1058,22 +1080,6 @@ function ProtectionController(config) {
         }
     }
 
-    /**
-     * Sets the request filters to be applied before the license request is made
-     * @param {array} filters
-     */
-    function setLicenseRequestFilters(filters) {
-        licenseRequestFilters = filters;
-    }
-
-    /**
-     * Sets the response filters to be applied after the license response has been received.
-     * @param {array} filters
-     */
-    function setLicenseResponseFilters(filters) {
-        licenseResponseFilters = filters;
-    }
-
     instance = {
         initializeForMedia,
         clearMediaInfoArray,
@@ -1089,8 +1095,6 @@ function ProtectionController(config) {
         getSupportedKeySystemsFromContentProtection,
         getKeySystems,
         setKeySystems,
-        setLicenseRequestFilters,
-        setLicenseResponseFilters,
         stop,
         reset
     };

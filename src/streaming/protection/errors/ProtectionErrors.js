@@ -29,11 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ErrorsBase from '../../../core/errors/ErrorsBase';
+
 /**
  * @class
  */
 class ProtectionErrors extends ErrorsBase {
-	constructor () {
+    constructor() {
         super();
 
         /**

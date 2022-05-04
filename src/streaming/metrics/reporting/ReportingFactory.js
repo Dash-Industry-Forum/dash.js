@@ -42,13 +42,15 @@ function ReportingFactory(config) {
     let instance;
     const logger = config.debug ? config.debug.getLogger(instance) : {};
     const metricsConstants = config.metricsConstants;
+    const mediaPlayerModel = config.mediaPlayerModel || {};
 
     function create(entry, rangeController) {
         let reporting;
 
         try {
             reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create({
-                metricsConstants: metricsConstants
+                metricsConstants: metricsConstants,
+                mediaPlayerModel: mediaPlayerModel
             });
 
             reporting.initialize(entry, rangeController);

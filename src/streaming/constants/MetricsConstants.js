@@ -55,6 +55,7 @@ class MetricsConstants {
         this.MANIFEST_UPDATE_TRACK_INFO = 'ManifestUpdateRepresentationInfo';
         this.PLAY_LIST = 'PlayList';
         this.DVB_ERRORS = 'DVBErrors';
+        this.HTTP_REQUEST_DVB_REPORTING_TYPE = 'DVBReporting';
     }
 
     constructor() {

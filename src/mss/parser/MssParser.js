@@ -43,7 +43,6 @@ function MssParser(config) {
     const debug = config.debug;
     const constants = config.constants;
     const manifestModel = config.manifestModel;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const settings = config.settings;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
@@ -725,7 +724,7 @@ function MssParser(config) {
         // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
         // 3- Set retry attempts and intervals for FragmentInfo requests
         if (manifest.type === 'dynamic') {
-            let targetLiveDelay = mediaPlayerModel.getLiveDelay();
+            let targetLiveDelay = settings.get().streaming.delay.liveDelay;
             if (!targetLiveDelay) {
                 const liveDelayFragmentCount = settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) ? settings.get().streaming.delay.liveDelayFragmentCount : 4;
                 targetLiveDelay = segmentDuration * liveDelayFragmentCount;
