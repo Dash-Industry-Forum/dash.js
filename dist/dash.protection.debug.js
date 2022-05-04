@@ -1576,8 +1576,8 @@ var Constants = /*#__PURE__*/function () {
       this.UTF8 = 'utf-8';
       this.SCHEME_ID_URI = 'schemeIdUri';
       this.START_TIME = 'starttime';
-      this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
-      this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+      this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
+      this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
       this.XML = 'XML';
       this.ARRAY_BUFFER = 'ArrayBuffer';
       this.DVB_REPORTING_URL = 'dvb:reportingUrl';
@@ -1588,6 +1588,10 @@ var Constants = /*#__PURE__*/function () {
         HAVE_CURRENT_DATA: 2,
         HAVE_FUTURE_DATA: 3,
         HAVE_ENOUGH_DATA: 4
+      };
+      this.FILE_LOADER_TYPES = {
+        FETCH: 'fetch_loader',
+        XHR: 'xhr_loader'
       };
     }
   }]);
@@ -2124,7 +2128,8 @@ function Protection() {
     var protectionKeyController = Object(_controllers_ProtectionKeyController__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
     protectionKeyController.setConfig({
       debug: config.debug,
-      BASE64: config.BASE64
+      BASE64: config.BASE64,
+      settings: config.settings
     });
     protectionKeyController.initialize();
 
@@ -2141,6 +2146,7 @@ function Protection() {
         BASE64: config.BASE64,
         constants: config.constants,
         cmcdModel: config.cmcdModel,
+        customParametersModel: config.customParametersModel,
         settings: config.settings
       });
       config.capabilities.setEncryptedMediaSupported(true);
@@ -2544,7 +2550,8 @@ function ProtectionController(config) {
   var needkeyRetries = [];
   var cmcdModel = config.cmcdModel;
   var settings = config.settings;
-  var instance, logger, pendingKeySystemData, mediaInfoArr, protDataSet, sessionType, robustnessLevel, selectedKeySystem, keySystemSelectionInProgress, licenseRequestFilters, licenseResponseFilters;
+  var customParametersModel = config.customParametersModel;
+  var instance, logger, pendingKeySystemData, mediaInfoArr, protDataSet, sessionType, robustnessLevel, selectedKeySystem, keySystemSelectionInProgress, licenseXhrRequest, licenseRequestRetryTimeout;
 
   function setup() {
     logger = debug.getLogger(instance);
@@ -2552,8 +2559,8 @@ function ProtectionController(config) {
     mediaInfoArr = [];
     sessionType = 'temporary';
     robustnessLevel = '';
-    licenseRequestFilters = [];
-    licenseResponseFilters = [];
+    licenseXhrRequest = null;
+    licenseRequestRetryTimeout = null;
     eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
     eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
   }
@@ -2585,13 +2592,7 @@ function ProtectionController(config) {
     mediaInfoArr.push(mediaInfo); // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
     // and video will be the same. Just use one valid MediaInfo object
 
-    var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType); // Reorder key systems according to priority order provided in protectionData
-
-    supportedKS = supportedKS.sort(function (ksA, ksB) {
-      var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-      var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-      return indexA - indexB;
-    });
+    var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
 
     if (supportedKS && supportedKS.length > 0) {
       _selectKeySystem(supportedKS, true);
@@ -2627,7 +2628,13 @@ function ProtectionController(config) {
 
   function _selectInitialKeySystem(supportedKS, fromManifest) {
     keySystemSelectionInProgress = true;
-    var requestedKeySystems = [];
+    var requestedKeySystems = []; // Reorder key systems according to priority order provided in protectionData
+
+    supportedKS = supportedKS.sort(function (ksA, ksB) {
+      var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+      var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
+      return indexA - indexB;
+    });
     pendingKeySystemData.push(supportedKS); // Add all key systems to our request list since we have yet to select a key system
 
     for (var i = 0; i < supportedKS.length; i++) {
@@ -3028,6 +3035,8 @@ function ProtectionController(config) {
 
 
   function stop() {
+    _abortLicenseRequest();
+
     if (protectionModel) {
       protectionModel.stop();
     }
@@ -3048,8 +3057,9 @@ function ProtectionController(config) {
     eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
     eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     checkConfig();
-    licenseRequestFilters = [];
-    licenseResponseFilters = [];
+
+    _abortLicenseRequest();
+
     setMediaElement(null);
     selectedKeySystem = null;
     keySystemSelectionInProgress = false;
@@ -3239,6 +3249,7 @@ function ProtectionController(config) {
       if (xhr.status >= 200 && xhr.status <= 299) {
         var responseHeaders = _core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
         var licenseResponse = new _vo_LicenseResponse__WEBPACK_IMPORTED_MODULE_6__["default"](xhr.responseURL, responseHeaders, xhr.response);
+        var licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
 
         _applyFilters(licenseResponseFilters, licenseResponse).then(function () {
           var licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
@@ -3271,6 +3282,7 @@ function ProtectionController(config) {
     var sessionId = sessionToken.getSessionId() || null;
     var licenseRequest = new _vo_LicenseRequest__WEBPACK_IMPORTED_MODULE_5__["default"](url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
     var retryAttempts = !isNaN(settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE]) ? settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
+    var licenseRequestFilters = customParametersModel.getLicenseRequestFilters();
 
     _applyFilters(licenseRequestFilters, licenseRequest).then(function () {
       _doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
@@ -3343,12 +3355,14 @@ function ProtectionController(config) {
       // fail silently and retry
       retriesCount--;
       var retryInterval = !isNaN(settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE]) ? settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_7__["HTTPRequest"].LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
-      setTimeout(function () {
+      licenseRequestRetryTimeout = setTimeout(function () {
         _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
       }, retryInterval);
     };
 
     xhr.onload = function () {
+      licenseXhrRequest = null;
+
       if (this.status >= 200 && this.status <= 299 || retriesCount <= 0) {
         onLoad(this);
       } else {
@@ -3359,6 +3373,8 @@ function ProtectionController(config) {
     };
 
     xhr.ontimeout = xhr.onerror = function () {
+      licenseXhrRequest = null;
+
       if (retriesCount <= 0) {
         onError(this);
       } else {
@@ -3379,7 +3395,27 @@ function ProtectionController(config) {
       payload: request.data,
       sessionId: request.sessionId
     });
+    licenseXhrRequest = xhr;
     xhr.send(request.data);
+  }
+  /**
+   * Aborts license request
+   * @private
+   */
+
+
+  function _abortLicenseRequest() {
+    if (licenseXhrRequest) {
+      licenseXhrRequest.onloadend = licenseXhrRequest.onerror = licenseXhrRequest.onprogress = undefined; //Ignore events from aborted requests.
+
+      licenseXhrRequest.abort();
+      licenseXhrRequest = null;
+    }
+
+    if (licenseRequestRetryTimeout) {
+      clearTimeout(licenseRequestRetryTimeout);
+      licenseRequestRetryTimeout = null;
+    }
   }
   /**
    * Returns the url of the license server
@@ -3554,24 +3590,6 @@ function ProtectionController(config) {
       protectionKeyController.setKeySystems(keySystems);
     }
   }
-  /**
-   * Sets the request filters to be applied before the license request is made
-   * @param {array} filters
-   */
-
-
-  function setLicenseRequestFilters(filters) {
-    licenseRequestFilters = filters;
-  }
-  /**
-   * Sets the response filters to be applied after the license response has been received.
-   * @param {array} filters
-   */
-
-
-  function setLicenseResponseFilters(filters) {
-    licenseResponseFilters = filters;
-  }
 
   instance = {
     initializeForMedia: initializeForMedia,
@@ -3588,8 +3606,6 @@ function ProtectionController(config) {
     getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
     getKeySystems: getKeySystems,
     setKeySystems: setKeySystems,
-    setLicenseRequestFilters: setLicenseRequestFilters,
-    setLicenseResponseFilters: setLicenseResponseFilters,
     stop: stop,
     reset: reset
   };
@@ -3670,7 +3686,7 @@ __webpack_require__.r(__webpack_exports__);
 
 function ProtectionKeyController() {
   var context = this.context;
-  var instance, debug, logger, keySystems, BASE64, clearkeyKeySystem, clearkeyW3CKeySystem;
+  var instance, debug, logger, keySystems, BASE64, settings, clearkeyKeySystem, clearkeyW3CKeySystem;
 
   function setConfig(config) {
     if (!config) return;
@@ -3683,6 +3699,10 @@ function ProtectionKeyController() {
     if (config.BASE64) {
       BASE64 = config.BASE64;
     }
+
+    if (config.settings) {
+      settings = config.settings;
+    }
   }
 
   function initialize() {
@@ -3690,7 +3710,8 @@ function ProtectionKeyController() {
     var keySystem; // PlayReady
 
     keySystem = Object(_drm_KeySystemPlayReady__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance({
-      BASE64: BASE64
+      BASE64: BASE64,
+      settings: settings
     });
     keySystems.push(keySystem); // Widevine
 
@@ -4167,7 +4188,7 @@ function KeySystemClearKey(config) {
   }
 
   function getLicenseRequestFromMessage(message) {
-    return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+    return JSON.stringify(JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message))));
   }
 
   function getLicenseServerURLFromInitData()
@@ -4262,6 +4283,7 @@ function KeySystemPlayReady(config) {
   var instance;
   var messageFormat = 'utf-16';
   var BASE64 = config.BASE64;
+  var settings = config.settings;
 
   function checkConfig() {
     if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray')) {
@@ -4273,6 +4295,15 @@ function KeySystemPlayReady(config) {
     var msg, xmlDoc;
     var headers = {};
     var parser = new DOMParser();
+
+    if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
+      // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+      if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
+        headers['Content-Type'] = 'text/xml; charset=utf-8';
+        return headers;
+      }
+    }
+
     var dataview = messageFormat === 'utf-16' ? new Uint16Array(message) : new Uint8Array(message);
     msg = String.fromCharCode.apply(null, dataview);
     xmlDoc = parser.parseFromString(msg, 'application/xml');
@@ -4303,6 +4334,14 @@ function KeySystemPlayReady(config) {
   function getLicenseRequestFromMessage(message) {
     var licenseRequest = null;
     var parser = new DOMParser();
+
+    if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
+      // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+      if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
+        return message;
+      }
+    }
+
     var dataview = messageFormat === 'utf-16' ? new Uint16Array(message) : new Uint8Array(message);
     checkConfig();
     var msg = String.fromCharCode.apply(null, dataview);
@@ -7890,6 +7929,11 @@ function HTTPRequest() {
    */
 
   this._serviceLocation = null;
+  /**
+   * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+   */
+
+  this._fileLoaderType = null;
 };
 /**
  * @classdesc This Object holds reference to the progress of the HTTPRequest.
@@ -7899,8 +7943,8 @@ function HTTPRequest() {
 
 var HTTPRequestTrace =
 /**
-* @class
-*/
+ * @class
+ */
 function HTTPRequestTrace() {
   _classCallCheck(this, HTTPRequestTrace);
 
@@ -7926,7 +7970,7 @@ function HTTPRequestTrace() {
    * @public
    */
 
-  this.t = null;
+  this._t = null;
 };
 
 HTTPRequest.GET = 'GET';
@@ -7938,6 +7982,7 @@ HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 

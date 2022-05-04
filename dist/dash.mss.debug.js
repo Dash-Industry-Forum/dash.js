@@ -3773,7 +3773,7 @@ function MssHandler(config) {
     }
   }
 
-  function onPlaybackSeekAsked() {
+  function onPlaybackSeeking() {
     if (playbackController.getIsDynamic() && playbackController.getTime() !== 0) {
       startFragmentInfoControllers();
     }
@@ -3798,7 +3798,7 @@ function MssHandler(config) {
     });
     /* jshint ignore:line */
 
-    eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, {
+    eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, {
       priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH
     });
     /* jshint ignore:line */
@@ -3819,7 +3819,7 @@ function MssHandler(config) {
 
     eventBus.off(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, this);
     eventBus.off(events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-    eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
+    eventBus.off(events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
     eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
     eventBus.off(events.TTML_TO_PARSE, onTTMLPreProcess, this); // Reset FragmentInfoControllers
 
@@ -4064,7 +4064,6 @@ function MssParser(config) {
   var debug = config.debug;
   var constants = config.constants;
   var manifestModel = config.manifestModel;
-  var mediaPlayerModel = config.mediaPlayerModel;
   var settings = config.settings;
   var DEFAULT_TIME_SCALE = 10000000.0;
   var SUPPORTED_CODECS = ['AAC', 'AACL', 'AACH', 'AACP', 'AVC1', 'H264', 'TTML', 'DFXP']; // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
@@ -4669,7 +4668,7 @@ function MssParser(config) {
     // 3- Set retry attempts and intervals for FragmentInfo requests
 
     if (manifest.type === 'dynamic') {
-      var targetLiveDelay = mediaPlayerModel.getLiveDelay();
+      var targetLiveDelay = settings.get().streaming.delay.liveDelay;
 
       if (!targetLiveDelay) {
         var liveDelayFragmentCount = settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) ? settings.get().streaming.delay.liveDelayFragmentCount : 4;
@@ -5217,12 +5216,6 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.PLAYBACK_SEEKING = 'playbackSeeking';
     /**
-     * Sent when a seek operation has been asked.
-     * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
-     */
-
-    _this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
-    /**
      * Sent when the video element reports stalled
      * @event MediaPlayerEvents#PLAYBACK_STALLED
      */
@@ -5279,6 +5272,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.REPRESENTATION_SWITCH = 'representationSwitch';
+    /**
+     * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
+     * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
+     */
+
+    _this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
     return _this;
   }
 
@@ -5681,6 +5680,11 @@ function HTTPRequest() {
    */
 
   this._serviceLocation = null;
+  /**
+   * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+   */
+
+  this._fileLoaderType = null;
 };
 /**
  * @classdesc This Object holds reference to the progress of the HTTPRequest.
@@ -5690,8 +5694,8 @@ function HTTPRequest() {
 
 var HTTPRequestTrace =
 /**
-* @class
-*/
+ * @class
+ */
 function HTTPRequestTrace() {
   _classCallCheck(this, HTTPRequestTrace);
 
@@ -5717,7 +5721,7 @@ function HTTPRequestTrace() {
    * @public
    */
 
-  this.t = null;
+  this._t = null;
 };
 
 HTTPRequest.GET = 'GET';
@@ -5729,6 +5733,7 @@ HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 
