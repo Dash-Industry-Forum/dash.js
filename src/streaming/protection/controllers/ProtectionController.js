@@ -675,7 +675,7 @@ function ProtectionController(config) {
         // Perform any special handling for ClearKey
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             const clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
-            if (clearkeys) {
+            if (clearkeys && clearkeys.keyPairs && clearkeys.keyPairs.length > 0) {
                 logger.debug('DRM: ClearKey license request handled by application!');
                 _sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken, clearkeys);
