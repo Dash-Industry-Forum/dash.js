@@ -267,7 +267,7 @@ function ProtectionController(config) {
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
             // initData and overwrite possible initData indicated in encrypted event (EME)
-            if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+            if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemInfo.protData.clearkeys).length !== 0) {
                 const initData = { kids: Object.keys(keySystemInfo.protData.clearkeys) };
                 keySystemInfo.initData = new TextEncoder().encode(JSON.stringify(initData));
             }
@@ -675,7 +675,7 @@ function ProtectionController(config) {
         // Perform any special handling for ClearKey
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             const clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
-            if (clearkeys) {
+            if (clearkeys && clearkeys.keyPairs && clearkeys.keyPairs.length > 0) {
                 logger.debug('DRM: ClearKey license request handled by application!');
                 _sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken, clearkeys);
