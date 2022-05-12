@@ -299,7 +299,6 @@ function AbrController() {
                 index: e.request.index
             })[0];
             if (request) {
-                fragmentModel.abortRequests();
                 abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
                 switchHistoryDict[streamId][type].reset();
                 switchHistoryDict[streamId][type].push({
@@ -625,7 +624,7 @@ function AbrController() {
 
             switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
 
-            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality)) {
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality < oldQuality)) {
                 _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
                 return true;
             }
