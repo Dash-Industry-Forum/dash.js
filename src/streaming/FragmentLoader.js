@@ -160,10 +160,10 @@ function FragmentLoader(config) {
     }
 
     instance = {
-        checkForExistence: checkForExistence,
-        load: load,
-        abort: abort,
-        reset: reset
+        checkForExistence,
+        load,
+        abort,
+        reset
     };
 
     setup();

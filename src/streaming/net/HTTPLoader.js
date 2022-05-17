@@ -94,40 +94,6 @@ function HTTPLoader(cfg) {
     }
 
     /**
-     * Aborts any inflight downloads
-     * @memberof module:HTTPLoader
-     * @instance
-     */
-    function abort() {
-        retryRequests.forEach(t => {
-            clearTimeout(t.timeout);
-            // abort request in order to trigger LOADING_ABANDONED event
-            if (t.config.request && t.config.abort) {
-                t.config.abort(t.config.request);
-            }
-        });
-        retryRequests = [];
-
-        delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
-        delayedRequests = [];
-
-        httpRequests.forEach(x => {
-            // MSS patch: ignore FragmentInfo requests
-            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
-                return;
-            }
-
-            // abort will trigger onloadend which we don't want
-            // when deliberately aborting inflight requests -
-            // set them to undefined so they are not called
-            x.onloadend = x.onerror = x.onprogress = undefined;
-            x.loader.abort(x);
-        });
-        httpRequests = [];
-    }
-
-
-    /**
      * Initiates a download of the resource described by config.request.
      * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
      * @memberof module:HTTPLoader
@@ -152,13 +118,19 @@ function HTTPLoader(cfg) {
      */
     function _internalLoad(config, remainingAttempts) {
         const requestObject = config.request;
+
         const traces = [];
-        let firstProgress = true;
-        let requestStartTime = new Date();
-        let lastTraceTime = requestStartTime;
-        let lastTraceReceivedCount = 0;
-        let fileLoaderType = '';
-        let httpRequest;
+        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, fileLoaderType, httpRequest;
+
+        requestObject.bytesLoaded = NaN;
+        requestObject.bytesTotal = NaN;
+        requestObject.firstByteDate = null;
+        firstProgress = true;
+        requestStartTime = new Date();
+        lastTraceTime = requestStartTime;
+        lastTraceReceivedCount = 0;
+        fileLoaderType = '';
+
 
         if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
@@ -207,7 +179,7 @@ function HTTPLoader(cfg) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0], // event.loaded: When downloading a resource using HTTP, this value is specified in bytes (not bits), and only represents the part of the content itself, not headers and other overhead
                     t: event.throughput
                 });
 
@@ -256,6 +228,8 @@ function HTTPLoader(cfg) {
          */
         const _ontimeout = function (event) {
             let timeoutMessage;
+
+            // We know how much we already downloaded by looking at the timeout event
             if (event.lengthComputable) {
                 let percentageComplete = (event.loaded / event.total) * 100;
                 timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
@@ -394,8 +368,8 @@ function HTTPLoader(cfg) {
         requestObject.fileLoaderType = fileLoaderType;
 
         // If enabled the ResourceTimingApi we add the corresponding information to the request object.
-        // These values are more accurate and can be used by the ThroughputHistory later
-        if (settings.get().streaming.abr.useResourceTimingApi) {
+        // These values are more accurate and can be used by the ThroughputController later
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
             _addResourceTimingValues(requestObject);
         }
 
@@ -525,6 +499,39 @@ function HTTPLoader(cfg) {
         } catch (e) {
             return [];
         }
+    }
+
+    /**
+     * Aborts any inflight downloads
+     * @memberof module:HTTPLoader
+     * @instance
+     */
+    function abort() {
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
+
+        delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
+        delayedRequests = [];
+
+        httpRequests.forEach(x => {
+            // MSS patch: ignore FragmentInfo requests
+            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                return;
+            }
+
+            // abort will trigger onloadend which we don't want
+            // when deliberately aborting inflight requests -
+            // set them to undefined so they are not called
+            x.onloadend = x.onerror = x.onprogress = undefined;
+            x.loader.abort(x);
+        });
+        httpRequests = [];
     }
 
     instance = {

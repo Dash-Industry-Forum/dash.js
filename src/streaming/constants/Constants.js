@@ -158,10 +158,10 @@ class Constants {
         this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
 
         /**
-        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
-        *  @memberof Constants#
-        *  @static
-        */
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
+         *  @memberof Constants#
+         *  @static
+         */
         this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
 
         /**
@@ -177,20 +177,6 @@ class Constants {
          *  @static
          */
         this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
-
-        /**
-         *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-
-        /**
-         *  @constant {string} EWMA Exponential moving average
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MOVING_AVERAGE_EWMA = 'ewma';
 
         /**
          *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
@@ -286,15 +272,18 @@ class Constants {
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
         this.DVB_PROBABILITY = 'dvb:probability';
         this.VIDEO_ELEMENT_READY_STATES = {
-            HAVE_NOTHING: 0,
-            HAVE_METADATA: 1,
-            HAVE_CURRENT_DATA: 2,
-            HAVE_FUTURE_DATA: 3,
-            HAVE_ENOUGH_DATA: 4
+            HAVE_NOTHING: 0, HAVE_METADATA: 1, HAVE_CURRENT_DATA: 2, HAVE_FUTURE_DATA: 3, HAVE_ENOUGH_DATA: 4
         };
         this.FILE_LOADER_TYPES = {
-            FETCH: 'fetch_loader',
-            XHR: 'xhr_loader'
+            FETCH: 'fetch_loader', XHR: 'xhr_loader'
+        };
+        this.THROUGHPUT_TYPES = {
+            LATENCY: 'throughput_type_latency', BANDWIDTH: 'throughput_type_bandwidth'
+        };
+        this.THROUGHPUT_CALCULATION_MODES = {
+            EWMA : 'throughput_calculcation_mode_ewma',
+            ARITHMETIC_MEAN : 'throughput_calculation_mode_am',
+            HARMONIC_MEAN : 'throughput_calculation_mode_hm'
         }
     }
 

@@ -81,6 +81,7 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
 import CustomParametersModel from './models/CustomParametersModel';
+import ThroughputController from './controllers/ThroughputController';
 
 /**
  * The media types
@@ -134,6 +135,7 @@ function MediaPlayer() {
         playbackInitialized,
         autoPlay,
         abrController,
+        throughputController,
         schemeLoaderFactory,
         timelineConverter,
         mediaController,
@@ -231,6 +233,9 @@ function MediaPlayer() {
         if (config.abrController) {
             abrController = config.abrController;
         }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
+        }
         if (config.schemeLoaderFactory) {
             schemeLoaderFactory = config.schemeLoaderFactory;
         }
@@ -281,11 +286,13 @@ function MediaPlayer() {
 
             // init some controllers and models
             timelineConverter = TimelineConverter(context).getInstance();
+
+            if (!throughputController) {
+                throughputController = ThroughputController(context).getInstance();
+            }
+
             if (!abrController) {
                 abrController = AbrController(context).getInstance();
-                abrController.setConfig({
-                    settings: settings
-                });
             }
 
             if (!schemeLoaderFactory) {
@@ -1148,10 +1155,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAverageThroughput(type) {
-        const throughputHistory = abrController.getThroughputHistory();
-        const isDynamic = playbackController.getIsDynamic();
-
-        return throughputHistory ? throughputHistory.getAverageThroughput(type, isDynamic) : 0;
+        return throughputController ? throughputController.getAverageThroughput(type) : 0;
     }
 
     /**
@@ -1969,6 +1973,7 @@ function MediaPlayer() {
         playbackController.reset();
         serviceDescriptionController.reset();
         abrController.reset();
+        throughputController.reset();
         mediaController.reset();
         segmentBaseController.reset();
         if (protectionController) {
@@ -2029,6 +2034,7 @@ function MediaPlayer() {
             playbackController,
             serviceDescriptionController,
             abrController,
+            throughputController,
             mediaController,
             settings,
             baseURLController,
@@ -2064,8 +2070,14 @@ function MediaPlayer() {
             settings
         })
 
+        throughputController.setConfig({
+            settings,
+            playbackController
+        })
+
         abrController.setConfig({
             streamController,
+            throughputController,
             domStorage,
             mediaPlayerModel,
             customParametersModel,
@@ -2078,10 +2090,12 @@ function MediaPlayer() {
         cmcdModel.setConfig({
             abrController,
             dashMetrics,
-            playbackController
+            playbackController,
+            throughputController
         });
 
         // initialises controller
+        throughputController.initialize();
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();

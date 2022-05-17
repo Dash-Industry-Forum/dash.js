@@ -36,6 +36,7 @@ function RulesContext(config) {
     config = config || {};
     let instance;
     const abrController = config.abrController;
+    const throughputController = config.throughputController;
     const switchHistory = config.switchHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
@@ -70,6 +71,10 @@ function RulesContext(config) {
 
     function getAbrController() {
         return abrController;
+    }
+
+    function getThroughputController() {
+        return throughputController;
     }
 
     function getSwitchHistory() {
@@ -108,6 +113,7 @@ function RulesContext(config) {
         getStreamInfo,
         getScheduleController,
         getAbrController,
+        getThroughputController,
         getRepresentationInfo,
         useBufferOccupancyABR,
         useL2AABR,

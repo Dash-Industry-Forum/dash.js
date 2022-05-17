@@ -90,8 +90,8 @@ function LoLPRule(config) {
             }
 
             const playbackRate = playbackController.getPlaybackRate();
-            const throughputHistory = abrController.getThroughputHistory();
-            const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
+            const throughputController = rulesContext.getThroughputController();
+            const throughput = throughputController.getSafeAverageThroughput(mediaType);
             logger.debug(`Throughput ${Math.round(throughput)} kbps`);
 
             if (isNaN(throughput) || !bufferStateVO) {

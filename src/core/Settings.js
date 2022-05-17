@@ -883,23 +883,31 @@ function Settings() {
                 lowLatencyMultiplyFactor: 5
             },
             abr: {
-                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                useDefaultABRRules: true,
+                limitBitrateByPortal: false,
+                usePixelRatioInLimitBitrateByPortal: false,
                 additionalAbrRules: {
                     insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
                     abandonRequestsRule: false
                 },
-                throughputHistory: {
+                throughput: {
+                    calculationMode: Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN,
+                    fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
+                    useDeadTimeLatency: true,
+                    bandwidthSafetyFactor: 0.9,
+                    useResourceTimingApi: true,
                     maxMeasurementsToKeep : 20,
-                    averageThroughputSampleAmount: {
+                    sampleSettings: {
                         live: 3,
-                        vod: 4
+                        vod: 4,
+                        enableSampleSizeAdjustment: true,
+                        decreaseScale: 1.3,
+                        increaseScale: 1.3,
                     },
                     averageLatencySampleAmount: 4,
-                    throughputDecreaseScale: 1.3,
-                    throughputIncreaseScale: 1.3,
                     ewma: {
                         throughputSlowHalfLifeSeconds: 8,
                         throughputFastHalfLifeSeconds: 3,
@@ -907,12 +915,6 @@ function Settings() {
                         latencyFastHalfLifeCount: 1
                     }
                 },
-                useResourceTimingApi: true,
-                bandwidthSafetyFactor: 0.9,
-                useDefaultABRRules: true,
-                useDeadTimeLatency: true,
-                limitBitrateByPortal: false,
-                usePixelRatioInLimitBitrateByPortal: false,
                 maxBitrate: {
                     audio: -1,
                     video: -1
@@ -936,8 +938,7 @@ function Settings() {
                 autoSwitchBitrate: {
                     audio: true,
                     video: true
-                },
-                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING
+                }
             },
             cmcd: {
                 enabled: false,

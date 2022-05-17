@@ -64,6 +64,7 @@ function Stream(config) {
     const errHandler = config.errHandler;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
+    const throughputController = config.throughputController;
     const eventController = config.eventController;
     const mediaController = config.mediaController;
     const protectionController = config.protectionController;
@@ -450,6 +451,7 @@ function Stream(config) {
             segmentBaseController: config.segmentBaseController,
             abrController,
             playbackController,
+            throughputController,
             mediaController,
             textController,
             errHandler,

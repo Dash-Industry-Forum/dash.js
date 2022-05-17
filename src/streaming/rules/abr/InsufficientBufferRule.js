@@ -107,11 +107,11 @@ function InsufficientBufferRule(config) {
         } else {
             const mediaInfo = rulesContext.getMediaInfo();
             const abrController = rulesContext.getAbrController();
-            const throughputHistory = abrController.getThroughputHistory();
+            const throughputController = rulesContext.getThroughputController();
 
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
-            const latency = throughputHistory.getAverageLatency(mediaType);
+            const throughput = throughputController.getAverageThroughput(mediaType);
+            const latency = throughputController.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
             switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);

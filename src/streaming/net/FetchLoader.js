@@ -103,7 +103,7 @@ function FetchLoader() {
             signal: abortController ? abortController.signal : undefined
         };
 
-        const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
+        const calculationMode = settings.get().streaming.abr.throughput.fetchThroughputCalculationMode;
         const requestTime = Date.now();
         let throughputCapacityDelayMS = 0;
 

@@ -91,6 +91,7 @@ function StreamController() {
         mediaSource,
         videoModel,
         playbackController,
+        throughputController,
         serviceDescriptionController,
         mediaPlayerModel,
         customParametersModel,
@@ -306,6 +307,7 @@ function StreamController() {
                 textController,
                 abrController,
                 playbackController,
+                throughputController,
                 eventController,
                 mediaController,
                 protectionController,
@@ -1422,6 +1424,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if(config.throughputController) {
+            throughputController = config.throughputController;
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;

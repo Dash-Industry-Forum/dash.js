@@ -1954,7 +1954,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
         $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
         $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
-        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.fetchThroughputCalculationMode;
+        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.throughput.fetchThroughputCalculationMode;
     }
 
     function setAdditionalPlaybackOptions() {

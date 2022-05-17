@@ -41,9 +41,7 @@ import RulesContext from '../rules/RulesContext';
 import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
-import ThroughputHistory from '../rules/ThroughputHistory';
 import Debug from '../../core/Debug';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import {checkInteger} from '../utils/SupervisorTools';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 
@@ -77,7 +75,7 @@ function AbrController() {
         playbackIndex,
         switchHistoryDict,
         droppedFramesHistory,
-        throughputHistory,
+        throughputController,
         isUsingBufferOccupancyAbrDict,
         isUsingL2AAbrDict,
         isUsingLoLPAbrDict,
@@ -94,9 +92,6 @@ function AbrController() {
      */
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
-        throughputHistory = ThroughputHistory(context).create({
-            settings
-        });
 
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics,
@@ -210,7 +205,6 @@ function AbrController() {
 
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
-        throughputHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
     }
@@ -233,6 +227,9 @@ function AbrController() {
 
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
         if (config.domStorage) {
             domStorage = config.domStorage;
@@ -263,6 +260,18 @@ function AbrController() {
         }
     }
 
+
+    /**
+     * When the buffer level is updated we check if we need to change the ABR strategy
+     * @param e
+     * @private
+     */
+    function _onMetricAdded(e) {
+        if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+            _updateAbrStrategy(e.mediaType, 0.001 * e.value.level);
+        }
+    }
+
     /**
      * While fragment loading is in progress we check if we might need to abort the request
      * @param {object} e
@@ -283,7 +292,8 @@ function AbrController() {
 
         const rulesContext = RulesContext(context).create({
             abrController: instance,
-            streamProcessor: streamProcessor,
+            throughputController,
+            streamProcessor,
             currentRequest: e.request,
             useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
             useL2AABR: isUsingL2AAbrDict[type],
@@ -299,7 +309,6 @@ function AbrController() {
                 index: e.request.index
             })[0];
             if (request) {
-                fragmentModel.abortRequests();
                 abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
                 switchHistoryDict[streamId][type].reset();
                 switchHistoryDict[streamId][type].push({
@@ -333,21 +342,6 @@ function AbrController() {
                 droppedFramesHistory.push(e.streamId, playbackIndex, videoModel.getPlaybackQuality());
             }
             playbackIndex = e.newQuality;
-        }
-    }
-
-    /**
-     * When the buffer level is updated we check if we need to change the ABR strategy
-     * @param e
-     * @private
-     */
-    function _onMetricAdded(e) {
-        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            throughputHistory.push(e.mediaType, e.value);
-        }
-
-        if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            _updateAbrStrategy(e.mediaType, 0.001 * e.value.level);
         }
     }
 
@@ -602,8 +596,9 @@ function AbrController() {
             const oldQuality = getQualityFor(type, streamId);
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
+                throughputController,
                 switchHistory: switchHistoryDict[streamId][type],
-                droppedFramesHistory: droppedFramesHistory,
+                droppedFramesHistory,
                 streamProcessor: streamProcessorDict[streamId][type],
                 currentValue: oldQuality,
                 useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
@@ -625,7 +620,7 @@ function AbrController() {
 
             switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
 
-            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality)) {
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality < oldQuality)) {
                 _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
                 return true;
             }
@@ -716,7 +711,6 @@ function AbrController() {
     function _changeQuality(type, oldQuality, newQuality, maxIdx, reason, streamId) {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
 
@@ -735,7 +729,7 @@ function AbrController() {
                 },
                 { streamId: streamInfo.id, mediaType: type }
             );
-            const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
+            const bitrate = throughputController.getAverageThroughput(type);
             if (!isNaN(bitrate)) {
                 domStorage.setSavedBitrateSettings(type, bitrate);
             }
@@ -761,7 +755,7 @@ function AbrController() {
     function getQualityForBitrate(mediaInfo, bitrate, streamId, latency = null) {
         const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[streamId][mediaInfo.type].getRepresentationInfo() : null;
 
-        if (settings.get().streaming.abr.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
+        if (settings.get().streaming.abr.throughput.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
             latency = latency / 1000;
             const fragmentDuration = voRepresentation.fragmentDuration;
             if (latency > fragmentDuration) {
@@ -842,10 +836,6 @@ function AbrController() {
         }
     }
 
-    function getThroughputHistory() {
-        return throughputHistory;
-    }
-
     function updateTopQualityIndex(mediaInfo) {
         const type = mediaInfo.type;
         const streamId = mediaInfo.streamInfo.id;
@@ -902,7 +892,6 @@ function AbrController() {
         isPlayingAtTopQuality,
         updateTopQualityIndex,
         clearDataForStream,
-        getThroughputHistory,
         getBitrateList,
         getQualityForBitrate,
         getTopBitrateInfoFor,
