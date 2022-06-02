@@ -33,8 +33,8 @@ import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
 
 const legacyKeysAndReplacements = [
-    { oldKey: 'dashjs_vbitrate',  newKey: 'dashjs_video_bitrate' },
-    { oldKey: 'dashjs_abitrate',  newKey: 'dashjs_audio_bitrate' },
+    { oldKey: 'dashjs_vbitrate', newKey: 'dashjs_video_bitrate' },
+    { oldKey: 'dashjs_abitrate', newKey: 'dashjs_audio_bitrate' },
     { oldKey: 'dashjs_vsettings', newKey: 'dashjs_video_settings' },
     { oldKey: 'dashjs_asettings', newKey: 'dashjs_audio_settings' }
 ];
@@ -136,6 +136,10 @@ function DOMStorage(config) {
     }
 
     function getSavedMediaSettings(type) {
+        if (!settings.get().streaming.lastMediaSettingsCachingInfo.enabled) {
+            return null;
+        }
+
         let mediaSettings = null;
 
         checkConfig();
@@ -159,6 +163,10 @@ function DOMStorage(config) {
     }
 
     function getSavedBitrateSettings(type) {
+        if (!settings.get().streaming.lastBitrateCachingInfo.enabled) {
+            return NaN;
+        }
+
         let savedBitrate = NaN;
 
         checkConfig();
@@ -189,7 +197,7 @@ function DOMStorage(config) {
         if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
             const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
             try {
-                localStorage.setItem(key, JSON.stringify({settings: value, timestamp: getTimestamp()}));
+                localStorage.setItem(key, JSON.stringify({ settings: value, timestamp: getTimestamp() }));
             } catch (e) {
                 logger.error(e.message);
             }
@@ -200,7 +208,7 @@ function DOMStorage(config) {
         if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE) && bitrate) {
             const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
-                localStorage.setItem(key, JSON.stringify({bitrate: bitrate.toFixed(3), timestamp: getTimestamp()}));
+                localStorage.setItem(key, JSON.stringify({ bitrate: bitrate.toFixed(3), timestamp: getTimestamp() }));
             } catch (e) {
                 logger.error(e.message);
             }
