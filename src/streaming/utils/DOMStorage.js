@@ -136,13 +136,14 @@ function DOMStorage(config) {
     }
 
     function getSavedMediaSettings(type) {
+        checkConfig();
+
         if (!settings.get().streaming.lastMediaSettingsCachingInfo.enabled) {
             return null;
         }
 
         let mediaSettings = null;
 
-        checkConfig();
         //Checks local storage to see if there is valid, non-expired media settings
         if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
             const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
@@ -163,13 +164,13 @@ function DOMStorage(config) {
     }
 
     function getSavedBitrateSettings(type) {
+        checkConfig();
+
         if (!settings.get().streaming.lastBitrateCachingInfo.enabled) {
             return NaN;
         }
 
         let savedBitrate = NaN;
-
-        checkConfig();
 
         //Checks local storage to see if there is valid, non-expired bit rate
         //hinting from the last play session to use as a starting bit rate.
@@ -216,10 +217,10 @@ function DOMStorage(config) {
     }
 
     instance = {
-        getSavedBitrateSettings: getSavedBitrateSettings,
-        setSavedBitrateSettings: setSavedBitrateSettings,
-        getSavedMediaSettings: getSavedMediaSettings,
-        setSavedMediaSettings: setSavedMediaSettings
+        getSavedBitrateSettings,
+        setSavedBitrateSettings,
+        getSavedMediaSettings,
+        setSavedMediaSettings
     };
 
     setup();
