@@ -614,6 +614,10 @@ function PlaybackController() {
         eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamInfo.isLast });
     }
 
+    function _onVolumeChanged() {
+        eventBus.trigger(Events.PLAYBACK_VOLUME_CHANGED);
+    }
+
     // Handle DASH PLAYBACK_ENDED event
     function _onPlaybackEnded(e) {
         if (wallclockTimeIntervalId && e.isLast) {
@@ -771,6 +775,7 @@ function PlaybackController() {
         videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
         videoModel.addEventListener('stalled', onPlaybackStalled);
         videoModel.addEventListener('ended', _onNativePlaybackEnded);
+        videoModel.addEventListener('volumechange', _onVolumeChanged);
     }
 
     function removeAllListeners() {
@@ -790,6 +795,7 @@ function PlaybackController() {
         videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
         videoModel.removeEventListener('stalled', onPlaybackStalled);
         videoModel.removeEventListener('ended', _onNativePlaybackEnded);
+        videoModel.removeEventListener('volumechange', _onVolumeChanged);
     }
 
     instance = {

@@ -355,6 +355,12 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
 
         /**
+         * Sent when the video element reports that the volume has changed
+         * @event MediaPlayerEvents#PLAYBACK_VOLUME_CHANGED
+         */
+        this.PLAYBACK_VOLUME_CHANGED = 'playbackVolumeChanged';
+
+        /**
          * Sent when the media playback has stopped because of a temporary lack of data.
          *
          * @event MediaPlayerEvents#PLAYBACK_WAITING
