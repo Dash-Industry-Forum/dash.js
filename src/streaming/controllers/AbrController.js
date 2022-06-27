@@ -496,7 +496,7 @@ function AbrController() {
             setElementSize();
         }
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
@@ -557,7 +557,7 @@ function AbrController() {
         if (configBitrate === -1) {
             if (configRatio > -1) {
                 const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
                     configBitrate = representation[repIdx].bandwidth / 1000;
