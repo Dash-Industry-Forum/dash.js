@@ -168,11 +168,11 @@ function MediaController() {
         const id = streamInfo.id;
         const current = getCurrentTrackFor(type, id);
 
-        if (!tracks[id] || !tracks[id][type] || isTracksEqual(track, current)) return;
+        if (!tracks[id] || !tracks[id][type]) return;
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current && (type !== Constants.TEXT || (type === Constants.TEXT && track.isFragmented))) {
+        if (tracks[id][type].current && ((type !== Constants.TEXT && !isTracksEqual(track, current)) || (type === Constants.TEXT && track.isFragmented))) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
