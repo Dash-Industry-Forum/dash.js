@@ -212,11 +212,11 @@ function ThroughputController() {
             sampleSize = 0;
         } else if (sampleSize >= dict.length) {
             sampleSize = dict.length;
-        } else if (type === Constants.THROUGHPUT_TYPES.BANDWIDTH) {
+        } else if (type === Constants.THROUGHPUT_TYPES.BANDWIDTH && settings.get().streaming.abr.throughput.sampleSettings.enableSampleSizeAdjustment) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
                 const ratio = dict[dict.length - i] / dict[dict.length - i - 1];
-                if (settings.get().streaming.abr.throughput.sampleSettings.enableSampleSizeAdjustment && (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= 1 / settings.get().streaming.abr.throughput.sampleSettings.decreaseScale)) {
+                if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= 1 / settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
                     sampleSize += 1;
                     if (sampleSize === dict.length) { // cannot increase sampleSize beyond arr.length
                         break;
@@ -229,18 +229,20 @@ function ThroughputController() {
     }
 
     /**
-     * Returns the average throughput based on the provided calculation mode
+     * Returns the average throughput based on the provided calculation mode. The returned value is depicted in kbit/s
      * @param {string} mediaType
      * @param {string | null} calculationMode
      * @param {number | NaN} sampleSize
      * @return {number}
      */
     function getAverageThroughput(mediaType, calculationMode = null, sampleSize = NaN) {
-        return _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH, mediaType, calculationMode, sampleSize);
+        const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH, mediaType, calculationMode, sampleSize);
+
+        return Math.round(value);
     }
 
     /**
-     * Returns the average throughout applying the bandwidth safety factor provided in the settings
+     * Returns the average throughout applying the bandwidth safety factor provided in the settings. The returned value is depicted in kbit/s
      * @param {string} mediaType
      * @param {string | null} calculationMode
      * @param {number | NaN} sampleSize
@@ -264,7 +266,9 @@ function ThroughputController() {
      * @return {number}
      */
     function getAverageLatency(mediaType, calculationMode = null, sampleSize = NaN) {
-        return _getAverage(Constants.THROUGHPUT_TYPES.LATENCY, mediaType, calculationMode, sampleSize);
+        const value = _getAverage(Constants.THROUGHPUT_TYPES.LATENCY, mediaType, calculationMode, sampleSize);
+
+        return Math.round(value);
     }
 
     function reset() {

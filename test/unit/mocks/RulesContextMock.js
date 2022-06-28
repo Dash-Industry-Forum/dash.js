@@ -28,8 +28,6 @@ function RulesContextMock() {
     };
     this.getAbrController = function () {
         return {
-            getThroughputHistory: function () {
-            }
         };
     };
     this.getSwitchHistory = function () {

@@ -14,6 +14,7 @@ import CustomParametersModel from '../../src/streaming/models/CustomParametersMo
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock';
 
 const expect = require('chai').expect;
 
@@ -37,6 +38,7 @@ describe('AbrController', function () {
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
     const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
     const playbackControllerMock = new PlaybackControllerMock();
+    const throughputControllerMock = new ThroughputControllerMock();
 
     mediaPlayerModel.setConfig({
         serviceDescriptionController,
@@ -52,6 +54,7 @@ describe('AbrController', function () {
             mediaPlayerModel,
             settings: settings,
             streamController: streamControllerMock,
+            throughputController: throughputControllerMock,
             customParametersModel
         });
         abrCtrl.initialize();

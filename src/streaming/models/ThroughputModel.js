@@ -154,7 +154,7 @@ function ThroughputModel(config) {
         let downloadTimeInMs = NaN;
 
         // Calculate the throughput using the ResourceTimingAPI if we got useful values
-        if (httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
             && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0) {
             downloadedBytes = httpRequest._resourceTimingValues.encodedBodySize;
             downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;

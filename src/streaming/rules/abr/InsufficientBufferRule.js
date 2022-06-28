@@ -90,7 +90,6 @@ function InsufficientBufferRule(config) {
         const streamInfo = rulesContext.getStreamInfo();
         const streamId = streamInfo ? streamInfo.id : null;
         const scheduleController = rulesContext.getScheduleController();
-        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
         const playbackController = scheduleController.getPlaybackController();
 
 

@@ -903,7 +903,7 @@ function Settings() {
                     sampleSettings: {
                         live: 3,
                         vod: 4,
-                        enableSampleSizeAdjustment: true,
+                        enableSampleSizeAdjustment: false,
                         decreaseScale: 1.3,
                         increaseScale: 1.3,
                     },

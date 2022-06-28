@@ -45,8 +45,6 @@ describe('RepresentationController', function () {
     const dashMetricsMock = new DashMetricsMock();
     const segmentsController = new SegmentsControllerMock();
 
-    abrControllerMock.registerStreamType();
-
     let representationController;
 
     describe('Config not correctly passed', function () {
