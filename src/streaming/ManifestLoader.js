@@ -194,6 +194,16 @@ function ManifestLoader(config) {
                         logger.debug('BaseURI set by Location to: ' + baseUri);
                     }
 
+                    // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
+                    // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
+                    if (manifest.mediaPresentationDuration && manifest.Period.length > 1) {
+                        const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+                        if (manifest.mediaPresentationDuration - sumPeriodDurations) {
+                            logger.warn('Media presentation duration does not match duration of all periods. Setting duration to total period duration');
+                            manifest.mediaPresentationDuration = sumPeriodDurations;
+                        }
+                    }
+
                     manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
