@@ -1017,6 +1017,7 @@ declare namespace dashjs {
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
+                enableLiveSeekableRangeFix?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,

@@ -112,7 +112,8 @@ import Events from './events/Events';
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
- *                resetSourceBuffersForTrackSwitch: false
+ *                resetSourceBuffersForTrackSwitch: false,
+ *                enableLiveSeekableRangeFix: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -352,6 +353,8 @@ import Events from './events/Events';
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
  * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
  * that does not properly implement "changeType()", such as webOS 4.0 and before.
+ * @property {boolean} [enableLiveSeekableRangeFix=true]
+ * Sets `mediaSource.duration` when live seekable range changes if `mediaSource.setLiveSeekableRange` is unavailable.
  */
 
 /**
@@ -937,7 +940,8 @@ function Settings() {
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
                 mediaSourceDurationInfinity: true,
-                resetSourceBuffersForTrackSwitch: false
+                resetSourceBuffersForTrackSwitch: false,
+                enableLiveSeekableRangeFix: true
             },
             gaps: {
                 jumpGaps: true,
