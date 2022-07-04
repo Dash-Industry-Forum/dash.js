@@ -288,9 +288,9 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
 
         /**
-         * The media's metadata has finished loading; all attributes now
-         * contain as much useful information as they're going to.
-         * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+         * The event is fired when the frame at the current playback position of the media has finished loading;
+         * often the first frame
+         * @event MediaPlayerEvents#PLAYBACK_LOADED_DATA
          */
         this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
 
