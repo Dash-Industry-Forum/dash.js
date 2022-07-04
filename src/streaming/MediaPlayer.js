@@ -422,7 +422,6 @@ function MediaPlayer() {
         }
         if (customParametersModel) {
             customParametersModel.reset();
-            customParametersModel = null;
         }
 
         settings.reset();
