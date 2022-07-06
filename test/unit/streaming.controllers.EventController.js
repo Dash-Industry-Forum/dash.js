@@ -80,9 +80,7 @@ describe('EventController', function () {
 
             let onInbandEvent = function (e) {
                 try {
-                    const inbandEvents = eventController.getInbandEvents();
                     expect(e.event.id).to.equal('event0');
-                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
                     eventBus.off(schemeIdUri, onInbandEvent);
                     done();
                 } catch (error) {
@@ -109,9 +107,7 @@ describe('EventController', function () {
 
             let onInbandEvent = function (e) {
                 try {
-                    const inbandEvents = eventController.getInbandEvents();
                     expect(e.event.id).to.equal('event0');
-                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
                     eventBus.off(schemeIdUri, onInbandEvent);
                     done();
                 } catch (error) {
@@ -153,8 +149,6 @@ describe('EventController', function () {
                     eventCounter += 1;
                     expect(e.event.id).to.equal('event0');
                     if (eventCounter === 2) {
-                        const inbandEvents = eventController.getInbandEvents();
-                        expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
                         eventBus.off(schemeIdUri, onInbandEvent);
                         done();
                     }
@@ -197,8 +191,6 @@ describe('EventController', function () {
                     eventCounter += 1;
                     expect(e.event.eventStream.value).to.equal('value1');
                     if (eventCounter === 2) {
-                        const inbandEvents = eventController.getInbandEvents();
-                        expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
                         eventBus.off(schemeIdUri, onInbandEvent);
                         done();
                     }
@@ -240,8 +232,6 @@ describe('EventController', function () {
                     eventCounter += 1;
                     expect(e.event.id).to.equal('event0');
                     if (eventCounter === 2) {
-                        const inbandEvents = eventController.getInbandEvents();
-                        expect(inbandEvents[e.event.eventStream.schemeIdUri]).to.be.undefined;  // jshint ignore:line
                         eventBus.off('inbandEvent1', onInbandEvent, this);
                         eventBus.off('inbandEvent2', onInbandEvent, this);
                         done();
@@ -286,8 +276,6 @@ describe('EventController', function () {
                 try {
                     expect(e.event.id).to.equal('event0');
                     expect(e.event.messageData).to.equal('1');
-                    const inbandEvents = eventController.getInbandEvents();
-                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
                     eventBus.off(schemeIdUri, onInbandEvent);
                     done();
                 } catch (error) {
