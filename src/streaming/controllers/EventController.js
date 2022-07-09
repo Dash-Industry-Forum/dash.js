@@ -149,6 +149,7 @@ function EventController() {
             }
         } catch (e) {
             eventHandlingInProgress = false;
+            logger.error(e);
         }
     }
 
@@ -168,7 +169,7 @@ function EventController() {
                     if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
                     } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
-                        logger.debug(`Deleting event ${event.id} as it is expired or invalid`);
+                        logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
                         _removeEvent(events, event);
                     }
                 }
@@ -176,6 +177,7 @@ function EventController() {
 
             _iterateAndTriggerCallback(events, callback);
         } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -323,6 +325,7 @@ function EventController() {
                 });
             }
         } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -336,7 +339,7 @@ function EventController() {
             _triggerRemainingEvents(inbandEvents);
             _triggerRemainingEvents(inlineEvents);
         } catch (e) {
-
+            logger.error(e);
         }
     }
 
@@ -367,7 +370,7 @@ function EventController() {
             _iterateAndTriggerCallback(events, callback);
 
         } catch (e) {
-
+            logger.error(e);
         }
     }
 
@@ -395,7 +398,7 @@ function EventController() {
                 }
             }
         } catch (e) {
-
+            logger.error(e);
         }
     }
 
@@ -411,6 +414,7 @@ function EventController() {
         try {
             return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
         } catch (e) {
+            logger.error(e);
             return false;
         }
     }
@@ -427,6 +431,7 @@ function EventController() {
 
             return event.calculatedPresentationTime > periodEndTime;
         } catch (e) {
+            logger.error(e);
             return false;
         }
     }
@@ -447,8 +452,8 @@ function EventController() {
 
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 event.triggeredReceivedEvent = true;
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 return;
             }
 
@@ -463,12 +468,13 @@ function EventController() {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
                     _sendCallbackRequest(event.messageData);
                 } else {
-                    logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
+                    logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
                     eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 }
                 event.triggeredStartEvent = true;
             }
         } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -507,6 +513,7 @@ function EventController() {
             checkConfig();
             manifestUpdater.refreshManifest();
         } catch (e) {
+            logger.error(e);
         }
     }
 

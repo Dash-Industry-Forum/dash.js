@@ -510,18 +510,19 @@ function DashAdapter() {
      * @instance
      * @ignore
      */
-    function getEventsFor(info, voRepresentation) {
+    function getEventsFor(info, voRepresentation, streamInfo) {
         let events = [];
 
         if (voPeriods.length > 0) {
             const manifest = voPeriods[0].mpd.manifest;
+            const period = getPeriodForStreamInfo(streamInfo, voPeriods)
 
             if (info instanceof StreamInfo) {
-                events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, voPeriods));
+                events = dashManifestModel.getEventsForPeriod(period);
             } else if (info instanceof MediaInfo) {
-                events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
+                events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
             } else if (info instanceof RepresentationInfo) {
-                events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation);
+                events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
             }
         }
 

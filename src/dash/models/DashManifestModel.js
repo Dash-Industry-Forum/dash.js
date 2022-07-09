@@ -165,7 +165,7 @@ function DashManifestModel() {
 
     function getProducerReferenceTimesForAdaptation(adaptation) {
         const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCERREFERENCETIME_ASARRAY) ? adaptation[DashConstants.PRODUCERREFERENCETIME_ASARRAY] : [];
-        
+
         // ProducerReferenceTime elements can also be contained in Representations
         const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.REPRESENTATION_ASARRAY) ? adaptation[DashConstants.REPRESENTATION_ASARRAY] : [];
 
@@ -206,7 +206,7 @@ function DashManifestModel() {
             // UTC element contained must be same as that in the MPD
             prtsForAdaptation.push(entry);
         })
-        
+
         return prtsForAdaptation;
     }
 
@@ -712,18 +712,18 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period
-            // element contains a @duration attribute then then this new
-            // Period is also a regular Period. The start time of the new
-            // Period PeriodStart is the sum of the start time of the previous
-            // Period PeriodStart and the value of the attribute @duration
+                // If the @start attribute is absent, but the previous Period
+                // element contains a @duration attribute then then this new
+                // Period is also a regular Period. The start time of the new
+                // Period PeriodStart is the sum of the start time of the previous
+                // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element
-            // is the first in the MPD, and (iii) the MPD@type is 'static',
+                // If (i) @start attribute is absent, and (ii) the Period element
+                // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
@@ -932,7 +932,7 @@ function DashManifestModel() {
         return events;
     }
 
-    function getEventStreams(inbandStreams, representation) {
+    function getEventStreams(inbandStreams, representation, period) {
         const eventStreams = [];
         let i;
 
@@ -955,12 +955,13 @@ function DashManifestModel() {
                 eventStream.value = inbandStreams[i].value;
             }
             eventStreams.push(eventStream);
+            eventStream.period = period;
         }
 
         return eventStreams;
     }
 
-    function getEventStreamForAdaptationSet(manifest, adaptation) {
+    function getEventStreamForAdaptationSet(manifest, adaptation, period) {
         let inbandStreams,
             periodArray,
             adaptationArray;
@@ -975,10 +976,10 @@ function DashManifestModel() {
             }
         }
 
-        return getEventStreams(inbandStreams, null);
+        return getEventStreams(inbandStreams, null, period);
     }
 
-    function getEventStreamForRepresentation(manifest, representation) {
+    function getEventStreamForRepresentation(manifest, representation, period) {
         let inbandStreams,
             periodArray,
             adaptationArray,
@@ -997,7 +998,7 @@ function DashManifestModel() {
             }
         }
 
-        return getEventStreams(inbandStreams, representation);
+        return getEventStreams(inbandStreams, representation, period);
     }
 
     function getUTCTimingSources(manifest) {
