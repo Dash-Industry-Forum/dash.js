@@ -638,10 +638,10 @@ function BufferController(config) {
         let range,
             length;
 
-        // Consider gap/discontinuity limit as tolerance
-        if (settings.get().streaming.gaps.jumpGaps) {
-            tolerance = settings.get().streaming.gaps.smallGapLimit;
-        }
+        // // Consider gap/discontinuity limit as tolerance
+        // if (settings.get().streaming.gaps.jumpGaps) {
+        //     tolerance = settings.get().streaming.gaps.smallGapLimit;
+        // }
 
         range = getRangeAt(time, tolerance);
 
@@ -665,7 +665,8 @@ function BufferController(config) {
 
     function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
-        const periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - parseFloat(bufferLevel.toFixed(5)) <= 0;
+        // To avoid rounding error when comparing, the stream time and buffer level only must be within 5 decimal places
+        const periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel < 0.00001;
         if ((isLastIdxAppended || periodBuffered) && !isBufferingCompleted) {
             setIsBufferingCompleted(true);
             logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
