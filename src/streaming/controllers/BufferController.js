@@ -665,8 +665,7 @@ function BufferController(config) {
 
     function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
-        const periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel <= 0;
-
+        const periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - parseFloat(bufferLevel.toFixed(5)) <= 0;
         if ((isLastIdxAppended || periodBuffered) && !isBufferingCompleted) {
             setIsBufferingCompleted(true);
             logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
