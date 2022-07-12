@@ -608,7 +608,7 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
         representationController.prepareQualityChange(newQuality);
 
-        // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
+        // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
         // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
         fragmentModel.abortRequests();
@@ -671,6 +671,7 @@ function StreamProcessor(config) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
+            // The quality we originally requested was lower than the new quality
             if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                 const targetTime = time + safeBufferLevel;
                 setExplicitBufferingTime(targetTime);
@@ -954,8 +955,8 @@ function StreamProcessor(config) {
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
         if (currentRepresentation && voRepresentation) {
-            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
+            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
+            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
             if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
                 const request = fragmentModel.getRequests({

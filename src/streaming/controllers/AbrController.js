@@ -299,7 +299,6 @@ function AbrController() {
                 index: e.request.index
             })[0];
             if (request) {
-                fragmentModel.abortRequests();
                 abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
                 switchHistoryDict[streamId][type].reset();
                 switchHistoryDict[streamId][type].push({
@@ -497,7 +496,7 @@ function AbrController() {
             setElementSize();
         }
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
@@ -558,7 +557,7 @@ function AbrController() {
         if (configBitrate === -1) {
             if (configRatio > -1) {
                 const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
                     configBitrate = representation[repIdx].bandwidth / 1000;
@@ -625,7 +624,7 @@ function AbrController() {
 
             switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
 
-            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality)) {
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality < oldQuality)) {
                 _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
                 return true;
             }

@@ -747,6 +747,7 @@ declare namespace dashjs {
         PLAYBACK_STALLED: 'playbackStalled';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
+        PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
         PLAYBACK_WAITING: 'playbackWaiting';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';

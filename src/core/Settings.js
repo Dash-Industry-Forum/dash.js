@@ -767,7 +767,7 @@ function Settings() {
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
-            eventControllerRefreshDelay: 150,
+            eventControllerRefreshDelay: 100,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
                 useMediaCapabilitiesApi: false
@@ -862,7 +862,7 @@ function Settings() {
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-            fragmentRequestTimeout: 10000,
+            fragmentRequestTimeout: 20000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -894,7 +894,7 @@ function Settings() {
                     insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
-                    abandonRequestsRule: false
+                    abandonRequestsRule: true
                 },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
