@@ -143,6 +143,8 @@ function EventController() {
 
                 _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
                 _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
+                _removeOutdatedEventObjects(inbandEvents);
+                _removeOutdatedEventObjects(inlineEvents);
 
                 lastEventTimerCall = currentVideoTime;
                 eventHandlingInProgress = false;
@@ -176,6 +178,24 @@ function EventController() {
             };
 
             _iterateAndTriggerCallback(events, callback);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Iterates over the entries of the events object and deletes the entries for which no events are present
+     * @param {object} events
+     * @private
+     */
+    function _removeOutdatedEventObjects(events) {
+        try {
+            for (const key in events) {
+                if (events.hasOwnProperty(key)) {
+                    if (Object.keys(events[key]).length === 0)
+                        delete events[key];
+                }
+            }
         } catch (e) {
             logger.error(e);
         }
@@ -485,23 +505,22 @@ function EventController() {
      * @private
      */
     function _removeEvent(events, event) {
-        const schemeIdUri = event.eventStream.schemeIdUri;
-        const periodId = event.eventStream.period.id;
-        const value = event.eventStream.value;
-        const id = event.id;
+        try {
+            const schemeIdUri = event.eventStream.schemeIdUri;
+            const periodId = event.eventStream.period.id;
+            const value = event.eventStream.value;
+            const id = event.id;
 
-        events[periodId][schemeIdUri] = events[periodId][schemeIdUri].filter((e) => {
-            return (value && e.eventStream.value && e.eventStream.value !== value) || e.id !== id;
-        });
+            events[periodId][schemeIdUri] = events[periodId][schemeIdUri].filter((e) => {
+                return (value && e.eventStream.value && e.eventStream.value !== value) || e.id !== id;
+            });
 
-        if (events[periodId][schemeIdUri].length === 0) {
-            delete events[periodId][schemeIdUri];
+            if (events[periodId][schemeIdUri].length === 0) {
+                delete events[periodId][schemeIdUri];
+            }
+        } catch (e) {
+            logger.error(e);
         }
-
-        if (!Object.keys(events[periodId]).length) {
-            delete events[periodId];
-        }
-
     }
 
     /**
@@ -533,7 +552,7 @@ function EventController() {
                 }
             });
         } catch (e) {
-            throw e;
+            logger.error(e);
         }
     }
 
