@@ -274,7 +274,7 @@ function Stream(config) {
             checkConfig();
 
             isUpdating = true;
-            addInlineEvents();
+            _addInlineEvents();
 
 
             let element = videoModel.getElement();
@@ -694,10 +694,12 @@ function Stream(config) {
         }
     }
 
-    function addInlineEvents() {
+    function _addInlineEvents() {
         if (eventController) {
             const events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            if (events && events.length > 0) {
+                eventController.addInlineEvents(events, streamInfo.id);
+            }
         }
     }
 
@@ -787,7 +789,7 @@ function Stream(config) {
 
     function onInbandEvents(e) {
         if (eventController) {
-            eventController.addInbandEvents(e.events);
+            eventController.addInbandEvents(e.events, streamInfo.id);
         }
     }
 
@@ -842,7 +844,7 @@ function Stream(config) {
             streamInfo = updatedStreamInfo;
 
             if (eventController) {
-                addInlineEvents();
+                _addInlineEvents();
             }
 
             let promises = [];

@@ -955,8 +955,8 @@ function StreamProcessor(config) {
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
         if (currentRepresentation && voRepresentation) {
-            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
+            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
+            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
             if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
                 const request = fragmentModel.getRequests({
