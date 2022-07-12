@@ -66,12 +66,16 @@ describe('EventController', function () {
         });
 
         it('should add a single inband event with a value and trigger it', function (done) {
-            const schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
             const value = 'value';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 1,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 value,
@@ -90,16 +94,20 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should add a single inband event without a value and trigger it', function (done) {
-            const schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 1,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 calculatedPresentationTime: 0
@@ -117,18 +125,22 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should add a two inband events with different values and same id and trigger them', function (done) {
-            const schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [
                 {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     calculatedPresentationTime: 0
@@ -137,7 +149,10 @@ describe('EventController', function () {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value2'
+                        value: 'value2',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     calculatedPresentationTime: 0
@@ -159,18 +174,22 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should add a two inband events with different ids and same values and trigger them', function (done) {
-            const schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [
                 {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     calculatedPresentationTime: 0
@@ -179,7 +198,10 @@ describe('EventController', function () {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event1',
                     calculatedPresentationTime: 0
@@ -201,17 +223,21 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should add a two inband events with different scheme ids and same id and value fields and trigger them', function (done) {
+            const periodId = 'periodId';
             let events = [
                 {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: 'inbandEvent1',
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     calculatedPresentationTime: 0
@@ -220,7 +246,10 @@ describe('EventController', function () {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: 'inbandEvent2',
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     calculatedPresentationTime: 0
@@ -244,18 +273,22 @@ describe('EventController', function () {
             eventBus.on('inbandEvent1', onInbandEvent, this);
             eventBus.on('inbandEvent2', onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should add only one out of two similar events and trigger it', function (done) {
-            const schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [
                 {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     messageData: '1',
@@ -265,7 +298,10 @@ describe('EventController', function () {
                     eventStream: {
                         timescale: 1,
                         schemeIdUri: schemeIdUri,
-                        value: 'value1'
+                        value: 'value1',
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     messageData: '2',
@@ -285,17 +321,21 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
         });
 
         it('should trigger added inline events', function (done) {
-            let schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
             const value = 'value';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 1,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 value,
@@ -314,18 +354,22 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInlineEvent, this);
 
-            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events, periodId);
             eventController.start();
         });
 
         it('should add inline event twice, updating first event', function (done) {
-            let schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
             const value = 'value';
+            const periodId = 'periodId';
             let events = [
                 {
                     eventStream: {
                         timescale: 1,
-                        schemeIdUri: schemeIdUri
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     value,
@@ -335,7 +379,10 @@ describe('EventController', function () {
                 {
                     eventStream: {
                         timescale: 1,
-                        schemeIdUri: schemeIdUri
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
                     },
                     id: 'event0',
                     value,
@@ -356,16 +403,20 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onInlineEvent, this);
 
-            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events, periodId);
             eventController.start();
         });
 
         it('should trigger added inline events', function (done) {
-            let schemeIdUri = 'inbandEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 1,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 calculatedPresentationTime: 20
@@ -391,18 +442,22 @@ describe('EventController', function () {
             };
             eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(events, periodId);
             eventController.start();
 
             playbackControllerMock.setTime(20);
         });
 
         it('should trigger an inline event that has already been started and is still running', function (done) {
-            let schemeIdUri = 'inlineEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 3,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 calculatedPresentationTime: 10,
@@ -422,7 +477,7 @@ describe('EventController', function () {
             };
             eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
-            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events, periodId);
             eventController.start();
 
             playbackControllerMock.setTime(20);
@@ -430,11 +485,15 @@ describe('EventController', function () {
 
         it('should not trigger an inline event for which the start + duration has already expired', function () {
             let triggerCount = 0;
-            let schemeIdUri = 'inlineEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 3,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 calculatedPresentationTime: 10,
@@ -446,7 +505,7 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
-            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events, periodId);
             eventController.start();
 
             playbackControllerMock.setTime(20);
@@ -458,11 +517,15 @@ describe('EventController', function () {
 
         it('should not fire inline events in onReceive mode twice', function () {
             let triggerCount = 0;
-            let schemeIdUri = 'inlineEvent';
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
             let events = [{
                 eventStream: {
                     timescale: 3,
-                    schemeIdUri: schemeIdUri
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
                 },
                 id: 'event0',
                 calculatedPresentationTime: 10,
@@ -474,8 +537,8 @@ describe('EventController', function () {
 
             eventBus.on(schemeIdUri, onReceiveEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
-            eventController.addInlineEvents(events);
-            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events, periodId);
+            eventController.addInlineEvents(events, periodId);
 
 
             expect(triggerCount).to.equal(1);
@@ -494,7 +557,7 @@ describe('EventController', function () {
 
             eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
 
-            eventController.addInbandEvents([manifestExpiredEventStub]);
+            eventController.addInbandEvents([manifestExpiredEventStub], 'periodId');
         });
 
         it('should not fire manifest validity expiration events if an event with that ID has already been received', function () {
@@ -505,8 +568,8 @@ describe('EventController', function () {
 
             eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
 
-            eventController.addInbandEvents([manifestExpiredEventStub]);
-            eventController.addInbandEvents([manifestExpiredEventStub]);
+            eventController.addInbandEvents([manifestExpiredEventStub], 'periodId');
+            eventController.addInbandEvents([manifestExpiredEventStub], 'periodId');
 
             expect(triggerCount).to.equal(1);
 
