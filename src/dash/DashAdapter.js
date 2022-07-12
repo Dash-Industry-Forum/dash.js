@@ -515,13 +515,15 @@ function DashAdapter() {
 
         if (voPeriods.length > 0) {
             const manifest = voPeriods[0].mpd.manifest;
-            const period = getPeriodForStreamInfo(streamInfo, voPeriods)
 
             if (info instanceof StreamInfo) {
+                const period = getPeriodForStreamInfo(info, voPeriods)
                 events = dashManifestModel.getEventsForPeriod(period);
             } else if (info instanceof MediaInfo) {
+                const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
             } else if (info instanceof RepresentationInfo) {
+                const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
             }
         }

@@ -697,7 +697,9 @@ function Stream(config) {
     function _addInlineEvents() {
         if (eventController) {
             const events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events, streamInfo.id);
+            if (events && events.length > 0) {
+                eventController.addInlineEvents(events, streamInfo.id);
+            }
         }
     }
 

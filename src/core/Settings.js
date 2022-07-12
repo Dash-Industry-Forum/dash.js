@@ -767,7 +767,7 @@ function Settings() {
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
-            eventControllerRefreshDelay: 150,
+            eventControllerRefreshDelay: 100,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
                 useMediaCapabilitiesApi: false
