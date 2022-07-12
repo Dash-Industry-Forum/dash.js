@@ -71,7 +71,8 @@ function CmcdModel() {
         streamProcessors,
         _isStartup,
         _bufferLevelStarved,
-        _initialMediaRequestsDone;
+        _initialMediaRequestsDone,
+        _customCMCDKeys;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -177,6 +178,21 @@ function CmcdModel() {
         }
     }
 
+    function _copyCustomParameters(data) {
+
+        const copiedData = {};
+
+        if(!data.custom) return null;
+
+        Object.keys(data.custom).forEach(key =>{
+            if(data.custom[key]){
+                copiedData[key] = data.custom[key];
+            }
+        })
+
+        return copiedData;
+    }
+
     function _copyParameters(data, parameterNames) {
         const copiedData = {};
         for (let name of parameterNames) {
@@ -195,11 +211,14 @@ function CmcdModel() {
                 const cmcdRequestHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']));
                 const cmcdStatusHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bs', 'rtp']));
                 const cmcdSessionHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['cid', 'pr', 'sf', 'sid', 'st', 'v']));
+                const cmcdCustomHeader = _copyCustomParameters(cmcdData);
+                
                 const headers = {
                     'CMCD-Object': _buildFinalString(cmcdObjectHeader),
                     'CMCD-Request': _buildFinalString(cmcdRequestHeader),
                     'CMCD-Status': _buildFinalString(cmcdStatusHeader),
-                    'CMCD-Session': _buildFinalString(cmcdSessionHeader)
+                    'CMCD-Session': _buildFinalString(cmcdSessionHeader),
+                    'CMCD-CUSTOM': _buildFinalString(cmcdCustomHeader),
                 };
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
@@ -217,6 +236,11 @@ function CmcdModel() {
         }
     }
 
+    async function setCustomCMCDKeys(keys, callback){
+        if(!callback) _customCMCDKeys = keys;
+        else _customCMCDKeys = callback(keys);
+    }
+
     function _applyWhitelistByKeys(keys) {
         const enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
 
@@ -228,22 +252,37 @@ function CmcdModel() {
             let cmcdData = null;
 
             if (request.type === HTTPRequest.MPD_TYPE) {
-                return _getCmcdDataForMpd(request);
+                cmcdData = _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                 _initForMediaType(request.mediaType);
-                return _getCmcdDataForMediaSegment(request);
+                cmcdData = _getCmcdDataForMediaSegment(request);
             } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                return _getCmcdDataForInitSegment(request);
+                cmcdData = _getCmcdDataForInitSegment(request);
             } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                return _getCmcdDataForOther(request);
+                cmcdData = _getCmcdDataForOther(request);
             } else if (request.type === HTTPRequest.LICENSE) {
-                return _getCmcdDataForLicense(request);
+                cmcdData = _getCmcdDataForLicense(request);
             }
-
+            cmcdData = _addCmcdDataForCustomKeys(cmcdData);
             return cmcdData;
         } catch (e) {
             return null;
         }
+    }
+
+    function _addCmcdDataForCustomKeys(data) {
+
+        let cmcdData = data;
+
+        if(_customCMCDKeys == null || _customCMCDKeys == undefined) return cmcdData;
+
+        cmcdData['custom'] = {}
+
+        Object.keys(_customCMCDKeys).forEach(key => {
+            cmcdData['custom'][key] = _customCMCDKeys[key]
+        })
+
+        return cmcdData
     }
 
     function _getCmcdDataForLicense(request) {
@@ -601,7 +640,8 @@ function CmcdModel() {
         getHeaderParameters,
         setConfig,
         reset,
-        initialize
+        initialize,
+        setCustomCMCDKeys
     };
 
     setup();

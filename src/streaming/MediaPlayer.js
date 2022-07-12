@@ -1635,6 +1635,10 @@ function MediaPlayer() {
         customParametersModel.unregisterLicenseResponseFilter(filter);
     }
 
+    function setCustomCMCDKeys(keys, callback) {
+        cmcdModel.setCustomCMCDKeys(keys, callback);
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2364,6 +2368,7 @@ function MediaPlayer() {
         registerLicenseResponseFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
+        setCustomCMCDKeys,
         registerCustomCapabilitiesFilter,
         unregisterCustomCapabilitiesFilter,
         setCustomInitialTrackSelectionFunction,
