@@ -88,8 +88,8 @@ function EventController() {
      */
     function _resetInitialSettings() {
         isStarted = false;
-        inlineEvents = {}; // Format inlineEvents[schemeIdUri]
-        inbandEvents = {}; // Format inlineEvents[schemeIdUri]
+        inlineEvents = {}; // Format inlineEvents[periodID][schemeIdUri]
+        inbandEvents = {}; // Format inbandEvents[periodID][schemeIdUri]
         eventInterval = null;
         eventHandlingInProgress = false;
         lastEventTimerCall = Date.now() / 1000;
@@ -129,26 +129,108 @@ function EventController() {
     }
 
     /**
+     * Iterate through the eventList and trigger the events
+     */
+    function _onEventTimer() {
+        try {
+            if (!eventHandlingInProgress) {
+                eventHandlingInProgress = true;
+                const currentVideoTime = playbackController.getTime();
+                let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
+
+                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
+                presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
+
+                _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
+                _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
+                _removeOutdatedEventObjects(inbandEvents);
+                _removeOutdatedEventObjects(inlineEvents);
+
+                lastEventTimerCall = currentVideoTime;
+                eventHandlingInProgress = false;
+            }
+        } catch (e) {
+            eventHandlingInProgress = false;
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing interval
+     * @param {object} events
+     * @param {number} presentationTimeThreshold
+     * @param {number} currentVideoTime
+     * @private
+     */
+    function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
+        try {
+            const callback = function (event) {
+                if (event !== undefined) {
+                    const duration = !isNaN(event.duration) ? event.duration : 0;
+                    // The event is either about to start or has already been started and we are within its duration
+                    if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
+                        _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
+                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
+                        logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
+                        _removeEvent(events, event);
+                    }
+                }
+            };
+
+            _iterateAndTriggerCallback(events, callback);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Iterates over the entries of the events object and deletes the entries for which no events are present
+     * @param {object} events
+     * @private
+     */
+    function _removeOutdatedEventObjects(events) {
+        try {
+            for (const key in events) {
+                if (events.hasOwnProperty(key)) {
+                    if (Object.keys(events[key]).length === 0)
+                        delete events[key];
+                }
+            }
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
      * Add MPD events to the list of events.
      * Events that are not in the MPD anymore but not triggered yet will still be deleted.
      * Existing events might get updated.
      * @param {Array.<Object>} values
+     * @param {string} periodId
      */
-    function addInlineEvents(values) {
+    function addInlineEvents(values, periodId) {
         try {
             checkConfig();
+
+            if (!inlineEvents[periodId]) {
+                inlineEvents[periodId] = {};
+            }
 
             if (values) {
                 for (let i = 0; i < values.length; i++) {
                     let event = values[i];
-                    let result = _addOrUpdateEvent(event, inlineEvents, true);
+                    const currentTime = playbackController.getTime();
+                    const duration = !isNaN(event.duration) ? event.duration : 0;
+                    if (!_eventHasExpired(currentTime, duration, event.calculatedPresentationTime)) {
+                        let result = _addOrUpdateEvent(event, inlineEvents[periodId], true);
 
-                    if (result === EVENT_HANDLED_STATES.ADDED) {
-                        logger.debug(`Added inline event with id ${event.id}`);
-                        // If we see the event for the first time we trigger it in onReceive mode
-                        _startEvent(event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
-                    } else if (result === EVENT_HANDLED_STATES.UPDATED) {
-                        logger.debug(`Updated inline event with id ${event.id}`);
+                        if (result === EVENT_HANDLED_STATES.ADDED) {
+                            logger.debug(`Added inline event with id ${event.id} from period ${periodId}`);
+                            // If we see the event for the first time we trigger it in onReceive mode
+                            _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                        } else if (result === EVENT_HANDLED_STATES.UPDATED) {
+                            logger.debug(`Updated inline event with id ${event.id} from period ${periodId}`);
+                        }
                     }
                 }
             }
@@ -161,23 +243,32 @@ function EventController() {
      * Add EMSG events to the list of events
      * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e. processing of any one event message box with the same id is sufficient.
      * @param {Array.<Object>} values
+     * @param {string} periodId
      */
-    function addInbandEvents(values) {
+    function addInbandEvents(values, periodId) {
         try {
             checkConfig();
 
+            if (!inbandEvents[periodId]) {
+                inbandEvents[periodId] = {};
+            }
+
             for (let i = 0; i < values.length; i++) {
                 let event = values[i];
-                let result = _addOrUpdateEvent(event, inbandEvents, false);
+                const currentTime = playbackController.getTime();
+                const duration = !isNaN(event.duration) ? event.duration : 0;
+                if (!_eventHasExpired(currentTime, duration, event.calculatedPresentationTime)) {
+                    let result = _addOrUpdateEvent(event, inbandEvents[periodId], false);
 
-                if (result === EVENT_HANDLED_STATES.ADDED) {
-                    if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
-                        _handleManifestReloadEvent(event);
+                    if (result === EVENT_HANDLED_STATES.ADDED) {
+                        if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME) {
+                            _handleManifestReloadEvent(event);
+                        }
+                        logger.debug(`Added inband event with id ${event.id} from period ${periodId}`);
+                        _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    } else {
+                        logger.debug(`Inband event with scheme_id_uri ${event.eventStream.schemeIdUri}, value ${event.eventStream.value}, period id ${periodId} and event id ${event.id} was ignored because it has been added before.`);
                     }
-                    logger.debug('Added inband event with id ' + event.id);
-                    _startEvent(event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
-                } else {
-                    logger.debug(`Inband event with scheme_id_uri ${event.eventStream.schemeIdUri}, value ${event.eventStream.value} and id ${event.id} was ignored because it has been added before.`);
                 }
             }
             _onEventTimer();
@@ -208,10 +299,19 @@ function EventController() {
             return ((!value || (e.eventStream.value && e.eventStream.value === value)) && (e.id === id));
         });
 
+        // New event, we add it to our list of events
         if (indexOfExistingEvent === -1) {
             events[schemeIdUri].push(event);
+            event.triggeredReceivedEvent = false;
+            event.triggeredStartEvent = false;
             eventState = EVENT_HANDLED_STATES.ADDED;
-        } else if (shouldOverwriteExistingEvents) {
+        }
+
+        // We have a similar event for this period with the same schemeIdUri, value and id. Overwrite it or ignore it
+        else if (shouldOverwriteExistingEvents) {
+            const oldEvent = events[schemeIdUri][indexOfExistingEvent];
+            event.triggeredReceivedEvent = oldEvent.triggeredReceivedEvent;
+            event.triggeredStartEvent = oldEvent.triggeredStartEvent;
             events[schemeIdUri][indexOfExistingEvent] = event;
             eventState = EVENT_HANDLED_STATES.UPDATED;
         }
@@ -245,30 +345,7 @@ function EventController() {
                 });
             }
         } catch (e) {
-        }
-    }
-
-    /**
-     * Iterate through the eventList and trigger the events
-     */
-    function _onEventTimer() {
-        try {
-            if (!eventHandlingInProgress) {
-                eventHandlingInProgress = true;
-                const currentVideoTime = playbackController.getTime();
-                let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
-
-                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
-                presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
-
-                _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
-                _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
-
-                lastEventTimerCall = currentVideoTime;
-                eventHandlingInProgress = false;
-            }
-        } catch (e) {
-            eventHandlingInProgress = false;
+            logger.error(e);
         }
     }
 
@@ -282,34 +359,7 @@ function EventController() {
             _triggerRemainingEvents(inbandEvents);
             _triggerRemainingEvents(inlineEvents);
         } catch (e) {
-
-        }
-    }
-
-    /**
-     * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing interval
-     * @param {object} events
-     * @param {number} presentationTimeThreshold
-     * @param {number} currentVideoTime
-     * @private
-     */
-    function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
-        try {
-            const callback = function (event) {
-                if (event !== undefined) {
-                    const duration = !isNaN(event.duration) ? event.duration : 0;
-                    // The event is either about to start or has already been started and we are within its duration
-                    if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
-                        _startEvent(event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
-                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
-                        logger.debug(`Deleting event ${event.id} as it is expired or invalid`);
-                        _removeEvent(events, event);
-                    }
-                }
-            };
-
-            _iterateAndTriggerCallback(events, callback);
-        } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -332,7 +382,7 @@ function EventController() {
                 const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime;
 
                 if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
-                    _startEvent(event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
+                    _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
                 }
 
             };
@@ -340,7 +390,7 @@ function EventController() {
             _iterateAndTriggerCallback(events, callback);
 
         } catch (e) {
-
+            logger.error(e);
         }
     }
 
@@ -353,18 +403,22 @@ function EventController() {
     function _iterateAndTriggerCallback(events, callback) {
         try {
             if (events) {
-                const schemeIdUris = Object.keys(events);
-                for (let i = 0; i < schemeIdUris.length; i++) {
-                    const schemeIdEvents = events[schemeIdUris[i]];
-                    schemeIdEvents.forEach((event) => {
-                        if (event !== undefined) {
-                            callback(event);
-                        }
-                    });
+                const periodIds = Object.keys(events);
+                for (let i = 0; i < periodIds.length; i++) {
+                    const currentPeriod = events[periodIds[i]];
+                    const schemeIdUris = Object.keys(currentPeriod);
+                    for (let j = 0; j < schemeIdUris.length; j++) {
+                        const schemeIdEvents = currentPeriod[schemeIdUris[j]];
+                        schemeIdEvents.forEach((event) => {
+                            if (event !== undefined) {
+                                callback(event);
+                            }
+                        });
+                    }
                 }
             }
         } catch (e) {
-
+            logger.error(e);
         }
     }
 
@@ -380,6 +434,7 @@ function EventController() {
         try {
             return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
         } catch (e) {
+            logger.error(e);
             return false;
         }
     }
@@ -396,49 +451,50 @@ function EventController() {
 
             return event.calculatedPresentationTime > periodEndTime;
         } catch (e) {
+            logger.error(e);
             return false;
         }
     }
 
     /**
-     * Starts an event. Depending on the schemeIdUri we distinguis between
+     * Starts an event. Depending on the schemeIdUri we distinguish between
      * - MPD Reload events
      * - MPD Callback events
      * - Events to be dispatched to the application
-     * Events should be removed from the list before beeing triggered. Otherwise the event handler might cause an error and the remove function will not be called.
      * @param {object} event
-     * @param {object} events
      * @param {String} mode
      * @private
      */
-    function _startEvent(event, events, mode) {
+    function _startEvent(event, mode) {
         try {
             const currentVideoTime = playbackController.getTime();
             const eventId = event.id;
 
-            if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE) {
+            if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
+                event.triggeredReceivedEvent = true;
                 eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 return;
             }
 
-            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
-                if (event.duration !== 0 || event.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
-                    logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
-                    _removeEvent(events, event);
-                    _refreshManifest();
+            if (!event.triggeredStartEvent) {
+                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
+                    //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
+                    if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
+                        logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
+                        _refreshManifest();
+                    }
+                } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
+                    logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
+                    _sendCallbackRequest(event.messageData);
+                } else {
+                    logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
+                    eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 }
-            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
-                logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
-                _removeEvent(events, event);
-                _sendCallbackRequest(event.messageData);
-            } else {
-                logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
-                _removeEvent(events, event);
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                event.triggeredStartEvent = true;
             }
-
         } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -449,18 +505,22 @@ function EventController() {
      * @private
      */
     function _removeEvent(events, event) {
-        const schemeIdUri = event.eventStream.schemeIdUri;
-        const value = event.eventStream.value;
-        const id = event.id;
+        try {
+            const schemeIdUri = event.eventStream.schemeIdUri;
+            const periodId = event.eventStream.period.id;
+            const value = event.eventStream.value;
+            const id = event.id;
 
-        events[schemeIdUri] = events[schemeIdUri].filter((e) => {
-            return (value && e.eventStream.value && e.eventStream.value !== value) || e.id !== id;
-        });
+            events[periodId][schemeIdUri] = events[periodId][schemeIdUri].filter((e) => {
+                return (value && e.eventStream.value && e.eventStream.value !== value) || e.id !== id;
+            });
 
-        if (events[schemeIdUri].length === 0) {
-            delete events[schemeIdUri];
+            if (events[periodId][schemeIdUri].length === 0) {
+                delete events[periodId][schemeIdUri];
+            }
+        } catch (e) {
+            logger.error(e);
         }
-
     }
 
     /**
@@ -472,6 +532,7 @@ function EventController() {
             checkConfig();
             manifestUpdater.refreshManifest();
         } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -491,7 +552,7 @@ function EventController() {
                 }
             });
         } catch (e) {
-            throw e;
+            logger.error(e);
         }
     }
 

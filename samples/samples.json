@@ -519,6 +519,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Multi Audio - Initial Track",
+                "description": "This example illustrates how to select a default audio language for playback.",
+                "href": "multi-audio/multi-audio-default-track.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

@@ -769,7 +769,7 @@ function Settings() {
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
-            eventControllerRefreshDelay: 150,
+            eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,

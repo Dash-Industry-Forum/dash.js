@@ -984,10 +984,23 @@ function ProtectionController(config) {
      * @private
      */
     function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
-        const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+        let errorMsg = 'NONE';
+        let data = null;
+
+        if (xhr.response) {
+            errorMsg = licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType);
+            data = {
+                serverResponse: xhr.response || null,
+                responseCode: xhr.status || null,
+                responseText: xhr.statusText || null
+            }
+        }
+
         _sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
             ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' +
-            xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+            xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg,
+            data
+        ));
     }
 
     /**
