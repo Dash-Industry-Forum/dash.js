@@ -66,6 +66,7 @@ import Events from './events/Events';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            eventControllerRefreshDelay: 100,
+ *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false

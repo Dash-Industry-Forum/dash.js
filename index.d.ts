@@ -155,7 +155,7 @@ declare namespace dashjs {
             applyServiceDescription?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
-            enableManifestDurationMismatchFix?: number,
+            enableManifestDurationMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
