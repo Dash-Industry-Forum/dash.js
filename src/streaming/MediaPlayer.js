@@ -252,14 +252,15 @@ function MediaPlayer() {
      *
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-     * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {number|NaN} startTime - Optional arg to set start time relative to the start time of the first period for VoD content and to the AST for live content
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, AutoPlay) {
+    function initialize(view, source, autoPlay, startTime = NaN) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -381,7 +382,7 @@ function MediaPlayer() {
             });
 
             restoreDefaultUTCTimingSources();
-            setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+            setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
             // Detect and initialize offline module to support offline contents playback
             _detectOffline();
@@ -392,7 +393,7 @@ function MediaPlayer() {
         }
 
         if (source) {
-            attachSource(source);
+            attachSource(source, startTime);
         }
 
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
@@ -1790,14 +1791,14 @@ function MediaPlayer() {
      *
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     *
+     * @param {number|NaN} startTime - Start time relative to the start time of the first period for VoD content and to the AST for live content
      *
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest) {
+    function attachSource(urlOrManifest, startTime = NaN) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
@@ -1813,7 +1814,7 @@ function MediaPlayer() {
         }
 
         if (isReady()) {
-            _initializePlayback();
+            _initializePlayback(startTime);
         }
     }
 
@@ -2262,7 +2263,12 @@ function MediaPlayer() {
         return utcValue;
     }
 
-    function _initializePlayback() {
+    /**
+     *
+     * @param @param {number|NaN} startTime - Start time relative to the start time of the first period for VoD content and to the AST for live content
+     * @private
+     */
+    function _initializePlayback(startTime = NaN) {
 
         if (offlineController) {
             offlineController.resetRecords();
@@ -2274,9 +2280,9 @@ function MediaPlayer() {
             _createPlaybackControllers();
 
             if (typeof source === 'string') {
-                streamController.load(source);
+                streamController.load(source, startTime);
             } else {
-                streamController.loadWithManifest(source);
+                streamController.loadWithManifest(source, startTime);
             }
         }
 

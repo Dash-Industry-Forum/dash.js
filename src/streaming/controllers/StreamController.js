@@ -103,6 +103,7 @@ function StreamController() {
         settings,
         firstLicenseIsFetched,
         waitForPlaybackStartTimeout,
+        providedStartTime,
         errorInformation;
 
     function setup() {
@@ -208,6 +209,42 @@ function StreamController() {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+    }
+
+    function _checkConfig() {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
+            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
+            !dashMetrics || !playbackController) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
+    function _checkInitialize() {
+        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
+            throw new Error('initialize function has to be called previously');
+        }
+    }
+
+    /**
+     * Start the streaming session by loading the target manifest
+     * @param {string} url
+     * @param {number} startTime
+     */
+    function load(url, startTime = NaN) {
+        _checkConfig();
+        providedStartTime = startTime;
+        manifestLoader.load(url);
+    }
+
+    /**
+     * Start the streaming session by using the provided manifest object
+     * @param {object} manifest
+     * @param {number} startTime
+     */
+    function loadWithManifest(manifest, startTime = NaN) {
+        _checkInitialize();
+        providedStartTime = startTime;
+        manifestUpdater.setManifest(manifest);
     }
 
     /**
@@ -349,7 +386,8 @@ function StreamController() {
         // Apply Service description parameters.
         if (settings.get().streaming.applyProducerReferenceTime) {
             serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
-        };
+        }
+        ;
 
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.applyServiceDescription) {
@@ -1030,6 +1068,7 @@ function StreamController() {
      */
     function _getInitialStartTime() {
         // Seek new stream in priority order:
+        // - at start time provided via the application
         // - at start time provided in URI parameters
         // - at stream/period start time (for static streams) or live start time (for dynamic streams)
         let startTime;
@@ -1042,25 +1081,39 @@ function StreamController() {
             // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
             const dvrWindow = dvrInfo ? dvrInfo.range : null;
             if (dvrWindow) {
-                // #t shall be relative to period start
-                const startTimeFromUri = _getStartTimeFromUriParameters(true);
-                if (!isNaN(startTimeFromUri)) {
-                    logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                    // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
-                    const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
-                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start + offset);
+                // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+                if (!isNaN(providedStartTime)) {
+                    logger.info(`Start time provided by the app: ${providedStartTime}`);
+                    startTime = Math.min(startTime, providedStartTime);
+                } else {
+                    // #t shall be relative to period start
+                    const startTimeFromUri = _getStartTimeFromUriParameters(true);
+                    if (!isNaN(startTimeFromUri)) {
+                        logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                        startTime = Math.min(startTime, startTimeFromUri);
+                    }
                 }
+                // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+                const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+                startTime = Math.max(startTime, dvrWindow.start + offset);
             }
         } else {
             // For static stream, start by default at period start
             const streams = getStreams();
             const streamInfo = streams[0].getStreamInfo();
             startTime = streamInfo.start;
-            // If start time in URI, take max value between period start and time from URI (if in period range)
-            const startTimeFromUri = _getStartTimeFromUriParameters(false);
-            if (!isNaN(startTimeFromUri)) {
-                logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                startTime = Math.max(startTime, startTimeFromUri);
+
+            // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+            if (!isNaN(providedStartTime)) {
+                logger.info(`Start time provided by the app: ${providedStartTime}`);
+                startTime = Math.max(startTime, streamInfo.start + providedStartTime);
+            } else {
+                // If start time in URI, take max value between period start and time from URI (if in period range)
+                const startTimeFromUri = _getStartTimeFromUriParameters(false);
+                if (!isNaN(startTimeFromUri)) {
+                    logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                    startTime = Math.max(startTime, startTimeFromUri);
+                }
             }
         }
 
@@ -1351,30 +1404,6 @@ function StreamController() {
         return null;
     }
 
-    function _checkConfig() {
-        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
-            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
-            !dashMetrics || !playbackController) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
-
-    function _checkInitialize() {
-        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
-            throw new Error('initialize function has to be called previously');
-        }
-    }
-
-    function load(url) {
-        _checkConfig();
-        manifestLoader.load(url);
-    }
-
-    function loadWithManifest(manifest) {
-        _checkInitialize();
-        manifestUpdater.setManifest(manifest);
-    }
-
     function _onManifestValidityChanged(e) {
         if (!isNaN(e.newDuration)) {
             _setMediaDuration(e.newDuration);
@@ -1458,6 +1487,7 @@ function StreamController() {
 
     function resetInitialSettings() {
         streams = [];
+        providedStartTime = NaN;
         protectionController = null;
         isStreamSwitchingInProgress = false;
         activeStream = null;
