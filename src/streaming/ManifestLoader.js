@@ -203,7 +203,7 @@ function ManifestLoader(config) {
                         manifest.mediaPresentationDuration &&
                         manifest.Period_asArray.length > 1) {
                         const sumPeriodDurations = manifest.Period_asArray.reduce((totalDuration, period) => totalDuration + period.duration, 0);
-                        if (manifest.mediaPresentationDuration > sumPeriodDurations) {
+                        if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
                             manifest.mediaPresentationDuration = sumPeriodDurations;
                         }
