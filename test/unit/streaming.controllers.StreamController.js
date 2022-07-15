@@ -341,6 +341,20 @@ describe('StreamController', function () {
 
             describe('dynamic streams', function () {
 
+                before(function () {
+                    adapterMock.setRegularPeriods([
+                        {
+                            mpd: {
+                                availabilityStartTime: new Date(0)
+                            }
+                        }
+                    ])
+                })
+
+                after(function () {
+                    adapterMock.setRegularPeriods([]);
+                })
+
                 beforeEach(function () {
                     getIsDynamicStub.returns(true);
                 });
