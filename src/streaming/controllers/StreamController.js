@@ -1102,6 +1102,13 @@ function StreamController() {
         return _getStartTimeFromString(isDynamic, fragData.t, referenceTime);
     }
 
+    /**
+     * Calculate start time using the value that was provided via the application as part of attachSource() or initialize()
+     * @param {boolean} isDynamic
+     * @param {number | string} providedStartTime
+     * @return {number}
+     * @private
+     */
     function _getStartTimeFromProvidedData(isDynamic, providedStartTime) {
         let referenceTime = 0;
 
