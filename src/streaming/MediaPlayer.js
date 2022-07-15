@@ -253,8 +253,10 @@ function MediaPlayer() {
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @param {number|NaN} startTime - Optional arg to set start time relative to the start time of the first period for VoD content and to the AST for live content
-     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
@@ -1791,7 +1793,10 @@ function MediaPlayer() {
      *
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     * @param {number|NaN} startTime - Start time relative to the start time of the first period for VoD content and to the AST for live content
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      *
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
@@ -2265,7 +2270,6 @@ function MediaPlayer() {
 
     /**
      *
-     * @param @param {number|NaN} startTime - Start time relative to the start time of the first period for VoD content and to the AST for live content
      * @private
      */
     function _initializePlayback(startTime = NaN) {
