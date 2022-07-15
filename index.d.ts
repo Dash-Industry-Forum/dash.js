@@ -364,7 +364,7 @@ declare namespace dashjs {
     export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
     export interface MediaPlayerClass {
-        initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
+        initialize(view?: HTMLElement, source?: string, autoPlay?: boolean, startTime?: number | string): void;
 
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
 
@@ -451,7 +451,7 @@ declare namespace dashjs {
 
         attachView(element: HTMLElement): void;
 
-        attachSource(urlOrManifest: string | object): void;
+        attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
         isReady(): boolean;
 
