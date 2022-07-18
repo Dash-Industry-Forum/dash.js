@@ -66,6 +66,7 @@ import Events from './events/Events';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            eventControllerRefreshDelay: 100,
+ *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -458,7 +459,7 @@ import Events from './events/Events';
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%).
  *
- * Set it to 0 to turn off live catch up feature.
+ * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [latencyThreshold=60]
@@ -665,6 +666,8 @@ import Events from './events/Events';
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {number} [eventControllerRefreshDelay=100]
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
+ * @property {boolean} [enableManifestDurationMismatchFix=true]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
@@ -768,6 +771,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             eventControllerRefreshDelay: 100,
+            enableManifestDurationMismatchFix: true,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
                 useMediaCapabilitiesApi: false

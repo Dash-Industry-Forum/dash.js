@@ -670,6 +670,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Manual load with start time",
+                "description": "A sample showing how to initialize playback at a specific start time.",
+                "href": "advanced/load-with-starttime.html",
+                "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
