@@ -84,6 +84,73 @@ function FragmentLoader(config) {
         }
     }
 
+    /**
+     * Requests viv31 segment decryption, returns AES encrypted segment
+     * @param {ArrayBuffer} viv31Segment viv31 encrypted live streaming segment
+     */
+    function decrypt(viv31Segment) {
+        return fetch(process.env.SEGMENT_DECRYPTION_ENDPOINT, {
+                method: 'POST',
+                body: viv31Segment,
+            })
+            .then((response) => {
+                const aesSegment = response.arrayBuffer();
+                const serverDate = response.headers.get('date')
+                return getDecryptionParameters(serverDate, viv31Segment.byteLength, aesSegment);
+            })
+            .then((parameters) => (aesDecrypt(parameters)));
+    }
+
+    /**
+     * Returns AES decryption parameters
+     * @param {String} serverDate 
+     * @param {Number} viv31ByteLength 
+     * @param {ArrayBuffer} aesSegment 
+     * @returns Object
+     */
+    function getDecryptionParameters(serverDate, viv31ByteLength, aesSegment) {
+        const password = `${navigator.userAgent}${serverDate}${viv31ByteLength}`;
+        const utf8Password = new TextEncoder().encode(password);
+        return crypto.subtle.digest('SHA-256', utf8Password)
+            .then((hashBuffer) => ({
+                pass: hashBuffer,
+                iv: aesSegment.slice(0, 12),
+                salt: aesSegment.slice(12, 12 + 16),
+                data: aesSegment.slice(12 + 16),
+            }));
+    }
+
+    function getKeyMaterial(password) {
+        return window.crypto.subtle.importKey(
+            'raw', 
+            password,
+            { name: 'PBKDF2' }, 
+            false, 
+            ['deriveBits', 'deriveKey']
+        );
+    }
+
+    function getKey(salt, keyMaterial) {
+        return window.crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: salt, 
+                iterations: 100000,
+                hash: 'SHA-256'
+            },
+            keyMaterial,
+            { 'name': 'AES-GCM', 'length': 256 },
+            true,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    function aesDecrypt({ pass, iv, salt, data }) {
+        getKeyMaterial(pass)
+            .then((keyMaterial) => getKey(salt, keyMaterial))
+            .then((key) => (window.crypto.subtle.decrypt({ name: 'AES-GCM', iv, }, key, data)));
+    }
+
     function load(request) {
         const report = function (data, error) {
             eventBus.trigger(events.LOADING_COMPLETED, {
@@ -113,7 +180,13 @@ function FragmentLoader(config) {
                     }
                 },
                 success: function (data) {
-                    report(data);
+                    decrypt(data)
+                        .then((decryptedSegment) => (report(decryptedSegment)))
+                        .catch(error => (report(undefined, new DashJSError(
+                            errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            error,
+                            error
+                        ))));
                 },
                 error: function (request, statusText, errorText) {
                     report(
