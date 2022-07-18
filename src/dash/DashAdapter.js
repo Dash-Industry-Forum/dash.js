@@ -448,7 +448,7 @@ function DashAdapter() {
      * Returns the event for the given parameters.
      * @param {object} eventBox
      * @param {object} eventStreams
-     * @param {number} mediaStartTime
+     * @param {number} mediaStartTime - Specified in seconds
      * @param {object} voRepresentation
      * @returns {null|Event}
      * @memberOf module:DashAdapter
@@ -472,8 +472,10 @@ function DashAdapter() {
             const timescale = eventBox.timescale || 1;
             const periodStart = voRepresentation.adaptation.period.start;
             const eventStream = eventStreams[schemeIdUri + '/' + value];
+            // The PTO in voRepresentation is already specified in seconds
             const presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
-            let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+            // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+            let presentationTimeDelta = eventBox.presentation_time_delta / timescale;
             let calculatedPresentationTime;
 
             if (eventBox.version === 0) {
@@ -482,7 +484,7 @@ function DashAdapter() {
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 
-            const duration = eventBox.event_duration;
+            const duration = eventBox.event_duration / timescale;
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
