@@ -459,7 +459,7 @@ import Events from './events/Events';
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%).
  *
- * Set it to 0 to turn off live catch up feature.
+ * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [latencyThreshold=60]
