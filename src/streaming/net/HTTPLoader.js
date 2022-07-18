@@ -208,8 +208,7 @@ function HTTPLoader(cfg) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
-                    t: event.throughput
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
                 });
 
                 lastTraceTime = currentTime;
