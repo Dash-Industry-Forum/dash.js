@@ -90,9 +90,9 @@ function FragmentLoader(config) {
      */
     function decrypt(viv31Segment) {
         return fetch(process.env.SEGMENT_DECRYPTION_ENDPOINT, {
-                method: 'POST',
-                body: viv31Segment,
-            })
+            method: 'POST',
+            body: viv31Segment,
+        })
             .then((response) => {
                 const aesSegment = response.arrayBuffer();
                 const serverDate = response.headers.get('date')
