@@ -1128,8 +1128,8 @@ function StreamController() {
         // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
         const period = adapter.getRegularPeriods()[0];
         const targetString = targetValue.toString();
-        const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseInt(targetString.substring(6)) : NaN;
-        let startTime = (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseInt(targetString) + referenceTime;
+        const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
+        let startTime = (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
 
         return startTime;
     }
