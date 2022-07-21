@@ -39,7 +39,8 @@ function RequestModifier() {
         return url;
     }
 
-    function modifyRequestHeader(request) {
+    // eslint-disable-next-line no-unused-vars
+    function modifyRequestHeader(request, {url}) {
         return request;
     }
 
