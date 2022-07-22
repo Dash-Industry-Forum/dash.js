@@ -59,6 +59,10 @@ var args = yargs
             describe: 'Output log/debug messages',
             type: 'boolean',
             default: 'false'
+        },
+        'groupname': {
+            describe: 'Group name that the stream needs to belong to. Only applied if a groupname is present such as in the list of reference vectors.',
+            default: ''
         }
     })
     .parse();
@@ -197,6 +201,10 @@ if (args.streams !== 'all') {
 
 if (args.mpd !== '') {
     config.mpd = args.mpd;
+}
+
+if (args.groupname !== '') {
+    config.groupname = args.groupname;
 }
 
 config.source = args.source;
