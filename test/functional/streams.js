@@ -16,6 +16,7 @@ module.exports.getStreams = function () {
             if(stream.url.substr(0,2) === '//') {
                 stream.url = intern.config.protocol + ':' + stream.url;
             }
+            stream.groupName = groupName;
             streams.push(stream);
         }
     }
@@ -27,6 +28,13 @@ module.exports.getStreams = function () {
     if (intern.config.streams) {
         streams = streams.filter(stream => {
             return stream.name.indexOf(intern.config.streams) !== -1;
+        });
+    }
+
+    // Filter streams if groupname is set
+    if (intern.config.groupname) {
+        streams = streams.filter(stream => {
+            return intern.config.groupname == stream.groupName;
         });
     }
 
