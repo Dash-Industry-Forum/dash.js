@@ -13,6 +13,9 @@ module.exports.getStreams = function () {
         for (var j = 0; j < group.submenu.length; j++) {
             var stream = group.submenu[j];
             stream.name = groupName + ' / ' + stream.name;
+            if(stream.url.substr(0,2) === '//') {
+                stream.url = intern.config.protocol + ':' + stream;
+            }
             streams.push(stream);
         }
     }
