@@ -84,71 +84,85 @@ function FragmentLoader(config) {
         }
     }
 
-    /**
-     * Requests viv31 segment decryption, returns AES encrypted segment
-     * @param {ArrayBuffer} viv31Segment viv31 encrypted live streaming segment
-     */
-    function decrypt(viv31Segment) {
-        return fetch(process.env.SEGMENT_DECRYPTION_ENDPOINT, {
-            method: 'POST',
-            body: viv31Segment,
-        })
-            .then((response) => {
-                const aesSegment = response.arrayBuffer();
-                const serverDate = response.headers.get('date')
-                return getDecryptionParameters(serverDate, viv31Segment.byteLength, aesSegment);
-            })
-            .then((parameters) => (aesDecrypt(parameters)));
-    }
-
-    /**
-     * Returns AES decryption parameters
-     * @param {String} serverDate 
-     * @param {Number} viv31ByteLength 
-     * @param {ArrayBuffer} aesSegment 
-     * @returns Object
-     */
-    function getDecryptionParameters(serverDate, viv31ByteLength, aesSegment) {
-        const password = `${navigator.userAgent}${serverDate}${viv31ByteLength}`;
-        const utf8Password = new TextEncoder().encode(password);
-        return crypto.subtle.digest('SHA-256', utf8Password)
-            .then((hashBuffer) => ({
-                pass: hashBuffer,
-                iv: aesSegment.slice(0, 12),
-                salt: aesSegment.slice(12, 12 + 16),
-                data: aesSegment.slice(12 + 16),
-            }));
-    }
-
+    /*
+        Get some key material to use as input to the deriveKey method.
+        The key material is a password supplied by the user.
+    */
     function getKeyMaterial(password) {
+        const enc = new TextEncoder();
         return window.crypto.subtle.importKey(
             'raw', 
-            password,
+            enc.encode(password),
             { name: 'PBKDF2' }, 
             false, 
             ['deriveBits', 'deriveKey']
         );
     }
 
-    function getKey(salt, keyMaterial) {
+    /*
+        Given some key material and some random salt
+        derive an AES-GCM key using PBKDF2.
+    */
+    function getKey(keyMaterial, salt) {
         return window.crypto.subtle.deriveKey(
             {
-                name: 'PBKDF2',
+                'name': 'PBKDF2',
                 salt: salt, 
-                iterations: 100000,
-                hash: 'SHA-256'
+                'iterations': 100000,
+                'hash': 'SHA-256'
             },
             keyMaterial,
             { 'name': 'AES-GCM', 'length': 256 },
             true,
-            ['encrypt', 'decrypt']
+            [ 'encrypt', 'decrypt' ]
         );
     }
 
-    function aesDecrypt({ pass, iv, salt, data }) {
-        getKeyMaterial(pass)
-            .then((keyMaterial) => getKey(salt, keyMaterial))
-            .then((key) => (window.crypto.subtle.decrypt({ name: 'AES-GCM', iv, }, key, data)));
+    /**
+     * Receives the appropiate decryption parameters and data to decrypt a LS segment
+     * @param {ArrayBuffer} encryptedChunk Data to decrypt
+     * @param {ArrayBuffer} iv Decryption parameter
+     * @param {ArrayBuffer} salt Decryption parameter
+     * @param {String} pass Password to use for decryption
+     * @returns ArrayBuffer
+     */
+    async function decrypt(encryptedChunk, iv, salt, pass) {
+        const keyMaterial = await getKeyMaterial(pass);
+        const key = await getKey(keyMaterial, salt);
+        return window.crypto.subtle.decrypt(
+            {
+                name: 'AES-GCM',
+                iv: iv
+            },
+            key,
+            encryptedChunk
+        );
+    }
+
+    /**
+     * Decrypts an AES encrypted LS segment
+     * @param {ArrayBuffer} videoChunk LS segment
+     * @returns Promise
+     */
+    async function decryptSegment(videoChunk) {
+        if (videoChunk) {
+            const response = await fetch('https://encrypt-free.vividas.wize.mx/e/v3.1b/segment', { method: 'POST', body: videoChunk });
+            const data = await response.arrayBuffer();
+            const pass = navigator.userAgent + response.headers.get('ls_date') + videoChunk.byteLength;
+            const utf8 = new TextEncoder().encode(pass);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const decryptionParameters = {
+                pass: hashHex,
+                iv: data.slice(0, 12),
+                salt: data.slice(12, 12 + 16),
+                data: data.slice(12 + 16),
+            };
+
+            return decrypt(decryptionParameters.data, decryptionParameters.iv, decryptionParameters.salt, decryptionParameters.pass);
+        }
     }
 
     function load(request) {
@@ -180,9 +194,9 @@ function FragmentLoader(config) {
                     }
                 },
                 success: function (data) {
-                    decrypt(data)
-                        .then((decryptedSegment) => (report(decryptedSegment)))
-                        .catch(error => (report(undefined, new DashJSError(
+                    decryptSegment(data)
+                        .then((decrypted) => (report(decrypted)))
+                        .catch((error) => (report(undefined, new DashJSError(
                             errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
                             error,
                             error

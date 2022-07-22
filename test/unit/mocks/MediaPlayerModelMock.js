@@ -31,7 +31,7 @@
 import {
     HTTPRequest
 }
-    from '../../../src/streaming/vo/metrics/HTTPRequest';
+from '../../../src/streaming/vo/metrics/HTTPRequest';
 
 
 const DEFAULT_UTC_TIMING_SOURCE = {

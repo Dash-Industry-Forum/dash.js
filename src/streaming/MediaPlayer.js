@@ -62,7 +62,7 @@ import Settings from '../core/Settings';
 import {
     getVersionString
 }
-    from '../core/Version';
+from '../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
