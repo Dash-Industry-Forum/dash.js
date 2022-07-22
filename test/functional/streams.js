@@ -14,7 +14,7 @@ module.exports.getStreams = function () {
             var stream = group.submenu[j];
             stream.name = groupName + ' / ' + stream.name;
             if(stream.url.substr(0,2) === '//') {
-                stream.url = intern.config.protocol + ':' + stream;
+                stream.url = intern.config.protocol + ':' + stream.url;
             }
             streams.push(stream);
         }
