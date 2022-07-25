@@ -2728,7 +2728,7 @@ function ProtectionController(config) {
     if (protectionKeyController.isClearKey(selectedKeySystem)) {
       // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
       // initData and overwrite possible initData indicated in encrypted event (EME)
-      if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+      if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemInfo.protData.clearkeys).length !== 0) {
         var initData = {
           kids: Object.keys(keySystemInfo.protData.clearkeys)
         };
@@ -3164,7 +3164,7 @@ function ProtectionController(config) {
     if (protectionKeyController.isClearKey(selectedKeySystem)) {
       var clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
 
-      if (clearkeys) {
+      if (clearkeys && clearkeys.keyPairs && clearkeys.keyPairs.length > 0) {
         logger.debug('DRM: ClearKey license request handled by application!');
 
         _sendLicenseRequestCompleteEvent(eventData);
@@ -3490,9 +3490,19 @@ function ProtectionController(config) {
 
 
   function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
-    var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
+    var errorMsg = 'NONE';
+    var data = null;
 
-    _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+    if (xhr.response) {
+      errorMsg = licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType);
+      data = {
+        serverResponse: xhr.response || null,
+        responseCode: xhr.status || null,
+        responseText: xhr.statusText || null
+      };
+    }
+
+    _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg, data));
   }
   /**
    * Applies custom filters defined by the application
@@ -7965,12 +7975,6 @@ function HTTPRequestTrace() {
    */
 
   this.b = [];
-  /**
-   * Measurement throughput in kbits/s
-   * @public
-   */
-
-  this._t = null;
 };
 
 HTTPRequest.GET = 'GET';

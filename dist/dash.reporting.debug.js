@@ -1392,6 +1392,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            eventControllerRefreshDelay: 100,
+ *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -1784,7 +1785,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%).
  *
- * Set it to 0 to turn off live catch up feature.
+ * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [latencyThreshold=60]
@@ -1991,6 +1992,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {number} [eventControllerRefreshDelay=100]
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
+ * @property {boolean} [enableManifestDurationMismatchFix=true]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
@@ -2094,7 +2097,8 @@ function Settings() {
       cacheInitSegments: false,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
-      eventControllerRefreshDelay: 150,
+      eventControllerRefreshDelay: 100,
+      enableManifestDurationMismatchFix: true,
       capabilities: {
         filterUnsupportedEssentialProperties: true,
         useMediaCapabilitiesApi: false
@@ -2189,7 +2193,7 @@ function Settings() {
         video: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-      fragmentRequestTimeout: 10000,
+      fragmentRequestTimeout: 20000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -2199,7 +2203,7 @@ function Settings() {
           insufficientBufferRule: true,
           switchHistoryRule: true,
           droppedFramesRule: true,
-          abandonRequestsRule: false
+          abandonRequestsRule: true
         },
         bandwidthSafetyFactor: 0.9,
         useDefaultABRRules: true,
@@ -3226,9 +3230,9 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
     /**
-     * The media's metadata has finished loading; all attributes now
-     * contain as much useful information as they're going to.
-     * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+     * The event is fired when the frame at the current playback position of the media has finished loading;
+     * often the first frame
+     * @event MediaPlayerEvents#PLAYBACK_LOADED_DATA
      */
 
     _this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
@@ -3292,6 +3296,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+    /**
+     * Sent when the video element reports that the volume has changed
+     * @event MediaPlayerEvents#PLAYBACK_VOLUME_CHANGED
+     */
+
+    _this.PLAYBACK_VOLUME_CHANGED = 'playbackVolumeChanged';
     /**
      * Sent when the media playback has stopped because of a temporary lack of data.
      *
@@ -10442,12 +10452,6 @@ function HTTPRequestTrace() {
    */
 
   this.b = [];
-  /**
-   * Measurement throughput in kbits/s
-   * @public
-   */
-
-  this._t = null;
 };
 
 HTTPRequest.GET = 'GET';

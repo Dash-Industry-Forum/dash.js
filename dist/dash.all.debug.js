@@ -18584,6 +18584,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            eventControllerRefreshDelay: 100,
+ *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -18976,7 +18977,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%).
  *
- * Set it to 0 to turn off live catch up feature.
+ * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [latencyThreshold=60]
@@ -19183,6 +19184,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {number} [eventControllerRefreshDelay=100]
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
+ * @property {boolean} [enableManifestDurationMismatchFix=true]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
@@ -19286,7 +19289,8 @@ function Settings() {
       cacheInitSegments: false,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
-      eventControllerRefreshDelay: 150,
+      eventControllerRefreshDelay: 100,
+      enableManifestDurationMismatchFix: true,
       capabilities: {
         filterUnsupportedEssentialProperties: true,
         useMediaCapabilitiesApi: false
@@ -19381,7 +19385,7 @@ function Settings() {
         video: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
-      fragmentRequestTimeout: 10000,
+      fragmentRequestTimeout: 20000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -19391,7 +19395,7 @@ function Settings() {
           insufficientBufferRule: true,
           switchHistoryRule: true,
           droppedFramesRule: true,
-          abandonRequestsRule: false
+          abandonRequestsRule: true
         },
         bandwidthSafetyFactor: 0.9,
         useDefaultABRRules: true,
@@ -19750,7 +19754,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.4.0';
+var VERSION = '4.4.1';
 function getVersionString() {
   return VERSION;
 }
@@ -20803,7 +20807,7 @@ function DashAdapter() {
    * Returns the event for the given parameters.
    * @param {object} eventBox
    * @param {object} eventStreams
-   * @param {number} mediaStartTime
+   * @param {number} mediaStartTime - Specified in seconds
    * @param {object} voRepresentation
    * @returns {null|Event}
    * @memberOf module:DashAdapter
@@ -20828,10 +20832,11 @@ function DashAdapter() {
       var event = new _vo_Event__WEBPACK_IMPORTED_MODULE_5__["default"]();
       var timescale = eventBox.timescale || 1;
       var periodStart = voRepresentation.adaptation.period.start;
-      var eventStream = eventStreams[schemeIdUri + '/' + value];
-      var presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
-      var presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+      var eventStream = eventStreams[schemeIdUri + '/' + value]; // The PTO in voRepresentation is already specified in seconds
 
+      var presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+
+      var presentationTimeDelta = eventBox.presentation_time_delta / timescale;
       var calculatedPresentationTime;
 
       if (eventBox.version === 0) {
@@ -20840,7 +20845,7 @@ function DashAdapter() {
         calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
       }
 
-      var duration = eventBox.event_duration;
+      var duration = eventBox.event_duration / timescale;
       var id = eventBox.id;
       var messageData = eventBox.message_data;
       event.eventStream = eventStream;
@@ -20867,18 +20872,23 @@ function DashAdapter() {
    */
 
 
-  function getEventsFor(info, voRepresentation) {
+  function getEventsFor(info, voRepresentation, streamInfo) {
     var events = [];
 
     if (voPeriods.length > 0) {
       var manifest = voPeriods[0].mpd.manifest;
 
       if (info instanceof _vo_StreamInfo__WEBPACK_IMPORTED_MODULE_3__["default"]) {
-        events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, voPeriods));
+        var period = getPeriodForStreamInfo(info, voPeriods);
+        events = dashManifestModel.getEventsForPeriod(period);
       } else if (info instanceof _vo_MediaInfo__WEBPACK_IMPORTED_MODULE_2__["default"]) {
-        events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
+        var _period = getPeriodForStreamInfo(streamInfo, voPeriods);
+
+        events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), _period);
       } else if (info instanceof _vo_RepresentationInfo__WEBPACK_IMPORTED_MODULE_1__["default"]) {
-        events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation);
+        var _period2 = getPeriodForStreamInfo(streamInfo, voPeriods);
+
+        events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, _period2);
       }
     }
 
@@ -25189,7 +25199,7 @@ function DashManifestModel() {
     return events;
   }
 
-  function getEventStreams(inbandStreams, representation) {
+  function getEventStreams(inbandStreams, representation, period) {
     var eventStreams = [];
     var i;
     if (!inbandStreams) return eventStreams;
@@ -25214,12 +25224,13 @@ function DashManifestModel() {
       }
 
       eventStreams.push(eventStream);
+      eventStream.period = period;
     }
 
     return eventStreams;
   }
 
-  function getEventStreamForAdaptationSet(manifest, adaptation) {
+  function getEventStreamForAdaptationSet(manifest, adaptation, period) {
     var inbandStreams, periodArray, adaptationArray;
 
     if (manifest && manifest.Period_asArray && adaptation && adaptation.period && isInteger(adaptation.period.index)) {
@@ -25234,10 +25245,10 @@ function DashManifestModel() {
       }
     }
 
-    return getEventStreams(inbandStreams, null);
+    return getEventStreams(inbandStreams, null, period);
   }
 
-  function getEventStreamForRepresentation(manifest, representation) {
+  function getEventStreamForRepresentation(manifest, representation, period) {
     var inbandStreams, periodArray, adaptationArray, representationArray;
 
     if (manifest && manifest.Period_asArray && representation && representation.adaptation && representation.adaptation.period && isInteger(representation.adaptation.period.index)) {
@@ -25256,7 +25267,7 @@ function DashManifestModel() {
       }
     }
 
-    return getEventStreams(inbandStreams, representation);
+    return getEventStreams(inbandStreams, representation, period);
   }
 
   function getUTCTimingSources(manifest) {
@@ -27955,10 +27966,10 @@ function TimelineConverter() {
         repeat = segment.r;
       }
 
-      d += segment.d / timescale * (1 + repeat);
+      d += segment.d * (1 + repeat);
     }
 
-    range.end = range.start + d;
+    range.end = calcPresentationTimeFromMediaTime((segments[0].t + d) / timescale, voRepresentation);
     return range;
   }
 
@@ -28120,7 +28131,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
     var timeline = base.SegmentTimeline;
     var list = base.SegmentURL_asArray;
     var time = 0;
-    var scaledTime = 0;
     var relativeIdx = -1;
     var fragments, frag, i, len, j, repeat, fTimescale;
     fTimescale = representation.timescale;
@@ -28138,26 +28148,24 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
       if (frag.hasOwnProperty('t')) {
         time = frag.t;
-        scaledTime = time / fTimescale;
       } // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
       // next MPD update."
 
 
       if (repeat < 0) {
         var nextFrag = fragments[i + 1];
-        repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
+        repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, time / fTimescale);
       }
 
       for (j = 0; j <= repeat && !breakIterator; j++) {
         relativeIdx++;
-        breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, relativeIdx, i);
+        breakIterator = iterFunc(time, base, list, frag, fTimescale, relativeIdx, i);
 
         if (breakIterator) {
           representation.segmentDuration = frag.d / fTimescale;
         }
 
         time += frag.d;
-        scaledTime = time / fTimescale;
       }
     }
   }
@@ -28199,7 +28207,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     var segment = null;
     var found = false;
-    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
+    iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
       if (found || lastSegmentTime < 0) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
@@ -28211,9 +28219,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, relativeIdx, frag.tManifest);
         return true;
-      } else if (scaledTime >= lastSegmentTime - frag.d * 0.5 / fTimescale) {
+      } else if (time >= lastSegmentTime * fTimescale - frag.d * 0.5) {
         // same logic, if deviation is
-        // 50% of segment duration, segment is found if scaledTime is greater than or equal to (startTime of previous segment - half of the previous segment duration)
+        // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
         found = true;
       }
 
@@ -28235,11 +28243,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
     var segment = null;
     var requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
-    iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
+    iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
       // In some cases when requiredMediaTime = actual end time of the last segment
       // it is possible that this time a bit exceeds the declared end time of the last segment.
       // in this case we still need to include the last segment in the segment list.
-      if (requiredMediaTime < scaledTime + frag.d / fTimescale && requiredMediaTime >= scaledTime) {
+      var scaledMediaTime = precisionRound(requiredMediaTime * fTimescale);
+
+      if (scaledMediaTime < time + frag.d && scaledMediaTime >= time) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
 
@@ -28255,6 +28265,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
       return false;
     });
     return segment;
+  }
+
+  function precisionRound(number) {
+    return parseFloat(number.toPrecision(15));
   }
 
   instance = {
@@ -29715,6 +29729,7 @@ function ManifestLoader(config) {
   config = config || {};
   var context = this.context;
   var debug = config.debug;
+  var settings = config.settings;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
   var urlUtils = Object(_utils_URLUtils__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   var instance, logger, urlLoader, xlinkController, parser;
@@ -29841,6 +29856,20 @@ function ManifestLoader(config) {
           if (manifest.hasOwnProperty(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].LOCATION)) {
             baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
             logger.debug('BaseURI set by Location to: ' + baseUri);
+          } // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
+          // and the specified duration is greater than the total duration of all periods,
+          // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
+
+
+          if (settings && settings.get().streaming.enableManifestDurationMismatchFix && manifest.mediaPresentationDuration && manifest.Period_asArray.length > 1) {
+            var sumPeriodDurations = manifest.Period_asArray.reduce(function (totalDuration, period) {
+              return totalDuration + period.duration;
+            }, 0);
+
+            if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
+              logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
+              manifest.mediaPresentationDuration = sumPeriodDurations;
+            }
           }
 
           manifest.baseUri = baseUri;
@@ -30481,8 +30510,11 @@ function MediaPlayer() {
    *
    * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
    * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-   * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-   * @see {@link module:MediaPlayer#attachView attachView()}
+   * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+   * For live content
+   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
    * @see {@link module:MediaPlayer#attachSource attachSource()}
    * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
    * @memberof module:MediaPlayer
@@ -30490,7 +30522,9 @@ function MediaPlayer() {
    */
 
 
-  function initialize(view, source, AutoPlay) {
+  function initialize(view, source, autoPlay) {
+    var startTime = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : NaN;
+
     if (!capabilities) {
       capabilities = Object(_utils_Capabilities__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
       capabilities.setConfig({
@@ -30604,7 +30638,7 @@ function MediaPlayer() {
         serviceDescriptionController: serviceDescriptionController
       });
       restoreDefaultUTCTimingSources();
-      setAutoPlay(AutoPlay !== undefined ? AutoPlay : true); // Detect and initialize offline module to support offline contents playback
+      setAutoPlay(autoPlay !== undefined ? autoPlay : true); // Detect and initialize offline module to support offline contents playback
 
       _detectOffline();
     }
@@ -30614,7 +30648,7 @@ function MediaPlayer() {
     }
 
     if (source) {
-      attachSource(source);
+      attachSource(source, startTime);
     }
 
     logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
@@ -30648,7 +30682,6 @@ function MediaPlayer() {
 
     if (customParametersModel) {
       customParametersModel.reset();
-      customParametersModel = null;
     }
 
     settings.reset();
@@ -32118,7 +32151,10 @@ function MediaPlayer() {
    *
    * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
    * parsed manifest object.
-   *
+   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+   * For live content
+   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
    *
    * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
    *
@@ -32128,6 +32164,8 @@ function MediaPlayer() {
 
 
   function attachSource(urlOrManifest) {
+    var startTime = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : NaN;
+
     if (!mediaPlayerInitialized) {
       throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
     }
@@ -32143,7 +32181,7 @@ function MediaPlayer() {
     }
 
     if (isReady()) {
-      _initializePlayback();
+      _initializePlayback(startTime);
     }
   }
   /**
@@ -32608,8 +32646,15 @@ function MediaPlayer() {
     utcValue = valToConvert + (availableFrom + metric.range.start);
     return utcValue;
   }
+  /**
+   *
+   * @private
+   */
+
 
   function _initializePlayback() {
+    var startTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : NaN;
+
     if (offlineController) {
       offlineController.resetRecords();
     }
@@ -32621,9 +32666,9 @@ function MediaPlayer() {
       _createPlaybackControllers();
 
       if (typeof source === 'string') {
-        streamController.load(source);
+        streamController.load(source, startTime);
       } else {
-        streamController.loadWithManifest(source);
+        streamController.loadWithManifest(source, startTime);
       }
     }
 
@@ -33066,9 +33111,9 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
     /**
-     * The media's metadata has finished loading; all attributes now
-     * contain as much useful information as they're going to.
-     * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+     * The event is fired when the frame at the current playback position of the media has finished loading;
+     * often the first frame
+     * @event MediaPlayerEvents#PLAYBACK_LOADED_DATA
      */
 
     _this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
@@ -33132,6 +33177,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+    /**
+     * Sent when the video element reports that the volume has changed
+     * @event MediaPlayerEvents#PLAYBACK_VOLUME_CHANGED
+     */
+
+    _this.PLAYBACK_VOLUME_CHANGED = 'playbackVolumeChanged';
     /**
      * Sent when the media playback has stopped because of a temporary lack of data.
      *
@@ -34144,7 +34195,9 @@ function Stream(config) {
     return new Promise(function (resolve, reject) {
       checkConfig();
       isUpdating = true;
-      addInlineEvents();
+
+      _addInlineEvents();
+
       var element = videoModel.getElement();
       MEDIA_TYPES.forEach(function (mediaType) {
         if (mediaType !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || !element || element && /^VIDEO$/i.test(element.nodeName)) {
@@ -34553,10 +34606,13 @@ function Stream(config) {
     }
   }
 
-  function addInlineEvents() {
+  function _addInlineEvents() {
     if (eventController) {
       var events = adapter.getEventsFor(streamInfo);
-      eventController.addInlineEvents(events);
+
+      if (events && events.length > 0) {
+        eventController.addInlineEvents(events, streamInfo.id);
+      }
     }
   }
 
@@ -34652,7 +34708,7 @@ function Stream(config) {
 
   function onInbandEvents(e) {
     if (eventController) {
-      eventController.addInbandEvents(e.events);
+      eventController.addInbandEvents(e.events, streamInfo.id);
     }
   }
 
@@ -34705,7 +34761,7 @@ function Stream(config) {
       streamInfo = updatedStreamInfo;
 
       if (eventController) {
-        addInlineEvents();
+        _addInlineEvents();
       }
 
       var promises = [];
@@ -35525,7 +35581,7 @@ function StreamProcessor(config) {
     scheduleController.clearScheduleTimer();
     var representationInfo = getRepresentationInfo(newQuality);
     scheduleController.setCurrentRepresentation(representationInfo);
-    representationController.prepareQualityChange(newQuality); // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
+    representationController.prepareQualityChange(newQuality); // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
     // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
     // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
 
@@ -35581,7 +35637,7 @@ function StreamProcessor(config) {
 
     if (request && !getIsTextTrack()) {
       var bufferLevel = bufferController.getBufferLevel();
-      var abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
+      var abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type); // The quality we originally requested was lower than the new quality
 
       if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_2__["default"].ABANDON_LOAD) {
         var targetTime = time + safeBufferLevel;
@@ -35862,8 +35918,8 @@ function StreamProcessor(config) {
     // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
 
     if (currentRepresentation && voRepresentation) {
-      var eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-      var eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
+      var eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
+      var eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
       if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
         var request = fragmentModel.getRequests({
@@ -37099,7 +37155,6 @@ function AbrController() {
       })[0];
 
       if (request) {
-        fragmentModel.abortRequests();
         abandonmentStateDict[streamId][type].state = _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_2__["default"].ABANDON_LOAD;
         switchHistoryDict[streamId][type].reset();
         switchHistoryDict[streamId][type].push({
@@ -37310,7 +37365,7 @@ function AbrController() {
     }
 
     var streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-    var representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+    var representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
     var newIdx = idx;
 
     if (elementWidth > 0 && elementHeight > 0) {
@@ -37373,7 +37428,7 @@ function AbrController() {
     if (configBitrate === -1) {
       if (configRatio > -1) {
         var streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-        var representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+        var representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
 
         if (Array.isArray(representation)) {
           var repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
@@ -37447,7 +37502,7 @@ function AbrController() {
         newValue: newQuality
       });
 
-      if (newQuality > _rules_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_2__["default"].ALLOW_LOAD || newQuality > oldQuality)) {
+      if (newQuality > _rules_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_2__["default"].ALLOW_LOAD || newQuality < oldQuality)) {
         _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
 
         return true;
@@ -38683,8 +38738,9 @@ function BufferController(config) {
 
   function _checkIfBufferingCompleted() {
     var isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
+    // To avoid rounding error when comparing, the stream time and buffer level only must be within 5 decimal places
 
-    var periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel <= 0;
+    var periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel < 0.00001;
 
     if ((isLastIdxAppended || periodBuffered) && !isBufferingCompleted) {
       setIsBufferingCompleted(true);
@@ -39659,9 +39715,9 @@ function EventController() {
 
   function _resetInitialSettings() {
     isStarted = false;
-    inlineEvents = {}; // Format inlineEvents[schemeIdUri]
+    inlineEvents = {}; // Format inlineEvents[periodID][schemeIdUri]
 
-    inbandEvents = {}; // Format inlineEvents[schemeIdUri]
+    inbandEvents = {}; // Format inbandEvents[periodID][schemeIdUri]
 
     eventInterval = null;
     eventHandlingInProgress = false;
@@ -39705,29 +39761,116 @@ function EventController() {
     }
   }
   /**
+   * Iterate through the eventList and trigger the events
+   */
+
+
+  function _onEventTimer() {
+    try {
+      if (!eventHandlingInProgress) {
+        eventHandlingInProgress = true;
+        var currentVideoTime = playbackController.getTime();
+        var presentationTimeThreshold = currentVideoTime - lastEventTimerCall; // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
+
+        presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
+
+        _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
+
+        _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
+
+        _removeOutdatedEventObjects(inbandEvents);
+
+        _removeOutdatedEventObjects(inlineEvents);
+
+        lastEventTimerCall = currentVideoTime;
+        eventHandlingInProgress = false;
+      }
+    } catch (e) {
+      eventHandlingInProgress = false;
+      logger.error(e);
+    }
+  }
+  /**
+   * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing interval
+   * @param {object} events
+   * @param {number} presentationTimeThreshold
+   * @param {number} currentVideoTime
+   * @private
+   */
+
+
+  function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
+    try {
+      var callback = function callback(event) {
+        if (event !== undefined) {
+          var duration = !isNaN(event.duration) ? event.duration : 0; // The event is either about to start or has already been started and we are within its duration
+
+          if (event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime) {
+            _startEvent(event, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_START);
+          } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
+            logger.debug("Removing event ".concat(event.id, " from period ").concat(event.eventStream.period.id, " as it is expired or invalid"));
+
+            _removeEvent(events, event);
+          }
+        }
+      };
+
+      _iterateAndTriggerCallback(events, callback);
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  /**
+   * Iterates over the entries of the events object and deletes the entries for which no events are present
+   * @param {object} events
+   * @private
+   */
+
+
+  function _removeOutdatedEventObjects(events) {
+    try {
+      for (var key in events) {
+        if (events.hasOwnProperty(key)) {
+          if (Object.keys(events[key]).length === 0) delete events[key];
+        }
+      }
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  /**
    * Add MPD events to the list of events.
    * Events that are not in the MPD anymore but not triggered yet will still be deleted.
    * Existing events might get updated.
    * @param {Array.<Object>} values
+   * @param {string} periodId
    */
 
 
-  function addInlineEvents(values) {
+  function addInlineEvents(values, periodId) {
     try {
       checkConfig();
+
+      if (!inlineEvents[periodId]) {
+        inlineEvents[periodId] = {};
+      }
 
       if (values) {
         for (var i = 0; i < values.length; i++) {
           var event = values[i];
+          var currentTime = playbackController.getTime();
+          var duration = !isNaN(event.duration) ? event.duration : 0;
 
-          var result = _addOrUpdateEvent(event, inlineEvents, true);
+          if (!_eventHasExpired(currentTime, duration, event.calculatedPresentationTime)) {
+            var result = _addOrUpdateEvent(event, inlineEvents[periodId], true);
 
-          if (result === EVENT_HANDLED_STATES.ADDED) {
-            logger.debug("Added inline event with id ".concat(event.id)); // If we see the event for the first time we trigger it in onReceive mode
+            if (result === EVENT_HANDLED_STATES.ADDED) {
+              logger.debug("Added inline event with id ".concat(event.id, " from period ").concat(periodId)); // If we see the event for the first time we trigger it in onReceive mode
 
-            _startEvent(event, values, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE);
-          } else if (result === EVENT_HANDLED_STATES.UPDATED) {
-            logger.debug("Updated inline event with id ".concat(event.id));
+              _startEvent(event, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE);
+            } else if (result === EVENT_HANDLED_STATES.UPDATED) {
+              logger.debug("Updated inline event with id ".concat(event.id, " from period ").concat(periodId));
+            }
           }
         }
       }
@@ -39739,28 +39882,37 @@ function EventController() {
    * Add EMSG events to the list of events
    * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e. processing of any one event message box with the same id is sufficient.
    * @param {Array.<Object>} values
+   * @param {string} periodId
    */
 
 
-  function addInbandEvents(values) {
+  function addInbandEvents(values, periodId) {
     try {
       checkConfig();
 
+      if (!inbandEvents[periodId]) {
+        inbandEvents[periodId] = {};
+      }
+
       for (var i = 0; i < values.length; i++) {
         var event = values[i];
+        var currentTime = playbackController.getTime();
+        var duration = !isNaN(event.duration) ? event.duration : 0;
 
-        var result = _addOrUpdateEvent(event, inbandEvents, false);
+        if (!_eventHasExpired(currentTime, duration, event.calculatedPresentationTime)) {
+          var result = _addOrUpdateEvent(event, inbandEvents[periodId], false);
 
-        if (result === EVENT_HANDLED_STATES.ADDED) {
-          if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
-            _handleManifestReloadEvent(event);
+          if (result === EVENT_HANDLED_STATES.ADDED) {
+            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME) {
+              _handleManifestReloadEvent(event);
+            }
+
+            logger.debug("Added inband event with id ".concat(event.id, " from period ").concat(periodId));
+
+            _startEvent(event, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE);
+          } else {
+            logger.debug("Inband event with scheme_id_uri ".concat(event.eventStream.schemeIdUri, ", value ").concat(event.eventStream.value, ", period id ").concat(periodId, " and event id ").concat(event.id, " was ignored because it has been added before."));
           }
-
-          logger.debug('Added inband event with id ' + event.id);
-
-          _startEvent(event, values, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE);
-        } else {
-          logger.debug("Inband event with scheme_id_uri ".concat(event.eventStream.schemeIdUri, ", value ").concat(event.eventStream.value, " and id ").concat(event.id, " was ignored because it has been added before."));
         }
       }
 
@@ -39792,15 +39944,21 @@ function EventController() {
 
     var indexOfExistingEvent = events[schemeIdUri].findIndex(function (e) {
       return (!value || e.eventStream.value && e.eventStream.value === value) && e.id === id;
-    });
+    }); // New event, we add it to our list of events
 
     if (indexOfExistingEvent === -1) {
       events[schemeIdUri].push(event);
+      event.triggeredReceivedEvent = false;
+      event.triggeredStartEvent = false;
       eventState = EVENT_HANDLED_STATES.ADDED;
-    } else if (shouldOverwriteExistingEvents) {
-      events[schemeIdUri][indexOfExistingEvent] = event;
-      eventState = EVENT_HANDLED_STATES.UPDATED;
-    }
+    } // We have a similar event for this period with the same schemeIdUri, value and id. Overwrite it or ignore it
+    else if (shouldOverwriteExistingEvents) {
+        var oldEvent = events[schemeIdUri][indexOfExistingEvent];
+        event.triggeredReceivedEvent = oldEvent.triggeredReceivedEvent;
+        event.triggeredStartEvent = oldEvent.triggeredStartEvent;
+        events[schemeIdUri][indexOfExistingEvent] = event;
+        eventState = EVENT_HANDLED_STATES.UPDATED;
+      }
 
     return eventState;
   }
@@ -39835,31 +39993,8 @@ function EventController() {
           mode: _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_START
         });
       }
-    } catch (e) {}
-  }
-  /**
-   * Iterate through the eventList and trigger the events
-   */
-
-
-  function _onEventTimer() {
-    try {
-      if (!eventHandlingInProgress) {
-        eventHandlingInProgress = true;
-        var currentVideoTime = playbackController.getTime();
-        var presentationTimeThreshold = currentVideoTime - lastEventTimerCall; // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
-
-        presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
-
-        _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
-
-        _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
-
-        lastEventTimerCall = currentVideoTime;
-        eventHandlingInProgress = false;
-      }
     } catch (e) {
-      eventHandlingInProgress = false;
+      logger.error(e);
     }
   }
   /**
@@ -39874,35 +40009,9 @@ function EventController() {
       _triggerRemainingEvents(inbandEvents);
 
       _triggerRemainingEvents(inlineEvents);
-    } catch (e) {}
-  }
-  /**
-   * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing interval
-   * @param {object} events
-   * @param {number} presentationTimeThreshold
-   * @param {number} currentVideoTime
-   * @private
-   */
-
-
-  function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
-    try {
-      var callback = function callback(event) {
-        if (event !== undefined) {
-          var duration = !isNaN(event.duration) ? event.duration : 0; // The event is either about to start or has already been started and we are within its duration
-
-          if (event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime) {
-            _startEvent(event, events, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_START);
-          } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
-            logger.debug("Deleting event ".concat(event.id, " as it is expired or invalid"));
-
-            _removeEvent(events, event);
-          }
-        }
-      };
-
-      _iterateAndTriggerCallback(events, callback);
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
   }
   /**
    * Triggers the remaining events after the EventController has been stopped
@@ -39926,12 +40035,14 @@ function EventController() {
         var calculatedPresentationTimeInSeconds = event.calculatedPresentationTime;
 
         if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
-          _startEvent(event, events, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_START);
+          _startEvent(event, _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_START);
         }
       };
 
       _iterateAndTriggerCallback(events, callback);
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
   }
   /**
    * Iterates over the inline/inband event object and triggers a callback for each event
@@ -39944,18 +40055,25 @@ function EventController() {
   function _iterateAndTriggerCallback(events, callback) {
     try {
       if (events) {
-        var schemeIdUris = Object.keys(events);
+        var periodIds = Object.keys(events);
 
-        for (var i = 0; i < schemeIdUris.length; i++) {
-          var schemeIdEvents = events[schemeIdUris[i]];
-          schemeIdEvents.forEach(function (event) {
-            if (event !== undefined) {
-              callback(event);
-            }
-          });
+        for (var i = 0; i < periodIds.length; i++) {
+          var currentPeriod = events[periodIds[i]];
+          var schemeIdUris = Object.keys(currentPeriod);
+
+          for (var j = 0; j < schemeIdUris.length; j++) {
+            var schemeIdEvents = currentPeriod[schemeIdUris[j]];
+            schemeIdEvents.forEach(function (event) {
+              if (event !== undefined) {
+                callback(event);
+              }
+            });
+          }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
   }
   /**
    * Checks if an event is expired. For instance if the presentationTime + the duration of an event are smaller than the current video time.
@@ -39971,6 +40089,7 @@ function EventController() {
     try {
       return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
     } catch (e) {
+      logger.error(e);
       return false;
     }
   }
@@ -39987,29 +40106,29 @@ function EventController() {
       var periodEndTime = event.eventStream.period.start + event.eventStream.period.duration;
       return event.calculatedPresentationTime > periodEndTime;
     } catch (e) {
+      logger.error(e);
       return false;
     }
   }
   /**
-   * Starts an event. Depending on the schemeIdUri we distinguis between
+   * Starts an event. Depending on the schemeIdUri we distinguish between
    * - MPD Reload events
    * - MPD Callback events
    * - Events to be dispatched to the application
-   * Events should be removed from the list before beeing triggered. Otherwise the event handler might cause an error and the remove function will not be called.
    * @param {object} event
-   * @param {object} events
    * @param {String} mode
    * @private
    */
 
 
-  function _startEvent(event, events, mode) {
+  function _startEvent(event, mode) {
     try {
       var currentVideoTime = playbackController.getTime();
       var eventId = event.id;
 
-      if (mode === _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE) {
+      if (mode === _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
         logger.debug("Received event ".concat(eventId));
+        event.triggeredReceivedEvent = true;
         eventBus.trigger(event.eventStream.schemeIdUri, {
           event: event
         }, {
@@ -40018,33 +40137,32 @@ function EventController() {
         return;
       }
 
-      if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
-        if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
+      if (!event.triggeredStartEvent) {
+        if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
           //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
-          logger.debug("Starting manifest refresh event ".concat(eventId, " at ").concat(currentVideoTime));
+          if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
+            logger.debug("Starting manifest refresh event ".concat(eventId, " at ").concat(currentVideoTime));
 
-          _removeEvent(events, event);
+            _refreshManifest();
+          }
+        } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
+          logger.debug("Starting callback event ".concat(eventId, " at ").concat(currentVideoTime));
 
-          _refreshManifest();
+          _sendCallbackRequest(event.messageData);
+        } else {
+          logger.debug("Starting event ".concat(eventId, " from period ").concat(event.eventStream.period.id, " at ").concat(currentVideoTime));
+          eventBus.trigger(event.eventStream.schemeIdUri, {
+            event: event
+          }, {
+            mode: mode
+          });
         }
-      } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
-        logger.debug("Starting callback event ".concat(eventId, " at ").concat(currentVideoTime));
 
-        _removeEvent(events, event);
-
-        _sendCallbackRequest(event.messageData);
-      } else {
-        logger.debug("Starting event ".concat(eventId, " at ").concat(currentVideoTime));
-
-        _removeEvent(events, event);
-
-        eventBus.trigger(event.eventStream.schemeIdUri, {
-          event: event
-        }, {
-          mode: mode
-        });
+        event.triggeredStartEvent = true;
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
   }
   /**
    * Removes an event from the list. If this is the last event of type "schemeIdUri"  the corresponding schemeIdUri Object in the list of events is deleted.
@@ -40055,15 +40173,20 @@ function EventController() {
 
 
   function _removeEvent(events, event) {
-    var schemeIdUri = event.eventStream.schemeIdUri;
-    var value = event.eventStream.value;
-    var id = event.id;
-    events[schemeIdUri] = events[schemeIdUri].filter(function (e) {
-      return value && e.eventStream.value && e.eventStream.value !== value || e.id !== id;
-    });
+    try {
+      var schemeIdUri = event.eventStream.schemeIdUri;
+      var periodId = event.eventStream.period.id;
+      var value = event.eventStream.value;
+      var id = event.id;
+      events[periodId][schemeIdUri] = events[periodId][schemeIdUri].filter(function (e) {
+        return value && e.eventStream.value && e.eventStream.value !== value || e.id !== id;
+      });
 
-    if (events[schemeIdUri].length === 0) {
-      delete events[schemeIdUri];
+      if (events[periodId][schemeIdUri].length === 0) {
+        delete events[periodId][schemeIdUri];
+      }
+    } catch (e) {
+      logger.error(e);
     }
   }
   /**
@@ -40076,7 +40199,9 @@ function EventController() {
     try {
       checkConfig();
       manifestUpdater.refreshManifest();
-    } catch (e) {}
+    } catch (e) {
+      logger.error(e);
+    }
   }
   /**
    * Send a callback request
@@ -40096,7 +40221,7 @@ function EventController() {
         }
       });
     } catch (e) {
-      throw e;
+      logger.error(e);
     }
   }
   /**
@@ -40957,10 +41082,10 @@ function MediaController() {
     var streamInfo = track.streamInfo;
     var id = streamInfo.id;
     var current = getCurrentTrackFor(type, id);
-    if (!tracks[id] || !tracks[id][type] || isTracksEqual(track, current)) return;
+    if (!tracks[id] || !tracks[id][type]) return;
     tracks[id][type].current = track;
 
-    if (tracks[id][type].current && (type !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && track.isFragmented)) {
+    if (tracks[id][type].current && (type !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && !isTracksEqual(track, current) || type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && track.isFragmented)) {
       eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_1__["default"].CURRENT_TRACK_CHANGED, {
         oldMediaInfo: current,
         newMediaInfo: track,
@@ -42128,6 +42253,10 @@ function PlaybackController() {
     eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_2__["default"].PLAYBACK_ENDED, {
       'isLast': streamInfo.isLast
     });
+  }
+
+  function _onVolumeChanged() {
+    eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_2__["default"].PLAYBACK_VOLUME_CHANGED);
   } // Handle DASH PLAYBACK_ENDED event
 
 
@@ -42298,6 +42427,7 @@ function PlaybackController() {
     videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
     videoModel.addEventListener('stalled', onPlaybackStalled);
     videoModel.addEventListener('ended', _onNativePlaybackEnded);
+    videoModel.addEventListener('volumechange', _onVolumeChanged);
   }
 
   function removeAllListeners() {
@@ -42317,6 +42447,7 @@ function PlaybackController() {
     videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
     videoModel.removeEventListener('stalled', onPlaybackStalled);
     videoModel.removeEventListener('ended', _onNativePlaybackEnded);
+    videoModel.removeEventListener('volumechange', _onVolumeChanged);
   }
 
   instance = {
@@ -43326,7 +43457,7 @@ var DVR_WAITING_OFFSET = 2;
 function StreamController() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  var instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, errorInformation;
+  var instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance().getLogger(instance);
@@ -43427,6 +43558,48 @@ function StreamController() {
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+  }
+
+  function _checkConfig() {
+    if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') || !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler || !dashMetrics || !playbackController) {
+      throw new Error(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
+    }
+  }
+
+  function _checkInitialize() {
+    if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
+      throw new Error('initialize function has to be called previously');
+    }
+  }
+  /**
+   * Start the streaming session by loading the target manifest
+   * @param {string} url
+   * @param {number} startTime
+   */
+
+
+  function load(url) {
+    var startTime = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : NaN;
+
+    _checkConfig();
+
+    providedStartTime = startTime;
+    manifestLoader.load(url);
+  }
+  /**
+   * Start the streaming session by using the provided manifest object
+   * @param {object} manifest
+   * @param {number} startTime
+   */
+
+
+  function loadWithManifest(manifest) {
+    var startTime = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : NaN;
+
+    _checkInitialize();
+
+    providedStartTime = startTime;
+    manifestUpdater.setManifest(manifest);
   }
   /**
    * When the UTC snychronization is completed we can compose the streams
@@ -43576,7 +43749,6 @@ function StreamController() {
       serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
     }
 
-    ;
     var manifestInfo = streamsInfo[0].manifestInfo;
 
     if (settings.get().streaming.applyServiceDescription) {
@@ -44319,11 +44491,13 @@ function StreamController() {
 
   function _getInitialStartTime() {
     // Seek new stream in priority order:
+    // - at start time provided via the application
     // - at start time provided in URI parameters
     // - at stream/period start time (for static streams) or live start time (for dynamic streams)
     var startTime;
+    var isDynamic = adapter.getIsDynamic();
 
-    if (adapter.getIsDynamic()) {
+    if (isDynamic) {
       // For dynamic stream, start by default at (live edge - live delay)
       var dvrInfo = dashMetrics.getCurrentDVRInfo();
       var liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0; // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
@@ -44333,15 +44507,30 @@ function StreamController() {
       var dvrWindow = dvrInfo ? dvrInfo.range : null;
 
       if (dvrWindow) {
-        // #t shall be relative to period start
-        var startTimeFromUri = _getStartTimeFromUriParameters(true);
+        // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+        if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
+          logger.info("Start time provided by the app: ".concat(providedStartTime));
 
-        if (!isNaN(startTimeFromUri)) {
-          logger.info('Start time from URI parameters: ' + startTimeFromUri); // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+          var providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime);
 
-          var offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
-          startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start + offset);
-        }
+          if (!isNaN(providedStartTimeAsPresentationTime)) {
+            // Do not move closer to the live edge as defined by live delay
+            startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
+          }
+        } else {
+          // #t shall be relative to period start
+          var startTimeFromUri = _getStartTimeFromUriParameters(true);
+
+          if (!isNaN(startTimeFromUri)) {
+            logger.info("Start time from URI parameters: ".concat(startTimeFromUri)); // Do not move closer to the live edge as defined by live delay
+
+            startTime = Math.min(startTime, startTimeFromUri);
+          }
+        } // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+
+
+        var offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+        startTime = Math.max(startTime, dvrWindow.start + offset);
       }
     } else {
       // For static stream, start by default at period start
@@ -44349,13 +44538,26 @@ function StreamController() {
 
       var streamInfo = _streams[0].getStreamInfo();
 
-      startTime = streamInfo.start; // If start time in URI, take max value between period start and time from URI (if in period range)
+      startTime = streamInfo.start; // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
 
-      var _startTimeFromUri = _getStartTimeFromUriParameters(false);
+      if (!isNaN(providedStartTime)) {
+        logger.info("Start time provided by the app: ".concat(providedStartTime));
 
-      if (!isNaN(_startTimeFromUri)) {
-        logger.info('Start time from URI parameters: ' + _startTimeFromUri);
-        startTime = Math.max(startTime, _startTimeFromUri);
+        var _providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime);
+
+        if (!isNaN(_providedStartTimeAsPresentationTime)) {
+          // Do not play earlier than the start of the first period
+          startTime = Math.max(startTime, _providedStartTimeAsPresentationTime);
+        }
+      } else {
+        // If start time in URI, take max value between period start and time from URI (if in period range)
+        var _startTimeFromUri = _getStartTimeFromUriParameters(false);
+
+        if (!isNaN(_startTimeFromUri)) {
+          logger.info("Start time from URI parameters: ".concat(_startTimeFromUri)); // Do not play earlier than the start of the first period
+
+          startTime = Math.max(startTime, _startTimeFromUri);
+        }
       }
     }
 
@@ -44377,14 +44579,39 @@ function StreamController() {
     }
 
     var refStream = getStreams()[0];
-    var refStreamStartTime = refStream.getStreamInfo().start; // Consider only start time of MediaRange
+    var referenceTime = refStream.getStreamInfo().start;
+    fragData.t = fragData.t.split(',')[0];
+    return _getStartTimeFromString(isDynamic, fragData.t, referenceTime);
+  }
+  /**
+   * Calculate start time using the value that was provided via the application as part of attachSource() or initialize()
+   * @param {boolean} isDynamic
+   * @param {number | string} providedStartTime
+   * @return {number}
+   * @private
+   */
+
+
+  function _getStartTimeFromProvidedData(isDynamic, providedStartTime) {
+    var referenceTime = 0;
+
+    if (!isDynamic) {
+      var refStream = getStreams()[0];
+      referenceTime = refStream.getStreamInfo().start;
+    }
+
+    return _getStartTimeFromString(isDynamic, providedStartTime, referenceTime);
+  }
+
+  function _getStartTimeFromString(isDynamic, targetValue, referenceTime) {
+    // Consider only start time of MediaRange
     // TODO: consider end time of MediaRange to stop playback at provided end time
-
-    fragData.t = fragData.t.split(',')[0]; // "t=<time>" : time is relative to 1st period start
+    // "t=<time>" : time is relative to 1st period start
     // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-
-    var posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
-    var startTime = isDynamic && !isNaN(posix) ? posix - playbackController.getAvailabilityStartTime() / 1000 : parseInt(fragData.t) + refStreamStartTime;
+    var period = adapter.getRegularPeriods()[0];
+    var targetString = targetValue.toString();
+    var posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
+    var startTime = isDynamic && !isNaN(posix) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
     return startTime;
   }
   /**
@@ -44649,30 +44876,6 @@ function StreamController() {
     return null;
   }
 
-  function _checkConfig() {
-    if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') || !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler || !dashMetrics || !playbackController) {
-      throw new Error(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
-    }
-  }
-
-  function _checkInitialize() {
-    if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
-      throw new Error('initialize function has to be called previously');
-    }
-  }
-
-  function load(url) {
-    _checkConfig();
-
-    manifestLoader.load(url);
-  }
-
-  function loadWithManifest(manifest) {
-    _checkInitialize();
-
-    manifestUpdater.setManifest(manifest);
-  }
-
   function _onManifestValidityChanged(e) {
     if (!isNaN(e.newDuration)) {
       _setMediaDuration(e.newDuration);
@@ -44777,6 +44980,7 @@ function StreamController() {
 
   function resetInitialSettings() {
     streams = [];
+    providedStartTime = NaN;
     protectionController = null;
     isStreamSwitchingInProgress = false;
     activeStream = null;
@@ -50657,12 +50861,11 @@ function MetricsModel(config) {
     }
   }
 
-  function appendHttpTrace(httpRequest, s, d, b, t) {
+  function appendHttpTrace(httpRequest, s, d, b) {
     var vo = new _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_3__["HTTPRequestTrace"]();
     vo.s = s;
     vo.d = d;
     vo.b = b;
-    vo._t = t;
     httpRequest.trace.push(vo);
 
     if (!httpRequest.interval) {
@@ -50708,7 +50911,7 @@ function MetricsModel(config) {
 
     if (traces) {
       traces.forEach(function (trace) {
-        appendHttpTrace(vo, trace.s, trace.d, trace.b, trace.t);
+        appendHttpTrace(vo, trace.s, trace.d, trace.b);
       });
     } else {
       // The interval and trace shall be absent for redirect and failure records.
@@ -51773,17 +51976,23 @@ function FetchLoader(cfg) {
                 // are correctly generated
                 // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
                 var calculatedThroughput = null;
+                var calculatedTime = null;
 
                 if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                   calculatedThroughput = calculateThroughputByChunkData(startTimeData, endTimeData);
+
+                  if (calculatedThroughput) {
+                    calculatedTime = bytesReceived * 8 / calculatedThroughput;
+                  }
+                } else if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA) {
+                  calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                 }
 
                 httpRequest.progress({
                   loaded: bytesReceived,
                   total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                   lengthComputable: true,
-                  time: calculateDownloadedTime(downloadedData, bytesReceived),
-                  throughput: calculatedThroughput,
+                  time: calculatedTime,
                   stream: true
                 });
               }
@@ -52230,8 +52439,7 @@ function HTTPLoader(cfg) {
         traces.push({
           s: lastTraceTime,
           d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-          b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
-          t: event.throughput
+          b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
         });
         lastTraceTime = currentTime;
         lastTraceReceivedCount = event.loaded;
@@ -53800,7 +54008,7 @@ function ProtectionController(config) {
     if (protectionKeyController.isClearKey(selectedKeySystem)) {
       // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
       // initData and overwrite possible initData indicated in encrypted event (EME)
-      if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+      if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemInfo.protData.clearkeys).length !== 0) {
         var initData = {
           kids: Object.keys(keySystemInfo.protData.clearkeys)
         };
@@ -54236,7 +54444,7 @@ function ProtectionController(config) {
     if (protectionKeyController.isClearKey(selectedKeySystem)) {
       var clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
 
-      if (clearkeys) {
+      if (clearkeys && clearkeys.keyPairs && clearkeys.keyPairs.length > 0) {
         logger.debug('DRM: ClearKey license request handled by application!');
 
         _sendLicenseRequestCompleteEvent(eventData);
@@ -54562,9 +54770,19 @@ function ProtectionController(config) {
 
 
   function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
-    var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
+    var errorMsg = 'NONE';
+    var data = null;
 
-    _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+    if (xhr.response) {
+      errorMsg = licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType);
+      data = {
+        serverResponse: xhr.response || null,
+        responseCode: xhr.status || null,
+        responseText: xhr.statusText || null
+      };
+    }
+
+    _sendLicenseRequestCompleteEvent(eventData, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg, data));
   }
   /**
    * Applies custom filters defined by the application
@@ -59289,20 +59507,9 @@ function ThroughputHistory(config) {
         throughput = 0;
 
     if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].FILE_LOADER_TYPES.FETCH) {
-      var calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
-
-      if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-        var sumOfThroughputValues = httpRequest.trace.reduce(function (a, b) {
-          return a + b._t;
-        }, 0);
-        throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
-      }
-
-      if (throughput === 0) {
-        throughputMeasureTime = httpRequest.trace.reduce(function (a, b) {
-          return a + b.d;
-        }, 0);
-      }
+      throughputMeasureTime = httpRequest.trace.reduce(function (a, b) {
+        return a + b.d;
+      }, 0);
     } else {
       throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
     }
@@ -67065,8 +67272,13 @@ function DOMStorage(config) {
   }
 
   function getSavedMediaSettings(type) {
-    var mediaSettings = null;
-    checkConfig(); //Checks local storage to see if there is valid, non-expired media settings
+    checkConfig();
+
+    if (!settings.get().streaming.lastMediaSettingsCachingInfo.enabled) {
+      return null;
+    }
+
+    var mediaSettings = null; //Checks local storage to see if there is valid, non-expired media settings
 
     if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
       var key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
@@ -67089,8 +67301,13 @@ function DOMStorage(config) {
   }
 
   function getSavedBitrateSettings(type) {
-    var savedBitrate = NaN;
-    checkConfig(); //Checks local storage to see if there is valid, non-expired bit rate
+    checkConfig();
+
+    if (!settings.get().streaming.lastBitrateCachingInfo.enabled) {
+      return NaN;
+    }
+
+    var savedBitrate = NaN; //Checks local storage to see if there is valid, non-expired bit rate
     //hinting from the last play session to use as a starting bit rate.
 
     if (canStore(STORAGE_TYPE_LOCAL, LAST_BITRATE)) {
@@ -70674,12 +70891,6 @@ function HTTPRequestTrace() {
    */
 
   this.b = [];
-  /**
-   * Measurement throughput in kbits/s
-   * @public
-   */
-
-  this._t = null;
 };
 
 HTTPRequest.GET = 'GET';
