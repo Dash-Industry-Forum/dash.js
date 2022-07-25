@@ -519,6 +519,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Multi Audio - Initial Track",
+                "description": "This example illustrates how to select a default audio language for playback.",
+                "href": "multi-audio/multi-audio-default-track.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -652,6 +665,17 @@
                 "description": "This sample shows how to use MPD anchors to start a presentation at a given time.",
                 "href": "advanced/mpd-anchors.html",
                 "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Manual load with start time",
+                "description": "A sample showing how to initialize playback at a specific start time.",
+                "href": "advanced/load-with-starttime.html",
+                "image": "lib/img/bbb-4.jpg",
                 "labels": [
                     "VoD",
                     "Video",

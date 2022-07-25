@@ -252,14 +252,17 @@ function MediaPlayer() {
      *
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-     * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, AutoPlay) {
+    function initialize(view, source, autoPlay, startTime = NaN) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -381,7 +384,7 @@ function MediaPlayer() {
             });
 
             restoreDefaultUTCTimingSources();
-            setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+            setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
             // Detect and initialize offline module to support offline contents playback
             _detectOffline();
@@ -392,7 +395,7 @@ function MediaPlayer() {
         }
 
         if (source) {
-            attachSource(source);
+            attachSource(source, startTime);
         }
 
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
@@ -422,7 +425,6 @@ function MediaPlayer() {
         }
         if (customParametersModel) {
             customParametersModel.reset();
-            customParametersModel = null;
         }
 
         settings.reset();
@@ -1791,14 +1793,17 @@ function MediaPlayer() {
      *
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     *
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      *
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest) {
+    function attachSource(urlOrManifest, startTime = NaN) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
@@ -1814,7 +1819,7 @@ function MediaPlayer() {
         }
 
         if (isReady()) {
-            _initializePlayback();
+            _initializePlayback(startTime);
         }
     }
 
@@ -2263,7 +2268,11 @@ function MediaPlayer() {
         return utcValue;
     }
 
-    function _initializePlayback() {
+    /**
+     *
+     * @private
+     */
+    function _initializePlayback(startTime = NaN) {
 
         if (offlineController) {
             offlineController.resetRecords();
@@ -2275,9 +2284,9 @@ function MediaPlayer() {
             _createPlaybackControllers();
 
             if (typeof source === 'string') {
-                streamController.load(source);
+                streamController.load(source, startTime);
             } else {
-                streamController.loadWithManifest(source);
+                streamController.loadWithManifest(source, startTime);
             }
         }
 

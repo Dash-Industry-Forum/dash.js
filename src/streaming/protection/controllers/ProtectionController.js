@@ -267,7 +267,7 @@ function ProtectionController(config) {
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
             // initData and overwrite possible initData indicated in encrypted event (EME)
-            if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys')) {
+            if (keySystemInfo.protData && keySystemInfo.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemInfo.protData.clearkeys).length !== 0) {
                 const initData = { kids: Object.keys(keySystemInfo.protData.clearkeys) };
                 keySystemInfo.initData = new TextEncoder().encode(JSON.stringify(initData));
             }
@@ -675,7 +675,7 @@ function ProtectionController(config) {
         // Perform any special handling for ClearKey
         if (protectionKeyController.isClearKey(selectedKeySystem)) {
             const clearkeys = protectionKeyController.processClearKeyLicenseRequest(selectedKeySystem, protData, message);
-            if (clearkeys) {
+            if (clearkeys && clearkeys.keyPairs && clearkeys.keyPairs.length > 0) {
                 logger.debug('DRM: ClearKey license request handled by application!');
                 _sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken, clearkeys);
@@ -984,10 +984,23 @@ function ProtectionController(config) {
      * @private
      */
     function _reportError(xhr, eventData, keySystemString, messageType, licenseServerData) {
-        const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+        let errorMsg = 'NONE';
+        let data = null;
+
+        if (xhr.response) {
+            errorMsg = licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType);
+            data = {
+                serverResponse: xhr.response || null,
+                responseCode: xhr.status || null,
+                responseText: xhr.statusText || null
+            }
+        }
+
         _sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
             ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' +
-            xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+            xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg,
+            data
+        ));
     }
 
     /**

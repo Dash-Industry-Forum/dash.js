@@ -303,6 +303,18 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
+                it('should start static stream at #t with milliseconds', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = 10.555;
+                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
+
+                    expectedStartTime = staticStreamInfo.start + uriStartTime;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
                 it('should start static stream at period start if #t is before period start', function (done) {
                     doneFn = done;
 
@@ -340,6 +352,20 @@ describe('StreamController', function () {
             });
 
             describe('dynamic streams', function () {
+
+                before(function () {
+                    adapterMock.setRegularPeriods([
+                        {
+                            mpd: {
+                                availabilityStartTime: new Date(0)
+                            }
+                        }
+                    ])
+                })
+
+                after(function () {
+                    adapterMock.setRegularPeriods([]);
+                })
 
                 beforeEach(function () {
                     getIsDynamicStub.returns(true);
@@ -393,6 +419,18 @@ describe('StreamController', function () {
                     doneFn = done;
 
                     let uriStartTime = dvrWindowRange.start + 10;
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
+
+                    expectedStartTime = uriStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at #t=posix on millisecond level', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = dvrWindowRange.start + 10.555;
                     uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
 
                     expectedStartTime = uriStartTime;

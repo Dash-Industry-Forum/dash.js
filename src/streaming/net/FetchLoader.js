@@ -231,16 +231,22 @@ function FetchLoader(cfg) {
                                     // are correctly generated
                                     // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
                                     let calculatedThroughput = null;
+                                    let calculatedTime = null;
                                     if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                                         calculatedThroughput = calculateThroughputByChunkData(startTimeData, endTimeData);
+                                        if (calculatedThroughput) {
+                                            calculatedTime = bytesReceived * 8 / calculatedThroughput;
+                                        }
+                                    }
+                                    else if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA) {
+                                        calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                                     }
 
                                     httpRequest.progress({
                                         loaded: bytesReceived,
                                         total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                                         lengthComputable: true,
-                                        time: calculateDownloadedTime(downloadedData, bytesReceived),
-                                        throughput: calculatedThroughput,
+                                        time: calculatedTime,
                                         stream: true
                                     });
                                 }

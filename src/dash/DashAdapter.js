@@ -448,7 +448,7 @@ function DashAdapter() {
      * Returns the event for the given parameters.
      * @param {object} eventBox
      * @param {object} eventStreams
-     * @param {number} mediaStartTime
+     * @param {number} mediaStartTime - Specified in seconds
      * @param {object} voRepresentation
      * @returns {null|Event}
      * @memberOf module:DashAdapter
@@ -472,8 +472,10 @@ function DashAdapter() {
             const timescale = eventBox.timescale || 1;
             const periodStart = voRepresentation.adaptation.period.start;
             const eventStream = eventStreams[schemeIdUri + '/' + value];
+            // The PTO in voRepresentation is already specified in seconds
             const presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
-            let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+            // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+            let presentationTimeDelta = eventBox.presentation_time_delta / timescale;
             let calculatedPresentationTime;
 
             if (eventBox.version === 0) {
@@ -482,7 +484,7 @@ function DashAdapter() {
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 
-            const duration = eventBox.event_duration;
+            const duration = eventBox.event_duration / timescale;
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
@@ -510,18 +512,21 @@ function DashAdapter() {
      * @instance
      * @ignore
      */
-    function getEventsFor(info, voRepresentation) {
+    function getEventsFor(info, voRepresentation, streamInfo) {
         let events = [];
 
         if (voPeriods.length > 0) {
             const manifest = voPeriods[0].mpd.manifest;
 
             if (info instanceof StreamInfo) {
-                events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, voPeriods));
+                const period = getPeriodForStreamInfo(info, voPeriods)
+                events = dashManifestModel.getEventsForPeriod(period);
             } else if (info instanceof MediaInfo) {
-                events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
+                const period = getPeriodForStreamInfo(streamInfo, voPeriods)
+                events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
             } else if (info instanceof RepresentationInfo) {
-                events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation);
+                const period = getPeriodForStreamInfo(streamInfo, voPeriods)
+                events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
             }
         }
 
