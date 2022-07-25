@@ -35,6 +35,7 @@ import Constants from '../constants/Constants';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import Events from '../../core/events/Events';
 import MetricsConstants from '../constants/MetricsConstants';
+import Utils from '../../core/Utils';
 
 function CatchupController() {
     const context = this.context;
@@ -120,8 +121,8 @@ function CatchupController() {
         isCatchupSeekInProgress = false;
 
         // Detect safari browser (special behavior for low latency streams)
-        const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-        const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
+        const ua = Utils.parseUserAgent();
+        const isSafari = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'safari';
         minPlaybackRateChange = isSafari ? 0.25 : 0.02;
     }
 

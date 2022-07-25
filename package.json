@@ -62,7 +62,8 @@
         "fast-deep-equal": "2.0.1",
         "html-entities": "^1.2.1",
         "imsc": "^1.0.2",
-        "localforage": "^1.7.1"
+        "localforage": "^1.7.1",
+        "ua-parser-js": "^1.0.2"
     },
     "repository": {
         "type": "git",
