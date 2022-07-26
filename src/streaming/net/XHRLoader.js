@@ -65,7 +65,9 @@ function XHRLoader(cfg) {
         }
 
         if (requestModifier) {
-            xhr = requestModifier.modifyRequestHeader(xhr);
+            xhr = requestModifier.modifyRequestHeader(xhr, {
+                url: httpRequest.url
+            });
         }
 
         if (httpRequest.headers) {

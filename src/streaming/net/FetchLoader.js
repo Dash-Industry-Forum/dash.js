@@ -86,6 +86,8 @@ function FetchLoader(cfg) {
                 setRequestHeader: function (header, value) {
                     headers.append(header, value);
                 }
+            }, {
+                url: httpRequest.url
             });
         }
 
