@@ -565,7 +565,8 @@ function MediaPlayer() {
      * Sets the currentTime property of the attached video element.  If it is a live stream with a
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
-     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+     * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
@@ -584,7 +585,18 @@ function MediaPlayer() {
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        playbackController.seek(s);
+        playbackController.seek(s, false, false, true);
+    }
+
+    /**
+     * Seeks back to the original live edge. Only applies to live streams, for VoD streams this call will be ignored.
+     */
+    function seekToLive() {
+        if (!playbackInitialized || !isDynamic()) {
+            return;
+        }
+
+        playbackController.seekToLive();
     }
 
     /**
@@ -763,7 +775,7 @@ function MediaPlayer() {
             return 0;
         }
 
-        let liveDelay = playbackController.getLiveDelay();
+        let liveDelay = playbackController.getOriginalLiveDelay();
 
         let val = metric.range.start + value;
 
@@ -785,7 +797,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        return playbackController.getLiveDelay();
+        return playbackController.getOriginalLiveDelay();
     }
 
     /**
@@ -2312,6 +2324,7 @@ function MediaPlayer() {
         isDynamic,
         getLowLatencyModeEnabled,
         seek,
+        seekToLive,
         setPlaybackRate,
         getPlaybackRate,
         setMute,

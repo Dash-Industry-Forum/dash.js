@@ -250,8 +250,7 @@ function CatchupController() {
      */
     function _shouldStartCatchUp() {
         try {
-            const latencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress || (!isNaN(latencyThreshold) && playbackController.getCurrentLiveLatency() >= latencyThreshold)) {
+            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
                 return false;
             }
 
