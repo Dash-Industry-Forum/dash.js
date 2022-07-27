@@ -199,9 +199,9 @@ function PlaybackController() {
      * @param {number} time
      * @param {boolean} stickToBuffered
      * @param {boolean} internal
-     * @param {boolean} userTriggeredSeek
+     * @param {boolean} adjustLiveDelay
      */
-    function seek(time, stickToBuffered = false, internal = false, userTriggeredSeek = false) {
+    function seek(time, stickToBuffered = false, internal = false, adjustLiveDelay = false) {
         if (!streamInfo || !videoModel) return;
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
@@ -215,7 +215,7 @@ function PlaybackController() {
         logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
 
         // We adjust the current latency. If catchup is enabled we will maintain this new latency
-        if (isDynamic && userTriggeredSeek) {
+        if (isDynamic && adjustLiveDelay) {
             _adjustLiveDelayAfterUserInteraction(time);
         }
 
@@ -223,25 +223,53 @@ function PlaybackController() {
     }
 
     /**
-     * Seeks back to the original live edge for dynamic streams
+     * Seeks back to the live edge as defined by the originally calculated live delay
+     * @param {boolean} stickToBuffered
+     * @param {boolean} internal
+     * @param {boolean} adjustLiveDelay
      */
-    function seekToLive() {
+    function seekToOriginalLive(stickToBuffered = false, internal = false, adjustLiveDelay = false) {
+        const dvrWindowEnd = _getDvrWindowEnd();
+
+        if (dvrWindowEnd === 0) {
+            return;
+        }
+
+        liveDelay = originalLiveDelay;
+        const seektime = dvrWindowEnd - liveDelay;
+
+        seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+    }
+
+    /**
+     * Seeks to the live edge as currently defined by liveDelay
+     * @param {boolean} stickToBuffered
+     * @param {boolean} internal
+     * @param {boolean} adjustLiveDelay
+     */
+    function seekToCurrentLive(stickToBuffered = false, internal = false, adjustLiveDelay = false) {
+        const dvrWindowEnd = _getDvrWindowEnd();
+
+        if (dvrWindowEnd === 0) {
+            return;
+        }
+
+        const seektime = dvrWindowEnd - liveDelay;
+
+        seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+    }
+
+    function _getDvrWindowEnd() {
         if (!streamInfo || !videoModel || !isDynamic) {
             return;
         }
 
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
-        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
 
-        if (liveEdge === 0) {
-            return;
-        }
-        liveDelay = originalLiveDelay;
-        const seektime = liveEdge - liveDelay;
-
-        seek(seektime, false, false, false);
+        return dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
     }
+
 
     function _adjustLiveDelayAfterUserInteraction(time) {
         const now = new Date(timelineConverter.getClientReferenceTime());
@@ -872,7 +900,8 @@ function PlaybackController() {
         isSeeking,
         getStreamEndTime,
         seek,
-        seekToLive,
+        seekToOriginalLive,
+        seekToCurrentLive,
         reset,
         updateCurrentTime,
         getAvailabilityStartTime

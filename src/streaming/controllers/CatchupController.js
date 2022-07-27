@@ -206,7 +206,7 @@ function CatchupController() {
                 deltaLatency > maxDrift) {
                 logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isCatchupSeekInProgress = true;
-                _seekToLive();
+                playbackController.seekToCurrentLive(true, false);
             }
 
             // try to reach the target latency by adjusting the playback rate
@@ -410,19 +410,6 @@ function CatchupController() {
         }
 
         return newRate
-    }
-
-    /**
-     * Seek to live edge
-     */
-    function _seekToLive() {
-        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
-        const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
-
-        if (DVRWindow && !isNaN(DVRWindow.end)) {
-            playbackController.seek(DVRWindow.end - playbackController.getLiveDelay(), true, false);
-        }
     }
 
     instance = {

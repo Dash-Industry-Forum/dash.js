@@ -589,14 +589,14 @@ function MediaPlayer() {
     }
 
     /**
-     * Seeks back to the original live edge. Only applies to live streams, for VoD streams this call will be ignored.
+     * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
      */
-    function seekToLive() {
+    function seekToOriginalLive() {
         if (!playbackInitialized || !isDynamic()) {
             return;
         }
 
-        playbackController.seekToLive();
+        playbackController.seekToOriginalLive();
     }
 
     /**
@@ -2324,7 +2324,7 @@ function MediaPlayer() {
         isDynamic,
         getLowLatencyModeEnabled,
         seek,
-        seekToLive,
+        seekToOriginalLive,
         setPlaybackRate,
         getPlaybackRate,
         setMute,

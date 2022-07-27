@@ -359,7 +359,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var seekLive = function () {
-        self.player.seekToLive();
+        self.player.seekToOriginalLive();
     };
 
     //************************************************************************************
