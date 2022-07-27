@@ -2,6 +2,7 @@ var METRIC_INTERVAL = 300;
 
 var App = function () {
     this.player = null;
+    this.controlbar = null;
     this.video = null;
     this.chart = null;
     this.domElements = {
@@ -45,7 +46,6 @@ App.prototype._setDomElements = function () {
     this.domElements.metrics.latencyTag = document.getElementById('latency-tag');
     this.domElements.metrics.playbackrateTag = document.getElementById('playbackrate-tag');
     this.domElements.metrics.bufferTag = document.getElementById('buffer-tag');
-    this.domElements.metrics.catchupThresholdTag = document.getElementById('catchup-threshold-tag');
     this.domElements.metrics.sec = document.getElementById('sec');
     this.domElements.metrics.min = document.getElementById('min');
     this.domElements.metrics.videoMaxIndex = document.getElementById('video-max-index');
@@ -70,6 +70,8 @@ App.prototype._load = function () {
     this._registerDashEventHandler();
     this._applyParameters();
     this.player.initialize(this.video, url, true);
+    this.controlbar = new ControlBar(this.player);
+    this.controlbar.initialize();
 }
 
 App.prototype._applyParameters = function () {
