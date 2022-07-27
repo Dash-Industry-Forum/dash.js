@@ -734,7 +734,7 @@ function StreamController() {
      * @private
      */
     function _onLiveDelaySettingUpdated() {
-        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0) {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
@@ -1031,7 +1031,7 @@ function StreamController() {
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
             // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-            startTime = liveEdge - playbackController.getLiveDelay();
+            startTime = liveEdge - playbackController.getOriginalLiveDelay();
             // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
             const dvrWindow = dvrInfo ? dvrInfo.range : null;
             if (dvrWindow) {

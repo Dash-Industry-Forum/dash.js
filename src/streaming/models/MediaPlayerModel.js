@@ -173,7 +173,7 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the retry interbal for a specific media type
+     * Returns the retry interval for a specific media type
      * @param type
      * @return {number}
      */
