@@ -31,6 +31,7 @@ App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
     this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
+    this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
     this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
     this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
     this.domElements.settings.abrAdditionalAbandonRequestRule = document.getElementById('abr-additional-abandon');
@@ -88,6 +89,7 @@ App.prototype._applyParameters = function () {
                 liveDelay: settings.targetLatency
             },
             liveCatchup: {
+                enabled: settings.catchupEnabled,
                 maxDrift: settings.maxDrift,
                 playbackRate: settings.catchupPlaybackRate,
                 mode: settings.catchupMechanism
@@ -116,7 +118,21 @@ App.prototype._exportSettings = function () {
         url += '&' + key + '=' + value
     }
 
-    this.domElements.settings.exportSettingsUrl.value = encodeURI(url);
+    url = encodeURI(url);
+    const element = document.createElement('textarea');
+    element.value = url;
+    document.body.appendChild(element);
+    element.select();
+    document.execCommand('copy');
+    document.body.removeChild(element);
+
+    Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: 'Settings URL copied to clipboard',
+        showConfirmButton: false,
+        timer: 1500
+    })
 }
 
 App.prototype._adjustSettingsByUrlParameters = function () {
@@ -145,6 +161,9 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.abrAdditionalDroppedFramesRule !== undefined) {
             this.domElements.settings.abrAdditionalDroppedFramesRule.checked = params.abrAdditionalDroppedFramesRule === 'true';
         }
+        if (params.catchupEnabled !== undefined) {
+            this.domElements.settings.catchupEnabled.checked = params.catchupEnabled === 'true';
+        }
         if (params.abrGeneral !== undefined) {
             document.getElementById(params.abrGeneral).checked = true;
         }
@@ -166,6 +185,7 @@ App.prototype._getCurrentSettings = function () {
     var abrAdditionalDroppedFramesRule = this.domElements.settings.abrAdditionalDroppedFramesRule.checked;
     var abrAdditionalAbandonRequestRule = this.domElements.settings.abrAdditionalAbandonRequestRule.checked;
     var abrAdditionalSwitchHistoryRule = this.domElements.settings.abrAdditionalSwitchHistoryRule.checked;
+    var catchupEnabled = this.domElements.settings.catchupEnabled.checked;
     var abrGeneral = document.querySelector('input[name="abr-general"]:checked').value;
     var catchupMechanism = document.querySelector('input[name="catchup"]:checked').value;
     var throughputCalculation = document.querySelector('input[name="throughput-calc"]:checked').value;
@@ -180,6 +200,7 @@ App.prototype._getCurrentSettings = function () {
         abrAdditionalAbandonRequestRule,
         abrAdditionalSwitchHistoryRule,
         catchupMechanism,
+        catchupEnabled,
         throughputCalculation
     }
 }
@@ -354,6 +375,13 @@ App.prototype._registerEventHandler = function () {
 
     document.getElementById('apply-settings-button').addEventListener('click', function () {
         self._applyParameters();
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Settings applied',
+            showConfirmButton: false,
+            timer: 1500
+        })
     })
 
     document.getElementById('load-button').addEventListener('click', function () {
@@ -366,6 +394,13 @@ App.prototype._registerEventHandler = function () {
 
     document.getElementById('chart-settings-button').addEventListener('click', function () {
         self._adjustChartSettings();
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Settings applied',
+            showConfirmButton: false,
+            timer: 1500
+        })
     })
 }
 
