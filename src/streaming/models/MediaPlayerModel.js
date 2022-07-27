@@ -113,26 +113,6 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the threshold for which to apply the catchup logic
-     * @return {number}
-     */
-    function getLiveCatchupLatencyThreshold() {
-        try {
-            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchup.latencyThreshold;
-            const liveDelay = playbackController.getLiveDelay();
-
-            if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
-                return Math.max(liveCatchupLatencyThreshold, liveDelay);
-            }
-
-            return NaN;
-
-        } catch (e) {
-            return NaN;
-        }
-    }
-
-    /**
      * Returns the min,max or initial bitrate for a specific media type.
      * @param {string} field
      * @param {string} mediaType
@@ -193,7 +173,7 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the retry interbal for a specific media type
+     * Returns the retry interval for a specific media type
      * @param type
      * @return {number}
      */
@@ -209,7 +189,6 @@ function MediaPlayerModel() {
     instance = {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
-        getLiveCatchupLatencyThreshold,
         getStableBufferTime,
         getInitialBufferLevel,
         getRetryAttemptsForType,

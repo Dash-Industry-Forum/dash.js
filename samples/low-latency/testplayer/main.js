@@ -2,6 +2,7 @@ var METRIC_INTERVAL = 300;
 
 var App = function () {
     this.player = null;
+    this.controlbar = null;
     this.video = null;
     this.chart = null;
     this.domElements = {
@@ -30,7 +31,6 @@ App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
     this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
-    this.domElements.settings.liveCatchupLatencyThreshold = document.getElementById('catchup-threshold');
     this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
     this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
     this.domElements.settings.abrAdditionalAbandonRequestRule = document.getElementById('abr-additional-abandon');
@@ -46,7 +46,6 @@ App.prototype._setDomElements = function () {
     this.domElements.metrics.latencyTag = document.getElementById('latency-tag');
     this.domElements.metrics.playbackrateTag = document.getElementById('playbackrate-tag');
     this.domElements.metrics.bufferTag = document.getElementById('buffer-tag');
-    this.domElements.metrics.catchupThresholdTag = document.getElementById('catchup-threshold-tag');
     this.domElements.metrics.sec = document.getElementById('sec');
     this.domElements.metrics.min = document.getElementById('min');
     this.domElements.metrics.videoMaxIndex = document.getElementById('video-max-index');
@@ -71,6 +70,8 @@ App.prototype._load = function () {
     this._registerDashEventHandler();
     this._applyParameters();
     this.player.initialize(this.video, url, true);
+    this.controlbar = new ControlBar(this.player);
+    this.controlbar.initialize();
 }
 
 App.prototype._applyParameters = function () {
@@ -89,7 +90,6 @@ App.prototype._applyParameters = function () {
             liveCatchup: {
                 maxDrift: settings.maxDrift,
                 playbackRate: settings.catchupPlaybackRate,
-                latencyThreshold: settings.liveCatchupLatencyThreshold,
                 mode: settings.catchupMechanism
             },
             abr: {
@@ -133,9 +133,6 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.catchupPlaybackRate !== undefined) {
             this.domElements.settings.catchupPlaybackRate.value = parseFloat(params.catchupPlaybackRate).toFixed(1);
         }
-        if (params.liveCatchupLatencyThreshold !== undefined) {
-            this.domElements.settings.liveCatchupLatencyThreshold.value = parseFloat(params.liveCatchupLatencyThreshold).toFixed(0);
-        }
         if (params.abrAdditionalInsufficientBufferRule !== undefined) {
             this.domElements.settings.abrAdditionalInsufficientBufferRule.checked = params.abrAdditionalInsufficientBufferRule === 'true';
         }
@@ -165,7 +162,6 @@ App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
     var catchupPlaybackRate = parseFloat(this.domElements.settings.catchupPlaybackRate.value, 10);
-    var liveCatchupLatencyThreshold = parseFloat(this.domElements.settings.liveCatchupLatencyThreshold.value, 10);
     var abrAdditionalInsufficientBufferRule = this.domElements.settings.abrAdditionalInsufficientBufferRule.checked;
     var abrAdditionalDroppedFramesRule = this.domElements.settings.abrAdditionalDroppedFramesRule.checked;
     var abrAdditionalAbandonRequestRule = this.domElements.settings.abrAdditionalAbandonRequestRule.checked;
@@ -178,7 +174,6 @@ App.prototype._getCurrentSettings = function () {
         targetLatency,
         maxDrift,
         catchupPlaybackRate,
-        liveCatchupLatencyThreshold,
         abrGeneral,
         abrAdditionalInsufficientBufferRule,
         abrAdditionalDroppedFramesRule,
@@ -343,8 +338,6 @@ App.prototype._startIntervalHandler = function () {
 
             var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
             self.domElements.metrics.bufferTag.innerHTML = currentBuffer + ' secs';
-
-            self.domElements.metrics.catchupThresholdTag.innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
 
             var d = new Date();
             var seconds = d.getSeconds();
