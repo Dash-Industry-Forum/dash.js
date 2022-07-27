@@ -466,7 +466,7 @@ declare namespace dashjs {
 
         seek(value: number): void;
 
-        seekToLive(): void;
+        seekToOriginalLive(): void;
 
         setPlaybackRate(value: number): void;
 
