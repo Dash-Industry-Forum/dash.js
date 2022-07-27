@@ -2076,7 +2076,6 @@ function MediaPlayer() {
             streamController,
             playbackController,
             mediaPlayerModel,
-            dashMetrics,
             videoModel,
             settings
         })
