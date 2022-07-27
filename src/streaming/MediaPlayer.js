@@ -529,7 +529,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         if (!autoPlay || (isPaused() && playbackInitialized)) {
-            playbackController.play();
+            playbackController.play(true);
         }
     }
 

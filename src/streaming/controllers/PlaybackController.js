@@ -177,8 +177,11 @@ function PlaybackController() {
     /**
      * Triggers play() on the video element
      */
-    function play() {
+    function play(adjustLiveDelay = false) {
         if (streamInfo && videoModel && videoModel.getElement()) {
+            if (adjustLiveDelay && isDynamic) {
+                _adjustLiveDelayAfterUserInteraction(getTime());
+            }
             videoModel.play();
         } else {
             playOnceInitialized = true;
