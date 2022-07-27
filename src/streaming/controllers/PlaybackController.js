@@ -53,6 +53,7 @@ function PlaybackController() {
         timelineConverter,
         wallclockTimeIntervalId,
         liveDelay,
+        originalLiveDelay,
         streamInfo,
         isDynamic,
         playOnceInitialized,
@@ -80,6 +81,7 @@ function PlaybackController() {
         pause();
         playOnceInitialized = false;
         liveDelay = 0;
+        originalLiveDelay = 0;
         availabilityStartTime = 0;
         manifestUpdateInProgress = false;
         availabilityTimeComplete = true;
@@ -175,8 +177,11 @@ function PlaybackController() {
     /**
      * Triggers play() on the video element
      */
-    function play() {
+    function play(adjustLiveDelay = false) {
         if (streamInfo && videoModel && videoModel.getElement()) {
+            if (adjustLiveDelay && isDynamic) {
+                _adjustLiveDelayAfterUserInteraction(getTime());
+            }
             videoModel.play();
         } else {
             playOnceInitialized = true;
@@ -197,8 +202,9 @@ function PlaybackController() {
      * @param {number} time
      * @param {boolean} stickToBuffered
      * @param {boolean} internal
+     * @param {boolean} adjustLiveDelay
      */
-    function seek(time, stickToBuffered, internal) {
+    function seek(time, stickToBuffered = false, internal = false, adjustLiveDelay = false) {
         if (!streamInfo || !videoModel) return;
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
@@ -210,7 +216,70 @@ function PlaybackController() {
             seekTarget = time;
         }
         logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
+
+        // We adjust the current latency. If catchup is enabled we will maintain this new latency
+        if (isDynamic && adjustLiveDelay) {
+            _adjustLiveDelayAfterUserInteraction(time);
+        }
+
         videoModel.setCurrentTime(time, stickToBuffered);
+    }
+
+    /**
+     * Seeks back to the live edge as defined by the originally calculated live delay
+     * @param {boolean} stickToBuffered
+     * @param {boolean} internal
+     * @param {boolean} adjustLiveDelay
+     */
+    function seekToOriginalLive(stickToBuffered = false, internal = false, adjustLiveDelay = false) {
+        const dvrWindowEnd = _getDvrWindowEnd();
+
+        if (dvrWindowEnd === 0) {
+            return;
+        }
+
+        liveDelay = originalLiveDelay;
+        const seektime = dvrWindowEnd - liveDelay;
+
+        seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+    }
+
+    /**
+     * Seeks to the live edge as currently defined by liveDelay
+     * @param {boolean} stickToBuffered
+     * @param {boolean} internal
+     * @param {boolean} adjustLiveDelay
+     */
+    function seekToCurrentLive(stickToBuffered = false, internal = false, adjustLiveDelay = false) {
+        const dvrWindowEnd = _getDvrWindowEnd();
+
+        if (dvrWindowEnd === 0) {
+            return;
+        }
+
+        const seektime = dvrWindowEnd - liveDelay;
+
+        seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+    }
+
+    function _getDvrWindowEnd() {
+        if (!streamInfo || !videoModel || !isDynamic) {
+            return;
+        }
+
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
+
+        return dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
+    }
+
+
+    function _adjustLiveDelayAfterUserInteraction(time) {
+        const now = new Date(timelineConverter.getClientReferenceTime());
+        const period = adapter.getRegularPeriods()[0];
+        const nowAsPresentationTime = timelineConverter.calcPresentationTimeFromWallTime(now, period);
+
+        liveDelay = nowAsPresentationTime - time;
     }
 
     /**
@@ -302,11 +371,18 @@ function PlaybackController() {
     }
 
     /**
-     * Returns the computed live delay
+     * Returns the current live delay. A seek triggered by the user adjusts this value.
      * @return {number}
      */
     function getLiveDelay() {
         return liveDelay;
+    }
+
+    /**
+     * Returns the original live delay as calculated at playback start
+     */
+    function getOriginalLiveDelay() {
+        return originalLiveDelay;
     }
 
     /**
@@ -385,6 +461,8 @@ function PlaybackController() {
             ret = delay;
         }
         liveDelay = ret;
+        originalLiveDelay = ret;
+
         return ret;
     }
 
@@ -698,6 +776,7 @@ function PlaybackController() {
             if (minDelay > liveDelay) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
                 liveDelay = minDelay;
+                originalLiveDelay = minDelay;
             }
         }
     }
@@ -815,6 +894,7 @@ function PlaybackController() {
         getStreamController,
         computeAndSetLiveDelay,
         getLiveDelay,
+        getOriginalLiveDelay,
         getCurrentLiveLatency,
         play,
         isPaused,
@@ -823,6 +903,8 @@ function PlaybackController() {
         isSeeking,
         getStreamEndTime,
         seek,
+        seekToOriginalLive,
+        seekToCurrentLive,
         reset,
         updateCurrentTime,
         getAvailabilityStartTime

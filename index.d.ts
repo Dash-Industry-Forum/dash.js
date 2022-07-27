@@ -228,7 +228,6 @@ declare namespace dashjs {
             liveCatchup?: {
                 maxDrift?: number;
                 playbackRate?: number;
-                latencyThreshold?: number,
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string
@@ -466,6 +465,8 @@ declare namespace dashjs {
         isDynamic(): boolean;
 
         seek(value: number): void;
+
+        seekToOriginalLive(): void;
 
         setPlaybackRate(value: number): void;
 

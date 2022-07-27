@@ -106,6 +106,10 @@ class PlaybackControllerMock {
         return 15;
     }
 
+    getOriginalLiveDelay() {
+        return 15;
+    }
+
     reset() {
         this.setup();
     }
