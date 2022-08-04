@@ -348,11 +348,8 @@ function GapController() {
             const timeUntilGapEnd = seekToPosition - currentTime;
 
             if (jumpToStreamEnd) {
-                const nextStream = streamController.getStreamForTime(seekToPosition);
-                const internalSeek = nextStream && !!nextStream.getPreloaded();
-
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-                playbackController.seek(seekToPosition, true, internalSeek);
+                playbackController.seek(seekToPosition, true, false);
             } else {
                 const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
