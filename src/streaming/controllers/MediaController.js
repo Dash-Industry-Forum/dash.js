@@ -33,6 +33,11 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import {bcp47Normalize} from 'bcp-47-normalize';
+import {extendedFilter} from 'bcp-47-match';
+// const bcp47Normalize = require('bcp-47-normalize').bcp47Normalize;
+// const extendedFilter = require('bcp-47-match').extendedFilter;
+
 
 function MediaController() {
 
@@ -309,7 +314,7 @@ function MediaController() {
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
-        const matchLang = !settings.lang || (track.lang.match(settings.lang));
+        const matchLang = !settings.lang || ( extendedFilter(track.lang, bcp47Normalize(settings.lang)).length>0 );
         const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
