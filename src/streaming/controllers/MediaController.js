@@ -63,7 +63,7 @@ function MediaController() {
     function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
         const tracksForType = getTracksFor(type, streamInfo.id);
-        const tracks = [];
+        let tracks = [];
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
@@ -73,11 +73,67 @@ function MediaController() {
         if (!tracksForType || (tracksForType.length === 0)) return;
 
         if (settings) {
-            tracksForType.forEach(function (track) {
-                if (matchSettings(settings, track, !!lastSelectedTracks[type])) {
-                    tracks.push(track);
+            let tracksAfterMatcher = [];
+            tracks = Array.from(tracksForType);
+            
+            tracks.forEach(function (track) {
+                if (matchSettingsLang(settings, track)) {
+                    tracksAfterMatcher.push(track);
                 }
             });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
+
+            tracksAfterMatcher = [];
+            tracks.forEach(function (track) {
+                if (matchSettingsIndex(settings, track)) {
+                    tracksAfterMatcher.push(track);
+                }
+            });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
+            
+            tracksAfterMatcher = [];
+            tracks.forEach(function (track) {
+                if (matchSettingsViewPoint(settings, track)) {
+                    tracksAfterMatcher.push(track);
+                }
+            });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
+
+            tracksAfterMatcher = [];
+            tracks.forEach(function (track) {
+                if (matchSettingsRole(settings, track, !!lastSelectedTracks[type])) {
+                    tracksAfterMatcher.push(track);
+                }
+            });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
+
+            tracksAfterMatcher = [];
+            tracks.forEach(function (track) {
+                if (matchSettingsAccessibility(settings, track)) {
+                    tracksAfterMatcher.push(track);
+                }
+            });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
+
+            tracksAfterMatcher = [];
+            tracks.forEach(function (track) {
+                if (matchSettingsAudioChannelConfig(settings, track)) {
+                    tracksAfterMatcher.push(track);
+                }
+            });
+            if (tracksAfterMatcher.length !== 0) {
+                tracks = Array.from(tracksAfterMatcher);
+            }
         }
 
         if (tracks.length === 0) {
@@ -309,6 +365,42 @@ function MediaController() {
 
         return notEmpty ? settings : null;
     }
+
+    function matchSettingsLang(settings, track) {
+        return !settings.lang || (track.lang.match(settings.lang));
+    }
+
+    function matchSettingsIndex(settings, track) {
+        return (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+    }
+
+    function matchSettingsViewPoint(settings, track) {
+        return !settings.viewpoint || (settings.viewpoint === track.viewpoint);
+    }
+
+    function matchSettingsRole(settings, track, isTrackActive = false) {
+        const matchRole = !settings.role || !!track.roles.filter(function (item) {
+            return item === settings.role;
+        })[0];
+        return (matchRole || (track.type === Constants.AUDIO && isTrackActive));
+    }
+
+    function matchSettingsAccessibility(settings, track) {
+        let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
+            return item === settings.accessibility;
+        })[0];
+
+        return matchAccessibility;
+    }
+
+    function matchSettingsAudioChannelConfig(settings, track) {
+        let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+            return item === settings.audioChannelConfiguration;
+        })[0];
+
+        return  matchAudioChannelConfiguration;
+    }
+
 
     function matchSettings(settings, track, isTrackActive = false) {
         try {
@@ -572,6 +664,12 @@ function MediaController() {
         getTracksWithWidestRange,
         isTracksEqual,
         matchSettings,
+        matchSettingsLang,
+        matchSettingsIndex,
+        matchSettingsViewPoint,
+        matchSettingsRole,
+        matchSettingsAccessibility,
+        matchSettingsAudioChannelConfig,
         saveTextSettingsDisabled,
         setConfig,
         reset
