@@ -35,9 +35,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
-// const bcp47Normalize = require('bcp-47-normalize').bcp47Normalize;
-// const extendedFilter = require('bcp-47-match').extendedFilter;
-
 
 function MediaController() {
 
