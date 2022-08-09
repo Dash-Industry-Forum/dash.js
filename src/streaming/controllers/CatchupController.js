@@ -43,7 +43,7 @@ function CatchupController() {
 
     let instance,
         isCatchupSeekInProgress,
-        minPlaybackRateChange,
+        isSafari,
         videoModel,
         settings,
         streamController,
@@ -114,11 +114,8 @@ function CatchupController() {
 
     function _resetInitialSettings() {
         isCatchupSeekInProgress = false;
-
-        // Detect safari browser (special behavior for low latency streams)
         const ua = Utils.parseUserAgent();
-        const isSafari = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'safari';
-        minPlaybackRateChange = isSafari ? 0.25 : 0.02;
+        isSafari = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'safari';
     }
 
 
@@ -219,8 +216,12 @@ function CatchupController() {
                     newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
                 }
 
-                // Obtain newRate and apply to video model
-                if (newRate) {  // non-null
+                // We adjust the min change linear, depending on the maximum catchup rate. Default is 0.02 for rate 0.5.
+                // For Safari we stick to a fixed value because of  https://bugs.webkit.org/show_bug.cgi?id=208142
+                const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRate);
+
+                // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
+                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {  // non-null
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
                 }
@@ -320,7 +321,7 @@ function CatchupController() {
      * @return {number}
      * @private
      */
-    function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate) {
+    function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel) {
 
         // if we recently ran into an empty buffer we wait for the buffer to recover before applying a new rate
         if (playbackStalled) {
@@ -344,11 +345,6 @@ function CatchupController() {
             }
         }
 
-        // don't change playbackrate for small variations (don't overload element with playbackrate changes)
-        if (Math.abs(currentPlaybackRate - newRate) <= minPlaybackRateChange) {
-            newRate = null;
-        }
-
         return newRate;
     }
 
@@ -363,7 +359,7 @@ function CatchupController() {
      * @return {number}
      * @private
      */
-    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate) {
+    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel) {
         const cpr = liveCatchUpPlaybackRate;
         let newRate;
 
@@ -398,11 +394,6 @@ function CatchupController() {
             }
 
             logger.debug('[LoL+ playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
-        }
-
-        // don't change playbackrate for small variations (don't overload element with playbackrate changes)
-        if (Math.abs(currentPlaybackRate - newRate) <= minPlaybackRateChange) {
-            newRate = null;
         }
 
         return newRate
