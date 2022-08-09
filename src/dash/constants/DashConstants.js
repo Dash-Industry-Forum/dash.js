@@ -142,6 +142,11 @@ class DashConstants {
         this.ORIGINAL_MPD_ID = 'mpdId';
         this.WALL_CLOCK_TIME = 'wallClockTime';
         this.PRESENTATION_TIME = 'presentationTime';
+        this.CONTENT_STEERING = 'ContentSteering';
+        this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
+        this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
+        this.QUERY_BEFORE_START = 'queryBeforeStart';
+        this.PROXY_SERVER_URL = 'proxyServerURL';
     }
 
     constructor () {

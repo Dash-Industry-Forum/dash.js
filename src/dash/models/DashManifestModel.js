@@ -39,6 +39,7 @@ import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime';
+import ContentSteering from '../vo/ContentSteering';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -712,18 +713,18 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period
-            // element contains a @duration attribute then then this new
-            // Period is also a regular Period. The start time of the new
-            // Period PeriodStart is the sum of the start time of the previous
-            // Period PeriodStart and the value of the attribute @duration
+                // If the @start attribute is absent, but the previous Period
+                // element contains a @duration attribute then then this new
+                // Period is also a regular Period. The start time of the new
+                // Period PeriodStart is the sum of the start time of the previous
+                // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element
-            // is the first in the MPD, and (iii) the MPD@type is 'static',
+                // If (i) @start attribute is absent, and (ii) the Period element
+                // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
@@ -1116,6 +1117,31 @@ function DashManifestModel() {
         return baseUrls;
     }
 
+    function getContentSteering(manifest) {
+        if (manifest && manifest.hasOwnProperty(DashConstants.CONTENT_STEERING_AS_ARRAY)) {
+            // Only one ContentSteering element is supported on MPD level
+            const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
+            const entry = new ContentSteering();
+
+            entry.serverUrl =  element.__text;
+
+            if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
+                entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
+            }
+
+            if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
+                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START];
+            }
+
+            if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
+                entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
+            }
+
+        }
+
+        return undefined;
+    }
+
     function getLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
             // for now, do not support multiple Locations -
@@ -1131,10 +1157,7 @@ function DashManifestModel() {
 
     function getPatchLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
-            // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
-
-            return manifest.PatchLocation;
+            return manifest.PatchLocation_asArray[0];
         }
 
         // no patch location provided
@@ -1282,6 +1305,7 @@ function DashManifestModel() {
         getUTCTimingSources,
         getBaseURLsFromElement,
         getRepresentationSortFunction,
+        getContentSteering,
         getLocation,
         getPatchLocation,
         getSuggestedPresentationDelay,
