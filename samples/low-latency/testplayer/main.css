@@ -44,3 +44,8 @@ video {
 .dash-video-player {
     background: #000000;
 }
+
+.btn-success:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
