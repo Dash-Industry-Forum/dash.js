@@ -29,7 +29,7 @@
             /* Extend RequestModifier class and implement our own behaviour */
             player.extend("RequestModifier", function () {
                 return {
-                    modifyRequestHeader: function (xhr) {
+                    modifyRequestHeader: function (xhr, {url}) {
                         /* Add custom header. Requires to set up Access-Control-Allow-Headers in your */
                         /* response header in the server side. Reference: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader */
                         /* xhr.setRequestHeader('DASH-CUSTOM-HEADER', 'MyValue'); */
