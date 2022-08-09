@@ -81,7 +81,7 @@ function SourceBufferSink(config) {
 
         const promises = [];
 
-        promises.push(_abortBeforeAppend);
+        promises.push(_abortBeforeAppend());
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
         promises.push(changeType(codec));
 
