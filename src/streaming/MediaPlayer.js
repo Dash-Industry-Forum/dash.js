@@ -36,7 +36,7 @@ import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
 import CatchupController from './controllers/CatchupController';
-import ServiceDescriptionController from './controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
