@@ -1130,7 +1130,7 @@ describe('DashManifestModel', function () {
 
             it('returns ProducerReferenceTimes within representations', () => {
                 const node = {
-                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                    [DashConstants.REPRESENTATION] : [
                         {
                             [DashConstants.PRODUCER_REFERENCE_TIME] : [
                                 {
@@ -1174,7 +1174,7 @@ describe('DashManifestModel', function () {
                             [DashConstants.PRESENTATION_TIME]: 1
                         }
                     ],
-                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                    [DashConstants.REPRESENTATION] : [
                         {
                             [DashConstants.PRODUCER_REFERENCE_TIME] : [
                                 {

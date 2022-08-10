@@ -79,23 +79,6 @@ function AdapterMock() {
                 {
                     width: 900
                 }
-            ],
-            Representation_asArray: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                }
             ]
         };
     };
