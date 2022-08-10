@@ -167,7 +167,7 @@ function DashManifestModel() {
         const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME) ? adaptation[DashConstants.PRODUCER_REFERENCE_TIME] : [];
 
         // ProducerReferenceTime elements can also be contained in Representations
-        const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME) ? adaptation[DashConstants.PRODUCER_REFERENCE_TIME] : [];
+        const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.REPRESENTATION) ? adaptation[DashConstants.REPRESENTATION] : [];
 
         representationsArray.forEach((rep) => {
             if (rep.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME)) {
