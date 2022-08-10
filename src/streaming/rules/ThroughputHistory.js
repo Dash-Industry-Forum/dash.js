@@ -88,17 +88,10 @@ function ThroughputHistory(config) {
         const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
-
         let throughputMeasureTime = 0, throughput = 0;
-        if (settings.get().streaming.lowLatencyEnabled) {
-            const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
-            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-                const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b.t, 0);
-                throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
-            }
-            if (throughput === 0) {
-                throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
-            }
+
+        if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
+            throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
         } else {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
         }

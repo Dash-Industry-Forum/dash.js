@@ -128,6 +128,10 @@ class HTTPRequest {
          * @public
          */
         this._serviceLocation = null;
+        /**
+         * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+         */
+        this._fileLoaderType = null;
     }
 }
 
@@ -137,8 +141,8 @@ class HTTPRequest {
  */
 class HTTPRequestTrace {
     /**
-    * @class
-    */
+     * @class
+     */
     constructor() {
         /**
          * Real-Time | Measurement stream start.
@@ -155,11 +159,6 @@ class HTTPRequestTrace {
          * @public
          */
         this.b = [];
-        /**
-         * Measurement throughput in kbits/s
-         * @public
-         */
-         this.t = null;
     }
 }
 
@@ -172,7 +171,8 @@ HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 
-export { HTTPRequest, HTTPRequestTrace };
+export {HTTPRequest, HTTPRequestTrace};

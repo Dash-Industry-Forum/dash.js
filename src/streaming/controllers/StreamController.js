@@ -36,8 +36,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
-    PlayList,
-    PlayListTrace
+    PlayList, PlayListTrace
 } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
@@ -58,50 +57,14 @@ function StreamController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
-    let instance,
-        logger,
-        capabilities,
-        capabilitiesFilter,
-        manifestUpdater,
-        manifestLoader,
-        manifestModel,
-        adapter,
-        dashMetrics,
-        mediaSourceController,
-        timeSyncController,
-        baseURLController,
-        segmentBaseController,
-        uriFragmentModel,
-        abrController,
-        mediaController,
-        eventController,
-        initCache,
-        urlUtils,
-        errHandler,
-        timelineConverter,
-        streams,
-        activeStream,
-        protectionController,
-        textController,
-        protectionData,
-        autoPlay,
-        isStreamSwitchingInProgress,
-        hasMediaError,
-        hasInitialisationError,
-        mediaSource,
-        videoModel,
-        playbackController,
-        mediaPlayerModel,
-        isPaused,
-        initialPlayback,
-        playbackEndedTimerInterval,
-        bufferSinks,
-        preloadingStreams,
-        supportsChangeType,
-        settings,
-        firstLicenseIsFetched,
-        waitForPlaybackStartTimeout,
-        errorInformation;
+    let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
+        dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController,
+        uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler,
+        timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay,
+        isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController,
+        serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback,
+        playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched,
+        waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -132,18 +95,13 @@ function StreamController() {
 
         eventController = EventController(context).getInstance();
         eventController.setConfig({
-            manifestUpdater: manifestUpdater,
-            playbackController: playbackController,
-            settings
+            manifestUpdater: manifestUpdater, playbackController: playbackController, settings
         });
         eventController.start();
 
 
         timeSyncController.setConfig({
-            dashMetrics,
-            baseURLController,
-            errHandler,
-            settings
+            dashMetrics, baseURLController, errHandler, settings
         });
         timeSyncController.initialize();
 
@@ -180,6 +138,8 @@ function StreamController() {
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -202,6 +162,42 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+    }
+
+    function _checkConfig() {
+        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') || !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler || !dashMetrics || !playbackController) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
+    function _checkInitialize() {
+        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
+            throw new Error('initialize function has to be called previously');
+        }
+    }
+
+    /**
+     * Start the streaming session by loading the target manifest
+     * @param {string} url
+     * @param {number} startTime
+     */
+    function load(url, startTime = NaN) {
+        _checkConfig();
+        providedStartTime = startTime;
+        manifestLoader.load(url);
+    }
+
+    /**
+     * Start the streaming session by using the provided manifest object
+     * @param {object} manifest
+     * @param {number} startTime
+     */
+    function loadWithManifest(manifest, startTime = NaN) {
+        _checkInitialize();
+        providedStartTime = startTime;
+        manifestUpdater.setManifest(manifest);
     }
 
     /**
@@ -317,7 +313,7 @@ function StreamController() {
 
     /**
      * Initialize playback for the first period.
-     * @param {object} streamsInfo
+     * @param {array} streamsInfo
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
@@ -340,9 +336,19 @@ function StreamController() {
             return;
         }
 
+        // Apply Service description parameters.
+        if (settings.get().streaming.applyProducerReferenceTime) {
+            serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
+        }
+
+
+        const manifestInfo = streamsInfo[0].manifestInfo;
+        if (settings.get().streaming.applyServiceDescription) {
+            serviceDescriptionController.applyServiceDescription(manifestInfo);
+        }
+
         // Compute and set the live delay
-        if (adapter.getIsDynamic() && streams.length) {
-            const manifestInfo = streamsInfo[0].manifestInfo;
+        if (adapter.getIsDynamic()) {
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
             playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
@@ -724,6 +730,22 @@ function StreamController() {
     }
 
     /**
+     * A setting related to the live delay was updated. Check if one of the latency values changed. If so, recalculate the live delay.
+     * @private
+     */
+    function _onLiveDelaySettingUpdated() {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
+            const streamsInfo = adapter.getStreamsInfo()
+            if (streamsInfo.length > 0) {
+                const manifestInfo = streamsInfo[0].manifestInfo;
+                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+
+                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+            }
+        }
+    }
+
+    /**
      * When the playback time is updated we add the droppedFrames metric to the dash metric object
      * @private
      */
@@ -999,37 +1021,63 @@ function StreamController() {
      */
     function _getInitialStartTime() {
         // Seek new stream in priority order:
+        // - at start time provided via the application
         // - at start time provided in URI parameters
         // - at stream/period start time (for static streams) or live start time (for dynamic streams)
         let startTime;
-        if (adapter.getIsDynamic()) {
+        const isDynamic = adapter.getIsDynamic();
+        if (isDynamic) {
             // For dynamic stream, start by default at (live edge - live delay)
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
             // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-            startTime = liveEdge - playbackController.getLiveDelay();
+            startTime = liveEdge - playbackController.getOriginalLiveDelay();
             // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
             const dvrWindow = dvrInfo ? dvrInfo.range : null;
             if (dvrWindow) {
-                // #t shall be relative to period start
-                const startTimeFromUri = _getStartTimeFromUriParameters(true);
-                if (!isNaN(startTimeFromUri)) {
-                    logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                    // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
-                    const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
-                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start + offset);
+                // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+                if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
+                    logger.info(`Start time provided by the app: ${providedStartTime}`);
+                    const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
+                    if (!isNaN(providedStartTimeAsPresentationTime)) {
+                        // Do not move closer to the live edge as defined by live delay
+                        startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
+                    }
+                } else {
+                    // #t shall be relative to period start
+                    const startTimeFromUri = _getStartTimeFromUriParameters(true);
+                    if (!isNaN(startTimeFromUri)) {
+                        logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                        // Do not move closer to the live edge as defined by live delay
+                        startTime = Math.min(startTime, startTimeFromUri);
+                    }
                 }
+                // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+                const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+                startTime = Math.max(startTime, dvrWindow.start + offset);
             }
         } else {
             // For static stream, start by default at period start
             const streams = getStreams();
             const streamInfo = streams[0].getStreamInfo();
             startTime = streamInfo.start;
-            // If start time in URI, take max value between period start and time from URI (if in period range)
-            const startTimeFromUri = _getStartTimeFromUriParameters(false);
-            if (!isNaN(startTimeFromUri)) {
-                logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                startTime = Math.max(startTime, startTimeFromUri);
+
+            // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+            if (!isNaN(providedStartTime)) {
+                logger.info(`Start time provided by the app: ${providedStartTime}`);
+                const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
+                if (!isNaN(providedStartTimeAsPresentationTime)) {
+                    // Do not play earlier than the start of the first period
+                    startTime = Math.max(startTime, providedStartTimeAsPresentationTime);
+                }
+            } else {
+                // If start time in URI, take max value between period start and time from URI (if in period range)
+                const startTimeFromUri = _getStartTimeFromUriParameters(false);
+                if (!isNaN(startTimeFromUri)) {
+                    logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                    // Do not play earlier than the start of the first period
+                    startTime = Math.max(startTime, startTimeFromUri);
+                }
             }
         }
 
@@ -1048,14 +1096,41 @@ function StreamController() {
             return NaN;
         }
         const refStream = getStreams()[0];
-        const refStreamStartTime = refStream.getStreamInfo().start;
+        const referenceTime = refStream.getStreamInfo().start;
+        fragData.t = fragData.t.split(',')[0];
+
+        return _getStartTimeFromString(isDynamic, fragData.t, referenceTime);
+    }
+
+    /**
+     * Calculate start time using the value that was provided via the application as part of attachSource() or initialize()
+     * @param {boolean} isDynamic
+     * @param {number | string} providedStartTime
+     * @return {number}
+     * @private
+     */
+    function _getStartTimeFromProvidedData(isDynamic, providedStartTime) {
+        let referenceTime = 0;
+
+        if (!isDynamic) {
+            const refStream = getStreams()[0];
+            referenceTime = refStream.getStreamInfo().start;
+        }
+
+        return _getStartTimeFromString(isDynamic, providedStartTime, referenceTime);
+    }
+
+
+    function _getStartTimeFromString(isDynamic, targetValue, referenceTime) {
         // Consider only start time of MediaRange
         // TODO: consider end time of MediaRange to stop playback at provided end time
-        fragData.t = fragData.t.split(',')[0];
         // "t=<time>" : time is relative to 1st period start
         // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-        const posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
-        let startTime = (isDynamic && !isNaN(posix)) ? posix - playbackController.getAvailabilityStartTime() / 1000 : parseInt(fragData.t) + refStreamStartTime;
+        const period = adapter.getRegularPeriods()[0];
+        const targetString = targetValue.toString();
+        const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
+        let startTime = (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
+
         return startTime;
     }
 
@@ -1173,12 +1248,12 @@ function StreamController() {
                 });
             }
 
-            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {
-                if (item.value.replace(/.*?:\/\//g, '') === mediaPlayerModel.getDefaultUtcTimingSource().value.replace(/.*?:\/\//g, '')) {
+                if (item.value.replace(/.*?:\/\//g, '') === settings.get().streaming.utcSynchronization.defaultTimingSource.value.replace(/.*?:\/\//g, '')) {
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
                     logger.debug('Matching default timing source protocol to manifest protocol: ', item.value);
                 }
@@ -1320,30 +1395,6 @@ function StreamController() {
         return null;
     }
 
-    function _checkConfig() {
-        if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
-            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
-            !dashMetrics || !playbackController) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
-
-    function _checkInitialize() {
-        if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
-            throw new Error('initialize function has to be called previously');
-        }
-    }
-
-    function load(url) {
-        _checkConfig();
-        manifestLoader.load(url);
-    }
-
-    function loadWithManifest(manifest) {
-        _checkInitialize();
-        manifestUpdater.setManifest(manifest);
-    }
-
     function _onManifestValidityChanged(e) {
         if (!isNaN(e.newDuration)) {
             _setMediaDuration(e.newDuration);
@@ -1368,6 +1419,9 @@ function StreamController() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
         if (config.protectionController) {
             protectionController = config.protectionController;
         }
@@ -1388,6 +1442,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.textController) {
             textController = config.textController;
@@ -1421,6 +1478,7 @@ function StreamController() {
 
     function resetInitialSettings() {
         streams = [];
+        providedStartTime = NaN;
         protectionController = null;
         isStreamSwitchingInProgress = false;
         activeStream = null;
@@ -1446,11 +1504,7 @@ function StreamController() {
 
         timeSyncController.reset();
 
-        _flushPlaylistMetrics(
-            hasMediaError || hasInitialisationError ?
-                PlayListTrace.FAILURE_STOP_REASON :
-                PlayListTrace.USER_REQUEST_STOP_REASON
-        );
+        _flushPlaylistMetrics(hasMediaError || hasInitialisationError ? PlayListTrace.FAILURE_STOP_REASON : PlayListTrace.USER_REQUEST_STOP_REASON);
 
         for (let i = 0, ln = streams ? streams.length : 0; i < ln; i++) {
             const stream = streams[i];

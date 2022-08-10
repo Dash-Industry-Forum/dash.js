@@ -151,11 +151,11 @@ declare namespace dashjs {
         streaming?: {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
-            lowLatencyEnabled?: boolean,
-            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
+            applyServiceDescription?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
+            enableManifestDurationMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -170,12 +170,12 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean,
-                applyServiceDescription?: boolean
+                useSuggestedPresentationDelay?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
-                ignoreEmeEncryptedEvent?: boolean
+                ignoreEmeEncryptedEvent?: boolean,
+                detectPlayreadyMessageFormat?: boolean,
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -198,7 +198,9 @@ declare namespace dashjs {
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
                 threshold?: number,
-                enableSeekFix?: boolean
+                enableSeekFix?: boolean,
+                enableStallFix?: boolean,
+                stallSeek?: number
             },
             utcSynchronization?: {
                 enabled?: boolean,
@@ -224,10 +226,8 @@ declare namespace dashjs {
                 defaultEnabled?: boolean
             },
             liveCatchup?: {
-                minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
-                latencyThreshold?: number,
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string
@@ -320,7 +320,8 @@ declare namespace dashjs {
                 cid?: string,
                 rtp?: number,
                 rtpSafetyFactor?: number,
-                mode?: 'query' | 'header'
+                mode?: 'query' | 'header',
+                enabledKeys?: Array<string>
             }
         };
         errors?: {
@@ -362,7 +363,7 @@ declare namespace dashjs {
     export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
     export interface MediaPlayerClass {
-        initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
+        initialize(view?: HTMLElement, source?: string, autoPlay?: boolean, startTime?: number | string): void;
 
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
 
@@ -438,15 +439,18 @@ declare namespace dashjs {
 
         on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
 
+        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
+        
         on(type: string, listener: (e: Event) => void, scope?: object): void;
 
+        
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
         extend(parentNameString: string, childInstance: object, override: boolean): void;
 
         attachView(element: HTMLElement): void;
 
-        attachSource(urlOrManifest: string | object): void;
+        attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
         isReady(): boolean;
 
@@ -461,6 +465,8 @@ declare namespace dashjs {
         isDynamic(): boolean;
 
         seek(value: number): void;
+
+        seekToOriginalLive(): void;
 
         setPlaybackRate(value: number): void;
 
@@ -505,6 +511,8 @@ declare namespace dashjs {
         getVideoElement(): HTMLVideoElement;
 
         getSource(): string | object;
+
+        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -726,6 +734,7 @@ declare namespace dashjs {
         OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
+        ADAPTATION_SET_REMOVED_NO_CAPABILITIES: 'adaptationSetRemovedNoCapabilities';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_LOADED_DATA: 'playbackLoadedData';
@@ -735,12 +744,12 @@ declare namespace dashjs {
         PLAYBACK_PLAYING: 'playbackPlaying';
         PLAYBACK_PROGRESS: 'playbackProgress';
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
-        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
+        PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
         PLAYBACK_WAITING: 'playbackWaiting';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
@@ -1013,6 +1022,11 @@ declare namespace dashjs {
         type: MediaPlayerEvents['PERIOD_SWITCH_COMPLETED' | 'PERIOD_SWITCH_STARTED'];
         toStreamInfo: StreamInfo | null;
         fromStreamInfo?: StreamInfo | null;
+    }
+
+    export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
+        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
+        adaptationSet: object;
     }
 
     export interface PlaybackErrorEvent extends Event {

@@ -59,6 +59,19 @@
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
                     "provider": "axinom"
+                },
+                {
+                    "name": "1080p with W3C Clear Key, single key",
+                    "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+                    "protData": {
+                        "org.w3.clearkey": {
+                            "clearkeys": {
+                                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "axinom"
                 }
             ]
         },

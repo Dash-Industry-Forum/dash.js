@@ -62,8 +62,9 @@ exports.register = function(stream) {
                 await command.sleep(PAUSE_DELAY * 1000);
 
                 const time = await command.execute(player.getTime);
+                const isDynamic = await command.execute(player.isDynamic);
                 utils.log(NAME, 'Playback time = ' + time);
-                if (stream.dynamic) {
+                if (isDynamic) {
                     // For dynamic streams, when paused, current time is progressing backward
                     assert.isAtMost(time, (pauseTime - PAUSE_DELAY + 1)); // +1 for 1 sec tolerance
                 } else {

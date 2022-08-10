@@ -94,6 +94,7 @@ class DashConstants {
         this.LABEL = 'Label';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
+        this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
         this.ACCESSIBILITY = 'Accessibility';
         this.ROLE = 'Role';
         this.RATING = 'Rating';
@@ -103,7 +104,6 @@ class DashConstants {
         this.VIEWPOINT = 'Viewpoint';
         this.ROLE = 'Role';
         this.ACCESSIBILITY = 'Accessibility';
-        this.CONTENTPROTECTION = 'ContentProtection';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
         this.STATIC = 'static';
@@ -134,6 +134,8 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
         this.SERVICE_DESCRIPTION_LATENCY = 'Latency';
         this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
+        this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
+        this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
         this.PATCH_LOCATION = 'PatchLocation';
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
@@ -141,6 +143,8 @@ class DashConstants {
         this.REPLACE = 'replace';
         this.ADD = 'add';
         this.REMOVE = 'remove';
+        this.WALL_CLOCK_TIME = 'wallClockTime';
+        this.PRESENTATION_TIME = 'presentationTime';
     }
 
     constructor () {

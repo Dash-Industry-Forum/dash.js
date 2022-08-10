@@ -72,6 +72,7 @@ function AbrController() {
         adapter,
         videoModel,
         mediaPlayerModel,
+        customParametersModel,
         domStorage,
         playbackIndex,
         switchHistoryDict,
@@ -94,13 +95,14 @@ function AbrController() {
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
         throughputHistory = ThroughputHistory(context).create({
-            settings: settings
+            settings
         });
 
         abrRulesCollection = ABRRulesCollection(context).create({
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            settings: settings
+            dashMetrics,
+            customParametersModel,
+            mediaPlayerModel,
+            settings
         });
 
         abrRulesCollection.initialize();
@@ -238,6 +240,9 @@ function AbrController() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -294,7 +299,6 @@ function AbrController() {
                 index: e.request.index
             })[0];
             if (request) {
-                fragmentModel.abortRequests();
                 abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
                 switchHistoryDict[streamId][type].reset();
                 switchHistoryDict[streamId][type].push({
@@ -392,7 +396,7 @@ function AbrController() {
      */
     function _getMaxIndexBasedOnBitrateFor(type, streamId) {
         try {
-            const maxBitrate = settings.get().streaming.abr.maxBitrate[type];
+            const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
             if (maxBitrate > -1) {
                 return getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxBitrate, streamId);
             } else {
@@ -411,7 +415,7 @@ function AbrController() {
      */
     function _getMinIndexBasedOnBitrateFor(type, streamId) {
         try {
-            const minBitrate = settings.get().streaming.abr.minBitrate[type];
+            const minBitrate = mediaPlayerModel.getAbrBitrateParameter('minBitrate', type);
 
             if (minBitrate > -1) {
                 const mediaInfo = streamProcessorDict[streamId][type].getMediaInfo();
@@ -492,7 +496,7 @@ function AbrController() {
             setElementSize();
         }
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+        const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
@@ -547,13 +551,13 @@ function AbrController() {
         }
 
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
-        let configBitrate = settings.get().streaming.abr.initialBitrate[type];
+        let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
         if (configBitrate === -1) {
             if (configRatio > -1) {
                 const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
+                const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
                     configBitrate = representation[repIdx].bandwidth / 1000;
@@ -620,7 +624,7 @@ function AbrController() {
 
             switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
 
-            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality)) {
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality < oldQuality)) {
                 _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
                 return true;
             }
@@ -816,20 +820,24 @@ function AbrController() {
     }
 
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-        const switchOnThreshold = stableBufferTime;
-        const switchOffThreshold = 0.5 * stableBufferTime;
+        try {
+            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+            const switchOnThreshold = stableBufferTime;
+            const switchOffThreshold = 0.5 * stableBufferTime;
 
-        const useBufferABR = isUsingBufferOccupancyAbrDict[mediaType];
-        const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
-        isUsingBufferOccupancyAbrDict[mediaType] = newUseBufferABR;
+            const useBufferABR = isUsingBufferOccupancyAbrDict[mediaType];
+            const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+            isUsingBufferOccupancyAbrDict[mediaType] = newUseBufferABR;
 
-        if (newUseBufferABR !== useBufferABR) {
-            if (newUseBufferABR) {
-                logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
-            } else {
-                logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+            if (newUseBufferABR !== useBufferABR) {
+                if (newUseBufferABR) {
+                    logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                } else {
+                    logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                }
             }
+        } catch (e) {
+            logger.error(e);
         }
     }
 

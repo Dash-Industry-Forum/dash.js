@@ -81,6 +81,9 @@ class CoreEvents extends EventsBase {
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
         this.SEEK_TARGET = 'seekTarget';
+        this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+        this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+        this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
     }
 }
 

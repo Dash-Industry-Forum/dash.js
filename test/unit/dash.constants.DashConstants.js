@@ -58,6 +58,7 @@ describe('DashConstants', function () {
         expect(DashConstants.ESSENTIAL_PROPERTY).to.equal('EssentialProperty');
         expect(DashConstants.SUPPLEMENTAL_PROPERTY).to.equal('SupplementalProperty');
         expect(DashConstants.INBAND_EVENT_STREAM).to.equal('InbandEventStream');
+        expect(DashConstants.PRODUCER_REFERENCE_TIME).to.equal('ProducerReferenceTime');
         expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
         expect(DashConstants.ROLE).to.equal('Role');
         expect(DashConstants.RATING).to.equal('Rating');
@@ -67,7 +68,7 @@ describe('DashConstants', function () {
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
         expect(DashConstants.ROLE).to.equal('Role');
         expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
-        expect(DashConstants.CONTENTPROTECTION).to.equal('ContentProtection');
+        expect(DashConstants.CONTENT_PROTECTION).to.equal('ContentProtection');
         expect(DashConstants.MAIN).to.equal('main');
         expect(DashConstants.DYNAMIC).to.equal('dynamic');
         expect(DashConstants.MEDIA_PRESENTATION_DURATION).to.equal('mediaPresentationDuration');
@@ -91,5 +92,7 @@ describe('DashConstants', function () {
         expect(DashConstants.DVB_PRIORITY).to.equal('dvb:priority');
         expect(DashConstants.DVB_WEIGHT).to.equal('dvb:weight');
         expect(DashConstants.SUGGESTED_PRESENTATION_DELAY).to.equal('suggestedPresentationDelay');
+        expect(DashConstants.WALL_CLOCK_TIME).to.equal('wallClockTime');
+        expect(DashConstants.PRESENTATION_TIME).to.equal('presentationTime');
     });
 });

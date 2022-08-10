@@ -1055,6 +1055,153 @@ describe('DashManifestModel', function () {
             });
         });
 
+        describe('getProducerReferenceTimesForAdaptation', () => {
+            it('returns an empty Array when no ProducerReferenceTimes are present on a node', () => {
+                const node = {};
+
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(obj).to.be.empty;                // jshint ignore:line
+            });
+
+            it('returns an empty Array where a single ProducerReferenceTime element on a node has missing mandatory attributes', () => {
+                const node = {
+                    [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:00Z'
+                            // missing presentationTime
+                        }
+                    ]
+                };
+
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(obj).to.be.empty;                // jshint ignore:line
+            });
+
+            it('returns an Array of ProducerReferenceTime elements with mandatory attributes', () => {
+                const node = {
+                    [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
+                            [DashConstants.PRESENTATION_TIME]: 0
+                        },
+                        {
+                            [DashConstants.ID]: 5,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:05Z',
+                            [DashConstants.PRESENTATION_TIME]: 1
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(4);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:04Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(0);
+                expect(obj[1][DashConstants.ID]).to.equal(5);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:05Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                /* jshint ignore:end */
+            });
+
+            it('returns ProducerReferenceTimes with correct default attribute values', () => {
+                const node = {
+                    [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
+                            [DashConstants.PRESENTATION_TIME]: 0
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);        // jshint ignore:line
+                expect(obj).to.have.lengthOf(1);            // jshint ignore:line
+                expect(obj[0].type).to.equal('encoder');    // jshint ignore:line
+            });
+
+            it('returns ProducerReferenceTimes within representations', () => {
+                const node = {
+                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                        {
+                            [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                                {
+                                    [DashConstants.ID]: 1,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                                    [DashConstants.PRESENTATION_TIME]: 0
+                                }
+                            ]
+                        },
+                        {
+                            [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 1
+                                }
+                            ]
+                        },
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(0);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                /* jshint ignore:end */
+
+            });
+
+            it('returns ProducerReferenceTimes at both AdaptationSet and Representation level', () => {
+                const node = {
+                    [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                        {
+                            [DashConstants.ID]: 1,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                            [DashConstants.PRESENTATION_TIME]: 1
+                        }
+                    ],
+                    [DashConstants.REPRESENTATION_ASARRAY] : [
+                        {
+                            [DashConstants.PRODUCER_REFERENCE_TIME] : [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 2
+                                }
+                            ]
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(2);
+                /* jshint ignore:end */
+            });
+
+        });
+
+
         describe('getSelectionPriority', () => {
 
             it('should return 1 when adaptation is not defined', () => {

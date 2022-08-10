@@ -288,9 +288,9 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
 
         /**
-         * The media's metadata has finished loading; all attributes now
-         * contain as much useful information as they're going to.
-         * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+         * The event is fired when the frame at the current playback position of the media has finished loading;
+         * often the first frame
+         * @event MediaPlayerEvents#PLAYBACK_LOADED_DATA
          */
         this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
 
@@ -335,12 +335,6 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_SEEKING = 'playbackSeeking';
 
         /**
-         * Sent when a seek operation has been asked.
-         * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
-         */
-        this.PLAYBACK_SEEK_ASKED = 'playbackSeekAsked';
-
-        /**
          * Sent when the video element reports stalled
          * @event MediaPlayerEvents#PLAYBACK_STALLED
          */
@@ -359,6 +353,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
          */
         this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+
+        /**
+         * Sent when the video element reports that the volume has changed
+         * @event MediaPlayerEvents#PLAYBACK_VOLUME_CHANGED
+         */
+        this.PLAYBACK_VOLUME_CHANGED = 'playbackVolumeChanged';
 
         /**
          * Sent when the media playback has stopped because of a temporary lack of data.
@@ -396,6 +396,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#REPRESENTATION_SWITCH
          */
         this.REPRESENTATION_SWITCH = 'representationSwitch';
+
+        /**
+         * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
+         * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
+         */
+        this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
     }
 }
 

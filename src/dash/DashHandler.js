@@ -172,6 +172,7 @@ function DashHandler(config) {
         request.timescale = representation.timescale;
         request.availabilityStartTime = segment.availabilityStartTime;
         request.availabilityEndTime = segment.availabilityEndTime;
+        request.availabilityTimeComplete = representation.availabilityTimeComplete;
         request.wallStartTime = segment.wallStartTime;
         request.quality = representation.index;
         request.index = segment.index;

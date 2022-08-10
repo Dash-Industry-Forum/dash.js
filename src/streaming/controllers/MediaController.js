@@ -45,8 +45,8 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
-        domStorage,
-        customInitialTrackSelectionFunction;
+        customParametersModel,
+        domStorage;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -168,11 +168,11 @@ function MediaController() {
         const id = streamInfo.id;
         const current = getCurrentTrackFor(type, id);
 
-        if (!tracks[id] || !tracks[id][type] || isTracksEqual(track, current)) return;
+        if (!tracks[id] || !tracks[id][type]) return;
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current && (type !== Constants.TEXT || (type === Constants.TEXT && track.isFragmented))) {
+        if (tracks[id][type].current && ((type !== Constants.TEXT && !isTracksEqual(track, current)) || (type === Constants.TEXT && track.isFragmented))) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
@@ -278,7 +278,12 @@ function MediaController() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
     }
+
 
     /**
      * @memberof MediaController#
@@ -334,7 +339,7 @@ function MediaController() {
         let result = [];
 
         trackArr.forEach((track) => {
-            if(!isNaN(track.selectionPriority)) {
+            if (!isNaN(track.selectionPriority)) {
                 // Higher max value. Reset list and add new entry
                 if (track.selectionPriority > max) {
                     max = track.selectionPriority;
@@ -415,15 +420,12 @@ function MediaController() {
         return result;
     }
 
-    function setCustomInitialTrackSelectionFunction(customFunc) {
-        customInitialTrackSelectionFunction = customFunc;
-    }
-
     function selectInitialTrack(type, tracks) {
         if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr;
+        const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();
 
         if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
             tmpArr = customInitialTrackSelectionFunction(tracks);
@@ -537,7 +539,6 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
-        setCustomInitialTrackSelectionFunction,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,

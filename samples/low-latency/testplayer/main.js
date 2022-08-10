@@ -2,6 +2,7 @@ var METRIC_INTERVAL = 300;
 
 var App = function () {
     this.player = null;
+    this.controlbar = null;
     this.video = null;
     this.chart = null;
     this.domElements = {
@@ -28,10 +29,9 @@ App.prototype.init = function () {
 
 App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
-    this.domElements.settings.minDrift = document.getElementById('min-drift');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
     this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
-    this.domElements.settings.liveCatchupLatencyThreshold = document.getElementById('catchup-threshold');
+    this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
     this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
     this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
     this.domElements.settings.abrAdditionalAbandonRequestRule = document.getElementById('abr-additional-abandon');
@@ -45,10 +45,8 @@ App.prototype._setDomElements = function () {
     this.domElements.chart.numberOfEntries = document.getElementById('chart-number-of-entries');
 
     this.domElements.metrics.latencyTag = document.getElementById('latency-tag');
-    this.domElements.metrics.mindriftTag = document.getElementById('mindrift-tag');
     this.domElements.metrics.playbackrateTag = document.getElementById('playbackrate-tag');
     this.domElements.metrics.bufferTag = document.getElementById('buffer-tag');
-    this.domElements.metrics.catchupThresholdTag = document.getElementById('catchup-threshold-tag');
     this.domElements.metrics.sec = document.getElementById('sec');
     this.domElements.metrics.min = document.getElementById('min');
     this.domElements.metrics.videoMaxIndex = document.getElementById('video-max-index');
@@ -70,10 +68,11 @@ App.prototype._load = function () {
 
     this.video = document.querySelector('video');
     this.player = dashjs.MediaPlayer().create();
-    this.player.updateSettings({ streaming: { lowLatencyEnabled: true } });
     this._registerDashEventHandler();
     this._applyParameters();
     this.player.initialize(this.video, url, true);
+    this.controlbar = new ControlBar(this.player);
+    this.controlbar.initialize();
 }
 
 App.prototype._applyParameters = function () {
@@ -90,10 +89,9 @@ App.prototype._applyParameters = function () {
                 liveDelay: settings.targetLatency
             },
             liveCatchup: {
-                minDrift: settings.minDrift,
+                enabled: settings.catchupEnabled,
                 maxDrift: settings.maxDrift,
                 playbackRate: settings.catchupPlaybackRate,
-                latencyThreshold: settings.liveCatchupLatencyThreshold,
                 mode: settings.catchupMechanism
             },
             abr: {
@@ -120,7 +118,21 @@ App.prototype._exportSettings = function () {
         url += '&' + key + '=' + value
     }
 
-    this.domElements.settings.exportSettingsUrl.value = encodeURI(url);
+    url = encodeURI(url);
+    const element = document.createElement('textarea');
+    element.value = url;
+    document.body.appendChild(element);
+    element.select();
+    document.execCommand('copy');
+    document.body.removeChild(element);
+
+    Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: 'Settings URL copied to clipboard',
+        showConfirmButton: false,
+        timer: 1500
+    })
 }
 
 App.prototype._adjustSettingsByUrlParameters = function () {
@@ -134,14 +146,8 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxDrift !== undefined) {
             this.domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
         }
-        if (params.minDrift !== undefined) {
-            this.domElements.settings.minDrift.value = parseFloat(params.minDrift).toFixed(2);
-        }
         if (params.catchupPlaybackRate !== undefined) {
             this.domElements.settings.catchupPlaybackRate.value = parseFloat(params.catchupPlaybackRate).toFixed(1);
-        }
-        if (params.liveCatchupLatencyThreshold !== undefined) {
-            this.domElements.settings.liveCatchupLatencyThreshold.value = parseFloat(params.liveCatchupLatencyThreshold).toFixed(0);
         }
         if (params.abrAdditionalInsufficientBufferRule !== undefined) {
             this.domElements.settings.abrAdditionalInsufficientBufferRule.checked = params.abrAdditionalInsufficientBufferRule === 'true';
@@ -154,6 +160,9 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         }
         if (params.abrAdditionalDroppedFramesRule !== undefined) {
             this.domElements.settings.abrAdditionalDroppedFramesRule.checked = params.abrAdditionalDroppedFramesRule === 'true';
+        }
+        if (params.catchupEnabled !== undefined) {
+            this.domElements.settings.catchupEnabled.checked = params.catchupEnabled === 'true';
         }
         if (params.abrGeneral !== undefined) {
             document.getElementById(params.abrGeneral).checked = true;
@@ -170,30 +179,28 @@ App.prototype._adjustSettingsByUrlParameters = function () {
 
 App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
-    var minDrift = parseFloat(this.domElements.settings.minDrift.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
     var catchupPlaybackRate = parseFloat(this.domElements.settings.catchupPlaybackRate.value, 10);
-    var liveCatchupLatencyThreshold = parseFloat(this.domElements.settings.liveCatchupLatencyThreshold.value, 10);
     var abrAdditionalInsufficientBufferRule = this.domElements.settings.abrAdditionalInsufficientBufferRule.checked;
     var abrAdditionalDroppedFramesRule = this.domElements.settings.abrAdditionalDroppedFramesRule.checked;
     var abrAdditionalAbandonRequestRule = this.domElements.settings.abrAdditionalAbandonRequestRule.checked;
     var abrAdditionalSwitchHistoryRule = this.domElements.settings.abrAdditionalSwitchHistoryRule.checked;
+    var catchupEnabled = this.domElements.settings.catchupEnabled.checked;
     var abrGeneral = document.querySelector('input[name="abr-general"]:checked').value;
     var catchupMechanism = document.querySelector('input[name="catchup"]:checked').value;
     var throughputCalculation = document.querySelector('input[name="throughput-calc"]:checked').value;
 
     return {
         targetLatency,
-        minDrift,
         maxDrift,
         catchupPlaybackRate,
-        liveCatchupLatencyThreshold,
         abrGeneral,
         abrAdditionalInsufficientBufferRule,
         abrAdditionalDroppedFramesRule,
         abrAdditionalAbandonRequestRule,
         abrAdditionalSwitchHistoryRule,
         catchupMechanism,
+        catchupEnabled,
         throughputCalculation
     }
 }
@@ -347,15 +354,11 @@ App.prototype._startIntervalHandler = function () {
             var currentLatency = parseFloat(self.player.getCurrentLiveLatency(), 10);
             self.domElements.metrics.latencyTag.innerHTML = currentLatency + ' secs';
 
-            self.domElements.metrics.mindriftTag.innerHTML = settings.streaming.liveCatchup.minDrift + ' secs';
-
             var currentPlaybackRate = self.player.getPlaybackRate();
-            self.domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 100) / 100;
+            self.domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 1000) / 1000;
 
             var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
             self.domElements.metrics.bufferTag.innerHTML = currentBuffer + ' secs';
-
-            self.domElements.metrics.catchupThresholdTag.innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
 
             var d = new Date();
             var seconds = d.getSeconds();
@@ -372,6 +375,13 @@ App.prototype._registerEventHandler = function () {
 
     document.getElementById('apply-settings-button').addEventListener('click', function () {
         self._applyParameters();
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Settings applied',
+            showConfirmButton: false,
+            timer: 1500
+        })
     })
 
     document.getElementById('load-button').addEventListener('click', function () {
@@ -384,6 +394,13 @@ App.prototype._registerEventHandler = function () {
 
     document.getElementById('chart-settings-button').addEventListener('click', function () {
         self._adjustChartSettings();
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'Settings applied',
+            showConfirmButton: false,
+            timer: 1500
+        })
     })
 }
 

@@ -157,42 +157,42 @@
             <div class="col-md-6">
                 <div class="p-5 border rounded-3">
                     <h4>Settings</h4>
-                <div class="settings">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox"  id="textDefaultEnabled" onchange="setTextDefaultEnabled()" checked>
-                        <label class="form-check-label" for="textDefaultEnabled">
-                            textDefaultEnabled
-                        </label>
+                    <div class="settings">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"  id="textDefaultEnabled" onchange="setTextDefaultEnabled()" checked>
+                            <label class="form-check-label" for="textDefaultEnabled">
+                                textDefaultEnabled
+                            </label>
+                        </div>
+                        <div>
+                            <label class="form-check-label" for="textSettings">
+                                Initial settings language/role
+                            </label>
+                            <select class="form-select" onchange="setLang()" aria-label="Default select example" id="textSettings">
+                                <option value="">-- unset initial lang and role --</option>
+                                <option value="en-subtitle">eng - subtitles</option>
+                                <option value="en-caption">eng - captions</option>
+                                <option value="se">swe - subtitles</option>
+                                <option value="qb">qbb - subtitles</option>
+                                <option value="no">nor - subtitles</option>
+                            </select>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"  id="lastMediaSettingsCachingInfoEnabled" onchange="setLastMediaSettingsCachingInfoEnabled()">
+                            <label class="form-check-label" for="lastMediaSettingsCachingInfoEnabled">
+                                streaming.lastMediaSettingsCachingInfo.enabled
+                            </label>
+                        </div>
+                        <div class="mt-4">
+                            <label>localStorage content: </label>
+                            <div id="domStorage"></div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-danger" onclick="clearDomStorage()">Clear localStorage</button>
+                            <button type="button" id="loadButton" class="btn btn-success" onclick="play(this)">Load stream
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="form-check-label" for="textSettings">
-                            Initial settings language/role
-                        </label>
-                        <select class="form-select" onchange="setLang()" aria-label="Default select example" id="textSettings">
-                            <option value="">-- unset initial lang and role --</option>
-                            <option value="eng-subtitle">eng - subtitles</option>
-                            <option value="eng-caption">eng - captions</option>
-                            <option value="swe">swe - subtitles</option>
-                            <option value="qbb">qbb - subtitles</option>
-                            <option value="nor">nor - subtitles</option>
-                        </select>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox"  id="lastMediaSettingsCachingInfoEnabled" onchange="setLastMediaSettingsCachingInfoEnabled()">
-                        <label class="form-check-label" for="lastMediaSettingsCachingInfoEnabled">
-                            streaming.lastMediaSettingsCachingInfo.enabled
-                        </label>
-                    </div>
-                    <div class="mt-4">
-                        <label>localStorage content: </label>
-                        <div id="domStorage"></div>
-                    </div>
-                    <div class="mt-4">
-                        <button type="button" class="btn btn-danger" onclick="clearDomStorage()">Clear localStorage</button>
-                        <button type="button" id="loadButton" class="btn btn-success" onclick="play(this)">Load stream
-                        </button>
-                    </div>
-                </div>
                 </div>
             </div>
         </div>
