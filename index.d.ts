@@ -45,6 +45,8 @@ declare namespace dashjs {
 
         clearMediaInfoArray(): void;
 
+        handleKeySystemFromManifest(): void;
+
         createKeySession(ksInfo: KeySystemInfo): void;
 
         loadKeySession(ksInfo: KeySystemInfo): void;
@@ -68,10 +70,6 @@ declare namespace dashjs {
         getKeySystems(): KeySystem[];
 
         setKeySystems(keySystems: KeySystem[]): void;
-
-        setLicenseRequestFilters(filters: RequestFilter[]): void;
-
-        setLicenseResponseFilters(filters: ResponseFilter[]): void;
 
         stop(): void;
 

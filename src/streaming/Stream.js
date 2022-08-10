@@ -730,6 +730,7 @@ function Stream(config) {
                     }
                 }
             }
+            protectionController.handleKeySystemFromManifest();
         }
 
         if (error) {
