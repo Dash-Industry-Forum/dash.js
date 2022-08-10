@@ -49,7 +49,7 @@
                     var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
                     var adaptation = dashAdapter.getAdaptationForType(periodIdx, 'video', streamInfo);
-                    var currentRep = adaptation.Representation_asArray.find(function (rep) {
+                    var currentRep = adaptation.Representation.find(function (rep) {
                         return rep.id === repSwitch.to
                     })
                     var frameRate = currentRep.frameRate;
