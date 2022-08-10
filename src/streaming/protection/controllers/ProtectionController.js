@@ -164,7 +164,7 @@ function ProtectionController(config) {
      */
     function _handleKeySystemFromPssh(supportedKs) {
         pendingKeySessionsToHandle.push(supportedKs);
-        _selectKeySystemOrUpdateKeySessions(supportedKs, true);
+        _selectKeySystemOrUpdateKeySessions(supportedKs, false);
     }
 
     /**
