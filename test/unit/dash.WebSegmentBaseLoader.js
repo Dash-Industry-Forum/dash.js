@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import Errors from '../../src/core/errors/Errors';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
+import { sleep } from './helpers/Async';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -68,33 +69,29 @@ describe('WebmSegmentBaseLoader', function () {
             webmSegmentBaseLoader.reset();
         });
 
-        it('should trigger INITIALIZATION_LOADED event when loadInitialization function is called without representation parameter', function (done) {
+        it('should trigger INITIALIZATION_LOADED event when loadInitialization function is called without representation parameter', async function () {
             const self = this.test.ctx;
-            webmSegmentBaseLoader.loadInitialization()
-                .then(() => {
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
+
+            webmSegmentBaseLoader.loadInitialization();
+
+            await sleep(0);
+
             self.requests[0].respond(200);
         });
 
-        it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', function (done) {
+        it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', async function () {
             const self = this.test.ctx;
 
-            webmSegmentBaseLoader.loadSegments()
-                .then((e) => {
-                    expect(e.error).not.to.equal(undefined);
-                    expect(e.error.code).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_CODE);
-                    expect(e.error.message).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE);
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
+            const promise = webmSegmentBaseLoader.loadSegments();
+
+            await sleep(0);
 
             self.requests[0].respond(200);
+
+            const e = await promise;
+            expect(e.error).not.to.equal(undefined);
+            expect(e.error.code).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_CODE);
+            expect(e.error.message).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE);
         });
     });
 });
