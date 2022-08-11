@@ -44,25 +44,24 @@ function XHRLoader(cfg) {
     let instance;
 
     function load(httpRequest) {
+        const modifiedRequest = {
+            url: httpRequest.url,
+            method: httpRequest.method,
+            headers: httpRequest.headers || {},
+            credentials: httpRequest.withCredentials ? 'include' : undefined,
+        };
 
         Promise.resolve()
             .then(() => {
                 if (requestModifier && requestModifier.modifyRequest) {
-                    return requestModifier.modifyRequest({
-                        url: httpRequest.url,
-                        method: httpRequest.method,
-                        headers: httpRequest.headers || {},
-                        credentials: httpRequest.withCredentials ? 'include' : undefined,
-                    });
+                    return requestModifier.modifyRequest(modifiedRequest);
                 }
             })
-            .then((modifiedRequest) => {
-                if (modifiedRequest) {
-                    httpRequest.url = modifiedRequest.url;
-                    httpRequest.method = modifiedRequest.method;
-                    httpRequest.headers = modifiedRequest.headers;
-                    httpRequest.withCredentials = modifiedRequest.credentials === 'include';
-                }
+            .then(() => {
+                httpRequest.url = modifiedRequest.url;
+                httpRequest.method = modifiedRequest.method;
+                httpRequest.headers = modifiedRequest.headers;
+                httpRequest.withCredentials = modifiedRequest.credentials === 'include';
 
                 // Variables will be used in the callback functions
                 const requestStartTime = new Date();
