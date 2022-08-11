@@ -9,6 +9,7 @@ import {
 }
     from '../../src/streaming/vo/metrics/HTTPRequest';
 import Settings from '../../src/core/Settings';
+import { sleep } from './helpers/Async';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -105,7 +106,7 @@ describe('HTTPLoader', function () {
         expect(httpLoader.load.bind(httpLoader, { request: {} })).to.throw('config object is not correct or missing');
     });
 
-    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', () => {
+    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', async () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -128,12 +129,15 @@ describe('HTTPLoader', function () {
                 availabilityTimeComplete: false
             }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
         });
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);
     });
 
-    it('should use XHRLoader and call success and complete callback when load is called successfully', () => {
+    it('should use XHRLoader and call success and complete callback when load is called successfully', async () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -154,6 +158,9 @@ describe('HTTPLoader', function () {
             complete: callbackCompleted,
             error: callbackError
         });
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);
@@ -162,7 +169,7 @@ describe('HTTPLoader', function () {
         expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader and call error and complete callback when load is called with error', () => {
+    it('should use XHRLoader and call error and complete callback when load is called with error', async () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -183,6 +190,9 @@ describe('HTTPLoader', function () {
             complete: callbackCompleted,
             error: callbackError
         });
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);
         sinon.assert.calledOnce(callbackError);
@@ -191,7 +201,7 @@ describe('HTTPLoader', function () {
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', () => {
+    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', async () => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -214,6 +224,9 @@ describe('HTTPLoader', function () {
                 availabilityTimeComplete: false
             }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
         });
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(global.fetch);

@@ -1,5 +1,6 @@
 import XHRLoader from '../../src/streaming/net/XHRLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
+import { sleep } from './helpers/Async';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -31,7 +32,7 @@ describe('XHRLoader', function () {
     afterEach(function () {
     });
 
-    it('should call success and complete callback when load is called successfully', () => {
+    it('should call success and complete callback when load is called successfully', async () => {
         const self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -51,6 +52,9 @@ describe('XHRLoader', function () {
             onabort: callbackAbort
         };
         xhrLoader.load(request);
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(callbackError);
@@ -60,7 +64,7 @@ describe('XHRLoader', function () {
         expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should call onload and complete callback when load is called and there is an error response', () => {
+    it('should call onload and complete callback when load is called and there is an error response', async () => {
         const self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -79,6 +83,9 @@ describe('XHRLoader', function () {
             onabort: callbackAbort
         };
         xhrLoader.load(request);
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);
         sinon.assert.notCalled(callbackError);
@@ -88,7 +95,7 @@ describe('XHRLoader', function () {
         expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should call onabort callback when abort is called', () => {
+    it('should call onabort callback when abort is called', async () => {
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
@@ -108,6 +115,9 @@ describe('XHRLoader', function () {
             onabort: callbackAbort
         };
         xhrLoader.load(request);
+
+        await sleep(0);
+
         xhrLoader.abort(request);
 
         sinon.assert.notCalled(callbackError);
@@ -117,7 +127,7 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackAbort);
     });
 
-    it('should call onerror and onend when load is called and there is a network error', () => {
+    it('should call onerror and onend when load is called and there is a network error', async () => {
         const self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -136,6 +146,9 @@ describe('XHRLoader', function () {
             onabort: callbackAbort
         };
         xhrLoader.load(request);
+
+        await sleep(0);
+
         expect(self.requests.length).to.equal(1);
         self.requests[0].error();
         sinon.assert.calledOnce(callbackError);
@@ -145,7 +158,7 @@ describe('XHRLoader', function () {
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should set timeout on the sending XHR request', () => {
+    it('should set timeout on the sending XHR request', async () => {
         xhrLoader = XHRLoader(context).create({
             requestModifier: requestModifier
         });
@@ -156,6 +169,9 @@ describe('XHRLoader', function () {
             timeout: 100
         };
         xhrLoader.load(request);
+
+        await sleep(0);
+
         expect(request.response.timeout).to.be.equal(100);
     });
 });
