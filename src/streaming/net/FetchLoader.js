@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import { modifyRequest } from '../utils/RequestModifier';
 
 /**
  * @module FetchLoader
@@ -105,19 +106,8 @@ function FetchLoader(cfg) {
             signal: abortController ? abortController.signal : undefined
         };
 
-        const modifiedRequest = Object.assign({ url: httpRequest.url }, reqOptions);
-
-        Promise.resolve()
+        modifyRequest(httpRequest, requestModifier, headers)
             .then(() => {
-                if (requestModifier && requestModifier.modifyRequest) {
-                    return requestModifier.modifyRequest(modifiedRequest);
-                }
-            })
-            .then(() => {
-                httpRequest.url = modifiedRequest.url;
-                httpRequest.method = modifiedRequest.method;
-                httpRequest.headers = modifiedRequest.headers;
-                httpRequest.withCredentials = modifiedRequest.credentials === 'include';
 
                 const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
                 const requestTime = Date.now();

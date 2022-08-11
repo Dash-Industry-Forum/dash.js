@@ -31,6 +31,28 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
+export function modifyRequest(httpRequest, requestModifier, headers) {
+    const modifiedRequest = {
+        url: httpRequest.url,
+        method: httpRequest.method,
+        headers: Object.assign({}, httpRequest.headers, headers),
+        credentials: httpRequest.withCredentials ? 'include' : undefined,
+    };
+
+    return Promise.resolve()
+        .then(() => {
+            if (requestModifier && requestModifier.modifyRequest) {
+                return requestModifier.modifyRequest(modifiedRequest);
+            }
+        })
+        .then(() => {
+            httpRequest.url = modifiedRequest.url;
+            httpRequest.method = modifiedRequest.method;
+            httpRequest.headers = modifiedRequest.headers;
+            httpRequest.withCredentials = modifiedRequest.credentials === 'include';
+        });
+}
+
 function RequestModifier() {
 
     let instance;

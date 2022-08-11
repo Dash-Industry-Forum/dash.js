@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import { modifyRequest } from '../utils/RequestModifier';
 
 /**
  * @module XHRLoader
@@ -44,25 +45,8 @@ function XHRLoader(cfg) {
     let instance;
 
     function load(httpRequest) {
-        const modifiedRequest = {
-            url: httpRequest.url,
-            method: httpRequest.method,
-            headers: httpRequest.headers || {},
-            credentials: httpRequest.withCredentials ? 'include' : undefined,
-        };
-
-        Promise.resolve()
+        modifyRequest(httpRequest, requestModifier)
             .then(() => {
-                if (requestModifier && requestModifier.modifyRequest) {
-                    return requestModifier.modifyRequest(modifiedRequest);
-                }
-            })
-            .then(() => {
-                httpRequest.url = modifiedRequest.url;
-                httpRequest.method = modifiedRequest.method;
-                httpRequest.headers = modifiedRequest.headers;
-                httpRequest.withCredentials = modifiedRequest.credentials === 'include';
-
                 // Variables will be used in the callback functions
                 const requestStartTime = new Date();
                 const request = httpRequest.request;
