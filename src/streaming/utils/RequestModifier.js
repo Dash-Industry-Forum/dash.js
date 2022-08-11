@@ -35,16 +35,21 @@ function RequestModifier() {
 
     let instance;
 
+    function modifyRequest(request) {
+        return request;
+    }
+
     function modifyRequestURL(url) {
         return url;
     }
 
     // eslint-disable-next-line no-unused-vars
-    function modifyRequestHeader(request, {url}) {
+    function modifyRequestHeader(request, { url }) {
         return request;
     }
 
     instance = {
+        modifyRequest: modifyRequest,
         modifyRequestURL: modifyRequestURL,
         modifyRequestHeader: modifyRequestHeader
     };

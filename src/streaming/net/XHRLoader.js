@@ -45,53 +45,73 @@ function XHRLoader(cfg) {
 
     function load(httpRequest) {
 
-        // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpRequest.request;
-
-        let xhr = new XMLHttpRequest();
-        xhr.open(httpRequest.method, httpRequest.url, true);
-
-        if (request.responseType) {
-            xhr.responseType = request.responseType;
-        }
-
-        if (request.range) {
-            xhr.setRequestHeader('Range', 'bytes=' + request.range);
-        }
-
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
-        }
-
-        if (requestModifier) {
-            xhr = requestModifier.modifyRequestHeader(xhr, {
-                url: httpRequest.url
-            });
-        }
-
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
-                if (value) {
-                    xhr.setRequestHeader(header, value);
+        Promise.resolve()
+            .then(() => {
+                if (requestModifier && requestModifier.modifyRequest) {
+                    return requestModifier.modifyRequest({
+                        url: httpRequest.url,
+                        method: httpRequest.method,
+                        headers: httpRequest.headers || {},
+                        credentials: httpRequest.withCredentials ? 'include' : undefined,
+                    });
                 }
-            }
-        }
+            })
+            .then((modifiedRequest) => {
+                if (modifiedRequest) {
+                    httpRequest.url = modifiedRequest.url;
+                    httpRequest.method = modifiedRequest.method;
+                    httpRequest.headers = modifiedRequest.headers;
+                    httpRequest.withCredentials = modifiedRequest.credentials === 'include';
+                }
 
-        xhr.withCredentials = httpRequest.withCredentials;
+                // Variables will be used in the callback functions
+                const requestStartTime = new Date();
+                const request = httpRequest.request;
 
-        xhr.onload = httpRequest.onload;
-        xhr.onloadend = httpRequest.onend;
-        xhr.onerror = httpRequest.onerror;
-        xhr.onprogress = httpRequest.progress;
-        xhr.onabort = httpRequest.onabort;
-        xhr.ontimeout = httpRequest.ontimeout;
-        xhr.timeout = httpRequest.timeout;
+                let xhr = new XMLHttpRequest();
+                xhr.open(httpRequest.method, httpRequest.url, true);
 
-        xhr.send();
+                if (request.responseType) {
+                    xhr.responseType = request.responseType;
+                }
 
-        httpRequest.response = xhr;
+                if (request.range) {
+                    xhr.setRequestHeader('Range', 'bytes=' + request.range);
+                }
+
+                if (!request.requestStartDate) {
+                    request.requestStartDate = requestStartTime;
+                }
+
+                if (requestModifier && requestModifier.modifyRequestHeader) {
+                    xhr = requestModifier.modifyRequestHeader(xhr, {
+                        url: httpRequest.url
+                    });
+                }
+
+                if (httpRequest.headers) {
+                    for (let header in httpRequest.headers) {
+                        let value = httpRequest.headers[header];
+                        if (value) {
+                            xhr.setRequestHeader(header, value);
+                        }
+                    }
+                }
+
+                xhr.withCredentials = httpRequest.withCredentials;
+
+                xhr.onload = httpRequest.onload;
+                xhr.onloadend = httpRequest.onend;
+                xhr.onerror = httpRequest.onerror;
+                xhr.onprogress = httpRequest.progress;
+                xhr.onabort = httpRequest.onabort;
+                xhr.ontimeout = httpRequest.ontimeout;
+                xhr.timeout = httpRequest.timeout;
+
+                xhr.send();
+
+                httpRequest.response = xhr;
+            });
     }
 
     function abort(request) {
