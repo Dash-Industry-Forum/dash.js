@@ -45,6 +45,7 @@ function XHRLoader(cfg) {
     let instance;
 
     function load(httpRequest) {
+
         modifyRequest(httpRequest, requestModifier)
             .then(() => {
                 // Variables will be used in the callback functions

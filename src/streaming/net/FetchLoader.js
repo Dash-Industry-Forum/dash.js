@@ -56,58 +56,57 @@ function FetchLoader(cfg) {
 
     function load(httpRequest) {
 
-        // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpRequest.request;
-
-        const headers = new Headers(); /*jshint ignore:line*/
-        if (request.range) {
-            headers.append('Range', 'bytes=' + request.range);
-        }
-
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
-                if (value) {
-                    headers.append(header, value);
-                }
-            }
-        }
-
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
-        }
-
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            // modifyRequestHeader expects a XMLHttpRequest object so,
-            // to keep backward compatibility, we should expose a setRequestHeader method
-            // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
-            // a more generic way to intercept/modify requests
-            requestModifier.modifyRequestHeader({
-                setRequestHeader: function (header, value) {
-                    headers.append(header, value);
-                }
-            }, {
-                url: httpRequest.url
-            });
-        }
-
-        let abortController;
-        if (typeof window.AbortController === 'function') {
-            abortController = new AbortController(); /*jshint ignore:line*/
-            httpRequest.abortController = abortController;
-            abortController.signal.onabort = httpRequest.onabort;
-        }
-
-        const reqOptions = {
-            method: httpRequest.method,
-            headers: headers,
-            credentials: httpRequest.withCredentials ? 'include' : undefined,
-            signal: abortController ? abortController.signal : undefined
-        };
-
-        modifyRequest(httpRequest, requestModifier, headers)
+        modifyRequest(httpRequest, requestModifier)
             .then(() => {
+                // Variables will be used in the callback functions
+                const requestStartTime = new Date();
+                const request = httpRequest.request;
+
+                const headers = new Headers(); /*jshint ignore:line*/
+                if (request.range) {
+                    headers.append('Range', 'bytes=' + request.range);
+                }
+
+                if (httpRequest.headers) {
+                    for (let header in httpRequest.headers) {
+                        let value = httpRequest.headers[header];
+                        if (value) {
+                            headers.append(header, value);
+                        }
+                    }
+                }
+
+                if (!request.requestStartDate) {
+                    request.requestStartDate = requestStartTime;
+                }
+
+                if (requestModifier && requestModifier.modifyRequestHeader) {
+                    // modifyRequestHeader expects a XMLHttpRequest object so,
+                    // to keep backward compatibility, we should expose a setRequestHeader method
+                    // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
+                    // a more generic way to intercept/modify requests
+                    requestModifier.modifyRequestHeader({
+                        setRequestHeader: function (header, value) {
+                            headers.append(header, value);
+                        }
+                    }, {
+                        url: httpRequest.url
+                    });
+                }
+
+                let abortController;
+                if (typeof window.AbortController === 'function') {
+                    abortController = new AbortController(); /*jshint ignore:line*/
+                    httpRequest.abortController = abortController;
+                    abortController.signal.onabort = httpRequest.onabort;
+                }
+
+                const reqOptions = {
+                    method: httpRequest.method,
+                    headers: headers,
+                    credentials: httpRequest.withCredentials ? 'include' : undefined,
+                    signal: abortController ? abortController.signal : undefined
+                };
 
                 const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
                 const requestTime = Date.now();

@@ -31,25 +31,22 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
-export function modifyRequest(httpRequest, requestModifier, headers) {
+export function modifyRequest(httpRequest, requestModifier) {
     if (!(requestModifier && requestModifier.modifyRequest)) {
         return Promise.resolve();
     }
 
-    const modifiedRequest = {
+    const request = {
         url: httpRequest.url,
         method: httpRequest.method,
-        headers: Object.assign({}, httpRequest.headers, headers),
+        headers: Object.assign({}, httpRequest.headers),
         credentials: httpRequest.withCredentials ? 'include' : undefined,
     };
 
-    return Promise.resolve(requestModifier.modifyRequest(modifiedRequest))
-        .then(() => {
-            httpRequest.url = modifiedRequest.url;
-            httpRequest.method = modifiedRequest.method;
-            httpRequest.headers = modifiedRequest.headers;
-            httpRequest.withCredentials = modifiedRequest.credentials === 'include';
-        });
+    return Promise.resolve(requestModifier.modifyRequest(request))
+        .then(() =>
+            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' })
+        );
 }
 
 function RequestModifier() {
