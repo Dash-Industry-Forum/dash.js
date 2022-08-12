@@ -439,13 +439,8 @@ function DashHandler(config) {
                 const requestEndTime = targetRequest.startTime + targetRequest.duration;
 
                 // Keep the original start time in case it is covered by a segment
-                if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+                if (time > targetRequest.startTime && requestEndTime - time > targetThreshold) {
                     return time;
-                }
-
-                // If target time is before the start of the request use request starttime
-                if (time < targetRequest.startTime) {
-                    return targetRequest.startTime;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
