@@ -443,6 +443,10 @@ function DashHandler(config) {
                     return time;
                 }
 
+                if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
+                    return targetRequest.startTime;
+                }
+
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
             }
 
