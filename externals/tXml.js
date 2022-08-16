@@ -51,6 +51,12 @@
     var pos = options.pos || 0;
     var keepComments = !!options.keepComments;
     var keepWhitespace = !!options.keepWhitespace
+    // dash.js - BEGIN
+    // Attributes matchers to post-process attributes (for ex to transform from xs:duration format to number of seconds)
+    var attrMatchers = options.attrMatchers || [];
+    // List od node names that must be stored as array within their parent
+    var nodesAsArray = options.nodesAsArray || [];
+    // dash.js - END
 
     var openBracket = "<";
     var openBracketCC = "<".charCodeAt(0);
@@ -68,7 +74,7 @@
     /**
      * parsing a list of entries
      */
-    function parseChildren(tagName) {
+    function parseChildren(tagName, parent) {
         var children = [];
         while (S[pos]) {
             if (S.charCodeAt(pos) == openBracketCC) {
@@ -137,27 +143,63 @@
                 }
                 var node = parseNode();
                 children.push(node);
+
                 if (node.tagName[0] === '?') {
                     children.push(...node.children);
                     node.children = [];
                 }
-            } else {
-                var text = parseText();
-                if (keepWhitespace) {
-                    if (text.length > 0) {
-                        children.push(text);
-                    }
-                } else {
-                    var trimmed = text.trim();
-                    if (trimmed.length > 0) {
-                        children.push(trimmed);
+
+                // dash.js - BEGIN
+                // Transform/process on the fly child nodes to add them to their parent as an array or an object
+                if (parent) {
+                    let tagName = node.tagName;
+                    delete node.tagName;
+                    if (nodesAsArray.indexOf(tagName) !== -1) {
+                        if (!parent[tagName]) {
+                            parent[tagName] = [];
+                        }
+                        parent[tagName].push(node);
+                    } else {
+                        parent[tagName] = node;
                     }
                 }
+                // dash.js - END
+            } else {
+                var text = parseText();
+                if (!keepWhitespace) {
+                    text = text.trim();
+                }
+                // dash.js - BEGIN
+                // Transform/process on the fly text values to add them to their parent as its "_text" property
+                if (parent) {
+                    parent.__text = text;
+                } else {
+                    children.push(text);
+                }
+                // dash.js - END
                 pos++;
             }
         }
         return children;
     }
+
+    // dash.js - BEGIN
+    // Add function processAttr() used to process node attributes on the fly when parsing nodes (see parseNode()))
+    function processAttr(tagName, attrName, value) {
+        // Specific use case for SegmentTimeline <S> tag
+        if (tagName === 'S') {
+            return parseInt(value);
+        }
+
+        let attrValue = value;
+        attrMatchers.forEach(matcher => {
+            if (matcher.test(tagName, attrName, value)) {
+                attrValue = matcher.converter(value);
+            }
+        });
+        return attrValue;
+    }
+    // dash.js - END
 
     /**
      *    returns the text outside of texts until the first '<'
@@ -190,8 +232,22 @@
     function parseNode() {
         pos++;
         const tagName = parseName();
-        const attributes = {};
+        // dash.js - BEGIN
+        // Set attributes as node properties which names are the attributes names
+        // For child nodes, see parseChildren() function where children are added as object properties
+        // const attributes = {};
         let children = [];
+        let node = {
+            tagName: tagName
+        };
+
+        // Support tag namespace
+        let p = node.tagName.indexOf(':');
+        if (p !== -1) {
+            node.__prefix = node.tagName.substr(0, p);
+            node.tagName = node.tagName.substr(p + 1);
+        }
+        // dash.js - END
 
         // parsing attributes
         while (S.charCodeAt(pos) !== closeBracketCC && S[pos]) {
@@ -208,17 +264,17 @@
                 if (code === singleQuoteCC || code === doubleQuoteCC) {
                     var value = parseString();
                     if (pos === -1) {
-                        return {
-                            tagName,
-                            attributes,
-                            children,
-                        };
+                        return node;
                     }
                 } else {
                     value = null;
                     pos--;
                 }
-                attributes[name] = value;
+                // dash.js - BEGIN
+                // Process attributes and add them as node properties which names are the attributes names
+                value = processAttr(node.tagName, name, value);
+                node[name] = value;
+                // dash.js - END
             }
             pos++;
         }
@@ -236,18 +292,19 @@
                 pos += 8;
             } else if (NoChildNodes.indexOf(tagName) === -1) {
                 pos++;
-                children = parseChildren(tagName);
+                // dash.js - BEGIN
+                // Add parent to parseChildren()
+                children = parseChildren(tagName, node);
+                // dash.js - END
             } else {
                 pos++
             }
         } else {
             pos++;
         }
-        return {
-            tagName,
-            attributes,
-            children,
-        };
+        // dash.js - BEGIN
+        return node;
+        // dash.js - END
     }
 
     /**
