@@ -145,6 +145,7 @@ class DashConstants {
         this.REMOVE = 'remove';
         this.WALL_CLOCK_TIME = 'wallClockTime';
         this.PRESENTATION_TIME = 'presentationTime';
+        this.UTC_TIMING = 'UTCTiming';
     }
 
     constructor () {

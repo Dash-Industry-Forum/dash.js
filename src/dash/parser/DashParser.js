@@ -63,7 +63,8 @@ const arrayNodes = [
     DashConstants.PATCH_LOCATION,
     DashConstants.REPLACE,
     DashConstants.ADD,
-    DashConstants.REMOVE
+    DashConstants.REMOVE,
+    DashConstants.UTC_TIMING
 ];
 
 function DashParser(config) {
