@@ -36,7 +36,7 @@ import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
-import tXml from '../../../externals/tXml';
+import * as tXml from '../../../externals/tXml';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
@@ -132,7 +132,7 @@ function DashParser(config) {
 
     function parseXml(data) {
         try {
-            let root = tXml(data, {
+            let root = tXml.parse(data, {
                 parseNode: true,
                 attrMatchers: matchers,
                 nodesAsArray: arrayNodes
