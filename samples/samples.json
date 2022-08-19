@@ -405,6 +405,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "DRM Robustness level example",
+                "description": "This example shows how to define a robustness level to be used by dash.js when calling <i>requestMediaKeySystemAccess</i>",
+                "href": "drm/robustness-level.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
