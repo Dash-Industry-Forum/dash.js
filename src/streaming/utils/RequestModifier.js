@@ -32,10 +32,6 @@
 import FactoryMaker from '../../core/FactoryMaker';
 
 export function modifyRequest(httpRequest, requestModifier) {
-    if (!(requestModifier && requestModifier.modifyRequest)) {
-        return Promise.resolve();
-    }
-
     const request = {
         url: httpRequest.url,
         method: httpRequest.method,
