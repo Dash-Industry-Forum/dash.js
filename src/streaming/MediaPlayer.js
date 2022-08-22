@@ -37,6 +37,7 @@ import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
 import CatchupController from './controllers/CatchupController';
 import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -153,6 +154,7 @@ function MediaPlayer() {
         gapController,
         playbackController,
         serviceDescriptionController,
+        contentSteeringController,
         catchupController,
         dashMetrics,
         manifestModel,
@@ -218,6 +220,9 @@ function MediaPlayer() {
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -319,6 +324,10 @@ function MediaPlayer() {
                 serviceDescriptionController = ServiceDescriptionController(context).getInstance();
             }
 
+            if (!contentSteeringController) {
+                contentSteeringController = ContentSteeringController(context).getInstance();
+            }
+
             if (!capabilitiesFilter) {
                 capabilitiesFilter = CapabilitiesFilter(context).getInstance();
             }
@@ -349,12 +358,21 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter: adapter
+                adapter
             });
 
             serviceDescriptionController.setConfig({
-                adapter: adapter
+                adapter
             });
+
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                requestModifier: RequestModifier(context).getInstance()
+            })
 
             if (!segmentBaseController) {
                 segmentBaseController = SegmentBaseController(context).getInstance({
@@ -1985,6 +2003,7 @@ function MediaPlayer() {
         catchupController.reset();
         playbackController.reset();
         serviceDescriptionController.reset();
+        contentSteeringController.reset();
         abrController.reset();
         mediaController.reset();
         segmentBaseController.reset();
@@ -2045,6 +2064,7 @@ function MediaPlayer() {
             videoModel,
             playbackController,
             serviceDescriptionController,
+            contentSteeringController,
             abrController,
             mediaController,
             settings,

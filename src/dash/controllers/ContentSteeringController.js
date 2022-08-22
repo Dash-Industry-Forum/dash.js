@@ -30,12 +30,25 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import URLLoader from '../../streaming/net/URLLoader';
+import Errors from '../../core/errors/Errors';
+import ContentSteeringRequest from '../vo/ContentSteeringRequest';
+import ContentSteeringResponse from '../vo/ContentSteeringResponse';
+import DashConstants from '../constants/DashConstants';
+import manifestModel from '../../streaming/models/ManifestModel';
 
 function ContentSteeringController() {
     const context = this.context;
 
     let instance,
         logger,
+        currentSteeringResponseData,
+        urlLoader,
+        errHandler,
+        dashMetrics,
+        mediaPlayerModel,
+        manifestModel,
+        requestModifier,
         adapter;
 
     function setup() {
@@ -49,6 +62,81 @@ function ContentSteeringController() {
         if (config.adapter) {
             adapter = config.adapter;
         }
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.requestModifier) {
+            requestModifier = config.requestModifier;
+        }
+        if(config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+
+        urlLoader = URLLoader(context).create({
+            errHandler,
+            dashMetrics,
+            mediaPlayerModel,
+            requestModifier,
+            errors: Errors
+        });
+    }
+
+
+    function loadSteeringData(beforePlaybackStart = false) {
+        return new Promise((resolve, reject) => {
+            try {
+                const manifest = manifestModel.getValue()
+                const steeringDataFromManifest = adapter.getContentSteering(manifest);
+                if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl || (beforePlaybackStart && !steeringDataFromManifest.queryBeforeStart)) {
+                    resolve();
+                    return;
+                }
+                const request = new ContentSteeringRequest(steeringDataFromManifest.serverUrl);
+                urlLoader.load({
+                    request: request,
+                    success: (data) => {
+                        _handleSteeringResponse(data);
+                        resolve();
+                    },
+                    error: (e) => {
+                        _handleSteeringResponseError(e);
+                        reject(e);
+                    }
+                });
+            } catch (e) {
+                reject(e);
+            }
+        })
+    }
+
+
+    function _handleSteeringResponse(data) {
+        if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
+            return;
+        }
+
+        currentSteeringResponseData = new ContentSteeringResponse();
+        currentSteeringResponseData.version = data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION];
+
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.TTL] && !isNaN(data[DashConstants.CONTENT_STEERING_RESPONSE.TTL])) {
+            currentSteeringResponseData.ttl = data[DashConstants.CONTENT_STEERING_RESPONSE.TTL];
+        }
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]) {
+            currentSteeringResponseData.reloadUri = data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]
+        }
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]) {
+            currentSteeringResponseData.serviceLocationPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]
+        }
+    }
+
+    function _handleSteeringResponseError(e) {
+        logger.warn(`Error fetching data from content steering server`, e);
     }
 
     function reset() {
@@ -56,12 +144,14 @@ function ContentSteeringController() {
     }
 
     function _resetInitialSettings() {
+        currentSteeringResponseData = null;
     }
 
 
     instance = {
         reset,
-        setConfig
+        setConfig,
+        loadSteeringData
     };
 
     setup();

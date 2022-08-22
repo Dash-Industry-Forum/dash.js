@@ -58,13 +58,13 @@ function StreamController() {
     const eventBus = EventBus(context).getInstance();
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
-        dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController,
-        uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler,
-        timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay,
-        isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController,
-        serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback,
-        playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched,
-        waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
+        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
+        errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
+        autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
+        playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
+        initialPlayback, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings,
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -252,13 +252,20 @@ function StreamController() {
             Promise.all(promises)
                 .then(() => {
                     if (!activeStream) {
+                        return contentSteeringController.loadSteeringData(true);
+                    }
+                    return Promise.resolve();
+                })
+                .then(() => {
+                    if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
-
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
                 })
+
+
                 .catch((e) => {
                     throw e;
                 })
@@ -318,6 +325,7 @@ function StreamController() {
      */
     function _initializeForFirstStream(streamsInfo) {
 
+
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
@@ -336,12 +344,13 @@ function StreamController() {
             return;
         }
 
-        // Apply Service description parameters.
+
+        // Calculate the producer reference time offsets if given
         if (settings.get().streaming.applyProducerReferenceTime) {
             serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
         }
 
-
+        // Apply Service description parameters.
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.applyServiceDescription) {
             serviceDescriptionController.applyServiceDescription(manifestInfo);
@@ -357,7 +366,6 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
-
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
@@ -1445,6 +1453,9 @@ function StreamController() {
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
         if (config.textController) {
             textController = config.textController;

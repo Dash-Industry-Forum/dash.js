@@ -1130,13 +1130,14 @@ function DashManifestModel() {
             }
 
             if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
-                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START];
+                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
             }
 
             if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
                 entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
             }
 
+            return entry;
         }
 
         return undefined;
