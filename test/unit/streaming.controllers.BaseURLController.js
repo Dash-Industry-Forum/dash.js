@@ -2,6 +2,7 @@ import BaseURLController from '../../src/streaming/controllers/BaseURLController
 import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector';
 import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector';
 import BaseURL from '../../src/dash/vo/BaseURL';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -10,6 +11,8 @@ const context = {};
 
 const SERVICE_LOCATION_A = 'a';
 const SERVICE_LOCATION_B = 'b';
+
+const contentSteeringControllerMock = new ContentSteeringControllerMock();
 
 const dummyBaseURLTreeModel = {
     getForPath: () => {
@@ -41,7 +44,8 @@ describe('BaseURLController', function () {
 
         const baseURLSelector = BaseURLSelector(context).create();
         baseURLSelector.setConfig({
-            selector: basicSelector
+            selector: basicSelector,
+            contentSteeringController: contentSteeringControllerMock
         });
 
         const baseURLController = BaseURLController(context).create();

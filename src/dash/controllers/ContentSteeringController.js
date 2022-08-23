@@ -122,20 +122,20 @@ function ContentSteeringController() {
         }
     }
 
-    function _getSteeringDataFromManifest() {
+    function getSteeringDataFromManifest() {
         const manifest = manifestModel.getValue()
         return adapter.getContentSteering(manifest);
     }
 
     function shouldQueryBeforeStart() {
-        const steeringDataFromManifest = _getSteeringDataFromManifest();
+        const steeringDataFromManifest = getSteeringDataFromManifest();
         return steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
     }
 
     function loadSteeringData() {
         return new Promise((resolve, reject) => {
             try {
-                const steeringDataFromManifest = _getSteeringDataFromManifest();
+                const steeringDataFromManifest = getSteeringDataFromManifest();
                 if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl) {
                     resolve();
                     return;
@@ -201,6 +201,10 @@ function ContentSteeringController() {
             currentSteeringResponseData.serviceLocationPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]
         }
 
+        _startSteeringRequestTimer();
+    }
+
+    function _startSteeringRequestTimer() {
         // Start timer for next request
         if (currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
             if (nextRequestTimer) {
@@ -214,6 +218,7 @@ function ContentSteeringController() {
 
     function _handleSteeringResponseError(e) {
         logger.warn(`Error fetching data from content steering server`, e);
+        _startSteeringRequestTimer();
     }
 
     function getCurrentSteeringResponseData() {
@@ -243,6 +248,7 @@ function ContentSteeringController() {
         loadSteeringData,
         getCurrentSteeringResponseData,
         shouldQueryBeforeStart,
+        getSteeringDataFromManifest,
         initialize
     };
 

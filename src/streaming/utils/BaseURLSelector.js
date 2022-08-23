@@ -37,7 +37,8 @@ import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
-import { checkParameterType } from '../utils/SupervisorTools';
+import {checkParameterType} from '../utils/SupervisorTools';
+import ContentSteeringController from '../../dash/controllers/ContentSteeringController';
 
 function BaseURLSelector() {
 
@@ -48,12 +49,13 @@ function BaseURLSelector() {
         serviceLocationBlacklistController,
         basicSelector,
         dvbSelector,
-        selector;
+        selector,
+        contentSteeringController;
 
     function setup() {
         serviceLocationBlacklistController = BlacklistController(context).create({
-            updateEventName:        Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
-            addBlacklistEventName:    Events.SERVICE_LOCATION_BLACKLIST_ADD
+            updateEventName: Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            addBlacklistEventName: Events.SERVICE_LOCATION_BLACKLIST_ADD
         });
 
         basicSelector = BasicSelector(context).create({
@@ -64,12 +66,16 @@ function BaseURLSelector() {
             blacklistController: serviceLocationBlacklistController
         });
 
+        contentSteeringController = ContentSteeringController(context).getInstance();
         selector = basicSelector;
     }
 
     function setConfig(config) {
         if (config.selector) {
             selector = config.selector;
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
     }
 
@@ -78,21 +84,63 @@ function BaseURLSelector() {
         selector = isDVB ? dvbSelector : basicSelector;
     }
 
+    function _handleContentSteering(data) {
+        let steeringIndex = NaN;
+
+        // In case we dont have a selected idx yet we consider the defaultServiceLocation
+        if (isNaN(data.selectedIdx)) {
+            const steeringDataFromMpd = contentSteeringController.getSteeringDataFromManifest();
+            if (steeringDataFromMpd && steeringDataFromMpd.defaultServiceLocation) {
+                steeringIndex = _findexIndexOfServiceLocation([steeringDataFromMpd.defaultServiceLocation], data.baseUrls);
+            }
+        }
+
+        // Search in the response data of the steering server
+        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
+        if (data.baseUrls && data.baseUrls.length && currentSteeringResponseData &&
+            currentSteeringResponseData.serviceLocationPriority && currentSteeringResponseData.serviceLocationPriority.length) {
+            steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.serviceLocationPriority, data.baseUrls);
+        }
+
+        return steeringIndex;
+    }
+
+    function _findexIndexOfServiceLocation(serviceLocationPriorities = [], baseUrls = []) {
+        let i = 0;
+        let steeringIndex = NaN;
+        while (i < serviceLocationPriorities.length) {
+            const curr = serviceLocationPriorities[i];
+            const idx = baseUrls.findIndex((elem) => {
+                return elem.serviceLocation && elem.serviceLocation === curr;
+            })
+            if (idx !== -1) {
+                steeringIndex = idx;
+                break;
+            }
+            i += 1;
+        }
+        return steeringIndex;
+    }
+
     function select(data) {
         if (!data) {
             return;
         }
-        const baseUrls = data.baseUrls;
-        const selectedIdx = data.selectedIdx;
+
+        const steeringIndex = _handleContentSteering(data);
+
+        if (!isNaN(steeringIndex) && steeringIndex !== -1) {
+            data.selectedIdx = steeringIndex;
+        }
 
         // Once a random selection has been carried out amongst a group of BaseURLs with the same
         // @priority attribute value, then that choice should be re-used if the selection needs to be made again
         // unless the blacklist has been modified or the available BaseURLs have changed.
-        if (!isNaN(selectedIdx)) {
-            return baseUrls[selectedIdx];
+        if (!isNaN(data.selectedIdx)) {
+            return data.baseUrls[data.selectedIdx];
         }
 
-        let selectedBaseUrl = selector.select(baseUrls);
+        let selectedBaseUrl = selector.select(data.baseUrls);
 
         if (!selectedBaseUrl) {
             eventBus.trigger(Events.URL_RESOLUTION_FAILED, {
@@ -107,7 +155,7 @@ function BaseURLSelector() {
             return;
         }
 
-        data.selectedIdx = baseUrls.indexOf(selectedBaseUrl);
+        data.selectedIdx = data.baseUrls.indexOf(selectedBaseUrl);
 
         return selectedBaseUrl;
     }
