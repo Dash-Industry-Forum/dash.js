@@ -109,7 +109,7 @@ class Constants {
         this.WVTT = 'wvtt';
 
         /**
-         *  @constant {string} WVTT STTP Subtitles format
+         *  @constant {string} Content Steering
          *  @memberof Constants#
          *  @static
          */
