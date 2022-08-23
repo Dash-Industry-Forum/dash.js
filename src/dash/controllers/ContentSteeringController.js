@@ -35,7 +35,15 @@ import Errors from '../../core/errors/Errors';
 import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
-import manifestModel from '../../streaming/models/ManifestModel';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
+import Events from '../../core/events/Events';
+import Constants from '../../streaming/constants/Constants';
+import Utils from '../../core/Utils';
+
+const QUERY_PARAMETER_KEYS = {
+    THROUGHPUT: '_DASH_throughput',
+    PATHWAY: '_DASH_pathway'
+}
 
 function ContentSteeringController() {
     const context = this.context;
@@ -43,12 +51,17 @@ function ContentSteeringController() {
     let instance,
         logger,
         currentSteeringResponseData,
+        activeStreamInfo,
+        currentSelectedServiceLocation,
+        nextRequestTimer,
         urlLoader,
         errHandler,
         dashMetrics,
         mediaPlayerModel,
         manifestModel,
         requestModifier,
+        abrController,
+        eventBus,
         adapter;
 
     function setup() {
@@ -74,10 +87,18 @@ function ContentSteeringController() {
         if (config.requestModifier) {
             requestModifier = config.requestModifier;
         }
-        if(config.manifestModel) {
+        if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
+        if (config.eventBus) {
+            eventBus = config.eventBus;
+        }
+    }
 
+    function initialize() {
         urlLoader = URLLoader(context).create({
             errHandler,
             dashMetrics,
@@ -85,19 +106,43 @@ function ContentSteeringController() {
             requestModifier,
             errors: Errors
         });
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
+        eventBus.on(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
     }
 
+    function _onPeriodSwitchCompleted(e) {
+        if (e && e.toStreamInfo) {
+            activeStreamInfo = e.toStreamInfo;
+        }
+    }
 
-    function loadSteeringData(beforePlaybackStart = false) {
+    function _onFragmentLoadingStarted(e) {
+        if (e && e.request && e.request.serviceLocation) {
+            currentSelectedServiceLocation = e.request.serviceLocation;
+        }
+    }
+
+    function _getSteeringDataFromManifest() {
+        const manifest = manifestModel.getValue()
+        return adapter.getContentSteering(manifest);
+    }
+
+    function shouldQueryBeforeStart() {
+        const steeringDataFromManifest = _getSteeringDataFromManifest();
+        return steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
+    }
+
+    function loadSteeringData() {
         return new Promise((resolve, reject) => {
             try {
-                const manifest = manifestModel.getValue()
-                const steeringDataFromManifest = adapter.getContentSteering(manifest);
-                if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl || (beforePlaybackStart && !steeringDataFromManifest.queryBeforeStart)) {
+                const steeringDataFromManifest = _getSteeringDataFromManifest();
+                if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl) {
                     resolve();
                     return;
                 }
-                const request = new ContentSteeringRequest(steeringDataFromManifest.serverUrl);
+
+                const url = _getSteeringServerUrl(steeringDataFromManifest);
+                const request = new ContentSteeringRequest(url);
                 urlLoader.load({
                     request: request,
                     success: (data) => {
@@ -115,12 +160,34 @@ function ContentSteeringController() {
         })
     }
 
+    function _getSteeringServerUrl(steeringDataFromManifest) {
+        let url = steeringDataFromManifest.serverUrl;
+
+        const additionalQueryParameter = [];
+        if (activeStreamInfo) {
+            const isDynamic = adapter.getIsDynamic();
+            const mediaType = adapter.getAllMediaInfoForType(activeStreamInfo, Constants.VIDEO).length > 0 ? Constants.VIDEO : Constants.AUDIO;
+            const throughputHistory = abrController.getThroughputHistory();
+            const throughput = throughputHistory ? throughputHistory.getAverageThroughput(mediaType, isDynamic) : NaN;
+            if (!isNaN(throughput)) {
+                additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput });
+            }
+        }
+        if (currentSelectedServiceLocation) {
+            additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.PATHWAY, value: currentSelectedServiceLocation });
+        }
+
+        url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+        return url;
+    }
+
 
     function _handleSteeringResponse(data) {
         if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
             return;
         }
 
+        // Update the data for other classes to use
         currentSteeringResponseData = new ContentSteeringResponse();
         currentSteeringResponseData.version = data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION];
 
@@ -133,25 +200,50 @@ function ContentSteeringController() {
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]) {
             currentSteeringResponseData.serviceLocationPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]
         }
+
+        // Start timer for next request
+        if (currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
+            if (nextRequestTimer) {
+                clearTimeout(nextRequestTimer);
+            }
+            nextRequestTimer = setTimeout(() => {
+                loadSteeringData();
+            }, currentSteeringResponseData.ttl * 1000);
+        }
     }
 
     function _handleSteeringResponseError(e) {
         logger.warn(`Error fetching data from content steering server`, e);
     }
 
+    function getCurrentSteeringResponseData() {
+        return currentSteeringResponseData;
+    }
+
     function reset() {
         _resetInitialSettings();
+        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
+        eventBus.off(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
+        activeStreamInfo = null;
+        currentSelectedServiceLocation = null;
+        if (nextRequestTimer) {
+            clearTimeout(nextRequestTimer);
+        }
+        nextRequestTimer = null;
     }
 
 
     instance = {
         reset,
         setConfig,
-        loadSteeringData
+        loadSteeringData,
+        getCurrentSteeringResponseData,
+        shouldQueryBeforeStart,
+        initialize
     };
 
     setup();

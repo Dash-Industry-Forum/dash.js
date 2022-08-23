@@ -365,15 +365,6 @@ function MediaPlayer() {
                 adapter
             });
 
-            contentSteeringController.setConfig({
-                adapter,
-                errHandler,
-                dashMetrics,
-                mediaPlayerModel,
-                manifestModel,
-                requestModifier: RequestModifier(context).getInstance()
-            })
-
             if (!segmentBaseController) {
                 segmentBaseController = SegmentBaseController(context).getInstance({
                     dashMetrics: dashMetrics,
@@ -2117,6 +2108,17 @@ function MediaPlayer() {
             playbackController
         });
 
+        contentSteeringController.setConfig({
+            adapter,
+            errHandler,
+            dashMetrics,
+            mediaPlayerModel,
+            manifestModel,
+            abrController,
+            eventBus,
+            requestModifier: RequestModifier(context).getInstance()
+        })
+
         // initialises controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
@@ -2124,6 +2126,7 @@ function MediaPlayer() {
         gapController.initialize();
         catchupController.initialize();
         cmcdModel.initialize();
+        contentSteeringController.initialize();
         segmentBaseController.initialize();
     }
 

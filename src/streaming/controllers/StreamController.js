@@ -251,7 +251,7 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
-                    if (!activeStream) {
+                    if (!activeStream && contentSteeringController.shouldQueryBeforeStart()) {
                         return contentSteeringController.loadSteeringData(true);
                     }
                     return Promise.resolve();
@@ -710,7 +710,6 @@ function StreamController() {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
             const excludedStreamProcessors = [Constants.TEXT];
             if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
-                initialPlayback = false;
                 _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
             }
@@ -777,6 +776,11 @@ function StreamController() {
         }
         if (initialPlayback) {
             initialPlayback = false;
+            // If this is the initial playback attempt and we have not yet triggered content steering now is the time
+            if (!contentSteeringController.shouldQueryBeforeStart()) {
+                contentSteeringController.loadSteeringData();
+            }
+
         }
         isPaused = false;
     }
