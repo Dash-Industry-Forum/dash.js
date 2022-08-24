@@ -39,6 +39,7 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import Events from '../../core/events/Events';
 import Constants from '../../streaming/constants/Constants';
 import Utils from '../../core/Utils';
+import URLUtils from '../../streaming/utils/URLUtils';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
@@ -47,6 +48,7 @@ const QUERY_PARAMETER_KEYS = {
 
 function ContentSteeringController() {
     const context = this.context;
+    const urlUtils = URLUtils(context).getInstance();
 
     let instance,
         logger,
@@ -162,6 +164,13 @@ function ContentSteeringController() {
 
     function _getSteeringServerUrl(steeringDataFromManifest) {
         let url = steeringDataFromManifest.serverUrl;
+        if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
+            if (urlUtils.isRelative(currentSteeringResponseData.reloadUri)) {
+                url = urlUtils.resolve(currentSteeringResponseData.reloadUri, steeringDataFromManifest.serverUrl);
+            } else {
+                url = currentSteeringResponseData.reloadUri;
+            }
+        }
 
         const additionalQueryParameter = [];
         if (activeStreamInfo) {
