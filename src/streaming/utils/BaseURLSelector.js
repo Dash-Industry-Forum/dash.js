@@ -38,7 +38,6 @@ import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import {checkParameterType} from '../utils/SupervisorTools';
-import ContentSteeringController from '../../dash/controllers/ContentSteeringController';
 import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
 
 function BaseURLSelector() {
