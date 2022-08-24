@@ -39,6 +39,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import {checkParameterType} from '../utils/SupervisorTools';
 import ContentSteeringController from '../../dash/controllers/ContentSteeringController';
+import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
 
 function BaseURLSelector() {
 
@@ -49,8 +50,8 @@ function BaseURLSelector() {
         serviceLocationBlacklistController,
         basicSelector,
         dvbSelector,
-        selector,
-        contentSteeringController;
+        contentSteeringSelector,
+        selector;
 
     function setup() {
         serviceLocationBlacklistController = BlacklistController(context).create({
@@ -66,7 +67,11 @@ function BaseURLSelector() {
             blacklistController: serviceLocationBlacklistController
         });
 
-        contentSteeringController = ContentSteeringController(context).getInstance();
+        contentSteeringSelector = ContentSteeringSelector(context).create();
+        contentSteeringSelector.setConfig({
+            blacklistController: serviceLocationBlacklistController
+        })
+
         selector = basicSelector;
     }
 
@@ -74,8 +79,8 @@ function BaseURLSelector() {
         if (config.selector) {
             selector = config.selector;
         }
-        if (config.contentSteeringController) {
-            contentSteeringController = config.contentSteeringController;
+        if (config.contentSteeringSelector) {
+            contentSteeringSelector = config.contentSteeringSelector;
         }
     }
 
@@ -84,51 +89,13 @@ function BaseURLSelector() {
         selector = isDVB ? dvbSelector : basicSelector;
     }
 
-    function _handleContentSteering(data) {
-        let steeringIndex = NaN;
-
-        // In case we dont have a selected idx yet we consider the defaultServiceLocation
-        if (isNaN(data.selectedIdx)) {
-            const steeringDataFromMpd = contentSteeringController.getSteeringDataFromManifest();
-            if (steeringDataFromMpd && steeringDataFromMpd.defaultServiceLocation) {
-                steeringIndex = _findexIndexOfServiceLocation([steeringDataFromMpd.defaultServiceLocation], data.baseUrls);
-            }
-        }
-
-        // Search in the response data of the steering server
-        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-        if (data.baseUrls && data.baseUrls.length && currentSteeringResponseData &&
-            currentSteeringResponseData.serviceLocationPriority && currentSteeringResponseData.serviceLocationPriority.length) {
-            steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.serviceLocationPriority, data.baseUrls);
-        }
-
-        return steeringIndex;
-    }
-
-    function _findexIndexOfServiceLocation(serviceLocationPriorities = [], baseUrls = []) {
-        let i = 0;
-        let steeringIndex = NaN;
-        while (i < serviceLocationPriorities.length) {
-            const curr = serviceLocationPriorities[i];
-            const idx = baseUrls.findIndex((elem) => {
-                return elem.serviceLocation && elem.serviceLocation === curr;
-            })
-            if (idx !== -1) {
-                steeringIndex = idx;
-                break;
-            }
-            i += 1;
-        }
-        return steeringIndex;
-    }
-
     function select(data) {
         if (!data) {
             return;
         }
 
-        const steeringIndex = _handleContentSteering(data);
-
+        // Check if we got any instructions from the content steering element in the MPD or from the content steering server
+        const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
         if (!isNaN(steeringIndex) && steeringIndex !== -1) {
             data.selectedIdx = steeringIndex;
         }
