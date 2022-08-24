@@ -151,6 +151,8 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
             applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,

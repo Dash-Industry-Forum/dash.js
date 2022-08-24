@@ -251,7 +251,7 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
-                    if (!activeStream && contentSteeringController.shouldQueryBeforeStart()) {
+                    if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
                         return contentSteeringController.loadSteeringData(true);
                     }
                     return Promise.resolve();
@@ -777,7 +777,7 @@ function StreamController() {
         if (initialPlayback) {
             initialPlayback = false;
             // If this is the initial playback attempt and we have not yet triggered content steering now is the time
-            if (!contentSteeringController.shouldQueryBeforeStart()) {
+            if (settings.get().streaming.applyContentSteering && !contentSteeringController.shouldQueryBeforeStart()) {
                 contentSteeringController.loadSteeringData();
             }
 

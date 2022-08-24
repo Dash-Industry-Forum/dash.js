@@ -39,11 +39,13 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import {checkParameterType} from '../utils/SupervisorTools';
 import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
+import Settings from '../../core/Settings';
 
 function BaseURLSelector() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         serviceLocationBlacklistController,
@@ -94,9 +96,11 @@ function BaseURLSelector() {
         }
 
         // Check if we got any instructions from the content steering element in the MPD or from the content steering server
-        const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
-        if (!isNaN(steeringIndex) && steeringIndex !== -1) {
-            data.selectedIdx = steeringIndex;
+        if(settings.get().streaming.applyContentSteering) {
+            const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
+            if (!isNaN(steeringIndex) && steeringIndex !== -1) {
+                data.selectedIdx = steeringIndex;
+            }
         }
 
         // Once a random selection has been carried out amongst a group of BaseURLs with the same
