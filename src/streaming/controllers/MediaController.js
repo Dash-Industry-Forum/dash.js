@@ -73,67 +73,16 @@ function MediaController() {
         if (!tracksForType || (tracksForType.length === 0)) return;
 
         if (settings) {
-            let tracksAfterMatcher = [];
             tracks = Array.from(tracksForType);
             
-            tracks.forEach(function (track) {
-                if (matchSettingsLang(settings, track)) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
+            tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
+            if ( !(type === Constants.AUDIO && !!lastSelectedTracks[type]) ) {
+                tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
             }
-
-            tracksAfterMatcher = [];
-            tracks.forEach(function (track) {
-                if (matchSettingsIndex(settings, track)) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
-            }
-            
-            tracksAfterMatcher = [];
-            tracks.forEach(function (track) {
-                if (matchSettingsViewPoint(settings, track)) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
-            }
-
-            tracksAfterMatcher = [];
-            tracks.forEach(function (track) {
-                if (matchSettingsRole(settings, track, !!lastSelectedTracks[type])) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
-            }
-
-            tracksAfterMatcher = [];
-            tracks.forEach(function (track) {
-                if (matchSettingsAccessibility(settings, track)) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
-            }
-
-            tracksAfterMatcher = [];
-            tracks.forEach(function (track) {
-                if (matchSettingsAudioChannelConfig(settings, track)) {
-                    tracksAfterMatcher.push(track);
-                }
-            });
-            if (tracksAfterMatcher.length !== 0) {
-                tracks = Array.from(tracksAfterMatcher);
-            }
+            tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
         }
 
         if (tracks.length === 0) {
@@ -364,6 +313,19 @@ function MediaController() {
             (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
 
         return notEmpty ? settings : null;
+    }
+
+    function filterTracksBySettings(tracks, filterFn, settings) {
+        let tracksAfterMatcher = [];
+        tracks.forEach(function (track) {
+            if (filterFn(settings, track)) {
+                tracksAfterMatcher.push(track);
+            }
+        });
+        if (tracksAfterMatcher.length !== 0) {
+            return tracksAfterMatcher;
+        }
+        return tracks;
     }
 
     function matchSettingsLang(settings, track) {
