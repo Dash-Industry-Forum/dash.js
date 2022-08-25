@@ -82,6 +82,7 @@ function MediaController() {
                 tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsNoAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
         }
 
@@ -355,6 +356,11 @@ function MediaController() {
         return matchAccessibility;
     }
 
+    function matchSettingsNoAccessibility(settings, track) {
+        let trackMatches = !!settings.accessibility || !track.accessibility.length;
+        return trackMatches;
+    }
+
     function matchSettingsAudioChannelConfig(settings, track) {
         let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
             return item === settings.audioChannelConfiguration;
@@ -362,7 +368,6 @@ function MediaController() {
 
         return  matchAudioChannelConfiguration;
     }
-
 
     function matchSettings(settings, track, isTrackActive = false) {
         try {
@@ -631,6 +636,7 @@ function MediaController() {
         matchSettingsViewPoint,
         matchSettingsRole,
         matchSettingsAccessibility,
+        matchSettingsNoAccessibility,
         matchSettingsAudioChannelConfig,
         saveTextSettingsDisabled,
         setConfig,
