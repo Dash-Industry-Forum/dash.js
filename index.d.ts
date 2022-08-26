@@ -608,6 +608,8 @@ declare namespace dashjs {
 
         getOfflineController(): OfflineController;
 
+        triggerSteeringRequest(): Promise<any>;
+
         getSettings(): MediaPlayerSettingClass;
 
         updateSettings(settings: MediaPlayerSettingClass): void;

@@ -1981,6 +1981,16 @@ function MediaPlayer() {
         return adapter;
     }
 
+    /**
+     * Triggers a request to the content steering server to update the steering information.
+     * @return {Promise<any>}
+     */
+    function triggerSteeringRequest() {
+        if (contentSteeringController) {
+            return contentSteeringController.loadSteeringData();
+        }
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2418,6 +2428,7 @@ function MediaPlayer() {
         provideThumbnail,
         getDashAdapter,
         getOfflineController,
+        triggerSteeringRequest,
         getSettings,
         updateSettings,
         resetSettings,
