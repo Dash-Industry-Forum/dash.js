@@ -1991,6 +1991,16 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Returns the current response data of the content steering server
+     * @return {object}
+     */
+    function getCurrentSteeringResponseData() {
+        if(contentSteeringController) {
+            return contentSteeringController.getCurrentSteeringResponseData();
+        }
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2429,6 +2439,7 @@ function MediaPlayer() {
         getDashAdapter,
         getOfflineController,
         triggerSteeringRequest,
+        getCurrentSteeringResponseData,
         getSettings,
         updateSettings,
         resetSettings,

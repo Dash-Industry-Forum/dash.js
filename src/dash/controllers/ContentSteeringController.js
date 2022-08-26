@@ -149,6 +149,7 @@ function ContentSteeringController() {
                     request: request,
                     success: (data) => {
                         _handleSteeringResponse(data);
+                        eventBus.trigger(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, {currentSteeringResponseData, url});
                         resolve();
                     },
                     error: (e) => {
@@ -179,7 +180,7 @@ function ContentSteeringController() {
             const throughputHistory = abrController.getThroughputHistory();
             const throughput = throughputHistory ? throughputHistory.getAverageThroughput(mediaType, isDynamic) : NaN;
             if (!isNaN(throughput)) {
-                additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput });
+                additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput * 1000 });
             }
         }
         if (currentSelectedServiceLocation) {

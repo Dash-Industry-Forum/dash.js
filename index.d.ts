@@ -610,6 +610,8 @@ declare namespace dashjs {
 
         triggerSteeringRequest(): Promise<any>;
 
+        getCurrentSteeringResponseData(): object;
+
         getSettings(): MediaPlayerSettingClass;
 
         updateSettings(settings: MediaPlayerSettingClass): void;
