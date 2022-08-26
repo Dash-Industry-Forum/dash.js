@@ -82,7 +82,6 @@ function MediaController() {
                 tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsNoAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
         }
 
@@ -349,16 +348,19 @@ function MediaController() {
     }
 
     function matchSettingsAccessibility(settings, track) {
-        let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
-            return item === settings.accessibility;
-        })[0];
+        let matchAccessibility;
+
+        if (!settings.accessibility) {
+            // if no accessibility is requested (or request is empty string),
+            // match only those tracks having no accessibility element present
+            matchAccessibility = !track.accessibility.length;
+        } else {
+            matchAccessibility =  !!track.accessibility.filter(function (item) {
+                return item === settings.accessibility;
+            })[0];
+        }
 
         return matchAccessibility;
-    }
-
-    function matchSettingsNoAccessibility(settings, track) {
-        let trackMatches = !!settings.accessibility || !track.accessibility.length;
-        return trackMatches;
     }
 
     function matchSettingsAudioChannelConfig(settings, track) {
@@ -636,7 +638,6 @@ function MediaController() {
         matchSettingsViewPoint,
         matchSettingsRole,
         matchSettingsAccessibility,
-        matchSettingsNoAccessibility,
         matchSettingsAudioChannelConfig,
         saveTextSettingsDisabled,
         setConfig,
