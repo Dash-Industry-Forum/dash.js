@@ -252,7 +252,7 @@ function StreamController() {
             Promise.all(promises)
                 .then(() => {
                     if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
-                        return contentSteeringController.loadSteeringData(true);
+                        return contentSteeringController.loadSteeringData();
                     }
                     return Promise.resolve();
                 })
