@@ -9,7 +9,7 @@ import StreamControllerMock from './mocks/StreamControllerMock';
 import StreamMock from './mocks/StreamMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 import AdapterMock from './mocks/AdapterMock';
-import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 
 const expect = require('chai').expect;
 const context = {};

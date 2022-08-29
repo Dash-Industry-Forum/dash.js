@@ -151,6 +151,8 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
             applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
@@ -605,6 +607,10 @@ declare namespace dashjs {
         getDashAdapter(): DashAdapter;
 
         getOfflineController(): OfflineController;
+
+        triggerSteeringRequest(): Promise<any>;
+
+        getCurrentSteeringResponseData(): object;
 
         getSettings(): MediaPlayerSettingClass;
 

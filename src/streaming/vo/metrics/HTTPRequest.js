@@ -173,6 +173,7 @@ HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
+HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
 HTTPRequest.OTHER_TYPE = 'other';
 
 export {HTTPRequest, HTTPRequestTrace};
