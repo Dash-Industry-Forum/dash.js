@@ -43,7 +43,8 @@ import URLUtils from '../../streaming/utils/URLUtils';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
-    PATHWAY: '_DASH_pathway'
+    PATHWAY: '_DASH_pathway',
+    URL: 'url'
 }
 
 function ContentSteeringController() {
@@ -149,7 +150,10 @@ function ContentSteeringController() {
                     request: request,
                     success: (data) => {
                         _handleSteeringResponse(data);
-                        eventBus.trigger(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, {currentSteeringResponseData, url});
+                        eventBus.trigger(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, {
+                            currentSteeringResponseData,
+                            url
+                        });
                         resolve();
                     },
                     error: (e) => {
@@ -164,7 +168,7 @@ function ContentSteeringController() {
     }
 
     function _getSteeringServerUrl(steeringDataFromManifest) {
-        let url = steeringDataFromManifest.serverUrl;
+        let url = steeringDataFromManifest.proxyServerUrl ? steeringDataFromManifest.proxyServerUrl : steeringDataFromManifest.serverUrl;
         if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
             if (urlUtils.isRelative(currentSteeringResponseData.reloadUri)) {
                 url = urlUtils.resolve(currentSteeringResponseData.reloadUri, steeringDataFromManifest.serverUrl);
@@ -174,6 +178,8 @@ function ContentSteeringController() {
         }
 
         const additionalQueryParameter = [];
+
+        // Add throughput value to list of query parameters
         if (activeStreamInfo) {
             const isDynamic = adapter.getIsDynamic();
             const mediaType = adapter.getAllMediaInfoForType(activeStreamInfo, Constants.VIDEO).length > 0 ? Constants.VIDEO : Constants.AUDIO;
@@ -183,8 +189,18 @@ function ContentSteeringController() {
                 additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput * 1000 });
             }
         }
+
+        // Ass pathway parameter/currently selected service location to list of query parameters
         if (currentSelectedServiceLocation) {
             additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.PATHWAY, value: currentSelectedServiceLocation });
+        }
+
+        // If we use the value in proxyServerUrl we add the original url as query parameter
+        if (steeringDataFromManifest.proxyServerUrl && steeringDataFromManifest.proxyServerUrl === url && steeringDataFromManifest.serverUrl) {
+            additionalQueryParameter.push({
+                key: QUERY_PARAMETER_KEYS.URL,
+                value: encodeURI(steeringDataFromManifest.serverUrl)
+            })
         }
 
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
