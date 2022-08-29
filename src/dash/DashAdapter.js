@@ -643,6 +643,17 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the ContentSteering element of the MPD
+     * @param {object} manifest
+     * @returns {object} contentSteering
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getContentSteering(manifest) {
+        return dashManifestModel.getContentSteering(manifest);
+    }
+
+    /**
      * Returns the location element of the MPD
      * @param {object} manifest
      * @returns {String} location
@@ -1211,6 +1222,7 @@ function DashAdapter() {
         getIsDynamic,
         getDuration,
         getRegularPeriods,
+        getContentSteering,
         getLocation,
         getPatchLocation,
         getManifestUpdatePeriod,
