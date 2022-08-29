@@ -21,18 +21,30 @@
             margin-top: 20px;
             font-size: 10px;
         }
+
+        .border {
+            border: 2px solid #dee2e6 !important;
+        }
     </style>
 
     <script class="code">
         let player;
-        const mpd = "http://localhost:3333/steering-content/bbb/dash.mpd";
+        let mpd = "";
 
         function init() {
             player = dashjs.MediaPlayer().create();
-            player.initialize(document.querySelector("video"), mpd, true);
+            document.getElementById('load-button').addEventListener('click', function () {
+                _load();
+            })
+            player.initialize(document.querySelector("video"), null, true);
 
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, null);
+        }
+
+        function _load() {
+            mpd = document.getElementById('manifest').value;
+            player.attachSource(mpd);
         }
 
         function _onFragmentLoadingStarted(e) {
@@ -47,7 +59,7 @@
                             document.getElementById('img-beta-cdn').classList.add('d-none');
                         } else {
                             document.getElementById('img-alpha-cdn').classList.add('d-none');
-                            document.getElementById('img-beta-cdn').classList.remove('d-none');     
+                            document.getElementById('img-beta-cdn').classList.remove('d-none');
                         }
                     }
                     if (e.request.url) {
@@ -55,12 +67,11 @@
                         element.innerText = e.request.url;
                     }
                 }
-            }
-            catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
-        
+
         function _onContentSteeringRequestCompleted(e) {
             try {
                 if (e) {
@@ -76,8 +87,7 @@
                         document.getElementById(`steering-service-location-priority`).innerText = e.currentSteeringResponseData.serviceLocationPriority.toString();
                     }
                 }
-            }
-            catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
@@ -97,14 +107,15 @@
         <div class="row">
             <h1>Content Steering</h1>
             <div class="col-md-5">
-                <div class="h-100 p-5 bg-light border rounded-3">
+                <div class="h-100 p-5 border rounded-3">
                     <h4>Description</h4>
                     <p>Content distributors often use multiple Content Delivery Networks (CDNs) to
                         distribute their content to the end-users. They may upload a copy of their catalogue
                         to each CDN, or more commonly have all CDNs pull the content from a common
                         origin. Alternate URLs are generated, one for each CDN, that point at identical
                         content. DASH players may access alternate URLs in the event of delivery
-                        problems. Content steering describes a deterministic capability for a content
+                        problems. </p>
+                    <p><b>Content steering</b> describes a deterministic capability for a content
                         distributor to switch the content source that a player uses either at start-up or
                         midstream, by means of a remote steering service. The DASH implementation of
                         Content Steering also supports the notion of a proxy steering server which can
@@ -112,63 +123,20 @@
                 </div>
             </div>
             <div class="col-md-7">
-                <div class="h-100 p-5 bg-light border rounded-3">
+                <div class="h-100 p-5 border rounded-3">
                     <h4>Architecture</h4>
                     <img src="img/steering.png" class="img-fluid" alt="Steering architecture illustration">
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
+        <div class="row mt-4">
             <div class="col-md-12">
-                <h4> Fragment Requests</h4>
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th scope="col">Type</th>
-                        <th scope="col">Request URL</th>
-                        <th scope="col">Service Location</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>Audio</td>
-                        <td id="audio-request-url"></td>
-                        <td id="audio-service-location"></td>
-                    </tr>
-                    <tr>
-                        <td>Video</td>
-                        <td id="video-request-url"></td>
-                        <td id="video-service-location"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-md-12">
-                <h4> Steering Data</h4>
-                <table class="table table-condensed">
-                    <thead>
-                    <tr>
-                        <th scope="col">Timestamp</th>
-                        <th scope="col">Request URL</th>
-                        <th scope="col">Response</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                    <tr>
-                        <td id="steering-request-timestamp"></td>
-                        <td id="steering-request-url"></td>
-                        <td id="steering-response">
-                            <ul>
-                                <li>Version: <span id="steering-version"></span></li>
-                                <li>Reload URI: <span id="steering-reload-uri"></span></li>
-                                <li>Service Location Priority: <span id="steering-service-location-priority"></span></li>
-                                <li>TTL: <span id="steering-ttl"></span></li>
-                            </ul>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div class="input-group mb-3">
+                    <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                           value="http://localhost:3333/steering-content/bbb/dash.mpd">
+                    <button type="button" id="load-button" class="btn btn-success">Load MPD
+                    </button>
+                </div>
             </div>
         </div>
         <div class="row mt-2">
@@ -176,8 +144,71 @@
                 <video controls="true" muted></video>
             </div>
             <div class="col-md-6">
-                <img src="img/content-steering-simulation-alpha-cdn.drawio.png" id="img-alpha-cdn" class="img-fluid d-none" alt="Steering alpha CDN">
-                <img src="img/content-steering-simulation-beta-cdn.drawio.png" id="img-beta-cdn" class="img-fluid d-none" alt="Steering alpha beta">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4>CDN Selection</h4>
+                    <img src="img/content-steering-simulation-alpha-cdn.drawio.png" id="img-alpha-cdn"
+                         class="img-fluid d-none" alt="Steering alpha CDN">
+                    <img src="img/content-steering-simulation-beta-cdn.drawio.png" id="img-beta-cdn"
+                         class="img-fluid d-none" alt="Steering alpha beta">
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4> Fragment Requests</h4>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Service Location</th>
+                            <th scope="col">Request URL</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Audio</td>
+                            <td id="audio-service-location"></td>
+                            <td id="audio-request-url"></td>
+                        </tr>
+                        <tr>
+                            <td>Video</td>
+                            <td id="video-service-location"></td>
+                            <td id="video-request-url"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-12 mt-2">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4> Steering Data</h4>
+                    <table class="table table-condensed">
+                        <thead>
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Request URL</th>
+                            <th scope="col">Response</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                        <tr>
+                            <td id="steering-request-timestamp"></td>
+                            <td id="steering-request-url"></td>
+                            <td id="steering-response">
+                                <ul>
+                                    <li>Version: <span id="steering-version"></span></li>
+                                    <li>Reload URI: <span id="steering-reload-uri"></span></li>
+                                    <li>Service Location Priority: <span id="steering-service-location-priority"></span>
+                                    </li>
+                                    <li>TTL: <span id="steering-ttl"></span></li>
+                                </ul>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <div class="row">
