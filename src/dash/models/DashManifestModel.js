@@ -1145,10 +1145,11 @@ function DashManifestModel() {
 
     function getLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
-            // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+            // for now, do not support multiple Locations -
+            // just set Location to the first Location.
+            manifest.Location = manifest.Location_asArray[0];
 
-            return manifest.PatchLocation;
+            return manifest.Location;
         }
 
         // may well be undefined
@@ -1157,7 +1158,10 @@ function DashManifestModel() {
 
     function getPatchLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
-            return manifest.PatchLocation_asArray[0];
+            // only include support for single patch location currently
+            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+
+            return manifest.PatchLocation;
         }
 
         // no patch location provided
