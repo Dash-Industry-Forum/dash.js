@@ -242,6 +242,13 @@ function ContentSteeringController() {
         }
     }
 
+    function stopSteeringRequestTimer() {
+        if (nextRequestTimer) {
+            clearTimeout(nextRequestTimer);
+        }
+        nextRequestTimer = null;
+    }
+
     function _handleSteeringResponseError(e) {
         logger.warn(`Error fetching data from content steering server`, e);
         _startSteeringRequestTimer();
@@ -261,10 +268,7 @@ function ContentSteeringController() {
         currentSteeringResponseData = null;
         activeStreamInfo = null;
         currentSelectedServiceLocation = null;
-        if (nextRequestTimer) {
-            clearTimeout(nextRequestTimer);
-        }
-        nextRequestTimer = null;
+        stopSteeringRequestTimer()
     }
 
 
@@ -275,6 +279,7 @@ function ContentSteeringController() {
         getCurrentSteeringResponseData,
         shouldQueryBeforeStart,
         getSteeringDataFromManifest,
+        stopSteeringRequestTimer,
         initialize
     };
 
