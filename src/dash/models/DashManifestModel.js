@@ -216,7 +216,9 @@ function DashManifestModel() {
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.LANG)) {
             //Filter out any other characters not allowed according to RFC5646
-            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g, '');
+            // lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g, '');
+            lang = adaptation.lang;
+            // code no longer needed since adaptation.lang is already filtered by langMatcher using bcp47Normalize
         }
 
         return lang;
