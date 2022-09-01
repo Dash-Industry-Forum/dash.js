@@ -42,7 +42,7 @@ describe('DashParser', function () {
         expect(dashParser.parse.bind(manifest)).to.be.throw('parsing the manifest failed');
     });
 
-    if('should retrun an Object when parse is called with correct data', function () {
+    it('should return an Object when parse is called with correct data', function () {
         let manifest = fs.readFileSync(__dirname + '/data/dash/manifest.xml', 'utf8');
         expect(dashParser.parse.bind(manifest)).to.be.instanceOf(Object);   // jshint ignore:line
     });
@@ -62,7 +62,7 @@ describe('DashParser', function () {
 
             expect(audioAdaptationsArray).to.be.instanceOf(Array);      // jshint ignore:line
             expect(audioAdaptationsArray.length).to.equal(1);           // jshint ignore:line
-            expect(dashManifestModel.getLanguageForAdaptation(audioAdaptationsArray[0])).to.equal('es');
+            expect(dashManifestModel.getLanguageForAdaptation(audioAdaptationsArray[0])).to.equal('es');  // jshint ignore:line
         });
 
         it('should return normalized language tages for labels on AdaptationSets', function () {
