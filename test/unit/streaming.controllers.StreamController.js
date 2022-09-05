@@ -17,8 +17,9 @@ import VideoModelMock from './mocks/VideoModelMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
 import TextControllerMock from './mocks/TextControllerMock';
-import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -46,6 +47,7 @@ const baseUrlControllerMock = new BaseURLControllerMock();
 const uriFragmentModelMock = new URIFragmentModelMock();
 const capabilitiesFilterMock = new CapabilitiesFilterMock();
 const textControllerMock = new TextControllerMock();
+const contentSteeringControllerMock = new ContentSteeringControllerMock();
 
 Events.extend(ProtectionEvents);
 
@@ -137,6 +139,7 @@ describe('StreamController', function () {
                 baseURLController: baseUrlControllerMock,
                 capabilitiesFilter: capabilitiesFilterMock,
                 textController: textControllerMock,
+                contentSteeringController: contentSteeringControllerMock,
                 settings: settings
             });
 
