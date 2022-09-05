@@ -49,10 +49,6 @@ function RequestModifier() {
 
     let instance;
 
-    function modifyRequest(request) {
-        return request;
-    }
-
     function modifyRequestURL(url) {
         return url;
     }
@@ -63,7 +59,7 @@ function RequestModifier() {
     }
 
     instance = {
-        modifyRequest: modifyRequest,
+        modifyRequest: null,
         modifyRequestURL: modifyRequestURL,
         modifyRequestHeader: modifyRequestHeader
     };
