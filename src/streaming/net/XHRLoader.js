@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import { modifyRequest } from '../utils/RequestModifier';
 
 /**
  * @module XHRLoader
@@ -44,7 +45,16 @@ function XHRLoader(cfg) {
     let instance;
 
     function load(httpRequest) {
+        if (requestModifier && requestModifier.modifyRequest) {
+            modifyRequest(httpRequest, requestModifier)
+                .then(() => request(httpRequest));
+        }
+        else {
+            request(httpRequest);
+        }
+    }
 
+    function request(httpRequest) {
         // Variables will be used in the callback functions
         const requestStartTime = new Date();
         const request = httpRequest.request;
@@ -64,7 +74,7 @@ function XHRLoader(cfg) {
             request.requestStartDate = requestStartTime;
         }
 
-        if (requestModifier) {
+        if (requestModifier && requestModifier.modifyRequestHeader) {
             xhr = requestModifier.modifyRequestHeader(xhr, {
                 url: httpRequest.url
             });
