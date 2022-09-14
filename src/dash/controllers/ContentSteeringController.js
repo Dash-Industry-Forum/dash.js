@@ -136,7 +136,7 @@ function ContentSteeringController() {
     }
 
     function loadSteeringData() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             try {
                 const steeringDataFromManifest = getSteeringDataFromManifest();
                 if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl) {
@@ -158,11 +158,11 @@ function ContentSteeringController() {
                     },
                     error: (e) => {
                         _handleSteeringResponseError(e);
-                        reject(e);
+                        resolve(e);
                     }
                 });
             } catch (e) {
-                reject(e);
+                resolve(e);
             }
         })
     }
@@ -232,7 +232,7 @@ function ContentSteeringController() {
 
     function _startSteeringRequestTimer() {
         // Start timer for next request
-        if (currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
+        if (currentSteeringResponseData && currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
             if (nextRequestTimer) {
                 clearTimeout(nextRequestTimer);
             }
