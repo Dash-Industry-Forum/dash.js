@@ -50,4 +50,4 @@ jobs:
                     known_hosts: unnecessary
 
             -   name: Deploy with rsync
-                run: rsync -av -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
+                run: rsync -av -c -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
