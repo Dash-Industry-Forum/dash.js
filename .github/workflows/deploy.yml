@@ -18,7 +18,7 @@ on:
                 required: true
 
 jobs:
-    build:
+    deploy:
         runs-on: ubuntu-latest
         
         steps:
@@ -31,20 +31,23 @@ jobs:
                 run: npm install
             -   name: Run build
                 run: npm run build
-    deploy:
-        runs-on: ubuntu-latest
-        needs: [ build ]
-        steps:
-            -   name: Copy to staging directory for deployment
-                run: |
-                    mkdir deploy
-                    cp contrib dist samples test/function/tests.html test/functional/testsCommon.js test/functional/testCommon.js test/functional/config test/functional/tests/ ./deploy/ 
-
-            -   name: deploy file to server
-                uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+            -   name: Find and Replace
+                uses: jacobtomlinson/gha-find-replace@v2
+                env:
+                    replacement_string: ${{ format('{0} - commit <a href="https://github.com/Dash-Industry-Forum/dash.js/commit/{1}">{2}</a>', github.ref_name, github.sha, github.sha)}}
                 with:
-                    username: ${{ secrets.user }}
-                    server: ${{ secrets.host }}
-                    ssh_private_key: ${{ secrets.private_key }}
-                    local_path: './deploy'
-                    remote_path: ${{inputs.deploy_path}}
+                    find: "<!-- commit-info -->"
+                    replace: ${{env.replacement_string}}
+                    include: "samples/dash-if-reference-player/index.html"
+            -   name: Copy to deploy directory for deployment
+                run: |
+                    mkdir ${{inputs.envname}}
+                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}} 
+            -   name: Install SSH Key
+                uses: shimataro/ssh-key-action@v2
+                with:
+                    key: ${{ secrets.private_key }}
+                    known_hosts: unnecessary
+
+            -   name: Deploy with rsync
+                run: rsync -av -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
