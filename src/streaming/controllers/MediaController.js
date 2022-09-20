@@ -311,23 +311,45 @@ function MediaController() {
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
-        const matchLang = !settings.lang || (
-            (settings.lang instanceof RegExp)?(track.lang.match(settings.lang)): track.lang !== '' ? ( extendedFilter(track.lang, bcp47Normalize(settings.lang) ).length > 0 ) : false
-        );
-        const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
-        const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
-        const matchRole = !settings.role || !!track.roles.filter(function (item) {
-            return item === settings.role;
-        })[0];
-        let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
-            return item === settings.accessibility;
-        })[0];
-        let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
-            return item === settings.audioChannelConfiguration;
-        })[0];
+        try {
+            let matchLang = false;
+
+            // If there is no language defined in the target settings we got a match
+            if (!settings.lang) {
+                matchLang = true;
+            }
+
+            // If the target language is provided as a RegExp apply match function
+            else if (settings.lang instanceof RegExp) {
+                matchLang = track.lang.match(settings.lang);
+            }
+
+            // If the track has a language and we can normalize the target language check if we got a match
+            else if (track.lang !== '') {
+                const normalizedSettingsLang = bcp47Normalize(settings.lang);
+                if (normalizedSettingsLang) {
+                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
+                }
+            }
+
+            const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+            const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
+            const matchRole = !settings.role || !!track.roles.filter(function (item) {
+                return item === settings.role;
+            })[0];
+            let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
+                return item === settings.accessibility;
+            })[0];
+            let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+                return item === settings.audioChannelConfiguration;
+            })[0];
 
 
-        return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
+            return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
+        } catch (e) {
+            return false;
+            logger.error(e);
+        }
     }
 
     function resetInitialSettings() {
