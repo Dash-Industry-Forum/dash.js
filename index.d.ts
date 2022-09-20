@@ -192,6 +192,7 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,

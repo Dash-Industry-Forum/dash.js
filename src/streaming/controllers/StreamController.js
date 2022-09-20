@@ -926,6 +926,7 @@ function StreamController() {
         }
         if (e && e.isLast) {
             _stopPlaybackEndedTimerInterval();
+            contentSteeringController.stopSteeringRequestTimer();
         }
     }
 

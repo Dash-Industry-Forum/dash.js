@@ -136,7 +136,7 @@ function ContentSteeringController() {
     }
 
     function loadSteeringData() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             try {
                 const steeringDataFromManifest = getSteeringDataFromManifest();
                 if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl) {
@@ -158,11 +158,11 @@ function ContentSteeringController() {
                     },
                     error: (e) => {
                         _handleSteeringResponseError(e);
-                        reject(e);
+                        resolve(e);
                     }
                 });
             } catch (e) {
-                reject(e);
+                resolve(e);
             }
         })
     }
@@ -232,7 +232,7 @@ function ContentSteeringController() {
 
     function _startSteeringRequestTimer() {
         // Start timer for next request
-        if (currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
+        if (currentSteeringResponseData && currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
             if (nextRequestTimer) {
                 clearTimeout(nextRequestTimer);
             }
@@ -240,6 +240,13 @@ function ContentSteeringController() {
                 loadSteeringData();
             }, currentSteeringResponseData.ttl * 1000);
         }
+    }
+
+    function stopSteeringRequestTimer() {
+        if (nextRequestTimer) {
+            clearTimeout(nextRequestTimer);
+        }
+        nextRequestTimer = null;
     }
 
     function _handleSteeringResponseError(e) {
@@ -261,10 +268,7 @@ function ContentSteeringController() {
         currentSteeringResponseData = null;
         activeStreamInfo = null;
         currentSelectedServiceLocation = null;
-        if (nextRequestTimer) {
-            clearTimeout(nextRequestTimer);
-        }
-        nextRequestTimer = null;
+        stopSteeringRequestTimer()
     }
 
 
@@ -275,6 +279,7 @@ function ContentSteeringController() {
         getCurrentSteeringResponseData,
         shouldQueryBeforeStart,
         getSteeringDataFromManifest,
+        stopSteeringRequestTimer,
         initialize
     };
 
