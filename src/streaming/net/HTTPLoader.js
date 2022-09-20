@@ -271,7 +271,7 @@ function HTTPLoader(cfg) {
         }
 
         let headers = null;
-        let modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
         if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
             const cmcdMode = settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {

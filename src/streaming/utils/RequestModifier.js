@@ -31,6 +31,20 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
+export function modifyRequest(httpRequest, requestModifier) {
+    const request = {
+        url: httpRequest.url,
+        method: httpRequest.method,
+        headers: Object.assign({}, httpRequest.headers),
+        credentials: httpRequest.withCredentials ? 'include' : undefined,
+    };
+
+    return Promise.resolve(requestModifier.modifyRequest(request))
+        .then(() =>
+            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' })
+        );
+}
+
 function RequestModifier() {
 
     let instance;
@@ -40,11 +54,12 @@ function RequestModifier() {
     }
 
     // eslint-disable-next-line no-unused-vars
-    function modifyRequestHeader(request, {url}) {
+    function modifyRequestHeader(request, { url }) {
         return request;
     }
 
     instance = {
+        modifyRequest: null,
         modifyRequestURL: modifyRequestURL,
         modifyRequestHeader: modifyRequestHeader
     };
