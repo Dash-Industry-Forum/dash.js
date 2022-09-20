@@ -33,7 +33,7 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-var bcp47Normalize = require('bcp-47-normalize')
+import bcp47Normalize from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 
 function MediaController() {
