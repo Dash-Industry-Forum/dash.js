@@ -103,7 +103,8 @@ import Events from './events/Events';
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
- *                setStallState: true
+ *                setStallState: true,
+ *                avoidCurrentTimeRangePruning: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -304,6 +305,10 @@ import Events from './events/Events';
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
+ * @property {boolean} [avoidCurrentTimeRangePruning=false]
+ * Avoids pruning of the buffered range that contains the current playback time.
+ *
+ * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  */
 
 /**
@@ -801,7 +806,8 @@ function Settings() {
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
                 useAppendWindow: true,
-                setStallState: true
+                setStallState: true,
+                avoidCurrentTimeRangePruning: false
             },
             gaps: {
                 jumpGaps: true,
