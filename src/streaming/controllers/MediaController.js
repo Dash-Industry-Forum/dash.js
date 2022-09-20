@@ -312,7 +312,7 @@ function MediaController() {
 
     function matchSettings(settings, track, isTrackActive = false) {
         const matchLang = !settings.lang || (
-            (settings.lang instanceof RegExp)?(track.lang.match(settings.lang)):( extendedFilter(track.lang, bcp47Normalize(settings.lang) ).length>0 )
+            (settings.lang instanceof RegExp)?(track.lang.match(settings.lang)): track.lang !== '' ? ( extendedFilter(track.lang, bcp47Normalize(settings.lang) ).length > 0 ) : false
         );
         const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
