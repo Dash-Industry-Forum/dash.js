@@ -33,7 +33,7 @@
  */
 import BaseMatcher from './BaseMatcher';
 import DashConstants from '../../constants/DashConstants';
-var bcp47Normalize = require('bcp-47-normalize')
+import bcp47Normalize from 'bcp-47-normalize';
 
 class LangMatcher extends BaseMatcher {
     constructor() {
