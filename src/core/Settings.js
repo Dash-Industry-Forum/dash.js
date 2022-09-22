@@ -138,7 +138,7 @@ import Events from './events/Events';
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
- *                playbackRate: NaN,
+ *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -451,14 +451,16 @@ import Events from './events/Events';
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=NaN]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
+ * @property {number} [playbackRate={min: NaN, max: NaN}]
+ * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
- * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0%)
+ * 
+ * Valid values for max catch up rate are in the range 0 to 0.5 (0% to 50%).
  *
- * Set it to NaN to turn off live catch up feature.
+ * Set min and max to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=NaN]
@@ -833,7 +835,10 @@ function Settings() {
             },
             liveCatchup: {
                 maxDrift: NaN,
-                playbackRate: NaN,
+                playbackRate: {
+                    min: NaN,
+                    max: NaN
+                },
                 playbackBufferMin: 0.5,
                 enabled: null,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT

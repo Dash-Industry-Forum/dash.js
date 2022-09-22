@@ -173,7 +173,13 @@ function CatchupController() {
      * @private
      */
     function _onPlaybackProgression() {
-        if (playbackController.getIsDynamic() && mediaPlayerModel.getCatchupModeEnabled() && mediaPlayerModel.getCatchupPlaybackRate() > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+        if (
+            playbackController.getIsDynamic() && 
+            mediaPlayerModel.getCatchupModeEnabled() && 
+            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) && 
+            !playbackController.isPaused() && 
+            !playbackController.isSeeking() && _shouldStartCatchUp()
+        ) {
             _startPlaybackCatchUp();
         }
     }
@@ -191,7 +197,7 @@ function CatchupController() {
         if (videoModel) {
             let newRate;
             const currentPlaybackRate = videoModel.getPlaybackRate();
-            const liveCatchupPlaybackRate = mediaPlayerModel.getCatchupPlaybackRate();
+            const liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
             const bufferLevel = playbackController.getBufferLevel();
             const deltaLatency = _getLatencyDrift();
 
@@ -212,10 +218,10 @@ function CatchupController() {
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     // Custom playback control: Based on buffer level
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-                    newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate);
+                    newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate);
                 } else {
                     // Default playback control: Based on target and current latency
-                    newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
+                    newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
                 }
 
                 // Obtain newRate and apply to video model
@@ -311,7 +317,9 @@ function CatchupController() {
 
     /**
      * Default algorithm to calculate the new playback rate
-     * @param {number} liveCatchUpPlaybackRate
+     * @param {object} liveCatchUpPlaybackRates
+     * @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+     * @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
      * @param {number} currentLiveLatency
      * @param {number} liveDelay
      * @param {number} bufferLevel
@@ -319,14 +327,13 @@ function CatchupController() {
      * @return {number}
      * @private
      */
-    function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate) {
-
+    function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate) {
         // if we recently ran into an empty buffer we wait for the buffer to recover before applying a new rate
         if (playbackStalled) {
             return 1.0;
         }
 
-        const cpr = liveCatchUpPlaybackRate;
+        const cpr = liveCatchUpPlaybackRates.max;
         const deltaLatency = currentLiveLatency - liveDelay;
         const d = deltaLatency * 5;
 
@@ -353,7 +360,9 @@ function CatchupController() {
 
     /**
      * Lol+ algorithm to calculate the new playback rate
-     * @param {number} liveCatchUpPlaybackRate
+     * @param {object} liveCatchUpPlaybackRates
+     * @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+     * @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
      * @param {number} currentLiveLatency
      * @param {number} liveDelay
      * @param {number} playbackBufferMin
@@ -362,13 +371,13 @@ function CatchupController() {
      * @return {number}
      * @private
      */
-    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate) {
-        const cpr = liveCatchUpPlaybackRate;
+    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate) {
         let newRate;
 
         // Hybrid: Buffer-based
         if (bufferLevel < playbackBufferMin) {
             // Buffer in danger, slow down
+            const cpr = Math.abs(liveCatchUpPlaybackRates.min); // Absolute value as negative delta value will be used.
             const deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
             const d = deltaBuffer * 5;
 
@@ -381,7 +390,7 @@ function CatchupController() {
         } else {
             // Hybrid: Latency-based
             // Buffer is safe, vary playback rate based on latency
-
+            const cpr = liveCatchUpPlaybackRates.max;
             // Check if latency is within range of target latency
             const minDifference = 0.02;
             if (Math.abs(currentLiveLatency - liveDelay) <= (minDifference * liveDelay)) {

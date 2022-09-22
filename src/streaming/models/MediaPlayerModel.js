@@ -36,7 +36,8 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const DEFAULT_CATCHUP_MAX_DRIFT = 12;
-const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
 
 
 /**
@@ -84,20 +85,32 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the maximum playback rate to be used when applying the catchup mechanism
+     * Returns the minium and maximum playback rates to be used when applying the catchup mechanism
+     * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
      * @return {number}
      */
-    function getCatchupPlaybackRate() {
-        if (!isNaN(settings.get().streaming.liveCatchup.playbackRate) && settings.get().streaming.liveCatchup.playbackRate > 0) {
-            return settings.get().streaming.liveCatchup.playbackRate;
+    function getCatchupPlaybackRates() {
+        const settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
+        if(!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+            return {
+                min: !isNaN(settingsPlaybackRate.min) ? settingsPlaybackRate.min : 0,
+                max: !isNaN(settingsPlaybackRate.max) ? settingsPlaybackRate.max : 0,
+            }
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate) && serviceDescriptionSettings.liveCatchup.playbackRate > 0) {
-            return serviceDescriptionSettings.liveCatchup.playbackRate;
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && (!isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.min) || !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.max))) {
+            const sdPlaybackRate = serviceDescriptionSettings.liveCatchup.playbackRate;
+            return {
+                min: !isNaN(sdPlaybackRate.min) ? sdPlaybackRate.min : 0,
+                max: !isNaN(sdPlaybackRate.max) ? sdPlaybackRate.max : 0,
+            }
         }
 
-        return DEFAULT_CATCHUP_PLAYBACK_RATE;
+        return {
+            min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
+            max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+        }
     }
 
     /**
@@ -193,7 +206,7 @@ function MediaPlayerModel() {
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
-        getCatchupPlaybackRate,
+        getCatchupPlaybackRates,
         getAbrBitrateParameter,
         setConfig,
         reset
