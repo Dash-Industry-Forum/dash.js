@@ -25,7 +25,9 @@
         "manifestUpdateRetryInterval": 100,
         "liveCatchup": {
             "maxDrift": 0,
-            "playbackRate": 0.5,
+            "playbackRate": {
+                "min": -0.05,
+                "max": 0.5,
             "enabled": false
         },
         "lastBitrateCachingInfo": { "enabled": true, "ttl": 360000},
