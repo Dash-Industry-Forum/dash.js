@@ -1,6 +1,6 @@
 import AdapterMock from './mocks/AdapterMock';
 
-const ServiceDescriptionController = require('../../src/streaming/controllers/ServiceDescriptionController');
+const ServiceDescriptionController = require('../../src/dash/controllers/ServiceDescriptionController');
 const expect = require('chai').expect;
 
 describe('ServiceDescriptionController', () => {

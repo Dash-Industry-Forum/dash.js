@@ -364,7 +364,7 @@ App.prototype._startIntervalHandler = function () {
             self.domElements.metrics.latencyTag.innerHTML = currentLatency + ' secs';
 
             var currentPlaybackRate = self.player.getPlaybackRate();
-            self.domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 100) / 100;
+            self.domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 1000) / 1000;
 
             var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
             self.domElements.metrics.bufferTag.innerHTML = currentBuffer + ' secs';

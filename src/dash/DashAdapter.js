@@ -38,6 +38,7 @@ import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import DashManifestModel from './models/DashManifestModel';
 import PatchManifestModel from './models/PatchManifestModel';
+import bcp47Normalize from 'bcp-47-normalize';
 
 /**
  * @module DashAdapter
@@ -643,6 +644,17 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the ContentSteering element of the MPD
+     * @param {object} manifest
+     * @returns {object} contentSteering
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getContentSteering(manifest) {
+        return dashManifestModel.getContentSteering(manifest);
+    }
+
+    /**
      * Returns the location element of the MPD
      * @param {object} manifest
      * @returns {String} location
@@ -1079,7 +1091,7 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        mediaInfo.lang = lang;
+        mediaInfo.lang = bcp47Normalize(lang);
         mediaInfo.roles = ['caption'];
     }
 
@@ -1211,6 +1223,7 @@ function DashAdapter() {
         getIsDynamic,
         getDuration,
         getRegularPeriods,
+        getContentSteering,
         getLocation,
         getPatchLocation,
         getManifestUpdatePeriod,

@@ -21,10 +21,10 @@ function DroppedFramesHistory() {
         let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
         let totalVideoFrames = playbackQuality && playbackQuality.totalVideoFrames ? playbackQuality.totalVideoFrames : 0;
 
-        let intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames;
+        let intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames[streamId];
         lastDroppedFrames[streamId] = droppedVideoFrames;
 
-        let intervalTotalFrames = totalVideoFrames - lastTotalFrames;
+        let intervalTotalFrames = totalVideoFrames - lastTotalFrames[streamId];
         lastTotalFrames[streamId] = totalVideoFrames;
 
         const current = values[streamId];

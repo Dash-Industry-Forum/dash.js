@@ -30,8 +30,8 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
+import Constants from '../../streaming/constants/Constants';
+import DashConstants from '../constants/DashConstants';
 
 const SUPPORTED_SCHEMES = [Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME];
 const MEDIA_TYPES = {
@@ -103,7 +103,7 @@ function ServiceDescriptionController() {
 
         const supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
         const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => sd.schemeIdUri == null);
-        let sd = (supportedServiceDescriptions.length > 0) 
+        let sd = (supportedServiceDescriptions.length > 0)
             ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
             : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
         if (!sd) return;

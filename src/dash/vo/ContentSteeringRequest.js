@@ -28,44 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * @class
+ * @ignore
+ */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import {HTTPRequest} from '../../streaming/vo/metrics/HTTPRequest';
 
-export function modifyRequest(httpRequest, requestModifier) {
-    const request = {
-        url: httpRequest.url,
-        method: httpRequest.method,
-        headers: Object.assign({}, httpRequest.headers),
-        credentials: httpRequest.withCredentials ? 'include' : undefined,
-    };
-
-    return Promise.resolve(requestModifier.modifyRequest(request))
-        .then(() =>
-            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' })
-        );
+class ContentSteeringRequest {
+    constructor(url) {
+        this.url = url || null;
+        this.type = HTTPRequest.CONTENT_STEERING_TYPE;
+        this.responseType = 'json';
+    }
 }
 
-function RequestModifier() {
-
-    let instance;
-
-    function modifyRequestURL(url) {
-        return url;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    function modifyRequestHeader(request, { url }) {
-        return request;
-    }
-
-    instance = {
-        modifyRequest: null,
-        modifyRequestURL: modifyRequestURL,
-        modifyRequestHeader: modifyRequestHeader
-    };
-
-    return instance;
-}
-
-RequestModifier.__dashjs_factory_name = 'RequestModifier';
-export default FactoryMaker.getSingletonFactory(RequestModifier);
+export default ContentSteeringRequest;

@@ -45,6 +45,8 @@ declare namespace dashjs {
 
         clearMediaInfoArray(): void;
 
+        handleKeySystemFromManifest(): void;
+
         createKeySession(ksInfo: KeySystemInfo): void;
 
         loadKeySession(ksInfo: KeySystemInfo): void;
@@ -68,10 +70,6 @@ declare namespace dashjs {
         getKeySystems(): KeySystem[];
 
         setKeySystems(keySystems: KeySystem[]): void;
-
-        setLicenseRequestFilters(filters: RequestFilter[]): void;
-
-        setLicenseResponseFilters(filters: ResponseFilter[]): void;
 
         stop(): void;
 
@@ -153,6 +151,8 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
             applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
@@ -192,6 +192,7 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -610,6 +611,10 @@ declare namespace dashjs {
         getDashAdapter(): DashAdapter;
 
         getOfflineController(): OfflineController;
+
+        triggerSteeringRequest(): Promise<any>;
+
+        getCurrentSteeringResponseData(): object;
 
         getSettings(): MediaPlayerSettingClass;
 
