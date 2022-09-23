@@ -224,7 +224,7 @@ function CatchupController() {
 
                 // We adjust the min change linear, depending on the maximum catchup rate. Default is 0.02 for rate 0.5.
                 // For Safari we stick to a fixed value because of  https://bugs.webkit.org/show_bug.cgi?id=208142
-                const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRate);
+                const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
                 // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
                 if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {  // non-null
