@@ -543,6 +543,7 @@ function BufferController(config) {
         // if we do a seek behind the current play position we do need to prune ahead of the new play position
         // we keep everything that is within bufferToKeepAhead but only if the buffer is continuous.
         // Otherwise we have gaps once the seek is done which might trigger an unintentional gap jump
+        const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
         const continuousBufferTime = getContinuousBufferTimeForTargetTime(targetTime);
 
         // This is the maximum range we keep ahead
@@ -588,7 +589,6 @@ function BufferController(config) {
         }
 
         if (rangeStart < ranges.end(ranges.length - 1)) {
-            const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
             return {
                 start: rangeStart,
                 end: endOfBuffer
