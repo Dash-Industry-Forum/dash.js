@@ -578,7 +578,7 @@ function BufferController(config) {
                 }
             }
 
-            if (rangeStart < endOfBuffer) {
+            if (rangeStart < ranges.end(ranges.length - 1)) {
                 return {
                     start: rangeStart,
                     end: endOfBuffer
