@@ -389,7 +389,22 @@ function TextSourceBuffer(config) {
         ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
 
         try {
+            const webVttParser = new window.WebVTT.Parser(
+                window,
+                window.vttjs,
+                window.WebVTT.StringDecoder()
+            );
+            let cues = [];
             result = getParser(codecType).parse(ccContent, 0);
+            webVttParser.oncue = function (cue) {
+                cues.push(cue);
+            };
+            webVttParser.parse(ccContent);
+            result.forEach((cue, index) => {
+                if (index < cues.length) {
+                    cue.webVttParserData = cues[index];
+                }
+            })
             textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             if (instance.buffered) {
                 instance.buffered.add(chunk.start, chunk.end);
@@ -485,6 +500,7 @@ function TextSourceBuffer(config) {
                 textTracks.addCaptions(trackIndex, 0, captionsArray);
             }
         }
+
         return newCue;
     }
 
