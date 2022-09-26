@@ -515,14 +515,21 @@ function TextTracks(config) {
         cue.onenter = function () {
             console.log(this);
             if (track.mode === Constants.TEXT_SHOWING) {
-                WebVTT.processCues(window, [this.webVttParserData], document.getElementById('video-caption'));
+                WebVTT.processCues(window, [this.webVttParserData], document.getElementById('video-caption'), this.cueID);
                 eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
             }
         };
 
         cue.onexit = function () {
             if (captionContainer) {
-                console.log('exit')
+                const divs = captionContainer.childNodes;
+                for (let i = 0; i < divs.length; ++i) {
+                    if (divs[i].id === this.cueID) {
+                        logger.debug('Cue exit id:' + divs[i].id);
+                        captionContainer.removeChild(divs[i]);
+                        --i;
+                    }
+                }
             }
         };
         return cue;
