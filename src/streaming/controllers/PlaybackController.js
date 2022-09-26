@@ -212,11 +212,6 @@ function PlaybackController() {
 
         internalSeek = (internal === true);
 
-        const videoElement = videoModel.getElement();
-        if (!isDynamic && videoElement.duration) {
-            time = Math.min(videoElement.duration, time);
-        }
-
         if (!internalSeek) {
             seekTarget = time;
         }
