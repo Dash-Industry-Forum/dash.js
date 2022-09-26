@@ -1285,7 +1285,7 @@ var CUE_BACKGROUND_PADDING = "1.5%";
 // Runs the processing model over the cues and regions passed to it.
 // @param overlay A block level element (usually a div) that the computed cues
 //                and regions will be placed into.
-var processCues = function(window, cues, overlay) {
+var processCues = function(window, cues, overlay, parentId) {
   if (!window || !cues || !overlay) {
     return null;
   }
@@ -1302,6 +1302,9 @@ var processCues = function(window, cues, overlay) {
   paddedOverlay.style.top = "0";
   paddedOverlay.style.bottom = "0";
   paddedOverlay.style.margin = CUE_BACKGROUND_PADDING;
+  if(parentId) {
+    paddedOverlay.id = parentId;
+  }
   overlay.appendChild(paddedOverlay);
 
   // Determine if we need to compute the display states of the cues. This could
