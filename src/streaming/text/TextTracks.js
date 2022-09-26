@@ -287,7 +287,7 @@ function TextTracks(config) {
         }
     }
 
-    function scaleCue(activeCue) {
+    function _scaleCue(activeCue) {
         const videoWidth = actualVideoWidth;
         const videoHeight = actualVideoHeight;
         let key,
@@ -361,11 +361,11 @@ function TextTracks(config) {
             if (htmlCaptionDiv) {
                 captionContainer.removeChild(htmlCaptionDiv);
             }
-            renderCaption(activeCue);
+            _renderCaption(activeCue);
         }
     }
 
-    function renderCaption(cue) {
+    function _renderCaption(cue) {
         if (captionContainer) {
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
@@ -400,7 +400,6 @@ function TextTracks(config) {
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
         const track = getTrackByIdx(trackIdx);
-        const self = this;
 
         if (!track) {
             return;
@@ -417,76 +416,9 @@ function TextTracks(config) {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (currentItem.type === 'html' && captionContainer && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
-                cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
-                cue.cueHTMLElement = currentItem.cueHTMLElement;
-                cue.isd = currentItem.isd;
-                cue.images = currentItem.images;
-                cue.embeddedImages = currentItem.embeddedImages;
-                cue.cueID = currentItem.cueID;
-                cue.scaleCue = scaleCue.bind(self);
-                //useful parameters for cea608 subtitles, not for TTML one.
-                cue.cellResolution = currentItem.cellResolution;
-                cue.lineHeight = currentItem.lineHeight;
-                cue.linePadding = currentItem.linePadding;
-                cue.fontSize = currentItem.fontSize;
-
-                captionContainer.style.left = actualVideoLeft + 'px';
-                captionContainer.style.top = actualVideoTop + 'px';
-                captionContainer.style.width = actualVideoWidth + 'px';
-                captionContainer.style.height = actualVideoHeight + 'px';
-
-                cue.onenter = function () {
-                    if (track.mode === Constants.TEXT_SHOWING) {
-                        if (this.isd) {
-                            renderCaption(this);
-                            logger.debug('Cue enter id:' + this.cueID);
-                        } else {
-                            captionContainer.appendChild(this.cueHTMLElement);
-                            scaleCue.call(self, this);
-                            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, {
-                                captionDiv: this.cueHTMLElement,
-                                currentTrackIdx
-                            });
-                        }
-                    }
-                };
-
-                cue.onexit = function () {
-                    if (captionContainer) {
-                        const divs = captionContainer.childNodes;
-                        for (let i = 0; i < divs.length; ++i) {
-                            if (divs[i].id === this.cueID) {
-                                logger.debug('Cue exit id:' + divs[i].id);
-                                captionContainer.removeChild(divs[i]);
-                                --i;
-                            }
-                        }
-                    }
-                };
-            } else {
-                if (currentItem.data && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
-                    cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-                    if (currentItem.styles) {
-                        if (currentItem.styles.align !== undefined && 'align' in cue) {
-                            cue.align = currentItem.styles.align;
-                        }
-                        if (currentItem.styles.line !== undefined && 'line' in cue) {
-                            cue.line = currentItem.styles.line;
-                        }
-                        if (currentItem.styles.position !== undefined && 'position' in cue) {
-                            cue.position = currentItem.styles.position;
-                        }
-                        if (currentItem.styles.size !== undefined && 'size' in cue) {
-                            cue.size = currentItem.styles.size;
-                        }
-                    }
-                    cue.onenter = function () {
-                        if (track.mode === Constants.TEXT_SHOWING) {
-                            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
-                        }
-                    };
-                }
+            if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
+                cue = currentItem.type === 'html' && captionContainer ? _handleHtmlCaption(currentItem, timeOffset, track)
+                    : currentItem.data ? _handleNonHtmlCaption(currentItem, timeOffset, track) : null;
             }
             try {
                 if (cue) {
@@ -505,6 +437,265 @@ function TextTracks(config) {
             }
         }
     }
+
+    function _handleHtmlCaption(currentItem, timeOffset, track) {
+        const self = this;
+        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
+        cue.cueHTMLElement = currentItem.cueHTMLElement;
+        cue.isd = currentItem.isd;
+        cue.images = currentItem.images;
+        cue.embeddedImages = currentItem.embeddedImages;
+        cue.cueID = currentItem.cueID;
+        cue.scaleCue = _scaleCue.bind(self);
+        //useful parameters for cea608 subtitles, not for TTML one.
+        cue.cellResolution = currentItem.cellResolution;
+        cue.lineHeight = currentItem.lineHeight;
+        cue.linePadding = currentItem.linePadding;
+        cue.fontSize = currentItem.fontSize;
+
+        captionContainer.style.left = actualVideoLeft + 'px';
+        captionContainer.style.top = actualVideoTop + 'px';
+        captionContainer.style.width = actualVideoWidth + 'px';
+        captionContainer.style.height = actualVideoHeight + 'px';
+
+        cue.onenter = function () {
+            if (track.mode === Constants.TEXT_SHOWING) {
+                if (this.isd) {
+                    _renderCaption(this);
+                    logger.debug('Cue enter id:' + this.cueID);
+                } else {
+                    captionContainer.appendChild(this.cueHTMLElement);
+                    _scaleCue.call(self, this);
+                    eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, {
+                        captionDiv: this.cueHTMLElement,
+                        currentTrackIdx
+                    });
+                }
+            }
+        };
+
+        cue.onexit = function () {
+            if (captionContainer) {
+                const divs = captionContainer.childNodes;
+                for (let i = 0; i < divs.length; ++i) {
+                    if (divs[i].id === this.cueID) {
+                        logger.debug('Cue exit id:' + divs[i].id);
+                        captionContainer.removeChild(divs[i]);
+                        --i;
+                    }
+                }
+            }
+        };
+
+        return cue;
+    }
+
+    function _handleNonHtmlCaption(currentItem, timeOffset, track) {
+        let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+        cue.cueID = `${cue.startTime}_${cue.endTime}`;
+
+        if (currentItem.styles) {
+            if (currentItem.styles.align !== undefined && 'align' in cue) {
+                cue.align = currentItem.styles.align;
+            }
+            if (currentItem.styles.line !== undefined && 'line' in cue) {
+                cue.line = currentItem.styles.line;
+            }
+            if (currentItem.styles.position !== undefined && 'position' in cue) {
+                cue.position = currentItem.styles.position;
+            }
+            if (currentItem.styles.size !== undefined && 'size' in cue) {
+                cue.size = currentItem.styles.size;
+            }
+        }
+
+        cue.onenter = function () {
+            if (track.mode === Constants.TEXT_SHOWING) {
+                const parsedElement = _parseVttContent(this.text, this.cueID);
+                captionContainer.appendChild(parsedElement);
+                _scaleCue.call(self, this);
+                eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
+            }
+        };
+
+        cue.onexit = function () {
+            if (captionContainer) {
+                const divs = captionContainer.childNodes;
+                for (let i = 0; i < divs.length; ++i) {
+                    if (divs[i].id === this.cueID) {
+                        logger.debug('Cue exit id:' + divs[i].id);
+                        captionContainer.removeChild(divs[i]);
+                        --i;
+                    }
+                }
+            }
+        };
+        return cue;
+    }
+
+    function _parseVttContent(input, cueId) {
+        var ESCAPE = {
+            "&amp;": "&",
+            "&lt;": "<",
+            "&gt;": ">",
+            "&lrm;": "\u200e",
+            "&rlm;": "\u200f",
+            "&nbsp;": "\u00a0"
+        };
+
+        var TAG_NAME = {
+            c: "span",
+            i: "i",
+            b: "b",
+            u: "u",
+            ruby: "ruby",
+            rt: "rt",
+            v: "span",
+            lang: "span"
+        };
+
+        var TAG_ANNOTATION = {
+            v: "title",
+            lang: "lang"
+        };
+
+        var NEEDS_PARENT = {
+            rt: "ruby"
+        };
+
+        function nextToken() {
+            // Check for end-of-string.
+            if (!input) {
+                return null;
+            }
+
+            // Consume 'n' characters from the input.
+            function consume(result) {
+                input = input.substr(result.length);
+                return result;
+            }
+
+            var m = input.match(/^([^<]*)(<[^>]+>?)?/);
+            // If there is some text before the next tag, return it, otherwise return
+            // the tag.
+            return consume(m[1] ? m[1] : m[2]);
+        }
+
+        // Unescape a string 's'.
+        function unescape1(e) {
+            return ESCAPE[e];
+        }
+        function unescape(s) {
+            while ((m = s.match(/&(amp|lt|gt|lrm|rlm|nbsp);/))) {
+                s = s.replace(m[0], unescape1);
+            }
+            return s;
+        }
+
+        function shouldAdd(current, element) {
+            return !NEEDS_PARENT[element.localName] ||
+                NEEDS_PARENT[element.localName] === current.localName;
+        }
+
+        // Create an element for this tag.
+        function createElement(type, annotation) {
+            var tagName = TAG_NAME[type];
+            if (!tagName) {
+                return null;
+            }
+            var element = window.document.createElement(tagName);
+            var name = TAG_ANNOTATION[type];
+            if (name && annotation) {
+                element[name] = annotation.trim();
+            }
+            return element;
+        }
+
+        var rootDiv = window.document.createElement("div"),
+            current = rootDiv,
+            t,
+            tagStack = [];
+
+        rootDiv.id = cueId;
+        while ((t = nextToken()) !== null) {
+            if (t[0] === '<') {
+                if (t[1] === "/") {
+                    // If the closing tag matches, move back up to the parent node.
+                    if (tagStack.length &&
+                        tagStack[tagStack.length - 1] === t.substr(2).replace(">", "")) {
+                        tagStack.pop();
+                        current = current.parentNode;
+                    }
+                    // Otherwise just ignore the end tag.
+                    continue;
+                }
+                var ts = parseTimeStamp(t.substr(1, t.length - 2));
+                var node;
+                if (ts) {
+                    // Timestamps are lead nodes as well.
+                    node = window.document.createProcessingInstruction("timestamp", ts);
+                    current.appendChild(node);
+                    continue;
+                }
+                var m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
+                // If we can't parse the tag, skip to the next tag.
+                if (!m) {
+                    continue;
+                }
+                // Try to construct an element, and ignore the tag if we couldn't.
+                node = createElement(m[1], m[3]);
+                if (!node) {
+                    continue;
+                }
+                // Determine if the tag should be added based on the context of where it
+                // is placed in the cuetext.
+                if (!shouldAdd(current, node)) {
+                    continue;
+                }
+                // Set the class list (as a list of classes, separated by space).
+                if (m[2]) {
+                    node.className = m[2].substr(1).replace('.', ' ');
+                }
+                // Append the node to the current node, and enter the scope of the new
+                // node.
+                tagStack.push(m[1]);
+                current.appendChild(node);
+                current = node;
+                continue;
+            }
+
+            // Text nodes are leaf nodes.
+            current.appendChild(window.document.createTextNode(unescape(t)));
+        }
+
+        return rootDiv;
+    }
+
+    // Try to parse input as a time stamp.
+    function parseTimeStamp(input) {
+
+        function computeSeconds(h, m, s, f) {
+            return (h | 0) * 3600 + (m | 0) * 60 + (s | 0) + (f | 0) / 1000;
+        }
+
+        var m = input.match(/^(\d+):(\d{2})(:\d{2})?\.(\d{3})/);
+        if (!m) {
+            return null;
+        }
+
+        if (m[3]) {
+            // Timestamp takes the form of [hours]:[minutes]:[seconds].[milliseconds]
+            return computeSeconds(m[1], m[2], m[3].replace(":", ""), m[4]);
+        } else if (m[1] > 59) {
+            // Timestamp takes the form of [hours]:[minutes].[milliseconds]
+            // First position is hours as it's over 59.
+            return computeSeconds(m[1], m[2], 0,  m[4]);
+        } else {
+            // Timestamp takes the form of [minutes]:[seconds].[milliseconds]
+            return computeSeconds(0, m[1], m[2], m[4]);
+        }
+    }
+
 
     function getTrackByIdx(idx) {
         return idx >= 0 && textTrackQueue[idx] ?
