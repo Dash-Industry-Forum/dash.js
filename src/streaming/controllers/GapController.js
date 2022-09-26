@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
+import Constants from '../constants/Constants';
 
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 10;
@@ -131,7 +132,7 @@ function GapController() {
      */
     function _onBufferReplacementStarted(e) {
         try {
-            if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
+            if (e.streamId !== streamController.getActiveStreamInfo().id || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
                 return;
             }
 
@@ -305,7 +306,7 @@ function GapController() {
      * @private
      */
     function _jumpGap(currentTime, playbackStalled = false) {
-        const enableStallFix = settings.get().streaming.gaps.enableStallFix; 
+        const enableStallFix = settings.get().streaming.gaps.enableStallFix;
         const stallSeek = settings.get().streaming.gaps.stallSeek;
         const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
@@ -332,7 +333,7 @@ function GapController() {
             seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
         }
-        
+
         if(enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) && _isTimeBuffered(ranges, currentTime)) {
             if (stallSeek === 0) {
                 logger.warn(`Toggle play pause to break stall`);
