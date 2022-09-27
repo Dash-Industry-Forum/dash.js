@@ -76,7 +76,7 @@ commands:
             - run:
                 name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>" --debug=true
 jobs:
     build-and-unit-test:
         executor: dashjs-executor
