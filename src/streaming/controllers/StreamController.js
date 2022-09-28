@@ -58,13 +58,14 @@ function StreamController() {
     const eventBus = EventBus(context).getInstance();
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
-        dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController,
-        uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler,
-        timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay,
-        isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController,
-        serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback,
-        playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched,
-        waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
+        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
+        errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
+        autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
+        playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
+        supportsChangeType, settings,
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -251,10 +252,15 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
+                    if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
+                        return contentSteeringController.loadSteeringData();
+                    }
+                    return Promise.resolve();
+                })
+                .then(() => {
                     if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
-
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
@@ -318,6 +324,7 @@ function StreamController() {
      */
     function _initializeForFirstStream(streamsInfo) {
 
+
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
@@ -336,12 +343,13 @@ function StreamController() {
             return;
         }
 
-        // Apply Service description parameters.
+
+        // Calculate the producer reference time offsets if given
         if (settings.get().streaming.applyProducerReferenceTime) {
             serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
         }
 
-
+        // Apply Service description parameters.
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.applyServiceDescription) {
             serviceDescriptionController.applyServiceDescription(manifestInfo);
@@ -357,7 +365,6 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
-
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
@@ -734,7 +741,7 @@ function StreamController() {
      * @private
      */
     function _onLiveDelaySettingUpdated() {
-        if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0) {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
@@ -769,6 +776,14 @@ function StreamController() {
         }
         if (initialPlayback) {
             initialPlayback = false;
+        }
+        if (initialSteeringRequest) {
+            initialSteeringRequest = false;
+            // If this is the initial playback attempt and we have not yet triggered content steering now is the time
+            if (settings.get().streaming.applyContentSteering && !contentSteeringController.shouldQueryBeforeStart()) {
+                contentSteeringController.loadSteeringData();
+            }
+
         }
         isPaused = false;
     }
@@ -916,6 +931,7 @@ function StreamController() {
         }
         if (e && e.isLast) {
             _stopPlaybackEndedTimerInterval();
+            contentSteeringController.stopSteeringRequestTimer();
         }
     }
 
@@ -1031,7 +1047,7 @@ function StreamController() {
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
             // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-            startTime = liveEdge - playbackController.getLiveDelay();
+            startTime = liveEdge - playbackController.getOriginalLiveDelay();
             // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
             const dvrWindow = dvrInfo ? dvrInfo.range : null;
             if (dvrWindow) {
@@ -1446,6 +1462,9 @@ function StreamController() {
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
+        }
         if (config.textController) {
             textController = config.textController;
         }
@@ -1485,6 +1504,7 @@ function StreamController() {
         hasMediaError = false;
         hasInitialisationError = false;
         initialPlayback = true;
+        initialSteeringRequest = true;
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;

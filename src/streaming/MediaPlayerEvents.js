@@ -402,6 +402,11 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
          */
         this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
+        /**
+         * Triggered when a content steering request has completed.
+         * @event MediaPlayerEvents#CONTENT_STEERING_REQUEST_COMPLETED
+         */
+        this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
     }
 }
 

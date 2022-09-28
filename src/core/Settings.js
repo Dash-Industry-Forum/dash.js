@@ -65,6 +65,7 @@ import Events from './events/Events';
  *            cacheInitSegments: true,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
+ *            applyContentSteering: true,
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
@@ -102,7 +103,8 @@ import Events from './events/Events';
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
- *                setStallState: true
+ *                setStallState: true,
+ *                avoidCurrentTimeRangePruning: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -140,7 +142,6 @@ import Events from './events/Events';
  *                maxDrift: NaN,
  *                playbackRate: NaN,
  *                playbackBufferMin: 0.5,
- *                latencyThreshold: 60,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -304,6 +305,10 @@ import Events from './events/Events';
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
+ * @property {boolean} [avoidCurrentTimeRangePruning=false]
+ * Avoids pruning of the buffered range that contains the current playback time.
+ *
+ * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  */
 
 /**
@@ -462,15 +467,6 @@ import Events from './events/Events';
  * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=60]
- * Use this parameter to set the maximum threshold for which live catch up is applied.
- *
- * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
- *
- * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified catchup mode will always be applied
- *
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
@@ -665,6 +661,8 @@ import Events from './events/Events';
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
+ * @property {boolean} [applyContentSteering=true]
+ * Set to true if dash.js should apply content steering during playback.
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestDurationMismatchFix=true]
@@ -770,6 +768,7 @@ function Settings() {
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
+            applyContentSteering: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
             capabilities: {
@@ -807,7 +806,8 @@ function Settings() {
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
                 useAppendWindow: true,
-                setStallState: true
+                setStallState: true,
+                avoidCurrentTimeRangePruning: false
             },
             gaps: {
                 jumpGaps: true,
@@ -846,7 +846,6 @@ function Settings() {
                 playbackRate: NaN,
                 playbackBufferMin: 0.5,
                 enabled: null,
-                latencyThreshold: 60,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
             lastBitrateCachingInfo: {

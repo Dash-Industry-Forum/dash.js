@@ -36,7 +36,8 @@ import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
 import CatchupController from './controllers/CatchupController';
-import ServiceDescriptionController from './controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -153,6 +154,7 @@ function MediaPlayer() {
         gapController,
         playbackController,
         serviceDescriptionController,
+        contentSteeringController,
         catchupController,
         dashMetrics,
         manifestModel,
@@ -218,6 +220,9 @@ function MediaPlayer() {
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -319,6 +324,10 @@ function MediaPlayer() {
                 serviceDescriptionController = ServiceDescriptionController(context).getInstance();
             }
 
+            if (!contentSteeringController) {
+                contentSteeringController = ContentSteeringController(context).getInstance();
+            }
+
             if (!capabilitiesFilter) {
                 capabilitiesFilter = CapabilitiesFilter(context).getInstance();
             }
@@ -349,11 +358,11 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter: adapter
+                adapter
             });
 
             serviceDescriptionController.setConfig({
-                adapter: adapter
+                adapter
             });
 
             if (!segmentBaseController) {
@@ -529,7 +538,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         if (!autoPlay || (isPaused() && playbackInitialized)) {
-            playbackController.play();
+            playbackController.play(true);
         }
     }
 
@@ -565,7 +574,8 @@ function MediaPlayer() {
      * Sets the currentTime property of the attached video element.  If it is a live stream with a
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
-     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+     * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
@@ -584,7 +594,18 @@ function MediaPlayer() {
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        playbackController.seek(s);
+        playbackController.seek(s, false, false, true);
+    }
+
+    /**
+     * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
+     */
+    function seekToOriginalLive() {
+        if (!playbackInitialized || !isDynamic()) {
+            return;
+        }
+
+        playbackController.seekToOriginalLive();
     }
 
     /**
@@ -763,7 +784,7 @@ function MediaPlayer() {
             return 0;
         }
 
-        let liveDelay = playbackController.getLiveDelay();
+        let liveDelay = playbackController.getOriginalLiveDelay();
 
         let val = metric.range.start + value;
 
@@ -785,7 +806,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        return playbackController.getLiveDelay();
+        return playbackController.getOriginalLiveDelay();
     }
 
     /**
@@ -1494,7 +1515,7 @@ function MediaPlayer() {
     /**
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
      * is following: <br />
-     * {lang: langValue (can be either a string or a regex to match),
+     * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
@@ -1960,6 +1981,26 @@ function MediaPlayer() {
         return adapter;
     }
 
+    /**
+     * Triggers a request to the content steering server to update the steering information.
+     * @return {Promise<any>}
+     */
+    function triggerSteeringRequest() {
+        if (contentSteeringController) {
+            return contentSteeringController.loadSteeringData();
+        }
+    }
+
+    /**
+     * Returns the current response data of the content steering server
+     * @return {object}
+     */
+    function getCurrentSteeringResponseData() {
+        if(contentSteeringController) {
+            return contentSteeringController.getCurrentSteeringResponseData();
+        }
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -1973,6 +2014,7 @@ function MediaPlayer() {
         catchupController.reset();
         playbackController.reset();
         serviceDescriptionController.reset();
+        contentSteeringController.reset();
         abrController.reset();
         mediaController.reset();
         segmentBaseController.reset();
@@ -2033,6 +2075,7 @@ function MediaPlayer() {
             videoModel,
             playbackController,
             serviceDescriptionController,
+            contentSteeringController,
             abrController,
             mediaController,
             settings,
@@ -2064,7 +2107,6 @@ function MediaPlayer() {
             streamController,
             playbackController,
             mediaPlayerModel,
-            dashMetrics,
             videoModel,
             settings
         })
@@ -2086,6 +2128,17 @@ function MediaPlayer() {
             playbackController
         });
 
+        contentSteeringController.setConfig({
+            adapter,
+            errHandler,
+            dashMetrics,
+            mediaPlayerModel,
+            manifestModel,
+            abrController,
+            eventBus,
+            requestModifier: RequestModifier(context).getInstance()
+        })
+
         // initialises controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
@@ -2093,6 +2146,7 @@ function MediaPlayer() {
         gapController.initialize();
         catchupController.initialize();
         cmcdModel.initialize();
+        contentSteeringController.initialize();
         segmentBaseController.initialize();
     }
 
@@ -2312,6 +2366,7 @@ function MediaPlayer() {
         isDynamic,
         getLowLatencyModeEnabled,
         seek,
+        seekToOriginalLive,
         setPlaybackRate,
         getPlaybackRate,
         setMute,
@@ -2383,6 +2438,8 @@ function MediaPlayer() {
         provideThumbnail,
         getDashAdapter,
         getOfflineController,
+        triggerSteeringRequest,
+        getCurrentSteeringResponseData,
         getSettings,
         updateSettings,
         resetSettings,

@@ -4,7 +4,7 @@ import {
 } from '../../src/streaming/vo/metrics/HTTPRequest';
 import Settings from '../../src/core/Settings';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 
 const chai = require('chai');
 const expect = chai.expect;

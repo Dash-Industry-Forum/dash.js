@@ -405,6 +405,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "DRM Robustness level example",
+                "description": "This example shows how to define a robustness level to be used by dash.js when calling <i>requestMediaKeySystemAccess</i>",
+                "href": "drm/robustness-level.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -676,6 +689,17 @@
                 "description": "A sample showing how to initialize playback at a specific start time.",
                 "href": "advanced/load-with-starttime.html",
                 "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Content Steering",
+                "description": "A sample illustrating content steering to dynamically switch between CDNs. Note that you need to provide a manifest with a valid content steering server.",
+                "href": "advanced/content-steering.html",
+                "image": "lib/img/bbb-2.jpg",
                 "labels": [
                     "VoD",
                     "Video",
