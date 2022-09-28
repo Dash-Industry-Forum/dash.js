@@ -5284,6 +5284,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
+    /**
+     * Triggered when a content steering request has completed.
+     * @event MediaPlayerEvents#CONTENT_STEERING_REQUEST_COMPLETED
+     */
+
+    _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
     return _this;
   }
 
@@ -5735,6 +5741,7 @@ HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
+HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
 HTTPRequest.OTHER_TYPE = 'other';
 
 

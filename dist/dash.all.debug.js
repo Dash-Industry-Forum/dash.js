@@ -2630,6 +2630,797 @@ function fromByteArray (uint8) {
 
 /***/ }),
 
+/***/ "./node_modules/bcp-47-match/index.js":
+/*!********************************************!*\
+  !*** ./node_modules/bcp-47-match/index.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// See https://tools.ietf.org/html/rfc4647#section-3.1
+// for more information on the algorithms.
+
+exports.basicFilter = factory(basic, true)
+exports.extendedFilter = factory(extended, true)
+exports.lookup = factory(lookup)
+
+// Basic Filtering (Section 3.3.1) matches a language priority list consisting
+// of basic language ranges (Section 2.1) to sets of language tags.
+function basic(tag, range) {
+  return range === '*' || tag === range || tag.indexOf(range + '-') > -1
+}
+
+// Extended Filtering (Section 3.3.2) matches a language priority list
+// consisting of extended language ranges (Section 2.2) to sets of language
+// tags.
+function extended(tag, range) {
+  // 3.3.2.1
+  var left = tag.split('-')
+  var right = range.split('-')
+  var leftIndex = 0
+  var rightIndex = 0
+
+  // 3.3.2.2
+  if (right[rightIndex] !== '*' && left[leftIndex] !== right[rightIndex]) {
+    return false
+  }
+
+  leftIndex++
+  rightIndex++
+
+  // 3.3.2.3
+  while (rightIndex < right.length) {
+    // 3.3.2.3.A
+    if (right[rightIndex] === '*') {
+      rightIndex++
+      continue
+    }
+
+    // 3.3.2.3.B
+    if (!left[leftIndex]) return false
+
+    // 3.3.2.3.C
+    if (left[leftIndex] === right[rightIndex]) {
+      leftIndex++
+      rightIndex++
+      continue
+    }
+
+    // 3.3.2.3.D
+    if (left[leftIndex].length === 1) return false
+
+    // 3.3.2.3.E
+    leftIndex++
+  }
+
+  // 3.3.2.4
+  return true
+}
+
+// Lookup (Section 3.4) matches a language priority list consisting of basic
+// language ranges to sets of language tags to find the one exact language tag
+// that best matches the range.
+function lookup(tag, range) {
+  var right = range
+  var index
+
+  /* eslint-disable-next-line no-constant-condition */
+  while (true) {
+    if (right === '*' || tag === right) return true
+
+    index = right.lastIndexOf('-')
+
+    if (index < 0) return false
+
+    if (right.charAt(index - 2) === '-') index -= 2
+
+    right = right.slice(0, index)
+  }
+}
+
+// Factory to perform a filter or a lookup.
+// This factory creates a function that accepts a list of tags and a list of
+// ranges, and contains logic to exit early for lookups.
+// `check` just has to deal with one tag and one range.
+// This match function iterates over ranges, and for each range,
+// iterates over tags.  That way, earlier ranges matching any tag have
+// precedence over later ranges.
+function factory(check, filter) {
+  return match
+
+  function match(tags, ranges) {
+    var left = cast(tags, 'tag')
+    var right = cast(ranges == null ? '*' : ranges, 'range')
+    var matches = []
+    var rightIndex = -1
+    var range
+    var leftIndex
+    var next
+
+    while (++rightIndex < right.length) {
+      range = right[rightIndex].toLowerCase()
+
+      // Ignore wildcards in lookup mode.
+      if (!filter && range === '*') continue
+
+      leftIndex = -1
+      next = []
+
+      while (++leftIndex < left.length) {
+        if (check(left[leftIndex].toLowerCase(), range)) {
+          // Exit if this is a lookup and we have a match.
+          if (!filter) return left[leftIndex]
+          matches.push(left[leftIndex])
+        } else {
+          next.push(left[leftIndex])
+        }
+      }
+
+      left = next
+    }
+
+    // If this is a filter, return the list.  If it’s a lookup, we didn’t find
+    // a match, so return `undefined`.
+    return filter ? matches : undefined
+  }
+}
+
+// Validate tags or ranges, and cast them to arrays.
+function cast(values, name) {
+  var value = values && typeof values === 'string' ? [values] : values
+
+  if (!value || typeof value !== 'object' || !('length' in value)) {
+    throw new Error(
+      'Invalid ' + name + ' `' + value + '`, expected non-empty string'
+    )
+  }
+
+  return value
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/index.js":
+/*!************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/index.js ***!
+  \************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = __webpack_require__(/*! ./lib */ "./node_modules/bcp-47-normalize/lib/index.js")
+
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/lib/defaults.json":
+/*!*********************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/lib/defaults.json ***!
+  \*********************************************************/
+/*! exports provided: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("[\"mni-beng-in\",\"mni-mtei-in\",\"sat-deva-in\",\"sat-olck-in\",\"shi-latn-ma\",\"shi-tfng-ma\",\"vai-latn-lr\",\"vai-vaii-lr\",\"yue-hans-cn\",\"yue-hant-hk\",\"az-arab-ir\",\"az-cyrl-az\",\"az-latn-az\",\"bm-nkoo-ml\",\"bs-cyrl-ba\",\"bs-latn-ba\",\"en-dsrt-us\",\"ff-adlm-gn\",\"ff-latn-sn\",\"ha-arab-ng\",\"hi-latn-in\",\"iu-latn-ca\",\"ks-arab-in\",\"ks-deva-in\",\"mn-mong-cn\",\"ms-arab-my\",\"pa-arab-pk\",\"pa-guru-in\",\"sd-arab-pk\",\"sd-deva-in\",\"sr-cyrl-rs\",\"sr-latn-rs\",\"su-latn-id\",\"uz-arab-af\",\"uz-cyrl-uz\",\"uz-latn-uz\",\"zh-hans-cn\",\"zh-hant-tw\",\"mni-beng\",\"sat-olck\",\"shi-tfng\",\"vai-vaii\",\"yue-hant\",\"az-latn\",\"bs-latn\",\"ff-latn\",\"jbo-001\",\"ks-arab\",\"pa-guru\",\"prg-001\",\"sd-arab\",\"sr-cyrl\",\"su-latn\",\"uz-latn\",\"zh-hans\",\"agq-cm\",\"ar-001\",\"arn-cl\",\"asa-tz\",\"ast-es\",\"bas-cm\",\"bem-zm\",\"bez-tz\",\"bgn-pk\",\"blt-vn\",\"brx-in\",\"bss-cm\",\"byn-er\",\"cad-us\",\"cch-ng\",\"ccp-bd\",\"ceb-ph\",\"cgg-ug\",\"chr-us\",\"cic-us\",\"ckb-iq\",\"dav-ke\",\"dje-ne\",\"doi-in\",\"dsb-de\",\"dua-cm\",\"dyo-sn\",\"ebu-ke\",\"eo-001\",\"ewo-cm\",\"fil-ph\",\"fur-it\",\"gaa-gh\",\"gez-et\",\"gsw-ch\",\"guz-ke\",\"haw-us\",\"hsb-de\",\"ia-001\",\"ife-tg\",\"io-001\",\"jgo-cm\",\"jmc-tz\",\"kab-dz\",\"kaj-ng\",\"kam-ke\",\"kcg-ng\",\"kde-tz\",\"kea-cv\",\"ken-cm\",\"khq-ml\",\"kkj-cm\",\"kln-ke\",\"kok-in\",\"kpe-lr\",\"ksb-tz\",\"ksf-cm\",\"ksh-de\",\"lag-tz\",\"lkt-us\",\"lrc-ir\",\"luo-ke\",\"luy-ke\",\"mai-in\",\"mas-ke\",\"mer-ke\",\"mfe-mu\",\"mgh-mz\",\"mgo-cm\",\"moh-ca\",\"mua-cm\",\"mus-us\",\"myv-ru\",\"mzn-ir\",\"naq-na\",\"nds-de\",\"nmg-cm\",\"nnh-cm\",\"nqo-gn\",\"nso-za\",\"nus-ss\",\"nyn-ug\",\"osa-us\",\"pcm-ng\",\"quc-gt\",\"rof-tz\",\"rwk-tz\",\"sah-ru\",\"saq-ke\",\"sbp-tz\",\"scn-it\",\"sdh-ir\",\"seh-mz\",\"ses-ml\",\"sid-et\",\"sma-se\",\"smj-se\",\"smn-fi\",\"sms-fi\",\"ssy-er\",\"syr-iq\",\"szl-pl\",\"teo-ug\",\"tig-er\",\"trv-tw\",\"trw-pk\",\"twq-ne\",\"tzm-ma\",\"vo-001\",\"vun-tz\",\"wae-ch\",\"wal-et\",\"wbp-au\",\"xog-ug\",\"yav-cm\",\"yi-001\",\"zgh-ma\",\"aa-et\",\"af-za\",\"ak-gh\",\"am-et\",\"an-es\",\"as-in\",\"ba-ru\",\"be-by\",\"bg-bg\",\"bm-ml\",\"bn-bd\",\"bo-cn\",\"br-fr\",\"ca-es\",\"ce-ru\",\"co-fr\",\"cs-cz\",\"cu-ru\",\"cv-ru\",\"cy-gb\",\"da-dk\",\"de-de\",\"dv-mv\",\"dz-bt\",\"ee-gh\",\"el-gr\",\"en-us\",\"es-es\",\"et-ee\",\"eu-es\",\"fa-ir\",\"fi-fi\",\"fo-fo\",\"fr-fr\",\"fy-nl\",\"ga-ie\",\"gd-gb\",\"gl-es\",\"gn-py\",\"gu-in\",\"gv-im\",\"ha-ng\",\"he-il\",\"hi-in\",\"hr-hr\",\"hu-hu\",\"hy-am\",\"id-id\",\"ig-ng\",\"ii-cn\",\"is-is\",\"it-it\",\"iu-ca\",\"ja-jp\",\"jv-id\",\"ka-ge\",\"ki-ke\",\"kk-kz\",\"kl-gl\",\"km-kh\",\"kn-in\",\"ko-kr\",\"ku-tr\",\"kw-gb\",\"ky-kg\",\"lb-lu\",\"lg-ug\",\"ln-cd\",\"lo-la\",\"lt-lt\",\"lu-cd\",\"lv-lv\",\"mg-mg\",\"mi-nz\",\"mk-mk\",\"ml-in\",\"mn-mn\",\"mr-in\",\"ms-my\",\"mt-mt\",\"my-mm\",\"nb-no\",\"nd-zw\",\"ne-np\",\"nl-nl\",\"nn-no\",\"nr-za\",\"nv-us\",\"ny-mw\",\"oc-fr\",\"om-et\",\"or-in\",\"os-ge\",\"pl-pl\",\"ps-af\",\"pt-br\",\"qu-pe\",\"rm-ch\",\"rn-bi\",\"ro-ro\",\"ru-ru\",\"rw-rw\",\"sa-in\",\"sc-it\",\"se-no\",\"sg-cf\",\"si-lk\",\"sk-sk\",\"sl-si\",\"sn-zw\",\"so-so\",\"sq-al\",\"ss-za\",\"st-za\",\"sv-se\",\"sw-tz\",\"ta-in\",\"te-in\",\"tg-tj\",\"th-th\",\"ti-et\",\"tk-tm\",\"tn-za\",\"to-to\",\"tr-tr\",\"ts-za\",\"tt-ru\",\"ug-cn\",\"uk-ua\",\"ur-pk\",\"ve-za\",\"vi-vn\",\"wa-be\",\"wo-sn\",\"xh-za\",\"yo-ng\",\"zu-za\"]");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/lib/fields.json":
+/*!*******************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/lib/fields.json ***!
+  \*******************************************************/
+/*! exports provided: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("[{\"from\":{\"field\":\"script\",\"value\":\"qaai\"},\"to\":{\"field\":\"script\",\"value\":\"zinh\"}},{\"from\":{\"field\":\"region\",\"value\":\"bu\"},\"to\":{\"field\":\"region\",\"value\":\"mm\"}},{\"from\":{\"field\":\"region\",\"value\":\"ct\"},\"to\":{\"field\":\"region\",\"value\":\"ki\"}},{\"from\":{\"field\":\"region\",\"value\":\"dd\"},\"to\":{\"field\":\"region\",\"value\":\"de\"}},{\"from\":{\"field\":\"region\",\"value\":\"dy\"},\"to\":{\"field\":\"region\",\"value\":\"bj\"}},{\"from\":{\"field\":\"region\",\"value\":\"fx\"},\"to\":{\"field\":\"region\",\"value\":\"fr\"}},{\"from\":{\"field\":\"region\",\"value\":\"hv\"},\"to\":{\"field\":\"region\",\"value\":\"bf\"}},{\"from\":{\"field\":\"region\",\"value\":\"jt\"},\"to\":{\"field\":\"region\",\"value\":\"um\"}},{\"from\":{\"field\":\"region\",\"value\":\"mi\"},\"to\":{\"field\":\"region\",\"value\":\"um\"}},{\"from\":{\"field\":\"region\",\"value\":\"nh\"},\"to\":{\"field\":\"region\",\"value\":\"vu\"}},{\"from\":{\"field\":\"region\",\"value\":\"nq\"},\"to\":{\"field\":\"region\",\"value\":\"aq\"}},{\"from\":{\"field\":\"region\",\"value\":\"pu\"},\"to\":{\"field\":\"region\",\"value\":\"um\"}},{\"from\":{\"field\":\"region\",\"value\":\"pz\"},\"to\":{\"field\":\"region\",\"value\":\"pa\"}},{\"from\":{\"field\":\"region\",\"value\":\"qu\"},\"to\":{\"field\":\"region\",\"value\":\"eu\"}},{\"from\":{\"field\":\"region\",\"value\":\"rh\"},\"to\":{\"field\":\"region\",\"value\":\"zw\"}},{\"from\":{\"field\":\"region\",\"value\":\"tp\"},\"to\":{\"field\":\"region\",\"value\":\"tl\"}},{\"from\":{\"field\":\"region\",\"value\":\"uk\"},\"to\":{\"field\":\"region\",\"value\":\"gb\"}},{\"from\":{\"field\":\"region\",\"value\":\"vd\"},\"to\":{\"field\":\"region\",\"value\":\"vn\"}},{\"from\":{\"field\":\"region\",\"value\":\"wk\"},\"to\":{\"field\":\"region\",\"value\":\"um\"}},{\"from\":{\"field\":\"region\",\"value\":\"yd\"},\"to\":{\"field\":\"region\",\"value\":\"ye\"}},{\"from\":{\"field\":\"region\",\"value\":\"zr\"},\"to\":{\"field\":\"region\",\"value\":\"cd\"}},{\"from\":{\"field\":\"region\",\"value\":\"230\"},\"to\":{\"field\":\"region\",\"value\":\"et\"}},{\"from\":{\"field\":\"region\",\"value\":\"280\"},\"to\":{\"field\":\"region\",\"value\":\"de\"}},{\"from\":{\"field\":\"region\",\"value\":\"736\"},\"to\":{\"field\":\"region\",\"value\":\"sd\"}},{\"from\":{\"field\":\"region\",\"value\":\"886\"},\"to\":{\"field\":\"region\",\"value\":\"ye\"}},{\"from\":{\"field\":\"region\",\"value\":\"958\"},\"to\":{\"field\":\"region\",\"value\":\"aa\"}},{\"from\":{\"field\":\"region\",\"value\":\"020\"},\"to\":{\"field\":\"region\",\"value\":\"ad\"}},{\"from\":{\"field\":\"region\",\"value\":\"784\"},\"to\":{\"field\":\"region\",\"value\":\"ae\"}},{\"from\":{\"field\":\"region\",\"value\":\"004\"},\"to\":{\"field\":\"region\",\"value\":\"af\"}},{\"from\":{\"field\":\"region\",\"value\":\"028\"},\"to\":{\"field\":\"region\",\"value\":\"ag\"}},{\"from\":{\"field\":\"region\",\"value\":\"660\"},\"to\":{\"field\":\"region\",\"value\":\"ai\"}},{\"from\":{\"field\":\"region\",\"value\":\"008\"},\"to\":{\"field\":\"region\",\"value\":\"al\"}},{\"from\":{\"field\":\"region\",\"value\":\"051\"},\"to\":{\"field\":\"region\",\"value\":\"am\"}},{\"from\":{\"field\":\"region\",\"value\":\"024\"},\"to\":{\"field\":\"region\",\"value\":\"ao\"}},{\"from\":{\"field\":\"region\",\"value\":\"010\"},\"to\":{\"field\":\"region\",\"value\":\"aq\"}},{\"from\":{\"field\":\"region\",\"value\":\"032\"},\"to\":{\"field\":\"region\",\"value\":\"ar\"}},{\"from\":{\"field\":\"region\",\"value\":\"016\"},\"to\":{\"field\":\"region\",\"value\":\"as\"}},{\"from\":{\"field\":\"region\",\"value\":\"040\"},\"to\":{\"field\":\"region\",\"value\":\"at\"}},{\"from\":{\"field\":\"region\",\"value\":\"036\"},\"to\":{\"field\":\"region\",\"value\":\"au\"}},{\"from\":{\"field\":\"region\",\"value\":\"533\"},\"to\":{\"field\":\"region\",\"value\":\"aw\"}},{\"from\":{\"field\":\"region\",\"value\":\"248\"},\"to\":{\"field\":\"region\",\"value\":\"ax\"}},{\"from\":{\"field\":\"region\",\"value\":\"031\"},\"to\":{\"field\":\"region\",\"value\":\"az\"}},{\"from\":{\"field\":\"region\",\"value\":\"070\"},\"to\":{\"field\":\"region\",\"value\":\"ba\"}},{\"from\":{\"field\":\"region\",\"value\":\"052\"},\"to\":{\"field\":\"region\",\"value\":\"bb\"}},{\"from\":{\"field\":\"region\",\"value\":\"050\"},\"to\":{\"field\":\"region\",\"value\":\"bd\"}},{\"from\":{\"field\":\"region\",\"value\":\"056\"},\"to\":{\"field\":\"region\",\"value\":\"be\"}},{\"from\":{\"field\":\"region\",\"value\":\"854\"},\"to\":{\"field\":\"region\",\"value\":\"bf\"}},{\"from\":{\"field\":\"region\",\"value\":\"100\"},\"to\":{\"field\":\"region\",\"value\":\"bg\"}},{\"from\":{\"field\":\"region\",\"value\":\"048\"},\"to\":{\"field\":\"region\",\"value\":\"bh\"}},{\"from\":{\"field\":\"region\",\"value\":\"108\"},\"to\":{\"field\":\"region\",\"value\":\"bi\"}},{\"from\":{\"field\":\"region\",\"value\":\"204\"},\"to\":{\"field\":\"region\",\"value\":\"bj\"}},{\"from\":{\"field\":\"region\",\"value\":\"652\"},\"to\":{\"field\":\"region\",\"value\":\"bl\"}},{\"from\":{\"field\":\"region\",\"value\":\"060\"},\"to\":{\"field\":\"region\",\"value\":\"bm\"}},{\"from\":{\"field\":\"region\",\"value\":\"096\"},\"to\":{\"field\":\"region\",\"value\":\"bn\"}},{\"from\":{\"field\":\"region\",\"value\":\"068\"},\"to\":{\"field\":\"region\",\"value\":\"bo\"}},{\"from\":{\"field\":\"region\",\"value\":\"535\"},\"to\":{\"field\":\"region\",\"value\":\"bq\"}},{\"from\":{\"field\":\"region\",\"value\":\"076\"},\"to\":{\"field\":\"region\",\"value\":\"br\"}},{\"from\":{\"field\":\"region\",\"value\":\"044\"},\"to\":{\"field\":\"region\",\"value\":\"bs\"}},{\"from\":{\"field\":\"region\",\"value\":\"064\"},\"to\":{\"field\":\"region\",\"value\":\"bt\"}},{\"from\":{\"field\":\"region\",\"value\":\"104\"},\"to\":{\"field\":\"region\",\"value\":\"mm\"}},{\"from\":{\"field\":\"region\",\"value\":\"074\"},\"to\":{\"field\":\"region\",\"value\":\"bv\"}},{\"from\":{\"field\":\"region\",\"value\":\"072\"},\"to\":{\"field\":\"region\",\"value\":\"bw\"}},{\"from\":{\"field\":\"region\",\"value\":\"112\"},\"to\":{\"field\":\"region\",\"value\":\"by\"}},{\"from\":{\"field\":\"region\",\"value\":\"084\"},\"to\":{\"field\":\"region\",\"value\":\"bz\"}},{\"from\":{\"field\":\"region\",\"value\":\"124\"},\"to\":{\"field\":\"region\",\"value\":\"ca\"}},{\"from\":{\"field\":\"region\",\"value\":\"166\"},\"to\":{\"field\":\"region\",\"value\":\"cc\"}},{\"from\":{\"field\":\"region\",\"value\":\"180\"},\"to\":{\"field\":\"region\",\"value\":\"cd\"}},{\"from\":{\"field\":\"region\",\"value\":\"140\"},\"to\":{\"field\":\"region\",\"value\":\"cf\"}},{\"from\":{\"field\":\"region\",\"value\":\"178\"},\"to\":{\"field\":\"region\",\"value\":\"cg\"}},{\"from\":{\"field\":\"region\",\"value\":\"756\"},\"to\":{\"field\":\"region\",\"value\":\"ch\"}},{\"from\":{\"field\":\"region\",\"value\":\"384\"},\"to\":{\"field\":\"region\",\"value\":\"ci\"}},{\"from\":{\"field\":\"region\",\"value\":\"184\"},\"to\":{\"field\":\"region\",\"value\":\"ck\"}},{\"from\":{\"field\":\"region\",\"value\":\"152\"},\"to\":{\"field\":\"region\",\"value\":\"cl\"}},{\"from\":{\"field\":\"region\",\"value\":\"120\"},\"to\":{\"field\":\"region\",\"value\":\"cm\"}},{\"from\":{\"field\":\"region\",\"value\":\"156\"},\"to\":{\"field\":\"region\",\"value\":\"cn\"}},{\"from\":{\"field\":\"region\",\"value\":\"170\"},\"to\":{\"field\":\"region\",\"value\":\"co\"}},{\"from\":{\"field\":\"region\",\"value\":\"188\"},\"to\":{\"field\":\"region\",\"value\":\"cr\"}},{\"from\":{\"field\":\"region\",\"value\":\"192\"},\"to\":{\"field\":\"region\",\"value\":\"cu\"}},{\"from\":{\"field\":\"region\",\"value\":\"132\"},\"to\":{\"field\":\"region\",\"value\":\"cv\"}},{\"from\":{\"field\":\"region\",\"value\":\"531\"},\"to\":{\"field\":\"region\",\"value\":\"cw\"}},{\"from\":{\"field\":\"region\",\"value\":\"162\"},\"to\":{\"field\":\"region\",\"value\":\"cx\"}},{\"from\":{\"field\":\"region\",\"value\":\"196\"},\"to\":{\"field\":\"region\",\"value\":\"cy\"}},{\"from\":{\"field\":\"region\",\"value\":\"203\"},\"to\":{\"field\":\"region\",\"value\":\"cz\"}},{\"from\":{\"field\":\"region\",\"value\":\"278\"},\"to\":{\"field\":\"region\",\"value\":\"de\"}},{\"from\":{\"field\":\"region\",\"value\":\"276\"},\"to\":{\"field\":\"region\",\"value\":\"de\"}},{\"from\":{\"field\":\"region\",\"value\":\"262\"},\"to\":{\"field\":\"region\",\"value\":\"dj\"}},{\"from\":{\"field\":\"region\",\"value\":\"208\"},\"to\":{\"field\":\"region\",\"value\":\"dk\"}},{\"from\":{\"field\":\"region\",\"value\":\"212\"},\"to\":{\"field\":\"region\",\"value\":\"dm\"}},{\"from\":{\"field\":\"region\",\"value\":\"214\"},\"to\":{\"field\":\"region\",\"value\":\"do\"}},{\"from\":{\"field\":\"region\",\"value\":\"012\"},\"to\":{\"field\":\"region\",\"value\":\"dz\"}},{\"from\":{\"field\":\"region\",\"value\":\"218\"},\"to\":{\"field\":\"region\",\"value\":\"ec\"}},{\"from\":{\"field\":\"region\",\"value\":\"233\"},\"to\":{\"field\":\"region\",\"value\":\"ee\"}},{\"from\":{\"field\":\"region\",\"value\":\"818\"},\"to\":{\"field\":\"region\",\"value\":\"eg\"}},{\"from\":{\"field\":\"region\",\"value\":\"732\"},\"to\":{\"field\":\"region\",\"value\":\"eh\"}},{\"from\":{\"field\":\"region\",\"value\":\"232\"},\"to\":{\"field\":\"region\",\"value\":\"er\"}},{\"from\":{\"field\":\"region\",\"value\":\"724\"},\"to\":{\"field\":\"region\",\"value\":\"es\"}},{\"from\":{\"field\":\"region\",\"value\":\"231\"},\"to\":{\"field\":\"region\",\"value\":\"et\"}},{\"from\":{\"field\":\"region\",\"value\":\"246\"},\"to\":{\"field\":\"region\",\"value\":\"fi\"}},{\"from\":{\"field\":\"region\",\"value\":\"242\"},\"to\":{\"field\":\"region\",\"value\":\"fj\"}},{\"from\":{\"field\":\"region\",\"value\":\"238\"},\"to\":{\"field\":\"region\",\"value\":\"fk\"}},{\"from\":{\"field\":\"region\",\"value\":\"583\"},\"to\":{\"field\":\"region\",\"value\":\"fm\"}},{\"from\":{\"field\":\"region\",\"value\":\"234\"},\"to\":{\"field\":\"region\",\"value\":\"fo\"}},{\"from\":{\"field\":\"region\",\"value\":\"250\"},\"to\":{\"field\":\"region\",\"value\":\"fr\"}},{\"from\":{\"field\":\"region\",\"value\":\"249\"},\"to\":{\"field\":\"region\",\"value\":\"fr\"}},{\"from\":{\"field\":\"region\",\"value\":\"266\"},\"to\":{\"field\":\"region\",\"value\":\"ga\"}},{\"from\":{\"field\":\"region\",\"value\":\"826\"},\"to\":{\"field\":\"region\",\"value\":\"gb\"}},{\"from\":{\"field\":\"region\",\"value\":\"308\"},\"to\":{\"field\":\"region\",\"value\":\"gd\"}},{\"from\":{\"field\":\"region\",\"value\":\"268\"},\"to\":{\"field\":\"region\",\"value\":\"ge\"}},{\"from\":{\"field\":\"region\",\"value\":\"254\"},\"to\":{\"field\":\"region\",\"value\":\"gf\"}},{\"from\":{\"field\":\"region\",\"value\":\"831\"},\"to\":{\"field\":\"region\",\"value\":\"gg\"}},{\"from\":{\"field\":\"region\",\"value\":\"288\"},\"to\":{\"field\":\"region\",\"value\":\"gh\"}},{\"from\":{\"field\":\"region\",\"value\":\"292\"},\"to\":{\"field\":\"region\",\"value\":\"gi\"}},{\"from\":{\"field\":\"region\",\"value\":\"304\"},\"to\":{\"field\":\"region\",\"value\":\"gl\"}},{\"from\":{\"field\":\"region\",\"value\":\"270\"},\"to\":{\"field\":\"region\",\"value\":\"gm\"}},{\"from\":{\"field\":\"region\",\"value\":\"324\"},\"to\":{\"field\":\"region\",\"value\":\"gn\"}},{\"from\":{\"field\":\"region\",\"value\":\"312\"},\"to\":{\"field\":\"region\",\"value\":\"gp\"}},{\"from\":{\"field\":\"region\",\"value\":\"226\"},\"to\":{\"field\":\"region\",\"value\":\"gq\"}},{\"from\":{\"field\":\"region\",\"value\":\"300\"},\"to\":{\"field\":\"region\",\"value\":\"gr\"}},{\"from\":{\"field\":\"region\",\"value\":\"239\"},\"to\":{\"field\":\"region\",\"value\":\"gs\"}},{\"from\":{\"field\":\"region\",\"value\":\"320\"},\"to\":{\"field\":\"region\",\"value\":\"gt\"}},{\"from\":{\"field\":\"region\",\"value\":\"316\"},\"to\":{\"field\":\"region\",\"value\":\"gu\"}},{\"from\":{\"field\":\"region\",\"value\":\"624\"},\"to\":{\"field\":\"region\",\"value\":\"gw\"}},{\"from\":{\"field\":\"region\",\"value\":\"328\"},\"to\":{\"field\":\"region\",\"value\":\"gy\"}},{\"from\":{\"field\":\"region\",\"value\":\"344\"},\"to\":{\"field\":\"region\",\"value\":\"hk\"}},{\"from\":{\"field\":\"region\",\"value\":\"334\"},\"to\":{\"field\":\"region\",\"value\":\"hm\"}},{\"from\":{\"field\":\"region\",\"value\":\"340\"},\"to\":{\"field\":\"region\",\"value\":\"hn\"}},{\"from\":{\"field\":\"region\",\"value\":\"191\"},\"to\":{\"field\":\"region\",\"value\":\"hr\"}},{\"from\":{\"field\":\"region\",\"value\":\"332\"},\"to\":{\"field\":\"region\",\"value\":\"ht\"}},{\"from\":{\"field\":\"region\",\"value\":\"348\"},\"to\":{\"field\":\"region\",\"value\":\"hu\"}},{\"from\":{\"field\":\"region\",\"value\":\"360\"},\"to\":{\"field\":\"region\",\"value\":\"id\"}},{\"from\":{\"field\":\"region\",\"value\":\"372\"},\"to\":{\"field\":\"region\",\"value\":\"ie\"}},{\"from\":{\"field\":\"region\",\"value\":\"376\"},\"to\":{\"field\":\"region\",\"value\":\"il\"}},{\"from\":{\"field\":\"region\",\"value\":\"833\"},\"to\":{\"field\":\"region\",\"value\":\"im\"}},{\"from\":{\"field\":\"region\",\"value\":\"356\"},\"to\":{\"field\":\"region\",\"value\":\"in\"}},{\"from\":{\"field\":\"region\",\"value\":\"086\"},\"to\":{\"field\":\"region\",\"value\":\"io\"}},{\"from\":{\"field\":\"region\",\"value\":\"368\"},\"to\":{\"field\":\"region\",\"value\":\"iq\"}},{\"from\":{\"field\":\"region\",\"value\":\"364\"},\"to\":{\"field\":\"region\",\"value\":\"ir\"}},{\"from\":{\"field\":\"region\",\"value\":\"352\"},\"to\":{\"field\":\"region\",\"value\":\"is\"}},{\"from\":{\"field\":\"region\",\"value\":\"380\"},\"to\":{\"field\":\"region\",\"value\":\"it\"}},{\"from\":{\"field\":\"region\",\"value\":\"832\"},\"to\":{\"field\":\"region\",\"value\":\"je\"}},{\"from\":{\"field\":\"region\",\"value\":\"388\"},\"to\":{\"field\":\"region\",\"value\":\"jm\"}},{\"from\":{\"field\":\"region\",\"value\":\"400\"},\"to\":{\"field\":\"region\",\"value\":\"jo\"}},{\"from\":{\"field\":\"region\",\"value\":\"392\"},\"to\":{\"field\":\"region\",\"value\":\"jp\"}},{\"from\":{\"field\":\"region\",\"value\":\"404\"},\"to\":{\"field\":\"region\",\"value\":\"ke\"}},{\"from\":{\"field\":\"region\",\"value\":\"417\"},\"to\":{\"field\":\"region\",\"value\":\"kg\"}},{\"from\":{\"field\":\"region\",\"value\":\"116\"},\"to\":{\"field\":\"region\",\"value\":\"kh\"}},{\"from\":{\"field\":\"region\",\"value\":\"296\"},\"to\":{\"field\":\"region\",\"value\":\"ki\"}},{\"from\":{\"field\":\"region\",\"value\":\"174\"},\"to\":{\"field\":\"region\",\"value\":\"km\"}},{\"from\":{\"field\":\"region\",\"value\":\"659\"},\"to\":{\"field\":\"region\",\"value\":\"kn\"}},{\"from\":{\"field\":\"region\",\"value\":\"408\"},\"to\":{\"field\":\"region\",\"value\":\"kp\"}},{\"from\":{\"field\":\"region\",\"value\":\"410\"},\"to\":{\"field\":\"region\",\"value\":\"kr\"}},{\"from\":{\"field\":\"region\",\"value\":\"414\"},\"to\":{\"field\":\"region\",\"value\":\"kw\"}},{\"from\":{\"field\":\"region\",\"value\":\"136\"},\"to\":{\"field\":\"region\",\"value\":\"ky\"}},{\"from\":{\"field\":\"region\",\"value\":\"398\"},\"to\":{\"field\":\"region\",\"value\":\"kz\"}},{\"from\":{\"field\":\"region\",\"value\":\"418\"},\"to\":{\"field\":\"region\",\"value\":\"la\"}},{\"from\":{\"field\":\"region\",\"value\":\"422\"},\"to\":{\"field\":\"region\",\"value\":\"lb\"}},{\"from\":{\"field\":\"region\",\"value\":\"662\"},\"to\":{\"field\":\"region\",\"value\":\"lc\"}},{\"from\":{\"field\":\"region\",\"value\":\"438\"},\"to\":{\"field\":\"region\",\"value\":\"li\"}},{\"from\":{\"field\":\"region\",\"value\":\"144\"},\"to\":{\"field\":\"region\",\"value\":\"lk\"}},{\"from\":{\"field\":\"region\",\"value\":\"430\"},\"to\":{\"field\":\"region\",\"value\":\"lr\"}},{\"from\":{\"field\":\"region\",\"value\":\"426\"},\"to\":{\"field\":\"region\",\"value\":\"ls\"}},{\"from\":{\"field\":\"region\",\"value\":\"440\"},\"to\":{\"field\":\"region\",\"value\":\"lt\"}},{\"from\":{\"field\":\"region\",\"value\":\"442\"},\"to\":{\"field\":\"region\",\"value\":\"lu\"}},{\"from\":{\"field\":\"region\",\"value\":\"428\"},\"to\":{\"field\":\"region\",\"value\":\"lv\"}},{\"from\":{\"field\":\"region\",\"value\":\"434\"},\"to\":{\"field\":\"region\",\"value\":\"ly\"}},{\"from\":{\"field\":\"region\",\"value\":\"504\"},\"to\":{\"field\":\"region\",\"value\":\"ma\"}},{\"from\":{\"field\":\"region\",\"value\":\"492\"},\"to\":{\"field\":\"region\",\"value\":\"mc\"}},{\"from\":{\"field\":\"region\",\"value\":\"498\"},\"to\":{\"field\":\"region\",\"value\":\"md\"}},{\"from\":{\"field\":\"region\",\"value\":\"499\"},\"to\":{\"field\":\"region\",\"value\":\"me\"}},{\"from\":{\"field\":\"region\",\"value\":\"663\"},\"to\":{\"field\":\"region\",\"value\":\"mf\"}},{\"from\":{\"field\":\"region\",\"value\":\"450\"},\"to\":{\"field\":\"region\",\"value\":\"mg\"}},{\"from\":{\"field\":\"region\",\"value\":\"584\"},\"to\":{\"field\":\"region\",\"value\":\"mh\"}},{\"from\":{\"field\":\"region\",\"value\":\"807\"},\"to\":{\"field\":\"region\",\"value\":\"mk\"}},{\"from\":{\"field\":\"region\",\"value\":\"466\"},\"to\":{\"field\":\"region\",\"value\":\"ml\"}},{\"from\":{\"field\":\"region\",\"value\":\"496\"},\"to\":{\"field\":\"region\",\"value\":\"mn\"}},{\"from\":{\"field\":\"region\",\"value\":\"446\"},\"to\":{\"field\":\"region\",\"value\":\"mo\"}},{\"from\":{\"field\":\"region\",\"value\":\"580\"},\"to\":{\"field\":\"region\",\"value\":\"mp\"}},{\"from\":{\"field\":\"region\",\"value\":\"474\"},\"to\":{\"field\":\"region\",\"value\":\"mq\"}},{\"from\":{\"field\":\"region\",\"value\":\"478\"},\"to\":{\"field\":\"region\",\"value\":\"mr\"}},{\"from\":{\"field\":\"region\",\"value\":\"500\"},\"to\":{\"field\":\"region\",\"value\":\"ms\"}},{\"from\":{\"field\":\"region\",\"value\":\"470\"},\"to\":{\"field\":\"region\",\"value\":\"mt\"}},{\"from\":{\"field\":\"region\",\"value\":\"480\"},\"to\":{\"field\":\"region\",\"value\":\"mu\"}},{\"from\":{\"field\":\"region\",\"value\":\"462\"},\"to\":{\"field\":\"region\",\"value\":\"mv\"}},{\"from\":{\"field\":\"region\",\"value\":\"454\"},\"to\":{\"field\":\"region\",\"value\":\"mw\"}},{\"from\":{\"field\":\"region\",\"value\":\"484\"},\"to\":{\"field\":\"region\",\"value\":\"mx\"}},{\"from\":{\"field\":\"region\",\"value\":\"458\"},\"to\":{\"field\":\"region\",\"value\":\"my\"}},{\"from\":{\"field\":\"region\",\"value\":\"508\"},\"to\":{\"field\":\"region\",\"value\":\"mz\"}},{\"from\":{\"field\":\"region\",\"value\":\"516\"},\"to\":{\"field\":\"region\",\"value\":\"na\"}},{\"from\":{\"field\":\"region\",\"value\":\"540\"},\"to\":{\"field\":\"region\",\"value\":\"nc\"}},{\"from\":{\"field\":\"region\",\"value\":\"562\"},\"to\":{\"field\":\"region\",\"value\":\"ne\"}},{\"from\":{\"field\":\"region\",\"value\":\"574\"},\"to\":{\"field\":\"region\",\"value\":\"nf\"}},{\"from\":{\"field\":\"region\",\"value\":\"566\"},\"to\":{\"field\":\"region\",\"value\":\"ng\"}},{\"from\":{\"field\":\"region\",\"value\":\"558\"},\"to\":{\"field\":\"region\",\"value\":\"ni\"}},{\"from\":{\"field\":\"region\",\"value\":\"528\"},\"to\":{\"field\":\"region\",\"value\":\"nl\"}},{\"from\":{\"field\":\"region\",\"value\":\"578\"},\"to\":{\"field\":\"region\",\"value\":\"no\"}},{\"from\":{\"field\":\"region\",\"value\":\"524\"},\"to\":{\"field\":\"region\",\"value\":\"np\"}},{\"from\":{\"field\":\"region\",\"value\":\"520\"},\"to\":{\"field\":\"region\",\"value\":\"nr\"}},{\"from\":{\"field\":\"region\",\"value\":\"570\"},\"to\":{\"field\":\"region\",\"value\":\"nu\"}},{\"from\":{\"field\":\"region\",\"value\":\"554\"},\"to\":{\"field\":\"region\",\"value\":\"nz\"}},{\"from\":{\"field\":\"region\",\"value\":\"512\"},\"to\":{\"field\":\"region\",\"value\":\"om\"}},{\"from\":{\"field\":\"region\",\"value\":\"591\"},\"to\":{\"field\":\"region\",\"value\":\"pa\"}},{\"from\":{\"field\":\"region\",\"value\":\"604\"},\"to\":{\"field\":\"region\",\"value\":\"pe\"}},{\"from\":{\"field\":\"region\",\"value\":\"258\"},\"to\":{\"field\":\"region\",\"value\":\"pf\"}},{\"from\":{\"field\":\"region\",\"value\":\"598\"},\"to\":{\"field\":\"region\",\"value\":\"pg\"}},{\"from\":{\"field\":\"region\",\"value\":\"608\"},\"to\":{\"field\":\"region\",\"value\":\"ph\"}},{\"from\":{\"field\":\"region\",\"value\":\"586\"},\"to\":{\"field\":\"region\",\"value\":\"pk\"}},{\"from\":{\"field\":\"region\",\"value\":\"616\"},\"to\":{\"field\":\"region\",\"value\":\"pl\"}},{\"from\":{\"field\":\"region\",\"value\":\"666\"},\"to\":{\"field\":\"region\",\"value\":\"pm\"}},{\"from\":{\"field\":\"region\",\"value\":\"612\"},\"to\":{\"field\":\"region\",\"value\":\"pn\"}},{\"from\":{\"field\":\"region\",\"value\":\"630\"},\"to\":{\"field\":\"region\",\"value\":\"pr\"}},{\"from\":{\"field\":\"region\",\"value\":\"275\"},\"to\":{\"field\":\"region\",\"value\":\"ps\"}},{\"from\":{\"field\":\"region\",\"value\":\"620\"},\"to\":{\"field\":\"region\",\"value\":\"pt\"}},{\"from\":{\"field\":\"region\",\"value\":\"585\"},\"to\":{\"field\":\"region\",\"value\":\"pw\"}},{\"from\":{\"field\":\"region\",\"value\":\"600\"},\"to\":{\"field\":\"region\",\"value\":\"py\"}},{\"from\":{\"field\":\"region\",\"value\":\"634\"},\"to\":{\"field\":\"region\",\"value\":\"qa\"}},{\"from\":{\"field\":\"region\",\"value\":\"959\"},\"to\":{\"field\":\"region\",\"value\":\"qm\"}},{\"from\":{\"field\":\"region\",\"value\":\"960\"},\"to\":{\"field\":\"region\",\"value\":\"qn\"}},{\"from\":{\"field\":\"region\",\"value\":\"962\"},\"to\":{\"field\":\"region\",\"value\":\"qp\"}},{\"from\":{\"field\":\"region\",\"value\":\"963\"},\"to\":{\"field\":\"region\",\"value\":\"qq\"}},{\"from\":{\"field\":\"region\",\"value\":\"964\"},\"to\":{\"field\":\"region\",\"value\":\"qr\"}},{\"from\":{\"field\":\"region\",\"value\":\"965\"},\"to\":{\"field\":\"region\",\"value\":\"qs\"}},{\"from\":{\"field\":\"region\",\"value\":\"966\"},\"to\":{\"field\":\"region\",\"value\":\"qt\"}},{\"from\":{\"field\":\"region\",\"value\":\"967\"},\"to\":{\"field\":\"region\",\"value\":\"eu\"}},{\"from\":{\"field\":\"region\",\"value\":\"968\"},\"to\":{\"field\":\"region\",\"value\":\"qv\"}},{\"from\":{\"field\":\"region\",\"value\":\"969\"},\"to\":{\"field\":\"region\",\"value\":\"qw\"}},{\"from\":{\"field\":\"region\",\"value\":\"970\"},\"to\":{\"field\":\"region\",\"value\":\"qx\"}},{\"from\":{\"field\":\"region\",\"value\":\"971\"},\"to\":{\"field\":\"region\",\"value\":\"qy\"}},{\"from\":{\"field\":\"region\",\"value\":\"972\"},\"to\":{\"field\":\"region\",\"value\":\"qz\"}},{\"from\":{\"field\":\"region\",\"value\":\"638\"},\"to\":{\"field\":\"region\",\"value\":\"re\"}},{\"from\":{\"field\":\"region\",\"value\":\"642\"},\"to\":{\"field\":\"region\",\"value\":\"ro\"}},{\"from\":{\"field\":\"region\",\"value\":\"688\"},\"to\":{\"field\":\"region\",\"value\":\"rs\"}},{\"from\":{\"field\":\"region\",\"value\":\"643\"},\"to\":{\"field\":\"region\",\"value\":\"ru\"}},{\"from\":{\"field\":\"region\",\"value\":\"646\"},\"to\":{\"field\":\"region\",\"value\":\"rw\"}},{\"from\":{\"field\":\"region\",\"value\":\"682\"},\"to\":{\"field\":\"region\",\"value\":\"sa\"}},{\"from\":{\"field\":\"region\",\"value\":\"090\"},\"to\":{\"field\":\"region\",\"value\":\"sb\"}},{\"from\":{\"field\":\"region\",\"value\":\"690\"},\"to\":{\"field\":\"region\",\"value\":\"sc\"}},{\"from\":{\"field\":\"region\",\"value\":\"729\"},\"to\":{\"field\":\"region\",\"value\":\"sd\"}},{\"from\":{\"field\":\"region\",\"value\":\"752\"},\"to\":{\"field\":\"region\",\"value\":\"se\"}},{\"from\":{\"field\":\"region\",\"value\":\"702\"},\"to\":{\"field\":\"region\",\"value\":\"sg\"}},{\"from\":{\"field\":\"region\",\"value\":\"654\"},\"to\":{\"field\":\"region\",\"value\":\"sh\"}},{\"from\":{\"field\":\"region\",\"value\":\"705\"},\"to\":{\"field\":\"region\",\"value\":\"si\"}},{\"from\":{\"field\":\"region\",\"value\":\"744\"},\"to\":{\"field\":\"region\",\"value\":\"sj\"}},{\"from\":{\"field\":\"region\",\"value\":\"703\"},\"to\":{\"field\":\"region\",\"value\":\"sk\"}},{\"from\":{\"field\":\"region\",\"value\":\"694\"},\"to\":{\"field\":\"region\",\"value\":\"sl\"}},{\"from\":{\"field\":\"region\",\"value\":\"674\"},\"to\":{\"field\":\"region\",\"value\":\"sm\"}},{\"from\":{\"field\":\"region\",\"value\":\"686\"},\"to\":{\"field\":\"region\",\"value\":\"sn\"}},{\"from\":{\"field\":\"region\",\"value\":\"706\"},\"to\":{\"field\":\"region\",\"value\":\"so\"}},{\"from\":{\"field\":\"region\",\"value\":\"740\"},\"to\":{\"field\":\"region\",\"value\":\"sr\"}},{\"from\":{\"field\":\"region\",\"value\":\"728\"},\"to\":{\"field\":\"region\",\"value\":\"ss\"}},{\"from\":{\"field\":\"region\",\"value\":\"678\"},\"to\":{\"field\":\"region\",\"value\":\"st\"}},{\"from\":{\"field\":\"region\",\"value\":\"222\"},\"to\":{\"field\":\"region\",\"value\":\"sv\"}},{\"from\":{\"field\":\"region\",\"value\":\"534\"},\"to\":{\"field\":\"region\",\"value\":\"sx\"}},{\"from\":{\"field\":\"region\",\"value\":\"760\"},\"to\":{\"field\":\"region\",\"value\":\"sy\"}},{\"from\":{\"field\":\"region\",\"value\":\"748\"},\"to\":{\"field\":\"region\",\"value\":\"sz\"}},{\"from\":{\"field\":\"region\",\"value\":\"796\"},\"to\":{\"field\":\"region\",\"value\":\"tc\"}},{\"from\":{\"field\":\"region\",\"value\":\"148\"},\"to\":{\"field\":\"region\",\"value\":\"td\"}},{\"from\":{\"field\":\"region\",\"value\":\"260\"},\"to\":{\"field\":\"region\",\"value\":\"tf\"}},{\"from\":{\"field\":\"region\",\"value\":\"768\"},\"to\":{\"field\":\"region\",\"value\":\"tg\"}},{\"from\":{\"field\":\"region\",\"value\":\"764\"},\"to\":{\"field\":\"region\",\"value\":\"th\"}},{\"from\":{\"field\":\"region\",\"value\":\"762\"},\"to\":{\"field\":\"region\",\"value\":\"tj\"}},{\"from\":{\"field\":\"region\",\"value\":\"772\"},\"to\":{\"field\":\"region\",\"value\":\"tk\"}},{\"from\":{\"field\":\"region\",\"value\":\"626\"},\"to\":{\"field\":\"region\",\"value\":\"tl\"}},{\"from\":{\"field\":\"region\",\"value\":\"795\"},\"to\":{\"field\":\"region\",\"value\":\"tm\"}},{\"from\":{\"field\":\"region\",\"value\":\"788\"},\"to\":{\"field\":\"region\",\"value\":\"tn\"}},{\"from\":{\"field\":\"region\",\"value\":\"776\"},\"to\":{\"field\":\"region\",\"value\":\"to\"}},{\"from\":{\"field\":\"region\",\"value\":\"792\"},\"to\":{\"field\":\"region\",\"value\":\"tr\"}},{\"from\":{\"field\":\"region\",\"value\":\"780\"},\"to\":{\"field\":\"region\",\"value\":\"tt\"}},{\"from\":{\"field\":\"region\",\"value\":\"798\"},\"to\":{\"field\":\"region\",\"value\":\"tv\"}},{\"from\":{\"field\":\"region\",\"value\":\"158\"},\"to\":{\"field\":\"region\",\"value\":\"tw\"}},{\"from\":{\"field\":\"region\",\"value\":\"834\"},\"to\":{\"field\":\"region\",\"value\":\"tz\"}},{\"from\":{\"field\":\"region\",\"value\":\"804\"},\"to\":{\"field\":\"region\",\"value\":\"ua\"}},{\"from\":{\"field\":\"region\",\"value\":\"800\"},\"to\":{\"field\":\"region\",\"value\":\"ug\"}},{\"from\":{\"field\":\"region\",\"value\":\"581\"},\"to\":{\"field\":\"region\",\"value\":\"um\"}},{\"from\":{\"field\":\"region\",\"value\":\"840\"},\"to\":{\"field\":\"region\",\"value\":\"us\"}},{\"from\":{\"field\":\"region\",\"value\":\"858\"},\"to\":{\"field\":\"region\",\"value\":\"uy\"}},{\"from\":{\"field\":\"region\",\"value\":\"860\"},\"to\":{\"field\":\"region\",\"value\":\"uz\"}},{\"from\":{\"field\":\"region\",\"value\":\"336\"},\"to\":{\"field\":\"region\",\"value\":\"va\"}},{\"from\":{\"field\":\"region\",\"value\":\"670\"},\"to\":{\"field\":\"region\",\"value\":\"vc\"}},{\"from\":{\"field\":\"region\",\"value\":\"862\"},\"to\":{\"field\":\"region\",\"value\":\"ve\"}},{\"from\":{\"field\":\"region\",\"value\":\"092\"},\"to\":{\"field\":\"region\",\"value\":\"vg\"}},{\"from\":{\"field\":\"region\",\"value\":\"850\"},\"to\":{\"field\":\"region\",\"value\":\"vi\"}},{\"from\":{\"field\":\"region\",\"value\":\"704\"},\"to\":{\"field\":\"region\",\"value\":\"vn\"}},{\"from\":{\"field\":\"region\",\"value\":\"548\"},\"to\":{\"field\":\"region\",\"value\":\"vu\"}},{\"from\":{\"field\":\"region\",\"value\":\"876\"},\"to\":{\"field\":\"region\",\"value\":\"wf\"}},{\"from\":{\"field\":\"region\",\"value\":\"882\"},\"to\":{\"field\":\"region\",\"value\":\"ws\"}},{\"from\":{\"field\":\"region\",\"value\":\"973\"},\"to\":{\"field\":\"region\",\"value\":\"xa\"}},{\"from\":{\"field\":\"region\",\"value\":\"974\"},\"to\":{\"field\":\"region\",\"value\":\"xb\"}},{\"from\":{\"field\":\"region\",\"value\":\"975\"},\"to\":{\"field\":\"region\",\"value\":\"xc\"}},{\"from\":{\"field\":\"region\",\"value\":\"976\"},\"to\":{\"field\":\"region\",\"value\":\"xd\"}},{\"from\":{\"field\":\"region\",\"value\":\"977\"},\"to\":{\"field\":\"region\",\"value\":\"xe\"}},{\"from\":{\"field\":\"region\",\"value\":\"978\"},\"to\":{\"field\":\"region\",\"value\":\"xf\"}},{\"from\":{\"field\":\"region\",\"value\":\"979\"},\"to\":{\"field\":\"region\",\"value\":\"xg\"}},{\"from\":{\"field\":\"region\",\"value\":\"980\"},\"to\":{\"field\":\"region\",\"value\":\"xh\"}},{\"from\":{\"field\":\"region\",\"value\":\"981\"},\"to\":{\"field\":\"region\",\"value\":\"xi\"}},{\"from\":{\"field\":\"region\",\"value\":\"982\"},\"to\":{\"field\":\"region\",\"value\":\"xj\"}},{\"from\":{\"field\":\"region\",\"value\":\"983\"},\"to\":{\"field\":\"region\",\"value\":\"xk\"}},{\"from\":{\"field\":\"region\",\"value\":\"984\"},\"to\":{\"field\":\"region\",\"value\":\"xl\"}},{\"from\":{\"field\":\"region\",\"value\":\"985\"},\"to\":{\"field\":\"region\",\"value\":\"xm\"}},{\"from\":{\"field\":\"region\",\"value\":\"986\"},\"to\":{\"field\":\"region\",\"value\":\"xn\"}},{\"from\":{\"field\":\"region\",\"value\":\"987\"},\"to\":{\"field\":\"region\",\"value\":\"xo\"}},{\"from\":{\"field\":\"region\",\"value\":\"988\"},\"to\":{\"field\":\"region\",\"value\":\"xp\"}},{\"from\":{\"field\":\"region\",\"value\":\"989\"},\"to\":{\"field\":\"region\",\"value\":\"xq\"}},{\"from\":{\"field\":\"region\",\"value\":\"990\"},\"to\":{\"field\":\"region\",\"value\":\"xr\"}},{\"from\":{\"field\":\"region\",\"value\":\"991\"},\"to\":{\"field\":\"region\",\"value\":\"xs\"}},{\"from\":{\"field\":\"region\",\"value\":\"992\"},\"to\":{\"field\":\"region\",\"value\":\"xt\"}},{\"from\":{\"field\":\"region\",\"value\":\"993\"},\"to\":{\"field\":\"region\",\"value\":\"xu\"}},{\"from\":{\"field\":\"region\",\"value\":\"994\"},\"to\":{\"field\":\"region\",\"value\":\"xv\"}},{\"from\":{\"field\":\"region\",\"value\":\"995\"},\"to\":{\"field\":\"region\",\"value\":\"xw\"}},{\"from\":{\"field\":\"region\",\"value\":\"996\"},\"to\":{\"field\":\"region\",\"value\":\"xx\"}},{\"from\":{\"field\":\"region\",\"value\":\"997\"},\"to\":{\"field\":\"region\",\"value\":\"xy\"}},{\"from\":{\"field\":\"region\",\"value\":\"998\"},\"to\":{\"field\":\"region\",\"value\":\"xz\"}},{\"from\":{\"field\":\"region\",\"value\":\"720\"},\"to\":{\"field\":\"region\",\"value\":\"ye\"}},{\"from\":{\"field\":\"region\",\"value\":\"887\"},\"to\":{\"field\":\"region\",\"value\":\"ye\"}},{\"from\":{\"field\":\"region\",\"value\":\"175\"},\"to\":{\"field\":\"region\",\"value\":\"yt\"}},{\"from\":{\"field\":\"region\",\"value\":\"710\"},\"to\":{\"field\":\"region\",\"value\":\"za\"}},{\"from\":{\"field\":\"region\",\"value\":\"894\"},\"to\":{\"field\":\"region\",\"value\":\"zm\"}},{\"from\":{\"field\":\"region\",\"value\":\"716\"},\"to\":{\"field\":\"region\",\"value\":\"zw\"}},{\"from\":{\"field\":\"region\",\"value\":\"999\"},\"to\":{\"field\":\"region\",\"value\":\"zz\"}},{\"from\":{\"field\":\"variants\",\"value\":\"aaland\"},\"to\":{\"field\":\"region\",\"value\":\"ax\"}},{\"from\":{\"field\":\"variants\",\"value\":\"polytoni\"},\"to\":{\"field\":\"variants\",\"value\":\"polyton\"}},{\"from\":{\"field\":\"variants\",\"value\":\"heploc\"},\"to\":{\"field\":\"variants\",\"value\":\"alalc97\"}},{\"from\":{\"field\":\"variants\",\"value\":\"arevela\"},\"to\":{\"field\":\"language\",\"value\":\"hy\"}},{\"from\":{\"field\":\"variants\",\"value\":\"arevmda\"},\"to\":{\"field\":\"language\",\"value\":\"hyw\"}}]");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/lib/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/lib/index.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var bcp47 = __webpack_require__(/*! bcp-47 */ "./node_modules/bcp-47/index.js")
+var match = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js")
+var matches = __webpack_require__(/*! ./matches.json */ "./node_modules/bcp-47-normalize/lib/matches.json")
+var fields = __webpack_require__(/*! ./fields.json */ "./node_modules/bcp-47-normalize/lib/fields.json")
+var defaults = __webpack_require__(/*! ./defaults.json */ "./node_modules/bcp-47-normalize/lib/defaults.json")
+var many = __webpack_require__(/*! ./many.json */ "./node_modules/bcp-47-normalize/lib/many.json")
+
+module.exports = normalize
+
+var own = {}.hasOwnProperty
+
+var collator = new Intl.Collator()
+
+var emptyExtraFields = {
+  variants: [],
+  extensions: [],
+  privateuse: [],
+  irregular: null,
+  regular: null
+}
+
+function normalize(value, options) {
+  var settings = options || {}
+  // 1. normalize and lowercase the tag (`sgn-be-fr` -> `sfb`).
+  var schema = bcp47.parse(String(value || '').toLowerCase(), settings)
+  var tag = bcp47.stringify(schema)
+  var index = -1
+  var key
+
+  if (!tag) {
+    return tag
+  }
+
+  // 2. Do fancy, expensive replaces (`ha-latn-gh` -> `ha-gh`).
+  while (++index < matches.length) {
+    if (match.extendedFilter(tag, matches[index].from).length) {
+      replace(schema, matches[index].from, matches[index].to)
+      tag = bcp47.stringify(schema)
+    }
+  }
+
+  // 3. Do basic field replaces (`en-840` -> `en-us`).
+  index = -1
+
+  while (++index < fields.length) {
+    if (remove(schema, fields[index].from.field, fields[index].from.value)) {
+      add(schema, fields[index].to.field, fields[index].to.value)
+    }
+  }
+
+  // 4. Remove defaults (`nl-nl` -> `nl`).
+  tag = bcp47.stringify(Object.assign({}, schema, emptyExtraFields))
+  index = -1
+
+  while (++index < defaults.length) {
+    if (tag === defaults[index]) {
+      replace(
+        schema,
+        defaults[index],
+        defaults[index].split('-').slice(0, -1).join('-')
+      )
+      tag = bcp47.stringify(Object.assign({}, schema, emptyExtraFields))
+    }
+  }
+
+  // 5. Sort extensions on singleton.
+  schema.extensions.sort(compareSingleton)
+
+  // 6. Warn if fields (currently only regions) should be updated but have
+  // multiple choices.
+  if (settings.warning) {
+    for (key in many) {
+      if (own.call(many[key], schema[key])) {
+        settings.warning(
+          'Deprecated ' +
+            key +
+            ' `' +
+            schema[key] +
+            '`, expected one of `' +
+            many[key][schema[key]].join('`, `') +
+            '`',
+          null,
+          7
+        )
+      }
+    }
+  }
+
+  // 7. Add proper casing back.
+  // Format script (ISO 15924) as titlecase (example: `Latn`):
+  if (schema.script) {
+    schema.script =
+      schema.script.charAt(0).toUpperCase() + schema.script.slice(1)
+  }
+
+  // Format region (ISO 3166) as uppercase (note: this doesn’t affect numeric
+  // codes, which is fine):
+  if (schema.region) {
+    schema.region = schema.region.toUpperCase()
+  }
+
+  return bcp47.stringify(schema)
+}
+
+function replace(schema, from, to) {
+  var left = bcp47.parse(from)
+  var right = bcp47.parse(to)
+  var removed = []
+  var key
+
+  // Remove values from `from`:
+  for (key in left) {
+    if (left[key] && left[key].length && remove(schema, key, left[key])) {
+      removed.push(key)
+    }
+  }
+
+  // Add values from `to`:
+  for (key in right) {
+    // Only add values that are defined on `to`, and that were either removed by
+    // `from` or are currently empty.
+    if (
+      right[key] &&
+      right[key].length &&
+      (removed.indexOf(key) > -1 || !schema[key] || !schema[key].length)
+    ) {
+      add(schema, key, right[key])
+    }
+  }
+}
+
+function remove(object, key, value) {
+  var removed = false
+  var current
+  var result
+  var index
+  var item
+
+  /* istanbul ignore else - this is currently done by wrapping code, so else is
+   * never reached.
+   * However, that could change in the future, so leave this guard here. */
+  if (value) {
+    current = object[key]
+    result = current
+
+    if (current && typeof current === 'object') {
+      result = []
+      index = -1
+
+      while (++index < current.length) {
+        item = current[index]
+
+        if (value.indexOf(item) < 0) {
+          result.push(item)
+        } else {
+          removed = true
+        }
+      }
+    } else if (current === value) {
+      result = null
+      removed = true
+    }
+
+    object[key] = result
+  }
+
+  return removed
+}
+
+function add(object, key, value) {
+  var current = object[key]
+  var list
+  var index
+  var item
+
+  if (current && typeof current === 'object') {
+    list = [].concat(value)
+    index = -1
+
+    while (++index < list.length) {
+      item = list[index]
+
+      /* istanbul ignore else - this currently can’t happen, but guard for the
+       * future. */
+      if (current.indexOf(item) < 0) {
+        current.push(item)
+      }
+    }
+  } else {
+    object[key] = value
+  }
+}
+
+function compareSingleton(left, right) {
+  return collator.compare(left.singleton, right.singleton)
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/lib/many.json":
+/*!*****************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/lib/many.json ***!
+  \*****************************************************/
+/*! exports provided: region, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("{\"region\":{\"172\":[\"ru\",\"am\",\"az\",\"by\",\"ge\",\"kg\",\"kz\",\"md\",\"tj\",\"tm\",\"ua\",\"uz\"],\"200\":[\"cz\",\"sk\"],\"530\":[\"cw\",\"sx\",\"bq\"],\"532\":[\"cw\",\"sx\",\"bq\"],\"536\":[\"sa\",\"iq\"],\"582\":[\"fm\",\"mh\",\"mp\",\"pw\"],\"810\":[\"ru\",\"am\",\"az\",\"by\",\"ee\",\"ge\",\"kz\",\"kg\",\"lv\",\"lt\",\"md\",\"tj\",\"tm\",\"ua\",\"uz\"],\"830\":[\"je\",\"gg\"],\"890\":[\"rs\",\"me\",\"si\",\"hr\",\"mk\",\"ba\"],\"891\":[\"rs\",\"me\"],\"an\":[\"cw\",\"sx\",\"bq\"],\"cs\":[\"rs\",\"me\"],\"fq\":[\"aq\",\"tf\"],\"nt\":[\"sa\",\"iq\"],\"pc\":[\"fm\",\"mh\",\"mp\",\"pw\"],\"su\":[\"ru\",\"am\",\"az\",\"by\",\"ee\",\"ge\",\"kz\",\"kg\",\"lv\",\"lt\",\"md\",\"tj\",\"tm\",\"ua\",\"uz\"],\"yu\":[\"rs\",\"me\"],\"062\":[\"034\",\"143\"],\"ant\":[\"cw\",\"sx\",\"bq\"],\"scg\":[\"rs\",\"me\"],\"ntz\":[\"sa\",\"iq\"],\"sun\":[\"ru\",\"am\",\"az\",\"by\",\"ee\",\"ge\",\"kz\",\"kg\",\"lv\",\"lt\",\"md\",\"tj\",\"tm\",\"ua\",\"uz\"],\"yug\":[\"rs\",\"me\"]}}");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47-normalize/lib/matches.json":
+/*!********************************************************!*\
+  !*** ./node_modules/bcp-47-normalize/lib/matches.json ***!
+  \********************************************************/
+/*! exports provided: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("[{\"from\":\"in\",\"to\":\"id\"},{\"from\":\"iw\",\"to\":\"he\"},{\"from\":\"ji\",\"to\":\"yi\"},{\"from\":\"jw\",\"to\":\"jv\"},{\"from\":\"mo\",\"to\":\"ro\"},{\"from\":\"scc\",\"to\":\"sr\"},{\"from\":\"scr\",\"to\":\"hr\"},{\"from\":\"aam\",\"to\":\"aas\"},{\"from\":\"adp\",\"to\":\"dz\"},{\"from\":\"aue\",\"to\":\"ktz\"},{\"from\":\"ayx\",\"to\":\"nun\"},{\"from\":\"bgm\",\"to\":\"bcg\"},{\"from\":\"bjd\",\"to\":\"drl\"},{\"from\":\"ccq\",\"to\":\"rki\"},{\"from\":\"cjr\",\"to\":\"mom\"},{\"from\":\"cka\",\"to\":\"cmr\"},{\"from\":\"cmk\",\"to\":\"xch\"},{\"from\":\"coy\",\"to\":\"pij\"},{\"from\":\"cqu\",\"to\":\"quh\"},{\"from\":\"drh\",\"to\":\"mn\"},{\"from\":\"drw\",\"to\":\"fa-af\"},{\"from\":\"gav\",\"to\":\"dev\"},{\"from\":\"gfx\",\"to\":\"vaj\"},{\"from\":\"ggn\",\"to\":\"gvr\"},{\"from\":\"gti\",\"to\":\"nyc\"},{\"from\":\"guv\",\"to\":\"duz\"},{\"from\":\"hrr\",\"to\":\"jal\"},{\"from\":\"ibi\",\"to\":\"opa\"},{\"from\":\"ilw\",\"to\":\"gal\"},{\"from\":\"jeg\",\"to\":\"oyb\"},{\"from\":\"kgc\",\"to\":\"tdf\"},{\"from\":\"kgh\",\"to\":\"kml\"},{\"from\":\"koj\",\"to\":\"kwv\"},{\"from\":\"krm\",\"to\":\"bmf\"},{\"from\":\"ktr\",\"to\":\"dtp\"},{\"from\":\"kvs\",\"to\":\"gdj\"},{\"from\":\"kwq\",\"to\":\"yam\"},{\"from\":\"kxe\",\"to\":\"tvd\"},{\"from\":\"kzj\",\"to\":\"dtp\"},{\"from\":\"kzt\",\"to\":\"dtp\"},{\"from\":\"lii\",\"to\":\"raq\"},{\"from\":\"lmm\",\"to\":\"rmx\"},{\"from\":\"meg\",\"to\":\"cir\"},{\"from\":\"mst\",\"to\":\"mry\"},{\"from\":\"mwj\",\"to\":\"vaj\"},{\"from\":\"myt\",\"to\":\"mry\"},{\"from\":\"nad\",\"to\":\"xny\"},{\"from\":\"ncp\",\"to\":\"kdz\"},{\"from\":\"nnx\",\"to\":\"ngv\"},{\"from\":\"nts\",\"to\":\"pij\"},{\"from\":\"oun\",\"to\":\"vaj\"},{\"from\":\"pcr\",\"to\":\"adx\"},{\"from\":\"pmc\",\"to\":\"huw\"},{\"from\":\"pmu\",\"to\":\"phr\"},{\"from\":\"ppa\",\"to\":\"bfy\"},{\"from\":\"ppr\",\"to\":\"lcq\"},{\"from\":\"pry\",\"to\":\"prt\"},{\"from\":\"puz\",\"to\":\"pub\"},{\"from\":\"sca\",\"to\":\"hle\"},{\"from\":\"skk\",\"to\":\"oyb\"},{\"from\":\"tdu\",\"to\":\"dtp\"},{\"from\":\"thc\",\"to\":\"tpo\"},{\"from\":\"thx\",\"to\":\"oyb\"},{\"from\":\"tie\",\"to\":\"ras\"},{\"from\":\"tkk\",\"to\":\"twm\"},{\"from\":\"tlw\",\"to\":\"weo\"},{\"from\":\"tmp\",\"to\":\"tyj\"},{\"from\":\"tne\",\"to\":\"kak\"},{\"from\":\"tnf\",\"to\":\"fa-af\"},{\"from\":\"tsf\",\"to\":\"taj\"},{\"from\":\"uok\",\"to\":\"ema\"},{\"from\":\"xba\",\"to\":\"cax\"},{\"from\":\"xia\",\"to\":\"acn\"},{\"from\":\"xkh\",\"to\":\"waw\"},{\"from\":\"xsj\",\"to\":\"suj\"},{\"from\":\"ybd\",\"to\":\"rki\"},{\"from\":\"yma\",\"to\":\"lrr\"},{\"from\":\"ymt\",\"to\":\"mtm\"},{\"from\":\"yos\",\"to\":\"zom\"},{\"from\":\"yuu\",\"to\":\"yug\"},{\"from\":\"asd\",\"to\":\"snz\"},{\"from\":\"dit\",\"to\":\"dif\"},{\"from\":\"llo\",\"to\":\"ngt\"},{\"from\":\"myd\",\"to\":\"aog\"},{\"from\":\"nns\",\"to\":\"nbr\"},{\"from\":\"sgn-br\",\"to\":\"bzs\"},{\"from\":\"sgn-co\",\"to\":\"csn\"},{\"from\":\"sgn-de\",\"to\":\"gsg\"},{\"from\":\"sgn-dk\",\"to\":\"dsl\"},{\"from\":\"sgn-fr\",\"to\":\"fsl\"},{\"from\":\"sgn-gb\",\"to\":\"bfi\"},{\"from\":\"sgn-gr\",\"to\":\"gss\"},{\"from\":\"sgn-ie\",\"to\":\"isg\"},{\"from\":\"sgn-it\",\"to\":\"ise\"},{\"from\":\"sgn-jp\",\"to\":\"jsl\"},{\"from\":\"sgn-mx\",\"to\":\"mfs\"},{\"from\":\"sgn-ni\",\"to\":\"ncs\"},{\"from\":\"sgn-nl\",\"to\":\"dse\"},{\"from\":\"sgn-no\",\"to\":\"nsi\"},{\"from\":\"sgn-pt\",\"to\":\"psr\"},{\"from\":\"sgn-se\",\"to\":\"swl\"},{\"from\":\"sgn-us\",\"to\":\"ase\"},{\"from\":\"sgn-za\",\"to\":\"sfs\"},{\"from\":\"no-bokmal\",\"to\":\"nb\"},{\"from\":\"no-nynorsk\",\"to\":\"nn\"},{\"from\":\"aa-saaho\",\"to\":\"ssy\"},{\"from\":\"sh\",\"to\":\"sr-latn\"},{\"from\":\"cnr\",\"to\":\"sr-me\"},{\"from\":\"no\",\"to\":\"nb\"},{\"from\":\"tl\",\"to\":\"fil\"},{\"from\":\"az-az\",\"to\":\"az-latn-az\"},{\"from\":\"bs-ba\",\"to\":\"bs-latn-ba\"},{\"from\":\"ha-latn-gh\",\"to\":\"ha-gh\"},{\"from\":\"ha-latn-ne\",\"to\":\"ha-ne\"},{\"from\":\"ha-latn-ng\",\"to\":\"ha-ng\"},{\"from\":\"kk-cyrl-kz\",\"to\":\"kk-kz\"},{\"from\":\"ky-cyrl-kg\",\"to\":\"ky-kg\"},{\"from\":\"ks-arab-in\",\"to\":\"ks-in\"},{\"from\":\"mn-cyrl-mn\",\"to\":\"mn-mn\"},{\"from\":\"ms-latn-bn\",\"to\":\"ms-bn\"},{\"from\":\"ms-latn-my\",\"to\":\"ms-my\"},{\"from\":\"ms-latn-sg\",\"to\":\"ms-sg\"},{\"from\":\"pa-in\",\"to\":\"pa-guru-in\"},{\"from\":\"pa-pk\",\"to\":\"pa-arab-pk\"},{\"from\":\"shi-ma\",\"to\":\"shi-tfng-ma\"},{\"from\":\"sr-ba\",\"to\":\"sr-cyrl-ba\"},{\"from\":\"sr-me\",\"to\":\"sr-latn-me\"},{\"from\":\"sr-rs\",\"to\":\"sr-cyrl-rs\"},{\"from\":\"sr-xk\",\"to\":\"sr-cyrl-xk\"},{\"from\":\"tzm-latn-ma\",\"to\":\"tzm-ma\"},{\"from\":\"ug-arab-cn\",\"to\":\"ug-cn\"},{\"from\":\"uz-af\",\"to\":\"uz-arab-af\"},{\"from\":\"uz-uz\",\"to\":\"uz-latn-uz\"},{\"from\":\"vai-lr\",\"to\":\"vai-vaii-lr\"},{\"from\":\"yue-cn\",\"to\":\"yue-hans-cn\"},{\"from\":\"yue-hk\",\"to\":\"yue-hant-hk\"},{\"from\":\"zh-cn\",\"to\":\"zh-hans-cn\"},{\"from\":\"zh-hk\",\"to\":\"zh-hant-hk\"},{\"from\":\"zh-mo\",\"to\":\"zh-hant-mo\"},{\"from\":\"zh-sg\",\"to\":\"zh-hans-sg\"},{\"from\":\"zh-tw\",\"to\":\"zh-hant-tw\"},{\"from\":\"aju\",\"to\":\"jrb\"},{\"from\":\"als\",\"to\":\"sq\"},{\"from\":\"arb\",\"to\":\"ar\"},{\"from\":\"ayr\",\"to\":\"ay\"},{\"from\":\"azj\",\"to\":\"az\"},{\"from\":\"bcc\",\"to\":\"bal\"},{\"from\":\"bcl\",\"to\":\"bik\"},{\"from\":\"bxk\",\"to\":\"luy\"},{\"from\":\"bxr\",\"to\":\"bua\"},{\"from\":\"cld\",\"to\":\"syr\"},{\"from\":\"cmn\",\"to\":\"zh\"},{\"from\":\"cwd\",\"to\":\"cr\"},{\"from\":\"dgo\",\"to\":\"doi\"},{\"from\":\"dhd\",\"to\":\"mwr\"},{\"from\":\"dik\",\"to\":\"din\"},{\"from\":\"diq\",\"to\":\"zza\"},{\"from\":\"lbk\",\"to\":\"bnc\"},{\"from\":\"ekk\",\"to\":\"et\"},{\"from\":\"emk\",\"to\":\"man\"},{\"from\":\"esk\",\"to\":\"ik\"},{\"from\":\"fat\",\"to\":\"ak\"},{\"from\":\"fuc\",\"to\":\"ff\"},{\"from\":\"gaz\",\"to\":\"om\"},{\"from\":\"gbo\",\"to\":\"grb\"},{\"from\":\"gno\",\"to\":\"gon\"},{\"from\":\"gug\",\"to\":\"gn\"},{\"from\":\"gya\",\"to\":\"gba\"},{\"from\":\"hdn\",\"to\":\"hai\"},{\"from\":\"hea\",\"to\":\"hmn\"},{\"from\":\"ike\",\"to\":\"iu\"},{\"from\":\"kmr\",\"to\":\"ku\"},{\"from\":\"knc\",\"to\":\"kr\"},{\"from\":\"kng\",\"to\":\"kg\"},{\"from\":\"knn\",\"to\":\"kok\"},{\"from\":\"kpv\",\"to\":\"kv\"},{\"from\":\"lvs\",\"to\":\"lv\"},{\"from\":\"mhr\",\"to\":\"chm\"},{\"from\":\"mup\",\"to\":\"raj\"},{\"from\":\"khk\",\"to\":\"mn\"},{\"from\":\"npi\",\"to\":\"ne\"},{\"from\":\"ojg\",\"to\":\"oj\"},{\"from\":\"ory\",\"to\":\"or\"},{\"from\":\"pbu\",\"to\":\"ps\"},{\"from\":\"pes\",\"to\":\"fa\"},{\"from\":\"plt\",\"to\":\"mg\"},{\"from\":\"pnb\",\"to\":\"lah\"},{\"from\":\"quz\",\"to\":\"qu\"},{\"from\":\"rmy\",\"to\":\"rom\"},{\"from\":\"spy\",\"to\":\"kln\"},{\"from\":\"src\",\"to\":\"sc\"},{\"from\":\"swh\",\"to\":\"sw\"},{\"from\":\"ttq\",\"to\":\"tmh\"},{\"from\":\"tw\",\"to\":\"ak\"},{\"from\":\"umu\",\"to\":\"del\"},{\"from\":\"uzn\",\"to\":\"uz\"},{\"from\":\"xpe\",\"to\":\"kpe\"},{\"from\":\"xsl\",\"to\":\"den\"},{\"from\":\"ydd\",\"to\":\"yi\"},{\"from\":\"zai\",\"to\":\"zap\"},{\"from\":\"zsm\",\"to\":\"ms\"},{\"from\":\"zyb\",\"to\":\"za\"},{\"from\":\"him\",\"to\":\"srx\"},{\"from\":\"mnk\",\"to\":\"man\"},{\"from\":\"bh\",\"to\":\"bho\"},{\"from\":\"prs\",\"to\":\"fa-af\"},{\"from\":\"swc\",\"to\":\"sw-cd\"},{\"from\":\"aar\",\"to\":\"aa\"},{\"from\":\"abk\",\"to\":\"ab\"},{\"from\":\"ave\",\"to\":\"ae\"},{\"from\":\"afr\",\"to\":\"af\"},{\"from\":\"aka\",\"to\":\"ak\"},{\"from\":\"amh\",\"to\":\"am\"},{\"from\":\"arg\",\"to\":\"an\"},{\"from\":\"ara\",\"to\":\"ar\"},{\"from\":\"asm\",\"to\":\"as\"},{\"from\":\"ava\",\"to\":\"av\"},{\"from\":\"aym\",\"to\":\"ay\"},{\"from\":\"aze\",\"to\":\"az\"},{\"from\":\"bak\",\"to\":\"ba\"},{\"from\":\"bel\",\"to\":\"be\"},{\"from\":\"bul\",\"to\":\"bg\"},{\"from\":\"bih\",\"to\":\"bho\"},{\"from\":\"bis\",\"to\":\"bi\"},{\"from\":\"bam\",\"to\":\"bm\"},{\"from\":\"ben\",\"to\":\"bn\"},{\"from\":\"bod\",\"to\":\"bo\"},{\"from\":\"bre\",\"to\":\"br\"},{\"from\":\"bos\",\"to\":\"bs\"},{\"from\":\"cat\",\"to\":\"ca\"},{\"from\":\"che\",\"to\":\"ce\"},{\"from\":\"cha\",\"to\":\"ch\"},{\"from\":\"cos\",\"to\":\"co\"},{\"from\":\"cre\",\"to\":\"cr\"},{\"from\":\"ces\",\"to\":\"cs\"},{\"from\":\"chu\",\"to\":\"cu\"},{\"from\":\"chv\",\"to\":\"cv\"},{\"from\":\"cym\",\"to\":\"cy\"},{\"from\":\"dan\",\"to\":\"da\"},{\"from\":\"deu\",\"to\":\"de\"},{\"from\":\"div\",\"to\":\"dv\"},{\"from\":\"dzo\",\"to\":\"dz\"},{\"from\":\"ewe\",\"to\":\"ee\"},{\"from\":\"ell\",\"to\":\"el\"},{\"from\":\"eng\",\"to\":\"en\"},{\"from\":\"epo\",\"to\":\"eo\"},{\"from\":\"spa\",\"to\":\"es\"},{\"from\":\"est\",\"to\":\"et\"},{\"from\":\"eus\",\"to\":\"eu\"},{\"from\":\"fas\",\"to\":\"fa\"},{\"from\":\"ful\",\"to\":\"ff\"},{\"from\":\"fin\",\"to\":\"fi\"},{\"from\":\"fij\",\"to\":\"fj\"},{\"from\":\"fao\",\"to\":\"fo\"},{\"from\":\"fra\",\"to\":\"fr\"},{\"from\":\"fry\",\"to\":\"fy\"},{\"from\":\"gle\",\"to\":\"ga\"},{\"from\":\"gla\",\"to\":\"gd\"},{\"from\":\"glg\",\"to\":\"gl\"},{\"from\":\"grn\",\"to\":\"gn\"},{\"from\":\"guj\",\"to\":\"gu\"},{\"from\":\"glv\",\"to\":\"gv\"},{\"from\":\"hau\",\"to\":\"ha\"},{\"from\":\"heb\",\"to\":\"he\"},{\"from\":\"hin\",\"to\":\"hi\"},{\"from\":\"hmo\",\"to\":\"ho\"},{\"from\":\"hrv\",\"to\":\"hr\"},{\"from\":\"hat\",\"to\":\"ht\"},{\"from\":\"hun\",\"to\":\"hu\"},{\"from\":\"hye\",\"to\":\"hy\"},{\"from\":\"her\",\"to\":\"hz\"},{\"from\":\"ina\",\"to\":\"ia\"},{\"from\":\"ind\",\"to\":\"id\"},{\"from\":\"ile\",\"to\":\"ie\"},{\"from\":\"ibo\",\"to\":\"ig\"},{\"from\":\"iii\",\"to\":\"ii\"},{\"from\":\"ipk\",\"to\":\"ik\"},{\"from\":\"ido\",\"to\":\"io\"},{\"from\":\"isl\",\"to\":\"is\"},{\"from\":\"ita\",\"to\":\"it\"},{\"from\":\"iku\",\"to\":\"iu\"},{\"from\":\"jpn\",\"to\":\"ja\"},{\"from\":\"jav\",\"to\":\"jv\"},{\"from\":\"kat\",\"to\":\"ka\"},{\"from\":\"kon\",\"to\":\"kg\"},{\"from\":\"kik\",\"to\":\"ki\"},{\"from\":\"kua\",\"to\":\"kj\"},{\"from\":\"kaz\",\"to\":\"kk\"},{\"from\":\"kal\",\"to\":\"kl\"},{\"from\":\"khm\",\"to\":\"km\"},{\"from\":\"kan\",\"to\":\"kn\"},{\"from\":\"kor\",\"to\":\"ko\"},{\"from\":\"kau\",\"to\":\"kr\"},{\"from\":\"kas\",\"to\":\"ks\"},{\"from\":\"kur\",\"to\":\"ku\"},{\"from\":\"kom\",\"to\":\"kv\"},{\"from\":\"cor\",\"to\":\"kw\"},{\"from\":\"kir\",\"to\":\"ky\"},{\"from\":\"lat\",\"to\":\"la\"},{\"from\":\"ltz\",\"to\":\"lb\"},{\"from\":\"lug\",\"to\":\"lg\"},{\"from\":\"lim\",\"to\":\"li\"},{\"from\":\"lin\",\"to\":\"ln\"},{\"from\":\"lao\",\"to\":\"lo\"},{\"from\":\"lit\",\"to\":\"lt\"},{\"from\":\"lub\",\"to\":\"lu\"},{\"from\":\"lav\",\"to\":\"lv\"},{\"from\":\"mlg\",\"to\":\"mg\"},{\"from\":\"mah\",\"to\":\"mh\"},{\"from\":\"mri\",\"to\":\"mi\"},{\"from\":\"mkd\",\"to\":\"mk\"},{\"from\":\"mal\",\"to\":\"ml\"},{\"from\":\"mon\",\"to\":\"mn\"},{\"from\":\"mol\",\"to\":\"ro\"},{\"from\":\"mar\",\"to\":\"mr\"},{\"from\":\"msa\",\"to\":\"ms\"},{\"from\":\"mlt\",\"to\":\"mt\"},{\"from\":\"mya\",\"to\":\"my\"},{\"from\":\"nau\",\"to\":\"na\"},{\"from\":\"nob\",\"to\":\"nb\"},{\"from\":\"nde\",\"to\":\"nd\"},{\"from\":\"nep\",\"to\":\"ne\"},{\"from\":\"ndo\",\"to\":\"ng\"},{\"from\":\"nld\",\"to\":\"nl\"},{\"from\":\"nno\",\"to\":\"nn\"},{\"from\":\"nor\",\"to\":\"nb\"},{\"from\":\"nbl\",\"to\":\"nr\"},{\"from\":\"nav\",\"to\":\"nv\"},{\"from\":\"nya\",\"to\":\"ny\"},{\"from\":\"oci\",\"to\":\"oc\"},{\"from\":\"oji\",\"to\":\"oj\"},{\"from\":\"orm\",\"to\":\"om\"},{\"from\":\"ori\",\"to\":\"or\"},{\"from\":\"oss\",\"to\":\"os\"},{\"from\":\"pan\",\"to\":\"pa\"},{\"from\":\"pli\",\"to\":\"pi\"},{\"from\":\"pol\",\"to\":\"pl\"},{\"from\":\"pus\",\"to\":\"ps\"},{\"from\":\"por\",\"to\":\"pt\"},{\"from\":\"que\",\"to\":\"qu\"},{\"from\":\"roh\",\"to\":\"rm\"},{\"from\":\"run\",\"to\":\"rn\"},{\"from\":\"ron\",\"to\":\"ro\"},{\"from\":\"rus\",\"to\":\"ru\"},{\"from\":\"kin\",\"to\":\"rw\"},{\"from\":\"san\",\"to\":\"sa\"},{\"from\":\"srd\",\"to\":\"sc\"},{\"from\":\"snd\",\"to\":\"sd\"},{\"from\":\"sme\",\"to\":\"se\"},{\"from\":\"sag\",\"to\":\"sg\"},{\"from\":\"hbs\",\"to\":\"sr-latn\"},{\"from\":\"sin\",\"to\":\"si\"},{\"from\":\"slk\",\"to\":\"sk\"},{\"from\":\"slv\",\"to\":\"sl\"},{\"from\":\"smo\",\"to\":\"sm\"},{\"from\":\"sna\",\"to\":\"sn\"},{\"from\":\"som\",\"to\":\"so\"},{\"from\":\"sqi\",\"to\":\"sq\"},{\"from\":\"srp\",\"to\":\"sr\"},{\"from\":\"ssw\",\"to\":\"ss\"},{\"from\":\"sot\",\"to\":\"st\"},{\"from\":\"sun\",\"to\":\"su\"},{\"from\":\"swe\",\"to\":\"sv\"},{\"from\":\"swa\",\"to\":\"sw\"},{\"from\":\"tam\",\"to\":\"ta\"},{\"from\":\"tel\",\"to\":\"te\"},{\"from\":\"tgk\",\"to\":\"tg\"},{\"from\":\"tha\",\"to\":\"th\"},{\"from\":\"tir\",\"to\":\"ti\"},{\"from\":\"tuk\",\"to\":\"tk\"},{\"from\":\"tgl\",\"to\":\"fil\"},{\"from\":\"tsn\",\"to\":\"tn\"},{\"from\":\"ton\",\"to\":\"to\"},{\"from\":\"tur\",\"to\":\"tr\"},{\"from\":\"tso\",\"to\":\"ts\"},{\"from\":\"tat\",\"to\":\"tt\"},{\"from\":\"twi\",\"to\":\"ak\"},{\"from\":\"tah\",\"to\":\"ty\"},{\"from\":\"uig\",\"to\":\"ug\"},{\"from\":\"ukr\",\"to\":\"uk\"},{\"from\":\"urd\",\"to\":\"ur\"},{\"from\":\"uzb\",\"to\":\"uz\"},{\"from\":\"ven\",\"to\":\"ve\"},{\"from\":\"vie\",\"to\":\"vi\"},{\"from\":\"vol\",\"to\":\"vo\"},{\"from\":\"wln\",\"to\":\"wa\"},{\"from\":\"wol\",\"to\":\"wo\"},{\"from\":\"xho\",\"to\":\"xh\"},{\"from\":\"yid\",\"to\":\"yi\"},{\"from\":\"yor\",\"to\":\"yo\"},{\"from\":\"zha\",\"to\":\"za\"},{\"from\":\"zho\",\"to\":\"zh\"},{\"from\":\"zul\",\"to\":\"zu\"},{\"from\":\"alb\",\"to\":\"sq\"},{\"from\":\"arm\",\"to\":\"hy\"},{\"from\":\"baq\",\"to\":\"eu\"},{\"from\":\"bur\",\"to\":\"my\"},{\"from\":\"chi\",\"to\":\"zh\"},{\"from\":\"cze\",\"to\":\"cs\"},{\"from\":\"dut\",\"to\":\"nl\"},{\"from\":\"fre\",\"to\":\"fr\"},{\"from\":\"geo\",\"to\":\"ka\"},{\"from\":\"ger\",\"to\":\"de\"},{\"from\":\"gre\",\"to\":\"el\"},{\"from\":\"ice\",\"to\":\"is\"},{\"from\":\"mac\",\"to\":\"mk\"},{\"from\":\"mao\",\"to\":\"mi\"},{\"from\":\"may\",\"to\":\"ms\"},{\"from\":\"per\",\"to\":\"fa\"},{\"from\":\"rum\",\"to\":\"ro\"},{\"from\":\"slo\",\"to\":\"sk\"},{\"from\":\"tib\",\"to\":\"bo\"},{\"from\":\"wel\",\"to\":\"cy\"}]");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47/index.js":
+/*!**************************************!*\
+  !*** ./node_modules/bcp-47/index.js ***!
+  \**************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.parse = __webpack_require__(/*! ./lib/parse */ "./node_modules/bcp-47/lib/parse.js")
+exports.stringify = __webpack_require__(/*! ./lib/stringify */ "./node_modules/bcp-47/lib/stringify.js")
+
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47/lib/normalize.json":
+/*!************************************************!*\
+  !*** ./node_modules/bcp-47/lib/normalize.json ***!
+  \************************************************/
+/*! exports provided: en-gb-oed, i-ami, i-bnn, i-default, i-enochian, i-hak, i-klingon, i-lux, i-mingo, i-navajo, i-pwn, i-tao, i-tay, i-tsu, sgn-be-fr, sgn-be-nl, sgn-ch-de, art-lojban, cel-gaulish, no-bok, no-nyn, zh-guoyu, zh-hakka, zh-min, zh-min-nan, zh-xiang, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("{\"en-gb-oed\":\"en-GB-oxendict\",\"i-ami\":\"ami\",\"i-bnn\":\"bnn\",\"i-default\":null,\"i-enochian\":null,\"i-hak\":\"hak\",\"i-klingon\":\"tlh\",\"i-lux\":\"lb\",\"i-mingo\":null,\"i-navajo\":\"nv\",\"i-pwn\":\"pwn\",\"i-tao\":\"tao\",\"i-tay\":\"tay\",\"i-tsu\":\"tsu\",\"sgn-be-fr\":\"sfb\",\"sgn-be-nl\":\"vgt\",\"sgn-ch-de\":\"sgg\",\"art-lojban\":\"jbo\",\"cel-gaulish\":null,\"no-bok\":\"nb\",\"no-nyn\":\"nn\",\"zh-guoyu\":\"cmn\",\"zh-hakka\":\"hak\",\"zh-min\":null,\"zh-min-nan\":\"nan\",\"zh-xiang\":\"hsn\"}");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47/lib/parse.js":
+/*!******************************************!*\
+  !*** ./node_modules/bcp-47/lib/parse.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var alphanumeric = __webpack_require__(/*! is-alphanumerical */ "./node_modules/is-alphanumerical/index.js")
+var alphabetical = __webpack_require__(/*! is-alphabetical */ "./node_modules/is-alphabetical/index.js")
+var decimal = __webpack_require__(/*! is-decimal */ "./node_modules/is-decimal/index.js")
+var regular = __webpack_require__(/*! ./regular.json */ "./node_modules/bcp-47/lib/regular.json")
+var normal = __webpack_require__(/*! ./normalize.json */ "./node_modules/bcp-47/lib/normalize.json")
+
+module.exports = parse
+
+var own = {}.hasOwnProperty
+
+// Parse a BCP 47 language tag.
+/* eslint-disable-next-line complexity */
+function parse(tag, options) {
+  var settings = options || {}
+  var result = empty()
+  var source = String(tag)
+  var value = source.toLowerCase()
+  var index = 0
+  var start
+  var groups
+  var offset
+
+  // Check input.
+  if (tag == null) {
+    throw new Error('Expected string, got `' + tag + '`')
+  }
+
+  // Let’s start.
+  // First: the edge cases.
+  if (own.call(normal, value)) {
+    if ((settings.normalize == null || settings.normalize) && normal[value]) {
+      return parse(normal[value])
+    }
+
+    result[regular.indexOf(value) === -1 ? 'irregular' : 'regular'] = source
+
+    return result
+  }
+
+  // Now, to actually parse, eat what could be a language.
+  while (alphabetical(value.charCodeAt(index)) && index < 9) index++
+
+  // A language.
+  if (index > 1 /* Min 639. */ && index < 9 /* Max subtag. */) {
+    // 5 and up is a subtag.
+    // 4 is the size of reserved languages.
+    // 3 an ISO 639-2 or ISO 639-3.
+    // 2 is an ISO 639-1.
+    // <https://github.com/wooorm/iso-639-2>
+    // <https://github.com/wooorm/iso-639-3>
+    result.language = source.slice(0, index)
+
+    if (index < 4 /* Max 639. */) {
+      groups = 0
+
+      while (
+        value.charCodeAt(index) === 45 /* `-` */ &&
+        alphabetical(value.charCodeAt(index + 1)) &&
+        alphabetical(value.charCodeAt(index + 2)) &&
+        alphabetical(value.charCodeAt(index + 3)) &&
+        !alphabetical(value.charCodeAt(index + 4))
+      ) {
+        if (groups > 2 /* Max extended language subtag count. */) {
+          return fail(
+            index,
+            3,
+            'Too many extended language subtags, expected at most 3 subtags'
+          )
+        }
+
+        // Extended language subtag.
+        result.extendedLanguageSubtags.push(source.slice(index + 1, index + 4))
+        index += 4
+        groups++
+      }
+    }
+
+    // ISO 15924 script.
+    // <https://github.com/wooorm/iso-15924>
+    if (
+      value.charCodeAt(index) === 45 /* `-` */ &&
+      alphabetical(value.charCodeAt(index + 1)) &&
+      alphabetical(value.charCodeAt(index + 2)) &&
+      alphabetical(value.charCodeAt(index + 3)) &&
+      alphabetical(value.charCodeAt(index + 4)) &&
+      !alphabetical(value.charCodeAt(index + 5))
+    ) {
+      result.script = source.slice(index + 1, index + 5)
+      index += 5
+    }
+
+    if (value.charCodeAt(index) === 45 /* `-` */) {
+      // ISO 3166-1 region.
+      // <https://github.com/wooorm/iso-3166>
+      if (
+        alphabetical(value.charCodeAt(index + 1)) &&
+        alphabetical(value.charCodeAt(index + 2)) &&
+        !alphabetical(value.charCodeAt(index + 3))
+      ) {
+        result.region = source.slice(index + 1, index + 3)
+        index += 3
+      }
+      // UN M49 region.
+      // <https://github.com/wooorm/un-m49>
+      else if (
+        decimal(value.charCodeAt(index + 1)) &&
+        decimal(value.charCodeAt(index + 2)) &&
+        decimal(value.charCodeAt(index + 3)) &&
+        !decimal(value.charCodeAt(index + 4))
+      ) {
+        result.region = source.slice(index + 1, index + 4)
+        index += 4
+      }
+    }
+
+    while (value.charCodeAt(index) === 45 /* `-` */) {
+      offset = start = index + 1
+
+      while (alphanumeric(value.charCodeAt(offset))) {
+        if (offset - start > 7 /* Max variant. */) {
+          return fail(
+            offset,
+            1,
+            'Too long variant, expected at most 8 characters'
+          )
+        }
+
+        offset++
+      }
+
+      if (
+        // Long variant.
+        offset - start > 4 /* Min alpha numeric variant. */ ||
+        // Short variant.
+        (offset - start > 3 /* Min variant. */ &&
+          decimal(value.charCodeAt(start)))
+      ) {
+        result.variants.push(source.slice(start, offset))
+        index = offset
+      }
+      // Something else.
+      else {
+        break
+      }
+    }
+
+    // Extensions.
+    while (value.charCodeAt(index) === 45 /* `-` */) {
+      // Exit if this isn’t an extension.
+      if (
+        value.charCodeAt(index + 1) === 120 /* `x` */ ||
+        !alphanumeric(value.charCodeAt(index + 1)) ||
+        value.charCodeAt(index + 2) !== 45 /* `-` */ ||
+        !alphanumeric(value.charCodeAt(index + 3))
+      ) {
+        break
+      }
+
+      offset = index + 2
+      groups = 0
+
+      while (
+        value.charCodeAt(offset) === 45 /* `-` */ &&
+        alphanumeric(value.charCodeAt(offset + 1)) &&
+        alphanumeric(value.charCodeAt(offset + 2))
+      ) {
+        start = offset + 1
+        offset = start + 2
+        groups++
+
+        while (alphanumeric(value.charCodeAt(offset))) {
+          if (offset - start > 7 /* Max extension. */) {
+            return fail(
+              offset,
+              2,
+              'Too long extension, expected at most 8 characters'
+            )
+          }
+
+          offset++
+        }
+      }
+
+      if (!groups) {
+        return fail(
+          offset,
+          4,
+          'Empty extension, extensions must have at least 2 characters of content'
+        )
+      }
+
+      result.extensions.push({
+        singleton: source.charAt(index + 1),
+        extensions: source.slice(index + 3, offset).split('-')
+      })
+
+      index = offset
+    }
+  }
+  // Not a language.
+  else {
+    index = 0
+  }
+
+  // Private use.
+  if (
+    (index === 0 && value.charCodeAt(index) === 120) /* `x` */ ||
+    (value.charCodeAt(index) === 45 /* `-` */ &&
+      value.charCodeAt(index + 1) === 120) /* `x` */
+  ) {
+    offset = index = index ? index + 2 : 1
+
+    while (
+      value.charCodeAt(offset) === 45 /* `-` */ &&
+      alphanumeric(value.charCodeAt(offset + 1))
+    ) {
+      offset = start = index + 1
+
+      while (alphanumeric(value.charCodeAt(offset))) {
+        if (offset - start > 7 /* Max private use. */) {
+          return fail(
+            offset,
+            5,
+            'Too long private-use area, expected at most 8 characters'
+          )
+        }
+
+        offset++
+      }
+
+      result.privateuse.push(source.slice(index + 1, offset))
+      index = offset
+    }
+  }
+
+  if (index !== source.length) {
+    return fail(index, 6, 'Found superfluous content after tag')
+  }
+
+  return result
+
+  function fail(offset, code, reason) {
+    if (settings.warning) settings.warning(reason, code, offset)
+    return settings.forgiving ? result : empty()
+  }
+}
+
+// Create an empty results object.
+function empty() {
+  return {
+    language: null,
+    extendedLanguageSubtags: [],
+    script: null,
+    region: null,
+    variants: [],
+    extensions: [],
+    privateuse: [],
+    irregular: null,
+    regular: null
+  }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47/lib/regular.json":
+/*!**********************************************!*\
+  !*** ./node_modules/bcp-47/lib/regular.json ***!
+  \**********************************************/
+/*! exports provided: 0, 1, 2, 3, 4, 5, 6, 7, 8, default */
+/***/ (function(module) {
+
+module.exports = JSON.parse("[\"art-lojban\",\"cel-gaulish\",\"no-bok\",\"no-nyn\",\"zh-guoyu\",\"zh-hakka\",\"zh-min\",\"zh-min-nan\",\"zh-xiang\"]");
+
+/***/ }),
+
+/***/ "./node_modules/bcp-47/lib/stringify.js":
+/*!**********************************************!*\
+  !*** ./node_modules/bcp-47/lib/stringify.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = stringify
+
+// Compile a language schema to a BCP 47 language tag.
+function stringify(schema) {
+  var fields = schema || {}
+  var result = []
+  var values
+  var index
+  var value
+
+  if (fields.irregular || fields.regular) {
+    return fields.irregular || fields.regular
+  }
+
+  if (fields.language) {
+    result = result.concat(
+      fields.language,
+      fields.extendedLanguageSubtags || [],
+      fields.script || [],
+      fields.region || [],
+      fields.variants || []
+    )
+
+    values = fields.extensions || []
+    index = -1
+
+    while (++index < values.length) {
+      value = values[index]
+
+      if (value.singleton && value.extensions && value.extensions.length) {
+        result = result.concat(value.singleton, value.extensions)
+      }
+    }
+  }
+
+  if (fields.privateuse && fields.privateuse.length) {
+    result = result.concat('x', fields.privateuse)
+  }
+
+  return result.join('-')
+}
+
+
+/***/ }),
+
 /***/ "./node_modules/codem-isoboxer/dist/iso_boxer.js":
 /*!*******************************************************!*\
   !*** ./node_modules/codem-isoboxer/dist/iso_boxer.js ***!
@@ -10002,6 +10793,79 @@ if (typeof Object.create === 'function') {
     ctor.prototype = new TempCtor()
     ctor.prototype.constructor = ctor
   }
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/is-alphabetical/index.js":
+/*!***********************************************!*\
+  !*** ./node_modules/is-alphabetical/index.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = alphabetical
+
+// Check if the given character code, or the character code at the first
+// character, is alphabetical.
+function alphabetical(character) {
+  var code = typeof character === 'string' ? character.charCodeAt(0) : character
+
+  return (
+    (code >= 97 && code <= 122) /* a-z */ ||
+    (code >= 65 && code <= 90) /* A-Z */
+  )
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/is-alphanumerical/index.js":
+/*!*************************************************!*\
+  !*** ./node_modules/is-alphanumerical/index.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var alphabetical = __webpack_require__(/*! is-alphabetical */ "./node_modules/is-alphabetical/index.js")
+var decimal = __webpack_require__(/*! is-decimal */ "./node_modules/is-decimal/index.js")
+
+module.exports = alphanumerical
+
+// Check if the given character code, or the character code at the first
+// character, is alphanumerical.
+function alphanumerical(character) {
+  return alphabetical(character) || decimal(character)
+}
+
+
+/***/ }),
+
+/***/ "./node_modules/is-decimal/index.js":
+/*!******************************************!*\
+  !*** ./node_modules/is-decimal/index.js ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = decimal
+
+// Check if the given character code, or the character code at the first
+// character, is decimal.
+function decimal(character) {
+  var code = typeof character === 'string' ? character.charCodeAt(0) : character
+
+  return code >= 48 && code <= 57 /* 0-9 */
 }
 
 
@@ -17687,6 +18551,892 @@ function simpleEnd(buf) {
 
 /***/ }),
 
+/***/ "./node_modules/ua-parser-js/src/ua-parser.js":
+/*!****************************************************!*\
+  !*** ./node_modules/ua-parser-js/src/ua-parser.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
+/* UAParser.js v1.0.2
+   Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
+   MIT License *//*
+   Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
+   Supports browser & node.js environment. 
+   Demo   : https://faisalman.github.io/ua-parser-js
+   Source : https://github.com/faisalman/ua-parser-js */
+/////////////////////////////////////////////////////////////////////////////////
+
+(function (window, undefined) {
+
+    'use strict';
+
+    //////////////
+    // Constants
+    /////////////
+
+
+    var LIBVERSION  = '1.0.2',
+        EMPTY       = '',
+        UNKNOWN     = '?',
+        FUNC_TYPE   = 'function',
+        UNDEF_TYPE  = 'undefined',
+        OBJ_TYPE    = 'object',
+        STR_TYPE    = 'string',
+        MAJOR       = 'major',
+        MODEL       = 'model',
+        NAME        = 'name',
+        TYPE        = 'type',
+        VENDOR      = 'vendor',
+        VERSION     = 'version',
+        ARCHITECTURE= 'architecture',
+        CONSOLE     = 'console',
+        MOBILE      = 'mobile',
+        TABLET      = 'tablet',
+        SMARTTV     = 'smarttv',
+        WEARABLE    = 'wearable',
+        EMBEDDED    = 'embedded',
+        UA_MAX_LENGTH = 255;
+
+    var AMAZON  = 'Amazon',
+        APPLE   = 'Apple',
+        ASUS    = 'ASUS',
+        BLACKBERRY = 'BlackBerry',
+        BROWSER = 'Browser',
+        CHROME  = 'Chrome',
+        EDGE    = 'Edge',
+        FIREFOX = 'Firefox',
+        GOOGLE  = 'Google',
+        HUAWEI  = 'Huawei',
+        LG      = 'LG',
+        MICROSOFT = 'Microsoft',
+        MOTOROLA  = 'Motorola',
+        OPERA   = 'Opera',
+        SAMSUNG = 'Samsung',
+        SONY    = 'Sony',
+        XIAOMI  = 'Xiaomi',
+        ZEBRA   = 'Zebra',
+        FACEBOOK   = 'Facebook';
+
+    ///////////
+    // Helper
+    //////////
+
+    var extend = function (regexes, extensions) {
+            var mergedRegexes = {};
+            for (var i in regexes) {
+                if (extensions[i] && extensions[i].length % 2 === 0) {
+                    mergedRegexes[i] = extensions[i].concat(regexes[i]);
+                } else {
+                    mergedRegexes[i] = regexes[i];
+                }
+            }
+            return mergedRegexes;
+        },
+        enumerize = function (arr) {
+            var enums = {};
+            for (var i=0; i<arr.length; i++) {
+                enums[arr[i].toUpperCase()] = arr[i];
+            }
+            return enums;
+        },
+        has = function (str1, str2) {
+            return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
+        },
+        lowerize = function (str) {
+            return str.toLowerCase();
+        },
+        majorize = function (version) {
+            return typeof(version) === STR_TYPE ? version.replace(/[^\d\.]/g, EMPTY).split('.')[0] : undefined;
+        },
+        trim = function (str, len) {
+            if (typeof(str) === STR_TYPE) {
+                str = str.replace(/^\s\s*/, EMPTY).replace(/\s\s*$/, EMPTY);
+                return typeof(len) === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
+            }
+    };
+
+    ///////////////
+    // Map helper
+    //////////////
+
+    var rgxMapper = function (ua, arrays) {
+
+            var i = 0, j, k, p, q, matches, match;
+
+            // loop through all regexes maps
+            while (i < arrays.length && !matches) {
+
+                var regex = arrays[i],       // even sequence (0,2,4,..)
+                    props = arrays[i + 1];   // odd sequence (1,3,5,..)
+                j = k = 0;
+
+                // try matching uastring with regexes
+                while (j < regex.length && !matches) {
+
+                    matches = regex[j++].exec(ua);
+
+                    if (!!matches) {
+                        for (p = 0; p < props.length; p++) {
+                            match = matches[++k];
+                            q = props[p];
+                            // check if given property is actually array
+                            if (typeof q === OBJ_TYPE && q.length > 0) {
+                                if (q.length === 2) {
+                                    if (typeof q[1] == FUNC_TYPE) {
+                                        // assign modified match
+                                        this[q[0]] = q[1].call(this, match);
+                                    } else {
+                                        // assign given value, ignore regex match
+                                        this[q[0]] = q[1];
+                                    }
+                                } else if (q.length === 3) {
+                                    // check whether function or regex
+                                    if (typeof q[1] === FUNC_TYPE && !(q[1].exec && q[1].test)) {
+                                        // call function (usually string mapper)
+                                        this[q[0]] = match ? q[1].call(this, match, q[2]) : undefined;
+                                    } else {
+                                        // sanitize match using given regex
+                                        this[q[0]] = match ? match.replace(q[1], q[2]) : undefined;
+                                    }
+                                } else if (q.length === 4) {
+                                        this[q[0]] = match ? q[3].call(this, match.replace(q[1], q[2])) : undefined;
+                                }
+                            } else {
+                                this[q] = match ? match : undefined;
+                            }
+                        }
+                    }
+                }
+                i += 2;
+            }
+        },
+
+        strMapper = function (str, map) {
+
+            for (var i in map) {
+                // check if current value is array
+                if (typeof map[i] === OBJ_TYPE && map[i].length > 0) {
+                    for (var j = 0; j < map[i].length; j++) {
+                        if (has(map[i][j], str)) {
+                            return (i === UNKNOWN) ? undefined : i;
+                        }
+                    }
+                } else if (has(map[i], str)) {
+                    return (i === UNKNOWN) ? undefined : i;
+                }
+            }
+            return str;
+    };
+
+    ///////////////
+    // String map
+    //////////////
+
+    // Safari < 3.0
+    var oldSafariMap = {
+            '1.0'   : '/8',
+            '1.2'   : '/1',
+            '1.3'   : '/3',
+            '2.0'   : '/412',
+            '2.0.2' : '/416',
+            '2.0.3' : '/417',
+            '2.0.4' : '/419',
+            '?'     : '/'
+        },
+        windowsVersionMap = {
+            'ME'        : '4.90',
+            'NT 3.11'   : 'NT3.51',
+            'NT 4.0'    : 'NT4.0',
+            '2000'      : 'NT 5.0',
+            'XP'        : ['NT 5.1', 'NT 5.2'],
+            'Vista'     : 'NT 6.0',
+            '7'         : 'NT 6.1',
+            '8'         : 'NT 6.2',
+            '8.1'       : 'NT 6.3',
+            '10'        : ['NT 6.4', 'NT 10.0'],
+            'RT'        : 'ARM'
+    };
+
+    //////////////
+    // Regex map
+    /////////////
+
+    var regexes = {
+
+        browser : [[
+
+            /\b(?:crmo|crios)\/([\w\.]+)/i                                      // Chrome for Android/iOS
+            ], [VERSION, [NAME, 'Chrome']], [
+            /edg(?:e|ios|a)?\/([\w\.]+)/i                                       // Microsoft Edge
+            ], [VERSION, [NAME, 'Edge']], [
+
+            // Presto based
+            /(opera mini)\/([-\w\.]+)/i,                                        // Opera Mini
+            /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,                 // Opera Mobi/Tablet
+            /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i                           // Opera
+            ], [NAME, VERSION], [
+            /opios[\/ ]+([\w\.]+)/i                                             // Opera mini on iphone >= 8.0
+            ], [VERSION, [NAME, OPERA+' Mini']], [
+            /\bopr\/([\w\.]+)/i                                                 // Opera Webkit
+            ], [VERSION, [NAME, OPERA]], [
+
+            // Mixed
+            /(kindle)\/([\w\.]+)/i,                                             // Kindle
+            /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,      // Lunascape/Maxthon/Netfront/Jasmine/Blazer
+            // Trident based
+            /(avant |iemobile|slim)(?:browser)?[\/ ]?([\w\.]*)/i,               // Avant/IEMobile/SlimBrowser
+            /(ba?idubrowser)[\/ ]?([\w\.]+)/i,                                  // Baidu Browser
+            /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
+
+            // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale|qqbrowserlite|qq)\/([-\w\.]+)/i,
+                                                                                // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
+            /(weibo)__([\d\.]+)/i                                               // Weibo
+            ], [NAME, VERSION], [
+            /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
+            ], [VERSION, [NAME, 'UC'+BROWSER]], [
+            /\bqbcore\/([\w\.]+)/i                                              // WeChat Desktop for Windows Built-in Browser
+            ], [VERSION, [NAME, 'WeChat(Win) Desktop']], [
+            /micromessenger\/([\w\.]+)/i                                        // WeChat
+            ], [VERSION, [NAME, 'WeChat']], [
+            /konqueror\/([\w\.]+)/i                                             // Konqueror
+            ], [VERSION, [NAME, 'Konqueror']], [
+            /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i                       // IE11
+            ], [VERSION, [NAME, 'IE']], [
+            /yabrowser\/([\w\.]+)/i                                             // Yandex
+            ], [VERSION, [NAME, 'Yandex']], [
+            /(avast|avg)\/([\w\.]+)/i                                           // Avast/AVG Secure Browser
+            ], [[NAME, /(.+)/, '$1 Secure '+BROWSER], VERSION], [
+            /\bfocus\/([\w\.]+)/i                                               // Firefox Focus
+            ], [VERSION, [NAME, FIREFOX+' Focus']], [
+            /\bopt\/([\w\.]+)/i                                                 // Opera Touch
+            ], [VERSION, [NAME, OPERA+' Touch']], [
+            /coc_coc\w+\/([\w\.]+)/i                                            // Coc Coc Browser
+            ], [VERSION, [NAME, 'Coc Coc']], [
+            /dolfin\/([\w\.]+)/i                                                // Dolphin
+            ], [VERSION, [NAME, 'Dolphin']], [
+            /coast\/([\w\.]+)/i                                                 // Opera Coast
+            ], [VERSION, [NAME, OPERA+' Coast']], [
+            /miuibrowser\/([\w\.]+)/i                                           // MIUI Browser
+            ], [VERSION, [NAME, 'MIUI '+BROWSER]], [
+            /fxios\/([-\w\.]+)/i                                                // Firefox for iOS
+            ], [VERSION, [NAME, FIREFOX]], [
+            /\bqihu|(qi?ho?o?|360)browser/i                                     // 360
+            ], [[NAME, '360 '+BROWSER]], [
+            /(oculus|samsung|sailfish)browser\/([\w\.]+)/i
+            ], [[NAME, /(.+)/, '$1 '+BROWSER], VERSION], [                      // Oculus/Samsung/Sailfish Browser
+            /(comodo_dragon)\/([\w\.]+)/i                                       // Comodo Dragon
+            ], [[NAME, /_/g, ' '], VERSION], [
+            /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
+            /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,                   // Tesla
+            /m?(qqbrowser|baiduboxapp|2345Explorer)[\/ ]?([\w\.]+)/i            // QQBrowser/Baidu App/2345 Browser
+            ], [NAME, VERSION], [
+            /(metasr)[\/ ]?([\w\.]+)/i,                                         // SouGouBrowser
+            /(lbbrowser)/i                                                      // LieBao Browser
+            ], [NAME], [
+
+            // WebView
+            /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i       // Facebook App for iOS & Android
+            ], [[NAME, FACEBOOK], VERSION], [
+            /safari (line)\/([\w\.]+)/i,                                        // Line App for iOS
+            /\b(line)\/([\w\.]+)\/iab/i,                                        // Line App for Android
+            /(chromium|instagram)[\/ ]([-\w\.]+)/i                              // Chromium/Instagram
+            ], [NAME, VERSION], [
+            /\bgsa\/([\w\.]+) .*safari\//i                                      // Google Search Appliance on iOS
+            ], [VERSION, [NAME, 'GSA']], [
+
+            /headlesschrome(?:\/([\w\.]+)| )/i                                  // Chrome Headless
+            ], [VERSION, [NAME, CHROME+' Headless']], [
+
+            / wv\).+(chrome)\/([\w\.]+)/i                                       // Chrome WebView
+            ], [[NAME, CHROME+' WebView'], VERSION], [
+
+            /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i           // Android Browser
+            ], [VERSION, [NAME, 'Android '+BROWSER]], [
+
+            /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i       // Chrome/OmniWeb/Arora/Tizen/Nokia
+            ], [NAME, VERSION], [
+
+            /version\/([\w\.]+) .*mobile\/\w+ (safari)/i                        // Mobile Safari
+            ], [VERSION, [NAME, 'Mobile Safari']], [
+            /version\/([\w\.]+) .*(mobile ?safari|safari)/i                     // Safari & Safari Mobile
+            ], [VERSION, NAME], [
+            /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i                      // Safari < 3.0
+            ], [NAME, [VERSION, strMapper, oldSafariMap]], [
+
+            /(webkit|khtml)\/([\w\.]+)/i
+            ], [NAME, VERSION], [
+
+            // Gecko based
+            /(navigator|netscape\d?)\/([-\w\.]+)/i                              // Netscape
+            ], [[NAME, 'Netscape'], VERSION], [
+            /mobile vr; rv:([\w\.]+)\).+firefox/i                               // Firefox Reality
+            ], [VERSION, [NAME, FIREFOX+' Reality']], [
+            /ekiohf.+(flow)\/([\w\.]+)/i,                                       // Flow
+            /(swiftfox)/i,                                                      // Swiftfox
+            /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror|klar)[\/ ]?([\w\.\+]+)/i,
+                                                                                // IceDragon/Iceweasel/Camino/Chimera/Fennec/Maemo/Minimo/Conkeror/Klar
+            /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
+                                                                                // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
+            /(firefox)\/([\w\.]+)/i,                                            // Other Firefox-based
+            /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,                         // Mozilla
+
+            // Other
+            /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir|obigo|mosaic|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
+                                                                                // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir/Obigo/Mosaic/Go/ICE/UP.Browser
+            /(links) \(([\w\.]+)/i                                              // Links
+            ], [NAME, VERSION]
+        ],
+
+        cpu : [[
+
+            /(?:(amd|x(?:(?:86|64)[-_])?|wow|win)64)[;\)]/i                     // AMD64 (x64)
+            ], [[ARCHITECTURE, 'amd64']], [
+
+            /(ia32(?=;))/i                                                      // IA32 (quicktime)
+            ], [[ARCHITECTURE, lowerize]], [
+
+            /((?:i[346]|x)86)[;\)]/i                                            // IA32 (x86)
+            ], [[ARCHITECTURE, 'ia32']], [
+
+            /\b(aarch64|arm(v?8e?l?|_?64))\b/i                                 // ARM64
+            ], [[ARCHITECTURE, 'arm64']], [
+
+            /\b(arm(?:v[67])?ht?n?[fl]p?)\b/i                                   // ARMHF
+            ], [[ARCHITECTURE, 'armhf']], [
+
+            // PocketPC mistakenly identified as PowerPC
+            /windows (ce|mobile); ppc;/i
+            ], [[ARCHITECTURE, 'arm']], [
+
+            /((?:ppc|powerpc)(?:64)?)(?: mac|;|\))/i                            // PowerPC
+            ], [[ARCHITECTURE, /ower/, EMPTY, lowerize]], [
+
+            /(sun4\w)[;\)]/i                                                    // SPARC
+            ], [[ARCHITECTURE, 'sparc']], [
+
+            /((?:avr32|ia64(?=;))|68k(?=\))|\barm(?=v(?:[1-7]|[5-7]1)l?|;|eabi)|(?=atmel )avr|(?:irix|mips|sparc)(?:64)?\b|pa-risc)/i
+                                                                                // IA64, 68K, ARM/64, AVR/32, IRIX/64, MIPS/64, SPARC/64, PA-RISC
+            ], [[ARCHITECTURE, lowerize]]
+        ],
+
+        device : [[
+
+            //////////////////////////
+            // MOBILES & TABLETS
+            // Ordered by popularity
+            /////////////////////////
+
+            // Samsung
+            /\b(sch-i[89]0\d|shw-m380s|sm-[pt]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+            ], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [
+            /\b((?:s[cgp]h|gt|sm)-\w+|galaxy nexus)/i,
+            /samsung[- ]([-\w]+)/i,
+            /sec-(sgh\w+)/i
+            ], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
+
+            // Apple
+            /\((ip(?:hone|od)[\w ]*);/i                                         // iPod/iPhone
+            ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [
+            /\((ipad);[-\w\),; ]+apple/i,                                       // iPad
+            /applecoremedia\/[\w\.]+ \((ipad)/i,
+            /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
+            ], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [
+
+            // Huawei
+            /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i
+            ], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [
+            /(?:huawei|honor)([-\w ]+)[;\)]/i,
+            /\b(nexus 6p|\w{2,4}-[atu]?[ln][01259x][012359][an]?)\b(?!.+d\/s)/i
+            ], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
+
+            // Xiaomi
+            /\b(poco[\w ]+)(?: bui|\))/i,                                       // Xiaomi POCO
+            /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
+            /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
+            /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
+            ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
+            /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i                        // Mi Pad tablets
+            ],[[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
+
+            // OPPO
+            /; (\w+) bui.+ oppo/i,
+            /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i
+            ], [MODEL, [VENDOR, 'OPPO'], [TYPE, MOBILE]], [
+
+            // Vivo
+            /vivo (\w+)(?: bui|\))/i,
+            /\b(v[12]\d{3}\w?[at])(?: bui|;)/i
+            ], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
+
+            // Realme
+            /\b(rmx[12]\d{3})(?: bui|;|\))/i
+            ], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
+
+            // Motorola
+            /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i,
+            /\bmot(?:orola)?[- ](\w*)/i,
+            /((?:moto[\w\(\) ]+|xt\d{3,4}|nexus 6)(?= bui|\)))/i
+            ], [MODEL, [VENDOR, MOTOROLA], [TYPE, MOBILE]], [
+            /\b(mz60\d|xoom[2 ]{0,2}) build\//i
+            ], [MODEL, [VENDOR, MOTOROLA], [TYPE, TABLET]], [
+
+            // LG
+            /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i
+            ], [MODEL, [VENDOR, LG], [TYPE, TABLET]], [
+            /(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i,
+            /\blg[-e;\/ ]+((?!browser|netcast|android tv)\w+)/i,
+            /\blg-?([\d\w]+) bui/i
+            ], [MODEL, [VENDOR, LG], [TYPE, MOBILE]], [
+
+            // Lenovo
+            /(ideatab[-\w ]+)/i,
+            /lenovo ?(s[56]000[-\w]+|tab(?:[\w ]+)|yt[-\d\w]{6}|tb[-\d\w]{6})/i
+            ], [MODEL, [VENDOR, 'Lenovo'], [TYPE, TABLET]], [
+
+            // Nokia
+            /(?:maemo|nokia).*(n900|lumia \d+)/i,
+            /nokia[-_ ]?([-\w\.]*)/i
+            ], [[MODEL, /_/g, ' '], [VENDOR, 'Nokia'], [TYPE, MOBILE]], [
+
+            // Google
+            /(pixel c)\b/i                                                      // Google Pixel C
+            ], [MODEL, [VENDOR, GOOGLE], [TYPE, TABLET]], [
+            /droid.+; (pixel[\daxl ]{0,6})(?: bui|\))/i                         // Google Pixel
+            ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
+
+            // Sony
+            /droid.+ ([c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+            ], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [
+            /sony tablet [ps]/i,
+            /\b(?:sony)?sgp\w+(?: bui|\))/i
+            ], [[MODEL, 'Xperia Tablet'], [VENDOR, SONY], [TYPE, TABLET]], [
+
+            // OnePlus
+            / (kb2005|in20[12]5|be20[12][59])\b/i,
+            /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i
+            ], [MODEL, [VENDOR, 'OnePlus'], [TYPE, MOBILE]], [
+
+            // Amazon
+            /(alexa)webm/i,
+            /(kf[a-z]{2}wi)( bui|\))/i,                                         // Kindle Fire without Silk
+            /(kf[a-z]+)( bui|\)).+silk\//i                                      // Kindle Fire HD
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [
+            /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i                     // Fire Phone
+            ], [[MODEL, /(.+)/g, 'Fire Phone $1'], [VENDOR, AMAZON], [TYPE, MOBILE]], [
+
+            // BlackBerry
+            /(playbook);[-\w\),; ]+(rim)/i                                      // BlackBerry PlayBook
+            ], [MODEL, VENDOR, [TYPE, TABLET]], [
+            /\b((?:bb[a-f]|st[hv])100-\d)/i,
+            /\(bb10; (\w+)/i                                                    // BlackBerry 10
+            ], [MODEL, [VENDOR, BLACKBERRY], [TYPE, MOBILE]], [
+
+            // Asus
+            /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i
+            ], [MODEL, [VENDOR, ASUS], [TYPE, TABLET]], [
+            / (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i
+            ], [MODEL, [VENDOR, ASUS], [TYPE, MOBILE]], [
+
+            // HTC
+            /(nexus 9)/i                                                        // HTC Nexus 9
+            ], [MODEL, [VENDOR, 'HTC'], [TYPE, TABLET]], [
+            /(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,                         // HTC
+
+            // ZTE
+            /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
+            /(alcatel|geeksphone|nexian|panasonic|sony)[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+            ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
+
+            // Acer
+            /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i
+            ], [MODEL, [VENDOR, 'Acer'], [TYPE, TABLET]], [
+
+            // Meizu
+            /droid.+; (m[1-5] note) bui/i,
+            /\bmz-([-\w]{2,})/i
+            ], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
+
+            // Sharp
+            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, MOBILE]], [
+
+            // MIXED
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[-_ ]?([-\w]*)/i,
+                                                                                // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
+            /(hp) ([\w ]+\w)/i,                                                 // HP iPAQ
+            /(asus)-?(\w+)/i,                                                   // Asus
+            /(microsoft); (lumia[\w ]+)/i,                                      // Microsoft Lumia
+            /(lenovo)[-_ ]?([-\w]+)/i,                                          // Lenovo
+            /(jolla)/i,                                                         // Jolla
+            /(oppo) ?([\w ]+) bui/i                                             // OPPO
+            ], [VENDOR, MODEL, [TYPE, MOBILE]], [
+
+            /(archos) (gamepad2?)/i,                                            // Archos
+            /(hp).+(touchpad(?!.+tablet)|tablet)/i,                             // HP TouchPad
+            /(kindle)\/([\w\.]+)/i,                                             // Kindle
+            /(nook)[\w ]+build\/(\w+)/i,                                        // Nook
+            /(dell) (strea[kpr\d ]*[\dko])/i,                                   // Dell Streak
+            /(le[- ]+pan)[- ]+(\w{1,9}) bui/i,                                  // Le Pan Tablets
+            /(trinity)[- ]*(t\d{3}) bui/i,                                      // Trinity Tablets
+            /(gigaset)[- ]+(q\w{1,9}) bui/i,                                    // Gigaset Tablets
+            /(vodafone) ([\w ]+)(?:\)| bui)/i                                   // Vodafone
+            ], [VENDOR, MODEL, [TYPE, TABLET]], [
+
+            /(surface duo)/i                                                    // Surface Duo
+            ], [MODEL, [VENDOR, MICROSOFT], [TYPE, TABLET]], [
+            /droid [\d\.]+; (fp\du?)(?: b|\))/i                                 // Fairphone
+            ], [MODEL, [VENDOR, 'Fairphone'], [TYPE, MOBILE]], [
+            /(u304aa)/i                                                         // AT&T
+            ], [MODEL, [VENDOR, 'AT&T'], [TYPE, MOBILE]], [
+            /\bsie-(\w*)/i                                                      // Siemens
+            ], [MODEL, [VENDOR, 'Siemens'], [TYPE, MOBILE]], [
+            /\b(rct\w+) b/i                                                     // RCA Tablets
+            ], [MODEL, [VENDOR, 'RCA'], [TYPE, TABLET]], [
+            /\b(venue[\d ]{2,7}) b/i                                            // Dell Venue Tablets
+            ], [MODEL, [VENDOR, 'Dell'], [TYPE, TABLET]], [
+            /\b(q(?:mv|ta)\w+) b/i                                              // Verizon Tablet
+            ], [MODEL, [VENDOR, 'Verizon'], [TYPE, TABLET]], [
+            /\b(?:barnes[& ]+noble |bn[rt])([\w\+ ]*) b/i                       // Barnes & Noble Tablet
+            ], [MODEL, [VENDOR, 'Barnes & Noble'], [TYPE, TABLET]], [
+            /\b(tm\d{3}\w+) b/i
+            ], [MODEL, [VENDOR, 'NuVision'], [TYPE, TABLET]], [
+            /\b(k88) b/i                                                        // ZTE K Series Tablet
+            ], [MODEL, [VENDOR, 'ZTE'], [TYPE, TABLET]], [
+            /\b(nx\d{3}j) b/i                                                   // ZTE Nubia
+            ], [MODEL, [VENDOR, 'ZTE'], [TYPE, MOBILE]], [
+            /\b(gen\d{3}) b.+49h/i                                              // Swiss GEN Mobile
+            ], [MODEL, [VENDOR, 'Swiss'], [TYPE, MOBILE]], [
+            /\b(zur\d{3}) b/i                                                   // Swiss ZUR Tablet
+            ], [MODEL, [VENDOR, 'Swiss'], [TYPE, TABLET]], [
+            /\b((zeki)?tb.*\b) b/i                                              // Zeki Tablets
+            ], [MODEL, [VENDOR, 'Zeki'], [TYPE, TABLET]], [
+            /\b([yr]\d{2}) b/i,
+            /\b(dragon[- ]+touch |dt)(\w{5}) b/i                                // Dragon Touch Tablet
+            ], [[VENDOR, 'Dragon Touch'], MODEL, [TYPE, TABLET]], [
+            /\b(ns-?\w{0,9}) b/i                                                // Insignia Tablets
+            ], [MODEL, [VENDOR, 'Insignia'], [TYPE, TABLET]], [
+            /\b((nxa|next)-?\w{0,9}) b/i                                        // NextBook Tablets
+            ], [MODEL, [VENDOR, 'NextBook'], [TYPE, TABLET]], [
+            /\b(xtreme\_)?(v(1[045]|2[015]|[3469]0|7[05])) b/i                  // Voice Xtreme Phones
+            ], [[VENDOR, 'Voice'], MODEL, [TYPE, MOBILE]], [
+            /\b(lvtel\-)?(v1[12]) b/i                                           // LvTel Phones
+            ], [[VENDOR, 'LvTel'], MODEL, [TYPE, MOBILE]], [
+            /\b(ph-1) /i                                                        // Essential PH-1
+            ], [MODEL, [VENDOR, 'Essential'], [TYPE, MOBILE]], [
+            /\b(v(100md|700na|7011|917g).*\b) b/i                               // Envizen Tablets
+            ], [MODEL, [VENDOR, 'Envizen'], [TYPE, TABLET]], [
+            /\b(trio[-\w\. ]+) b/i                                              // MachSpeed Tablets
+            ], [MODEL, [VENDOR, 'MachSpeed'], [TYPE, TABLET]], [
+            /\btu_(1491) b/i                                                    // Rotor Tablets
+            ], [MODEL, [VENDOR, 'Rotor'], [TYPE, TABLET]], [
+            /(shield[\w ]+) b/i                                                 // Nvidia Shield Tablets
+            ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, TABLET]], [
+            /(sprint) (\w+)/i                                                   // Sprint Phones
+            ], [VENDOR, MODEL, [TYPE, MOBILE]], [
+            /(kin\.[onetw]{3})/i                                                // Microsoft Kin
+            ], [[MODEL, /\./g, ' '], [VENDOR, MICROSOFT], [TYPE, MOBILE]], [
+            /droid.+; (cc6666?|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i             // Zebra
+            ], [MODEL, [VENDOR, ZEBRA], [TYPE, TABLET]], [
+            /droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i
+            ], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
+
+            ///////////////////
+            // CONSOLES
+            ///////////////////
+
+            /(ouya)/i,                                                          // Ouya
+            /(nintendo) ([wids3utch]+)/i                                        // Nintendo
+            ], [VENDOR, MODEL, [TYPE, CONSOLE]], [
+            /droid.+; (shield) bui/i                                            // Nvidia
+            ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, CONSOLE]], [
+            /(playstation [345portablevi]+)/i                                   // Playstation
+            ], [MODEL, [VENDOR, SONY], [TYPE, CONSOLE]], [
+            /\b(xbox(?: one)?(?!; xbox))[\); ]/i                                // Microsoft Xbox
+            ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
+
+            ///////////////////
+            // SMARTTVS
+            ///////////////////
+
+            /smart-tv.+(samsung)/i                                              // Samsung
+            ], [VENDOR, [TYPE, SMARTTV]], [
+            /hbbtv.+maple;(\d+)/i
+            ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
+            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i        // LG SmartTV
+            ], [[VENDOR, LG], [TYPE, SMARTTV]], [
+            /(apple) ?tv/i                                                      // Apple TV
+            ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
+            /crkey/i                                                            // Google Chromecast
+            ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+            /droid.+aft(\w)( bui|\))/i                                          // Fire TV
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
+            /\(dtv[\);].+(aquos)/i                                              // Sharp
+            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, SMARTTV]], [
+            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
+            /hbbtv\/\d+\.\d+\.\d+ +\([\w ]*; *(\w[^;]*);([^;]*)/i               // HbbTV devices
+            ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
+            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i                   // SmartTV from Unidentified Vendors
+            ], [[TYPE, SMARTTV]], [
+
+            ///////////////////
+            // WEARABLES
+            ///////////////////
+
+            /((pebble))app/i                                                    // Pebble
+            ], [VENDOR, MODEL, [TYPE, WEARABLE]], [
+            /droid.+; (glass) \d/i                                              // Google Glass
+            ], [MODEL, [VENDOR, GOOGLE], [TYPE, WEARABLE]], [
+            /droid.+; (wt63?0{2,3})\)/i
+            ], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [
+            /(quest( 2)?)/i                                                     // Oculus Quest
+            ], [MODEL, [VENDOR, FACEBOOK], [TYPE, WEARABLE]], [
+
+            ///////////////////
+            // EMBEDDED
+            ///////////////////
+
+            /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i                              // Tesla
+            ], [VENDOR, [TYPE, EMBEDDED]], [
+
+            ////////////////////
+            // MIXED (GENERIC)
+            ///////////////////
+
+            /droid .+?; ([^;]+?)(?: bui|\) applew).+? mobile safari/i           // Android Phones from Unidentified Vendors
+            ], [MODEL, [TYPE, MOBILE]], [
+            /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i       // Android Tablets from Unidentified Vendors
+            ], [MODEL, [TYPE, TABLET]], [
+            /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i                      // Unidentifiable Tablet
+            ], [[TYPE, TABLET]], [
+            /(phone|mobile(?:[;\/]| safari)|pda(?=.+windows ce))/i              // Unidentifiable Mobile
+            ], [[TYPE, MOBILE]], [
+            /(android[-\w\. ]{0,9});.+buil/i                                    // Generic Android Device
+            ], [MODEL, [VENDOR, 'Generic']]
+        ],
+
+        engine : [[
+
+            /windows.+ edge\/([\w\.]+)/i                                       // EdgeHTML
+            ], [VERSION, [NAME, EDGE+'HTML']], [
+
+            /webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i                         // Blink
+            ], [VERSION, [NAME, 'Blink']], [
+
+            /(presto)\/([\w\.]+)/i,                                             // Presto
+            /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i, // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna
+            /ekioh(flow)\/([\w\.]+)/i,                                          // Flow
+            /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,                           // KHTML/Tasman/Links
+            /(icab)[\/ ]([23]\.[\d\.]+)/i                                       // iCab
+            ], [NAME, VERSION], [
+
+            /rv\:([\w\.]{1,9})\b.+(gecko)/i                                     // Gecko
+            ], [VERSION, NAME]
+        ],
+
+        os : [[
+
+            // Windows
+            /microsoft (windows) (vista|xp)/i                                   // Windows (iTunes)
+            ], [NAME, VERSION], [
+            /(windows) nt 6\.2; (arm)/i,                                        // Windows RT
+            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i,            // Windows Phone
+            /(windows)[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i
+            ], [NAME, [VERSION, strMapper, windowsVersionMap]], [
+            /(win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+            ], [[NAME, 'Windows'], [VERSION, strMapper, windowsVersionMap]], [
+
+            // iOS/macOS
+            /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,              // iOS
+            /cfnetwork\/.+darwin/i
+            ], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [
+            /(mac os x) ?([\w\. ]*)/i,
+            /(macintosh|mac_powerpc\b)(?!.+haiku)/i                             // Mac OS
+            ], [[NAME, 'Mac OS'], [VERSION, /_/g, '.']], [
+
+            // Mobile OSes
+            /droid ([\w\.]+)\b.+(android[- ]x86)/i                              // Android-x86
+            ], [VERSION, NAME], [                                               // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
+            /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i,
+            /(blackberry)\w*\/([\w\.]*)/i,                                      // Blackberry
+            /(tizen|kaios)[\/ ]([\w\.]+)/i,                                     // Tizen/KaiOS
+            /\((series40);/i                                                    // Series 40
+            ], [NAME, VERSION], [
+            /\(bb(10);/i                                                        // BlackBerry 10
+            ], [VERSION, [NAME, BLACKBERRY]], [
+            /(?:symbian ?os|symbos|s60(?=;)|series60)[-\/ ]?([\w\.]*)/i         // Symbian
+            ], [VERSION, [NAME, 'Symbian']], [
+            /mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i // Firefox OS
+            ], [VERSION, [NAME, FIREFOX+' OS']], [
+            /web0s;.+rt(tv)/i,
+            /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i                              // WebOS
+            ], [VERSION, [NAME, 'webOS']], [
+
+            // Google Chromecast
+            /crkey\/([\d\.]+)/i                                                 // Google Chromecast
+            ], [VERSION, [NAME, CHROME+'cast']], [
+            /(cros) [\w]+ ([\w\.]+\w)/i                                         // Chromium OS
+            ], [[NAME, 'Chromium OS'], VERSION],[
+
+            // Console
+            /(nintendo|playstation) ([wids345portablevuch]+)/i,                 // Nintendo/Playstation
+            /(xbox); +xbox ([^\);]+)/i,                                         // Microsoft Xbox (360, One, X, S, Series X, Series S)
+
+            // Other
+            /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,                            // Joli/Palm
+            /(mint)[\/\(\) ]?(\w*)/i,                                           // Mint
+            /(mageia|vectorlinux)[; ]/i,                                        // Mageia/VectorLinux
+            /([kxln]?ubuntu|debian|suse|opensuse|gentoo|arch(?= linux)|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire)(?: gnu\/linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
+                                                                                // Ubuntu/Debian/SUSE/Gentoo/Arch/Slackware/Fedora/Mandriva/CentOS/PCLinuxOS/RedHat/Zenwalk/Linpus/Raspbian/Plan9/Minix/RISCOS/Contiki/Deepin/Manjaro/elementary/Sabayon/Linspire
+            /(hurd|linux) ?([\w\.]*)/i,                                         // Hurd/Linux
+            /(gnu) ?([\w\.]*)/i,                                                // GNU
+            /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i, // FreeBSD/NetBSD/OpenBSD/PC-BSD/GhostBSD/DragonFly
+            /(haiku) (\w+)/i                                                    // Haiku
+            ], [NAME, VERSION], [
+            /(sunos) ?([\w\.\d]*)/i                                             // Solaris
+            ], [[NAME, 'Solaris'], VERSION], [
+            /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,                              // Solaris
+            /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,                                  // AIX
+            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux)/i,            // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX
+            /(unix) ?([\w\.]*)/i                                                // UNIX
+            ], [NAME, VERSION]
+        ]
+    };
+
+    /////////////////
+    // Constructor
+    ////////////////
+
+    var UAParser = function (ua, extensions) {
+
+        if (typeof ua === OBJ_TYPE) {
+            extensions = ua;
+            ua = undefined;
+        }
+
+        if (!(this instanceof UAParser)) {
+            return new UAParser(ua, extensions).getResult();
+        }
+
+        var _ua = ua || ((typeof window !== UNDEF_TYPE && window.navigator && window.navigator.userAgent) ? window.navigator.userAgent : EMPTY);
+        var _rgxmap = extensions ? extend(regexes, extensions) : regexes;
+
+        this.getBrowser = function () {
+            var _browser = {};
+            _browser[NAME] = undefined;
+            _browser[VERSION] = undefined;
+            rgxMapper.call(_browser, _ua, _rgxmap.browser);
+            _browser.major = majorize(_browser.version);
+            return _browser;
+        };
+        this.getCPU = function () {
+            var _cpu = {};
+            _cpu[ARCHITECTURE] = undefined;
+            rgxMapper.call(_cpu, _ua, _rgxmap.cpu);
+            return _cpu;
+        };
+        this.getDevice = function () {
+            var _device = {};
+            _device[VENDOR] = undefined;
+            _device[MODEL] = undefined;
+            _device[TYPE] = undefined;
+            rgxMapper.call(_device, _ua, _rgxmap.device);
+            return _device;
+        };
+        this.getEngine = function () {
+            var _engine = {};
+            _engine[NAME] = undefined;
+            _engine[VERSION] = undefined;
+            rgxMapper.call(_engine, _ua, _rgxmap.engine);
+            return _engine;
+        };
+        this.getOS = function () {
+            var _os = {};
+            _os[NAME] = undefined;
+            _os[VERSION] = undefined;
+            rgxMapper.call(_os, _ua, _rgxmap.os);
+            return _os;
+        };
+        this.getResult = function () {
+            return {
+                ua      : this.getUA(),
+                browser : this.getBrowser(),
+                engine  : this.getEngine(),
+                os      : this.getOS(),
+                device  : this.getDevice(),
+                cpu     : this.getCPU()
+            };
+        };
+        this.getUA = function () {
+            return _ua;
+        };
+        this.setUA = function (ua) {
+            _ua = (typeof ua === STR_TYPE && ua.length > UA_MAX_LENGTH) ? trim(ua, UA_MAX_LENGTH) : ua;
+            return this;
+        };
+        this.setUA(_ua);
+        return this;
+    };
+
+    UAParser.VERSION = LIBVERSION;
+    UAParser.BROWSER =  enumerize([NAME, VERSION, MAJOR]);
+    UAParser.CPU = enumerize([ARCHITECTURE]);
+    UAParser.DEVICE = enumerize([MODEL, VENDOR, TYPE, CONSOLE, MOBILE, SMARTTV, TABLET, WEARABLE, EMBEDDED]);
+    UAParser.ENGINE = UAParser.OS = enumerize([NAME, VERSION]);
+
+    ///////////
+    // Export
+    //////////
+
+    // check js environment
+    if (typeof(exports) !== UNDEF_TYPE) {
+        // nodejs env
+        if (typeof module !== UNDEF_TYPE && module.exports) {
+            exports = module.exports = UAParser;
+        }
+        exports.UAParser = UAParser;
+    } else {
+        // requirejs env (optional)
+        if ("function" === FUNC_TYPE && __webpack_require__(/*! !webpack amd options */ "./node_modules/webpack/buildin/amd-options.js")) {
+            !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
+                return UAParser;
+            }).call(exports, __webpack_require__, exports, module),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+        } else if (typeof window !== UNDEF_TYPE) {
+            // browser env
+            window.UAParser = UAParser;
+        }
+    }
+
+    // jQuery/Zepto specific (optional)
+    // Note:
+    //   In AMD env the global scope should be kept clean, but jQuery is an exception.
+    //   jQuery always exports to global scope, unless jQuery.noConflict(true) is used,
+    //   and we should catch that.
+    var $ = typeof window !== UNDEF_TYPE && (window.jQuery || window.Zepto);
+    if ($ && !$.ua) {
+        var parser = new UAParser();
+        $.ua = parser.getResult();
+        $.ua.get = function () {
+            return parser.getUA();
+        };
+        $.ua.set = function (ua) {
+            parser.setUA(ua);
+            var result = parser.getResult();
+            for (var prop in result) {
+                $.ua[prop] = result[prop];
+            }
+        };
+    }
+
+})(typeof window === 'object' ? window : this);
+
+
+/***/ }),
+
 /***/ "./node_modules/util-deprecate/browser.js":
 /*!************************************************!*\
   !*** ./node_modules/util-deprecate/browser.js ***!
@@ -17763,6 +19513,20 @@ function config (name) {
 }
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/webpack/buildin/amd-options.js":
+/*!****************************************!*\
+  !*** (webpack)/buildin/amd-options.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {/* globals __webpack_amd_options__ */
+module.exports = __webpack_amd_options__;
+
+/* WEBPACK VAR INJECTION */}.call(this, {}))
 
 /***/ }),
 
@@ -18583,6 +20347,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            cacheInitSegments: true,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
+ *            applyContentSteering: true,
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            capabilities: {
@@ -18620,7 +20385,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
- *                setStallState: true
+ *                setStallState: true,
+ *                avoidCurrentTimeRangePruning: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -18658,7 +20424,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                maxDrift: NaN,
  *                playbackRate: NaN,
  *                playbackBufferMin: 0.5,
- *                latencyThreshold: 60,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -18822,6 +20587,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
+ * @property {boolean} [avoidCurrentTimeRangePruning=false]
+ * Avoids pruning of the buffered range that contains the current playback time.
+ *
+ * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  */
 
 /**
@@ -18980,15 +20749,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set it to NaN to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=60]
- * Use this parameter to set the maximum threshold for which live catch up is applied.
- *
- * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
- *
- * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified catchup mode will always be applied
- *
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
@@ -19183,6 +20943,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
+ * @property {boolean} [applyContentSteering=true]
+ * Set to true if dash.js should apply content steering during playback.
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestDurationMismatchFix=true]
@@ -19289,6 +21051,7 @@ function Settings() {
       cacheInitSegments: false,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
+      applyContentSteering: true,
       eventControllerRefreshDelay: 100,
       enableManifestDurationMismatchFix: true,
       capabilities: {
@@ -19326,7 +21089,8 @@ function Settings() {
         longFormContentDurationThreshold: 600,
         stallThreshold: 0.3,
         useAppendWindow: true,
-        setStallState: true
+        setStallState: true,
+        avoidCurrentTimeRangePruning: false
       },
       gaps: {
         jumpGaps: true,
@@ -19365,7 +21129,6 @@ function Settings() {
         playbackRate: NaN,
         playbackBufferMin: 0.5,
         enabled: null,
-        latencyThreshold: 60,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
       },
       lastBitrateCachingInfo: {
@@ -19531,6 +21294,8 @@ var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingleton
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path_browserify__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
+/* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(ua_parser_js__WEBPACK_IMPORTED_MODULE_1__);
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -19574,6 +21339,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * @class
  * @ignore
  */
+
 
 
 var Utils = /*#__PURE__*/function () {
@@ -19735,6 +21501,18 @@ var Utils = /*#__PURE__*/function () {
         return targetUrl;
       }
     }
+  }, {
+    key: "parseUserAgent",
+    value: function parseUserAgent() {
+      var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      try {
+        var uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
+        return Object(ua_parser_js__WEBPACK_IMPORTED_MODULE_1__["UAParser"])(uaString);
+      } catch (e) {
+        return {};
+      }
+    }
   }]);
 
   return Utils;
@@ -19754,7 +21532,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.4.1';
+var VERSION = '4.5.0';
 function getVersionString() {
   return VERSION;
 }
@@ -20366,6 +22144,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _models_DashManifestModel__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./models/DashManifestModel */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _models_PatchManifestModel__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./models/PatchManifestModel */ "./src/dash/models/PatchManifestModel.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/index.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9__);
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -20396,6 +22176,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -21013,6 +22794,18 @@ function DashAdapter() {
     return dashManifestModel.getMpd(manifest);
   }
   /**
+   * Returns the ContentSteering element of the MPD
+   * @param {object} manifest
+   * @returns {object} contentSteering
+   * @memberOf module:DashAdapter
+   * @instance
+   */
+
+
+  function getContentSteering(manifest) {
+    return dashManifestModel.getContentSteering(manifest);
+  }
+  /**
    * Returns the location element of the MPD
    * @param {object} manifest
    * @returns {String} location
@@ -21462,7 +23255,7 @@ function DashAdapter() {
     mediaInfo.codec = 'cea-608-in-SEI';
     mediaInfo.isEmbedded = true;
     mediaInfo.isFragmented = false;
-    mediaInfo.lang = lang;
+    mediaInfo.lang = bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9___default()(lang);
     mediaInfo.roles = ['caption'];
   }
 
@@ -21583,6 +23376,7 @@ function DashAdapter() {
     getIsDynamic: getIsDynamic,
     getDuration: getDuration,
     getRegularPeriods: getRegularPeriods,
+    getContentSteering: getContentSteering,
     getLocation: getLocation,
     getPatchLocation: getPatchLocation,
     getManifestUpdatePeriod: getManifestUpdatePeriod,
@@ -22036,12 +23830,11 @@ function DashHandler(config) {
       if (targetRequest) {
         var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
 
-        if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+        if (time > targetRequest.startTime && requestEndTime - time > targetThreshold) {
           return time;
-        } // If target time is before the start of the request use request starttime
+        }
 
-
-        if (time < targetRequest.startTime) {
+        if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
           return targetRequest.startTime;
         }
 
@@ -23603,6 +25396,19 @@ var DashConstants = /*#__PURE__*/function () {
       this.ORIGINAL_MPD_ID = 'mpdId';
       this.WALL_CLOCK_TIME = 'wallClockTime';
       this.PRESENTATION_TIME = 'presentationTime';
+      this.LABEL = 'Label';
+      this.GROUP_LABEL = 'GroupLabel';
+      this.CONTENT_STEERING = 'ContentSteering';
+      this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
+      this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
+      this.QUERY_BEFORE_START = 'queryBeforeStart';
+      this.PROXY_SERVER_URL = 'proxyServerURL';
+      this.CONTENT_STEERING_RESPONSE = {
+        VERSION: 'VERSION',
+        TTL: 'TTL',
+        RELOAD_URI: 'RELOAD-URI',
+        SERVICE_LOCATION_PRIORITY: 'SERVICE-LOCATION-PRIORITY'
+      };
     }
   }]);
 
@@ -23611,6 +25417,327 @@ var DashConstants = /*#__PURE__*/function () {
 
 var constants = new DashConstants();
 /* harmony default export */ __webpack_exports__["default"] = (constants);
+
+/***/ }),
+
+/***/ "./src/dash/controllers/ContentSteeringController.js":
+/*!***********************************************************!*\
+  !*** ./src/dash/controllers/ContentSteeringController.js ***!
+  \***********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_net_URLLoader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../streaming/net/URLLoader */ "./src/streaming/net/URLLoader.js");
+/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
+/* harmony import */ var _vo_ContentSteeringRequest__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../vo/ContentSteeringRequest */ "./src/dash/vo/ContentSteeringRequest.js");
+/* harmony import */ var _vo_ContentSteeringResponse__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/ContentSteeringResponse */ "./src/dash/vo/ContentSteeringResponse.js");
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/events/Events */ "./src/core/events/Events.js");
+/* harmony import */ var _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../streaming/constants/Constants */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_Utils__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/Utils */ "./src/core/Utils.js");
+/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+var QUERY_PARAMETER_KEYS = {
+  THROUGHPUT: '_DASH_throughput',
+  PATHWAY: '_DASH_pathway',
+  URL: 'url'
+};
+
+function ContentSteeringController() {
+  var context = this.context;
+  var urlUtils = Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
+  var instance, logger, currentSteeringResponseData, activeStreamInfo, currentSelectedServiceLocation, nextRequestTimer, urlLoader, errHandler, dashMetrics, mediaPlayerModel, manifestModel, requestModifier, abrController, eventBus, adapter;
+
+  function setup() {
+    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
+
+    _resetInitialSettings();
+  }
+
+  function setConfig(config) {
+    if (!config) return;
+
+    if (config.adapter) {
+      adapter = config.adapter;
+    }
+
+    if (config.errHandler) {
+      errHandler = config.errHandler;
+    }
+
+    if (config.dashMetrics) {
+      dashMetrics = config.dashMetrics;
+    }
+
+    if (config.mediaPlayerModel) {
+      mediaPlayerModel = config.mediaPlayerModel;
+    }
+
+    if (config.requestModifier) {
+      requestModifier = config.requestModifier;
+    }
+
+    if (config.manifestModel) {
+      manifestModel = config.manifestModel;
+    }
+
+    if (config.abrController) {
+      abrController = config.abrController;
+    }
+
+    if (config.eventBus) {
+      eventBus = config.eventBus;
+    }
+  }
+
+  function initialize() {
+    urlLoader = Object(_streaming_net_URLLoader__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
+      errHandler: errHandler,
+      dashMetrics: dashMetrics,
+      mediaPlayerModel: mediaPlayerModel,
+      requestModifier: requestModifier,
+      errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_3__["default"]
+    });
+    eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+  }
+
+  function _onPeriodSwitchCompleted(e) {
+    if (e && e.toStreamInfo) {
+      activeStreamInfo = e.toStreamInfo;
+    }
+  }
+
+  function _onFragmentLoadingStarted(e) {
+    if (e && e.request && e.request.serviceLocation) {
+      currentSelectedServiceLocation = e.request.serviceLocation;
+    }
+  }
+
+  function getSteeringDataFromManifest() {
+    var manifest = manifestModel.getValue();
+    return adapter.getContentSteering(manifest);
+  }
+
+  function shouldQueryBeforeStart() {
+    var steeringDataFromManifest = getSteeringDataFromManifest();
+    return steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
+  }
+
+  function loadSteeringData() {
+    return new Promise(function (resolve) {
+      try {
+        var steeringDataFromManifest = getSteeringDataFromManifest();
+
+        if (!steeringDataFromManifest || !steeringDataFromManifest.serverUrl) {
+          resolve();
+          return;
+        }
+
+        var url = _getSteeringServerUrl(steeringDataFromManifest);
+
+        var request = new _vo_ContentSteeringRequest__WEBPACK_IMPORTED_MODULE_4__["default"](url);
+        urlLoader.load({
+          request: request,
+          success: function success(data) {
+            _handleSteeringResponse(data);
+
+            eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_STEERING_REQUEST_COMPLETED, {
+              currentSteeringResponseData: currentSteeringResponseData,
+              url: url
+            });
+            resolve();
+          },
+          error: function error(e) {
+            _handleSteeringResponseError(e);
+
+            resolve(e);
+          }
+        });
+      } catch (e) {
+        resolve(e);
+      }
+    });
+  }
+
+  function _getSteeringServerUrl(steeringDataFromManifest) {
+    var url = steeringDataFromManifest.proxyServerUrl ? steeringDataFromManifest.proxyServerUrl : steeringDataFromManifest.serverUrl;
+
+    if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
+      if (urlUtils.isRelative(currentSteeringResponseData.reloadUri)) {
+        url = urlUtils.resolve(currentSteeringResponseData.reloadUri, steeringDataFromManifest.serverUrl);
+      } else {
+        url = currentSteeringResponseData.reloadUri;
+      }
+    }
+
+    var additionalQueryParameter = []; // Add throughput value to list of query parameters
+
+    if (activeStreamInfo) {
+      var isDynamic = adapter.getIsDynamic();
+      var mediaType = adapter.getAllMediaInfoForType(activeStreamInfo, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_9__["default"].VIDEO).length > 0 ? _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_9__["default"].VIDEO : _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_9__["default"].AUDIO;
+      var throughputHistory = abrController.getThroughputHistory();
+      var throughput = throughputHistory ? throughputHistory.getAverageThroughput(mediaType, isDynamic) : NaN;
+
+      if (!isNaN(throughput)) {
+        additionalQueryParameter.push({
+          key: QUERY_PARAMETER_KEYS.THROUGHPUT,
+          value: throughput * 1000
+        });
+      }
+    } // Ass pathway parameter/currently selected service location to list of query parameters
+
+
+    if (currentSelectedServiceLocation) {
+      additionalQueryParameter.push({
+        key: QUERY_PARAMETER_KEYS.PATHWAY,
+        value: currentSelectedServiceLocation
+      });
+    } // If we use the value in proxyServerUrl we add the original url as query parameter
+
+
+    if (steeringDataFromManifest.proxyServerUrl && steeringDataFromManifest.proxyServerUrl === url && steeringDataFromManifest.serverUrl) {
+      additionalQueryParameter.push({
+        key: QUERY_PARAMETER_KEYS.URL,
+        value: encodeURI(steeringDataFromManifest.serverUrl)
+      });
+    }
+
+    url = _core_Utils__WEBPACK_IMPORTED_MODULE_10__["default"].addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+    return url;
+  }
+
+  function _handleSteeringResponse(data) {
+    if (!data || !data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
+      return;
+    } // Update the data for other classes to use
+
+
+    currentSteeringResponseData = new _vo_ContentSteeringResponse__WEBPACK_IMPORTED_MODULE_5__["default"]();
+    currentSteeringResponseData.version = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.VERSION];
+
+    if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.TTL] && !isNaN(data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.TTL])) {
+      currentSteeringResponseData.ttl = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.TTL];
+    }
+
+    if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.RELOAD_URI]) {
+      currentSteeringResponseData.reloadUri = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.RELOAD_URI];
+    }
+
+    if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]) {
+      currentSteeringResponseData.serviceLocationPriority = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY];
+    }
+
+    _startSteeringRequestTimer();
+  }
+
+  function _startSteeringRequestTimer() {
+    // Start timer for next request
+    if (currentSteeringResponseData && currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
+      if (nextRequestTimer) {
+        clearTimeout(nextRequestTimer);
+      }
+
+      nextRequestTimer = setTimeout(function () {
+        loadSteeringData();
+      }, currentSteeringResponseData.ttl * 1000);
+    }
+  }
+
+  function stopSteeringRequestTimer() {
+    if (nextRequestTimer) {
+      clearTimeout(nextRequestTimer);
+    }
+
+    nextRequestTimer = null;
+  }
+
+  function _handleSteeringResponseError(e) {
+    logger.warn("Error fetching data from content steering server", e);
+
+    _startSteeringRequestTimer();
+  }
+
+  function getCurrentSteeringResponseData() {
+    return currentSteeringResponseData;
+  }
+
+  function reset() {
+    _resetInitialSettings();
+
+    eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+  }
+
+  function _resetInitialSettings() {
+    currentSteeringResponseData = null;
+    activeStreamInfo = null;
+    currentSelectedServiceLocation = null;
+    stopSteeringRequestTimer();
+  }
+
+  instance = {
+    reset: reset,
+    setConfig: setConfig,
+    loadSteeringData: loadSteeringData,
+    getCurrentSteeringResponseData: getCurrentSteeringResponseData,
+    shouldQueryBeforeStart: shouldQueryBeforeStart,
+    getSteeringDataFromManifest: getSteeringDataFromManifest,
+    stopSteeringRequestTimer: stopSteeringRequestTimer,
+    initialize: initialize
+  };
+  setup();
+  return instance;
+}
+
+ContentSteeringController.__dashjs_factory_name = 'ContentSteeringController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ContentSteeringController));
 
 /***/ }),
 
@@ -24215,6 +26342,402 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClas
 
 /***/ }),
 
+/***/ "./src/dash/controllers/ServiceDescriptionController.js":
+/*!**************************************************************!*\
+  !*** ./src/dash/controllers/ServiceDescriptionController.js ***!
+  \**************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../streaming/constants/Constants */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+var SUPPORTED_SCHEMES = [_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_DESCRIPTION_DVB_LL_SCHEME];
+var MEDIA_TYPES = {
+  VIDEO: 'video',
+  AUDIO: 'audio',
+  ANY: 'any',
+  ALL: 'all'
+};
+
+function ServiceDescriptionController() {
+  var context = this.context;
+  var instance, serviceDescriptionSettings, prftOffsets, logger, adapter;
+
+  function setup() {
+    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
+
+    _resetInitialSettings();
+  }
+
+  function setConfig(config) {
+    if (!config) return;
+
+    if (config.adapter) {
+      adapter = config.adapter;
+    }
+  }
+
+  function reset() {
+    _resetInitialSettings();
+  }
+
+  function _resetInitialSettings() {
+    serviceDescriptionSettings = {
+      liveDelay: NaN,
+      liveCatchup: {
+        maxDrift: NaN,
+        playbackRate: NaN
+      },
+      minBitrate: {},
+      maxBitrate: {},
+      initialBitrate: {}
+    };
+    prftOffsets = [];
+  }
+  /**
+   * Returns the service description settings for latency, catchup and bandwidth
+   */
+
+
+  function getServiceDescriptionSettings() {
+    return serviceDescriptionSettings;
+  }
+  /**
+   * Check for potential ServiceDescriptor elements in the MPD and update the settings accordingly
+   * @param {object} manifestInfo
+   * @private
+   */
+
+
+  function applyServiceDescription(manifestInfo) {
+    if (!manifestInfo || !manifestInfo.serviceDescriptions) {
+      return;
+    }
+
+    var supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(function (sd) {
+      return SUPPORTED_SCHEMES.includes(sd.schemeIdUri);
+    });
+    var allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(function (sd) {
+      return sd.schemeIdUri == null;
+    });
+    var sd = supportedServiceDescriptions.length > 0 ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1] : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
+    if (!sd) return;
+
+    if (sd.latency && sd.latency.target > 0) {
+      _applyServiceDescriptionLatency(sd);
+    }
+
+    if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+      _applyServiceDescriptionPlaybackRate(sd);
+    }
+
+    if (sd.operatingQuality) {
+      _applyServiceDescriptionOperatingQuality(sd);
+    }
+
+    if (sd.operatingBandwidth) {
+      _applyServiceDescriptionOperatingBandwidth(sd);
+    }
+  }
+  /**
+   * Adjust the latency targets for the service.
+   * @param {object} sd - service description element
+   * @private
+   */
+
+
+  function _applyServiceDescriptionLatency(sd) {
+    var params;
+
+    if (sd.schemeIdUri === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
+      params = _getDvbServiceDescriptionLatencyParameters(sd);
+    } else {
+      params = _getStandardServiceDescriptionLatencyParameters(sd);
+    }
+
+    if (prftOffsets.length > 0) {
+      var _calculateTimeOffset2 = _calculateTimeOffset(params),
+          to = _calculateTimeOffset2.to,
+          id = _calculateTimeOffset2.id; // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
+      // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
+      // Since maxDrift is a difference rather than absolute it does not need offset applied
+
+
+      serviceDescriptionSettings.liveDelay = params.liveDelay - to;
+      serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+      logger.debug("\n                Found latency properties coming from service description. Applied time offset of ".concat(to, " from ProducerReferenceTime element with id ").concat(id, ".\n                Live Delay: ").concat(params.liveDelay - to, ", Live catchup max drift: ").concat(params.maxDrift, "\n            "));
+    } else {
+      serviceDescriptionSettings.liveDelay = params.liveDelay;
+      serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
+      logger.debug("Found latency properties coming from service description: Live Delay: ".concat(params.liveDelay, ", Live catchup max drift: ").concat(params.maxDrift));
+    }
+  }
+  /**
+   * Get default parameters for liveDelay,maxDrift
+   * @param {object} sd
+   * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
+   * @private
+   */
+
+
+  function _getStandardServiceDescriptionLatencyParameters(sd) {
+    var liveDelay = sd.latency.target / 1000;
+    var maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+    var referenceId = sd.latency.referenceId || NaN;
+    return {
+      liveDelay: liveDelay,
+      maxDrift: maxDrift,
+      referenceId: referenceId
+    };
+  }
+  /**
+   * Get DVB DASH parameters for liveDelay,maxDrift
+   * @param sd
+   * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
+   * @private
+   */
+
+
+  function _getDvbServiceDescriptionLatencyParameters(sd) {
+    var liveDelay = sd.latency.target / 1000;
+    var maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+    var referenceId = sd.latency.referenceId || NaN;
+    return {
+      liveDelay: liveDelay,
+      maxDrift: maxDrift,
+      referenceId: referenceId
+    };
+  }
+  /**
+   * Adjust the playback rate targets for the service
+   * @param {object} sd
+   * @private
+   */
+
+
+  function _applyServiceDescriptionPlaybackRate(sd) {
+    var playbackRate = Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000;
+    serviceDescriptionSettings.liveCatchup.playbackRate = playbackRate;
+    logger.debug("Found latency properties coming from service description: Live catchup playback rate: ".concat(playbackRate));
+  }
+  /**
+   * Used to specify a quality ranking. We do not support this yet.
+   * @private
+   */
+
+
+  function _applyServiceDescriptionOperatingQuality() {
+    return;
+  }
+  /**
+   * Adjust the operating quality targets for the service
+   * @param {object} sd
+   * @private
+   */
+
+
+  function _applyServiceDescriptionOperatingBandwidth(sd) {
+    // Aggregation of media types is not supported yet
+    if (!sd || !sd.operatingBandwidth || !sd.operatingBandwidth.mediaType || sd.operatingBandwidth.mediaType === MEDIA_TYPES.ALL) {
+      return;
+    }
+
+    var params = {};
+    params.minBandwidth = sd.operatingBandwidth.min;
+    params.maxBandwidth = sd.operatingBandwidth.max;
+    params.targetBandwidth = sd.operatingBandwidth.target;
+    var mediaTypesToApply = [];
+
+    if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.VIDEO || sd.operatingBandwidth.mediaType === MEDIA_TYPES.AUDIO) {
+      mediaTypesToApply.push(sd.operatingBandwidth.mediaType);
+    } else if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.ANY) {
+      mediaTypesToApply.push(MEDIA_TYPES.AUDIO);
+      mediaTypesToApply.push(MEDIA_TYPES.VIDEO);
+    }
+
+    mediaTypesToApply.forEach(function (mediaType) {
+      if (!isNaN(params.minBandwidth)) {
+        _updateBandwidthSetting('minBitrate', mediaType, params.minBandwidth);
+      }
+
+      if (!isNaN(params.maxBandwidth)) {
+        _updateBandwidthSetting('maxBitrate', mediaType, params.maxBandwidth);
+      }
+
+      if (!isNaN(params.targetBandwidth)) {
+        _updateBandwidthSetting('initialBitrate', mediaType, params.targetBandwidth);
+      }
+    });
+  }
+  /**
+   * Update the bandwidth settings vor a specific field and media type
+   * @param {string} field
+   * @param {string} mediaType
+   * @param {number} value
+   * @private
+   */
+
+
+  function _updateBandwidthSetting(field, mediaType, value) {
+    try {
+      // Service description values are specified in bps. Settings expect the value in kbps
+      serviceDescriptionSettings[field][mediaType] = value / 1000;
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  /**
+   * Returns the current calculated time offsets based on ProducerReferenceTime elements
+   * @returns {array}
+   */
+
+
+  function getProducerReferenceTimeOffsets() {
+    return prftOffsets;
+  }
+  /**
+   * Calculates an array of time offsets each with matching ProducerReferenceTime id.
+   * Call before applyServiceDescription if producer reference time elements should be considered.
+   * @param {array} streamInfos
+   * @returns {array}
+   * @private
+   */
+
+
+  function calculateProducerReferenceTimeOffsets(streamInfos) {
+    try {
+      var timeOffsets = [];
+
+      if (streamInfos && streamInfos.length > 0) {
+        var mediaTypes = [_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT];
+        var astInSeconds = adapter.getAvailabilityStartTime() / 1000;
+        streamInfos.forEach(function (streamInfo) {
+          var offsets = mediaTypes.reduce(function (acc, mediaType) {
+            acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
+            return acc;
+          }, []).reduce(function (acc, mediaInfo) {
+            var prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
+            prts.forEach(function (prt) {
+              var voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
+              if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].SEGMENT_TEMPLATE) {
+                var voRep = voRepresentations[0];
+                var d = new Date(prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].WALL_CLOCK_TIME]);
+                var wallClockTime = d.getTime() / 1000; // TS 103 285 Clause 10.20.4
+                // 1) Calculate PRT0
+                // i) take the PRT@presentationTime and subtract any ST@presentationTimeOffset
+                // ii) convert this time to seconds by dividing by ST@timescale
+                // iii) Add this to start time of period that contains PRT.
+                // N.B presentationTimeOffset is already divided by timescale at this point
+
+                var prt0 = wallClockTime - (prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].PRESENTATION_TIME] / voRep[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].TIMESCALE] - voRep[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].PRESENTATION_TIME_OFFSET] + streamInfo.start); // 2) Calculate TO between PRT at the start of MPD timeline and the AST
+
+                var to = astInSeconds - prt0; // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
+
+                acc.push({
+                  id: prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].ID],
+                  to: to
+                });
+              }
+            });
+            return acc;
+          }, []);
+          timeOffsets = timeOffsets.concat(offsets);
+        });
+      }
+
+      prftOffsets = timeOffsets;
+    } catch (e) {
+      logger.error(e);
+      prftOffsets = [];
+    }
+  }
+
+  ;
+  /**
+   * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
+   * @param {object} sdLatency - service description latency element
+   * @returns {number}
+   * @private
+   */
+
+  function _calculateTimeOffset(sdLatency) {
+    var to = 0,
+        id;
+    var offset = prftOffsets.filter(function (prt) {
+      return prt.id === sdLatency.referenceId;
+    }); // If only one ProducerReferenceTime to generate one TO, then use that regardless of matching ids
+
+    if (offset.length === 0) {
+      to = prftOffsets.length > 0 ? prftOffsets[0].to : 0;
+      id = prftOffsets[0].id || NaN;
+    } else {
+      // If multiple id matches, use the first but this should be invalid
+      to = offset[0].to || 0;
+      id = offset[0].id || NaN;
+    }
+
+    return {
+      to: to,
+      id: id
+    };
+  }
+
+  instance = {
+    getServiceDescriptionSettings: getServiceDescriptionSettings,
+    getProducerReferenceTimeOffsets: getProducerReferenceTimeOffsets,
+    calculateProducerReferenceTimeOffsets: calculateProducerReferenceTimeOffsets,
+    applyServiceDescription: applyServiceDescription,
+    reset: reset,
+    setConfig: setConfig
+  };
+  setup();
+  return instance;
+}
+
+ServiceDescriptionController.__dashjs_factory_name = 'ServiceDescriptionController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ServiceDescriptionController));
+
+/***/ }),
+
 /***/ "./src/dash/models/DashManifestModel.js":
 /*!**********************************************!*\
   !*** ./src/dash/models/DashManifestModel.js ***!
@@ -24235,13 +26758,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_BaseURL__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../vo/BaseURL */ "./src/dash/vo/BaseURL.js");
 /* harmony import */ var _vo_EventStream__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../vo/EventStream */ "./src/dash/vo/EventStream.js");
 /* harmony import */ var _vo_ProducerReferenceTime__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/ProducerReferenceTime */ "./src/dash/vo/ProducerReferenceTime.js");
-/* harmony import */ var _streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../streaming/utils/ObjectUtils */ "./src/streaming/utils/ObjectUtils.js");
-/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
-/* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
-/* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
+/* harmony import */ var _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/ContentSteering */ "./src/dash/vo/ContentSteering.js");
+/* harmony import */ var _streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../streaming/utils/ObjectUtils */ "./src/streaming/utils/ObjectUtils.js");
+/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
+/* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -24305,17 +26829,18 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
+
 function DashManifestModel() {
   var instance, logger, errHandler, BASE64;
   var context = this.context;
-  var urlUtils = Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+  var urlUtils = Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
 
   var isInteger = Number.isInteger || function (value) {
     return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
   };
 
   function setup() {
-    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance().getLogger(instance);
+    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance().getLogger(instance);
   }
 
   function getIsTypeOf(adaptation, type) {
@@ -24331,7 +26856,7 @@ function DashManifestModel() {
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
       var essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
 
-      if (essentialProperties && essentialProperties.length > 0 && _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_17__["THUMBNAILS_SCHEME_ID_URIS"].indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+      if (essentialProperties && essentialProperties.length > 0 && _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__["THUMBNAILS_SCHEME_ID_URIS"].indexOf(essentialProperties[0].schemeIdUri) >= 0) {
         return type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE;
       }
     } // Check ContentComponent.contentType
@@ -24462,8 +26987,7 @@ function DashManifestModel() {
     var lang = '';
 
     if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG)) {
-      //Filter out any other characters not allowed according to RFC5646
-      lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g, '');
+      lang = adaptation.lang;
     }
 
     return lang;
@@ -24552,7 +27076,7 @@ function DashManifestModel() {
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
 
     for (var i = 0; i < realAdaptations.length; i++) {
-      var objectUtils = Object(_streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
+      var objectUtils = Object(_streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
 
       if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
         return i;
@@ -25120,7 +27644,7 @@ function DashManifestModel() {
     } else if (isDynamic) {
       periodEnd = Number.POSITIVE_INFINITY;
     } else {
-      errHandler.error(new _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_15__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_16__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+      errHandler.error(new _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
     }
 
     return periodEnd;
@@ -25378,6 +27902,31 @@ function DashManifestModel() {
     return baseUrls;
   }
 
+  function getContentSteering(manifest) {
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY)) {
+      // Only one ContentSteering element is supported on MPD level
+      var element = manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY][0];
+      var entry = new _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__["default"]();
+      entry.serverUrl = element.__text;
+
+      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION)) {
+        entry.defaultServiceLocation = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION];
+      }
+
+      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START)) {
+        entry.queryBeforeStart = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START].toLowerCase() === 'true';
+      }
+
+      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL)) {
+        entry.proxyServerUrl = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL];
+      }
+
+      return entry;
+    }
+
+    return undefined;
+  }
+
   function getLocation(manifest) {
     if (manifest && manifest.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].LOCATION)) {
       // for now, do not support multiple Locations -
@@ -25565,6 +28114,7 @@ function DashManifestModel() {
     getUTCTimingSources: getUTCTimingSources,
     getBaseURLsFromElement: getBaseURLsFromElement,
     getRepresentationSortFunction: getRepresentationSortFunction,
+    getContentSteering: getContentSteering,
     getLocation: getLocation,
     getPatchLocation: getPatchLocation,
     getSuggestedPresentationDelay: getSuggestedPresentationDelay,
@@ -25578,7 +28128,7 @@ function DashManifestModel() {
 }
 
 DashManifestModel.__dashjs_factory_name = 'DashManifestModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_13__["default"].getSingletonFactory(DashManifestModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_14__["default"].getSingletonFactory(DashManifestModel));
 
 /***/ }),
 
@@ -25757,8 +28307,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _matchers_DurationMatcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./matchers/DurationMatcher */ "./src/dash/parser/matchers/DurationMatcher.js");
 /* harmony import */ var _matchers_DateTimeMatcher__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./matchers/DateTimeMatcher */ "./src/dash/parser/matchers/DateTimeMatcher.js");
 /* harmony import */ var _matchers_NumericMatcher__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./matchers/NumericMatcher */ "./src/dash/parser/matchers/NumericMatcher.js");
-/* harmony import */ var _maps_RepresentationBaseValuesMap__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./maps/RepresentationBaseValuesMap */ "./src/dash/parser/maps/RepresentationBaseValuesMap.js");
-/* harmony import */ var _maps_SegmentValuesMap__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./maps/SegmentValuesMap */ "./src/dash/parser/maps/SegmentValuesMap.js");
+/* harmony import */ var _matchers_LangMatcher__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./matchers/LangMatcher */ "./src/dash/parser/matchers/LangMatcher.js");
+/* harmony import */ var _maps_RepresentationBaseValuesMap__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./maps/RepresentationBaseValuesMap */ "./src/dash/parser/maps/RepresentationBaseValuesMap.js");
+/* harmony import */ var _maps_SegmentValuesMap__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./maps/SegmentValuesMap */ "./src/dash/parser/maps/SegmentValuesMap.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -25799,6 +28350,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function DashParser(config) {
   config = config || {};
   var context = this.context;
@@ -25807,7 +28359,7 @@ function DashParser(config) {
 
   function setup() {
     logger = debug.getLogger(instance);
-    matchers = [new _matchers_DurationMatcher__WEBPACK_IMPORTED_MODULE_4__["default"](), new _matchers_DateTimeMatcher__WEBPACK_IMPORTED_MODULE_5__["default"](), new _matchers_NumericMatcher__WEBPACK_IMPORTED_MODULE_6__["default"](), new _matchers_StringMatcher__WEBPACK_IMPORTED_MODULE_3__["default"]() // last in list to take precedence over NumericMatcher
+    matchers = [new _matchers_DurationMatcher__WEBPACK_IMPORTED_MODULE_4__["default"](), new _matchers_DateTimeMatcher__WEBPACK_IMPORTED_MODULE_5__["default"](), new _matchers_NumericMatcher__WEBPACK_IMPORTED_MODULE_6__["default"](), new _matchers_LangMatcher__WEBPACK_IMPORTED_MODULE_7__["default"](), new _matchers_StringMatcher__WEBPACK_IMPORTED_MODULE_3__["default"]() // last in list to take precedence over NumericMatcher
     ];
     converter = new _externals_xml2json__WEBPACK_IMPORTED_MODULE_2__["default"]({
       escapeMode: false,
@@ -25820,8 +28372,8 @@ function DashParser(config) {
       matchers: matchers
     });
     objectIron = Object(_objectiron__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
-      adaptationset: new _maps_RepresentationBaseValuesMap__WEBPACK_IMPORTED_MODULE_7__["default"](),
-      period: new _maps_SegmentValuesMap__WEBPACK_IMPORTED_MODULE_8__["default"]()
+      adaptationset: new _maps_RepresentationBaseValuesMap__WEBPACK_IMPORTED_MODULE_8__["default"](),
+      period: new _maps_SegmentValuesMap__WEBPACK_IMPORTED_MODULE_9__["default"]()
     });
   }
 
@@ -26521,6 +29073,119 @@ var DurationMatcher = /*#__PURE__*/function (_BaseMatcher) {
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 /* harmony default export */ __webpack_exports__["default"] = (DurationMatcher);
+
+/***/ }),
+
+/***/ "./src/dash/parser/matchers/LangMatcher.js":
+/*!*************************************************!*\
+  !*** ./src/dash/parser/matchers/LangMatcher.js ***!
+  \*************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _BaseMatcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher */ "./src/dash/parser/matchers/BaseMatcher.js");
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/index.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__);
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @classdesc Matches and converts any ISO 639 language tag to BCP-47 language tags
+ */
+
+
+
+
+var LangMatcher = /*#__PURE__*/function (_BaseMatcher) {
+  _inherits(LangMatcher, _BaseMatcher);
+
+  var _super = _createSuper(LangMatcher);
+
+  function LangMatcher() {
+    _classCallCheck(this, LangMatcher);
+
+    return _super.call(this, function (attr, nodeName) {
+      var _stringAttrsInElement;
+
+      var stringAttrsInElements = (_stringAttrsInElement = {}, _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].GROUP_LABEL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _stringAttrsInElement);
+
+      if (stringAttrsInElements.hasOwnProperty(nodeName)) {
+        var attrNames = stringAttrsInElements[nodeName];
+
+        if (attrNames !== undefined) {
+          return attrNames.indexOf(attr.name) >= 0;
+        } else {
+          return false;
+        }
+      }
+
+      return false;
+    }, function (str) {
+      var lang = bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2___default()(str);
+
+      if (lang !== undefined) {
+        return lang;
+      }
+
+      return String(str);
+    });
+  }
+
+  return LangMatcher;
+}(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
+
+/* harmony default export */ __webpack_exports__["default"] = (LangMatcher);
 
 /***/ }),
 
@@ -28413,6 +31078,185 @@ BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
 
 /***/ }),
 
+/***/ "./src/dash/vo/ContentSteering.js":
+/*!****************************************!*\
+  !*** ./src/dash/vo/ContentSteering.js ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+var ContentSteering = function ContentSteering() {
+  _classCallCheck(this, ContentSteering);
+
+  this.defaultServiceLocation = null;
+  this.queryBeforeStart = false;
+  this.proxyServerUrl = null;
+  this.serverUrl = null;
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (ContentSteering);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ContentSteeringRequest.js":
+/*!***********************************************!*\
+  !*** ./src/dash/vo/ContentSteeringRequest.js ***!
+  \***********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../streaming/vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+
+
+var ContentSteeringRequest = function ContentSteeringRequest(url) {
+  _classCallCheck(this, ContentSteeringRequest);
+
+  this.url = url || null;
+  this.type = _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_0__["HTTPRequest"].CONTENT_STEERING_TYPE;
+  this.responseType = 'json';
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (ContentSteeringRequest);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ContentSteeringResponse.js":
+/*!************************************************!*\
+  !*** ./src/dash/vo/ContentSteeringResponse.js ***!
+  \************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+var ContentSteeringResponse = function ContentSteeringResponse() {
+  _classCallCheck(this, ContentSteeringResponse);
+
+  this.version = null;
+  this.ttl = 300;
+  this.reloadUri = null;
+  this.serviceLocationPriority = [];
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (ContentSteeringResponse);
+
+/***/ }),
+
 /***/ "./src/dash/vo/Event.js":
 /*!******************************!*\
   !*** ./src/dash/vo/Event.js ***!
@@ -30241,46 +33085,47 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _controllers_StreamController__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./controllers/StreamController */ "./src/streaming/controllers/StreamController.js");
 /* harmony import */ var _controllers_GapController__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./controllers/GapController */ "./src/streaming/controllers/GapController.js");
 /* harmony import */ var _controllers_CatchupController__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./controllers/CatchupController */ "./src/streaming/controllers/CatchupController.js");
-/* harmony import */ var _controllers_ServiceDescriptionController__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./controllers/ServiceDescriptionController */ "./src/streaming/controllers/ServiceDescriptionController.js");
-/* harmony import */ var _controllers_MediaController__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./controllers/MediaController */ "./src/streaming/controllers/MediaController.js");
-/* harmony import */ var _controllers_BaseURLController__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./controllers/BaseURLController */ "./src/streaming/controllers/BaseURLController.js");
-/* harmony import */ var _ManifestLoader__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./ManifestLoader */ "./src/streaming/ManifestLoader.js");
-/* harmony import */ var _utils_ErrorHandler__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./utils/ErrorHandler */ "./src/streaming/utils/ErrorHandler.js");
-/* harmony import */ var _utils_Capabilities__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./utils/Capabilities */ "./src/streaming/utils/Capabilities.js");
-/* harmony import */ var _utils_CapabilitiesFilter__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./utils/CapabilitiesFilter */ "./src/streaming/utils/CapabilitiesFilter.js");
-/* harmony import */ var _utils_RequestModifier__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./utils/RequestModifier */ "./src/streaming/utils/RequestModifier.js");
-/* harmony import */ var _models_URIFragmentModel__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./models/URIFragmentModel */ "./src/streaming/models/URIFragmentModel.js");
-/* harmony import */ var _models_ManifestModel__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./models/ManifestModel */ "./src/streaming/models/ManifestModel.js");
-/* harmony import */ var _models_MediaPlayerModel__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./models/MediaPlayerModel */ "./src/streaming/models/MediaPlayerModel.js");
-/* harmony import */ var _controllers_AbrController__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./controllers/AbrController */ "./src/streaming/controllers/AbrController.js");
-/* harmony import */ var _net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./net/SchemeLoaderFactory */ "./src/streaming/net/SchemeLoaderFactory.js");
-/* harmony import */ var _models_VideoModel__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./models/VideoModel */ "./src/streaming/models/VideoModel.js");
-/* harmony import */ var _models_CmcdModel__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./models/CmcdModel */ "./src/streaming/models/CmcdModel.js");
-/* harmony import */ var _utils_DOMStorage__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./utils/DOMStorage */ "./src/streaming/utils/DOMStorage.js");
-/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./../core/Debug */ "./src/core/Debug.js");
-/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./../core/errors/Errors */ "./src/core/errors/Errors.js");
-/* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./../core/EventBus */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./../core/events/Events */ "./src/core/events/Events.js");
-/* harmony import */ var _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../core/Settings */ "./src/core/Settings.js");
-/* harmony import */ var _core_Version__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../core/Version */ "./src/core/Version.js");
-/* harmony import */ var _dash_controllers_SegmentBaseController__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../dash/controllers/SegmentBaseController */ "./src/dash/controllers/SegmentBaseController.js");
-/* harmony import */ var _dash_DashAdapter__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../dash/DashAdapter */ "./src/dash/DashAdapter.js");
-/* harmony import */ var _dash_DashMetrics__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../dash/DashMetrics */ "./src/dash/DashMetrics.js");
-/* harmony import */ var _dash_utils_TimelineConverter__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../dash/utils/TimelineConverter */ "./src/dash/utils/TimelineConverter.js");
-/* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _externals_base64__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../externals/base64 */ "./externals/base64.js");
-/* harmony import */ var _externals_base64__WEBPACK_IMPORTED_MODULE_37___default = /*#__PURE__*/__webpack_require__.n(_externals_base64__WEBPACK_IMPORTED_MODULE_37__);
-/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
-/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_38___default = /*#__PURE__*/__webpack_require__.n(codem_isoboxer__WEBPACK_IMPORTED_MODULE_38__);
-/* harmony import */ var _vo_DashJSError__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ./vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _ManifestUpdater__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./ManifestUpdater */ "./src/streaming/ManifestUpdater.js");
-/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _utils_BoxParser__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./utils/BoxParser */ "./src/streaming/utils/BoxParser.js");
-/* harmony import */ var _text_TextController__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./text/TextController */ "./src/streaming/text/TextController.js");
-/* harmony import */ var _models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./models/CustomParametersModel */ "./src/streaming/models/CustomParametersModel.js");
+/* harmony import */ var _dash_controllers_ServiceDescriptionController__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../dash/controllers/ServiceDescriptionController */ "./src/dash/controllers/ServiceDescriptionController.js");
+/* harmony import */ var _dash_controllers_ContentSteeringController__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../dash/controllers/ContentSteeringController */ "./src/dash/controllers/ContentSteeringController.js");
+/* harmony import */ var _controllers_MediaController__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./controllers/MediaController */ "./src/streaming/controllers/MediaController.js");
+/* harmony import */ var _controllers_BaseURLController__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./controllers/BaseURLController */ "./src/streaming/controllers/BaseURLController.js");
+/* harmony import */ var _ManifestLoader__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./ManifestLoader */ "./src/streaming/ManifestLoader.js");
+/* harmony import */ var _utils_ErrorHandler__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./utils/ErrorHandler */ "./src/streaming/utils/ErrorHandler.js");
+/* harmony import */ var _utils_Capabilities__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./utils/Capabilities */ "./src/streaming/utils/Capabilities.js");
+/* harmony import */ var _utils_CapabilitiesFilter__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./utils/CapabilitiesFilter */ "./src/streaming/utils/CapabilitiesFilter.js");
+/* harmony import */ var _utils_RequestModifier__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./utils/RequestModifier */ "./src/streaming/utils/RequestModifier.js");
+/* harmony import */ var _models_URIFragmentModel__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./models/URIFragmentModel */ "./src/streaming/models/URIFragmentModel.js");
+/* harmony import */ var _models_ManifestModel__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./models/ManifestModel */ "./src/streaming/models/ManifestModel.js");
+/* harmony import */ var _models_MediaPlayerModel__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./models/MediaPlayerModel */ "./src/streaming/models/MediaPlayerModel.js");
+/* harmony import */ var _controllers_AbrController__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./controllers/AbrController */ "./src/streaming/controllers/AbrController.js");
+/* harmony import */ var _net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./net/SchemeLoaderFactory */ "./src/streaming/net/SchemeLoaderFactory.js");
+/* harmony import */ var _models_VideoModel__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./models/VideoModel */ "./src/streaming/models/VideoModel.js");
+/* harmony import */ var _models_CmcdModel__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./models/CmcdModel */ "./src/streaming/models/CmcdModel.js");
+/* harmony import */ var _utils_DOMStorage__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./utils/DOMStorage */ "./src/streaming/utils/DOMStorage.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./../core/errors/Errors */ "./src/core/errors/Errors.js");
+/* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./../core/EventBus */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./../core/events/Events */ "./src/core/events/Events.js");
+/* harmony import */ var _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../core/Settings */ "./src/core/Settings.js");
+/* harmony import */ var _core_Version__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../core/Version */ "./src/core/Version.js");
+/* harmony import */ var _dash_controllers_SegmentBaseController__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../dash/controllers/SegmentBaseController */ "./src/dash/controllers/SegmentBaseController.js");
+/* harmony import */ var _dash_DashAdapter__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../dash/DashAdapter */ "./src/dash/DashAdapter.js");
+/* harmony import */ var _dash_DashMetrics__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../dash/DashMetrics */ "./src/dash/DashMetrics.js");
+/* harmony import */ var _dash_utils_TimelineConverter__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../dash/utils/TimelineConverter */ "./src/dash/utils/TimelineConverter.js");
+/* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _externals_base64__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../externals/base64 */ "./externals/base64.js");
+/* harmony import */ var _externals_base64__WEBPACK_IMPORTED_MODULE_38___default = /*#__PURE__*/__webpack_require__.n(_externals_base64__WEBPACK_IMPORTED_MODULE_38__);
+/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
+/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_39___default = /*#__PURE__*/__webpack_require__.n(codem_isoboxer__WEBPACK_IMPORTED_MODULE_39__);
+/* harmony import */ var _vo_DashJSError__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _ManifestUpdater__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./ManifestUpdater */ "./src/streaming/ManifestUpdater.js");
+/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _utils_BoxParser__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./utils/BoxParser */ "./src/streaming/utils/BoxParser.js");
+/* harmony import */ var _text_TextController__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./text/TextController */ "./src/streaming/text/TextController.js");
+/* harmony import */ var _models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./models/CustomParametersModel */ "./src/streaming/models/CustomParametersModel.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -30311,6 +33156,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -30401,12 +33247,12 @@ function MediaPlayer() {
 
   var MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
   var context = this.context;
-  var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_26__["default"])(context).getInstance();
-  var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_30__["default"])(context).getInstance();
-  var debug = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_24__["default"])(context).getInstance({
+  var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_27__["default"])(context).getInstance();
+  var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_31__["default"])(context).getInstance();
+  var debug = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_25__["default"])(context).getInstance({
     settings: settings
   });
-  var instance, logger, source, protectionData, mediaPlayerInitialized, streamingInitialized, playbackInitialized, autoPlay, abrController, schemeLoaderFactory, timelineConverter, mediaController, protectionController, metricsReportingController, mssHandler, offlineController, adapter, mediaPlayerModel, customParametersModel, errHandler, baseURLController, capabilities, capabilitiesFilter, streamController, textController, gapController, playbackController, serviceDescriptionController, catchupController, dashMetrics, manifestModel, cmcdModel, videoModel, uriFragmentModel, domStorage, segmentBaseController;
+  var instance, logger, source, protectionData, mediaPlayerInitialized, streamingInitialized, playbackInitialized, autoPlay, abrController, schemeLoaderFactory, timelineConverter, mediaController, protectionController, metricsReportingController, mssHandler, offlineController, adapter, mediaPlayerModel, customParametersModel, errHandler, baseURLController, capabilities, capabilitiesFilter, streamController, textController, gapController, playbackController, serviceDescriptionController, contentSteeringController, catchupController, dashMetrics, manifestModel, cmcdModel, videoModel, uriFragmentModel, domStorage, segmentBaseController;
   /*
   ---------------------------------------------------------------------------
        INIT FUNCTIONS
@@ -30424,11 +33270,11 @@ function MediaPlayer() {
     protectionData = null;
     adapter = null;
     segmentBaseController = null;
-    _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"].extend(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_28__["default"]);
-    mediaPlayerModel = Object(_models_MediaPlayerModel__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance();
-    customParametersModel = Object(_models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_45__["default"])(context).getInstance();
-    videoModel = Object(_models_VideoModel__WEBPACK_IMPORTED_MODULE_21__["default"])(context).getInstance();
-    uriFragmentModel = Object(_models_URIFragmentModel__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance();
+    _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"].extend(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_29__["default"]);
+    mediaPlayerModel = Object(_models_MediaPlayerModel__WEBPACK_IMPORTED_MODULE_19__["default"])(context).getInstance();
+    customParametersModel = Object(_models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_46__["default"])(context).getInstance();
+    videoModel = Object(_models_VideoModel__WEBPACK_IMPORTED_MODULE_22__["default"])(context).getInstance();
+    uriFragmentModel = Object(_models_URIFragmentModel__WEBPACK_IMPORTED_MODULE_17__["default"])(context).getInstance();
   }
   /**
    * Configure media player with customs controllers. Helpful for tests
@@ -30470,6 +33316,10 @@ function MediaPlayer() {
 
     if (config.serviceDescriptionController) {
       serviceDescriptionController = config.serviceDescriptionController;
+    }
+
+    if (config.contentSteeringController) {
+      contentSteeringController = config.contentSteeringController;
     }
 
     if (config.catchupController) {
@@ -30526,35 +33376,35 @@ function MediaPlayer() {
     var startTime = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : NaN;
 
     if (!capabilities) {
-      capabilities = Object(_utils_Capabilities__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
+      capabilities = Object(_utils_Capabilities__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
       capabilities.setConfig({
         settings: settings
       });
     }
 
     if (!errHandler) {
-      errHandler = Object(_utils_ErrorHandler__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+      errHandler = Object(_utils_ErrorHandler__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
     }
 
     if (!capabilities.supportsMediaSource()) {
-      errHandler.error(new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_39__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
+      errHandler.error(new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_40__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
       return;
     }
 
     if (!mediaPlayerInitialized) {
       mediaPlayerInitialized = true; // init some controllers and models
 
-      timelineConverter = Object(_dash_utils_TimelineConverter__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance();
+      timelineConverter = Object(_dash_utils_TimelineConverter__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance();
 
       if (!abrController) {
-        abrController = Object(_controllers_AbrController__WEBPACK_IMPORTED_MODULE_19__["default"])(context).getInstance();
+        abrController = Object(_controllers_AbrController__WEBPACK_IMPORTED_MODULE_20__["default"])(context).getInstance();
         abrController.setConfig({
           settings: settings
         });
       }
 
       if (!schemeLoaderFactory) {
-        schemeLoaderFactory = Object(_net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_20__["default"])(context).getInstance();
+        schemeLoaderFactory = Object(_net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_21__["default"])(context).getInstance();
       }
 
       if (!playbackController) {
@@ -30562,7 +33412,7 @@ function MediaPlayer() {
       }
 
       if (!mediaController) {
-        mediaController = Object(_controllers_MediaController__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+        mediaController = Object(_controllers_MediaController__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
       }
 
       if (!streamController) {
@@ -30578,31 +33428,35 @@ function MediaPlayer() {
       }
 
       if (!serviceDescriptionController) {
-        serviceDescriptionController = Object(_controllers_ServiceDescriptionController__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+        serviceDescriptionController = Object(_dash_controllers_ServiceDescriptionController__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+      }
+
+      if (!contentSteeringController) {
+        contentSteeringController = Object(_dash_controllers_ContentSteeringController__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
       }
 
       if (!capabilitiesFilter) {
-        capabilitiesFilter = Object(_utils_CapabilitiesFilter__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
+        capabilitiesFilter = Object(_utils_CapabilitiesFilter__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance();
       }
 
-      adapter = Object(_dash_DashAdapter__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance();
-      manifestModel = Object(_models_ManifestModel__WEBPACK_IMPORTED_MODULE_17__["default"])(context).getInstance();
-      cmcdModel = Object(_models_CmcdModel__WEBPACK_IMPORTED_MODULE_22__["default"])(context).getInstance();
-      dashMetrics = Object(_dash_DashMetrics__WEBPACK_IMPORTED_MODULE_34__["default"])(context).getInstance({
+      adapter = Object(_dash_DashAdapter__WEBPACK_IMPORTED_MODULE_34__["default"])(context).getInstance();
+      manifestModel = Object(_models_ManifestModel__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance();
+      cmcdModel = Object(_models_CmcdModel__WEBPACK_IMPORTED_MODULE_23__["default"])(context).getInstance();
+      dashMetrics = Object(_dash_DashMetrics__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance({
         settings: settings
       });
-      domStorage = Object(_utils_DOMStorage__WEBPACK_IMPORTED_MODULE_23__["default"])(context).getInstance({
+      domStorage = Object(_utils_DOMStorage__WEBPACK_IMPORTED_MODULE_24__["default"])(context).getInstance({
         settings: settings
       });
       adapter.setConfig({
         constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"],
         cea608parser: _externals_cea608_parser__WEBPACK_IMPORTED_MODULE_0___default.a,
         errHandler: errHandler,
-        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_37___default.a
+        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_38___default.a
       });
 
       if (!baseURLController) {
-        baseURLController = Object(_controllers_BaseURLController__WEBPACK_IMPORTED_MODULE_10__["default"])(context).create();
+        baseURLController = Object(_controllers_BaseURLController__WEBPACK_IMPORTED_MODULE_11__["default"])(context).create();
       }
 
       baseURLController.setConfig({
@@ -30613,17 +33467,17 @@ function MediaPlayer() {
       });
 
       if (!segmentBaseController) {
-        segmentBaseController = Object(_dash_controllers_SegmentBaseController__WEBPACK_IMPORTED_MODULE_32__["default"])(context).getInstance({
+        segmentBaseController = Object(_dash_controllers_SegmentBaseController__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance({
           dashMetrics: dashMetrics,
           mediaPlayerModel: mediaPlayerModel,
           errHandler: errHandler,
           baseURLController: baseURLController,
-          events: _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"],
+          events: _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"],
           eventBus: eventBus,
           debug: debug,
-          boxParser: Object(_utils_BoxParser__WEBPACK_IMPORTED_MODULE_43__["default"])(context).getInstance(),
-          requestModifier: Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance(),
-          errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"]
+          boxParser: Object(_utils_BoxParser__WEBPACK_IMPORTED_MODULE_44__["default"])(context).getInstance(),
+          requestModifier: Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance(),
+          errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"]
         });
       } // configure controllers
 
@@ -30701,7 +33555,7 @@ function MediaPlayer() {
 
   function destroy() {
     reset();
-    _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_29__["default"].deleteSingletonInstances(context);
+    _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_30__["default"].deleteSingletonInstances(context);
   }
   /**
    * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
@@ -30755,7 +33609,7 @@ function MediaPlayer() {
 
 
   function getVersion() {
-    return Object(_core_Version__WEBPACK_IMPORTED_MODULE_31__["getVersionString"])();
+    return Object(_core_Version__WEBPACK_IMPORTED_MODULE_32__["getVersionString"])();
   }
   /**
    * Use this method to access the dash.js logging class.
@@ -30792,7 +33646,7 @@ function MediaPlayer() {
     }
 
     if (!autoPlay || isPaused() && playbackInitialized) {
-      playbackController.play();
+      playbackController.play(true);
     }
   }
   /**
@@ -30831,7 +33685,8 @@ function MediaPlayer() {
    * Sets the currentTime property of the attached video element.  If it is a live stream with a
    * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
    *
-   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+   * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
    * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
    * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
    * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
@@ -30845,14 +33700,26 @@ function MediaPlayer() {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
 
-    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_40__["checkParameterType"])(value, 'number');
+    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_41__["checkParameterType"])(value, 'number');
 
     if (isNaN(value)) {
       throw _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].BAD_ARGUMENT_ERROR;
     }
 
     var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-    playbackController.seek(s);
+    playbackController.seek(s, false, false, true);
+  }
+  /**
+   * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
+   */
+
+
+  function seekToOriginalLive() {
+    if (!playbackInitialized || !isDynamic()) {
+      return;
+    }
+
+    playbackController.seekToOriginalLive();
   }
   /**
    * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
@@ -30933,7 +33800,7 @@ function MediaPlayer() {
 
 
   function setMute(value) {
-    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_40__["checkParameterType"])(value, 'boolean');
+    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_41__["checkParameterType"])(value, 'boolean');
     getVideoElement().muted = value;
   }
   /**
@@ -31052,7 +33919,7 @@ function MediaPlayer() {
       return 0;
     }
 
-    var liveDelay = playbackController.getLiveDelay();
+    var liveDelay = playbackController.getOriginalLiveDelay();
     var val = metric.range.start + value;
 
     if (val > metric.range.end - liveDelay) {
@@ -31074,7 +33941,7 @@ function MediaPlayer() {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
 
-    return playbackController.getLiveDelay();
+    return playbackController.getOriginalLiveDelay();
   }
   /**
    * Current time of the playhead, in seconds.
@@ -31303,7 +34170,7 @@ function MediaPlayer() {
 
 
   function setAutoPlay(value) {
-    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_40__["checkParameterType"])(value, 'boolean');
+    Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_41__["checkParameterType"])(value, 'boolean');
     autoPlay = value;
   }
   /**
@@ -31833,7 +34700,7 @@ function MediaPlayer() {
   /**
    * This method allows to set media settings that will be used to pick the initial track. Format of the settings
    * is following: <br />
-   * {lang: langValue (can be either a string or a regex to match),
+   * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
    *  index: indexValue,
    *  viewpoint: viewpointValue,
    *  audioChannelConfiguration: audioChannelConfigurationValue,
@@ -32109,11 +34976,11 @@ function MediaPlayer() {
         callback(null, e.error);
       }
 
-      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
       manifestLoader.reset();
     };
 
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
     uriFragmentModel.initialize(url);
     manifestLoader.load(url);
   }
@@ -32298,7 +35165,7 @@ function MediaPlayer() {
 
 
   function extend(parentNameString, childInstance, override) {
-    _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_29__["default"].extend(parentNameString, childInstance, override, context);
+    _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_30__["default"].extend(parentNameString, childInstance, override, context);
   }
   /**
    * This method returns the active stream
@@ -32329,6 +35196,28 @@ function MediaPlayer() {
 
   function getDashAdapter() {
     return adapter;
+  }
+  /**
+   * Triggers a request to the content steering server to update the steering information.
+   * @return {Promise<any>}
+   */
+
+
+  function triggerSteeringRequest() {
+    if (contentSteeringController) {
+      return contentSteeringController.loadSteeringData();
+    }
+  }
+  /**
+   * Returns the current response data of the content steering server
+   * @return {object}
+   */
+
+
+  function getCurrentSteeringResponseData() {
+    if (contentSteeringController) {
+      return contentSteeringController.getCurrentSteeringResponseData();
+    }
   } //***********************************
   // PRIVATE METHODS
   //***********************************
@@ -32343,6 +35232,7 @@ function MediaPlayer() {
     catchupController.reset();
     playbackController.reset();
     serviceDescriptionController.reset();
+    contentSteeringController.reset();
     abrController.reset();
     mediaController.reset();
     segmentBaseController.reset();
@@ -32371,7 +35261,7 @@ function MediaPlayer() {
     }
 
     if (!textController) {
-      textController = Object(_text_TextController__WEBPACK_IMPORTED_MODULE_44__["default"])(context).create({
+      textController = Object(_text_TextController__WEBPACK_IMPORTED_MODULE_45__["default"])(context).create({
         errHandler: errHandler,
         manifestModel: manifestModel,
         adapter: adapter,
@@ -32405,6 +35295,7 @@ function MediaPlayer() {
       videoModel: videoModel,
       playbackController: playbackController,
       serviceDescriptionController: serviceDescriptionController,
+      contentSteeringController: contentSteeringController,
       abrController: abrController,
       mediaController: mediaController,
       settings: settings,
@@ -32433,7 +35324,6 @@ function MediaPlayer() {
       streamController: streamController,
       playbackController: playbackController,
       mediaPlayerModel: mediaPlayerModel,
-      dashMetrics: dashMetrics,
       videoModel: videoModel,
       settings: settings
     });
@@ -32451,6 +35341,16 @@ function MediaPlayer() {
       abrController: abrController,
       dashMetrics: dashMetrics,
       playbackController: playbackController
+    });
+    contentSteeringController.setConfig({
+      adapter: adapter,
+      errHandler: errHandler,
+      dashMetrics: dashMetrics,
+      mediaPlayerModel: mediaPlayerModel,
+      manifestModel: manifestModel,
+      abrController: abrController,
+      eventBus: eventBus,
+      requestModifier: Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance()
     }); // initialises controller
 
     abrController.initialize();
@@ -32459,16 +35359,17 @@ function MediaPlayer() {
     gapController.initialize();
     catchupController.initialize();
     cmcdModel.initialize();
+    contentSteeringController.initialize();
     segmentBaseController.initialize();
   }
 
   function _createManifestLoader() {
-    return Object(_ManifestLoader__WEBPACK_IMPORTED_MODULE_11__["default"])(context).create({
+    return Object(_ManifestLoader__WEBPACK_IMPORTED_MODULE_12__["default"])(context).create({
       debug: debug,
       errHandler: errHandler,
       dashMetrics: dashMetrics,
       mediaPlayerModel: mediaPlayerModel,
-      requestModifier: Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance(),
+      requestModifier: Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance(),
       mssHandler: mssHandler,
       settings: settings
     });
@@ -32486,14 +35387,14 @@ function MediaPlayer() {
     if (typeof Protection === 'function') {
       //TODO need a better way to register/detect plugin components
       var protection = Protection(context).create();
-      _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"].extend(Protection.events);
-      _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_28__["default"].extend(Protection.events, {
+      _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"].extend(Protection.events);
+      _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_29__["default"].extend(Protection.events, {
         publicOnly: true
       });
-      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"].extend(Protection.errors);
+      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"].extend(Protection.errors);
 
       if (!capabilities) {
-        capabilities = Object(_utils_Capabilities__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
+        capabilities = Object(_utils_Capabilities__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
       }
 
       protectionController = protection.createProtectionSystem({
@@ -32503,8 +35404,8 @@ function MediaPlayer() {
         customParametersModel: customParametersModel,
         capabilities: capabilities,
         eventBus: eventBus,
-        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"],
-        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_37___default.a,
+        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"],
+        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_38___default.a,
         constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"],
         cmcdModel: cmcdModel,
         settings: settings
@@ -32534,7 +35435,7 @@ function MediaPlayer() {
         adapter: adapter,
         dashMetrics: dashMetrics,
         mediaPlayerModel: mediaPlayerModel,
-        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"],
+        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"],
         constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"],
         metricsConstants: _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_3__["default"]
       });
@@ -32552,7 +35453,7 @@ function MediaPlayer() {
 
     if (typeof MssHandler === 'function') {
       //TODO need a better way to register/detect plugin components
-      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"].extend(MssHandler.errors);
+      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"].extend(MssHandler.errors);
       mssHandler = MssHandler(context).create({
         eventBus: eventBus,
         mediaPlayerModel: mediaPlayerModel,
@@ -32563,12 +35464,12 @@ function MediaPlayer() {
         protectionController: protectionController,
         baseURLController: baseURLController,
         errHandler: errHandler,
-        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"],
+        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"],
         constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"],
         debug: debug,
-        initSegmentType: _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_36__["HTTPRequest"].INIT_SEGMENT_TYPE,
-        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_37___default.a,
-        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_38___default.a,
+        initSegmentType: _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_37__["HTTPRequest"].INIT_SEGMENT_TYPE,
+        BASE64: _externals_base64__WEBPACK_IMPORTED_MODULE_38___default.a,
+        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_39___default.a,
         settings: settings
       });
     }
@@ -32589,15 +35490,15 @@ function MediaPlayer() {
 
     if (typeof OfflineController === 'function') {
       //TODO need a better way to register/detect plugin components
-      _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"].extend(OfflineController.events);
-      _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_28__["default"].extend(OfflineController.events, {
+      _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"].extend(OfflineController.events);
+      _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_29__["default"].extend(OfflineController.events, {
         publicOnly: true
       });
-      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"].extend(OfflineController.errors);
+      _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"].extend(OfflineController.errors);
 
       var manifestLoader = _createManifestLoader();
 
-      var manifestUpdater = Object(_ManifestUpdater__WEBPACK_IMPORTED_MODULE_41__["default"])(context).create();
+      var manifestUpdater = Object(_ManifestUpdater__WEBPACK_IMPORTED_MODULE_42__["default"])(context).create();
       manifestUpdater.setConfig({
         manifestModel: manifestModel,
         adapter: adapter,
@@ -32620,12 +35521,12 @@ function MediaPlayer() {
         segmentBaseController: segmentBaseController,
         schemeLoaderFactory: schemeLoaderFactory,
         eventBus: eventBus,
-        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_27__["default"],
-        errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"],
+        events: _core_events_Events__WEBPACK_IMPORTED_MODULE_28__["default"],
+        errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"],
         constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"],
         settings: settings,
         dashConstants: _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"],
-        urlUtils: Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_42__["default"])(context).getInstance()
+        urlUtils: Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_43__["default"])(context).getInstance()
       });
       return offlineController;
     }
@@ -32694,6 +35595,7 @@ function MediaPlayer() {
     isDynamic: isDynamic,
     getLowLatencyModeEnabled: getLowLatencyModeEnabled,
     seek: seek,
+    seekToOriginalLive: seekToOriginalLive,
     setPlaybackRate: setPlaybackRate,
     getPlaybackRate: getPlaybackRate,
     setMute: setMute,
@@ -32765,6 +35667,8 @@ function MediaPlayer() {
     provideThumbnail: provideThumbnail,
     getDashAdapter: getDashAdapter,
     getOfflineController: getOfflineController,
+    triggerSteeringRequest: triggerSteeringRequest,
+    getCurrentSteeringResponseData: getCurrentSteeringResponseData,
     getSettings: getSettings,
     updateSettings: updateSettings,
     resetSettings: resetSettings,
@@ -32776,10 +35680,10 @@ function MediaPlayer() {
 }
 
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_29__["default"].getClassFactory(MediaPlayer);
-factory.events = _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_28__["default"];
-factory.errors = _core_errors_Errors__WEBPACK_IMPORTED_MODULE_25__["default"];
-_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_29__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
+var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_30__["default"].getClassFactory(MediaPlayer);
+factory.events = _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_29__["default"];
+factory.errors = _core_errors_Errors__WEBPACK_IMPORTED_MODULE_26__["default"];
+_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_30__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -33226,6 +36130,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
+    /**
+     * Triggered when a content steering request has completed.
+     * @event MediaPlayerEvents#CONTENT_STEERING_REQUEST_COMPLETED
+     */
+
+    _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
     return _this;
   }
 
@@ -33473,7 +36383,7 @@ function SourceBufferSink(config) {
     _addEventListeners();
 
     var promises = [];
-    promises.push(_abortBeforeAppend);
+    promises.push(_abortBeforeAppend());
     promises.push(updateAppendWindow(mediaInfo.streamInfo));
     promises.push(changeType(codec));
 
@@ -34645,6 +37555,8 @@ function Stream(config) {
           }
         }
       }
+
+      protectionController.handleKeySystemFromManifest();
     }
 
     if (error) {
@@ -35628,7 +38540,7 @@ function StreamProcessor(config) {
   function _prepareForFastQualitySwitch(representationInfo) {
     // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
     var time = playbackController.getTime();
-    var safeBufferLevel = 1.5;
+    var safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
     var request = fragmentModel.getRequests({
       state: _models_FragmentModel__WEBPACK_IMPORTED_MODULE_3__["default"].FRAGMENT_MODEL_EXECUTED,
       time: time + safeBufferLevel,
@@ -36485,6 +39397,13 @@ var Constants = /*#__PURE__*/function () {
        */
 
       this.WVTT = 'wvtt';
+      /**
+       *  @constant {string} Content Steering
+       *  @memberof Constants#
+       *  @static
+       */
+
+      this.CONTENT_STEERING = 'contentSteering';
       /**
        *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
        *  @memberof Constants#
@@ -38626,6 +41545,26 @@ function BufferController(config) {
 
       if (currentTimeRequest) {
         rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
+      } // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
+
+
+      var avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
+
+      if (avoidCurrentTimeRangePruning) {
+        for (var i = 0; i < ranges.length; i++) {
+          if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i) && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
+            var oldRangeStart = rangeStart;
+
+            if (i + 1 < ranges.length) {
+              rangeStart = ranges.start(i + 1);
+            } else {
+              rangeStart = ranges.end(i) + 1;
+            }
+
+            logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + (rangeStart < endOfBuffer ? '' : ' (no actual pruning)'));
+            break;
+          }
+        }
       }
 
       if (rangeStart < endOfBuffer) {
@@ -39185,6 +42124,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
 /* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/events/Events */ "./src/core/events/Events.js");
 /* harmony import */ var _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../constants/MetricsConstants */ "./src/streaming/constants/MetricsConstants.js");
+/* harmony import */ var _core_Utils__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Utils */ "./src/core/Utils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -39223,10 +42163,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function CatchupController() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
-  var instance, isCatchupSeekInProgress, minPlaybackRateChange, videoModel, settings, streamController, playbackController, mediaPlayerModel, dashMetrics, playbackStalled, logger;
+  var instance, isCatchupSeekInProgress, isSafari, videoModel, settings, streamController, playbackController, mediaPlayerModel, playbackStalled, logger;
 
   function initialize() {
     _registerEvents();
@@ -39251,10 +42192,6 @@ function CatchupController() {
 
     if (config.playbackController) {
       playbackController = config.playbackController;
-    }
-
-    if (config.dashMetrics) {
-      dashMetrics = config.dashMetrics;
     }
 
     if (config.mediaPlayerModel) {
@@ -39295,11 +42232,9 @@ function CatchupController() {
   }
 
   function _resetInitialSettings() {
-    isCatchupSeekInProgress = false; // Detect safari browser (special behavior for low latency streams)
-
-    var ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-    var isSafari = /safari/.test(ua) && !/chrome/.test(ua);
-    minPlaybackRateChange = isSafari ? 0.25 : 0.02;
+    isCatchupSeekInProgress = false;
+    var ua = _core_Utils__WEBPACK_IMPORTED_MODULE_7__["default"].parseUserAgent();
+    isSafari = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'safari';
   }
 
   function _onPlaybackSeeked() {
@@ -39388,8 +42323,7 @@ function CatchupController() {
       if (!isNaN(maxDrift) && maxDrift > 0 && deltaLatency > maxDrift) {
         logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
         isCatchupSeekInProgress = true;
-
-        _seekToLive();
+        playbackController.seekToCurrentLive(true, false);
       } // try to reach the target latency by adjusting the playback rate
       else {
           var currentLiveLatency = playbackController.getCurrentLiveLatency();
@@ -39402,10 +42336,13 @@ function CatchupController() {
           } else {
             // Default playback control: Based on target and current latency
             newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
-          } // Obtain newRate and apply to video model
+          } // We adjust the min change linear, depending on the maximum catchup rate. Default is 0.02 for rate 0.5.
+          // For Safari we stick to a fixed value because of  https://bugs.webkit.org/show_bug.cgi?id=208142
 
 
-          if (newRate) {
+          var minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRate); // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
+
+          if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {
             // non-null
             logger.debug("[CatchupController]: Setting playback rate to ".concat(newRate));
             videoModel.setPlaybackRate(newRate);
@@ -39433,9 +42370,7 @@ function CatchupController() {
 
   function _shouldStartCatchUp() {
     try {
-      var latencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-
-      if (!playbackController.getTime() > 0 || isCatchupSeekInProgress || !isNaN(latencyThreshold) && playbackController.getCurrentLiveLatency() >= latencyThreshold) {
+      if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
         return false;
       }
 
@@ -39507,7 +42442,7 @@ function CatchupController() {
    */
 
 
-  function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate) {
+  function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel) {
     // if we recently ran into an empty buffer we wait for the buffer to recover before applying a new rate
     if (playbackStalled) {
       return 1.0;
@@ -39527,11 +42462,6 @@ function CatchupController() {
       if (bufferLevel <= liveDelay / 2 && deltaLatency > 0) {
         newRate = 1.0;
       }
-    } // don't change playbackrate for small variations (don't overload element with playbackrate changes)
-
-
-    if (Math.abs(currentPlaybackRate - newRate) <= minPlaybackRateChange) {
-      newRate = null;
     }
 
     return newRate;
@@ -39549,7 +42479,7 @@ function CatchupController() {
    */
 
 
-  function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate) {
+  function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel) {
     var cpr = liveCatchUpPlaybackRate;
     var newRate; // Hybrid: Buffer-based
 
@@ -39584,28 +42514,9 @@ function CatchupController() {
       }
 
       logger.debug('[LoL+ playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
-    } // don't change playbackrate for small variations (don't overload element with playbackrate changes)
-
-
-    if (Math.abs(currentPlaybackRate - newRate) <= minPlaybackRateChange) {
-      newRate = null;
     }
 
     return newRate;
-  }
-  /**
-   * Seek to live edge
-   */
-
-
-  function _seekToLive() {
-    var type = streamController && streamController.hasVideoTrack() ? _constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].VIDEO : _constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].AUDIO;
-    var DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
-    var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
-
-    if (DVRWindow && !isNaN(DVRWindow.end)) {
-      playbackController.seek(DVRWindow.end - playbackController.getLiveDelay(), true, false);
-    }
   }
 
   instance = {
@@ -40505,6 +43416,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
 /* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/events/Events */ "./src/core/events/Events.js");
 /* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/EventBus */ "./src/core/EventBus.js");
+/* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -40535,6 +43447,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -40632,7 +43545,7 @@ function GapController() {
 
   function _onBufferReplacementStarted(e) {
     try {
-      if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
+      if (e.streamId !== streamController.getActiveStreamInfo().id || e.mediaType !== _constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO && e.mediaType !== _constants_Constants__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
         return;
       }
 
@@ -40918,6 +43831,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/EventBus */ "./src/core/EventBus.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/index.js");
+/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js");
+/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(bcp_47_match__WEBPACK_IMPORTED_MODULE_6__);
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -40948,6 +43865,8 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 
 
@@ -41224,19 +44143,40 @@ function MediaController() {
 
   function matchSettings(settings, track) {
     var isTrackActive = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-    var matchLang = !settings.lang || track.lang.match(settings.lang);
-    var matchIndex = settings.index === undefined || settings.index === null || track.index === settings.index;
-    var matchViewPoint = !settings.viewpoint || settings.viewpoint === track.viewpoint;
-    var matchRole = !settings.role || !!track.roles.filter(function (item) {
-      return item === settings.role;
-    })[0];
-    var matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
-      return item === settings.accessibility;
-    })[0];
-    var matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
-      return item === settings.audioChannelConfiguration;
-    })[0];
-    return matchLang && matchIndex && matchViewPoint && (matchRole || track.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && isTrackActive) && matchAccessibility && matchAudioChannelConfiguration;
+
+    try {
+      var matchLang = false; // If there is no language defined in the target settings we got a match
+
+      if (!settings.lang) {
+        matchLang = true;
+      } // If the target language is provided as a RegExp apply match function
+      else if (settings.lang instanceof RegExp) {
+          matchLang = track.lang.match(settings.lang);
+        } // If the track has a language and we can normalize the target language check if we got a match
+        else if (track.lang !== '') {
+            var normalizedSettingsLang = bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5___default()(settings.lang);
+
+            if (normalizedSettingsLang) {
+              matchLang = Object(bcp_47_match__WEBPACK_IMPORTED_MODULE_6__["extendedFilter"])(track.lang, normalizedSettingsLang).length > 0;
+            }
+          }
+
+      var matchIndex = settings.index === undefined || settings.index === null || track.index === settings.index;
+      var matchViewPoint = !settings.viewpoint || settings.viewpoint === track.viewpoint;
+      var matchRole = !settings.role || !!track.roles.filter(function (item) {
+        return item === settings.role;
+      })[0];
+      var matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
+        return item === settings.accessibility;
+      })[0];
+      var matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+        return item === settings.audioChannelConfiguration;
+      })[0];
+      return matchLang && matchIndex && matchViewPoint && (matchRole || track.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && isTrackActive) && matchAccessibility && matchAudioChannelConfiguration;
+    } catch (e) {
+      return false;
+      logger.error(e);
+    }
   }
 
   function resetInitialSettings() {
@@ -41669,7 +44609,7 @@ var LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 function PlaybackController() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
-  var instance, logger, streamController, serviceDescriptionController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, streamInfo, isDynamic, playOnceInitialized, lastLivePlaybackTime, availabilityStartTime, availabilityTimeComplete, lowLatencyModeEnabled, seekTarget, internalSeek, playbackStalled, manifestUpdateInProgress, initialCatchupModeActivated, settings;
+  var instance, logger, streamController, serviceDescriptionController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, originalLiveDelay, streamInfo, isDynamic, playOnceInitialized, lastLivePlaybackTime, availabilityStartTime, availabilityTimeComplete, lowLatencyModeEnabled, seekTarget, internalSeek, playbackStalled, manifestUpdateInProgress, initialCatchupModeActivated, settings;
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance().getLogger(instance);
@@ -41684,6 +44624,7 @@ function PlaybackController() {
     pause();
     playOnceInitialized = false;
     liveDelay = 0;
+    originalLiveDelay = 0;
     availabilityStartTime = 0;
     manifestUpdateInProgress = false;
     availabilityTimeComplete = true;
@@ -41787,7 +44728,13 @@ function PlaybackController() {
 
 
   function play() {
+    var adjustLiveDelay = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
     if (streamInfo && videoModel && videoModel.getElement()) {
+      if (adjustLiveDelay && isDynamic) {
+        _adjustLiveDelayAfterUserInteraction(getTime());
+      }
+
       videoModel.play();
     } else {
       playOnceInitialized = true;
@@ -41808,10 +44755,14 @@ function PlaybackController() {
    * @param {number} time
    * @param {boolean} stickToBuffered
    * @param {boolean} internal
+   * @param {boolean} adjustLiveDelay
    */
 
 
-  function seek(time, stickToBuffered, internal) {
+  function seek(time) {
+    var stickToBuffered = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var internal = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+    var adjustLiveDelay = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
     if (!streamInfo || !videoModel) return;
     var currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
     if (time === currentTime) return;
@@ -41821,8 +44772,75 @@ function PlaybackController() {
       seekTarget = time;
     }
 
-    logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
+    logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : '')); // We adjust the current latency. If catchup is enabled we will maintain this new latency
+
+    if (isDynamic && adjustLiveDelay) {
+      _adjustLiveDelayAfterUserInteraction(time);
+    }
+
     videoModel.setCurrentTime(time, stickToBuffered);
+  }
+  /**
+   * Seeks back to the live edge as defined by the originally calculated live delay
+   * @param {boolean} stickToBuffered
+   * @param {boolean} internal
+   * @param {boolean} adjustLiveDelay
+   */
+
+
+  function seekToOriginalLive() {
+    var stickToBuffered = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var internal = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var adjustLiveDelay = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+    var dvrWindowEnd = _getDvrWindowEnd();
+
+    if (dvrWindowEnd === 0) {
+      return;
+    }
+
+    liveDelay = originalLiveDelay;
+    var seektime = dvrWindowEnd - liveDelay;
+    seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+  }
+  /**
+   * Seeks to the live edge as currently defined by liveDelay
+   * @param {boolean} stickToBuffered
+   * @param {boolean} internal
+   * @param {boolean} adjustLiveDelay
+   */
+
+
+  function seekToCurrentLive() {
+    var stickToBuffered = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var internal = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    var adjustLiveDelay = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+    var dvrWindowEnd = _getDvrWindowEnd();
+
+    if (dvrWindowEnd === 0) {
+      return;
+    }
+
+    var seektime = dvrWindowEnd - liveDelay;
+    seek(seektime, stickToBuffered, internal, adjustLiveDelay);
+  }
+
+  function _getDvrWindowEnd() {
+    if (!streamInfo || !videoModel || !isDynamic) {
+      return;
+    }
+
+    var type = streamController && streamController.hasVideoTrack() ? _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+    var dvrInfo = dashMetrics.getCurrentDVRInfo(type);
+    return dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
+  }
+
+  function _adjustLiveDelayAfterUserInteraction(time) {
+    var now = new Date(timelineConverter.getClientReferenceTime());
+    var period = adapter.getRegularPeriods()[0];
+    var nowAsPresentationTime = timelineConverter.calcPresentationTimeFromWallTime(now, period);
+    liveDelay = nowAsPresentationTime - time;
   }
   /**
    * Returns current time of video element
@@ -41924,13 +44942,21 @@ function PlaybackController() {
     return availabilityStartTime;
   }
   /**
-   * Returns the computed live delay
+   * Returns the current live delay. A seek triggered by the user adjusts this value.
    * @return {number}
    */
 
 
   function getLiveDelay() {
     return liveDelay;
+  }
+  /**
+   * Returns the original live delay as calculated at playback start
+   */
+
+
+  function getOriginalLiveDelay() {
+    return originalLiveDelay;
   }
   /**
    * Returns the current live latency
@@ -42002,6 +45028,7 @@ function PlaybackController() {
     }
 
     liveDelay = ret;
+    originalLiveDelay = ret;
     return ret;
   }
 
@@ -42346,6 +45373,7 @@ function PlaybackController() {
       if (minDelay > liveDelay) {
         logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
         liveDelay = minDelay;
+        originalLiveDelay = minDelay;
       }
     }
   }
@@ -42467,6 +45495,7 @@ function PlaybackController() {
     getStreamController: getStreamController,
     computeAndSetLiveDelay: computeAndSetLiveDelay,
     getLiveDelay: getLiveDelay,
+    getOriginalLiveDelay: getOriginalLiveDelay,
     getCurrentLiveLatency: getCurrentLiveLatency,
     play: play,
     isPaused: isPaused,
@@ -42475,6 +45504,8 @@ function PlaybackController() {
     isSeeking: isSeeking,
     getStreamEndTime: getStreamEndTime,
     seek: seek,
+    seekToOriginalLive: seekToOriginalLive,
+    seekToCurrentLive: seekToCurrentLive,
     reset: reset,
     updateCurrentTime: updateCurrentTime,
     getAvailabilityStartTime: getAvailabilityStartTime
@@ -42968,402 +45999,6 @@ ScheduleController.__dashjs_factory_name = 'ScheduleController';
 
 /***/ }),
 
-/***/ "./src/streaming/controllers/ServiceDescriptionController.js":
-/*!*******************************************************************!*\
-  !*** ./src/streaming/controllers/ServiceDescriptionController.js ***!
-  \*******************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
-/* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../dash/constants/DashConstants */ "./src/dash/constants/DashConstants.js");
-/**
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2013, Dash Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-
-
-var SUPPORTED_SCHEMES = [_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_DESCRIPTION_DVB_LL_SCHEME];
-var MEDIA_TYPES = {
-  VIDEO: 'video',
-  AUDIO: 'audio',
-  ANY: 'any',
-  ALL: 'all'
-};
-
-function ServiceDescriptionController() {
-  var context = this.context;
-  var instance, serviceDescriptionSettings, prftOffsets, logger, adapter;
-
-  function setup() {
-    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
-
-    _resetInitialSettings();
-  }
-
-  function setConfig(config) {
-    if (!config) return;
-
-    if (config.adapter) {
-      adapter = config.adapter;
-    }
-  }
-
-  function reset() {
-    _resetInitialSettings();
-  }
-
-  function _resetInitialSettings() {
-    serviceDescriptionSettings = {
-      liveDelay: NaN,
-      liveCatchup: {
-        maxDrift: NaN,
-        playbackRate: NaN
-      },
-      minBitrate: {},
-      maxBitrate: {},
-      initialBitrate: {}
-    };
-    prftOffsets = [];
-  }
-  /**
-   * Returns the service description settings for latency, catchup and bandwidth
-   */
-
-
-  function getServiceDescriptionSettings() {
-    return serviceDescriptionSettings;
-  }
-  /**
-   * Check for potential ServiceDescriptor elements in the MPD and update the settings accordingly
-   * @param {object} manifestInfo
-   * @private
-   */
-
-
-  function applyServiceDescription(manifestInfo) {
-    if (!manifestInfo || !manifestInfo.serviceDescriptions) {
-      return;
-    }
-
-    var supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(function (sd) {
-      return SUPPORTED_SCHEMES.includes(sd.schemeIdUri);
-    });
-    var allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(function (sd) {
-      return sd.schemeIdUri == null;
-    });
-    var sd = supportedServiceDescriptions.length > 0 ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1] : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
-    if (!sd) return;
-
-    if (sd.latency && sd.latency.target > 0) {
-      _applyServiceDescriptionLatency(sd);
-    }
-
-    if (sd.playbackRate && sd.playbackRate.max > 1.0) {
-      _applyServiceDescriptionPlaybackRate(sd);
-    }
-
-    if (sd.operatingQuality) {
-      _applyServiceDescriptionOperatingQuality(sd);
-    }
-
-    if (sd.operatingBandwidth) {
-      _applyServiceDescriptionOperatingBandwidth(sd);
-    }
-  }
-  /**
-   * Adjust the latency targets for the service.
-   * @param {object} sd - service description element
-   * @private
-   */
-
-
-  function _applyServiceDescriptionLatency(sd) {
-    var params;
-
-    if (sd.schemeIdUri === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_DESCRIPTION_DVB_LL_SCHEME) {
-      params = _getDvbServiceDescriptionLatencyParameters(sd);
-    } else {
-      params = _getStandardServiceDescriptionLatencyParameters(sd);
-    }
-
-    if (prftOffsets.length > 0) {
-      var _calculateTimeOffset2 = _calculateTimeOffset(params),
-          to = _calculateTimeOffset2.to,
-          id = _calculateTimeOffset2.id; // TS 103 285 Clause 10.20.4. 3) Subtract calculated offset from Latency@target converted from milliseconds
-      // liveLatency does not consider ST@availabilityTimeOffset so leave out that step
-      // Since maxDrift is a difference rather than absolute it does not need offset applied
-
-
-      serviceDescriptionSettings.liveDelay = params.liveDelay - to;
-      serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
-      logger.debug("\n                Found latency properties coming from service description. Applied time offset of ".concat(to, " from ProducerReferenceTime element with id ").concat(id, ".\n                Live Delay: ").concat(params.liveDelay - to, ", Live catchup max drift: ").concat(params.maxDrift, "\n            "));
-    } else {
-      serviceDescriptionSettings.liveDelay = params.liveDelay;
-      serviceDescriptionSettings.liveCatchup.maxDrift = params.maxDrift;
-      logger.debug("Found latency properties coming from service description: Live Delay: ".concat(params.liveDelay, ", Live catchup max drift: ").concat(params.maxDrift));
-    }
-  }
-  /**
-   * Get default parameters for liveDelay,maxDrift
-   * @param {object} sd
-   * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
-   * @private
-   */
-
-
-  function _getStandardServiceDescriptionLatencyParameters(sd) {
-    var liveDelay = sd.latency.target / 1000;
-    var maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
-    var referenceId = sd.latency.referenceId || NaN;
-    return {
-      liveDelay: liveDelay,
-      maxDrift: maxDrift,
-      referenceId: referenceId
-    };
-  }
-  /**
-   * Get DVB DASH parameters for liveDelay,maxDrift
-   * @param sd
-   * @return {{maxDrift: (number|undefined), liveDelay: number, referenceId: (number|undefined)}}
-   * @private
-   */
-
-
-  function _getDvbServiceDescriptionLatencyParameters(sd) {
-    var liveDelay = sd.latency.target / 1000;
-    var maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
-    var referenceId = sd.latency.referenceId || NaN;
-    return {
-      liveDelay: liveDelay,
-      maxDrift: maxDrift,
-      referenceId: referenceId
-    };
-  }
-  /**
-   * Adjust the playback rate targets for the service
-   * @param {object} sd
-   * @private
-   */
-
-
-  function _applyServiceDescriptionPlaybackRate(sd) {
-    var playbackRate = Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000;
-    serviceDescriptionSettings.liveCatchup.playbackRate = playbackRate;
-    logger.debug("Found latency properties coming from service description: Live catchup playback rate: ".concat(playbackRate));
-  }
-  /**
-   * Used to specify a quality ranking. We do not support this yet.
-   * @private
-   */
-
-
-  function _applyServiceDescriptionOperatingQuality() {
-    return;
-  }
-  /**
-   * Adjust the operating quality targets for the service
-   * @param {object} sd
-   * @private
-   */
-
-
-  function _applyServiceDescriptionOperatingBandwidth(sd) {
-    // Aggregation of media types is not supported yet
-    if (!sd || !sd.operatingBandwidth || !sd.operatingBandwidth.mediaType || sd.operatingBandwidth.mediaType === MEDIA_TYPES.ALL) {
-      return;
-    }
-
-    var params = {};
-    params.minBandwidth = sd.operatingBandwidth.min;
-    params.maxBandwidth = sd.operatingBandwidth.max;
-    params.targetBandwidth = sd.operatingBandwidth.target;
-    var mediaTypesToApply = [];
-
-    if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.VIDEO || sd.operatingBandwidth.mediaType === MEDIA_TYPES.AUDIO) {
-      mediaTypesToApply.push(sd.operatingBandwidth.mediaType);
-    } else if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.ANY) {
-      mediaTypesToApply.push(MEDIA_TYPES.AUDIO);
-      mediaTypesToApply.push(MEDIA_TYPES.VIDEO);
-    }
-
-    mediaTypesToApply.forEach(function (mediaType) {
-      if (!isNaN(params.minBandwidth)) {
-        _updateBandwidthSetting('minBitrate', mediaType, params.minBandwidth);
-      }
-
-      if (!isNaN(params.maxBandwidth)) {
-        _updateBandwidthSetting('maxBitrate', mediaType, params.maxBandwidth);
-      }
-
-      if (!isNaN(params.targetBandwidth)) {
-        _updateBandwidthSetting('initialBitrate', mediaType, params.targetBandwidth);
-      }
-    });
-  }
-  /**
-   * Update the bandwidth settings vor a specific field and media type
-   * @param {string} field
-   * @param {string} mediaType
-   * @param {number} value
-   * @private
-   */
-
-
-  function _updateBandwidthSetting(field, mediaType, value) {
-    try {
-      // Service description values are specified in bps. Settings expect the value in kbps
-      serviceDescriptionSettings[field][mediaType] = value / 1000;
-    } catch (e) {
-      logger.error(e);
-    }
-  }
-  /**
-   * Returns the current calculated time offsets based on ProducerReferenceTime elements
-   * @returns {array}
-   */
-
-
-  function getProducerReferenceTimeOffsets() {
-    return prftOffsets;
-  }
-  /**
-   * Calculates an array of time offsets each with matching ProducerReferenceTime id.
-   * Call before applyServiceDescription if producer reference time elements should be considered.
-   * @param {array} streamInfos
-   * @returns {array}
-   * @private
-   */
-
-
-  function calculateProducerReferenceTimeOffsets(streamInfos) {
-    try {
-      var timeOffsets = [];
-
-      if (streamInfos && streamInfos.length > 0) {
-        var mediaTypes = [_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO, _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO, _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT];
-        var astInSeconds = adapter.getAvailabilityStartTime() / 1000;
-        streamInfos.forEach(function (streamInfo) {
-          var offsets = mediaTypes.reduce(function (acc, mediaType) {
-            acc = acc.concat(adapter.getAllMediaInfoForType(streamInfo, mediaType));
-            return acc;
-          }, []).reduce(function (acc, mediaInfo) {
-            var prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
-            prts.forEach(function (prt) {
-              var voRepresentations = adapter.getVoRepresentations(mediaInfo);
-
-              if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].SEGMENT_TEMPLATE) {
-                var voRep = voRepresentations[0];
-                var d = new Date(prt[_dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].WALL_CLOCK_TIME]);
-                var wallClockTime = d.getTime() / 1000; // TS 103 285 Clause 10.20.4
-                // 1) Calculate PRT0
-                // i) take the PRT@presentationTime and subtract any ST@presentationTimeOffset
-                // ii) convert this time to seconds by dividing by ST@timescale
-                // iii) Add this to start time of period that contains PRT.
-                // N.B presentationTimeOffset is already divided by timescale at this point
-
-                var prt0 = wallClockTime - (prt[_dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].PRESENTATION_TIME] / voRep[_dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].TIMESCALE] - voRep[_dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].PRESENTATION_TIME_OFFSET] + streamInfo.start); // 2) Calculate TO between PRT at the start of MPD timeline and the AST
-
-                var to = astInSeconds - prt0; // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset
-
-                acc.push({
-                  id: prt[_dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_3__["default"].ID],
-                  to: to
-                });
-              }
-            });
-            return acc;
-          }, []);
-          timeOffsets = timeOffsets.concat(offsets);
-        });
-      }
-
-      prftOffsets = timeOffsets;
-    } catch (e) {
-      logger.error(e);
-      prftOffsets = [];
-    }
-  }
-
-  ;
-  /**
-   * Calculates offset to apply to live delay as described in TS 103 285 Clause 10.20.4
-   * @param {object} sdLatency - service description latency element
-   * @returns {number}
-   * @private
-   */
-
-  function _calculateTimeOffset(sdLatency) {
-    var to = 0,
-        id;
-    var offset = prftOffsets.filter(function (prt) {
-      return prt.id === sdLatency.referenceId;
-    }); // If only one ProducerReferenceTime to generate one TO, then use that regardless of matching ids
-
-    if (offset.length === 0) {
-      to = prftOffsets.length > 0 ? prftOffsets[0].to : 0;
-      id = prftOffsets[0].id || NaN;
-    } else {
-      // If multiple id matches, use the first but this should be invalid
-      to = offset[0].to || 0;
-      id = offset[0].id || NaN;
-    }
-
-    return {
-      to: to,
-      id: id
-    };
-  }
-
-  instance = {
-    getServiceDescriptionSettings: getServiceDescriptionSettings,
-    getProducerReferenceTimeOffsets: getProducerReferenceTimeOffsets,
-    calculateProducerReferenceTimeOffsets: calculateProducerReferenceTimeOffsets,
-    applyServiceDescription: applyServiceDescription,
-    reset: reset,
-    setConfig: setConfig
-  };
-  setup();
-  return instance;
-}
-
-ServiceDescriptionController.__dashjs_factory_name = 'ServiceDescriptionController';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ServiceDescriptionController));
-
-/***/ }),
-
 /***/ "./src/streaming/controllers/StreamController.js":
 /*!*******************************************************!*\
   !*** ./src/streaming/controllers/StreamController.js ***!
@@ -43457,7 +46092,7 @@ var DVR_WAITING_OFFSET = 2;
 function StreamController() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  var instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+  var instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController, segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance().getLogger(instance);
@@ -43658,6 +46293,12 @@ function StreamController() {
       }
 
       Promise.all(promises).then(function () {
+        if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
+          return contentSteeringController.loadSteeringData();
+        }
+
+        return Promise.resolve();
+      }).then(function () {
         if (!activeStream) {
           _initializeForFirstStream(streamsInfo);
         }
@@ -43742,12 +46383,13 @@ function StreamController() {
         _initializeForFirstStream(streamsInfo);
       }, waitingTime);
       return;
-    } // Apply Service description parameters.
+    } // Calculate the producer reference time offsets if given
 
 
     if (settings.get().streaming.applyProducerReferenceTime) {
       serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
-    }
+    } // Apply Service description parameters.
+
 
     var manifestInfo = streamsInfo[0].manifestInfo;
 
@@ -44164,7 +46806,7 @@ function StreamController() {
 
 
   function _onLiveDelaySettingUpdated() {
-    if (adapter.getIsDynamic() && playbackController.getLiveDelay() !== 0) {
+    if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
       var streamsInfo = adapter.getStreamsInfo();
 
       if (streamsInfo.length > 0) {
@@ -44210,6 +46852,14 @@ function StreamController() {
 
     if (initialPlayback) {
       initialPlayback = false;
+    }
+
+    if (initialSteeringRequest) {
+      initialSteeringRequest = false; // If this is the initial playback attempt and we have not yet triggered content steering now is the time
+
+      if (settings.get().streaming.applyContentSteering && !contentSteeringController.shouldQueryBeforeStart()) {
+        contentSteeringController.loadSteeringData();
+      }
     }
 
     isPaused = false;
@@ -44377,6 +47027,8 @@ function StreamController() {
 
     if (e && e.isLast) {
       _stopPlaybackEndedTimerInterval();
+
+      contentSteeringController.stopSteeringRequestTimer();
     }
   }
   /**
@@ -44502,7 +47154,7 @@ function StreamController() {
       var dvrInfo = dashMetrics.getCurrentDVRInfo();
       var liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0; // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
 
-      startTime = liveEdge - playbackController.getLiveDelay(); // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
+      startTime = liveEdge - playbackController.getOriginalLiveDelay(); // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
 
       var dvrWindow = dvrInfo ? dvrInfo.range : null;
 
@@ -44941,6 +47593,10 @@ function StreamController() {
       serviceDescriptionController = config.serviceDescriptionController;
     }
 
+    if (config.contentSteeringController) {
+      contentSteeringController = config.contentSteeringController;
+    }
+
     if (config.textController) {
       textController = config.textController;
     }
@@ -44987,6 +47643,7 @@ function StreamController() {
     hasMediaError = false;
     hasInitialisationError = false;
     initialPlayback = true;
+    initialSteeringRequest = true;
     isPaused = false;
     autoPlay = true;
     playbackEndedTimerInterval = null;
@@ -50594,26 +53251,6 @@ function MediaPlayerModel() {
     return playbackController.getInitialCatchupModeActivated();
   }
   /**
-   * Returns the threshold for which to apply the catchup logic
-   * @return {number}
-   */
-
-
-  function getLiveCatchupLatencyThreshold() {
-    try {
-      var liveCatchupLatencyThreshold = settings.get().streaming.liveCatchup.latencyThreshold;
-      var liveDelay = playbackController.getLiveDelay();
-
-      if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
-        return Math.max(liveCatchupLatencyThreshold, liveDelay);
-      }
-
-      return NaN;
-    } catch (e) {
-      return NaN;
-    }
-  }
-  /**
    * Returns the min,max or initial bitrate for a specific media type.
    * @param {string} field
    * @param {string} mediaType
@@ -50677,7 +53314,7 @@ function MediaPlayerModel() {
     return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryAttempts[type] * lowLatencyMultiplyFactor : settings.get().streaming.retryAttempts[type];
   }
   /**
-   * Returns the retry interbal for a specific media type
+   * Returns the retry interval for a specific media type
    * @param type
    * @return {number}
    */
@@ -50693,7 +53330,6 @@ function MediaPlayerModel() {
   instance = {
     getCatchupMaxDrift: getCatchupMaxDrift,
     getCatchupModeEnabled: getCatchupModeEnabled,
-    getLiveCatchupLatencyThreshold: getLiveCatchupLatencyThreshold,
     getStableBufferTime: getStableBufferTime,
     getInitialBufferLevel: getInitialBufferLevel,
     getRetryAttemptsForType: getRetryAttemptsForType,
@@ -51709,6 +54345,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Settings */ "./src/core/Settings.js");
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _utils_RequestModifier__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/RequestModifier */ "./src/streaming/utils/RequestModifier.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -51756,6 +54393,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
+
 /**
  * @module FetchLoader
  * @ignore
@@ -51777,6 +54415,16 @@ function FetchLoader(cfg) {
   }
 
   function load(httpRequest) {
+    if (requestModifier && requestModifier.modifyRequest) {
+      Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_3__["modifyRequest"])(httpRequest, requestModifier).then(function () {
+        return request(httpRequest);
+      });
+    } else {
+      request(httpRequest);
+    }
+  }
+
+  function request(httpRequest) {
     // Variables will be used in the callback functions
     var requestStartTime = new Date();
     var request = httpRequest.request;
@@ -51801,7 +54449,7 @@ function FetchLoader(cfg) {
       request.requestStartDate = requestStartTime;
     }
 
-    if (requestModifier) {
+    if (requestModifier && requestModifier.modifyRequestHeader) {
       // modifyRequestHeader expects a XMLHttpRequest object so,
       // to keep backward compatibility, we should expose a setRequestHeader method
       // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
@@ -51810,6 +54458,8 @@ function FetchLoader(cfg) {
         setRequestHeader: function setRequestHeader(header, value) {
           headers.append(header, value);
         }
+      }, {
+        url: httpRequest.url
       });
     }
 
@@ -52503,7 +55153,7 @@ function HTTPLoader(cfg) {
     }
 
     var headers = null;
-    var modifiedUrl = requestModifier.modifyRequestURL(request.url);
+    var modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
 
     if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
       var cmcdMode = settings.get().streaming.cmcd.mode;
@@ -52855,6 +55505,7 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClas
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _utils_RequestModifier__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/RequestModifier */ "./src/streaming/utils/RequestModifier.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -52886,6 +55537,7 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * @module XHRLoader
  * @ignore
@@ -52899,6 +55551,16 @@ function XHRLoader(cfg) {
   var instance;
 
   function load(httpRequest) {
+    if (requestModifier && requestModifier.modifyRequest) {
+      Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_1__["modifyRequest"])(httpRequest, requestModifier).then(function () {
+        return request(httpRequest);
+      });
+    } else {
+      request(httpRequest);
+    }
+  }
+
+  function request(httpRequest) {
     // Variables will be used in the callback functions
     var requestStartTime = new Date();
     var request = httpRequest.request;
@@ -52917,8 +55579,10 @@ function XHRLoader(cfg) {
       request.requestStartDate = requestStartTime;
     }
 
-    if (requestModifier) {
-      xhr = requestModifier.modifyRequestHeader(xhr);
+    if (requestModifier && requestModifier.modifyRequestHeader) {
+      xhr = requestModifier.modifyRequestHeader(xhr, {
+        url: httpRequest.url
+      });
     }
 
     if (httpRequest.headers) {
@@ -53831,11 +56495,11 @@ function ProtectionController(config) {
   var cmcdModel = config.cmcdModel;
   var settings = config.settings;
   var customParametersModel = config.customParametersModel;
-  var instance, logger, pendingKeySystemData, mediaInfoArr, protDataSet, sessionType, robustnessLevel, selectedKeySystem, keySystemSelectionInProgress, licenseXhrRequest, licenseRequestRetryTimeout;
+  var instance, logger, pendingKeySessionsToHandle, mediaInfoArr, protDataSet, sessionType, robustnessLevel, selectedKeySystem, keySystemSelectionInProgress, licenseXhrRequest, licenseRequestRetryTimeout;
 
   function setup() {
     logger = debug.getLogger(instance);
-    pendingKeySystemData = [];
+    pendingKeySessionsToHandle = [];
     mediaInfoArr = [];
     sessionType = 'temporary';
     robustnessLevel = '';
@@ -53869,132 +56533,157 @@ function ProtectionController(config) {
     }
 
     checkConfig();
-    mediaInfoArr.push(mediaInfo); // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-    // and video will be the same. Just use one valid MediaInfo object
+    mediaInfoArr.push(mediaInfo);
+  }
+  /**
+   * Once all mediaInfo objects have been added to our mediaInfoArray we can select a key system or check if the kid has changed and we need to trigger a new license request
+   * @memberof module:ProtectionController
+   * @instance
+   */
 
-    var supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
 
-    if (supportedKS && supportedKS.length > 0) {
-      _selectKeySystem(supportedKS, true);
+  function handleKeySystemFromManifest() {
+    if (!mediaInfoArr || mediaInfoArr.length === 0) {
+      return;
+    }
+
+    var supportedKeySystems = [];
+    mediaInfoArr.forEach(function (mInfo) {
+      var currentKs = protectionKeyController.getSupportedKeySystemsFromContentProtection(mInfo.contentProtection, protDataSet, sessionType); // We assume that the same key systems are signaled for each AS. We can use the first entry we found
+
+      if (currentKs.length > 0) {
+        if (supportedKeySystems.length === 0) {
+          supportedKeySystems = currentKs;
+        } // Save config for creating key session once we selected a key system
+
+
+        pendingKeySessionsToHandle.push(currentKs);
+      }
+    });
+
+    if (supportedKeySystems && supportedKeySystems.length > 0) {
+      _selectKeySystemOrUpdateKeySessions(supportedKeySystems, true);
     }
   }
   /**
    * Selects a key system if we dont have any one yet. Otherwise we use the existing key system and trigger a new license request if the initdata has changed
-   * @param {array} supportedKS
+   * @param {array} supportedKs
+   * @private
+   */
+
+
+  function _handleKeySystemFromPssh(supportedKs) {
+    pendingKeySessionsToHandle.push(supportedKs);
+
+    _selectKeySystemOrUpdateKeySessions(supportedKs, false);
+  }
+  /**
+   * Select the key system or update one of our existing key sessions
+   * @param {array} supportedKs
    * @param {boolean} fromManifest
    * @private
    */
 
 
-  function _selectKeySystem(supportedKS, fromManifest) {
-    // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
-    if (keySystemSelectionInProgress) {
-      pendingKeySystemData.push(supportedKS);
-    } // First time, so we need to select a key system
-    else if (!selectedKeySystem) {
-        _selectInitialKeySystem(supportedKS, fromManifest);
-      } // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
-      else if (selectedKeySystem) {
-          _initiateWithExistingKeySystem(supportedKS);
-        }
+  function _selectKeySystemOrUpdateKeySessions(supportedKs, fromManifest) {
+    // First time, so we need to select a key system
+    if (!selectedKeySystem && !keySystemSelectionInProgress) {
+      _selectInitialKeySystem(supportedKs, fromManifest);
+    } // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
+    else if (selectedKeySystem) {
+        _handleKeySessions();
+      }
   }
   /**
    * We do not have a key system yet. Select one
-   * @param {array} supportedKS
+   * @param {array} supportedKs
    * @param {boolean} fromManifest
    * @private
    */
 
 
-  function _selectInitialKeySystem(supportedKS, fromManifest) {
-    keySystemSelectionInProgress = true;
-    var requestedKeySystems = []; // Reorder key systems according to priority order provided in protectionData
+  function _selectInitialKeySystem(supportedKs, fromManifest) {
+    if (!keySystemSelectionInProgress) {
+      keySystemSelectionInProgress = true;
+      var requestedKeySystems = []; // Reorder key systems according to priority order provided in protectionData
 
-    supportedKS = supportedKS.sort(function (ksA, ksB) {
-      var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-      var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-      return indexA - indexB;
-    });
-    pendingKeySystemData.push(supportedKS); // Add all key systems to our request list since we have yet to select a key system
+      supportedKs = supportedKs.sort(function (ksA, ksB) {
+        var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKs.length;
+        var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKs.length;
+        return indexA - indexB;
+      }); // Add all key systems to our request list since we have yet to select a key system
 
-    for (var i = 0; i < supportedKS.length; i++) {
-      var keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
+      for (var i = 0; i < supportedKs.length; i++) {
+        var keySystemConfiguration = _getKeySystemConfiguration(supportedKs[i]);
 
-      requestedKeySystems.push({
-        ks: supportedKS[i].ks,
-        configs: [keySystemConfiguration],
-        protData: supportedKS[i].protData
-      });
-    }
-
-    var keySystemAccess;
-    protectionModel.requestKeySystemAccess(requestedKeySystems).then(function (event) {
-      keySystemAccess = event.data;
-      var selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
-      logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
-      return protectionModel.selectKeySystem(keySystemAccess);
-    }).then(function (keySystem) {
-      selectedKeySystem = keySystem;
-      keySystemSelectionInProgress = false;
-
-      if (!protectionModel) {
-        return;
-      }
-
-      eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-        data: keySystemAccess
-      }); // Set server certificate from protData
-
-      var protData = _getProtDataForKeySystem(selectedKeySystem);
-
-      if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
-      } // Create key sessions for the different AdaptationSets
-
-
-      var ksIdx;
-
-      for (var _i = 0; _i < pendingKeySystemData.length; _i++) {
-        for (ksIdx = 0; ksIdx < pendingKeySystemData[_i].length; ksIdx++) {
-          if (selectedKeySystem === pendingKeySystemData[_i][ksIdx].ks) {
-            var current = pendingKeySystemData[_i][ksIdx];
-
-            _loadOrCreateKeySession(current);
-
-            break;
-          }
-        }
-      }
-    })["catch"](function (event) {
-      selectedKeySystem = null;
-      keySystemSelectionInProgress = false;
-
-      if (!fromManifest) {
-        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-          data: null,
-          error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+        requestedKeySystems.push({
+          ks: supportedKs[i].ks,
+          configs: [keySystemConfiguration],
+          protData: supportedKs[i].protData
         });
       }
-    });
+
+      var keySystemAccess;
+      protectionModel.requestKeySystemAccess(requestedKeySystems).then(function (event) {
+        keySystemAccess = event.data;
+        var selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
+        logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
+        return protectionModel.selectKeySystem(keySystemAccess);
+      }).then(function (keySystem) {
+        selectedKeySystem = keySystem;
+        keySystemSelectionInProgress = false;
+
+        if (!protectionModel) {
+          return;
+        }
+
+        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+          data: keySystemAccess
+        }); // Set server certificate from protData
+
+        var protData = _getProtDataForKeySystem(selectedKeySystem);
+
+        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+          protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+        }
+
+        _handleKeySessions();
+      })["catch"](function (event) {
+        selectedKeySystem = null;
+        keySystemSelectionInProgress = false;
+
+        if (!fromManifest) {
+          eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+            data: null,
+            error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+          });
+        }
+      });
+    }
   }
   /**
-   * If we have already selected a keysytem we only need to create a new key session and issue a new license request if the init data has changed.
-   * @param {array} supportedKS
+   * If we have already selected a key system we only need to create a new key session and issue a new license request if the init data has changed.
    * @private
    */
 
 
-  function _initiateWithExistingKeySystem(supportedKS) {
-    var ksIdx = supportedKS.findIndex(function (entry) {
-      return entry.ks === selectedKeySystem;
-    });
-    var current = supportedKS[ksIdx];
+  function _handleKeySessions() {
+    // Create key sessions for the different AdaptationSets
+    var ksIdx;
 
-    if (ksIdx === -1 || !current.initData) {
-      return;
+    for (var i = 0; i < pendingKeySessionsToHandle.length; i++) {
+      for (ksIdx = 0; ksIdx < pendingKeySessionsToHandle[i].length; ksIdx++) {
+        if (selectedKeySystem === pendingKeySessionsToHandle[i][ksIdx].ks) {
+          var current = pendingKeySessionsToHandle[i][ksIdx];
+
+          _loadOrCreateKeySession(current);
+
+          break;
+        }
+      }
     }
 
-    _loadOrCreateKeySession(current);
+    pendingKeySessionsToHandle = [];
   }
   /**
    * Loads an existing key session if we already have a session id. Otherwise we create a new key session
@@ -54354,7 +57043,7 @@ function ProtectionController(config) {
     });
     needkeyRetries = [];
     mediaInfoArr = [];
-    pendingKeySystemData = [];
+    pendingKeySessionsToHandle = [];
   }
   /**
    * Returns an object corresponding to the EME MediaKeySystemConfiguration dictionary
@@ -54850,14 +57539,14 @@ function ProtectionController(config) {
       }
 
       logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-      var supportedKS = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
+      var supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
 
-      if (supportedKS.length === 0) {
+      if (supportedKs.length === 0) {
         logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
         return;
       }
 
-      _selectKeySystem(supportedKS, false);
+      _handleKeySystemFromPssh(supportedKs);
     }
   }
   /**
@@ -54884,6 +57573,7 @@ function ProtectionController(config) {
   instance = {
     initializeForMedia: initializeForMedia,
     clearMediaInfoArray: clearMediaInfoArray,
+    handleKeySystemFromManifest: handleKeySystemFromManifest,
     createKeySession: createKeySession,
     loadKeySession: loadKeySession,
     removeKeySession: removeKeySession,
@@ -55462,7 +58152,7 @@ function KeySystemClearKey(config) {
       kid = btoa(kid.match(/\w{2}/g).map(function (a) {
         return String.fromCharCode(parseInt(a, 16));
       }).join(''));
-      return kid.replace(/=/g, '');
+      return kid.replace(/=/g, '').replace(/\//g, '_').replace(/\+/g, '-');
     } catch (e) {
       return null;
     }
@@ -59031,9 +61721,9 @@ function DroppedFramesHistory() {
 
     var droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
     var totalVideoFrames = playbackQuality && playbackQuality.totalVideoFrames ? playbackQuality.totalVideoFrames : 0;
-    var intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames;
+    var intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames[streamId];
     lastDroppedFrames[streamId] = droppedVideoFrames;
-    var intervalTotalFrames = totalVideoFrames - lastTotalFrames;
+    var intervalTotalFrames = totalVideoFrames - lastTotalFrames[streamId];
     lastTotalFrames[streamId] = totalVideoFrames;
     var current = values[streamId];
 
@@ -65984,6 +68674,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _vo_DashJSError__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _baseUrlResolution_ContentSteeringSelector__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./baseUrlResolution/ContentSteeringSelector */ "./src/streaming/utils/baseUrlResolution/ContentSteeringSelector.js");
+/* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/Settings */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -66024,10 +68716,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 function BaseURLSelector() {
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
-  var instance, serviceLocationBlacklistController, basicSelector, dvbSelector, selector;
+  var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
+  var instance, serviceLocationBlacklistController, basicSelector, dvbSelector, contentSteeringSelector, selector;
 
   function setup() {
     serviceLocationBlacklistController = Object(_controllers_BlacklistController__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create({
@@ -66040,12 +68735,20 @@ function BaseURLSelector() {
     dvbSelector = Object(_baseUrlResolution_DVBSelector__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create({
       blacklistController: serviceLocationBlacklistController
     });
+    contentSteeringSelector = Object(_baseUrlResolution_ContentSteeringSelector__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create();
+    contentSteeringSelector.setConfig({
+      blacklistController: serviceLocationBlacklistController
+    });
     selector = basicSelector;
   }
 
   function setConfig(config) {
     if (config.selector) {
       selector = config.selector;
+    }
+
+    if (config.contentSteeringSelector) {
+      contentSteeringSelector = config.contentSteeringSelector;
     }
   }
 
@@ -66057,18 +68760,25 @@ function BaseURLSelector() {
   function select(data) {
     if (!data) {
       return;
-    }
+    } // Check if we got any instructions from the content steering element in the MPD or from the content steering server
 
-    var baseUrls = data.baseUrls;
-    var selectedIdx = data.selectedIdx; // Once a random selection has been carried out amongst a group of BaseURLs with the same
+
+    if (settings.get().streaming.applyContentSteering) {
+      var steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
+
+      if (!isNaN(steeringIndex) && steeringIndex !== -1) {
+        data.selectedIdx = steeringIndex;
+      }
+    } // Once a random selection has been carried out amongst a group of BaseURLs with the same
     // @priority attribute value, then that choice should be re-used if the selection needs to be made again
     // unless the blacklist has been modified or the available BaseURLs have changed.
 
-    if (!isNaN(selectedIdx)) {
-      return baseUrls[selectedIdx];
+
+    if (!isNaN(data.selectedIdx)) {
+      return data.baseUrls[data.selectedIdx];
     }
 
-    var selectedBaseUrl = selector.select(baseUrls);
+    var selectedBaseUrl = selector.select(data.baseUrls);
 
     if (!selectedBaseUrl) {
       eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_2__["default"].URL_RESOLUTION_FAILED, {
@@ -66082,7 +68792,7 @@ function BaseURLSelector() {
       return;
     }
 
-    data.selectedIdx = baseUrls.indexOf(selectedBaseUrl);
+    data.selectedIdx = data.baseUrls.indexOf(selectedBaseUrl);
     return selectedBaseUrl;
   }
 
@@ -68335,11 +71045,12 @@ ObjectUtils.__dashjs_factory_name = 'ObjectUtils';
 /*!************************************************!*\
   !*** ./src/streaming/utils/RequestModifier.js ***!
   \************************************************/
-/*! exports provided: default */
+/*! exports provided: modifyRequest, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "modifyRequest", function() { return modifyRequest; });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -68372,19 +71083,35 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+function modifyRequest(httpRequest, requestModifier) {
+  var request = {
+    url: httpRequest.url,
+    method: httpRequest.method,
+    headers: Object.assign({}, httpRequest.headers),
+    credentials: httpRequest.withCredentials ? 'include' : undefined
+  };
+  return Promise.resolve(requestModifier.modifyRequest(request)).then(function () {
+    return Object.assign(httpRequest, request, {
+      withCredentials: request.credentials === 'include'
+    });
+  });
+}
 
 function RequestModifier() {
   var instance;
 
   function modifyRequestURL(url) {
     return url;
-  }
+  } // eslint-disable-next-line no-unused-vars
 
-  function modifyRequestHeader(request) {
+
+  function modifyRequestHeader(request, _ref) {
+    var url = _ref.url;
     return request;
   }
 
   instance = {
+    modifyRequest: null,
     modifyRequestURL: modifyRequestURL,
     modifyRequestHeader: modifyRequestHeader
   };
@@ -69181,6 +71908,131 @@ function BasicSelector(config) {
 
 BasicSelector.__dashjs_factory_name = 'BasicSelector';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(BasicSelector));
+
+/***/ }),
+
+/***/ "./src/streaming/utils/baseUrlResolution/ContentSteeringSelector.js":
+/*!**************************************************************************!*\
+  !*** ./src/streaming/utils/baseUrlResolution/ContentSteeringSelector.js ***!
+  \**************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _dash_controllers_ContentSteeringController__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../dash/controllers/ContentSteeringController */ "./src/dash/controllers/ContentSteeringController.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+function ContentSteeringSelector() {
+  var context = this.context;
+  var instance, contentSteeringController, blacklistController;
+
+  function setup() {
+    contentSteeringController = Object(_dash_controllers_ContentSteeringController__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  }
+
+  function setConfig(config) {
+    if (config.blacklistController) {
+      blacklistController = config.blacklistController;
+    }
+
+    if (config.contentSteeringController) {
+      contentSteeringController = config.contentSteeringController;
+    }
+  }
+
+  function selectBaseUrlIndex(data) {
+    var steeringIndex = NaN; // In case we dont have a selected idx yet we consider the defaultServiceLocation
+
+    if (isNaN(data.selectedIdx)) {
+      var steeringDataFromMpd = contentSteeringController.getSteeringDataFromManifest();
+
+      if (steeringDataFromMpd && steeringDataFromMpd.defaultServiceLocation) {
+        steeringIndex = _findexIndexOfServiceLocation([steeringDataFromMpd.defaultServiceLocation], data.baseUrls);
+      }
+    } // Search in the response data of the steering server
+
+
+    var currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
+
+    if (data.baseUrls && data.baseUrls.length && currentSteeringResponseData && currentSteeringResponseData.serviceLocationPriority && currentSteeringResponseData.serviceLocationPriority.length) {
+      steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.serviceLocationPriority, data.baseUrls);
+    }
+
+    return steeringIndex;
+  }
+
+  function _findexIndexOfServiceLocation() {
+    var serviceLocationPriorities = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    var baseUrls = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    var i = 0;
+    var steeringIndex = NaN;
+
+    var _loop = function _loop() {
+      var curr = serviceLocationPriorities[i];
+      var idx = baseUrls.findIndex(function (elem) {
+        return elem.serviceLocation && elem.serviceLocation === curr;
+      });
+
+      if (idx !== -1 && !blacklistController.contains(baseUrls[idx].serviceLocation)) {
+        steeringIndex = idx;
+        return "break";
+      }
+
+      i += 1;
+    };
+
+    while (i < serviceLocationPriorities.length) {
+      var _ret = _loop();
+
+      if (_ret === "break") break;
+    }
+
+    return steeringIndex;
+  }
+
+  instance = {
+    selectBaseUrlIndex: selectBaseUrlIndex,
+    setConfig: setConfig
+  };
+  setup();
+  return instance;
+}
+
+ContentSteeringSelector.__dashjs_factory_name = 'ContentSteeringSelector';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ContentSteeringSelector));
 
 /***/ }),
 
@@ -70904,6 +73756,7 @@ HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
+HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
 HTTPRequest.OTHER_TYPE = 'other';
 
 
