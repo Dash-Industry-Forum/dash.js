@@ -497,27 +497,11 @@ function TextTracks(config) {
             cue.webVttParserData = currentItem.webVttParserData;
         }
 
-        if (currentItem.styles) {
-            if (currentItem.styles.align !== undefined && 'align' in cue) {
-                cue.align = currentItem.styles.align;
-            }
-            if (currentItem.styles.line !== undefined && 'line' in cue) {
-                cue.line = currentItem.styles.line;
-            }
-            if (currentItem.styles.position !== undefined && 'position' in cue) {
-                cue.position = currentItem.styles.position;
-            }
-            if (currentItem.styles.size !== undefined && 'size' in cue) {
-                cue.size = currentItem.styles.size;
-            }
-        }
-
         cue.onenter = function () {
-            console.log(this);
-            if (track.mode === Constants.TEXT_SHOWING) {
-                WebVTT.processCues(window, [this.webVttParserData], document.getElementById('video-caption'), this.cueID);
-                eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
-            }
+            console.log('Entering cue');
+            // eslint-disable-next-line no-undef
+            WebVTT.processCues(window, [this.webVttParserData], document.getElementById('video-caption'), this.cueID);
+            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
         };
 
         cue.onexit = function () {
