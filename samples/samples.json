@@ -705,6 +705,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Synchronization with a TimingObject",
+                "description": "An example which shows how to connect a TimingObject to a dash.js player to synchronize playback across devices.",
+                "href": "advanced/timing-object.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
