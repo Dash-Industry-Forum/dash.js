@@ -694,6 +694,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Content Steering",
+                "description": "A sample illustrating content steering to dynamically switch between CDNs. Note that you need to provide a manifest with a valid content steering server.",
+                "href": "advanced/content-steering.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

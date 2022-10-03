@@ -192,6 +192,7 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -441,7 +442,7 @@ declare namespace dashjs {
 
         on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
         
-        on(type: string, listener: (e: Event) => void, scope?: object): void;
+        on(type: string, listener: (e: Event) => void, scope?: object, options?:object): void;
 
         
         off(type: string, listener: (e: any) => void, scope?: object): void;

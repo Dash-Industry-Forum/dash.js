@@ -34,6 +34,7 @@ import ObjectIron from './objectiron';
 import DurationMatcher from './matchers/DurationMatcher';
 import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
+import LangMatcher from './matchers/LangMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
 import * as tXml from '../../../externals/tXml';
@@ -83,7 +84,8 @@ function DashParser(config) {
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
-            new NumericMatcher()
+            new NumericMatcher(),
+            new LangMatcher()
         ];
 
         objectIron = ObjectIron(context).create({

@@ -594,6 +594,13 @@ function MediaPlayer() {
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+
+        // For VoD limit the seek to the duration of the content
+        const videoElement = getVideoElement();
+        if (!playbackController.getIsDynamic() && videoElement.duration) {
+            s = Math.min(videoElement.duration, s);
+        }
+
         playbackController.seek(s, false, false, true);
     }
 
@@ -1515,7 +1522,7 @@ function MediaPlayer() {
     /**
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
      * is following: <br />
-     * {lang: langValue (can be either a string or a regex to match),
+     * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
@@ -1996,7 +2003,7 @@ function MediaPlayer() {
      * @return {object}
      */
     function getCurrentSteeringResponseData() {
-        if(contentSteeringController) {
+        if (contentSteeringController) {
             return contentSteeringController.getCurrentSteeringResponseData();
         }
     }

@@ -28,44 +28,44 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * @classdesc Matches and converts any ISO 639 language tag to BCP-47 language tags
+ */
+import BaseMatcher from './BaseMatcher';
+import DashConstants from '../../constants/DashConstants';
+import bcp47Normalize from 'bcp-47-normalize';
 
-import FactoryMaker from '../../core/FactoryMaker';
-
-export function modifyRequest(httpRequest, requestModifier) {
-    const request = {
-        url: httpRequest.url,
-        method: httpRequest.method,
-        headers: Object.assign({}, httpRequest.headers),
-        credentials: httpRequest.withCredentials ? 'include' : undefined,
-    };
-
-    return Promise.resolve(requestModifier.modifyRequest(request))
-        .then(() =>
-            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' })
+class LangMatcher extends BaseMatcher {
+    constructor() {
+        super(
+            (attr, nodeName) => {
+                const stringAttrsInElements = {
+                    [DashConstants.ADAPTATION_SET]:                 [ DashConstants.LANG ],
+                    [DashConstants.REPRESENTATION]:                 [ DashConstants.LANG ],
+                    [DashConstants.CONTENT_COMPONENT]:              [ DashConstants.LANG ],
+                    [DashConstants.LABEL]:                          [ DashConstants.LANG ],
+                    [DashConstants.GROUP_LABEL]:                    [ DashConstants.LANG ]
+                    // still missing from 23009-1: Preselection@lang, ProgramInformation@lang
+                };
+                if (stringAttrsInElements.hasOwnProperty(nodeName)) {
+                    let attrNames = stringAttrsInElements[nodeName];
+                    if (attrNames !== undefined) {
+                        return attrNames.indexOf(attr.name) >= 0;
+                    } else {
+                        return false;
+                    }
+                }
+                return false;
+            },
+            str => {
+                let lang = bcp47Normalize(str);
+                if (lang !== undefined) {
+                    return lang;
+                }
+                return String(str);
+            }
         );
+    }
 }
 
-function RequestModifier() {
-
-    let instance;
-
-    function modifyRequestURL(url) {
-        return url;
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    function modifyRequestHeader(request, { url }) {
-        return request;
-    }
-
-    instance = {
-        modifyRequest: null,
-        modifyRequestURL: modifyRequestURL,
-        modifyRequestHeader: modifyRequestHeader
-    };
-
-    return instance;
-}
-
-RequestModifier.__dashjs_factory_name = 'RequestModifier';
-export default FactoryMaker.getSingletonFactory(RequestModifier);
+export default LangMatcher;

@@ -146,6 +146,8 @@ class DashConstants {
         this.WALL_CLOCK_TIME = 'wallClockTime';
         this.PRESENTATION_TIME = 'presentationTime';
         this.UTC_TIMING = 'UTCTiming';
+        this.LABEL = 'Label';
+        this.GROUP_LABEL = 'GroupLabel';
         this.CONTENT_STEERING = 'ContentSteering';
         this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
         this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
