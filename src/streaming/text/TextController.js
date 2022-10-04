@@ -83,6 +83,7 @@ function TextController(config) {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     }
 
     function initializeForStream(streamInfo) {
@@ -212,8 +213,20 @@ function TextController(config) {
                 return;
             }
             textTracks[streamId].manualCueProcessing(e.time);
+        } catch (err) {
         }
-        catch(err) {
+    }
+
+    function _onPlaybackSeeking(e) {
+        try {
+            const streamId = e.streamId;
+
+            if (!textTracks[streamId]) {
+                return;
+            }
+            textTracks[streamId].disableManualTracks();
+        } catch (e) {
+
         }
     }
 
@@ -283,6 +296,9 @@ function TextController(config) {
             return;
         }
 
+
+        textTracks[streamId].disableManualTracks();
+
         textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
         textTracks[streamId].setCurrentTrackIdx(idx);
         textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
@@ -315,7 +331,7 @@ function TextController(config) {
                 if (mediaInfo.id ? currentFragTrack.id !== mediaInfo.id : currentFragTrack.index !== mediaInfo.index) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
-                }  else if (oldTrackIdx === -1) {
+                } else if (oldTrackIdx === -1) {
                     // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
                     // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
                     // For that reason we reactivate the StreamProcessor and the ScheduleController
@@ -370,6 +386,7 @@ function TextController(config) {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
 
         Object.keys(textSourceBuffers).forEach((key) => {
             textSourceBuffers[key].resetEmbedded();

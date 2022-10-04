@@ -175,6 +175,7 @@ function TextTracks(config) {
                 const videoTextTrack = getTrackByIdx(idx);
                 if (videoTextTrack) {
                     videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    videoTextTrack.manualMode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
             }
         }
@@ -515,14 +516,7 @@ function TextTracks(config) {
     }
 
     function manualCueProcessing(time) {
-        const tracks = videoModel.getTextTracks();
-        const activeTracks = []
-
-        for (const track of tracks) {
-            if (track.mode === Constants.TEXT_SHOWING) {
-                activeTracks.push(track);
-            }
-        }
+        const activeTracks = _getManualActiveTracks();
 
         if (activeTracks && activeTracks.length > 0) {
             const targetTrack = activeTracks[0];
@@ -533,8 +527,8 @@ function TextTracks(config) {
                 cues.forEach((cue) => {
                     // Render cue if target time is reached and not in active state
                     if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
-                        // eslint-disable-next-line no-undef
                         cue.isActive = true;
+                        // eslint-disable-next-line no-undef
                         WebVTT.processCues(window, [cue.webVttParserData], vttCaptionContainer, cue.cueID);
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
@@ -554,7 +548,42 @@ function TextTracks(config) {
     }
 
     function disableManualTracks() {
+        const activeTracks = _getManualActiveTracks();
 
+        if (activeTracks && activeTracks.length > 0) {
+            const targetTrack = activeTracks[0];
+            const cues = targetTrack.manualCueList;
+
+
+            if (cues && cues.length > 0) {
+                cues.forEach((cue) => {
+                    if (cue.isActive) {
+                        cue.isActive = false;
+                        if (vttCaptionContainer) {
+                            const divs = vttCaptionContainer.childNodes;
+                            for (let i = 0; i < divs.length; ++i) {
+                                if (divs[i].id === cue.cueID) {
+                                    vttCaptionContainer.removeChild(divs[i]);
+                                    --i;
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    function _getManualActiveTracks() {
+        const tracks = videoModel.getTextTracks();
+        const activeTracks = []
+
+        for (const track of tracks) {
+            if (track.manualMode === Constants.TEXT_SHOWING) {
+                activeTracks.push(track);
+            }
+        }
+        return activeTracks;
     }
 
     function getTrackByIdx(idx) {
@@ -730,6 +759,9 @@ function TextTracks(config) {
         if (track && track.mode !== mode) {
             track.mode = mode;
         }
+        if (track && track.manualMode !== mode) {
+            track.manualMode = mode;
+        }
     }
 
     function getCurrentTrackInfo() {
@@ -750,7 +782,8 @@ function TextTracks(config) {
         deleteCuesFromTrackIdx,
         deleteAllTextTracks,
         deleteTextTrack,
-        manualCueProcessing
+        manualCueProcessing,
+        disableManualTracks
     };
 
     setup();
