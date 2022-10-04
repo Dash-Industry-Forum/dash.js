@@ -38,6 +38,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {checkParameterType} from '../utils/SupervisorTools';
+import {logger} from '../../../externals/cea608-parser';
 
 function TextController(config) {
 
@@ -81,6 +82,7 @@ function TextController(config) {
     function initialize() {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
     }
 
     function initializeForStream(streamInfo) {
@@ -200,6 +202,19 @@ function TextController(config) {
         });
 
         textTracksAdded = true;
+    }
+
+    function _onPlaybackTimeUpdated(e) {
+        try {
+            const streamId = e.streamId;
+
+            if (!textTracks[streamId] || isNaN(e.time)) {
+                return;
+            }
+            textTracks[streamId].manualCueProcessing(e.time);
+        }
+        catch(err) {
+        }
     }
 
     function _onCurrentTrackChanged(event) {
@@ -354,6 +369,7 @@ function TextController(config) {
         resetInitialSettings();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
 
         Object.keys(textSourceBuffers).forEach((key) => {
             textSourceBuffers[key].resetEmbedded();

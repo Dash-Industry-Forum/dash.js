@@ -21,10 +21,13 @@
         function init() {
             var url = "https://arteptweb-a.akamaihd.net/test/CMAF/corner_uhd/068000/068300/068394-000-F/20220915142906/068394-000-F_malonlyvtt5.mpd",
                 video = video = document.querySelector('video'),
+                vttRenderingDiv,
                 player;
 
+            vttRenderingDiv = document.querySelector("#vtt-rendering-div");
             player = dashjs.MediaPlayer({}).create();
             player.initialize(video, url, true);
+            player.attachVttRenderingDiv(vttRenderingDiv);
         }
     </script>
 </head>
@@ -47,9 +50,9 @@
                 </div>
             </div>
             <div class="col-md-8">
-                <video controls="true"></video>
+                <video controls="true" muted></video>
                 <div style="position: relative">
-                    <div id="video-caption" style="min-width: 600px; min-height: 100px;"></div>
+                    <div id="vtt-rendering-div" style="min-width: 600px; min-height: 100px;"></div>
                 </div>
             </div>
         </div>

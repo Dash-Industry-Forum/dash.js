@@ -54,6 +54,7 @@ function TextTracks(config) {
         actualVideoWidth,
         actualVideoHeight,
         captionContainer,
+        vttCaptionContainer,
         videoSizeCheckInterval,
         fullscreenAttribute,
         displayCCOnTop,
@@ -79,6 +80,7 @@ function TextTracks(config) {
         actualVideoWidth = 0;
         actualVideoHeight = 0;
         captionContainer = null;
+        vttCaptionContainer = null;
         videoSizeCheckInterval = null;
         displayCCOnTop = false;
         topZIndex = 2147483647;
@@ -122,6 +124,7 @@ function TextTracks(config) {
         });
 
         captionContainer = videoModel.getTTMLRenderingDiv();
+        vttCaptionContainer = videoModel.getVttRenderingDiv();
         let defaultIndex = -1;
         for (let i = 0; i < textTrackQueue.length; i++) {
             const track = _createTrackForUserAgent(textTrackQueue[i]);
@@ -424,6 +427,10 @@ function TextTracks(config) {
                 if (cue) {
                     if (!cueInTrack(track, cue)) {
                         track.addCue(cue);
+                        if (!track.manualCueList) {
+                            track.manualCueList = [];
+                        }
+                        track.manualCueList.push(cue);
                     }
                 } else {
                     logger.error('impossible to display subtitles.');
@@ -493,30 +500,61 @@ function TextTracks(config) {
     function _handleNonHtmlCaption(currentItem, timeOffset, track) {
         let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
         cue.cueID = `${cue.startTime}_${cue.endTime}`;
+        cue.isActive = false;
         if (currentItem.webVttParserData) {
             cue.webVttParserData = currentItem.webVttParserData;
         }
 
         cue.onenter = function () {
-            console.log('Entering cue');
-            // eslint-disable-next-line no-undef
-            WebVTT.processCues(window, [this.webVttParserData], document.getElementById('video-caption'), this.cueID);
-            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
-        };
-
-        cue.onexit = function () {
-            if (captionContainer) {
-                const divs = captionContainer.childNodes;
-                for (let i = 0; i < divs.length; ++i) {
-                    if (divs[i].id === this.cueID) {
-                        logger.debug('Cue exit id:' + divs[i].id);
-                        captionContainer.removeChild(divs[i]);
-                        --i;
-                    }
-                }
+            if (track.mode === Constants.TEXT_SHOWING) {
+                eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
             }
         };
+
         return cue;
+    }
+
+    function manualCueProcessing(time) {
+        const tracks = videoModel.getTextTracks();
+        const activeTracks = []
+
+        for (const track of tracks) {
+            if (track.mode === Constants.TEXT_SHOWING) {
+                activeTracks.push(track);
+            }
+        }
+
+        if (activeTracks && activeTracks.length > 0) {
+            const targetTrack = activeTracks[0];
+            const cues = targetTrack.manualCueList;
+
+
+            if (cues && cues.length > 0) {
+                cues.forEach((cue) => {
+                    // Render cue if target time is reached and not in active state
+                    if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
+                        // eslint-disable-next-line no-undef
+                        cue.isActive = true;
+                        WebVTT.processCues(window, [cue.webVttParserData], vttCaptionContainer, cue.cueID);
+                    } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
+                        cue.isActive = false;
+                        if (vttCaptionContainer) {
+                            const divs = vttCaptionContainer.childNodes;
+                            for (let i = 0; i < divs.length; ++i) {
+                                if (divs[i].id === cue.cueID) {
+                                    captionContainer.removeChild(divs[i]);
+                                    --i;
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    function disableManualTracks() {
+
     }
 
     function getTrackByIdx(idx) {
@@ -711,7 +749,8 @@ function TextTracks(config) {
         setModeForTrackIdx,
         deleteCuesFromTrackIdx,
         deleteAllTextTracks,
-        deleteTextTrack
+        deleteTextTrack,
+        manualCueProcessing
     };
 
     setup();
