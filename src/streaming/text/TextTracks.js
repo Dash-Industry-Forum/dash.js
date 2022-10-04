@@ -536,7 +536,7 @@ function TextTracks(config) {
                             const divs = vttCaptionContainer.childNodes;
                             for (let i = 0; i < divs.length; ++i) {
                                 if (divs[i].id === cue.cueID) {
-                                    captionContainer.removeChild(divs[i]);
+                                    vttCaptionContainer.removeChild(divs[i]);
                                     --i;
                                 }
                             }
