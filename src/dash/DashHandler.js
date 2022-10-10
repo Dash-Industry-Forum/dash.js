@@ -445,7 +445,8 @@ function DashHandler(config) {
                 }
 
                 if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
-                    return targetRequest.startTime;
+                    // Apply delta to segment start time to get around rounding issues
+                    return targetRequest.startTime + 0.001;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
