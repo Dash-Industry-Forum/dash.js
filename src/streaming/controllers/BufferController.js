@@ -541,53 +541,62 @@ function BufferController(config) {
 
     function _getRangeAheadForPruning(targetTime, ranges) {
         // if we do a seek behind the current play position we do need to prune ahead of the new play position
+        // we keep everything that is within bufferToKeepAhead but only if the buffer is continuous.
+        // Otherwise we have gaps once the seek is done which might trigger an unintentional gap jump
         const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
+        const continuousBufferTime = getContinuousBufferTimeForTargetTime(targetTime);
+
+        // This is the maximum range we keep ahead
         const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
         const bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
-        const aheadDiff = endOfBuffer - targetTime;
 
-        if (aheadDiff > bufferToKeepAhead) {
+        // Define the start time from which we will prune. If there is no continuous range from the targettime we start immediately at the target time
+        // Otherwise we set the start point to the end of the continuous range taking the maximum buffer to keep ahead into account
+        let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
 
-            let rangeStart = targetTime + bufferToKeepAhead;
-            // Ensure we keep full range of current fragment
-            const currentTimeRequest = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                time: targetTime,
-                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-            })[0];
+        // Check if we are done buffering, no need to prune then
+        if (rangeStart >= ranges.end(ranges.length - 1)) {
+            return null
+        }
 
-            if (currentTimeRequest) {
-                rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
-            }
+        // Ensure we keep full range of current fragment
+        const currentTimeRequest = fragmentModel.getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: targetTime,
+            threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+        })[0];
 
-            // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
-            const avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
-            if (avoidCurrentTimeRangePruning) {
-                for (let i = 0; i < ranges.length; i++) {
-                    if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i)
-                        && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
-                        let oldRangeStart = rangeStart;
-                        if (i + 1 < ranges.length) {
-                            rangeStart = ranges.start(i+1);
-                        } else {
-                            rangeStart = ranges.end(i) + 1;
-                        }
-                        logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer +'] instead' + ((rangeStart < endOfBuffer) ? '' : ' (no actual pruning)'));
-                        break;
+        if (currentTimeRequest) {
+            rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
+        }
+
+        // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
+        const avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
+        if (avoidCurrentTimeRangePruning) {
+            for (let i = 0; i < ranges.length; i++) {
+                if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i)
+                    && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
+                    let oldRangeStart = rangeStart;
+                    if (i + 1 < ranges.length) {
+                        rangeStart = ranges.start(i + 1);
+                    } else {
+                        rangeStart = ranges.end(i) + 1;
                     }
+                    logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + ((rangeStart < endOfBuffer) ? '' : ' (no actual pruning)'));
+                    break;
                 }
-            }
-
-            if (rangeStart < endOfBuffer) {
-                return {
-                    start: rangeStart,
-                    end: endOfBuffer
-                };
             }
         }
 
+        if (rangeStart < ranges.end(ranges.length - 1)) {
+            return {
+                start: rangeStart,
+                end: endOfBuffer
+            };
+        }
         return null;
     }
+
 
     function _onPlaybackProgression() {
         if (!replacingBuffer || (type === Constants.TEXT && textController.isTextEnabled())) {
