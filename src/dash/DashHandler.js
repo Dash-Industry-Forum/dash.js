@@ -41,7 +41,7 @@ import DashConstants from './constants/DashConstants';
 
 
 const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
-
+const SEGMENT_START_TIME_DELTA = 0.001;
 
 function DashHandler(config) {
 
@@ -369,7 +369,7 @@ function DashHandler(config) {
                 // If target time is before the start of the request use request starttime
                 if (time < targetRequest.startTime) {
                     // Apply delta to segment start time to get around rounding issues
-                    return targetRequest.startTime + 0.001;
+                    return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
@@ -446,7 +446,7 @@ function DashHandler(config) {
 
                 if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
                     // Apply delta to segment start time to get around rounding issues
-                    return targetRequest.startTime + 0.001;
+                    return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
