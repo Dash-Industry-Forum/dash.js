@@ -368,7 +368,8 @@ function DashHandler(config) {
 
                 // If target time is before the start of the request use request starttime
                 if (time < targetRequest.startTime) {
-                    return targetRequest.startTime;
+                    // Apply delta to segment start time to get around rounding issues
+                    return targetRequest.startTime + 0.001;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
