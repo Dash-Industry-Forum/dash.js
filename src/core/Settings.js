@@ -467,6 +467,8 @@ import Events from './events/Events';
  * Valid values for max catch up rate are in the range 0 to 0.5 (0% to 50%).
  *
  * Set min and max to NaN to turn off live catch up feature.
+ * 
+ * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=NaN]

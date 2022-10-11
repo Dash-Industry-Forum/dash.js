@@ -85,7 +85,7 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the minium and maximum playback rates to be used when applying the catchup mechanism
+     * Returns the minimum and maximum playback rates to be used when applying the catchup mechanism
      * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
      * @return {number}
      */

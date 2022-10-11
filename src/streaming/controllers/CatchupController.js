@@ -335,8 +335,8 @@ function CatchupController() {
             return 1.0;
         }
 
-        const cpr = liveCatchUpPlaybackRates.max;
         const deltaLatency = currentLiveLatency - liveDelay;
+        const cpr = (deltaLatency < 0) ? Math.abs(liveCatchUpPlaybackRates.min) : liveCatchUpPlaybackRates.max;
         const d = deltaLatency * 5;
 
         // Playback rate must be between (1 - cpr) - (1 + cpr)

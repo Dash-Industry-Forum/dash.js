@@ -154,7 +154,7 @@ App.prototype._adjustSettingsByUrlParameters = function () {
             this.domElements.settings.minCatchupPlaybackRate.value = parseFloat(params.minCatchupPlaybackRate).toFixed(2);
         }
         if (params.maxCatchupPlaybackRate !== undefined) {
-            this.domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.catchupPlaybackRate).toFixed(2);
+            this.domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.maxCatchupPlaybackRate).toFixed(2);
         }
         if (params.abrAdditionalInsufficientBufferRule !== undefined) {
             this.domElements.settings.abrAdditionalInsufficientBufferRule.checked = params.abrAdditionalInsufficientBufferRule === 'true';
