@@ -54,6 +54,7 @@ function CatchupController() {
 
     function initialize() {
         _registerEvents();
+        _checkPlaybackRates();
     }
 
     function setConfig(config) {
@@ -89,6 +90,9 @@ function CatchupController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.on(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
+        eventBus.on(Events.SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
+        eventBus.on(MediaPlayerEvents.STREAM_INITIALIZED, _checkPlaybackRates, instance);
     }
 
     function _unregisterEvents() {
@@ -98,6 +102,9 @@ function CatchupController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackProgression, instance);
         eventBus.off(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
+        eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
+        eventBus.off(MediaPlayerEvents.STREAM_INITIALIZED, _checkPlaybackRates, instance);
     }
 
     function setup() {
@@ -406,6 +413,10 @@ function CatchupController() {
         }
 
         return newRate
+    }
+
+    function _checkPlaybackRates() {
+        mediaPlayerModel.getCatchupPlaybackRates(true);
     }
 
     instance = {

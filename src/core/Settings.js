@@ -752,7 +752,9 @@ function Settings() {
     const DISPATCH_KEY_MAP = {
         'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
         'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
-        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED
+        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED,
+        'streaming.liveCatchup.playbackRate.min': Events.SETTING_UPDATED_PLAYBACK_RATE_MIN,
+        'streaming.liveCatchup.playbackRate.max': Events.SETTING_UPDATED_PLAYBACK_RATE_MAX
     };
 
 
