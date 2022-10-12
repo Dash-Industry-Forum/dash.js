@@ -462,9 +462,9 @@ import Events from './events/Events';
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
- * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0%)
+ * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
  * 
- * Valid values for max catch up rate are in the range 0 to 0.5 (0% to 50%).
+ * Valid values for max catch up rate are in the range 0 to 1 (0% to 100% playback rate increase).
  *
  * Set min and max to NaN to turn off live catch up feature.
  * 
