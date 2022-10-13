@@ -813,7 +813,8 @@ function Settings() {
                 stallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
-                avoidCurrentTimeRangePruning: false
+                avoidCurrentTimeRangePruning: false,
+                useChangeTypeForTrackSwitch: false
             },
             gaps: {
                 jumpGaps: true,

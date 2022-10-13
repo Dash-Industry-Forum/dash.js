@@ -405,7 +405,11 @@ function BufferController(config) {
                     return updateAppendWindow();
                 })
                 .then(() => {
-                    return sourceBufferSink.changeType(codec);
+                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+                        return sourceBufferSink.changeType(codec);
+                    }
+
+                    return Promise.resolve();
                 })
                 .then(() => {
                     return pruneAllSafely();
@@ -443,7 +447,11 @@ function BufferController(config) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
                 .then(() => {
-                    return sourceBufferSink.changeType(codec);
+                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+                        return sourceBufferSink.changeType(codec);
+                    }
+
+                    return Promise.resolve();
                 })
                 .then(() => {
                     resolve();
