@@ -363,7 +363,7 @@ describe('MediaController', function () {
             roles: ['Main'],
             accessibility: [],
             audioChannelConfiguration: 6,
-            selectionPriority: 2
+            selectionPriority: 5
         };
         const enADTrack = {
             type: trackType,
@@ -371,7 +371,7 @@ describe('MediaController', function () {
             lang: 'en',
             viewpoint: null,
             roles: ['alternate'],
-            accessibility: ['1'],
+            accessibility: ['1','description'],
             audioChannelConfiguration: 6,
             selectionPriority: 3
         };
