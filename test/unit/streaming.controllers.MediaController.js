@@ -337,7 +337,7 @@ describe('MediaController', function () {
         const streamInfo = {
             id: 'id'
         };
-        let frTrack = {
+        const frTrack = {
             type: trackType,
             streamInfo: streamInfo,
             lang: 'fr',
@@ -431,7 +431,6 @@ describe('MediaController', function () {
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true; // jshint ignore:line
-
         });
 
         it('should check initial media settings to choose initial track with a string/regex lang', function () {

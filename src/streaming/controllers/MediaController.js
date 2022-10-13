@@ -329,7 +329,10 @@ function MediaController() {
     }
 
     function matchSettingsLang(settings, track) {
-        return !settings.lang || (track.lang.match(settings.lang));
+        return !settings.lang ||
+            (settings.lang instanceof RegExp)?
+            (track.lang.match(settings.lang)):
+            (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length>0);
     }
 
     function matchSettingsIndex(settings, track) {
