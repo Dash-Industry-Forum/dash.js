@@ -14,6 +14,8 @@ import DashMetricsMock from './mocks/DashMetricsMock';
 const sinon = require('sinon');
 const expect = require('chai').expect;
 
+const SEGMENT_START_TIME_DELTA = 0.001;
+
 describe('DashHandler', function () {
     const objectsHelper = new ObjectsHelper();
     const voHelper = new VoHelper();
@@ -265,7 +267,7 @@ describe('DashHandler', function () {
             });
             const result = dashHandler.getValidTimeCloseToTargetTime(18, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.equal(20);
+            expect(result).to.be.equal(20 + SEGMENT_START_TIME_DELTA);
         })
 
         it('should return valid time if seek is right after the start of a gap', () => {
@@ -303,7 +305,7 @@ describe('DashHandler', function () {
             });
             const result = dashHandler.getValidTimeCloseToTargetTime(27, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.equal(28);
+            expect(result).to.be.equal(28 + SEGMENT_START_TIME_DELTA);
         })
 
         it('should return valid time if only one valid segment before target time', () => {
@@ -482,7 +484,7 @@ describe('DashHandler', function () {
             });
             const result = dashHandler.getValidTimeAheadOfTargetTime(26.8, dummyMediaInfo, dummyRepresentation, 0.5)
 
-            expect(result).to.be.equal(28);
+            expect(result).to.be.equal(28 + SEGMENT_START_TIME_DELTA);
         })
 
         it('should return valid time on the right side of the timeline if gap is in the middle and target time is close to left side of the timeline', () => {
