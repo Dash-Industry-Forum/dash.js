@@ -30,7 +30,8 @@ App.prototype.init = function () {
 App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
-    this.domElements.settings.catchupPlaybackRate = document.getElementById('catchup-playback-rate');
+    this.domElements.settings.maxCatchupPlaybackRate = document.getElementById('max-catchup-playback-rate');
+    this.domElements.settings.minCatchupPlaybackRate = document.getElementById('min-catchup-playback-rate');
     this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
     this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
     this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
@@ -91,7 +92,10 @@ App.prototype._applyParameters = function () {
             liveCatchup: {
                 enabled: settings.catchupEnabled,
                 maxDrift: settings.maxDrift,
-                playbackRate: settings.catchupPlaybackRate,
+                playbackRate: {
+                    min: settings.minCatchupPlaybackRate,
+                    max: settings.maxCatchupPlaybackRate
+                },
                 mode: settings.catchupMechanism
             },
             abr: {
@@ -146,8 +150,11 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxDrift !== undefined) {
             this.domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
         }
-        if (params.catchupPlaybackRate !== undefined) {
-            this.domElements.settings.catchupPlaybackRate.value = parseFloat(params.catchupPlaybackRate).toFixed(1);
+        if (params.minCatchupPlaybackRate !== undefined) {
+            this.domElements.settings.minCatchupPlaybackRate.value = parseFloat(params.minCatchupPlaybackRate).toFixed(2);
+        }
+        if (params.maxCatchupPlaybackRate !== undefined) {
+            this.domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.maxCatchupPlaybackRate).toFixed(2);
         }
         if (params.abrAdditionalInsufficientBufferRule !== undefined) {
             this.domElements.settings.abrAdditionalInsufficientBufferRule.checked = params.abrAdditionalInsufficientBufferRule === 'true';
@@ -180,7 +187,8 @@ App.prototype._adjustSettingsByUrlParameters = function () {
 App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
-    var catchupPlaybackRate = parseFloat(this.domElements.settings.catchupPlaybackRate.value, 10);
+    var minCatchupPlaybackRate = parseFloat(this.domElements.settings.minCatchupPlaybackRate.value, 10);
+    var maxCatchupPlaybackRate = parseFloat(this.domElements.settings.maxCatchupPlaybackRate.value, 10);
     var abrAdditionalInsufficientBufferRule = this.domElements.settings.abrAdditionalInsufficientBufferRule.checked;
     var abrAdditionalDroppedFramesRule = this.domElements.settings.abrAdditionalDroppedFramesRule.checked;
     var abrAdditionalAbandonRequestRule = this.domElements.settings.abrAdditionalAbandonRequestRule.checked;
@@ -193,7 +201,8 @@ App.prototype._getCurrentSettings = function () {
     return {
         targetLatency,
         maxDrift,
-        catchupPlaybackRate,
+        minCatchupPlaybackRate,
+        maxCatchupPlaybackRate,
         abrGeneral,
         abrAdditionalInsufficientBufferRule,
         abrAdditionalDroppedFramesRule,

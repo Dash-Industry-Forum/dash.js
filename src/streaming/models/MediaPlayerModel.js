@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Debug from '../../core/Debug';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 
@@ -36,8 +37,10 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const DEFAULT_CATCHUP_MAX_DRIFT = 12;
-const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
-
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
+const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
+const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
 
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
@@ -48,6 +51,7 @@ const DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
 function MediaPlayerModel() {
 
     let instance,
+        logger,
         playbackController,
         serviceDescriptionController;
 
@@ -55,6 +59,7 @@ function MediaPlayerModel() {
     const settings = Settings(context).getInstance();
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function setConfig(config) {
@@ -65,6 +70,52 @@ function MediaPlayerModel() {
             serviceDescriptionController = config.serviceDescriptionController;
         }
     }
+
+    /**
+     * Checks the supplied min playback rate is a valid vlaue and within supported limits
+     * @param {number} rate - Supplied min playback rate 
+     * @param {boolean} log - wether to shown warning or not 
+     * @returns {number} corrected min playback rate
+     */
+    function _checkMinPlaybackRate (rate, log) {
+        if (isNaN(rate)) return 0;
+        if (rate > 0) {
+            if (log) {
+                logger.warn(`Supplied minimum playback rate is a positive value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)
+            }
+            return 0;
+        } 
+        if (rate < CATCHUP_PLAYBACK_RATE_MIN_LIMIT) {
+            if (log) {
+                logger.warn(`Supplied minimum playback rate is out of range and will be limited to ${CATCHUP_PLAYBACK_RATE_MIN_LIMIT}: ${CATCHUP_PLAYBACK_RATE_MIN_LIMIT * 100}% playback speed.`);
+            }
+            return CATCHUP_PLAYBACK_RATE_MIN_LIMIT;
+        }
+        return rate;
+    };
+
+    /**
+     * Checks the supplied max playback rate is a valid vlaue and within supported limits
+     * @param {number} rate - Supplied max playback rate 
+     * @param {boolean} log - wether to shown warning or not 
+     * @returns {number} corrected max playback rate
+     */
+    function _checkMaxPlaybackRate (rate, log) {
+        if (isNaN(rate)) return 0;
+        if (rate < 0) {
+            if (log) {
+                logger.warn(`Supplied maximum playback rate is a negative value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)
+            }
+            return 0;
+        } 
+        if (rate > CATCHUP_PLAYBACK_RATE_MAX_LIMIT) {
+            if (log) {
+                logger.warn(`Supplied maximum playback rate is out of range and will be limited to ${CATCHUP_PLAYBACK_RATE_MAX_LIMIT}: ${(1 + CATCHUP_PLAYBACK_RATE_MAX_LIMIT) * 100}% playback speed.`);
+            }
+            return CATCHUP_PLAYBACK_RATE_MAX_LIMIT;
+        }
+        return rate;
+    };
 
     /**
      * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
@@ -84,20 +135,33 @@ function MediaPlayerModel() {
     }
 
     /**
-     * Returns the maximum playback rate to be used when applying the catchup mechanism
+     * Returns the minimum and maximum playback rates to be used when applying the catchup mechanism
+     * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
      * @return {number}
      */
-    function getCatchupPlaybackRate() {
-        if (!isNaN(settings.get().streaming.liveCatchup.playbackRate) && settings.get().streaming.liveCatchup.playbackRate > 0) {
-            return settings.get().streaming.liveCatchup.playbackRate;
+    function getCatchupPlaybackRates(log) {
+        const settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
+        
+        if(!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+            return {
+                min: _checkMinPlaybackRate(settingsPlaybackRate.min, log),
+                max: _checkMaxPlaybackRate(settingsPlaybackRate.max, log),
+            }
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate) && serviceDescriptionSettings.liveCatchup.playbackRate > 0) {
-            return serviceDescriptionSettings.liveCatchup.playbackRate;
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && (!isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.min) || !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.max))) {
+            const sdPlaybackRate = serviceDescriptionSettings.liveCatchup.playbackRate;
+            return {
+                min: _checkMinPlaybackRate(sdPlaybackRate.min, log),
+                max: _checkMaxPlaybackRate(sdPlaybackRate.max, log),
+            }
         }
 
-        return DEFAULT_CATCHUP_PLAYBACK_RATE;
+        return {
+            min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
+            max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+        }
     }
 
     /**
@@ -193,7 +257,7 @@ function MediaPlayerModel() {
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
-        getCatchupPlaybackRate,
+        getCatchupPlaybackRates,
         getAbrBitrateParameter,
         setConfig,
         reset

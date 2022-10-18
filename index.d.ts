@@ -228,7 +228,10 @@ declare namespace dashjs {
             },
             liveCatchup?: {
                 maxDrift?: number;
-                playbackRate?: number;
+                playbackRate?:{
+                    min?: number,
+                    max?: number
+                },
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string

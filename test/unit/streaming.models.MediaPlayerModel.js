@@ -69,25 +69,87 @@ describe('MediaPlayerModel', function () {
         expect(maxDrift).to.not.be.NaN;
     })
 
-    it('Should return catchup playback rate if specified in the settings', () => {
-        settings.update({ streaming: { liveCatchup: { playbackRate: 0.3 } } });
+    it('Should return catchup playback rates if specified in the settings', () => {
+        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3, min: -0.2 }} } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
-        const value = mediaPlayerModel.getCatchupPlaybackRate();
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
-        expect(value).to.be.equal(0.3);
+        expect(playbackRates.max).to.be.equal(0.3);
+        expect(playbackRates.min).to.be.equal(-0.2);
+    });
+
+    it('Should set playbackRate.min to 0 if only playbackRate.max is specified in the settings', () => {
+        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3 }} } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0.3);
+        expect(playbackRates.min).to.be.equal(0);
+    });
+
+    it('Should set playbackRate.max to 0 if only playbackRate.min is specified in the settings', () => {
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.2 }} } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0);
+        expect(playbackRates.min).to.be.equal(-0.2);
+    });
+
+    it('Should return catchup playback rates if specified in Service Description', () => {
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0.4);
+        expect(playbackRates.min).to.be.equal(-0.5);
     })
 
-    it('Should return catchup playback rate if specified in Service Description', () => {
+    it('Should limit catchup playback rates from service description if they are beyond the rate thresholds', () => {
+        dummyManifestInfo.serviceDescriptions[0].playbackRate.max = 2.5;
+        dummyManifestInfo.serviceDescriptions[0].playbackRate.min = 0.1;
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
-        const value = mediaPlayerModel.getCatchupPlaybackRate();
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
-        expect(value).to.be.equal(0.4);
-    })
+        expect(playbackRates.max).to.be.equal(1);
+        expect(playbackRates.min).to.be.equal(-0.5);
+    });
 
-    it('Should return default catchup playback rate', () => {
-        const value = mediaPlayerModel.getCatchupPlaybackRate();
+    it('Should limit catchup playback rates from settings if they are beyond the rate thresholds', () => {
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.8, max: 2.5 }} } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
-        expect(value).to.not.be.NaN;
+        expect(playbackRates.max).to.be.equal(1);
+        expect(playbackRates.min).to.be.equal(-0.5);
+    });
+
+
+    it('Should set catchup playback rates from service description to 0 if the sign of the set values is incorrect', () => {
+        // i.e. if max rate is incorrectly negative, or min rate is incorrectly positive
+        dummyManifestInfo.serviceDescriptions[0].playbackRate.max = -2.0;
+        dummyManifestInfo.serviceDescriptions[0].playbackRate.min = 1.5;
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0);
+        expect(playbackRates.min).to.be.equal(0);
+    });
+
+    it('Should set catchup playback rates from settings to 0 if the sign of the set values is incorrect', () => {
+        // i.e. if max rate is incorrectly negative, or min rate is incorrectly positive
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: 1.5, max: -2.0 }} } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0);
+        expect(playbackRates.min).to.be.equal(0);
+    });
+
+    it('Should return default catchup playback rates', () => {
+        const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
+
+        expect(playbackRates.max).to.be.equal(0.5);
+        expect(playbackRates.min).to.be.equal(-0.5);
     })
 
     it('Should return abr bitrate parameter if specified in the settings', () => {

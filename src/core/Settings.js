@@ -140,7 +140,7 @@ import Events from './events/Events';
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
- *                playbackRate: NaN,
+ *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -457,14 +457,18 @@ import Events from './events/Events';
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=NaN]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
+ * @property {number} [playbackRate={min: NaN, max: NaN}]
+ * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
- * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
+ * 
+ * Valid values for max catch up rate are in the range 0 to 1 (0% to 100% playback rate increase).
  *
- * Set it to NaN to turn off live catch up feature.
+ * Set min and max to NaN to turn off live catch up feature.
+ * 
+ * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=NaN]
@@ -748,7 +752,9 @@ function Settings() {
     const DISPATCH_KEY_MAP = {
         'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
         'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
-        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED
+        'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED,
+        'streaming.liveCatchup.playbackRate.min': Events.SETTING_UPDATED_PLAYBACK_RATE_MIN,
+        'streaming.liveCatchup.playbackRate.max': Events.SETTING_UPDATED_PLAYBACK_RATE_MAX
     };
 
 
@@ -843,7 +849,10 @@ function Settings() {
             },
             liveCatchup: {
                 maxDrift: NaN,
-                playbackRate: NaN,
+                playbackRate: {
+                    min: NaN,
+                    max: NaN
+                },
                 playbackBufferMin: 0.5,
                 enabled: null,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
