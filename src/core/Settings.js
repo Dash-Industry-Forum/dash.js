@@ -104,7 +104,8 @@ import Events from './events/Events';
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
  *                setStallState: true,
- *                avoidCurrentTimeRangePruning: false
+ *                avoidCurrentTimeRangePruning: false,
+ *                useChangeTypeForTrackSwitch: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -309,6 +310,9 @@ import Events from './events/Events';
  * Avoids pruning of the buffered range that contains the current playback time.
  *
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
+ * @property {boolean} [useChangeTypeForTrackSwitch=true]
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
+ * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
  */
 
 /**
@@ -463,11 +467,11 @@ import Events from './events/Events';
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
  * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
- * 
+ *
  * Valid values for max catch up rate are in the range 0 to 1 (0% to 100% playback rate increase).
  *
  * Set min and max to NaN to turn off live catch up feature.
- * 
+ *
  * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
@@ -814,7 +818,7 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: false
+                useChangeTypeForTrackSwitch: true
             },
             gaps: {
                 jumpGaps: true,
