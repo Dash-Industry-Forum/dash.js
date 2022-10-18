@@ -193,6 +193,7 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
+                useChangeTypeForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
