@@ -193,6 +193,7 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
+                useChangeTypeForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -228,7 +229,10 @@ declare namespace dashjs {
             },
             liveCatchup?: {
                 maxDrift?: number;
-                playbackRate?: number;
+                playbackRate?:{
+                    min?: number,
+                    max?: number
+                },
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string
@@ -442,7 +446,7 @@ declare namespace dashjs {
 
         on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
         
-        on(type: string, listener: (e: Event) => void, scope?: object): void;
+        on(type: string, listener: (e: Event) => void, scope?: object, options?:object): void;
 
         
         off(type: string, listener: (e: any) => void, scope?: object): void;

@@ -594,6 +594,13 @@ function MediaPlayer() {
         }
 
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+
+        // For VoD limit the seek to the duration of the content
+        const videoElement = getVideoElement();
+        if (!playbackController.getIsDynamic() && videoElement.duration) {
+            s = Math.min(videoElement.duration, s);
+        }
+
         playbackController.seek(s, false, false, true);
     }
 
@@ -1996,7 +2003,7 @@ function MediaPlayer() {
      * @return {object}
      */
     function getCurrentSteeringResponseData() {
-        if(contentSteeringController) {
+        if (contentSteeringController) {
             return contentSteeringController.getCurrentSteeringResponseData();
         }
     }
