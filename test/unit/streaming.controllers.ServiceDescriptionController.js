@@ -184,23 +184,36 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.liveCatchup.maxDrift).to.be.equal(3.5);
         });
 
-        it('Should not update playback rate if max value is below 1', () => {
+        it('Should update playback rates', () => {
             delete dummyManifestInfo.serviceDescriptions[0].latency;
             delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
-            dummyManifestInfo.serviceDescriptions[0].playbackRate.max = 0.5;
             serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
 
             const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            expect(currentSettings.liveCatchup.playbackRate).to.be.NaN
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.equal(0.4);
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.equal(-0.5);
         })
 
-        it('Should update playback rate', () => {
+        it('Should set min playback rate to NaN if only max playback rate is provided', () => {
             delete dummyManifestInfo.serviceDescriptions[0].latency;
             delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate.min;
             serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
 
             const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            expect(currentSettings.liveCatchup.playbackRate).to.be.equal(0.4);
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.equal(0.4);
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.NaN;
+        })
+
+        it('Should set max playback rate to NaN if only min playback rate is provided', () => {
+            delete dummyManifestInfo.serviceDescriptions[0].latency;
+            delete dummyManifestInfo.serviceDescriptions[0].operatingBandwidth;
+            delete dummyManifestInfo.serviceDescriptions[0].playbackRate.max;
+            serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+
+            const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.equal(-0.5);
         })
 
         it('Should not update bandwidth parameters if unsupported mediaType is provided', () => {
@@ -274,7 +287,8 @@ describe('ServiceDescriptionController', () => {
             expect(currentSettings.initialBitrate.audio).to.be.equal(5000);
             expect(currentSettings.liveDelay).to.be.equal(5);
             expect(currentSettings.liveCatchup.maxDrift).to.be.equal(3.5);
-            expect(currentSettings.liveCatchup.playbackRate).to.be.equal(0.4);
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.equal(0.4);
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.equal(-0.5);
         })
 
 

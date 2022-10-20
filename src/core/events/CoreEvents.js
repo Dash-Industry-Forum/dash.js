@@ -84,6 +84,8 @@ class CoreEvents extends EventsBase {
         this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
         this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
         this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+        this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
+        this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
     }
 }
 
