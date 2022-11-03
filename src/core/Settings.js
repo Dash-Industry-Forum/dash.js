@@ -155,7 +155,7 @@ import Events from './events/Events';
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
- *            manifestRequestTimeout: 20000,
+ *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
  *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
