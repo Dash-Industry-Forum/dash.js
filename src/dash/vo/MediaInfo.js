@@ -53,6 +53,7 @@ class MediaInfo {
         this.isFragmented = null;
         this.isEmbedded = null;
         this.selectionPriority = 1;
+        this.supplementalProperties = {};
     }
 
 }

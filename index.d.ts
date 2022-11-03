@@ -134,6 +134,7 @@ declare namespace dashjs {
         isText: boolean;
         KID: any | null;
         bitrateList: Bitrate[];
+        supplementalProperties: object;
     }
 
     export class ProtectionMediaInfo {
@@ -255,6 +256,7 @@ declare namespace dashjs {
             }
             selectionModeForInitialTrack?: TrackSelectionMode
             fragmentRequestTimeout?: number;
+            manifestRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?: number;
                 'XLinkExpansion'?: number;
