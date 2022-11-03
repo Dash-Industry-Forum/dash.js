@@ -134,6 +134,7 @@ declare namespace dashjs {
         isText: boolean;
         KID: any | null;
         bitrateList: Bitrate[];
+        supplementalProperties: object;
     }
 
     export class ProtectionMediaInfo {
