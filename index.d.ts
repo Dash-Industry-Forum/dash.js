@@ -256,6 +256,7 @@ declare namespace dashjs {
             }
             selectionModeForInitialTrack?: TrackSelectionMode
             fragmentRequestTimeout?: number;
+            manifestRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?: number;
                 'XLinkExpansion'?: number;
