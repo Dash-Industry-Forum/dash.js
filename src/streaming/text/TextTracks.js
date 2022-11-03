@@ -468,17 +468,22 @@ function TextTracks(config) {
                 if (currentItem.data && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
                     if (currentItem.styles) {
-                        if (currentItem.styles.align !== undefined && 'align' in cue) {
-                            cue.align = currentItem.styles.align;
+                        try {
+                            if (currentItem.styles.align !== undefined && 'align' in cue) {
+                                cue.align = currentItem.styles.align;
+                            }
+                            if (currentItem.styles.line !== undefined && 'line' in cue) {
+                                cue.line = currentItem.styles.line;
+                            }
+                            if (currentItem.styles.position !== undefined && 'position' in cue) {
+                                cue.position = currentItem.styles.position;
+                            }
+                            if (currentItem.styles.size !== undefined && 'size' in cue) {
+                                cue.size = currentItem.styles.size;
+                            }
                         }
-                        if (currentItem.styles.line !== undefined && 'line' in cue) {
-                            cue.line = currentItem.styles.line;
-                        }
-                        if (currentItem.styles.position !== undefined && 'position' in cue) {
-                            cue.position = currentItem.styles.position;
-                        }
-                        if (currentItem.styles.size !== undefined && 'size' in cue) {
-                            cue.size = currentItem.styles.size;
+                        catch(e) {
+                            logger.error(e);
                         }
                     }
                     cue.onenter = function () {
