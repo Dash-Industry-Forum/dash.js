@@ -154,7 +154,8 @@ import Events from './events/Events';
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
- *            fragmentRequestTimeout: 0,
+ *            fragmentRequestTimeout: 20000,
+ *            manifestRequestTimeout: 20000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
  *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -726,8 +727,11 @@ import Events from './events/Events';
  * This mode makes the player select the track with a widest range of bitrates.
  *
  *
- * @property {number} [fragmentRequestTimeout=0]
+ * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [manifestRequestTimeout=10000]
+ * Time in milliseconds before timing out on loading a manifest.
  *
  * Fragments that timeout are retried as if they failed.
  * @property {module:Settings~RequestTypeSettings} [retryIntervals]
@@ -880,6 +884,7 @@ function Settings() {
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
             fragmentRequestTimeout: 20000,
+            manifestRequestTimeout: 10000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
