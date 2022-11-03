@@ -72,7 +72,10 @@ function ServiceDescriptionController() {
             liveDelay: NaN,
             liveCatchup: {
                 maxDrift: NaN,
-                playbackRate: NaN
+                playbackRate: {
+                    min: NaN,
+                    max: NaN
+                },
             },
             minBitrate: {},
             maxBitrate: {},
@@ -109,7 +112,7 @@ function ServiceDescriptionController() {
             _applyServiceDescriptionLatency(sd);
         }
 
-        if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+        if (sd.playbackRate) {
             _applyServiceDescriptionPlaybackRate(sd);
         }
 
@@ -199,11 +202,14 @@ function ServiceDescriptionController() {
      * @private
      */
     function _applyServiceDescriptionPlaybackRate(sd) {
-        const playbackRate = (Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000)
+        // Convert each playback rate into a difference from 1. i.e 0.8 becomes -0.2.
+        const min = sd.playbackRate.min ? (Math.round((sd.playbackRate.min - 1.0) * 1000) / 1000) : NaN;
+        const max = sd.playbackRate.max ? (Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000) : NaN;
+        serviceDescriptionSettings.liveCatchup.playbackRate.min = min;
+        serviceDescriptionSettings.liveCatchup.playbackRate.max = max;
 
-        serviceDescriptionSettings.liveCatchup.playbackRate = playbackRate;
-        logger.debug(`Found latency properties coming from service description: Live catchup playback rate: ${playbackRate}`);
-
+        logger.debug(`Found latency properties coming from service description: Live catchup min playback rate: ${min}`);
+        logger.debug(`Found latency properties coming from service description: Live catchup max playback rate: ${max}`);
     }
 
     /**
