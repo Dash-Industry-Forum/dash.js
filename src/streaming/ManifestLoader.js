@@ -72,7 +72,8 @@ function ManifestLoader(config) {
             urlUtils: urlUtils,
             constants: Constants,
             dashConstants: DashConstants,
-            errors: Errors
+            errors: Errors,
+            requestTimeout: config.settings.get().streaming.manifestRequestTimeout
         });
 
         xlinkController = XlinkController(context).create({

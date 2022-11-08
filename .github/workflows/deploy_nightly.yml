@@ -7,6 +7,7 @@ on:
 
 jobs:
     deploy_staging:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
         uses: ./.github/workflows/deploy.yml
         with:
             envname: nightly
