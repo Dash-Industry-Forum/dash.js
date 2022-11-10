@@ -74,11 +74,11 @@ function MediaController() {
 
         if (settings) {
             tracks = Array.from(tracksForType);
-            
+
             tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
-            if ( !(type === Constants.AUDIO && !!lastSelectedTracks[type]) ) {
+            if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
                 tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
@@ -330,9 +330,9 @@ function MediaController() {
 
     function matchSettingsLang(settings, track) {
         return !settings.lang ||
-            (settings.lang instanceof RegExp)?
-            (track.lang.match(settings.lang)):
-            (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length>0);
+        (settings.lang instanceof RegExp) ?
+            (track.lang.match(settings.lang)) : track.lang !== '' ?
+                (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
     }
 
     function matchSettingsIndex(settings, track) {
@@ -358,7 +358,7 @@ function MediaController() {
             // match only those tracks having no accessibility element present
             matchAccessibility = !track.accessibility.length;
         } else {
-            matchAccessibility =  !!track.accessibility.filter(function (item) {
+            matchAccessibility = !!track.accessibility.filter(function (item) {
                 return item === settings.accessibility;
             })[0];
         }
@@ -371,7 +371,7 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return  matchAudioChannelConfiguration;
+        return matchAudioChannelConfiguration;
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
