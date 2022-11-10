@@ -57,18 +57,14 @@ function TextController(config) {
         vttParser,
         ttmlParser,
         eventBus,
-        defaultSettings,
-        initialSettingsSet,
         allTracksAreDisabled,
         forceTextStreaming,
         textTracksAdded,
         disableTextBeforeTextTracksAdded;
 
     function setup() {
-        defaultSettings = null;
         forceTextStreaming = false;
         textTracksAdded = false;
-        initialSettingsSet = false;
         disableTextBeforeTextTracksAdded = false;
 
         vttParser = VTTParser(context).getInstance();
@@ -79,7 +75,6 @@ function TextController(config) {
     }
 
     function initialize() {
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
     }
 
@@ -161,11 +156,6 @@ function TextController(config) {
         textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
     }
 
-    function setInitialSettings(settings) {
-        defaultSettings = settings;
-        initialSettingsSet = true;
-    }
-
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
@@ -177,7 +167,15 @@ function TextController(config) {
             // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             setTextTrack(streamId, -1);
         } else {
-            if (defaultSettings) {
+            const currentTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
+            if (currentTrack) {
+                const defaultSettings = {
+                    lang: currentTrack.lang,
+                    role: currentTrack.roles[0],
+                    index: currentTrack.index,
+                    codec: currentTrack.codec,
+                    accessibility: currentTrack.accessibility[0]
+                };
                 tracks.some((item, idx) => {
                     // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
                     if (mediaController.matchSettings(defaultSettings, item)) {
@@ -200,21 +198,6 @@ function TextController(config) {
         });
 
         textTracksAdded = true;
-    }
-
-    function _onCurrentTrackChanged(event) {
-        if (!initialSettingsSet && event && event.newMediaInfo) {
-            let mediaInfo = event.newMediaInfo;
-            if (mediaInfo.type === Constants.TEXT) {
-                defaultSettings = {
-                    lang: mediaInfo.lang,
-                    role: mediaInfo.roles[0],
-                    index: mediaInfo.index,
-                    codec: mediaInfo.codec,
-                    accessibility: mediaInfo.accessibility[0]
-                };
-            }
-        }
     }
 
     function enableText(streamId, enable) {
@@ -352,7 +335,6 @@ function TextController(config) {
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
 
         Object.keys(textSourceBuffers).forEach((key) => {
@@ -369,7 +351,6 @@ function TextController(config) {
         getTextSourceBuffer,
         getAllTracksAreDisabled,
         addEmbeddedTrack,
-        setInitialSettings,
         enableText,
         isTextEnabled,
         setTextTrack,
