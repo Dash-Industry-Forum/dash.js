@@ -20386,7 +20386,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
  *                setStallState: true,
- *                avoidCurrentTimeRangePruning: false
+ *                avoidCurrentTimeRangePruning: false,
+ *                useChangeTypeForTrackSwitch: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -20422,7 +20423,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
- *                playbackRate: NaN,
+ *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -20435,7 +20436,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
- *            fragmentRequestTimeout: 0,
+ *            fragmentRequestTimeout: 20000,
+ *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
  *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -20591,6 +20593,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Avoids pruning of the buffered range that contains the current playback time.
  *
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
+ * @property {boolean} [useChangeTypeForTrackSwitch=true]
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
+ * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
  */
 
 /**
@@ -20739,14 +20744,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=NaN]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
+ * @property {number} [playbackRate={min: NaN, max: NaN}]
+ * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
- * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
  *
- * Set it to NaN to turn off live catch up feature.
+ * Valid values for max catch up rate are in the range 0 to 1 (0% to 100% playback rate increase).
+ *
+ * Set min and max to NaN to turn off live catch up feature.
+ *
+ * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=NaN]
@@ -21000,8 +21009,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * This mode makes the player select the track with a widest range of bitrates.
  *
  *
- * @property {number} [fragmentRequestTimeout=0]
+ * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [manifestRequestTimeout=10000]
+ * Time in milliseconds before timing out on loading a manifest.
  *
  * Fragments that timeout are retried as if they failed.
  * @property {module:Settings~RequestTypeSettings} [retryIntervals]
@@ -21032,7 +21044,9 @@ function Settings() {
   var DISPATCH_KEY_MAP = {
     'streaming.delay.liveDelay': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_LIVE_DELAY,
     'streaming.delay.liveDelayFragmentCount': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
-    'streaming.liveCatchup.enabled': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_CATCHUP_ENABLED
+    'streaming.liveCatchup.enabled': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_CATCHUP_ENABLED,
+    'streaming.liveCatchup.playbackRate.min': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN,
+    'streaming.liveCatchup.playbackRate.max': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX
   };
   /**
    * @const {PlayerSettings} defaultSettings
@@ -21090,7 +21104,8 @@ function Settings() {
         stallThreshold: 0.3,
         useAppendWindow: true,
         setStallState: true,
-        avoidCurrentTimeRangePruning: false
+        avoidCurrentTimeRangePruning: false,
+        useChangeTypeForTrackSwitch: true
       },
       gaps: {
         jumpGaps: true,
@@ -21126,7 +21141,10 @@ function Settings() {
       },
       liveCatchup: {
         maxDrift: NaN,
-        playbackRate: NaN,
+        playbackRate: {
+          min: NaN,
+          max: NaN
+        },
         playbackBufferMin: 0.5,
         enabled: null,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
@@ -21149,6 +21167,7 @@ function Settings() {
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
       fragmentRequestTimeout: 20000,
+      manifestRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -21532,7 +21551,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.5.0';
+var VERSION = '4.5.1';
 function getVersionString() {
   return VERSION;
 }
@@ -21955,6 +21974,8 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
     _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
     _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
     return _this;
   }
 
@@ -23454,6 +23475,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
+var SEGMENT_START_TIME_DELTA = 0.001;
 
 function DashHandler(config) {
   config = config || {};
@@ -23762,7 +23784,8 @@ function DashHandler(config) {
 
 
         if (time < targetRequest.startTime) {
-          return targetRequest.startTime;
+          // Apply delta to segment start time to get around rounding issues
+          return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
         }
 
         return Math.min(requestEndTime - targetThreshold, adjustedTime);
@@ -23835,7 +23858,8 @@ function DashHandler(config) {
         }
 
         if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
-          return targetRequest.startTime;
+          // Apply delta to segment start time to get around rounding issues
+          return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
         }
 
         return Math.min(requestEndTime - targetThreshold, adjustedTime);
@@ -26424,7 +26448,10 @@ function ServiceDescriptionController() {
       liveDelay: NaN,
       liveCatchup: {
         maxDrift: NaN,
-        playbackRate: NaN
+        playbackRate: {
+          min: NaN,
+          max: NaN
+        }
       },
       minBitrate: {},
       maxBitrate: {},
@@ -26465,7 +26492,7 @@ function ServiceDescriptionController() {
       _applyServiceDescriptionLatency(sd);
     }
 
-    if (sd.playbackRate && sd.playbackRate.max > 1.0) {
+    if (sd.playbackRate) {
       _applyServiceDescriptionPlaybackRate(sd);
     }
 
@@ -26554,9 +26581,13 @@ function ServiceDescriptionController() {
 
 
   function _applyServiceDescriptionPlaybackRate(sd) {
-    var playbackRate = Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000;
-    serviceDescriptionSettings.liveCatchup.playbackRate = playbackRate;
-    logger.debug("Found latency properties coming from service description: Live catchup playback rate: ".concat(playbackRate));
+    // Convert each playback rate into a difference from 1. i.e 0.8 becomes -0.2.
+    var min = sd.playbackRate.min ? Math.round((sd.playbackRate.min - 1.0) * 1000) / 1000 : NaN;
+    var max = sd.playbackRate.max ? Math.round((sd.playbackRate.max - 1.0) * 1000) / 1000 : NaN;
+    serviceDescriptionSettings.liveCatchup.playbackRate.min = min;
+    serviceDescriptionSettings.liveCatchup.playbackRate.max = max;
+    logger.debug("Found latency properties coming from service description: Live catchup min playback rate: ".concat(min));
+    logger.debug("Found latency properties coming from service description: Live catchup max playback rate: ".concat(max));
   }
   /**
    * Used to specify a quality ranking. We do not support this yet.
@@ -31510,6 +31541,7 @@ var MediaInfo = function MediaInfo() {
   this.isFragmented = null;
   this.isEmbedded = null;
   this.selectionPriority = 1;
+  this.supplementalProperties = {};
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (MediaInfo);
@@ -32591,7 +32623,8 @@ function ManifestLoader(config) {
       urlUtils: urlUtils,
       constants: _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"],
       dashConstants: _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"],
-      errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_10__["default"]
+      errors: _core_errors_Errors__WEBPACK_IMPORTED_MODULE_10__["default"],
+      requestTimeout: config.settings.get().streaming.manifestRequestTimeout
     });
     xlinkController = Object(_controllers_XlinkController__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
       errHandler: errHandler,
@@ -33706,7 +33739,14 @@ function MediaPlayer() {
       throw _constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].BAD_ARGUMENT_ERROR;
     }
 
-    var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+    var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value; // For VoD limit the seek to the duration of the content
+
+    var videoElement = getVideoElement();
+
+    if (!playbackController.getIsDynamic() && videoElement.duration) {
+      s = Math.min(videoElement.duration, s);
+    }
+
     playbackController.seek(s, false, false, true);
   }
   /**
@@ -37176,7 +37216,6 @@ function Stream(config) {
 
     if (embeddedMediaInfos.length > 0) {
       mediaController.setInitialMediaSettingsForType(type, streamInfo);
-      textController.setInitialSettings(mediaController.getInitialSettings(type));
       textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
     } // Filter out embedded text track before creating StreamProcessor
 
@@ -41407,7 +41446,11 @@ function BufferController(config) {
       sourceBufferSink.abort().then(function () {
         return updateAppendWindow();
       }).then(function () {
-        return sourceBufferSink.changeType(codec);
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+          return sourceBufferSink.changeType(codec);
+        }
+
+        return Promise.resolve();
       }).then(function () {
         return pruneAllSafely();
       }).then(function () {
@@ -41437,7 +41480,11 @@ function BufferController(config) {
   function prepareForNonReplacementTrackSwitch(codec) {
     return new Promise(function (resolve, reject) {
       updateAppendWindow().then(function () {
-        return sourceBufferSink.changeType(codec);
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+          return sourceBufferSink.changeType(codec);
+        }
+
+        return Promise.resolve();
       }).then(function () {
         resolve();
       })["catch"](function (e) {
@@ -41529,50 +41576,57 @@ function BufferController(config) {
 
   function _getRangeAheadForPruning(targetTime, ranges) {
     // if we do a seek behind the current play position we do need to prune ahead of the new play position
+    // we keep everything that is within bufferToKeepAhead but only if the buffer is continuous.
+    // Otherwise we have gaps once the seek is done which might trigger an unintentional gap jump
     var endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
+    var continuousBufferTime = getContinuousBufferTimeForTargetTime(targetTime); // This is the maximum range we keep ahead
+
     var isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
-    var bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
-    var aheadDiff = endOfBuffer - targetTime;
+    var bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality; // Define the start time from which we will prune. If there is no continuous range from the targettime we start immediately at the target time
+    // Otherwise we set the start point to the end of the continuous range taking the maximum buffer to keep ahead into account
 
-    if (aheadDiff > bufferToKeepAhead) {
-      var rangeStart = targetTime + bufferToKeepAhead; // Ensure we keep full range of current fragment
+    var rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime; // Check if we are done buffering, no need to prune then
 
-      var currentTimeRequest = fragmentModel.getRequests({
-        state: _models_FragmentModel__WEBPACK_IMPORTED_MODULE_2__["default"].FRAGMENT_MODEL_EXECUTED,
-        time: targetTime,
-        threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-      })[0];
-
-      if (currentTimeRequest) {
-        rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
-      } // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
+    if (rangeStart >= ranges.end(ranges.length - 1)) {
+      return null;
+    } // Ensure we keep full range of current fragment
 
 
-      var avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
+    var currentTimeRequest = fragmentModel.getRequests({
+      state: _models_FragmentModel__WEBPACK_IMPORTED_MODULE_2__["default"].FRAGMENT_MODEL_EXECUTED,
+      time: targetTime,
+      threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
+    })[0];
 
-      if (avoidCurrentTimeRangePruning) {
-        for (var i = 0; i < ranges.length; i++) {
-          if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i) && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
-            var oldRangeStart = rangeStart;
+    if (currentTimeRequest) {
+      rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
+    } // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
 
-            if (i + 1 < ranges.length) {
-              rangeStart = ranges.start(i + 1);
-            } else {
-              rangeStart = ranges.end(i) + 1;
-            }
 
-            logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + (rangeStart < endOfBuffer ? '' : ' (no actual pruning)'));
-            break;
+    var avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
+
+    if (avoidCurrentTimeRangePruning) {
+      for (var i = 0; i < ranges.length; i++) {
+        if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i) && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
+          var oldRangeStart = rangeStart;
+
+          if (i + 1 < ranges.length) {
+            rangeStart = ranges.start(i + 1);
+          } else {
+            rangeStart = ranges.end(i) + 1;
           }
+
+          logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + (rangeStart < endOfBuffer ? '' : ' (no actual pruning)'));
+          break;
         }
       }
+    }
 
-      if (rangeStart < endOfBuffer) {
-        return {
-          start: rangeStart,
-          end: endOfBuffer
-        };
-      }
+    if (rangeStart < ranges.end(ranges.length - 1)) {
+      return {
+        start: rangeStart,
+        end: endOfBuffer
+      };
     }
 
     return null;
@@ -42171,6 +42225,8 @@ function CatchupController() {
 
   function initialize() {
     _registerEvents();
+
+    _checkPlaybackRates();
   }
 
   function setConfig(config) {
@@ -42206,6 +42262,9 @@ function CatchupController() {
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
+    eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].STREAM_INITIALIZED, _checkPlaybackRates, instance);
   }
 
   function _unregisterEvents() {
@@ -42215,6 +42274,9 @@ function CatchupController() {
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_SEEKED, _onPlaybackProgression, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
+    eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].STREAM_INITIALIZED, _checkPlaybackRates, instance);
   }
 
   function setup() {
@@ -42294,7 +42356,7 @@ function CatchupController() {
 
 
   function _onPlaybackProgression() {
-    if (playbackController.getIsDynamic() && mediaPlayerModel.getCatchupModeEnabled() && mediaPlayerModel.getCatchupPlaybackRate() > 0 && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
+    if (playbackController.getIsDynamic() && mediaPlayerModel.getCatchupModeEnabled() && (mediaPlayerModel.getCatchupPlaybackRates().max > 0 || mediaPlayerModel.getCatchupPlaybackRates().min < 0) && !playbackController.isPaused() && !playbackController.isSeeking() && _shouldStartCatchUp()) {
       _startPlaybackCatchUp();
     }
   }
@@ -42312,7 +42374,7 @@ function CatchupController() {
     if (videoModel) {
       var newRate;
       var currentPlaybackRate = videoModel.getPlaybackRate();
-      var liveCatchupPlaybackRate = mediaPlayerModel.getCatchupPlaybackRate();
+      var liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
       var bufferLevel = playbackController.getBufferLevel();
 
       var deltaLatency = _getLatencyDrift(); // we reached the maxDrift. Do a seek
@@ -42332,15 +42394,15 @@ function CatchupController() {
           if (_getCatchupMode() === _constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP) {
             // Custom playback control: Based on buffer level
             var playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-            newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel, currentPlaybackRate);
+            newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel);
           } else {
             // Default playback control: Based on target and current latency
-            newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, targetLiveDelay, bufferLevel, currentPlaybackRate);
+            newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
           } // We adjust the min change linear, depending on the maximum catchup rate. Default is 0.02 for rate 0.5.
           // For Safari we stick to a fixed value because of  https://bugs.webkit.org/show_bug.cgi?id=208142
 
 
-          var minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRate); // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
+          var minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max); // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
 
           if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {
             // non-null
@@ -42432,7 +42494,9 @@ function CatchupController() {
   }
   /**
    * Default algorithm to calculate the new playback rate
-   * @param {number} liveCatchUpPlaybackRate
+   * @param {object} liveCatchUpPlaybackRates
+   * @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+   * @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
    * @param {number} currentLiveLatency
    * @param {number} liveDelay
    * @param {number} bufferLevel
@@ -42442,14 +42506,14 @@ function CatchupController() {
    */
 
 
-  function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, bufferLevel) {
+  function _calculateNewPlaybackRateDefault(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, bufferLevel) {
     // if we recently ran into an empty buffer we wait for the buffer to recover before applying a new rate
     if (playbackStalled) {
       return 1.0;
     }
 
-    var cpr = liveCatchUpPlaybackRate;
     var deltaLatency = currentLiveLatency - liveDelay;
+    var cpr = deltaLatency < 0 ? Math.abs(liveCatchUpPlaybackRates.min) : liveCatchUpPlaybackRates.max;
     var d = deltaLatency * 5; // Playback rate must be between (1 - cpr) - (1 + cpr)
     // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
 
@@ -42468,7 +42532,9 @@ function CatchupController() {
   }
   /**
    * Lol+ algorithm to calculate the new playback rate
-   * @param {number} liveCatchUpPlaybackRate
+   * @param {object} liveCatchUpPlaybackRates
+   * @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+   * @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
    * @param {number} currentLiveLatency
    * @param {number} liveDelay
    * @param {number} playbackBufferMin
@@ -42479,12 +42545,13 @@ function CatchupController() {
    */
 
 
-  function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel) {
-    var cpr = liveCatchUpPlaybackRate;
+  function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel) {
     var newRate; // Hybrid: Buffer-based
 
     if (bufferLevel < playbackBufferMin) {
       // Buffer in danger, slow down
+      var cpr = Math.abs(liveCatchUpPlaybackRates.min); // Absolute value as negative delta value will be used.
+
       var deltaBuffer = bufferLevel - playbackBufferMin; // -ve value
 
       var d = deltaBuffer * 5; // Playback rate must be between (1 - cpr) - (1 + cpr)
@@ -42496,7 +42563,8 @@ function CatchupController() {
     } else {
       // Hybrid: Latency-based
       // Buffer is safe, vary playback rate based on latency
-      // Check if latency is within range of target latency
+      var _cpr = liveCatchUpPlaybackRates.max; // Check if latency is within range of target latency
+
       var minDifference = 0.02;
 
       if (Math.abs(currentLiveLatency - liveDelay) <= minDifference * liveDelay) {
@@ -42508,15 +42576,19 @@ function CatchupController() {
         // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
 
 
-        var _s = cpr * 2 / (1 + Math.pow(Math.E, -_d));
+        var _s = _cpr * 2 / (1 + Math.pow(Math.E, -_d));
 
-        newRate = 1 - cpr + _s;
+        newRate = 1 - _cpr + _s;
       }
 
       logger.debug('[LoL+ playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
     }
 
     return newRate;
+  }
+
+  function _checkPlaybackRates() {
+    mediaPlayerModel.getCatchupPlaybackRates(true);
   }
 
   instance = {
@@ -43902,11 +43974,17 @@ function MediaController() {
     if (!tracksForType || tracksForType.length === 0) return;
 
     if (settings) {
-      tracksForType.forEach(function (track) {
-        if (matchSettings(settings, track, !!lastSelectedTracks[type])) {
-          tracks.push(track);
-        }
-      });
+      tracks = Array.from(tracksForType);
+      tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
+      tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
+      tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
+
+      if (!(type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && !!lastSelectedTracks[type])) {
+        tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
+      }
+
+      tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
+      tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
     }
 
     if (tracks.length === 0) {
@@ -44139,6 +44217,64 @@ function MediaController() {
     };
     var notEmpty = settings.lang || settings.viewpoint || settings.role && settings.role.length > 0 || settings.accessibility && settings.accessibility.length > 0 || settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0;
     return notEmpty ? settings : null;
+  }
+
+  function filterTracksBySettings(tracks, filterFn, settings) {
+    var tracksAfterMatcher = [];
+    tracks.forEach(function (track) {
+      if (filterFn(settings, track)) {
+        tracksAfterMatcher.push(track);
+      }
+    });
+
+    if (tracksAfterMatcher.length !== 0) {
+      return tracksAfterMatcher;
+    }
+
+    return tracks;
+  }
+
+  function matchSettingsLang(settings, track) {
+    return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? Object(bcp_47_match__WEBPACK_IMPORTED_MODULE_6__["extendedFilter"])(track.lang, bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5___default()(settings.lang)).length > 0 : false;
+  }
+
+  function matchSettingsIndex(settings, track) {
+    return settings.index === undefined || settings.index === null || track.index === settings.index;
+  }
+
+  function matchSettingsViewPoint(settings, track) {
+    return !settings.viewpoint || settings.viewpoint === track.viewpoint;
+  }
+
+  function matchSettingsRole(settings, track) {
+    var isTrackActive = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+    var matchRole = !settings.role || !!track.roles.filter(function (item) {
+      return item === settings.role;
+    })[0];
+    return matchRole || track.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && isTrackActive;
+  }
+
+  function matchSettingsAccessibility(settings, track) {
+    var matchAccessibility;
+
+    if (!settings.accessibility) {
+      // if no accessibility is requested (or request is empty string),
+      // match only those tracks having no accessibility element present
+      matchAccessibility = !track.accessibility.length;
+    } else {
+      matchAccessibility = !!track.accessibility.filter(function (item) {
+        return item === settings.accessibility;
+      })[0];
+    }
+
+    return matchAccessibility;
+  }
+
+  function matchSettingsAudioChannelConfig(settings, track) {
+    var matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+      return item === settings.audioChannelConfiguration;
+    })[0];
+    return matchAudioChannelConfiguration;
   }
 
   function matchSettings(settings, track) {
@@ -44391,6 +44527,12 @@ function MediaController() {
     getTracksWithWidestRange: getTracksWithWidestRange,
     isTracksEqual: isTracksEqual,
     matchSettings: matchSettings,
+    matchSettingsLang: matchSettingsLang,
+    matchSettingsIndex: matchSettingsIndex,
+    matchSettingsViewPoint: matchSettingsViewPoint,
+    matchSettingsRole: matchSettingsRole,
+    matchSettingsAccessibility: matchSettingsAccessibility,
+    matchSettingsAudioChannelConfig: matchSettingsAudioChannelConfig,
     saveTextSettingsDisabled: saveTextSettingsDisabled,
     setConfig: setConfig,
     reset: reset
@@ -53136,8 +53278,9 @@ ManifestModel.__dashjs_factory_name = 'ManifestModel';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Settings */ "./src/core/Settings.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -53170,12 +53313,16 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 var DEFAULT_MIN_BUFFER_TIME = 12;
 var DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 var LOW_LATENCY_REDUCTION_FACTOR = 10;
 var LOW_LATENCY_MULTIPLY_FACTOR = 5;
 var DEFAULT_CATCHUP_MAX_DRIFT = 12;
-var DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
+var DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
+var DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
+var CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
+var CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
@@ -53184,11 +53331,13 @@ var DEFAULT_CATCHUP_PLAYBACK_RATE = 0.5;
  */
 
 function MediaPlayerModel() {
-  var instance, playbackController, serviceDescriptionController;
+  var instance, logger, playbackController, serviceDescriptionController;
   var context = this.context;
-  var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
 
-  function setup() {}
+  function setup() {
+    logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance().getLogger(instance);
+  }
 
   function setConfig(config) {
     if (config.playbackController) {
@@ -53200,10 +53349,70 @@ function MediaPlayerModel() {
     }
   }
   /**
+   * Checks the supplied min playback rate is a valid vlaue and within supported limits
+   * @param {number} rate - Supplied min playback rate 
+   * @param {boolean} log - wether to shown warning or not 
+   * @returns {number} corrected min playback rate
+   */
+
+
+  function _checkMinPlaybackRate(rate, log) {
+    if (isNaN(rate)) return 0;
+
+    if (rate > 0) {
+      if (log) {
+        logger.warn("Supplied minimum playback rate is a positive value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.");
+      }
+
+      return 0;
+    }
+
+    if (rate < CATCHUP_PLAYBACK_RATE_MIN_LIMIT) {
+      if (log) {
+        logger.warn("Supplied minimum playback rate is out of range and will be limited to ".concat(CATCHUP_PLAYBACK_RATE_MIN_LIMIT, ": ").concat(CATCHUP_PLAYBACK_RATE_MIN_LIMIT * 100, "% playback speed."));
+      }
+
+      return CATCHUP_PLAYBACK_RATE_MIN_LIMIT;
+    }
+
+    return rate;
+  }
+
+  ;
+  /**
+   * Checks the supplied max playback rate is a valid vlaue and within supported limits
+   * @param {number} rate - Supplied max playback rate 
+   * @param {boolean} log - wether to shown warning or not 
+   * @returns {number} corrected max playback rate
+   */
+
+  function _checkMaxPlaybackRate(rate, log) {
+    if (isNaN(rate)) return 0;
+
+    if (rate < 0) {
+      if (log) {
+        logger.warn("Supplied maximum playback rate is a negative value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.");
+      }
+
+      return 0;
+    }
+
+    if (rate > CATCHUP_PLAYBACK_RATE_MAX_LIMIT) {
+      if (log) {
+        logger.warn("Supplied maximum playback rate is out of range and will be limited to ".concat(CATCHUP_PLAYBACK_RATE_MAX_LIMIT, ": ").concat((1 + CATCHUP_PLAYBACK_RATE_MAX_LIMIT) * 100, "% playback speed."));
+      }
+
+      return CATCHUP_PLAYBACK_RATE_MAX_LIMIT;
+    }
+
+    return rate;
+  }
+
+  ;
+  /**
    * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
    * @return {number}
    */
-
 
   function getCatchupMaxDrift() {
     if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
@@ -53219,23 +53428,36 @@ function MediaPlayerModel() {
     return DEFAULT_CATCHUP_MAX_DRIFT;
   }
   /**
-   * Returns the maximum playback rate to be used when applying the catchup mechanism
+   * Returns the minimum and maximum playback rates to be used when applying the catchup mechanism
+   * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
    * @return {number}
    */
 
 
-  function getCatchupPlaybackRate() {
-    if (!isNaN(settings.get().streaming.liveCatchup.playbackRate) && settings.get().streaming.liveCatchup.playbackRate > 0) {
-      return settings.get().streaming.liveCatchup.playbackRate;
+  function getCatchupPlaybackRates(log) {
+    var settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
+
+    if (!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+      return {
+        min: _checkMinPlaybackRate(settingsPlaybackRate.min, log),
+        max: _checkMaxPlaybackRate(settingsPlaybackRate.max, log)
+      };
     }
 
     var serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
 
-    if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate) && serviceDescriptionSettings.liveCatchup.playbackRate > 0) {
-      return serviceDescriptionSettings.liveCatchup.playbackRate;
+    if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && (!isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.min) || !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.max))) {
+      var sdPlaybackRate = serviceDescriptionSettings.liveCatchup.playbackRate;
+      return {
+        min: _checkMinPlaybackRate(sdPlaybackRate.min, log),
+        max: _checkMaxPlaybackRate(sdPlaybackRate.max, log)
+      };
     }
 
-    return DEFAULT_CATCHUP_PLAYBACK_RATE;
+    return {
+      min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
+      max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+    };
   }
   /**
    * Returns whether the catchup mode is activated via the settings or internally in the PlaybackController
@@ -53334,7 +53556,7 @@ function MediaPlayerModel() {
     getInitialBufferLevel: getInitialBufferLevel,
     getRetryAttemptsForType: getRetryAttemptsForType,
     getRetryIntervalsForType: getRetryIntervalsForType,
-    getCatchupPlaybackRate: getCatchupPlaybackRate,
+    getCatchupPlaybackRates: getCatchupPlaybackRates,
     getAbrBitrateParameter: getAbrBitrateParameter,
     setConfig: setConfig,
     reset: reset
@@ -53344,7 +53566,7 @@ function MediaPlayerModel() {
 }
 
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(MediaPlayerModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(MediaPlayerModel));
 
 /***/ }),
 
@@ -66406,13 +66628,11 @@ function TextController(config) {
   var mediaController = config.mediaController;
   var videoModel = config.videoModel;
   var settings = config.settings;
-  var instance, streamData, textSourceBuffers, textTracks, vttParser, ttmlParser, eventBus, defaultSettings, initialSettingsSet, allTracksAreDisabled, forceTextStreaming, textTracksAdded, disableTextBeforeTextTracksAdded;
+  var instance, streamData, textSourceBuffers, textTracks, vttParser, ttmlParser, eventBus, allTracksAreDisabled, forceTextStreaming, textTracksAdded, disableTextBeforeTextTracksAdded;
 
   function setup() {
-    defaultSettings = null;
     forceTextStreaming = false;
     textTracksAdded = false;
-    initialSettingsSet = false;
     disableTextBeforeTextTracksAdded = false;
     vttParser = Object(_utils_VTTParser__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
     ttmlParser = Object(_utils_TTMLParser__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
@@ -66421,7 +66641,6 @@ function TextController(config) {
   }
 
   function initialize() {
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_7__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_7__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
   }
 
@@ -66506,11 +66725,6 @@ function TextController(config) {
     textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
   }
 
-  function setInitialSettings(settings) {
-    defaultSettings = settings;
-    initialSettingsSet = true;
-  }
-
   function _onTextTracksAdded(e) {
     var tracks = e.tracks;
     var index = e.index;
@@ -66521,7 +66735,16 @@ function TextController(config) {
       // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
       setTextTrack(streamId, -1);
     } else {
-      if (defaultSettings) {
+      var currentTrack = mediaController.getCurrentTrackFor(_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT, streamId);
+
+      if (currentTrack) {
+        var defaultSettings = {
+          lang: currentTrack.lang,
+          role: currentTrack.roles[0],
+          index: currentTrack.index,
+          codec: currentTrack.codec,
+          accessibility: currentTrack.accessibility[0]
+        };
         tracks.some(function (item, idx) {
           // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
           if (mediaController.matchSettings(defaultSettings, item)) {
@@ -66543,22 +66766,6 @@ function TextController(config) {
       streamId: streamId
     });
     textTracksAdded = true;
-  }
-
-  function _onCurrentTrackChanged(event) {
-    if (!initialSettingsSet && event && event.newMediaInfo) {
-      var mediaInfo = event.newMediaInfo;
-
-      if (mediaInfo.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT) {
-        defaultSettings = {
-          lang: mediaInfo.lang,
-          role: mediaInfo.roles[0],
-          index: mediaInfo.index,
-          codec: mediaInfo.codec,
-          accessibility: mediaInfo.accessibility[0]
-        };
-      }
-    }
   }
 
   function enableText(streamId, enable) {
@@ -66699,7 +66906,6 @@ function TextController(config) {
 
   function reset() {
     resetInitialSettings();
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_7__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_7__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
     Object.keys(textSourceBuffers).forEach(function (key) {
       textSourceBuffers[key].resetEmbedded();
@@ -66715,7 +66921,6 @@ function TextController(config) {
     getTextSourceBuffer: getTextSourceBuffer,
     getAllTracksAreDisabled: getAllTracksAreDisabled,
     addEmbeddedTrack: addEmbeddedTrack,
-    setInitialSettings: setInitialSettings,
     enableText: enableText,
     isTextEnabled: isTextEnabled,
     setTextTrack: setTextTrack,
@@ -67872,20 +68077,24 @@ function TextTracks(config) {
           cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
 
           if (currentItem.styles) {
-            if (currentItem.styles.align !== undefined && 'align' in cue) {
-              cue.align = currentItem.styles.align;
-            }
+            try {
+              if (currentItem.styles.align !== undefined && 'align' in cue) {
+                cue.align = currentItem.styles.align;
+              }
 
-            if (currentItem.styles.line !== undefined && 'line' in cue) {
-              cue.line = currentItem.styles.line;
-            }
+              if (currentItem.styles.line !== undefined && 'line' in cue) {
+                cue.line = currentItem.styles.line;
+              }
 
-            if (currentItem.styles.position !== undefined && 'position' in cue) {
-              cue.position = currentItem.styles.position;
-            }
+              if (currentItem.styles.position !== undefined && 'position' in cue) {
+                cue.position = currentItem.styles.position;
+              }
 
-            if (currentItem.styles.size !== undefined && 'size' in cue) {
-              cue.size = currentItem.styles.size;
+              if (currentItem.styles.size !== undefined && 'size' in cue) {
+                cue.size = currentItem.styles.size;
+              }
+            } catch (e) {
+              logger.error(e);
             }
           }
 

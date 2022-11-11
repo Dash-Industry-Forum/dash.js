@@ -2330,7 +2330,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                stallThreshold: 0.5,
  *                useAppendWindow: true,
  *                setStallState: true,
- *                avoidCurrentTimeRangePruning: false
+ *                avoidCurrentTimeRangePruning: false,
+ *                useChangeTypeForTrackSwitch: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -2366,7 +2367,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
- *                playbackRate: NaN,
+ *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
  *                enabled: false,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -2379,7 +2380,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
- *            fragmentRequestTimeout: 0,
+ *            fragmentRequestTimeout: 20000,
+ *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
  *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -2535,6 +2537,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Avoids pruning of the buffered range that contains the current playback time.
  *
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
+ * @property {boolean} [useChangeTypeForTrackSwitch=true]
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
+ * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
  */
 
 /**
@@ -2683,14 +2688,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=NaN]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
+ * @property {number} [playbackRate={min: NaN, max: NaN}]
+ * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
  *
  * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
- * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
  *
- * Set it to NaN to turn off live catch up feature.
+ * Valid values for max catch up rate are in the range 0 to 1 (0% to 100% playback rate increase).
+ *
+ * Set min and max to NaN to turn off live catch up feature.
+ *
+ * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=NaN]
@@ -2944,8 +2953,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * This mode makes the player select the track with a widest range of bitrates.
  *
  *
- * @property {number} [fragmentRequestTimeout=0]
+ * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [manifestRequestTimeout=10000]
+ * Time in milliseconds before timing out on loading a manifest.
  *
  * Fragments that timeout are retried as if they failed.
  * @property {module:Settings~RequestTypeSettings} [retryIntervals]
@@ -2976,7 +2988,9 @@ function Settings() {
   var DISPATCH_KEY_MAP = {
     'streaming.delay.liveDelay': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_LIVE_DELAY,
     'streaming.delay.liveDelayFragmentCount': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
-    'streaming.liveCatchup.enabled': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_CATCHUP_ENABLED
+    'streaming.liveCatchup.enabled': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_CATCHUP_ENABLED,
+    'streaming.liveCatchup.playbackRate.min': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN,
+    'streaming.liveCatchup.playbackRate.max': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX
   };
   /**
    * @const {PlayerSettings} defaultSettings
@@ -3034,7 +3048,8 @@ function Settings() {
         stallThreshold: 0.3,
         useAppendWindow: true,
         setStallState: true,
-        avoidCurrentTimeRangePruning: false
+        avoidCurrentTimeRangePruning: false,
+        useChangeTypeForTrackSwitch: true
       },
       gaps: {
         jumpGaps: true,
@@ -3070,7 +3085,10 @@ function Settings() {
       },
       liveCatchup: {
         maxDrift: NaN,
-        playbackRate: NaN,
+        playbackRate: {
+          min: NaN,
+          max: NaN
+        },
         playbackBufferMin: 0.5,
         enabled: null,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
@@ -3093,6 +3111,7 @@ function Settings() {
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
       fragmentRequestTimeout: 20000,
+      manifestRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__["HTTPRequest"].OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
       abr: {
@@ -3588,6 +3607,8 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
     _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
     _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
     return _this;
   }
 
