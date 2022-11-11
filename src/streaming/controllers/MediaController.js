@@ -63,7 +63,7 @@ function MediaController() {
     function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
         const tracksForType = getTracksFor(type, streamInfo.id);
-        const tracks = [];
+        let tracks = [];
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
@@ -73,11 +73,16 @@ function MediaController() {
         if (!tracksForType || (tracksForType.length === 0)) return;
 
         if (settings) {
-            tracksForType.forEach(function (track) {
-                if (matchSettings(settings, track, !!lastSelectedTracks[type])) {
-                    tracks.push(track);
-                }
-            });
+            tracks = Array.from(tracksForType);
+
+            tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
+            if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
+                tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
+            }
+            tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
         }
 
         if (tracks.length === 0) {
@@ -308,6 +313,65 @@ function MediaController() {
             (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
 
         return notEmpty ? settings : null;
+    }
+
+    function filterTracksBySettings(tracks, filterFn, settings) {
+        let tracksAfterMatcher = [];
+        tracks.forEach(function (track) {
+            if (filterFn(settings, track)) {
+                tracksAfterMatcher.push(track);
+            }
+        });
+        if (tracksAfterMatcher.length !== 0) {
+            return tracksAfterMatcher;
+        }
+        return tracks;
+    }
+
+    function matchSettingsLang(settings, track) {
+        return !settings.lang ||
+        (settings.lang instanceof RegExp) ?
+            (track.lang.match(settings.lang)) : track.lang !== '' ?
+                (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+    }
+
+    function matchSettingsIndex(settings, track) {
+        return (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+    }
+
+    function matchSettingsViewPoint(settings, track) {
+        return !settings.viewpoint || (settings.viewpoint === track.viewpoint);
+    }
+
+    function matchSettingsRole(settings, track, isTrackActive = false) {
+        const matchRole = !settings.role || !!track.roles.filter(function (item) {
+            return item === settings.role;
+        })[0];
+        return (matchRole || (track.type === Constants.AUDIO && isTrackActive));
+    }
+
+    function matchSettingsAccessibility(settings, track) {
+        let matchAccessibility;
+
+        if (!settings.accessibility) {
+            // if no accessibility is requested (or request is empty string),
+            // match only those tracks having no accessibility element present
+            matchAccessibility = !track.accessibility.length;
+        } else {
+            matchAccessibility = !!track.accessibility.filter(function (item) {
+                return item === settings.accessibility;
+            })[0];
+        }
+
+        return matchAccessibility;
+    }
+
+    function matchSettingsAudioChannelConfig(settings, track) {
+        let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+            return item === settings.audioChannelConfiguration;
+        })[0];
+
+        return matchAudioChannelConfiguration;
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
@@ -572,6 +636,12 @@ function MediaController() {
         getTracksWithWidestRange,
         isTracksEqual,
         matchSettings,
+        matchSettingsLang,
+        matchSettingsIndex,
+        matchSettingsViewPoint,
+        matchSettingsRole,
+        matchSettingsAccessibility,
+        matchSettingsAudioChannelConfig,
         saveTextSettingsDisabled,
         setConfig,
         reset
