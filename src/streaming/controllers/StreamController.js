@@ -741,7 +741,7 @@ function StreamController() {
      * @private
      */
     function _onLiveDelaySettingUpdated() {
-        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
