@@ -42,6 +42,7 @@ function TextTracks(config) {
     const eventBus = EventBus(context).getInstance();
     const videoModel = config.videoModel;
     const streamInfo = config.streamInfo;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -427,11 +428,15 @@ function TextTracks(config) {
             try {
                 if (cue) {
                     if (!cueInTrack(track, cue)) {
-                        track.addCue(cue);
-                        if (!track.manualCueList) {
-                            track.manualCueList = [];
+                        if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+                            if (!track.manualCueList) {
+                                track.manualCueList = [];
+                            }
+                            track.manualCueList.push(cue);
+                        } else {
+                            track.addCue(cue);
                         }
-                        track.manualCueList.push(cue);
+
                     }
                 } else {
                     logger.error('impossible to display subtitles.');
@@ -500,11 +505,11 @@ function TextTracks(config) {
 
     function _handleNonHtmlCaption(currentItem, timeOffset, track) {
         let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+
         cue.cueID = `${cue.startTime}_${cue.endTime}`;
         cue.isActive = false;
-        if (currentItem.webVttParserData) {
-            cue.webVttParserData = currentItem.webVttParserData;
-        } else if (currentItem.styles) {
+
+        if (currentItem.styles) {
             try {
                 if (currentItem.styles.align !== undefined && 'align' in cue) {
                     cue.align = currentItem.styles.align;
@@ -518,8 +523,7 @@ function TextTracks(config) {
                 if (currentItem.styles.size !== undefined && 'size' in cue) {
                     cue.size = currentItem.styles.size;
                 }
-            }
-            catch(e) {
+            } catch (e) {
                 logger.error(e);
             }
         }
@@ -547,7 +551,7 @@ function TextTracks(config) {
                     if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
                         cue.isActive = true;
                         // eslint-disable-next-line no-undef
-                        WebVTT.processCues(window, [cue.webVttParserData], vttCaptionContainer, cue.cueID);
+                        WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
                         if (vttCaptionContainer) {

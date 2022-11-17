@@ -854,7 +854,11 @@ function Settings() {
                 scheduleWhilePaused: true
             },
             text: {
-                defaultEnabled: true
+                defaultEnabled: true,
+                webvtt: {
+                    customRenderingEnabled: false,
+                    remoteParsingServer: 'http://localhost:3000/parsevtt'
+                }
             },
             liveCatchup: {
                 maxDrift: NaN,

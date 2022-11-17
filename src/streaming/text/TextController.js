@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
+import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -55,6 +56,7 @@ function TextController(config) {
         textSourceBuffers,
         textTracks,
         vttParser,
+        vttCustomRenderingParser,
         ttmlParser,
         eventBus,
         allTracksAreDisabled,
@@ -68,6 +70,7 @@ function TextController(config) {
         disableTextBeforeTextTracksAdded = false;
 
         vttParser = VTTParser(context).getInstance();
+        vttCustomRenderingParser = VttCustomRenderingParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
         eventBus = EventBus(context).getInstance();
 
@@ -76,14 +79,17 @@ function TextController(config) {
 
     function initialize() {
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+            eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+            eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        }
     }
 
     function initializeForStream(streamInfo) {
         const streamId = streamInfo.id;
         const tracks = TextTracks(context).create({
             videoModel,
+            settings,
             streamInfo
         });
         tracks.initialize();
@@ -97,8 +103,10 @@ function TextController(config) {
             videoModel,
             textTracks: tracks,
             vttParser,
+            vttCustomRenderingParser,
             ttmlParser,
-            streamInfo
+            streamInfo,
+            settings
         });
         textSourceBuffer.initialize();
         textSourceBuffers[streamId] = textSourceBuffer;
@@ -366,8 +374,10 @@ function TextController(config) {
     function reset() {
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
+        if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+            eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+            eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
+        }
 
         Object.keys(textSourceBuffers).forEach((key) => {
             textSourceBuffers[key].resetEmbedded();
