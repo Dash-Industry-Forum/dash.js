@@ -26,21 +26,28 @@
 
     <script class="code">
         function init() {
-           //var url = "https://arteptweb-a.akamaihd.net/test/CMAF/corner_uhd/068000/068300/068394-000-F/20220915142906/068394-000-F_malonlyvtt5.mpd",
-            var url = "https://arte-cmafdash.akamaized.net/tests/098124-000-A_v1/098124-000-A_v1.mpd",
+            var url = "https://arteptweb-a.akamaihd.net/test/CMAF/corner_uhd/068000/068300/068394-000-F/20220915142906/068394-000-F_malonlyvtt5.mpd",
+                // var url = "https://arte-cmafdash.akamaized.net/tests/098124-000-A_v1/098124-000-A_v1.mpd",
                 video = document.querySelector('video'),
                 vttRenderingDiv,
                 player;
 
             vttRenderingDiv = document.querySelector("#vtt-rendering-div");
             player = dashjs.MediaPlayer({}).create();
-            player.initialize(video, url, true);
-            player.attachVttRenderingDiv(vttRenderingDiv)
             player.updateSettings({
                 debug: {
                     logLevel: 5
+                },
+                streaming: {
+                    text: {
+                        webvtt: {
+                            customRenderingEnabled: true
+                        }
+                    }
                 }
             })
+            player.initialize(video, url, true);
+            player.attachVttRenderingDiv(vttRenderingDiv)
             controlbar = new ControlBar(player);
             controlbar.initialize();
         }
