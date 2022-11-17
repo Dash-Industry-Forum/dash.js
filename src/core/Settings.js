@@ -856,8 +856,7 @@ function Settings() {
             text: {
                 defaultEnabled: true,
                 webvtt: {
-                    customRenderingEnabled: false,
-                    remoteParsingServer: 'http://localhost:3000/parsevtt'
+                    customRenderingEnabled: false
                 }
             },
             liveCatchup: {
