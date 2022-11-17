@@ -4,6 +4,7 @@ import Constants from '../../src/streaming/constants/Constants';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import AdapterMock from './mocks/AdapterMock';
+import Settings from '../../src/core/Settings';
 
 
 const expect = require('chai').expect;
@@ -17,6 +18,7 @@ describe('TextController', function () {
     const streamInfo = voHelper.getDummyStreamInfo();
     let mediaControllerMock = new MediaControllerMock();
     let dashAdapterMock = new AdapterMock();
+    const settings = Settings(context).getInstance();
     let textController;
 
     beforeEach(function () {
@@ -45,6 +47,7 @@ describe('TextController', function () {
         }
         delete global.window;
         delete global.navigator;
+        settings.reset();
     });
 
     beforeEach(function () {
@@ -52,7 +55,8 @@ describe('TextController', function () {
             videoModel: videoModelMock,
             mediaController: mediaControllerMock,
             adapter: dashAdapterMock,
-            streamInfo
+            streamInfo,
+            settings
         });
 
         textController.initializeForStream(streamInfo);

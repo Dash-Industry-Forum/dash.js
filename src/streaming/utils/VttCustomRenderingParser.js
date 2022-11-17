@@ -36,11 +36,18 @@ function VttCustomRenderingParser() {
         vttjs;
 
     function setup() {
-        vttjs = new window.WebVTT.Parser(
-            window,
-            window.vttjs,
-            window.WebVTT.StringDecoder()
-        );
+        try {
+            if (window && window.WebVTT && window.WebVTT.Parser) {
+                vttjs = new window.WebVTT.Parser(
+                    window,
+                    window.vttjs,
+                    window.WebVTT.StringDecoder()
+                );
+            }
+        }
+        catch(e) {
+
+        }
     }
 
     function parse(data) {
@@ -69,5 +76,6 @@ function VttCustomRenderingParser() {
     setup();
     return instance;
 }
+
 VttCustomRenderingParser.__dashjs_factory_name = 'VttCustomRenderingParser';
 export default FactoryMaker.getSingletonFactory(VttCustomRenderingParser);
