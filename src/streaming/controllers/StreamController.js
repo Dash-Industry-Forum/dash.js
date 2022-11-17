@@ -63,7 +63,8 @@ function StreamController() {
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
+        supportsChangeType, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -708,6 +709,7 @@ function StreamController() {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
             const excludedStreamProcessors = [Constants.TEXT];
             if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
+                initialPlayback = false;
                 _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
             }
@@ -739,7 +741,7 @@ function StreamController() {
      * @private
      */
     function _onLiveDelaySettingUpdated() {
-        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
@@ -774,6 +776,9 @@ function StreamController() {
         }
         if (initialPlayback) {
             initialPlayback = false;
+        }
+        if (initialSteeringRequest) {
+            initialSteeringRequest = false;
             // If this is the initial playback attempt and we have not yet triggered content steering now is the time
             if (settings.get().streaming.applyContentSteering && !contentSteeringController.shouldQueryBeforeStart()) {
                 contentSteeringController.loadSteeringData();
@@ -1499,6 +1504,7 @@ function StreamController() {
         hasMediaError = false;
         hasInitialisationError = false;
         initialPlayback = true;
+        initialSteeringRequest = true;
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;

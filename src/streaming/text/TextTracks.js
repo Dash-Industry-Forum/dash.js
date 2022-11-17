@@ -504,6 +504,24 @@ function TextTracks(config) {
         cue.isActive = false;
         if (currentItem.webVttParserData) {
             cue.webVttParserData = currentItem.webVttParserData;
+        } else if (currentItem.styles) {
+            try {
+                if (currentItem.styles.align !== undefined && 'align' in cue) {
+                    cue.align = currentItem.styles.align;
+                }
+                if (currentItem.styles.line !== undefined && 'line' in cue) {
+                    cue.line = currentItem.styles.line;
+                }
+                if (currentItem.styles.position !== undefined && 'position' in cue) {
+                    cue.position = currentItem.styles.position;
+                }
+                if (currentItem.styles.size !== undefined && 'size' in cue) {
+                    cue.size = currentItem.styles.size;
+                }
+            }
+            catch(e) {
+                logger.error(e);
+            }
         }
 
         cue.onenter = function () {
