@@ -167,6 +167,10 @@ function NotFragmentedTextBufferController(config) {
         return null;
     }
 
+    function hasBufferAtTime() {
+        return true;
+    }
+
     function getAllRangesWithSafetyFactor() {
         return [];
     }
@@ -177,6 +181,10 @@ function NotFragmentedTextBufferController(config) {
 
     function clearBuffers() {
         return Promise.resolve();
+    }
+
+    function pruneBuffer() {
+        return;
     }
 
     function updateBufferTimestampOffset() {
@@ -222,6 +230,8 @@ function NotFragmentedTextBufferController(config) {
         getBuffer,
         getBufferLevel,
         getRangeAt,
+        pruneBuffer,
+        hasBufferAtTime,
         getAllRangesWithSafetyFactor,
         getContinuousBufferTimeForTargetTime,
         setMediaSource,

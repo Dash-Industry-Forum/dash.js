@@ -496,15 +496,14 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const oldTime = playbackController.getTime();
         const newTime = e.seekTime;
         const seekToStream = getStreamForTime(newTime);
 
         if (!seekToStream || seekToStream === activeStream) {
-            _cancelPreloading(oldTime, newTime);
+            _cancelPreloading();
             _handleInnerPeriodSeek(e);
         } else if (seekToStream && seekToStream !== activeStream) {
-            _cancelPreloading(oldTime, newTime, seekToStream);
+            _cancelPreloading(seekToStream);
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
@@ -513,19 +512,12 @@ function StreamController() {
 
     /**
      * Cancels the preloading of certain streams based on the position we are seeking to.
-     * @param {number} oldTime
-     * @param {number} newTime
-     * @param {boolean} isInnerPeriodSeek
+     * @param {object} seekToStream
      * @private
      */
-    function _cancelPreloading(oldTime, newTime, seekToStream = null) {
-        // Inner period seek forward
-        if (oldTime <= newTime && !seekToStream) {
-            _deactivateAllPreloadingStreams();
-        }
-
-        // Inner period seek: If we seek backwards we might need to prune the period(s) that are currently being prebuffered. For now deactivate everything
-        else if (oldTime > newTime && !seekToStream) {
+    function _cancelPreloading(seekToStream = null) {
+        // Inner period seek
+        if (!seekToStream) {
             _deactivateAllPreloadingStreams();
         }
 
@@ -552,6 +544,7 @@ function StreamController() {
     /**
      * Handle an inner period seek. Prepare all StreamProcessors for the seek.
      * @param {object} e
+     * @param {number} oldTime
      * @private
      */
     function _handleInnerPeriodSeek(e) {
