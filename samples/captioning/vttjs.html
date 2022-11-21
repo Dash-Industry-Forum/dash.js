@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>WebVTT example</title>
+    <title>WebVTT Custom Rendering</title>
     <script src="../../contrib/videojs-vtt.js/vtt.js"></script>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
@@ -26,8 +26,7 @@
 
     <script class="code">
         function init() {
-            var url = "https://arteptweb-a.akamaihd.net/test/CMAF/corner_uhd/068000/068300/068394-000-F/20220915142906/068394-000-F_malonlyvtt5.mpd",
-                // var url = "https://arte-cmafdash.akamaized.net/tests/098124-000-A_v1/098124-000-A_v1.mpd",
+            var url = 'https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd',
                 video = document.querySelector('video'),
                 vttRenderingDiv,
                 player;
@@ -65,8 +64,10 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>WebVTT Dash Demo</h3>
-                    <p>This example shows how content with VTT captions can be played back by the dash.js player. First
+                    <h3>WebVTT Custom Rendering Demo</h3>
+                    <p>This example shows how content with VTT captions can be played back by the dash.js player using
+                        the external vtt.js library. This enables VTT support on devices that do not provide native VTT
+                        support. <p>The first
                         captions appear at the 15s mark.</p>
                     <p>Note: This sample will only work when using http as the subtitles are not hosted via https.</p>
                 </div>
