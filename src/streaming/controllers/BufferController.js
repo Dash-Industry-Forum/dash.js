@@ -621,6 +621,35 @@ function BufferController(config) {
         seekTarget = NaN;
     }
 
+    function hasBufferAtTime(time) {
+        try {
+            const ranges = sourceBufferSink.getAllBufferRanges();
+
+            if (!ranges || ranges.length === 0) {
+                return false;
+            }
+
+            let i = 0;
+
+            while (i < ranges.length) {
+                const start = ranges.start(i);
+                const end = ranges.end(i);
+
+                if (time >= start && time <= end) {
+                    return true;
+                }
+
+                i += 1;
+            }
+
+            return false
+
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
     function getRangeAt(time, tolerance) {
         const ranges = sourceBufferSink.getAllBufferRanges();
         let start = 0;
@@ -1100,6 +1129,8 @@ function BufferController(config) {
         getBuffer,
         getBufferLevel,
         getRangeAt,
+        hasBufferAtTime,
+        pruneBuffer,
         setMediaSource,
         getMediaSource,
         appendInitSegmentFromCache,
