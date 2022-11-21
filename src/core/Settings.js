@@ -137,7 +137,10 @@ import Events from './events/Events';
  *                scheduleWhilePaused: true
  *            },
  *            text: {
- *                defaultEnabled: true
+ *                defaultEnabled: true,
+ *                webvtt: {
+ *                    customRenderingEnabled: false
+ *                }
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
@@ -448,6 +451,9 @@ import Events from './events/Events';
  * @typedef {Object} Text
  * @property {number} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {object} [webvtt={customRenderingEnabled=false}]
+ * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
+ * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
 
 /**
