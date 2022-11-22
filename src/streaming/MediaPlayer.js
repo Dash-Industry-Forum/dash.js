@@ -1425,6 +1425,13 @@ function MediaPlayer() {
         videoModel.setTTMLRenderingDiv(div);
     }
 
+    function attachVttRenderingDiv(div) {
+        if (!videoModel.getElement()) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        videoModel.setVttRenderingDiv(div);
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2441,6 +2448,7 @@ function MediaPlayer() {
         setCustomInitialTrackSelectionFunction,
         resetCustomInitialTrackSelectionFunction,
         attachTTMLRenderingDiv,
+        attachVttRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,
         getDashAdapter,

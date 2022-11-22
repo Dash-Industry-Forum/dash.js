@@ -500,6 +500,18 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "WebVTT Custom Rendering",
+                "description": "This example shows how content with VTT captions can be played back by the dash.js player using the external vtt.js library. This enables VTT support on devices that do not provide native VTT support.",
+                "href": "captioning/vttjs.html",
+                "image": "lib/img/sintel-1.jpg",
+                "labels": [
+                    "VoD",
+                    "External caption",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
