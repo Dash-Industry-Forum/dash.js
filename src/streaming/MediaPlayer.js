@@ -593,6 +593,10 @@ function MediaPlayer() {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
+        if (value < 0) {
+            value = 0;
+        }
+
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
 
         // For VoD limit the seek to the duration of the content
