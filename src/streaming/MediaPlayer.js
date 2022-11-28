@@ -1847,6 +1847,12 @@ function MediaPlayer() {
             uriFragmentModel.initialize(urlOrManifest);
         }
 
+        if (startTime == null || isNaN(startTime)) {
+            startTime = NaN;
+        }
+
+        startTime = Math.max(0, startTime);
+
         source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
