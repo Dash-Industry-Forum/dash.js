@@ -1,0 +1,92 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="top"
+    android:paddingLeft="3dp"
+    android:paddingRight="3dp"
+    tools:context=".MainActivity" >
+
+	<LinearLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_vertical"
+	    android:orientation="horizontal" >
+
+	    <Spinner
+		    android:id="@+id/streamOptions"
+		    android:layout_width="0dip"
+		    android:layout_weight="1"
+		    android:layout_height="wrap_content" />
+	    
+	    <android.support.v7.app.MediaRouteButton
+	        android:id="@+id/media_route_button"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:layout_weight=".25"
+	        android:mediaRouteTypes="user"
+	        android:visibility="visible" />
+	    
+    </LinearLayout>
+    
+	<LinearLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_vertical"
+	    android:orientation="horizontal" >
+ 
+ 		<ToggleButton 
+		    android:id="@+id/play_pause_toggle"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:textOn="Pause"
+		    android:textOff="Play"/>
+ 	    
+	    <ToggleButton 
+		    android:id="@+id/sound_toggle"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:textOn="Sound on"
+		    android:textOff="Sound off"/>
+	    
+    </LinearLayout>
+    
+	<LinearLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_vertical"
+	    android:orientation="horizontal" >
+	
+	    <TextView
+	        android:layout_width="wrap_content" 
+			android:layout_height="wrap_content" 
+			android:text="Volume:"/>
+	    
+		<SeekBar 
+		    android:id="@+id/volume_bar"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"/>
+		
+	</LinearLayout>
+	
+	<LinearLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_vertical"
+	    android:orientation="horizontal" >
+	
+	    <TextView
+	        android:layout_width="wrap_content" 
+			android:layout_height="wrap_content" 
+			android:text="Scrub:"/>
+	    
+		<SeekBar 
+		    android:id="@+id/scrub_bar"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"/>
+		
+	</LinearLayout>
+	
+</LinearLayout>

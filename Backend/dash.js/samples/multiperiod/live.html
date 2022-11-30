@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiperiod Live example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 100%;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, url, true);
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Multiperiod live example</h3>
+                    <p>Example showing how dash.js handles live streams with multiple periods. A new period starts every minute.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

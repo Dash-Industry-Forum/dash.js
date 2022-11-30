@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<head>
+    <title>Fraunhofer Fokus - Ad Insertion Sample</title>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fokus.png"
+                                                                                     class="img-responsive"></a></div>
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fame.png"
+                                                                                     class="img-responsive "></a></div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <h4>Post-Roll Ad-Insertion with DASH + W3C MediaSource Extensions + Inline Event MPD Reload</h4>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Working principle</h3>
+                </div>
+                <div class="panel-body">
+                    <ol>
+                        <li>The server provides an MPD containing an InlineEventStream element on Period Level. The
+                            schmeIdUri and the value of the Eventstream are set according to ISO/IEC 23009-1
+                            5.10.4.1.<br>
+<pre>&lt;EventStream schemeIdUri="urn:mpeg:dash:event:2012" value="1"&gt;
+&lt;Event presentationTime="5" id="1"/&gt;
+&lt;EventStream&gt;</pre>
+                            Additionally one segment contains an EMSG Box with the same schemeIdUri and the same value.
+                        </li>
+                        <li>During the playback the Client parses the inline event and schedules the MPD Reload.</li>
+                        <li>The new MPD contains an additional period with ad content, which will be played after 20
+                            seconds
+                        </li>
+                    </ol>
+                    <img src="img/event_wf.png" class="img-responsive">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <video controls="true" id="vid" width="640" height="480"></video>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2"><p><a href="index.html">Back to selection</a></p></div>
+    </div>
+</div>
+
+<script> (function () {
+    $.get("https://se-mashup.fokus.fraunhofer.de/getAdSession", function (data) {
+        var url = "https://se-mashup.fokus.fraunhofer.de/dash/assets/adinsertion-samples/events/inline/dash.mpd?sid=" + data.sessionID;
+        var player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector("#vid"), url, true);
+    })
+})();
+</script>
+</body>
+</html>

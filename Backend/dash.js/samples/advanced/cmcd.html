@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CMCD Reporting</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #trace {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+    </style>
+
+    <script class="code">
+        var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
+
+        /* possible modes of attach cmcd data */
+        var CMCD_MODE_QUERY = 'query'; /* as query parameters */
+        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var player;
+
+        function init() {
+            var video,
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+                version;
+
+            player = dashjs.MediaPlayer().create();
+            video = document.querySelector('video');
+            player.initialize();
+            version = player.getVersion();
+
+            player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
+
+            player.updateSettings({
+                streaming: {
+                    cmcd: {
+                        enabled: true, /* enable reporting of cmcd parameters */
+                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
+                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
+                        mode: CMCD_MODE_QUERY,
+                        enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                    }
+                }
+            });
+            player.setAutoPlay(false);
+            player.attachView(video);
+            player.attachSource(url);
+        }
+
+        function handleCmcdDataGeneratedEvent(event) {
+            log('type: ' + event.mediaType);
+            log('file: ' + event.url.split('/').pop())
+            var mode = player.getSettings().streaming.cmcd.mode;
+            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            var keys = Object.keys(data);
+            keys = keys.sort();
+            for (var key of keys) {
+                log(key.padEnd(4) + ': ' + event.cmcdData[key]);
+            }
+            log('');
+        }
+
+        function getKeysForQueryMode(event) {
+            var cmcdData = {};
+            var cmcdString = event.cmcdString;
+
+            extractKeyValuePairs(cmcdString, cmcdData);
+
+            return cmcdData;
+        }
+
+        function getKeysForHeaderMode(event) {
+            var cmcdData = {};
+            var keys = Object.keys(event.headers);
+
+            for (var key of keys) {
+                extractKeyValuePairs(event.headers[key], cmcdData)
+            }
+            
+            return cmcdData
+        }
+
+        function extractKeyValuePairs(cmcdString, cmcdData) {
+            if (cmcdString === '') {
+                return;
+            }
+            var keyValuePairs = cmcdString.split(',');
+
+            keyValuePairs.forEach(function (keyValuePair) {
+                var data = keyValuePair.split('=');
+                var key = data[0];
+                var value = data[1];
+
+                cmcdData[key] = value;
+            })
+
+        }
+
+        function log(msg) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById('trace');
+            tracePanel.innerHTML += msg + '\n';
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>CMCD Reporting</h3>
+                    <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
+                        Client Data (CMCD - CTA 5004).</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                              id="trace"></textarea>
+                    <label for="trace">CMCD Data</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

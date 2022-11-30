@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js</OriginalElement>
+  <nodes>
+    <node x="327.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/utils/ErrorHandler.js</node>
+    <node x="0.0" y="133.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js</node>
+    <node x="210.0" y="342.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/metrics/HTTPRequest.js#HTTPRequest#1834;</node>
+    <node x="233.0" y="121.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#ErrorHandler#1944;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#FactoryMaker#1895;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#HTTPRequest#1842;</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#ErrorHandler#1944;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#FactoryMaker#1895;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#HTTPRequest#1842;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/utils/ErrorHandler.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#ErrorHandler#1944;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#FactoryMaker#1895;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#HTTPRequest#1842;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/metrics/HTTPRequest.js#HTTPRequest#1834;">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#ErrorHandler#1944;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#FactoryMaker#1895;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#HTTPRequest#1842;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="263.5" y="197.5" />
+  <SelectedNodes>
+    <node>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#ErrorHandler#1944;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#FactoryMaker#1895;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js#HTTPRequest#1842;</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

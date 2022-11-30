@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayerFactory.js</OriginalElement>
+  <nodes>
+    <node x="157.0" y="146.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayer.js</node>
+    <node x="0.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayerFactory.js#MediaPlayer#7;</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayerFactory.js#MediaPlayer#7;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayer.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="190.5" y="88.0" />
+  <SelectedNodes>
+    <node>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/MediaPlayerFactory.js#MediaPlayer#7;</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

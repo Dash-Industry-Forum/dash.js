@@ -1,0 +1,8 @@
+{
+  "include": [
+    "index.d.ts"
+  ],
+  "compilerOptions": {
+    "noImplicitAny": true
+  }
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content=""/>
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico"/>
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <link href="style.css" rel="stylesheet" type="text/css"/>
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <head>
+        <title>Fraunhofer Fokus - Ad Insertion Sample</title>
+        <script src="../../dist/dash.all.debug.js"></script>
+        <!--dash.all.min.js should be used in production over dash.all.debug.js
+            Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+        <!--<script src="../../dist/dash.all.min.js"></script>-->
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/main.css" rel="stylesheet">
+    </head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fokus.png"
+                                                                                     class="img-responsive"></a></div>
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fame.png"
+                                                                                     class="img-responsive "></a></div>
+    </div>
+    <div class="row">
+        <div class="col-md-5">
+            <h4>XLink sample page</h4>
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Working principle</h3>
+                </div>
+                <div class="panel-body">
+                    Remote elements are elements that are not fully contained inside the manifest and
+                    can be resolved via XML Linking Language (XLink). Only a subset of the XLink
+                    speciﬁcation is needed for DASH. In order to use XLink, two attributes namely “xlink:href” and
+                    “xlink:actuate” have to be included inside an element. While the
+                    former is used to specify an URL to the remote content, the latter deﬁnes the resolution time.
+                    This page gives an overview of different XLink resolution procedures with the xlink:actuate
+                    attribute set to "onLoad". To start a demo please click on a testcase.
+                    <div class="table-responsive">
+                        <table class="table table-condensed">
+                            <thead>
+                            <tr>
+                                <th>Testcase</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="tdcursor" id="xlink-two-per">Two periods</td>
+                                <td>Resolve two onLoad periods into two periods.
+ <pre>&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tdcursor" id="xlink-three-per">Three periods</td>
+                                <td>Resolve three onLoad periods into three periods.
+
+<pre>
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tdcursor" id="xlink-two-of-one">One period into two periods</td>
+                                <td>Resolve one onLoad period into two periods. <pre>
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tdcursor" id="xlink-three-of-two">Two periods into three periods</td>
+                                <td>Resolve two onLoad periods into three periods.
+                            <pre>
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tdcursor" id="xlink-one-as">One adaptation</td>
+                                <td>Resolve one AdaptationSet into one AdaptationSet.
+                            <pre>
+&lt;Period&gt;
+&lt;AdaptationSet xlink:href="http://someurl" xlink:actuate="onLoad"&gt;
+&lt;Period/&gt;
+</pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="tdcursor" id="xlink-one-ases">One adaptation one eventstream</td>
+                                <td>Resolve one AdapatationSet and one EventStream.<pre>
+&lt;Period&gt;
+&lt;AdaptationSet xlink:href="http://someurl" xlink:actuate="onLoad"&gt;
+&lt;EventStream xlink:href="http://someurl" xlink:actuate="onLoad"/&gt;
+&lt;Period/&gt;
+</pre>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <video controls="true" id="vid" width="640" height="480"></video>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2"><p><a href="index.html">Back to selection</a></p></div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector("#vid"));
+
+        document.getElementById('xlink-two-per').addEventListener('click', function () {
+            player.attachSource("https://dash.akamaized.net/fokus/adinsertion-samples/xlink/twoperiods.mpd");
+        });
+        document.getElementById('xlink-three-per').addEventListener('click', function () {
+            player.attachSource('https://dash.akamaized.net/fokus/adinsertion-samples/xlink/threeperiods.mpd');
+        });
+        document.getElementById('xlink-two-of-one').addEventListener('click', function () {
+            player.attachSource('https://dash.akamaized.net/fokus/adinsertion-samples/xlink/twoperiods_of_one.mpd');
+        });
+        document.getElementById('xlink-three-of-two').addEventListener('click', function () {
+            player.attachSource('https://dash.akamaized.net/fokus/adinsertion-samples/xlink/threeperiods_of_two.mpd');
+        });
+        document.getElementById('xlink-one-as').addEventListener('click', function () {
+            player.attachSource('https://dash.akamaized.net/fokus/adinsertion-samples/xlink/singleas.mpd');
+        });
+        document.getElementById('xlink-one-ases').addEventListener('click', function () {
+            player.attachSource('https://dash.akamaized.net/fokus/adinsertion-samples/xlink/singleases.mpd');
+        });
+
+    })();
+
+</script>
+</body>
+</html>

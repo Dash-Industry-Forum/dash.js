@@ -1,0 +1,18 @@
+{
+  "name": "dash_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-watch": "^0.7.3",
+    "nodemon": "^2.0.19",
+    "xml-formatter": "^2.6.1",
+    "xml2json": "^0.12.0"
+  }
+}
