@@ -593,6 +593,10 @@ function MediaPlayer() {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
+        if (value < 0) {
+            value = 0;
+        }
+
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
 
         // For VoD limit the seek to the duration of the content
@@ -1846,6 +1850,12 @@ function MediaPlayer() {
         if (typeof urlOrManifest === 'string') {
             uriFragmentModel.initialize(urlOrManifest);
         }
+
+        if (startTime == null || isNaN(startTime)) {
+            startTime = NaN;
+        }
+
+        startTime = Math.max(0, startTime);
 
         source = urlOrManifest;
 
