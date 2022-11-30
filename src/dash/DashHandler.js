@@ -331,8 +331,8 @@ function DashHandler(config) {
                 return NaN;
             }
 
-            // Only look 30 seconds ahead
-            const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+            // Look until the end of the period
+            const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration);
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
             let targetRequest = null;
