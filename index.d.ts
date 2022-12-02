@@ -332,7 +332,9 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
                 enabledKeys?: Array<string>
-            }
+            },
+            cmsd?: {
+                enabled?: boolean,
         };
         errors?: {
             recoverAttempts?: {
