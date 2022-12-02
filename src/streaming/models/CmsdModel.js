@@ -39,6 +39,25 @@ const CMSD_DYNAMIC = 'dynamic';
 const CMSD_RESPONSE_FIELD_BASENAME = 'cmsd-';
 const CMSD_STATIC_RESPONSE_FIELD_NAME = CMSD_RESPONSE_FIELD_BASENAME + CMSD_STATIC;
 const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = CMSD_RESPONSE_FIELD_BASENAME + CMSD_DYNAMIC;
+const CMSD_KEYS = {
+    AVAILABILITY_TIME: 'at',
+    DURESS: 'du',
+    ENCODED_BITRATE: 'br',
+    ESTIMATED_THROUGHPUT: 'etp',
+    HELD_TIME: 'ht',
+    INTERMEDIARY_IDENTIFIER: 'n',
+    MAX_SUGGESTED_BITRATE: 'mb',
+    NEXT_OBJECT_RESPONSE: 'nor',
+    NEXT_RANGE_RESPONSE: 'nrr',
+    OBJECT_DURATION: 'd',
+    OBJECT_TYPE: 'ot',
+    RESPONSE_DELAY: 'rd',
+    ROUND_TRIP_TIME: 'rtt',
+    STARTUP: 'su',
+    STREAM_TYPE: 'st',
+    STREAMING_FORMAT: 'sf',
+    VERSION: 'v'
+}
 const OBJECT_TYPES = {
     MANIFEST: 'm',
     AUDIO: 'a',
@@ -186,7 +205,7 @@ function CmsdModel() {
         }
 
         // Get object type
-        const ot = staticParams['ot'] || OBJECT_TYPES.STREAM;
+        const ot = staticParams[CMSD_KEYS.OBJECT_TYPE] || OBJECT_TYPES.STREAM;
 
         // Merge params with previously received params 
         _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
@@ -195,7 +214,7 @@ function CmsdModel() {
 
     function getMaxBitrate(type) {
         let ot = _mediaTypetoObjectType(type);
-        let mb = _getParamValueForObjectType(CMSD_DYNAMIC, ot, 'mb');
+        let mb = _getParamValueForObjectType(CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
         return mb ? mb : -1
     }
 
