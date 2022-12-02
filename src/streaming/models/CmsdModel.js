@@ -181,10 +181,12 @@ function CmsdModel() {
     }
 
     function parseResponseHeaders(responseHeaders) {
-        let staticParams = {};
-        let dynamicParams = {};
-        const headerArray = responseHeaders.split('\r\n');
-        for (let header of headerArray) {
+        let staticParams = null;
+        let dynamicParams = null;
+        const headers = responseHeaders.split('\r\n');
+        // Ge in reverse order in order to consider only last CMSD-Dynamic header
+        for (let i = headers.length - 1; i >= 0; i--) {
+            const header = headers[i];
             let m = header.match(/^(?<key>[^:]*):\s*(?<value>.*)$/);
             if (m && m.groups) {
                 // Note: in modern browsers, the header names are returned in all lower case
@@ -196,7 +198,9 @@ function CmsdModel() {
                         eventBus.trigger(Events.CMSD_STATIC_HEADER, staticParams);
                         break;
                     case CMSD_DYNAMIC_RESPONSE_FIELD_NAME:
-                        dynamicParams = _parseCMSDDynamic(value);
+                        if (!dynamicParams) {
+                            dynamicParams = _parseCMSDDynamic(value);
+                        }
                         break;
                     default:
                         break;
@@ -208,8 +212,12 @@ function CmsdModel() {
         const ot = staticParams[CMSD_KEYS.OBJECT_TYPE] || OBJECT_TYPES.STREAM;
 
         // Merge params with previously received params 
-        _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
-        _dynamicParamsDict[ot] = Object.assign(_dynamicParamsDict[ot] || {}, dynamicParams);
+        if (staticParams) {
+            _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
+        }
+        if (dynamicParams) {
+            _dynamicParamsDict[ot] = Object.assign(_dynamicParamsDict[ot] || {}, dynamicParams);
+        }
     }
 
     function getMaxBitrate(type) {
