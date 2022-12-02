@@ -73,6 +73,7 @@ function AbrController() {
         videoModel,
         mediaPlayerModel,
         customParametersModel,
+        cmsdModel,
         domStorage,
         playbackIndex,
         switchHistoryDict,
@@ -243,6 +244,9 @@ function AbrController() {
         if (config.customParametersModel) {
             customParametersModel = config.customParametersModel;
         }
+        if (config.cmsdModel) {
+            cmsdModel = config.cmsdModel
+        }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -366,6 +370,7 @@ function AbrController() {
             }
 
             idx = _checkMaxBitrate(type, streamId);
+            idx = _checkCmsdMaxBitrate(idx, type, streamId);
             idx = _checkMaxRepresentationRatio(idx, type, streamId);
             idx = _checkPortalSize(idx, type, streamId);
             return idx;
@@ -459,6 +464,22 @@ function AbrController() {
         }
 
         return newIdx;
+    }
+
+    /**
+     * Returns the maximum possible index from CMSD model
+     * @param type
+     * @param streamId
+     * @return {number|*}
+     */
+    function _checkCmsdMaxBitrate(idx, type, streamId) {
+        const maxCmsdBitrate = cmsdModel.getMaxBitrate(type);
+        if (maxCmsdBitrate < 0) {
+            return idx;
+        }
+        logger.info('Stream ID: ' + streamId + ' [' + type + '] Apply max bit rate from CMSD: ' + maxCmsdBitrate);
+        const maxIdx = getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxCmsdBitrate, streamId);
+        return Math.min(idx, maxIdx);
     }
 
     /**

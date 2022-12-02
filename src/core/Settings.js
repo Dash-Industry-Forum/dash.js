@@ -213,6 +213,9 @@ import Events from './events/Events';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+ *            },
+ *            cmsd: {
+ *                enabled: false
  *            }
  *          },
  *          errors: {
@@ -655,6 +658,12 @@ import Events from './events/Events';
  */
 
 /**
+ * @typedef {Object} module:Settings~CmsdSettings
+ * @property {boolean} [enabled=false]
+ * Enable or disable the CMSD parsing.
+ */
+
+/**
  * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
  * Maximum number of metrics that are persisted per type.
@@ -752,6 +761,8 @@ import Events from './events/Events';
  * Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd
  * Settings related to Common Media Client Data reporting.
+ * @property {module:Settings~CmsdSettings} cmsd
+ * Settings related to Common Media Server Data parsing.
  */
 
 
@@ -966,6 +977,9 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+            },
+            cmsd: {
+                enabled: false
             }
         },
         errors: {

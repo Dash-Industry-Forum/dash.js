@@ -283,6 +283,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     // Starting Options
     $scope.autoPlaySelected = true;
     $scope.cmcdEnabled = false;
+    $scope.cmsdEnabled = false;
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
@@ -878,6 +879,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             'streaming': {
                 'cmcd': {
                     'enabled': $scope.cmcdEnabled
+                }
+            }
+        });
+    };
+
+    $scope.toggleCmsdEnabled = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'cmsd': {
+                    'enabled': $scope.cmsdEnabled
                 }
             }
         });

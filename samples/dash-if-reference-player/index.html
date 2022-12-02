@@ -835,6 +835,17 @@
                        ng-change="updateCmcdEnabledKeys()">
             </div>
         </div>
+        <div class="options-item">
+            <div class="options-item-title">CMSD</div>
+            <div class="options-item-body">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables parsing of CMSD response header parameters">
+                    <input type="checkbox" ng-model="cmsdEnabled" ng-change="toggleCmsdEnabled()"
+                           ng-checked="cmsdEnabled">
+                    Enable CMSD Parsing
+                </label>
+            </div>
+        </div>
 
     </div>
 
