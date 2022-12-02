@@ -334,7 +334,8 @@ declare namespace dashjs {
                 enabledKeys?: Array<string>
             },
             cmsd?: {
-                enabled?: boolean,
+                enabled?: boolean
+            }
         };
         errors?: {
             recoverAttempts?: {
