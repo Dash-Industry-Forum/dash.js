@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Daniel Silhavy">
+    <title>Samples players for dash.js</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        #tab-list {
+            margin-bottom: 10px;
+        }
+
+        .card-footer {
+            border: none;
+            background: #FFFFFF;
+        }
+
+        .card-title > a {
+            text-decoration: none;
+        }
+    </style>
+
+
+</head>
+<body>
+
+
+<main>
+    <div class="album py-5 bg-white">
+        <div class="container">
+            <header class="pb-3 mb-4 border-bottom">
+                <img class=""
+                     src="./lib/img/dashjs-logo.png"
+                     width="200">
+            </header>
+
+            <h2>Samples</h2>
+
+            <p class="lead"><a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"> dash.js </a> is a
+                reference client implementation by the <a href="http://dashif.org" target="_blank">DASH Industry
+                    Forum</a> (DASH-IF) for the playback of MPEG-DASH via JavaScript
+                and compliant
+                MSE/EME platforms. This page provides a starting point with multiple samples to explore the various
+                dash.js features and settings.</p>
+
+            <p class="lead">A reference UI encapsulating the main functionality of dash.js is available <a
+                target="_blank" href="dash-if-reference-player/index.html"> here </a>.
+            </p>
+
+            <p>
+            <figcaption class="blockquote-footer"> The DASH Industry Forum is
+                a non-profit industry forum formed to catalyze the adoption of MPEG-DASH. They define common versions of
+                DASH
+                which other standards bodies (such as DVB and HbbTV) then formalize.
+                This player is intended to provide a reference implementation. Note the player is just a UI on top of
+                the same
+                framework used in all these samples. In using dash.js you are inheriting
+                much of the latest thinking of the DASH ecosystem.
+            </figcaption>
+            </p>
+
+
+            <div class="row">
+                <div class="col">
+                    <ul class="nav nav-tabs" id="tab-list" role="tablist">
+                    </ul>
+                    <div class="tab-content" id="tab-content">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+<hr>
+<footer class="text-muted py-5">
+    <div class="container">
+        Copyright DASH Industry Forum 2012-2021
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="./lib/bootstrap/bootstrap.bundle.min.js"></script>
+
+
+<div style="display: none">
+    <div class="col" id="card-sample">
+        <div class="card h-100 shadow-sm">
+            <img class="card-img-top" src="">
+            <div class="card-body">
+                <h5 class="card-title"></h5>
+                <p class="card-text"></p>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span> </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var sampleData = [];
+    $(document).ready(function () {
+        $.getJSON('samples.json', function (json) {
+            sampleData = json;
+            drawSampleData();
+            selectSection();
+            registerCallbacks();
+        });
+    });
+
+    function drawSampleData() {
+        sampleData.forEach(function (section) {
+            drawSection(section);
+            drawSectionSamples(section);
+        });
+    }
+
+    function selectSection() {
+        try {
+            var hash = decodeURI(window.location.hash);
+            var element = document.querySelector(hash + '-tab')
+            var tab = new bootstrap.Tab(element)
+            tab.show();
+        } catch (e) {
+            
+        }
+    }
+    
+    function registerCallbacks() {
+        var tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]')
+        tabEls.forEach(function (tabEl) {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                location.hash = event.target.attributes.href.nodeValue;
+            })    
+        })
+    }
+
+    function drawSection(section) {
+        var idFromName = nameToId(section.section)
+        var $tab = $('<li class="nav-item" role="presentation">\n' +
+            '        <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#home"\n' +
+            '                type="button" role="tab" aria-controls="home" aria-selected="true">Home\n' +
+            '        </button>\n' +
+            '    </li>');
+        var $link = $tab.find('button');
+        $link.attr('id', idFromName + '-tab');
+        $link.attr('data-bs-target', '#' + idFromName);
+        $link.attr('aria-controls', idFromName);
+        $link.attr('href', '#' + idFromName);
+        $link.html(section.section);
+        if (section.active) {
+            $link.addClass('active');
+        }
+        $('#tab-list').append($tab);
+
+        var $tabContainer = $('    <div class="tab-pane fade show" id="home" role="tabpanel" aria-labelledby="home-tab"></div>');
+        var $tabContainerRow = $('<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-2"></div>');
+
+        $tabContainer.attr('id', idFromName);
+        $tabContainer.attr('aria-labelledby', idFromName + '-tab');
+        $tabContainerRow.attr('id', idFromName + '-tab-container-row');
+
+        $($tabContainer).append($tabContainerRow);
+        $('#tab-content').append($tabContainer);
+    }
+
+    function drawSectionSamples(section) {
+        var $tabContainer = $('#' + nameToId(section.section));
+        var $tabContainerRow = $('#' + nameToId(section.section) + '-tab-container-row');
+        section.samples.forEach(function (sample) {
+            var $card = $('#card-sample').clone(true);
+            $card.attr('id', '');
+            var image = sample.image ? sample.image : './lib/img/dashjs-logo-border.png';
+            $card.find('img').attr('src', image);
+            $card.find('h5').html('<a href="' + sample.href + '" target="_blank">' + sample.title + '</a>');
+            $card.find('p').html(sample.description);
+            $card.find('a').attr('href', sample.href);
+            $card.find('small').text(section.section);
+
+            var labels = '';
+
+            if (sample.labels && sample.labels.length > 0) {
+                sample.labels.forEach(function (label) {
+                    labels += '<span class="badge bg-secondary me-1">' + label + '</span>';
+                })
+            }
+
+            $card.find('span').append(labels);
+
+            $tabContainerRow.append($card);
+        });
+
+        if (section.active) {
+            $tabContainer.addClass('active show');
+        }
+    }
+
+    function nameToId(name) {
+        return name.replace(/[^a-z0-9]/gmi, '');
+    }
+</script>
+</body>
+</html>

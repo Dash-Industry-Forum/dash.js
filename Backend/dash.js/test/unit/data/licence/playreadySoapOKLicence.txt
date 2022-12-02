@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<soap:Body>
+		<AcquireLicenseResponse xmlns="http://schemas.microsoft.com/DRM/2007/03/protocols">
+			<AcquireLicenseResult>
+				<Response xmlns="http://schemas.microsoft.com/DRM/2007/03/protocols/messages">
+					<LicenseResponse xmlns="http://schemas.microsoft.com/DRM/2007/03/protocols" Id="SignedData">
+						<Version>1</Version>
+						<Licenses>
+							<License>WE1SAAAAAAMA0znFg4ZvQ7BLWkG7LSi3AAMAAQAAAZQAAgAEAAAAOgACADYAAAAgAAAAOQAAABjYJ2Z4psK+RI+ICK4lWwGnAAEABQAAABIB9AD6AAAAAAAAAAMAAgAAAEQAAQASAAAAEAAAAABWVwYWAAAAEwAAAAxWVbSWAAEAMgAAAAwAAAAeAAEANAAAAAoH0AAAADMAAAAKAAEAAwAJAAAA8gABAAoAAACeLIIl1t8IS1/UVdXDo42EWAABAAMAgPOyUoXrYdbNXbRT4dH9217XpvJPNU5JjVObs+woGQM1zba1T7cXkdN5T21K/TTT8Eo6P93/fLZ+P5F8NAleDYP1MS02+hr6HeNnbJZiXXIyYWa5IMvuAXlv4R3+3mKnTPOLbJT8+sXNbL+vw5JG02VSIFFDkNnKWBdYyi26vG54AAAAKgAAAEwAAQBAjV34PvbuPF0cNONtj3vktMECpku3cRbeoXPOzS/GAN0zY5VFVVL9bNQV1HCCzfvwXMt9roQQiXd0xxMBSh5XOAABAAsAAAAcAAEAEKHK9sT5xF+MhBWFZkp+yYA=</License>
+							<License>WE1SAAAAAAPdPVB4uW7sTr5caFt2bnajAAMAAQAAAZQAAgAEAAAAOgACADYAAAAgAAAAOQAAABjYJ2Z4psK+RI+ICK4lWwGnAAEABQAAABIB9AD6AAAAAAAAAAMAAgAAAEQAAQASAAAAEAAAAABWWFeWAAAAEwAAAAxWVbSWAAEAMgAAAAwAAAAeAAEANAAAAAoH0AAAADMAAAAKAAEAAwAJAAAA8gABAAoAAACetE2vrT7F/pDQJP+PgUHBKQABAAMAgKBopGsgerfUQt3IPrsX+A7lRCqkEBa+SgRknU12kvKQU9nAHdVmJxfaENI/Wp6XHT7mMwyx6DgXIfblX+ZReLa1o0KB+QQo3JQRwb3NRfXrF8tW4f5q6SJcTNjaF4ONA1LUOjOuZ7VrfQSvK9p/NYIUo70JbKY+/kvs84rJ9mv4AAAAKgAAAEwAAQBAjV34PvbuPF0cNONtj3vktMECpku3cRbeoXPOzS/GAN0zY5VFVVL9bNQV1HCCzfvwXMt9roQQiXd0xxMBSh5XOAABAAsAAAAcAAEAEH+zYjKBOTGgneKt1uFxFxw=</License>
+						</Licenses>
+						<LicenseNonce>nMvkcHHzMnBRfahx2OU1mA==</LicenseNonce>
+						<ResponseID>UhmjIrr5wArfgfDqtufD7xg0kD/U5hy1fq7N2r60gYA=</ResponseID>
+						<SigningCertificateChain>Q0hBSQAAAAEAAAOQAAAAAAAAAAJDRVJUAAAAAQAAAcwAAAE8AAEAAQAAAFgK0vVgrDHTACpw/lqQJFqsAAAAAAAAAAAAAAALE3e1eXDzrZzLDdZVbI5i78bUPmAjSy2Rik3kp6XI7K9aAkkAAAAAAAAAAAAAAAAAAAAAAAABAA8AAAAMAAAALQABAAUAAAAQAAAAAQAAAAwAAQAGAAAAYAAAAAEAAQIAAAAAAD8z45tPPU/WQxkd+lLCN2TYqHbYoZ+CGvgy/ZN6px8tgrOUIEYPrxUUmcL9p4EcnXeJTpwL/cmCOcpwmFJFDb4AAAACAAAAAQAAABQAAAAHAAAAWAAAAAAAAAAOVmlhY2Nlc3MtT3JjYQAAAAAAAChQbGF5UmVhZHkgU2VydmVyIERlcGxveW1lbnQgQ2VydGlmaWNhdGUAAAAABjQyMjQyAAAAAAEACAAAAJAAAQBApkcvLH3cIHOrecKFs8cwq+XccSz8TKEJdeySxzB8fLWXnP2y7W+8vlGoUrmCU6t++0NW0frs3InbAS39/8L46wAAAgDNHddz+oiHRZKMm1Isw8y5uUHyJ1K/jzTaWU4vRKMhRXXtR1kr7zsmMQzhfLUrgo+JXj+DJ/N1yZvDCwxGfEYmQ0VSVAAAAAEAAAGwAAABIAABAAEAAABYmgoLNjK7RTGjazONWZH0bwAAAAAAAAAAAAAABPaIVPWtSmiciPW1MKsGlcQTqO0eMUvoBvB79BEnQbZ8/////wAAAAAAAAAAAAAAAAAAAAAAAQAFAAAADAAAAAAAAQAGAAAAYAAAAAEAAQIAAAAAAM0d13P6iIdFkoybUizDzLm5QfInUr+PNNpZTi9EoyFFde1HWSvvOyYxDOF8tSuCj4leP4Mn83XJm8MLDEZ8RiYAAAACAAAAAQAAAA8AAAAHAAAATAAAAAAAAAAKTWljcm9zb2Z0AAAAAAAAHVBsYXlSZWFkeSBTTDAgU2VydmVyIFJvb3QgQ0EAAAAAAAAACDEuMC4wLjEAAAEACAAAAJAAAQBAOjj5VWrMfYHeH+3Z2aEthKFrm6yhopLn5sdhw99G8nBbuad9WMOvWC1ZHklRdhhDtf07US/Y7sNA9sBLQpff8wAAAgCGTWHP8iVuQixWizwoABz7PhUnZYWEugUht5sYKNk23h2Cao/D5uf6epDVyilG8fZKLvufXc/+fkNOtEKT+sWr</SigningCertificateChain>
+					</LicenseResponse>
+					<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+						<SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+							<CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+							<SignatureMethod Algorithm="http://schemas.microsoft.com/DRM/2007/03/protocols#ecdsa-sha256"/>
+							<Reference URI="#SignedData">
+								<DigestMethod Algorithm="http://schemas.microsoft.com/DRM/2007/03/protocols#sha256"/>
+								<DigestValue>PjcoBmhxb2DPWtbre7QtipexPvDMIMae86RCA1WaMvE=</DigestValue>
+							</Reference>
+						</SignedInfo>
+						<SignatureValue>ZhbrS8KGHDNIxqHIC6MaShUlRTQ4wox/AJaR4takwmx9HLTQ5WU/3RUNZjj2KCyKwV88ulF1bZzLisI6oQF0Iw==</SignatureValue>
+					</Signature>
+				</Response>
+			</AcquireLicenseResult>
+		</AcquireLicenseResponse>
+	</soap:Body>
+</soap:Envelope>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<head>
+    <title>Fraunhofer Fokus - Ad Insertion Sample</title>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fokus.png"
+                                                                                     class="img-responsive"></a></div>
+        <div class="col-md-2"><a href="https://www.fokus.fraunhofer.de/go/fame"><img src="img/fame.png"
+                                                                                     class="img-responsive "></a></div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <h4>App based ad insertion based on SCTE35 Inband events</h4>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Working principle</h3>
+                </div>
+                <div class="panel-body">
+                    <p>During the playback of the main content, the DASH client transfers the SCTE35 inband events
+                        to an application that is registered for SCTE35 events. The application
+                        contacts the ad decision server through an interface like VAST in order to get the
+                        URL to an MPD that contains the ad content. This results in two diﬀerent manifest
+                        ﬁles, one for the main content and one for the ad content. Hence the use of multiple
+                        periods is not required. When it is time to play the ad the app pauses the playback
+                        of the main content and starts the ad content on a second DASH client. After the ad
+                        is ﬁnished the client resumes the playback of the main content. Since two diﬀerent
+                        DASH clients are involved, the playback typically also requires two video elements.</p>
+                    <p>This demo uses the DASH-IF DASH Live simulator and triggers an ad every two minutes with a
+                        duration of one minute. </p>
+                    <p><h4>Instructions</h4>
+                    <ul>
+                        <li> Please turn off your ad blocker if the ad is not shown correctly</li>
+                        <li> On mobile devices the playback may have to be started manually</li>
+                    </ul>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <video controls="true" id="vid" width="640" height="480"></video>
+            <video controls id="vidAd" width="640" height="480" style=" display:none;"></video>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2"><p><a href="index.html">Back to selection</a></p></div>
+    </div>
+</div>
+<script src="js/scte.js"></script>
+
+</body>
+</html>

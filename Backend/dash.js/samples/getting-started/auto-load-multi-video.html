@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Auto load multi video</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 320px;
+            height: 180px;
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Auto load multi video</h3>
+                    <p>This example shows how to auto-embed multiple instances of dash.js players in a page. To make it
+                        more difficult, one of the available video elements specifies a non-DASH source..</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6> This is a dash.js player that should autostart</h6>
+                        <div class="code">
+                            <video autoplay controls>
+                                <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                                        type="application/dash+xml"/>
+                            </video>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <hr>
+                        <h6>This is a dash.js player that should not autostart</h6>
+                        <div class="code">
+                            <video poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png" controls="true">
+                                <source
+                                    src="https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd"
+                                    type="application/dash+xml"/>
+                            </video>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <hr>
+                        <h6>This is a dash.js player that where the manifest is defined via the src attribute of
+                            the video element.</h6>
+                        <div class="code">
+                            <video data-dashjs-player autoplay
+                                   src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+<script src="../highlighter.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+ffmpeg -re -fflags +genpts -stream_loop -1 -i TearsOfSteel.mp4 \
+    -vn -c:a libopus -f rtp "rtp://127.0.0.1:8002" \
+    -filter_complex "drawbox=x=160:y=160:width=460:height=100:color=black@0.5:t=fill,\
+    drawtext=text='%{localtime\:%H\\\\\:%M\\\\\:%S}':x=160:y=160:\
+    fontfile=/usr/share/fonts/truetype/freefont/FreeSans.ttf:fontsize=80:fontcolor=white,\
+    split=3[s1][s2][s3]; \
+    [s1]scale=960x540[s1]; \
+    [s2]scale=1280x720[s2]; \
+    [s3]scale=1280x720[s3]" \
+    -c:v h264 \
+    -preset ultrafast \
+    -framerate 25 \
+    -b:v:1 2000K -maxrate:v:1 2000K -bufsize:v:1 2000K/2 \
+    -b:v:0 750K -maxrate:v:1 750K -bufsize:v:0 750K/2 \
+    -map [s3] -an -f rtp "rtp://127.0.0.1:8004" \
+    -map [s1] -map [s2] \
+    -map 0:a:0 \
+    -seg_duration 1 \
+    -use_template 1 \
+    -use_timeline 1 \
+    -window_size 30 \
+    -streaming 1 \
+    -remove_at_exit 1 \
+    -adaptation_sets 'id=0,streams=v id=1,streams=a' \
+    -f dash \
+    /home/omar/Desktop/dashplayer/manifest/live.mpd
+
+
+     export LD_LIBRARY_PATH=/usr/lib64
+      /opt/janus/bin/janus

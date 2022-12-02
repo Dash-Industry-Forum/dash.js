@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Listening to events example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+        
+        .btn {
+          margin-top: 3px;  
+        }
+        
+        #trace {
+            height:500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+    </style>
+
+    <script class="code">
+        var player,firstLoad = true;
+
+        function init() {
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
+        }
+
+        function showEvent(e)
+        {
+            log("Event received: " + e.type);
+            for (var name in e)
+            {
+
+                if (typeof e[name] != 'object') {
+                    log("    " + name + ": " + e[name]);
+                }
+            }
+            for (name in e)
+            {
+                if (typeof e[name] == 'object' )
+                {
+                    log("    " + name + ":");
+                    for (name2 in e[name])
+                    {
+                        log("        " + name2 + ": " + JSON.stringify(e[name][name2]));
+                    }
+                }
+            }
+        }
+
+
+        function log(msg) {
+            msg = msg.length > 90 ? msg.substring(0, 90) + "..." : msg; 
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+        function setListener(eventName)
+        {
+            player.on(dashjs.MediaPlayer.events[eventName],showEvent);
+            var element = document.createElement("input");
+            element.type = "button";
+            element.className = "btn btn-danger";
+            element.id = eventName;
+            element.value = "Remove " + eventName;
+            element.onclick = function() {
+                player.off(dashjs.MediaPlayer.events[eventName],showEvent);
+                document.getElementById("eventHolder").removeChild(element);
+            };
+            document.getElementById("eventHolder").appendChild(element);
+        }
+
+        function load(button)
+        {
+            var url = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
+
+            if (!firstLoad)
+            {
+                player.attachSource(url);
+            }
+            else
+            {
+                firstLoad = false;
+                button.value = "RELOAD PLAYER";
+                player.initialize(document.querySelector("video"), url, true);
+            }
+            document.getElementById("trace").innerHTML = "";
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Listening to events</h3>
+                    <p>Example showing how to listen to events raised by dash.js. This sample allows you to explore the various external events that are accessible from MediaPlayer. Events can be dynamically added and removed. <br/>
+                        Choose the events you would like to monitor before starting playback:</p>
+                    <div>
+                        <select class="form-select" id="availableEvents" onChange="setListener(this.options[this.selectedIndex].text)">
+                            <option selected disabled>Select an event ..</option>
+                            <option>BUFFER_EMPTY</option>
+                            <option>BUFFER_LOADED</option>
+                            <option>CAN_PLAY</option>
+                            <option>DYNAMIC_TO_STATIC</option>
+                            <option>ERROR</option>
+                            <option>LOG</option>
+                            <option>MANIFEST_LOADED</option>
+                            <option>METRIC_ADDED</option>
+                            <option>METRIC_CHANGED</option>
+                            <option>METRIC_UPDATED</option>
+                            <option>METRICS_CHANGED</option>
+                            <option>PERIOD_SWITCH_COMPLETED</option>
+                            <option>PERIOD_SWITCH_STARTED</option>
+                            <option>PLAYBACK_ENDED</option>
+                            <option>PLAYBACK_ERROR</option>
+                            <option>PLAYBACK_METADATA_LOADED</option>
+                            <option>PLAYBACK_PAUSED</option>
+                            <option>PLAYBACK_PLAYING</option>
+                            <option>PLAYBACK_PROGRESS</option>
+                            <option>PLAYBACK_RATE_CHANGED</option>
+                            <option>PLAYBACK_SEEKED</option>
+                            <option>PLAYBACK_SEEKING</option>
+                            <option>PLAYBACK_STARTED</option>
+                            <option>PLAYBACK_TIME_UPDATED</option>
+                            <option>PLAYBACK_WAITING</option>
+                            <option>STREAM_UPDATED</option>
+                            <option>STREAM_INITIALIZED</option>
+                            <option>TEXT_TRACK_ADDED</option>
+                            <option>TEXT_TRACKS_ADDED</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="h-100 p-5 border rounded-3">
+                    <h3>Active events</h3>
+                    <span id="eventHolder"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <video controls="true"></video>
+                <div>
+                    <input type="button" value="Load" onclick="load(this)"/>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Trapped events will be displayed here" id="trace"></textarea>
+                    <label for="trace">Event log</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "items": [
+    {
+      "name": "Digital Primates",
+      "logo": "app/img/dp.png",
+      "link": "http://www.digitalprimates.net"
+    },
+    {
+      "name": "Akamai",
+      "logo": "app/img/akamai.png",
+      "link": "http://www.akamai.com"
+    },
+    {
+      "name": "Microsoft Open Technologies",
+      "logo": "app/img/MSOpenTech.jpg",
+      "link": "http://msopentech.com"
+    },
+    {
+      "name": "Fraunhofer Fokus",
+      "logo": "app/img/fh_fokus.png",
+      "link": "https://www.fokus.fraunhofer.de/go/fame"
+    },
+    {
+      "name": "CableLabs",
+      "logo": "app/img/cablelabs.png",
+      "link": "http://www.cablelabs.com"
+    },
+    {
+      "name": "YouTube",
+      "logo": "app/img/youtube.png",
+      "link": "http://www.youtube.com"
+    },
+    {
+      "name": "Senthil",
+      "link": "https://github.com/senthil-codr"
+    },
+    {
+      "name": "Brightcove",
+      "logo": "app/img/brightcove.png",
+      "link": "https://www.brightcove.com"
+    },
+    {
+      "name": "Edgeware",
+      "logo": "app/img/edgeware.png",
+      "link": "http://www.edgeware.tv/"
+    },
+    {
+      "name": "Epic Labs",
+      "logo": "app/img/epiclabs.png",
+      "link": "https://www.epiclabs.io/"
+    }
+  ]
+}
