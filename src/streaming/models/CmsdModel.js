@@ -47,7 +47,8 @@ const OBJECT_TYPES = {
     CAPTION: 'c',
     ISOBMFF_TEXT_TRACK: 'tt',
     ENCRYPTION_KEY: 'k',
-    OTHER: 'o'
+    OTHER: 'o',
+    STREAM: 'stream' // Specific value for parameters without object type, which apply for all media/objects
 };
 // const STREAMING_FORMATS = {
 //     DASH: 'd',
@@ -154,8 +155,9 @@ function CmsdModel() {
 
     function _getParamValueForObjectType(paramsType, ot, key) {
         const params = paramsType === CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
-        const paramsForOT = params[ot] || params[OBJECT_TYPES.OTHER];
-        const value = paramsForOT[key] || params[OBJECT_TYPES.OTHER][key];
+        const otParams = params[ot] || {};
+        const streamParams = params[OBJECT_TYPES.STREAM] || {};
+        const value = otParams[key] || streamParams[key];
         return value;
     }
 
@@ -184,7 +186,7 @@ function CmsdModel() {
         }
 
         // Get object type
-        const ot = staticParams['ot'] || OBJECT_TYPES.OTHER;
+        const ot = staticParams['ot'] || OBJECT_TYPES.STREAM;
 
         // Merge params with previously received params 
         _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
