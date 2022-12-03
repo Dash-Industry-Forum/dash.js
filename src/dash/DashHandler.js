@@ -331,8 +331,8 @@ function DashHandler(config) {
                 return NaN;
             }
 
-            // Look until the end of the period
-            const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration);
+            // If we have a duration look until the end of the duration, otherwise maximum 30 seconds
+            const end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
             let targetRequest = null;
