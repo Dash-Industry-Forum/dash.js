@@ -4,10 +4,7 @@ import Errors from '../../src/core/errors/Errors';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import DashMetrics from '../../src/dash/DashMetrics';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import {
-    HTTPRequest
-}
-    from '../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
 import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
