@@ -209,7 +209,7 @@ function CmsdModel() {
         }
 
         // Get object type
-        const ot = staticParams[CMSD_KEYS.OBJECT_TYPE] || OBJECT_TYPES.STREAM;
+        const ot = staticParams ? staticParams[CMSD_KEYS.OBJECT_TYPE] || OBJECT_TYPES.STREAM : OBJECT_TYPES.STREAM;
 
         // Merge params with previously received params 
         if (staticParams) {
