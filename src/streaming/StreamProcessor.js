@@ -263,10 +263,22 @@ function StreamProcessor(config) {
     /**
      * When a seek within the corresponding period occurs this function initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
+     * @param {number} oldTime
      * @private
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
         return new Promise((resolve) => {
+
+            // If we seek to a buffered area we can keep requesting where we left before the seek
+            // If we seek back then forwards buffering will stop until we are below our buffer goal
+            // If we seek forwards then pruneBuffer() will make sure that the bufferToKeep setting is respected
+            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
+            if (hasBufferAtTargetTime) {
+                bufferController.pruneBuffer();
+                resolve();
+                return;
+            }
+
             // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
             scheduleController.clearScheduleTimer();
             fragmentModel.abortRequests();
@@ -316,8 +328,8 @@ function StreamProcessor(config) {
                 .catch((e) => {
                     logger.error(e);
                 });
-        });
 
+        })
     }
 
     /**

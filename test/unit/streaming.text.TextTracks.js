@@ -3,6 +3,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import VoHelper from './helpers/VOHelper';
 import VideoModelMock from './mocks/VideoModelMock';
+import Settings from '../../src/core/Settings';
 
 const SUBTITLE_DATA = 'subtitle lign 1';
 const chai = require('chai');
@@ -15,6 +16,7 @@ describe('TextTracks', function () {
     const voHelper = new VoHelper();
     let videoModelMock = new VideoModelMock();
     const streamInfo = voHelper.getDummyStreamInfo();
+    const settings = Settings(context).getInstance();
     let textTracks;
 
     beforeEach(function () {
@@ -53,12 +55,14 @@ describe('TextTracks', function () {
         delete global.document;
         delete global.window;
         delete global.navigator;
+        settings.reset();
     });
 
     beforeEach(function () {
         textTracks = TextTracks(context).create({
             videoModel: videoModelMock,
-            streamInfo
+            streamInfo,
+            settings
         });
         textTracks.initialize();
     });

@@ -226,7 +226,10 @@ declare namespace dashjs {
                 scheduleWhilePaused?: boolean
             },
             text?: {
-                defaultEnabled?: boolean
+                defaultEnabled?: boolean,
+                webvtt?: {
+                    customRenderingEnabled?: number
+                }
             },
             liveCatchup?: {
                 maxDrift?: number;
