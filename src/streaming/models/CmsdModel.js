@@ -83,7 +83,8 @@ const OBJECT_TYPES = {
 const MEDIATYPE_TO_OBJECTTYPE = {
     'video': OBJECT_TYPES.VIDEO,
     'audio': OBJECT_TYPES.AUDIO,
-    'text': OBJECT_TYPES.ISOBMFF_TEXT_TRACK
+    'text': OBJECT_TYPES.ISOBMFF_TEXT_TRACK,
+    'stream': OBJECT_TYPES.STREAM
 }
 
 const integerRegex = /^[-0-9]/
@@ -180,7 +181,7 @@ function CmsdModel() {
         return value;
     }
 
-    function parseResponseHeaders(responseHeaders) {
+    function parseResponseHeaders(responseHeaders, mediaType) {
         let staticParams = null;
         let dynamicParams = null;
         const headers = responseHeaders.split('\r\n');
@@ -209,7 +210,12 @@ function CmsdModel() {
         }
 
         // Get object type
-        const ot = staticParams ? staticParams[CMSD_KEYS.OBJECT_TYPE] || OBJECT_TYPES.STREAM : OBJECT_TYPES.STREAM;
+        let ot = OBJECT_TYPES.STREAM;
+        if (staticParams && staticParams[CMSD_KEYS.OBJECT_TYPE]) {
+            ot = staticParams[CMSD_KEYS.OBJECT_TYPE];
+        } else if (mediaType) {
+            ot = _mediaTypetoObjectType(mediaType)
+        }
 
         // Merge params with previously received params 
         if (staticParams) {

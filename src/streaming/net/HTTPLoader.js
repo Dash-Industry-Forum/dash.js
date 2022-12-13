@@ -128,6 +128,7 @@ function HTTPLoader(cfg) {
 
                 if (settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled) {
                     cmsdModel.parseResponseHeaders(responseHeaders);
+                    cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType);
                 }
 
                 dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
