@@ -232,6 +232,12 @@ function CmsdModel() {
         return mb ? mb : -1
     }
 
+    function getEstimatedThroughput(type) {
+        let ot = _mediaTypetoObjectType(type);
+        let etp = _getParamValueForObjectType(CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
+        return etp ? etp : null
+    }
+
     function reset() {
         _resetInitialSettings();
     }
@@ -241,7 +247,8 @@ function CmsdModel() {
         initialize,
         reset,
         parseResponseHeaders,
-        getMaxBitrate
+        getMaxBitrate,
+        getEstimatedThroughput
     };
 
     setup();
