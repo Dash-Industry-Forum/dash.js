@@ -258,7 +258,7 @@ function GapController() {
      * @return {boolean}
      */
     function _isTimeBuffered(ranges, currentTime) {
-        for(let i = 0, len = ranges.length; i < len; i++) {
+        for (let i = 0, len = ranges.length; i < len; i++) {
             if (currentTime >= ranges.start(i) && currentTime <= ranges.end(i)) {
                 return true;
             }
@@ -334,7 +334,7 @@ function GapController() {
             jumpToStreamEnd = true;
         }
 
-        if(enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) && _isTimeBuffered(ranges, currentTime)) {
+        if (enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) && _isTimeBuffered(ranges, currentTime)) {
             if (stallSeek === 0) {
                 logger.warn(`Toggle play pause to break stall`);
                 videoModel.pause();

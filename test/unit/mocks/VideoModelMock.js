@@ -176,6 +176,10 @@ class VideoModelMock {
         return {};
     }
 
+    getVttRenderingDiv() {
+        return
+    }
+
     setSource(source) {
         this.source = source;
     }
