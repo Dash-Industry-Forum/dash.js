@@ -131,6 +131,7 @@ __webpack_require__.r(__webpack_exports__);
   - don't add white-space text nodes
   - remove explicit RequireJS support
 */
+
 function X2JS(config) {
   'use strict';
 
@@ -138,51 +139,38 @@ function X2JS(config) {
   config = config || {};
   initConfigDefaults();
   initRequiredPolyfills();
-
   function initConfigDefaults() {
     if (config.escapeMode === undefined) {
       config.escapeMode = true;
     }
-
     if (config.attributePrefix === undefined) {
       config.attributePrefix = "_";
     }
-
     config.arrayAccessForm = config.arrayAccessForm || "none";
     config.emptyNodeForm = config.emptyNodeForm || "text";
-
     if (config.enableToStringFunc === undefined) {
       config.enableToStringFunc = true;
     }
-
     config.arrayAccessFormPaths = config.arrayAccessFormPaths || [];
-
     if (config.skipEmptyTextNodesForObj === undefined) {
       config.skipEmptyTextNodesForObj = true;
     }
-
     if (config.stripWhitespaces === undefined) {
       config.stripWhitespaces = true;
     }
-
     config.datetimeAccessFormPaths = config.datetimeAccessFormPaths || [];
-
     if (config.useDoubleQuotes === undefined) {
       config.useDoubleQuotes = false;
     }
-
     config.xmlElementsFilter = config.xmlElementsFilter || [];
     config.jsonPropertiesFilter = config.jsonPropertiesFilter || [];
-
     if (config.keepCData === undefined) {
       config.keepCData = false;
     }
-
     if (config.ignoreRoot === undefined) {
       config.ignoreRoot = false;
     }
   }
-
   var DOMNodeTypes = {
     ELEMENT_NODE: 1,
     TEXT_NODE: 3,
@@ -190,36 +178,30 @@ function X2JS(config) {
     COMMENT_NODE: 8,
     DOCUMENT_NODE: 9
   };
-
   function initRequiredPolyfills() {}
-
   function getNodeLocalName(node) {
     var nodeLocalName = node.localName;
-    if (nodeLocalName == null) // Yeah, this is IE!!
+    if (nodeLocalName == null)
+      // Yeah, this is IE!!
       nodeLocalName = node.baseName;
-    if (nodeLocalName == null || nodeLocalName == "") // =="" is IE too
+    if (nodeLocalName == null || nodeLocalName == "")
+      // =="" is IE too
       nodeLocalName = node.nodeName;
     return nodeLocalName;
   }
-
   function getNodePrefix(node) {
     return node.prefix;
   }
-
   function escapeXmlChars(str) {
     if (typeof str == "string") return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');else return str;
   }
-
   function unescapeXmlChars(str) {
     return str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
   }
-
   function checkInStdFiltersArrayForm(stdFiltersArrayForm, obj, name, path) {
     var idx = 0;
-
     for (; idx < stdFiltersArrayForm.length; idx++) {
       var filterPath = stdFiltersArrayForm[idx];
-
       if (typeof filterPath === "string") {
         if (filterPath == path) break;
       } else if (filterPath instanceof RegExp) {
@@ -228,16 +210,13 @@ function X2JS(config) {
         if (filterPath(obj, name, path)) break;
       }
     }
-
     return idx != stdFiltersArrayForm.length;
   }
-
   function toArrayAccessForm(obj, childName, path) {
     switch (config.arrayAccessForm) {
       case "property":
         if (!(obj[childName] instanceof Array)) obj[childName + "_asArray"] = [obj[childName]];else obj[childName + "_asArray"] = obj[childName];
         break;
-
       /*case "none":
           break;*/
     }
@@ -248,7 +227,6 @@ function X2JS(config) {
       }
     }
   }
-
   function fromXmlDateTime(prop) {
     // Implementation based up on http://stackoverflow.com/questions/8178598/xml-datetime-to-javascript-date-object
     // Improved to support full spec and optional parts
@@ -256,47 +234,45 @@ function X2JS(config) {
     var d = new Date(bits[0], bits[1] - 1, bits[2]);
     var secondBits = bits[5].split("\.");
     d.setHours(bits[3], bits[4], secondBits[0]);
-    if (secondBits.length > 1) d.setMilliseconds(secondBits[1]); // Get supplied time zone offset in minutes
+    if (secondBits.length > 1) d.setMilliseconds(secondBits[1]);
 
+    // Get supplied time zone offset in minutes
     if (bits[6] && bits[7]) {
       var offsetMinutes = bits[6] * 60 + Number(bits[7]);
-      var sign = /\d\d-\d\d:\d\d$/.test(prop) ? '-' : '+'; // Apply the sign
+      var sign = /\d\d-\d\d:\d\d$/.test(prop) ? '-' : '+';
 
-      offsetMinutes = 0 + (sign == '-' ? -1 * offsetMinutes : offsetMinutes); // Apply offset and local timezone
+      // Apply the sign
+      offsetMinutes = 0 + (sign == '-' ? -1 * offsetMinutes : offsetMinutes);
 
+      // Apply offset and local timezone
       d.setMinutes(d.getMinutes() - offsetMinutes - d.getTimezoneOffset());
     } else if (prop.indexOf("Z", prop.length - 1) !== -1) {
       d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()));
-    } // d is now a local time equivalent to the supplied time
+    }
 
-
+    // d is now a local time equivalent to the supplied time
     return d;
   }
-
   function checkFromXmlDateTimePaths(value, childName, fullPath) {
     if (config.datetimeAccessFormPaths.length > 0) {
       var path = fullPath.split("\.#")[0];
-
       if (checkInStdFiltersArrayForm(config.datetimeAccessFormPaths, value, childName, path)) {
         return fromXmlDateTime(value);
       } else return value;
     } else return value;
   }
-
   function checkXmlElementsFilter(obj, childType, childName, childPath) {
     if (childType == DOMNodeTypes.ELEMENT_NODE && config.xmlElementsFilter.length > 0) {
       return checkInStdFiltersArrayForm(config.xmlElementsFilter, obj, childName, childPath);
     } else return true;
   }
-
   function parseDOMChildren(node, path) {
     if (node.nodeType == DOMNodeTypes.DOCUMENT_NODE) {
       var result = new Object();
-      var nodeChildren = node.childNodes; // Alternative for firstElementChild which is not supported in some environments
-
+      var nodeChildren = node.childNodes;
+      // Alternative for firstElementChild which is not supported in some environments
       for (var cidx = 0; cidx < nodeChildren.length; cidx++) {
         var child = nodeChildren[cidx];
-
         if (child.nodeType == DOMNodeTypes.ELEMENT_NODE) {
           if (config.ignoreRoot) {
             result = parseDOMChildren(child);
@@ -307,33 +283,28 @@ function X2JS(config) {
           }
         }
       }
-
       return result;
     } else if (node.nodeType == DOMNodeTypes.ELEMENT_NODE) {
       var result = new Object();
       result.__cnt = 0;
       var children = [];
-      var nodeChildren = node.childNodes; // Children nodes
+      var nodeChildren = node.childNodes;
 
+      // Children nodes
       for (var cidx = 0; cidx < nodeChildren.length; cidx++) {
         var child = nodeChildren[cidx];
         var childName = getNodeLocalName(child);
-
         if (child.nodeType != DOMNodeTypes.COMMENT_NODE) {
           var childPath = path + "." + childName;
-
           if (checkXmlElementsFilter(result, child.nodeType, childName, childPath)) {
             result.__cnt++;
-
             if (result[childName] == null) {
               var c = parseDOMChildren(child, childPath);
-
               if (childName != "#text" || /[^\s]/.test(c)) {
                 var o = {};
                 o[childName] = c;
                 children.push(o);
               }
-
               result[childName] = c;
               toArrayAccessForm(result, childName, childPath);
             } else {
@@ -343,68 +314,56 @@ function X2JS(config) {
                   toArrayAccessForm(result, childName, childPath);
                 }
               }
-
               var c = parseDOMChildren(child, childPath);
-
               if (childName != "#text" || /[^\s]/.test(c)) {
                 // Don't add white-space text nodes
                 var o = {};
                 o[childName] = c;
                 children.push(o);
               }
-
               result[childName][result[childName].length] = c;
             }
           }
         }
       }
+      result.__children = children;
 
-      result.__children = children; // Attributes
-
+      // Attributes
       var nodeLocalName = getNodeLocalName(node);
-
       for (var aidx = 0; aidx < node.attributes.length; aidx++) {
         var attr = node.attributes[aidx];
         result.__cnt++;
         var value2 = attr.value;
-
         for (var m = 0, ml = config.matchers.length; m < ml; m++) {
           var matchobj = config.matchers[m];
           if (matchobj.test(attr, nodeLocalName)) value2 = matchobj.converter(attr.value);
         }
-
         result[config.attributePrefix + attr.name] = value2;
-      } // Node namespace prefix
+      }
 
-
+      // Node namespace prefix
       var nodePrefix = getNodePrefix(node);
-
       if (nodePrefix != null && nodePrefix != "") {
         result.__cnt++;
         result.__prefix = nodePrefix;
       }
-
       if (result["#text"] != null) {
         result.__text = result["#text"];
-
         if (result.__text instanceof Array) {
           result.__text = result.__text.join("\n");
-        } //if(config.escapeMode)
+        }
+        //if(config.escapeMode)
         //	result.__text = unescapeXmlChars(result.__text);
-
-
         if (config.stripWhitespaces) result.__text = result.__text.trim();
         delete result["#text"];
         if (config.arrayAccessForm == "property") delete result["#text_asArray"];
         result.__text = checkFromXmlDateTimePaths(result.__text, childName, path + "." + childName);
       }
-
       if (result["#cdata-section"] != null) {
         result.__cdata = result["#cdata-section"];
         delete result["#cdata-section"];
         if (config.arrayAccessForm == "property") delete result["#cdata-section_asArray"];
       }
-
       if (result.__cnt == 0 && config.emptyNodeForm == "text") {
         result = '';
       } else if (result.__cnt == 1 && result.__text != null) {
@@ -416,24 +375,19 @@ function X2JS(config) {
           delete result.__text;
         }
       }
-
       delete result.__cnt;
-
       if (config.enableToStringFunc && (result.__text != null || result.__cdata != null)) {
         result.toString = function () {
           return (this.__text != null ? this.__text : '') + (this.__cdata != null ? this.__cdata : '');
         };
       }
-
       return result;
     } else if (node.nodeType == DOMNodeTypes.TEXT_NODE || node.nodeType == DOMNodeTypes.CDATA_SECTION_NODE) {
       return node.nodeValue;
     }
   }
-
   function startTag(jsonObj, element, attrList, closed) {
     var resultStr = "<" + (jsonObj != null && jsonObj.__prefix != null ? jsonObj.__prefix + ":" : "") + element;
-
     if (attrList != null) {
       for (var aidx = 0; aidx < attrList.length; aidx++) {
         var attrName = attrList[aidx];
@@ -443,43 +397,33 @@ function X2JS(config) {
         if (config.useDoubleQuotes) resultStr += '"' + attrVal + '"';else resultStr += "'" + attrVal + "'";
       }
     }
-
     if (!closed) resultStr += ">";else resultStr += "/>";
     return resultStr;
   }
-
   function endTag(jsonObj, elementName) {
     return "</" + (jsonObj.__prefix != null ? jsonObj.__prefix + ":" : "") + elementName + ">";
   }
-
   function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
   }
-
   function jsonXmlSpecialElem(jsonObj, jsonObjField) {
     if (config.arrayAccessForm == "property" && endsWith(jsonObjField.toString(), "_asArray") || jsonObjField.toString().indexOf(config.attributePrefix) == 0 || jsonObjField.toString().indexOf("__") == 0 || jsonObj[jsonObjField] instanceof Function) return true;else return false;
   }
-
   function jsonXmlElemCount(jsonObj) {
     var elementsCnt = 0;
-
     if (jsonObj instanceof Object) {
       for (var it in jsonObj) {
         if (jsonXmlSpecialElem(jsonObj, it)) continue;
         elementsCnt++;
       }
     }
-
     return elementsCnt;
   }
-
   function checkJsonObjPropertiesFilter(jsonObj, propertyName, jsonObjPath) {
     return config.jsonPropertiesFilter.length == 0 || jsonObjPath == "" || checkInStdFiltersArrayForm(config.jsonPropertiesFilter, jsonObj, propertyName, jsonObjPath);
   }
-
   function parseJSONAttributes(jsonObj) {
     var attrList = [];
-
     if (jsonObj instanceof Object) {
       for (var ait in jsonObj) {
         if (ait.toString().indexOf("__") == -1 && ait.toString().indexOf(config.attributePrefix) == 0) {
@@ -487,45 +431,34 @@ function X2JS(config) {
         }
       }
     }
-
     return attrList;
   }
-
   function parseJSONTextAttrs(jsonTxtObj) {
     var result = "";
-
     if (jsonTxtObj.__cdata != null) {
       result += "<![CDATA[" + jsonTxtObj.__cdata + "]]>";
     }
-
     if (jsonTxtObj.__text != null) {
       if (config.escapeMode) result += escapeXmlChars(jsonTxtObj.__text);else result += jsonTxtObj.__text;
     }
-
     return result;
   }
-
   function parseJSONTextObject(jsonTxtObj) {
     var result = "";
-
     if (jsonTxtObj instanceof Object) {
       result += parseJSONTextAttrs(jsonTxtObj);
     } else if (jsonTxtObj != null) {
       if (config.escapeMode) result += escapeXmlChars(jsonTxtObj);else result += jsonTxtObj;
     }
-
     return result;
   }
-
   function getJsonPropertyPath(jsonObjPath, jsonPropName) {
     if (jsonObjPath === "") {
       return jsonPropName;
     } else return jsonObjPath + "." + jsonPropName;
   }
-
   function parseJSONArray(jsonArrRoot, jsonArrObj, attrList, jsonObjPath) {
     var result = "";
-
     if (jsonArrRoot.length == 0) {
       result += startTag(jsonArrRoot, jsonArrObj, attrList, true);
     } else {
@@ -535,20 +468,16 @@ function X2JS(config) {
         result += endTag(jsonArrRoot[arIdx], jsonArrObj);
       }
     }
-
     return result;
   }
-
   function parseJSONObject(jsonObj, jsonObjPath) {
     var result = "";
     var elementsCnt = jsonXmlElemCount(jsonObj);
-
     if (elementsCnt > 0) {
       for (var it in jsonObj) {
         if (jsonXmlSpecialElem(jsonObj, it) || jsonObjPath != "" && !checkJsonObjPropertiesFilter(jsonObj, it, getJsonPropertyPath(jsonObjPath, it))) continue;
         var subObj = jsonObj[it];
         var attrList = parseJSONAttributes(subObj);
-
         if (subObj == null || subObj == undefined) {
           result += startTag(subObj, it, attrList, true);
         } else if (subObj instanceof Object) {
@@ -560,7 +489,6 @@ function X2JS(config) {
             result += endTag(subObj, it);
           } else {
             var subObjElementsCnt = jsonXmlElemCount(subObj);
-
             if (subObjElementsCnt > 0 || subObj.__text != null || subObj.__cdata != null) {
               result += startTag(subObj, it, attrList, false);
               result += parseJSONObject(subObj, getJsonPropertyPath(jsonObjPath, it));
@@ -576,27 +504,20 @@ function X2JS(config) {
         }
       }
     }
-
     result += parseJSONTextObject(jsonObj);
     return result;
   }
-
   this.parseXmlString = function (xmlDocStr) {
     var isIEParser = window.ActiveXObject || "ActiveXObject" in window;
-
     if (xmlDocStr === undefined) {
       return null;
     }
-
     var xmlDoc;
-
     if (window.DOMParser) {
       var parser = new window.DOMParser();
       var parsererrorNS = null;
-
       try {
         xmlDoc = parser.parseFromString(xmlDocStr, "text/xml");
-
         if (xmlDoc.getElementsByTagNameNS("*", "parsererror").length > 0) {
           xmlDoc = null;
         }
@@ -608,52 +529,41 @@ function X2JS(config) {
       if (xmlDocStr.indexOf("<?") == 0) {
         xmlDocStr = xmlDocStr.substr(xmlDocStr.indexOf("?>") + 2);
       }
-
       xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
       xmlDoc.async = "false";
       xmlDoc.loadXML(xmlDocStr);
     }
-
     return xmlDoc;
   };
-
   this.asArray = function (prop) {
     if (prop === undefined || prop == null) return [];else if (prop instanceof Array) return prop;else return [prop];
   };
-
   this.toXmlDateTime = function (dt) {
     if (dt instanceof Date) return dt.toISOString();else if (typeof dt === 'number') return new Date(dt).toISOString();else return null;
   };
-
   this.asDateTime = function (prop) {
     if (typeof prop == "string") {
       return fromXmlDateTime(prop);
     } else return prop;
   };
-
   this.xml2json = function (xmlDoc) {
     return parseDOMChildren(xmlDoc);
   };
-
   this.xml_str2json = function (xmlDocStr) {
     var xmlDoc = this.parseXmlString(xmlDocStr);
     if (xmlDoc != null) return this.xml2json(xmlDoc);else return null;
   };
-
   this.json2xml_str = function (jsonObj) {
     return parseJSONObject(jsonObj, "");
   };
-
   this.json2xml = function (jsonObj) {
     var xmlDocStr = this.json2xml_str(jsonObj);
     return this.parseXmlString(xmlDocStr);
   };
-
   this.getVersion = function () {
     return VERSION;
   };
 }
-
 /* harmony default export */ __webpack_exports__["default"] = (X2JS);
 
 /***/ }),
@@ -2701,177 +2611,142 @@ module.exports = function equal(a, b) {
 
 /***/ }),
 
-/***/ "./node_modules/html-entities/index.js":
-/*!*********************************************!*\
-  !*** ./node_modules/html-entities/index.js ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = {
-  XmlEntities: __webpack_require__(/*! ./lib/xml-entities.js */ "./node_modules/html-entities/lib/xml-entities.js"),
-  Html4Entities: __webpack_require__(/*! ./lib/html4-entities.js */ "./node_modules/html-entities/lib/html4-entities.js"),
-  Html5Entities: __webpack_require__(/*! ./lib/html5-entities.js */ "./node_modules/html-entities/lib/html5-entities.js"),
-  AllHtmlEntities: __webpack_require__(/*! ./lib/html5-entities.js */ "./node_modules/html-entities/lib/html5-entities.js")
-};
-
-
-/***/ }),
-
 /***/ "./node_modules/html-entities/lib/html4-entities.js":
 /*!**********************************************************!*\
   !*** ./node_modules/html-entities/lib/html4-entities.js ***!
   \**********************************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var HTML_ALPHA = ['apos', 'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen', 'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo', 'not', 'shy', 'reg', 'macr', 'deg', 'plusmn', 'sup2', 'sup3', 'acute', 'micro', 'para', 'middot', 'cedil', 'sup1', 'ordm', 'raquo', 'frac14', 'frac12', 'frac34', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde', 'Auml', 'Aring', 'Aelig', 'Ccedil', 'Egrave', 'Eacute', 'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml', 'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde', 'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc', 'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute', 'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil', 'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute', 'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute', 'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave', 'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml', 'quot', 'amp', 'lt', 'gt', 'OElig', 'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde', 'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm', 'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo', 'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil', 'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym', 'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime', 'oline', 'frasl', 'weierp', 'image', 'real', 'trade', 'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr', 'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr', 'forall', 'part', 'exist', 'empty', 'nabla', 'isin', 'notin', 'ni', 'prod', 'sum', 'minus', 'lowast', 'radic', 'prop', 'infin', 'ang', 'and', 'or', 'cap', 'cup', 'int', 'there4', 'sim', 'cong', 'asymp', 'ne', 'equiv', 'le', 'ge', 'sub', 'sup', 'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp', 'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang', 'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams'];
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var surrogate_pairs_1 = __webpack_require__(/*! ./surrogate-pairs */ "./node_modules/html-entities/lib/surrogate-pairs.js");
+var HTML_ALPHA = ['apos', 'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen', 'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo', 'not', 'shy', 'reg', 'macr', 'deg', 'plusmn', 'sup2', 'sup3', 'acute', 'micro', 'para', 'middot', 'cedil', 'sup1', 'ordm', 'raquo', 'frac14', 'frac12', 'frac34', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde', 'Auml', 'Aring', 'AElig', 'Ccedil', 'Egrave', 'Eacute', 'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml', 'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde', 'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc', 'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute', 'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil', 'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute', 'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute', 'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave', 'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml', 'quot', 'amp', 'lt', 'gt', 'OElig', 'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde', 'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm', 'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo', 'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil', 'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym', 'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime', 'oline', 'frasl', 'weierp', 'image', 'real', 'trade', 'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr', 'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr', 'forall', 'part', 'exist', 'empty', 'nabla', 'isin', 'notin', 'ni', 'prod', 'sum', 'minus', 'lowast', 'radic', 'prop', 'infin', 'ang', 'and', 'or', 'cap', 'cup', 'int', 'there4', 'sim', 'cong', 'asymp', 'ne', 'equiv', 'le', 'ge', 'sub', 'sup', 'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp', 'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang', 'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams'];
 var HTML_CODES = [39, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 34, 38, 60, 62, 338, 339, 352, 353, 376, 710, 732, 8194, 8195, 8201, 8204, 8205, 8206, 8207, 8211, 8212, 8216, 8217, 8218, 8220, 8221, 8222, 8224, 8225, 8240, 8249, 8250, 8364, 402, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 977, 978, 982, 8226, 8230, 8242, 8243, 8254, 8260, 8472, 8465, 8476, 8482, 8501, 8592, 8593, 8594, 8595, 8596, 8629, 8656, 8657, 8658, 8659, 8660, 8704, 8706, 8707, 8709, 8711, 8712, 8713, 8715, 8719, 8721, 8722, 8727, 8730, 8733, 8734, 8736, 8743, 8744, 8745, 8746, 8747, 8756, 8764, 8773, 8776, 8800, 8801, 8804, 8805, 8834, 8835, 8836, 8838, 8839, 8853, 8855, 8869, 8901, 8968, 8969, 8970, 8971, 9001, 9002, 9674, 9824, 9827, 9829, 9830];
-
 var alphaIndex = {};
 var numIndex = {};
-
-var i = 0;
-var length = HTML_ALPHA.length;
-while (i < length) {
-    var a = HTML_ALPHA[i];
-    var c = HTML_CODES[i];
-    alphaIndex[a] = String.fromCharCode(c);
-    numIndex[c] = a;
-    i++;
-}
-
-/**
- * @constructor
- */
-function Html4Entities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
+(function () {
+    var i = 0;
+    var length = HTML_ALPHA.length;
+    while (i < length) {
+        var a = HTML_ALPHA[i];
+        var c = HTML_CODES[i];
+        alphaIndex[a] = String.fromCharCode(c);
+        numIndex[c] = a;
+        i++;
     }
-    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
-        var chr;
-        if (entity.charAt(0) === "#") {
-            var code = entity.charAt(1).toLowerCase() === 'x' ?
-                parseInt(entity.substr(2), 16) :
-                parseInt(entity.substr(1));
-
-            if (!(isNaN(code) || code < -32768 || code > 65535)) {
-                chr = String.fromCharCode(code);
+})();
+var Html4Entities = /** @class */ (function () {
+    function Html4Entities() {
+    }
+    Html4Entities.prototype.decode = function (str) {
+        if (!str || !str.length) {
+            return '';
+        }
+        return str.replace(/&(#?[\w\d]+);?/g, function (s, entity) {
+            var chr;
+            if (entity.charAt(0) === "#") {
+                var code = entity.charAt(1).toLowerCase() === 'x' ?
+                    parseInt(entity.substr(2), 16) :
+                    parseInt(entity.substr(1));
+                if (!isNaN(code) || code >= -32768) {
+                    if (code <= 65535) {
+                        chr = String.fromCharCode(code);
+                    }
+                    else {
+                        chr = surrogate_pairs_1.fromCodePoint(code);
+                    }
+                }
             }
-        } else {
-            chr = alphaIndex[entity];
+            else {
+                chr = alphaIndex[entity];
+            }
+            return chr || s;
+        });
+    };
+    Html4Entities.decode = function (str) {
+        return new Html4Entities().decode(str);
+    };
+    Html4Entities.prototype.encode = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        return chr || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.decode = function(str) {
-    return new Html4Entities().decode(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var alpha = numIndex[str.charCodeAt(i)];
-        result += alpha ? "&" + alpha + ";" : str.charAt(i);
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encode = function(str) {
-    return new Html4Entities().encode(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var cc = str.charCodeAt(i);
-        var alpha = numIndex[cc];
-        if (alpha) {
-            result += "&" + alpha + ";";
-        } else if (cc < 32 || cc > 126) {
-            result += "&#" + cc + ";";
-        } else {
-            result += str.charAt(i);
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var alpha = numIndex[str.charCodeAt(i)];
+            result += alpha ? "&" + alpha + ";" : str.charAt(i);
+            i++;
         }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encodeNonUTF = function(str) {
-    return new Html4Entities().encodeNonUTF(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
+        return result;
+    };
+    Html4Entities.encode = function (str) {
+        return new Html4Entities().encode(str);
+    };
+    Html4Entities.prototype.encodeNonUTF = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        result += '&#' + c + ';';
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encodeNonASCII = function(str) {
-    return new Html4Entities().encodeNonASCII(str);
-};
-
-module.exports = Html4Entities;
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var cc = str.charCodeAt(i);
+            var alpha = numIndex[cc];
+            if (alpha) {
+                result += "&" + alpha + ";";
+            }
+            else if (cc < 32 || cc > 126) {
+                if (cc >= surrogate_pairs_1.highSurrogateFrom && cc <= surrogate_pairs_1.highSurrogateTo) {
+                    result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                    i++;
+                }
+                else {
+                    result += '&#' + cc + ';';
+                }
+            }
+            else {
+                result += str.charAt(i);
+            }
+            i++;
+        }
+        return result;
+    };
+    Html4Entities.encodeNonUTF = function (str) {
+        return new Html4Entities().encodeNonUTF(str);
+    };
+    Html4Entities.prototype.encodeNonASCII = function (str) {
+        if (!str || !str.length) {
+            return '';
+        }
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var c = str.charCodeAt(i);
+            if (c <= 255) {
+                result += str[i++];
+                continue;
+            }
+            if (c >= surrogate_pairs_1.highSurrogateFrom && c <= surrogate_pairs_1.highSurrogateTo) {
+                result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                i++;
+            }
+            else {
+                result += '&#' + c + ';';
+            }
+            i++;
+        }
+        return result;
+    };
+    Html4Entities.encodeNonASCII = function (str) {
+        return new Html4Entities().encodeNonASCII(str);
+    };
+    return Html4Entities;
+}());
+exports.Html4Entities = Html4Entities;
 
 
 /***/ }),
@@ -2881,198 +2756,224 @@ module.exports = Html4Entities;
   !*** ./node_modules/html-entities/lib/html5-entities.js ***!
   \**********************************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var surrogate_pairs_1 = __webpack_require__(/*! ./surrogate-pairs */ "./node_modules/html-entities/lib/surrogate-pairs.js");
 var ENTITIES = [['Aacute', [193]], ['aacute', [225]], ['Abreve', [258]], ['abreve', [259]], ['ac', [8766]], ['acd', [8767]], ['acE', [8766, 819]], ['Acirc', [194]], ['acirc', [226]], ['acute', [180]], ['Acy', [1040]], ['acy', [1072]], ['AElig', [198]], ['aelig', [230]], ['af', [8289]], ['Afr', [120068]], ['afr', [120094]], ['Agrave', [192]], ['agrave', [224]], ['alefsym', [8501]], ['aleph', [8501]], ['Alpha', [913]], ['alpha', [945]], ['Amacr', [256]], ['amacr', [257]], ['amalg', [10815]], ['amp', [38]], ['AMP', [38]], ['andand', [10837]], ['And', [10835]], ['and', [8743]], ['andd', [10844]], ['andslope', [10840]], ['andv', [10842]], ['ang', [8736]], ['ange', [10660]], ['angle', [8736]], ['angmsdaa', [10664]], ['angmsdab', [10665]], ['angmsdac', [10666]], ['angmsdad', [10667]], ['angmsdae', [10668]], ['angmsdaf', [10669]], ['angmsdag', [10670]], ['angmsdah', [10671]], ['angmsd', [8737]], ['angrt', [8735]], ['angrtvb', [8894]], ['angrtvbd', [10653]], ['angsph', [8738]], ['angst', [197]], ['angzarr', [9084]], ['Aogon', [260]], ['aogon', [261]], ['Aopf', [120120]], ['aopf', [120146]], ['apacir', [10863]], ['ap', [8776]], ['apE', [10864]], ['ape', [8778]], ['apid', [8779]], ['apos', [39]], ['ApplyFunction', [8289]], ['approx', [8776]], ['approxeq', [8778]], ['Aring', [197]], ['aring', [229]], ['Ascr', [119964]], ['ascr', [119990]], ['Assign', [8788]], ['ast', [42]], ['asymp', [8776]], ['asympeq', [8781]], ['Atilde', [195]], ['atilde', [227]], ['Auml', [196]], ['auml', [228]], ['awconint', [8755]], ['awint', [10769]], ['backcong', [8780]], ['backepsilon', [1014]], ['backprime', [8245]], ['backsim', [8765]], ['backsimeq', [8909]], ['Backslash', [8726]], ['Barv', [10983]], ['barvee', [8893]], ['barwed', [8965]], ['Barwed', [8966]], ['barwedge', [8965]], ['bbrk', [9141]], ['bbrktbrk', [9142]], ['bcong', [8780]], ['Bcy', [1041]], ['bcy', [1073]], ['bdquo', [8222]], ['becaus', [8757]], ['because', [8757]], ['Because', [8757]], ['bemptyv', [10672]], ['bepsi', [1014]], ['bernou', [8492]], ['Bernoullis', [8492]], ['Beta', [914]], ['beta', [946]], ['beth', [8502]], ['between', [8812]], ['Bfr', [120069]], ['bfr', [120095]], ['bigcap', [8898]], ['bigcirc', [9711]], ['bigcup', [8899]], ['bigodot', [10752]], ['bigoplus', [10753]], ['bigotimes', [10754]], ['bigsqcup', [10758]], ['bigstar', [9733]], ['bigtriangledown', [9661]], ['bigtriangleup', [9651]], ['biguplus', [10756]], ['bigvee', [8897]], ['bigwedge', [8896]], ['bkarow', [10509]], ['blacklozenge', [10731]], ['blacksquare', [9642]], ['blacktriangle', [9652]], ['blacktriangledown', [9662]], ['blacktriangleleft', [9666]], ['blacktriangleright', [9656]], ['blank', [9251]], ['blk12', [9618]], ['blk14', [9617]], ['blk34', [9619]], ['block', [9608]], ['bne', [61, 8421]], ['bnequiv', [8801, 8421]], ['bNot', [10989]], ['bnot', [8976]], ['Bopf', [120121]], ['bopf', [120147]], ['bot', [8869]], ['bottom', [8869]], ['bowtie', [8904]], ['boxbox', [10697]], ['boxdl', [9488]], ['boxdL', [9557]], ['boxDl', [9558]], ['boxDL', [9559]], ['boxdr', [9484]], ['boxdR', [9554]], ['boxDr', [9555]], ['boxDR', [9556]], ['boxh', [9472]], ['boxH', [9552]], ['boxhd', [9516]], ['boxHd', [9572]], ['boxhD', [9573]], ['boxHD', [9574]], ['boxhu', [9524]], ['boxHu', [9575]], ['boxhU', [9576]], ['boxHU', [9577]], ['boxminus', [8863]], ['boxplus', [8862]], ['boxtimes', [8864]], ['boxul', [9496]], ['boxuL', [9563]], ['boxUl', [9564]], ['boxUL', [9565]], ['boxur', [9492]], ['boxuR', [9560]], ['boxUr', [9561]], ['boxUR', [9562]], ['boxv', [9474]], ['boxV', [9553]], ['boxvh', [9532]], ['boxvH', [9578]], ['boxVh', [9579]], ['boxVH', [9580]], ['boxvl', [9508]], ['boxvL', [9569]], ['boxVl', [9570]], ['boxVL', [9571]], ['boxvr', [9500]], ['boxvR', [9566]], ['boxVr', [9567]], ['boxVR', [9568]], ['bprime', [8245]], ['breve', [728]], ['Breve', [728]], ['brvbar', [166]], ['bscr', [119991]], ['Bscr', [8492]], ['bsemi', [8271]], ['bsim', [8765]], ['bsime', [8909]], ['bsolb', [10693]], ['bsol', [92]], ['bsolhsub', [10184]], ['bull', [8226]], ['bullet', [8226]], ['bump', [8782]], ['bumpE', [10926]], ['bumpe', [8783]], ['Bumpeq', [8782]], ['bumpeq', [8783]], ['Cacute', [262]], ['cacute', [263]], ['capand', [10820]], ['capbrcup', [10825]], ['capcap', [10827]], ['cap', [8745]], ['Cap', [8914]], ['capcup', [10823]], ['capdot', [10816]], ['CapitalDifferentialD', [8517]], ['caps', [8745, 65024]], ['caret', [8257]], ['caron', [711]], ['Cayleys', [8493]], ['ccaps', [10829]], ['Ccaron', [268]], ['ccaron', [269]], ['Ccedil', [199]], ['ccedil', [231]], ['Ccirc', [264]], ['ccirc', [265]], ['Cconint', [8752]], ['ccups', [10828]], ['ccupssm', [10832]], ['Cdot', [266]], ['cdot', [267]], ['cedil', [184]], ['Cedilla', [184]], ['cemptyv', [10674]], ['cent', [162]], ['centerdot', [183]], ['CenterDot', [183]], ['cfr', [120096]], ['Cfr', [8493]], ['CHcy', [1063]], ['chcy', [1095]], ['check', [10003]], ['checkmark', [10003]], ['Chi', [935]], ['chi', [967]], ['circ', [710]], ['circeq', [8791]], ['circlearrowleft', [8634]], ['circlearrowright', [8635]], ['circledast', [8859]], ['circledcirc', [8858]], ['circleddash', [8861]], ['CircleDot', [8857]], ['circledR', [174]], ['circledS', [9416]], ['CircleMinus', [8854]], ['CirclePlus', [8853]], ['CircleTimes', [8855]], ['cir', [9675]], ['cirE', [10691]], ['cire', [8791]], ['cirfnint', [10768]], ['cirmid', [10991]], ['cirscir', [10690]], ['ClockwiseContourIntegral', [8754]], ['clubs', [9827]], ['clubsuit', [9827]], ['colon', [58]], ['Colon', [8759]], ['Colone', [10868]], ['colone', [8788]], ['coloneq', [8788]], ['comma', [44]], ['commat', [64]], ['comp', [8705]], ['compfn', [8728]], ['complement', [8705]], ['complexes', [8450]], ['cong', [8773]], ['congdot', [10861]], ['Congruent', [8801]], ['conint', [8750]], ['Conint', [8751]], ['ContourIntegral', [8750]], ['copf', [120148]], ['Copf', [8450]], ['coprod', [8720]], ['Coproduct', [8720]], ['copy', [169]], ['COPY', [169]], ['copysr', [8471]], ['CounterClockwiseContourIntegral', [8755]], ['crarr', [8629]], ['cross', [10007]], ['Cross', [10799]], ['Cscr', [119966]], ['cscr', [119992]], ['csub', [10959]], ['csube', [10961]], ['csup', [10960]], ['csupe', [10962]], ['ctdot', [8943]], ['cudarrl', [10552]], ['cudarrr', [10549]], ['cuepr', [8926]], ['cuesc', [8927]], ['cularr', [8630]], ['cularrp', [10557]], ['cupbrcap', [10824]], ['cupcap', [10822]], ['CupCap', [8781]], ['cup', [8746]], ['Cup', [8915]], ['cupcup', [10826]], ['cupdot', [8845]], ['cupor', [10821]], ['cups', [8746, 65024]], ['curarr', [8631]], ['curarrm', [10556]], ['curlyeqprec', [8926]], ['curlyeqsucc', [8927]], ['curlyvee', [8910]], ['curlywedge', [8911]], ['curren', [164]], ['curvearrowleft', [8630]], ['curvearrowright', [8631]], ['cuvee', [8910]], ['cuwed', [8911]], ['cwconint', [8754]], ['cwint', [8753]], ['cylcty', [9005]], ['dagger', [8224]], ['Dagger', [8225]], ['daleth', [8504]], ['darr', [8595]], ['Darr', [8609]], ['dArr', [8659]], ['dash', [8208]], ['Dashv', [10980]], ['dashv', [8867]], ['dbkarow', [10511]], ['dblac', [733]], ['Dcaron', [270]], ['dcaron', [271]], ['Dcy', [1044]], ['dcy', [1076]], ['ddagger', [8225]], ['ddarr', [8650]], ['DD', [8517]], ['dd', [8518]], ['DDotrahd', [10513]], ['ddotseq', [10871]], ['deg', [176]], ['Del', [8711]], ['Delta', [916]], ['delta', [948]], ['demptyv', [10673]], ['dfisht', [10623]], ['Dfr', [120071]], ['dfr', [120097]], ['dHar', [10597]], ['dharl', [8643]], ['dharr', [8642]], ['DiacriticalAcute', [180]], ['DiacriticalDot', [729]], ['DiacriticalDoubleAcute', [733]], ['DiacriticalGrave', [96]], ['DiacriticalTilde', [732]], ['diam', [8900]], ['diamond', [8900]], ['Diamond', [8900]], ['diamondsuit', [9830]], ['diams', [9830]], ['die', [168]], ['DifferentialD', [8518]], ['digamma', [989]], ['disin', [8946]], ['div', [247]], ['divide', [247]], ['divideontimes', [8903]], ['divonx', [8903]], ['DJcy', [1026]], ['djcy', [1106]], ['dlcorn', [8990]], ['dlcrop', [8973]], ['dollar', [36]], ['Dopf', [120123]], ['dopf', [120149]], ['Dot', [168]], ['dot', [729]], ['DotDot', [8412]], ['doteq', [8784]], ['doteqdot', [8785]], ['DotEqual', [8784]], ['dotminus', [8760]], ['dotplus', [8724]], ['dotsquare', [8865]], ['doublebarwedge', [8966]], ['DoubleContourIntegral', [8751]], ['DoubleDot', [168]], ['DoubleDownArrow', [8659]], ['DoubleLeftArrow', [8656]], ['DoubleLeftRightArrow', [8660]], ['DoubleLeftTee', [10980]], ['DoubleLongLeftArrow', [10232]], ['DoubleLongLeftRightArrow', [10234]], ['DoubleLongRightArrow', [10233]], ['DoubleRightArrow', [8658]], ['DoubleRightTee', [8872]], ['DoubleUpArrow', [8657]], ['DoubleUpDownArrow', [8661]], ['DoubleVerticalBar', [8741]], ['DownArrowBar', [10515]], ['downarrow', [8595]], ['DownArrow', [8595]], ['Downarrow', [8659]], ['DownArrowUpArrow', [8693]], ['DownBreve', [785]], ['downdownarrows', [8650]], ['downharpoonleft', [8643]], ['downharpoonright', [8642]], ['DownLeftRightVector', [10576]], ['DownLeftTeeVector', [10590]], ['DownLeftVectorBar', [10582]], ['DownLeftVector', [8637]], ['DownRightTeeVector', [10591]], ['DownRightVectorBar', [10583]], ['DownRightVector', [8641]], ['DownTeeArrow', [8615]], ['DownTee', [8868]], ['drbkarow', [10512]], ['drcorn', [8991]], ['drcrop', [8972]], ['Dscr', [119967]], ['dscr', [119993]], ['DScy', [1029]], ['dscy', [1109]], ['dsol', [10742]], ['Dstrok', [272]], ['dstrok', [273]], ['dtdot', [8945]], ['dtri', [9663]], ['dtrif', [9662]], ['duarr', [8693]], ['duhar', [10607]], ['dwangle', [10662]], ['DZcy', [1039]], ['dzcy', [1119]], ['dzigrarr', [10239]], ['Eacute', [201]], ['eacute', [233]], ['easter', [10862]], ['Ecaron', [282]], ['ecaron', [283]], ['Ecirc', [202]], ['ecirc', [234]], ['ecir', [8790]], ['ecolon', [8789]], ['Ecy', [1069]], ['ecy', [1101]], ['eDDot', [10871]], ['Edot', [278]], ['edot', [279]], ['eDot', [8785]], ['ee', [8519]], ['efDot', [8786]], ['Efr', [120072]], ['efr', [120098]], ['eg', [10906]], ['Egrave', [200]], ['egrave', [232]], ['egs', [10902]], ['egsdot', [10904]], ['el', [10905]], ['Element', [8712]], ['elinters', [9191]], ['ell', [8467]], ['els', [10901]], ['elsdot', [10903]], ['Emacr', [274]], ['emacr', [275]], ['empty', [8709]], ['emptyset', [8709]], ['EmptySmallSquare', [9723]], ['emptyv', [8709]], ['EmptyVerySmallSquare', [9643]], ['emsp13', [8196]], ['emsp14', [8197]], ['emsp', [8195]], ['ENG', [330]], ['eng', [331]], ['ensp', [8194]], ['Eogon', [280]], ['eogon', [281]], ['Eopf', [120124]], ['eopf', [120150]], ['epar', [8917]], ['eparsl', [10723]], ['eplus', [10865]], ['epsi', [949]], ['Epsilon', [917]], ['epsilon', [949]], ['epsiv', [1013]], ['eqcirc', [8790]], ['eqcolon', [8789]], ['eqsim', [8770]], ['eqslantgtr', [10902]], ['eqslantless', [10901]], ['Equal', [10869]], ['equals', [61]], ['EqualTilde', [8770]], ['equest', [8799]], ['Equilibrium', [8652]], ['equiv', [8801]], ['equivDD', [10872]], ['eqvparsl', [10725]], ['erarr', [10609]], ['erDot', [8787]], ['escr', [8495]], ['Escr', [8496]], ['esdot', [8784]], ['Esim', [10867]], ['esim', [8770]], ['Eta', [919]], ['eta', [951]], ['ETH', [208]], ['eth', [240]], ['Euml', [203]], ['euml', [235]], ['euro', [8364]], ['excl', [33]], ['exist', [8707]], ['Exists', [8707]], ['expectation', [8496]], ['exponentiale', [8519]], ['ExponentialE', [8519]], ['fallingdotseq', [8786]], ['Fcy', [1060]], ['fcy', [1092]], ['female', [9792]], ['ffilig', [64259]], ['fflig', [64256]], ['ffllig', [64260]], ['Ffr', [120073]], ['ffr', [120099]], ['filig', [64257]], ['FilledSmallSquare', [9724]], ['FilledVerySmallSquare', [9642]], ['fjlig', [102, 106]], ['flat', [9837]], ['fllig', [64258]], ['fltns', [9649]], ['fnof', [402]], ['Fopf', [120125]], ['fopf', [120151]], ['forall', [8704]], ['ForAll', [8704]], ['fork', [8916]], ['forkv', [10969]], ['Fouriertrf', [8497]], ['fpartint', [10765]], ['frac12', [189]], ['frac13', [8531]], ['frac14', [188]], ['frac15', [8533]], ['frac16', [8537]], ['frac18', [8539]], ['frac23', [8532]], ['frac25', [8534]], ['frac34', [190]], ['frac35', [8535]], ['frac38', [8540]], ['frac45', [8536]], ['frac56', [8538]], ['frac58', [8541]], ['frac78', [8542]], ['frasl', [8260]], ['frown', [8994]], ['fscr', [119995]], ['Fscr', [8497]], ['gacute', [501]], ['Gamma', [915]], ['gamma', [947]], ['Gammad', [988]], ['gammad', [989]], ['gap', [10886]], ['Gbreve', [286]], ['gbreve', [287]], ['Gcedil', [290]], ['Gcirc', [284]], ['gcirc', [285]], ['Gcy', [1043]], ['gcy', [1075]], ['Gdot', [288]], ['gdot', [289]], ['ge', [8805]], ['gE', [8807]], ['gEl', [10892]], ['gel', [8923]], ['geq', [8805]], ['geqq', [8807]], ['geqslant', [10878]], ['gescc', [10921]], ['ges', [10878]], ['gesdot', [10880]], ['gesdoto', [10882]], ['gesdotol', [10884]], ['gesl', [8923, 65024]], ['gesles', [10900]], ['Gfr', [120074]], ['gfr', [120100]], ['gg', [8811]], ['Gg', [8921]], ['ggg', [8921]], ['gimel', [8503]], ['GJcy', [1027]], ['gjcy', [1107]], ['gla', [10917]], ['gl', [8823]], ['glE', [10898]], ['glj', [10916]], ['gnap', [10890]], ['gnapprox', [10890]], ['gne', [10888]], ['gnE', [8809]], ['gneq', [10888]], ['gneqq', [8809]], ['gnsim', [8935]], ['Gopf', [120126]], ['gopf', [120152]], ['grave', [96]], ['GreaterEqual', [8805]], ['GreaterEqualLess', [8923]], ['GreaterFullEqual', [8807]], ['GreaterGreater', [10914]], ['GreaterLess', [8823]], ['GreaterSlantEqual', [10878]], ['GreaterTilde', [8819]], ['Gscr', [119970]], ['gscr', [8458]], ['gsim', [8819]], ['gsime', [10894]], ['gsiml', [10896]], ['gtcc', [10919]], ['gtcir', [10874]], ['gt', [62]], ['GT', [62]], ['Gt', [8811]], ['gtdot', [8919]], ['gtlPar', [10645]], ['gtquest', [10876]], ['gtrapprox', [10886]], ['gtrarr', [10616]], ['gtrdot', [8919]], ['gtreqless', [8923]], ['gtreqqless', [10892]], ['gtrless', [8823]], ['gtrsim', [8819]], ['gvertneqq', [8809, 65024]], ['gvnE', [8809, 65024]], ['Hacek', [711]], ['hairsp', [8202]], ['half', [189]], ['hamilt', [8459]], ['HARDcy', [1066]], ['hardcy', [1098]], ['harrcir', [10568]], ['harr', [8596]], ['hArr', [8660]], ['harrw', [8621]], ['Hat', [94]], ['hbar', [8463]], ['Hcirc', [292]], ['hcirc', [293]], ['hearts', [9829]], ['heartsuit', [9829]], ['hellip', [8230]], ['hercon', [8889]], ['hfr', [120101]], ['Hfr', [8460]], ['HilbertSpace', [8459]], ['hksearow', [10533]], ['hkswarow', [10534]], ['hoarr', [8703]], ['homtht', [8763]], ['hookleftarrow', [8617]], ['hookrightarrow', [8618]], ['hopf', [120153]], ['Hopf', [8461]], ['horbar', [8213]], ['HorizontalLine', [9472]], ['hscr', [119997]], ['Hscr', [8459]], ['hslash', [8463]], ['Hstrok', [294]], ['hstrok', [295]], ['HumpDownHump', [8782]], ['HumpEqual', [8783]], ['hybull', [8259]], ['hyphen', [8208]], ['Iacute', [205]], ['iacute', [237]], ['ic', [8291]], ['Icirc', [206]], ['icirc', [238]], ['Icy', [1048]], ['icy', [1080]], ['Idot', [304]], ['IEcy', [1045]], ['iecy', [1077]], ['iexcl', [161]], ['iff', [8660]], ['ifr', [120102]], ['Ifr', [8465]], ['Igrave', [204]], ['igrave', [236]], ['ii', [8520]], ['iiiint', [10764]], ['iiint', [8749]], ['iinfin', [10716]], ['iiota', [8489]], ['IJlig', [306]], ['ijlig', [307]], ['Imacr', [298]], ['imacr', [299]], ['image', [8465]], ['ImaginaryI', [8520]], ['imagline', [8464]], ['imagpart', [8465]], ['imath', [305]], ['Im', [8465]], ['imof', [8887]], ['imped', [437]], ['Implies', [8658]], ['incare', [8453]], ['in', [8712]], ['infin', [8734]], ['infintie', [10717]], ['inodot', [305]], ['intcal', [8890]], ['int', [8747]], ['Int', [8748]], ['integers', [8484]], ['Integral', [8747]], ['intercal', [8890]], ['Intersection', [8898]], ['intlarhk', [10775]], ['intprod', [10812]], ['InvisibleComma', [8291]], ['InvisibleTimes', [8290]], ['IOcy', [1025]], ['iocy', [1105]], ['Iogon', [302]], ['iogon', [303]], ['Iopf', [120128]], ['iopf', [120154]], ['Iota', [921]], ['iota', [953]], ['iprod', [10812]], ['iquest', [191]], ['iscr', [119998]], ['Iscr', [8464]], ['isin', [8712]], ['isindot', [8949]], ['isinE', [8953]], ['isins', [8948]], ['isinsv', [8947]], ['isinv', [8712]], ['it', [8290]], ['Itilde', [296]], ['itilde', [297]], ['Iukcy', [1030]], ['iukcy', [1110]], ['Iuml', [207]], ['iuml', [239]], ['Jcirc', [308]], ['jcirc', [309]], ['Jcy', [1049]], ['jcy', [1081]], ['Jfr', [120077]], ['jfr', [120103]], ['jmath', [567]], ['Jopf', [120129]], ['jopf', [120155]], ['Jscr', [119973]], ['jscr', [119999]], ['Jsercy', [1032]], ['jsercy', [1112]], ['Jukcy', [1028]], ['jukcy', [1108]], ['Kappa', [922]], ['kappa', [954]], ['kappav', [1008]], ['Kcedil', [310]], ['kcedil', [311]], ['Kcy', [1050]], ['kcy', [1082]], ['Kfr', [120078]], ['kfr', [120104]], ['kgreen', [312]], ['KHcy', [1061]], ['khcy', [1093]], ['KJcy', [1036]], ['kjcy', [1116]], ['Kopf', [120130]], ['kopf', [120156]], ['Kscr', [119974]], ['kscr', [120000]], ['lAarr', [8666]], ['Lacute', [313]], ['lacute', [314]], ['laemptyv', [10676]], ['lagran', [8466]], ['Lambda', [923]], ['lambda', [955]], ['lang', [10216]], ['Lang', [10218]], ['langd', [10641]], ['langle', [10216]], ['lap', [10885]], ['Laplacetrf', [8466]], ['laquo', [171]], ['larrb', [8676]], ['larrbfs', [10527]], ['larr', [8592]], ['Larr', [8606]], ['lArr', [8656]], ['larrfs', [10525]], ['larrhk', [8617]], ['larrlp', [8619]], ['larrpl', [10553]], ['larrsim', [10611]], ['larrtl', [8610]], ['latail', [10521]], ['lAtail', [10523]], ['lat', [10923]], ['late', [10925]], ['lates', [10925, 65024]], ['lbarr', [10508]], ['lBarr', [10510]], ['lbbrk', [10098]], ['lbrace', [123]], ['lbrack', [91]], ['lbrke', [10635]], ['lbrksld', [10639]], ['lbrkslu', [10637]], ['Lcaron', [317]], ['lcaron', [318]], ['Lcedil', [315]], ['lcedil', [316]], ['lceil', [8968]], ['lcub', [123]], ['Lcy', [1051]], ['lcy', [1083]], ['ldca', [10550]], ['ldquo', [8220]], ['ldquor', [8222]], ['ldrdhar', [10599]], ['ldrushar', [10571]], ['ldsh', [8626]], ['le', [8804]], ['lE', [8806]], ['LeftAngleBracket', [10216]], ['LeftArrowBar', [8676]], ['leftarrow', [8592]], ['LeftArrow', [8592]], ['Leftarrow', [8656]], ['LeftArrowRightArrow', [8646]], ['leftarrowtail', [8610]], ['LeftCeiling', [8968]], ['LeftDoubleBracket', [10214]], ['LeftDownTeeVector', [10593]], ['LeftDownVectorBar', [10585]], ['LeftDownVector', [8643]], ['LeftFloor', [8970]], ['leftharpoondown', [8637]], ['leftharpoonup', [8636]], ['leftleftarrows', [8647]], ['leftrightarrow', [8596]], ['LeftRightArrow', [8596]], ['Leftrightarrow', [8660]], ['leftrightarrows', [8646]], ['leftrightharpoons', [8651]], ['leftrightsquigarrow', [8621]], ['LeftRightVector', [10574]], ['LeftTeeArrow', [8612]], ['LeftTee', [8867]], ['LeftTeeVector', [10586]], ['leftthreetimes', [8907]], ['LeftTriangleBar', [10703]], ['LeftTriangle', [8882]], ['LeftTriangleEqual', [8884]], ['LeftUpDownVector', [10577]], ['LeftUpTeeVector', [10592]], ['LeftUpVectorBar', [10584]], ['LeftUpVector', [8639]], ['LeftVectorBar', [10578]], ['LeftVector', [8636]], ['lEg', [10891]], ['leg', [8922]], ['leq', [8804]], ['leqq', [8806]], ['leqslant', [10877]], ['lescc', [10920]], ['les', [10877]], ['lesdot', [10879]], ['lesdoto', [10881]], ['lesdotor', [10883]], ['lesg', [8922, 65024]], ['lesges', [10899]], ['lessapprox', [10885]], ['lessdot', [8918]], ['lesseqgtr', [8922]], ['lesseqqgtr', [10891]], ['LessEqualGreater', [8922]], ['LessFullEqual', [8806]], ['LessGreater', [8822]], ['lessgtr', [8822]], ['LessLess', [10913]], ['lesssim', [8818]], ['LessSlantEqual', [10877]], ['LessTilde', [8818]], ['lfisht', [10620]], ['lfloor', [8970]], ['Lfr', [120079]], ['lfr', [120105]], ['lg', [8822]], ['lgE', [10897]], ['lHar', [10594]], ['lhard', [8637]], ['lharu', [8636]], ['lharul', [10602]], ['lhblk', [9604]], ['LJcy', [1033]], ['ljcy', [1113]], ['llarr', [8647]], ['ll', [8810]], ['Ll', [8920]], ['llcorner', [8990]], ['Lleftarrow', [8666]], ['llhard', [10603]], ['lltri', [9722]], ['Lmidot', [319]], ['lmidot', [320]], ['lmoustache', [9136]], ['lmoust', [9136]], ['lnap', [10889]], ['lnapprox', [10889]], ['lne', [10887]], ['lnE', [8808]], ['lneq', [10887]], ['lneqq', [8808]], ['lnsim', [8934]], ['loang', [10220]], ['loarr', [8701]], ['lobrk', [10214]], ['longleftarrow', [10229]], ['LongLeftArrow', [10229]], ['Longleftarrow', [10232]], ['longleftrightarrow', [10231]], ['LongLeftRightArrow', [10231]], ['Longleftrightarrow', [10234]], ['longmapsto', [10236]], ['longrightarrow', [10230]], ['LongRightArrow', [10230]], ['Longrightarrow', [10233]], ['looparrowleft', [8619]], ['looparrowright', [8620]], ['lopar', [10629]], ['Lopf', [120131]], ['lopf', [120157]], ['loplus', [10797]], ['lotimes', [10804]], ['lowast', [8727]], ['lowbar', [95]], ['LowerLeftArrow', [8601]], ['LowerRightArrow', [8600]], ['loz', [9674]], ['lozenge', [9674]], ['lozf', [10731]], ['lpar', [40]], ['lparlt', [10643]], ['lrarr', [8646]], ['lrcorner', [8991]], ['lrhar', [8651]], ['lrhard', [10605]], ['lrm', [8206]], ['lrtri', [8895]], ['lsaquo', [8249]], ['lscr', [120001]], ['Lscr', [8466]], ['lsh', [8624]], ['Lsh', [8624]], ['lsim', [8818]], ['lsime', [10893]], ['lsimg', [10895]], ['lsqb', [91]], ['lsquo', [8216]], ['lsquor', [8218]], ['Lstrok', [321]], ['lstrok', [322]], ['ltcc', [10918]], ['ltcir', [10873]], ['lt', [60]], ['LT', [60]], ['Lt', [8810]], ['ltdot', [8918]], ['lthree', [8907]], ['ltimes', [8905]], ['ltlarr', [10614]], ['ltquest', [10875]], ['ltri', [9667]], ['ltrie', [8884]], ['ltrif', [9666]], ['ltrPar', [10646]], ['lurdshar', [10570]], ['luruhar', [10598]], ['lvertneqq', [8808, 65024]], ['lvnE', [8808, 65024]], ['macr', [175]], ['male', [9794]], ['malt', [10016]], ['maltese', [10016]], ['Map', [10501]], ['map', [8614]], ['mapsto', [8614]], ['mapstodown', [8615]], ['mapstoleft', [8612]], ['mapstoup', [8613]], ['marker', [9646]], ['mcomma', [10793]], ['Mcy', [1052]], ['mcy', [1084]], ['mdash', [8212]], ['mDDot', [8762]], ['measuredangle', [8737]], ['MediumSpace', [8287]], ['Mellintrf', [8499]], ['Mfr', [120080]], ['mfr', [120106]], ['mho', [8487]], ['micro', [181]], ['midast', [42]], ['midcir', [10992]], ['mid', [8739]], ['middot', [183]], ['minusb', [8863]], ['minus', [8722]], ['minusd', [8760]], ['minusdu', [10794]], ['MinusPlus', [8723]], ['mlcp', [10971]], ['mldr', [8230]], ['mnplus', [8723]], ['models', [8871]], ['Mopf', [120132]], ['mopf', [120158]], ['mp', [8723]], ['mscr', [120002]], ['Mscr', [8499]], ['mstpos', [8766]], ['Mu', [924]], ['mu', [956]], ['multimap', [8888]], ['mumap', [8888]], ['nabla', [8711]], ['Nacute', [323]], ['nacute', [324]], ['nang', [8736, 8402]], ['nap', [8777]], ['napE', [10864, 824]], ['napid', [8779, 824]], ['napos', [329]], ['napprox', [8777]], ['natural', [9838]], ['naturals', [8469]], ['natur', [9838]], ['nbsp', [160]], ['nbump', [8782, 824]], ['nbumpe', [8783, 824]], ['ncap', [10819]], ['Ncaron', [327]], ['ncaron', [328]], ['Ncedil', [325]], ['ncedil', [326]], ['ncong', [8775]], ['ncongdot', [10861, 824]], ['ncup', [10818]], ['Ncy', [1053]], ['ncy', [1085]], ['ndash', [8211]], ['nearhk', [10532]], ['nearr', [8599]], ['neArr', [8663]], ['nearrow', [8599]], ['ne', [8800]], ['nedot', [8784, 824]], ['NegativeMediumSpace', [8203]], ['NegativeThickSpace', [8203]], ['NegativeThinSpace', [8203]], ['NegativeVeryThinSpace', [8203]], ['nequiv', [8802]], ['nesear', [10536]], ['nesim', [8770, 824]], ['NestedGreaterGreater', [8811]], ['NestedLessLess', [8810]], ['nexist', [8708]], ['nexists', [8708]], ['Nfr', [120081]], ['nfr', [120107]], ['ngE', [8807, 824]], ['nge', [8817]], ['ngeq', [8817]], ['ngeqq', [8807, 824]], ['ngeqslant', [10878, 824]], ['nges', [10878, 824]], ['nGg', [8921, 824]], ['ngsim', [8821]], ['nGt', [8811, 8402]], ['ngt', [8815]], ['ngtr', [8815]], ['nGtv', [8811, 824]], ['nharr', [8622]], ['nhArr', [8654]], ['nhpar', [10994]], ['ni', [8715]], ['nis', [8956]], ['nisd', [8954]], ['niv', [8715]], ['NJcy', [1034]], ['njcy', [1114]], ['nlarr', [8602]], ['nlArr', [8653]], ['nldr', [8229]], ['nlE', [8806, 824]], ['nle', [8816]], ['nleftarrow', [8602]], ['nLeftarrow', [8653]], ['nleftrightarrow', [8622]], ['nLeftrightarrow', [8654]], ['nleq', [8816]], ['nleqq', [8806, 824]], ['nleqslant', [10877, 824]], ['nles', [10877, 824]], ['nless', [8814]], ['nLl', [8920, 824]], ['nlsim', [8820]], ['nLt', [8810, 8402]], ['nlt', [8814]], ['nltri', [8938]], ['nltrie', [8940]], ['nLtv', [8810, 824]], ['nmid', [8740]], ['NoBreak', [8288]], ['NonBreakingSpace', [160]], ['nopf', [120159]], ['Nopf', [8469]], ['Not', [10988]], ['not', [172]], ['NotCongruent', [8802]], ['NotCupCap', [8813]], ['NotDoubleVerticalBar', [8742]], ['NotElement', [8713]], ['NotEqual', [8800]], ['NotEqualTilde', [8770, 824]], ['NotExists', [8708]], ['NotGreater', [8815]], ['NotGreaterEqual', [8817]], ['NotGreaterFullEqual', [8807, 824]], ['NotGreaterGreater', [8811, 824]], ['NotGreaterLess', [8825]], ['NotGreaterSlantEqual', [10878, 824]], ['NotGreaterTilde', [8821]], ['NotHumpDownHump', [8782, 824]], ['NotHumpEqual', [8783, 824]], ['notin', [8713]], ['notindot', [8949, 824]], ['notinE', [8953, 824]], ['notinva', [8713]], ['notinvb', [8951]], ['notinvc', [8950]], ['NotLeftTriangleBar', [10703, 824]], ['NotLeftTriangle', [8938]], ['NotLeftTriangleEqual', [8940]], ['NotLess', [8814]], ['NotLessEqual', [8816]], ['NotLessGreater', [8824]], ['NotLessLess', [8810, 824]], ['NotLessSlantEqual', [10877, 824]], ['NotLessTilde', [8820]], ['NotNestedGreaterGreater', [10914, 824]], ['NotNestedLessLess', [10913, 824]], ['notni', [8716]], ['notniva', [8716]], ['notnivb', [8958]], ['notnivc', [8957]], ['NotPrecedes', [8832]], ['NotPrecedesEqual', [10927, 824]], ['NotPrecedesSlantEqual', [8928]], ['NotReverseElement', [8716]], ['NotRightTriangleBar', [10704, 824]], ['NotRightTriangle', [8939]], ['NotRightTriangleEqual', [8941]], ['NotSquareSubset', [8847, 824]], ['NotSquareSubsetEqual', [8930]], ['NotSquareSuperset', [8848, 824]], ['NotSquareSupersetEqual', [8931]], ['NotSubset', [8834, 8402]], ['NotSubsetEqual', [8840]], ['NotSucceeds', [8833]], ['NotSucceedsEqual', [10928, 824]], ['NotSucceedsSlantEqual', [8929]], ['NotSucceedsTilde', [8831, 824]], ['NotSuperset', [8835, 8402]], ['NotSupersetEqual', [8841]], ['NotTilde', [8769]], ['NotTildeEqual', [8772]], ['NotTildeFullEqual', [8775]], ['NotTildeTilde', [8777]], ['NotVerticalBar', [8740]], ['nparallel', [8742]], ['npar', [8742]], ['nparsl', [11005, 8421]], ['npart', [8706, 824]], ['npolint', [10772]], ['npr', [8832]], ['nprcue', [8928]], ['nprec', [8832]], ['npreceq', [10927, 824]], ['npre', [10927, 824]], ['nrarrc', [10547, 824]], ['nrarr', [8603]], ['nrArr', [8655]], ['nrarrw', [8605, 824]], ['nrightarrow', [8603]], ['nRightarrow', [8655]], ['nrtri', [8939]], ['nrtrie', [8941]], ['nsc', [8833]], ['nsccue', [8929]], ['nsce', [10928, 824]], ['Nscr', [119977]], ['nscr', [120003]], ['nshortmid', [8740]], ['nshortparallel', [8742]], ['nsim', [8769]], ['nsime', [8772]], ['nsimeq', [8772]], ['nsmid', [8740]], ['nspar', [8742]], ['nsqsube', [8930]], ['nsqsupe', [8931]], ['nsub', [8836]], ['nsubE', [10949, 824]], ['nsube', [8840]], ['nsubset', [8834, 8402]], ['nsubseteq', [8840]], ['nsubseteqq', [10949, 824]], ['nsucc', [8833]], ['nsucceq', [10928, 824]], ['nsup', [8837]], ['nsupE', [10950, 824]], ['nsupe', [8841]], ['nsupset', [8835, 8402]], ['nsupseteq', [8841]], ['nsupseteqq', [10950, 824]], ['ntgl', [8825]], ['Ntilde', [209]], ['ntilde', [241]], ['ntlg', [8824]], ['ntriangleleft', [8938]], ['ntrianglelefteq', [8940]], ['ntriangleright', [8939]], ['ntrianglerighteq', [8941]], ['Nu', [925]], ['nu', [957]], ['num', [35]], ['numero', [8470]], ['numsp', [8199]], ['nvap', [8781, 8402]], ['nvdash', [8876]], ['nvDash', [8877]], ['nVdash', [8878]], ['nVDash', [8879]], ['nvge', [8805, 8402]], ['nvgt', [62, 8402]], ['nvHarr', [10500]], ['nvinfin', [10718]], ['nvlArr', [10498]], ['nvle', [8804, 8402]], ['nvlt', [60, 8402]], ['nvltrie', [8884, 8402]], ['nvrArr', [10499]], ['nvrtrie', [8885, 8402]], ['nvsim', [8764, 8402]], ['nwarhk', [10531]], ['nwarr', [8598]], ['nwArr', [8662]], ['nwarrow', [8598]], ['nwnear', [10535]], ['Oacute', [211]], ['oacute', [243]], ['oast', [8859]], ['Ocirc', [212]], ['ocirc', [244]], ['ocir', [8858]], ['Ocy', [1054]], ['ocy', [1086]], ['odash', [8861]], ['Odblac', [336]], ['odblac', [337]], ['odiv', [10808]], ['odot', [8857]], ['odsold', [10684]], ['OElig', [338]], ['oelig', [339]], ['ofcir', [10687]], ['Ofr', [120082]], ['ofr', [120108]], ['ogon', [731]], ['Ograve', [210]], ['ograve', [242]], ['ogt', [10689]], ['ohbar', [10677]], ['ohm', [937]], ['oint', [8750]], ['olarr', [8634]], ['olcir', [10686]], ['olcross', [10683]], ['oline', [8254]], ['olt', [10688]], ['Omacr', [332]], ['omacr', [333]], ['Omega', [937]], ['omega', [969]], ['Omicron', [927]], ['omicron', [959]], ['omid', [10678]], ['ominus', [8854]], ['Oopf', [120134]], ['oopf', [120160]], ['opar', [10679]], ['OpenCurlyDoubleQuote', [8220]], ['OpenCurlyQuote', [8216]], ['operp', [10681]], ['oplus', [8853]], ['orarr', [8635]], ['Or', [10836]], ['or', [8744]], ['ord', [10845]], ['order', [8500]], ['orderof', [8500]], ['ordf', [170]], ['ordm', [186]], ['origof', [8886]], ['oror', [10838]], ['orslope', [10839]], ['orv', [10843]], ['oS', [9416]], ['Oscr', [119978]], ['oscr', [8500]], ['Oslash', [216]], ['oslash', [248]], ['osol', [8856]], ['Otilde', [213]], ['otilde', [245]], ['otimesas', [10806]], ['Otimes', [10807]], ['otimes', [8855]], ['Ouml', [214]], ['ouml', [246]], ['ovbar', [9021]], ['OverBar', [8254]], ['OverBrace', [9182]], ['OverBracket', [9140]], ['OverParenthesis', [9180]], ['para', [182]], ['parallel', [8741]], ['par', [8741]], ['parsim', [10995]], ['parsl', [11005]], ['part', [8706]], ['PartialD', [8706]], ['Pcy', [1055]], ['pcy', [1087]], ['percnt', [37]], ['period', [46]], ['permil', [8240]], ['perp', [8869]], ['pertenk', [8241]], ['Pfr', [120083]], ['pfr', [120109]], ['Phi', [934]], ['phi', [966]], ['phiv', [981]], ['phmmat', [8499]], ['phone', [9742]], ['Pi', [928]], ['pi', [960]], ['pitchfork', [8916]], ['piv', [982]], ['planck', [8463]], ['planckh', [8462]], ['plankv', [8463]], ['plusacir', [10787]], ['plusb', [8862]], ['pluscir', [10786]], ['plus', [43]], ['plusdo', [8724]], ['plusdu', [10789]], ['pluse', [10866]], ['PlusMinus', [177]], ['plusmn', [177]], ['plussim', [10790]], ['plustwo', [10791]], ['pm', [177]], ['Poincareplane', [8460]], ['pointint', [10773]], ['popf', [120161]], ['Popf', [8473]], ['pound', [163]], ['prap', [10935]], ['Pr', [10939]], ['pr', [8826]], ['prcue', [8828]], ['precapprox', [10935]], ['prec', [8826]], ['preccurlyeq', [8828]], ['Precedes', [8826]], ['PrecedesEqual', [10927]], ['PrecedesSlantEqual', [8828]], ['PrecedesTilde', [8830]], ['preceq', [10927]], ['precnapprox', [10937]], ['precneqq', [10933]], ['precnsim', [8936]], ['pre', [10927]], ['prE', [10931]], ['precsim', [8830]], ['prime', [8242]], ['Prime', [8243]], ['primes', [8473]], ['prnap', [10937]], ['prnE', [10933]], ['prnsim', [8936]], ['prod', [8719]], ['Product', [8719]], ['profalar', [9006]], ['profline', [8978]], ['profsurf', [8979]], ['prop', [8733]], ['Proportional', [8733]], ['Proportion', [8759]], ['propto', [8733]], ['prsim', [8830]], ['prurel', [8880]], ['Pscr', [119979]], ['pscr', [120005]], ['Psi', [936]], ['psi', [968]], ['puncsp', [8200]], ['Qfr', [120084]], ['qfr', [120110]], ['qint', [10764]], ['qopf', [120162]], ['Qopf', [8474]], ['qprime', [8279]], ['Qscr', [119980]], ['qscr', [120006]], ['quaternions', [8461]], ['quatint', [10774]], ['quest', [63]], ['questeq', [8799]], ['quot', [34]], ['QUOT', [34]], ['rAarr', [8667]], ['race', [8765, 817]], ['Racute', [340]], ['racute', [341]], ['radic', [8730]], ['raemptyv', [10675]], ['rang', [10217]], ['Rang', [10219]], ['rangd', [10642]], ['range', [10661]], ['rangle', [10217]], ['raquo', [187]], ['rarrap', [10613]], ['rarrb', [8677]], ['rarrbfs', [10528]], ['rarrc', [10547]], ['rarr', [8594]], ['Rarr', [8608]], ['rArr', [8658]], ['rarrfs', [10526]], ['rarrhk', [8618]], ['rarrlp', [8620]], ['rarrpl', [10565]], ['rarrsim', [10612]], ['Rarrtl', [10518]], ['rarrtl', [8611]], ['rarrw', [8605]], ['ratail', [10522]], ['rAtail', [10524]], ['ratio', [8758]], ['rationals', [8474]], ['rbarr', [10509]], ['rBarr', [10511]], ['RBarr', [10512]], ['rbbrk', [10099]], ['rbrace', [125]], ['rbrack', [93]], ['rbrke', [10636]], ['rbrksld', [10638]], ['rbrkslu', [10640]], ['Rcaron', [344]], ['rcaron', [345]], ['Rcedil', [342]], ['rcedil', [343]], ['rceil', [8969]], ['rcub', [125]], ['Rcy', [1056]], ['rcy', [1088]], ['rdca', [10551]], ['rdldhar', [10601]], ['rdquo', [8221]], ['rdquor', [8221]], ['CloseCurlyDoubleQuote', [8221]], ['rdsh', [8627]], ['real', [8476]], ['realine', [8475]], ['realpart', [8476]], ['reals', [8477]], ['Re', [8476]], ['rect', [9645]], ['reg', [174]], ['REG', [174]], ['ReverseElement', [8715]], ['ReverseEquilibrium', [8651]], ['ReverseUpEquilibrium', [10607]], ['rfisht', [10621]], ['rfloor', [8971]], ['rfr', [120111]], ['Rfr', [8476]], ['rHar', [10596]], ['rhard', [8641]], ['rharu', [8640]], ['rharul', [10604]], ['Rho', [929]], ['rho', [961]], ['rhov', [1009]], ['RightAngleBracket', [10217]], ['RightArrowBar', [8677]], ['rightarrow', [8594]], ['RightArrow', [8594]], ['Rightarrow', [8658]], ['RightArrowLeftArrow', [8644]], ['rightarrowtail', [8611]], ['RightCeiling', [8969]], ['RightDoubleBracket', [10215]], ['RightDownTeeVector', [10589]], ['RightDownVectorBar', [10581]], ['RightDownVector', [8642]], ['RightFloor', [8971]], ['rightharpoondown', [8641]], ['rightharpoonup', [8640]], ['rightleftarrows', [8644]], ['rightleftharpoons', [8652]], ['rightrightarrows', [8649]], ['rightsquigarrow', [8605]], ['RightTeeArrow', [8614]], ['RightTee', [8866]], ['RightTeeVector', [10587]], ['rightthreetimes', [8908]], ['RightTriangleBar', [10704]], ['RightTriangle', [8883]], ['RightTriangleEqual', [8885]], ['RightUpDownVector', [10575]], ['RightUpTeeVector', [10588]], ['RightUpVectorBar', [10580]], ['RightUpVector', [8638]], ['RightVectorBar', [10579]], ['RightVector', [8640]], ['ring', [730]], ['risingdotseq', [8787]], ['rlarr', [8644]], ['rlhar', [8652]], ['rlm', [8207]], ['rmoustache', [9137]], ['rmoust', [9137]], ['rnmid', [10990]], ['roang', [10221]], ['roarr', [8702]], ['robrk', [10215]], ['ropar', [10630]], ['ropf', [120163]], ['Ropf', [8477]], ['roplus', [10798]], ['rotimes', [10805]], ['RoundImplies', [10608]], ['rpar', [41]], ['rpargt', [10644]], ['rppolint', [10770]], ['rrarr', [8649]], ['Rrightarrow', [8667]], ['rsaquo', [8250]], ['rscr', [120007]], ['Rscr', [8475]], ['rsh', [8625]], ['Rsh', [8625]], ['rsqb', [93]], ['rsquo', [8217]], ['rsquor', [8217]], ['CloseCurlyQuote', [8217]], ['rthree', [8908]], ['rtimes', [8906]], ['rtri', [9657]], ['rtrie', [8885]], ['rtrif', [9656]], ['rtriltri', [10702]], ['RuleDelayed', [10740]], ['ruluhar', [10600]], ['rx', [8478]], ['Sacute', [346]], ['sacute', [347]], ['sbquo', [8218]], ['scap', [10936]], ['Scaron', [352]], ['scaron', [353]], ['Sc', [10940]], ['sc', [8827]], ['sccue', [8829]], ['sce', [10928]], ['scE', [10932]], ['Scedil', [350]], ['scedil', [351]], ['Scirc', [348]], ['scirc', [349]], ['scnap', [10938]], ['scnE', [10934]], ['scnsim', [8937]], ['scpolint', [10771]], ['scsim', [8831]], ['Scy', [1057]], ['scy', [1089]], ['sdotb', [8865]], ['sdot', [8901]], ['sdote', [10854]], ['searhk', [10533]], ['searr', [8600]], ['seArr', [8664]], ['searrow', [8600]], ['sect', [167]], ['semi', [59]], ['seswar', [10537]], ['setminus', [8726]], ['setmn', [8726]], ['sext', [10038]], ['Sfr', [120086]], ['sfr', [120112]], ['sfrown', [8994]], ['sharp', [9839]], ['SHCHcy', [1065]], ['shchcy', [1097]], ['SHcy', [1064]], ['shcy', [1096]], ['ShortDownArrow', [8595]], ['ShortLeftArrow', [8592]], ['shortmid', [8739]], ['shortparallel', [8741]], ['ShortRightArrow', [8594]], ['ShortUpArrow', [8593]], ['shy', [173]], ['Sigma', [931]], ['sigma', [963]], ['sigmaf', [962]], ['sigmav', [962]], ['sim', [8764]], ['simdot', [10858]], ['sime', [8771]], ['simeq', [8771]], ['simg', [10910]], ['simgE', [10912]], ['siml', [10909]], ['simlE', [10911]], ['simne', [8774]], ['simplus', [10788]], ['simrarr', [10610]], ['slarr', [8592]], ['SmallCircle', [8728]], ['smallsetminus', [8726]], ['smashp', [10803]], ['smeparsl', [10724]], ['smid', [8739]], ['smile', [8995]], ['smt', [10922]], ['smte', [10924]], ['smtes', [10924, 65024]], ['SOFTcy', [1068]], ['softcy', [1100]], ['solbar', [9023]], ['solb', [10692]], ['sol', [47]], ['Sopf', [120138]], ['sopf', [120164]], ['spades', [9824]], ['spadesuit', [9824]], ['spar', [8741]], ['sqcap', [8851]], ['sqcaps', [8851, 65024]], ['sqcup', [8852]], ['sqcups', [8852, 65024]], ['Sqrt', [8730]], ['sqsub', [8847]], ['sqsube', [8849]], ['sqsubset', [8847]], ['sqsubseteq', [8849]], ['sqsup', [8848]], ['sqsupe', [8850]], ['sqsupset', [8848]], ['sqsupseteq', [8850]], ['square', [9633]], ['Square', [9633]], ['SquareIntersection', [8851]], ['SquareSubset', [8847]], ['SquareSubsetEqual', [8849]], ['SquareSuperset', [8848]], ['SquareSupersetEqual', [8850]], ['SquareUnion', [8852]], ['squarf', [9642]], ['squ', [9633]], ['squf', [9642]], ['srarr', [8594]], ['Sscr', [119982]], ['sscr', [120008]], ['ssetmn', [8726]], ['ssmile', [8995]], ['sstarf', [8902]], ['Star', [8902]], ['star', [9734]], ['starf', [9733]], ['straightepsilon', [1013]], ['straightphi', [981]], ['strns', [175]], ['sub', [8834]], ['Sub', [8912]], ['subdot', [10941]], ['subE', [10949]], ['sube', [8838]], ['subedot', [10947]], ['submult', [10945]], ['subnE', [10955]], ['subne', [8842]], ['subplus', [10943]], ['subrarr', [10617]], ['subset', [8834]], ['Subset', [8912]], ['subseteq', [8838]], ['subseteqq', [10949]], ['SubsetEqual', [8838]], ['subsetneq', [8842]], ['subsetneqq', [10955]], ['subsim', [10951]], ['subsub', [10965]], ['subsup', [10963]], ['succapprox', [10936]], ['succ', [8827]], ['succcurlyeq', [8829]], ['Succeeds', [8827]], ['SucceedsEqual', [10928]], ['SucceedsSlantEqual', [8829]], ['SucceedsTilde', [8831]], ['succeq', [10928]], ['succnapprox', [10938]], ['succneqq', [10934]], ['succnsim', [8937]], ['succsim', [8831]], ['SuchThat', [8715]], ['sum', [8721]], ['Sum', [8721]], ['sung', [9834]], ['sup1', [185]], ['sup2', [178]], ['sup3', [179]], ['sup', [8835]], ['Sup', [8913]], ['supdot', [10942]], ['supdsub', [10968]], ['supE', [10950]], ['supe', [8839]], ['supedot', [10948]], ['Superset', [8835]], ['SupersetEqual', [8839]], ['suphsol', [10185]], ['suphsub', [10967]], ['suplarr', [10619]], ['supmult', [10946]], ['supnE', [10956]], ['supne', [8843]], ['supplus', [10944]], ['supset', [8835]], ['Supset', [8913]], ['supseteq', [8839]], ['supseteqq', [10950]], ['supsetneq', [8843]], ['supsetneqq', [10956]], ['supsim', [10952]], ['supsub', [10964]], ['supsup', [10966]], ['swarhk', [10534]], ['swarr', [8601]], ['swArr', [8665]], ['swarrow', [8601]], ['swnwar', [10538]], ['szlig', [223]], ['Tab', [9]], ['target', [8982]], ['Tau', [932]], ['tau', [964]], ['tbrk', [9140]], ['Tcaron', [356]], ['tcaron', [357]], ['Tcedil', [354]], ['tcedil', [355]], ['Tcy', [1058]], ['tcy', [1090]], ['tdot', [8411]], ['telrec', [8981]], ['Tfr', [120087]], ['tfr', [120113]], ['there4', [8756]], ['therefore', [8756]], ['Therefore', [8756]], ['Theta', [920]], ['theta', [952]], ['thetasym', [977]], ['thetav', [977]], ['thickapprox', [8776]], ['thicksim', [8764]], ['ThickSpace', [8287, 8202]], ['ThinSpace', [8201]], ['thinsp', [8201]], ['thkap', [8776]], ['thksim', [8764]], ['THORN', [222]], ['thorn', [254]], ['tilde', [732]], ['Tilde', [8764]], ['TildeEqual', [8771]], ['TildeFullEqual', [8773]], ['TildeTilde', [8776]], ['timesbar', [10801]], ['timesb', [8864]], ['times', [215]], ['timesd', [10800]], ['tint', [8749]], ['toea', [10536]], ['topbot', [9014]], ['topcir', [10993]], ['top', [8868]], ['Topf', [120139]], ['topf', [120165]], ['topfork', [10970]], ['tosa', [10537]], ['tprime', [8244]], ['trade', [8482]], ['TRADE', [8482]], ['triangle', [9653]], ['triangledown', [9663]], ['triangleleft', [9667]], ['trianglelefteq', [8884]], ['triangleq', [8796]], ['triangleright', [9657]], ['trianglerighteq', [8885]], ['tridot', [9708]], ['trie', [8796]], ['triminus', [10810]], ['TripleDot', [8411]], ['triplus', [10809]], ['trisb', [10701]], ['tritime', [10811]], ['trpezium', [9186]], ['Tscr', [119983]], ['tscr', [120009]], ['TScy', [1062]], ['tscy', [1094]], ['TSHcy', [1035]], ['tshcy', [1115]], ['Tstrok', [358]], ['tstrok', [359]], ['twixt', [8812]], ['twoheadleftarrow', [8606]], ['twoheadrightarrow', [8608]], ['Uacute', [218]], ['uacute', [250]], ['uarr', [8593]], ['Uarr', [8607]], ['uArr', [8657]], ['Uarrocir', [10569]], ['Ubrcy', [1038]], ['ubrcy', [1118]], ['Ubreve', [364]], ['ubreve', [365]], ['Ucirc', [219]], ['ucirc', [251]], ['Ucy', [1059]], ['ucy', [1091]], ['udarr', [8645]], ['Udblac', [368]], ['udblac', [369]], ['udhar', [10606]], ['ufisht', [10622]], ['Ufr', [120088]], ['ufr', [120114]], ['Ugrave', [217]], ['ugrave', [249]], ['uHar', [10595]], ['uharl', [8639]], ['uharr', [8638]], ['uhblk', [9600]], ['ulcorn', [8988]], ['ulcorner', [8988]], ['ulcrop', [8975]], ['ultri', [9720]], ['Umacr', [362]], ['umacr', [363]], ['uml', [168]], ['UnderBar', [95]], ['UnderBrace', [9183]], ['UnderBracket', [9141]], ['UnderParenthesis', [9181]], ['Union', [8899]], ['UnionPlus', [8846]], ['Uogon', [370]], ['uogon', [371]], ['Uopf', [120140]], ['uopf', [120166]], ['UpArrowBar', [10514]], ['uparrow', [8593]], ['UpArrow', [8593]], ['Uparrow', [8657]], ['UpArrowDownArrow', [8645]], ['updownarrow', [8597]], ['UpDownArrow', [8597]], ['Updownarrow', [8661]], ['UpEquilibrium', [10606]], ['upharpoonleft', [8639]], ['upharpoonright', [8638]], ['uplus', [8846]], ['UpperLeftArrow', [8598]], ['UpperRightArrow', [8599]], ['upsi', [965]], ['Upsi', [978]], ['upsih', [978]], ['Upsilon', [933]], ['upsilon', [965]], ['UpTeeArrow', [8613]], ['UpTee', [8869]], ['upuparrows', [8648]], ['urcorn', [8989]], ['urcorner', [8989]], ['urcrop', [8974]], ['Uring', [366]], ['uring', [367]], ['urtri', [9721]], ['Uscr', [119984]], ['uscr', [120010]], ['utdot', [8944]], ['Utilde', [360]], ['utilde', [361]], ['utri', [9653]], ['utrif', [9652]], ['uuarr', [8648]], ['Uuml', [220]], ['uuml', [252]], ['uwangle', [10663]], ['vangrt', [10652]], ['varepsilon', [1013]], ['varkappa', [1008]], ['varnothing', [8709]], ['varphi', [981]], ['varpi', [982]], ['varpropto', [8733]], ['varr', [8597]], ['vArr', [8661]], ['varrho', [1009]], ['varsigma', [962]], ['varsubsetneq', [8842, 65024]], ['varsubsetneqq', [10955, 65024]], ['varsupsetneq', [8843, 65024]], ['varsupsetneqq', [10956, 65024]], ['vartheta', [977]], ['vartriangleleft', [8882]], ['vartriangleright', [8883]], ['vBar', [10984]], ['Vbar', [10987]], ['vBarv', [10985]], ['Vcy', [1042]], ['vcy', [1074]], ['vdash', [8866]], ['vDash', [8872]], ['Vdash', [8873]], ['VDash', [8875]], ['Vdashl', [10982]], ['veebar', [8891]], ['vee', [8744]], ['Vee', [8897]], ['veeeq', [8794]], ['vellip', [8942]], ['verbar', [124]], ['Verbar', [8214]], ['vert', [124]], ['Vert', [8214]], ['VerticalBar', [8739]], ['VerticalLine', [124]], ['VerticalSeparator', [10072]], ['VerticalTilde', [8768]], ['VeryThinSpace', [8202]], ['Vfr', [120089]], ['vfr', [120115]], ['vltri', [8882]], ['vnsub', [8834, 8402]], ['vnsup', [8835, 8402]], ['Vopf', [120141]], ['vopf', [120167]], ['vprop', [8733]], ['vrtri', [8883]], ['Vscr', [119985]], ['vscr', [120011]], ['vsubnE', [10955, 65024]], ['vsubne', [8842, 65024]], ['vsupnE', [10956, 65024]], ['vsupne', [8843, 65024]], ['Vvdash', [8874]], ['vzigzag', [10650]], ['Wcirc', [372]], ['wcirc', [373]], ['wedbar', [10847]], ['wedge', [8743]], ['Wedge', [8896]], ['wedgeq', [8793]], ['weierp', [8472]], ['Wfr', [120090]], ['wfr', [120116]], ['Wopf', [120142]], ['wopf', [120168]], ['wp', [8472]], ['wr', [8768]], ['wreath', [8768]], ['Wscr', [119986]], ['wscr', [120012]], ['xcap', [8898]], ['xcirc', [9711]], ['xcup', [8899]], ['xdtri', [9661]], ['Xfr', [120091]], ['xfr', [120117]], ['xharr', [10231]], ['xhArr', [10234]], ['Xi', [926]], ['xi', [958]], ['xlarr', [10229]], ['xlArr', [10232]], ['xmap', [10236]], ['xnis', [8955]], ['xodot', [10752]], ['Xopf', [120143]], ['xopf', [120169]], ['xoplus', [10753]], ['xotime', [10754]], ['xrarr', [10230]], ['xrArr', [10233]], ['Xscr', [119987]], ['xscr', [120013]], ['xsqcup', [10758]], ['xuplus', [10756]], ['xutri', [9651]], ['xvee', [8897]], ['xwedge', [8896]], ['Yacute', [221]], ['yacute', [253]], ['YAcy', [1071]], ['yacy', [1103]], ['Ycirc', [374]], ['ycirc', [375]], ['Ycy', [1067]], ['ycy', [1099]], ['yen', [165]], ['Yfr', [120092]], ['yfr', [120118]], ['YIcy', [1031]], ['yicy', [1111]], ['Yopf', [120144]], ['yopf', [120170]], ['Yscr', [119988]], ['yscr', [120014]], ['YUcy', [1070]], ['yucy', [1102]], ['yuml', [255]], ['Yuml', [376]], ['Zacute', [377]], ['zacute', [378]], ['Zcaron', [381]], ['zcaron', [382]], ['Zcy', [1047]], ['zcy', [1079]], ['Zdot', [379]], ['zdot', [380]], ['zeetrf', [8488]], ['ZeroWidthSpace', [8203]], ['Zeta', [918]], ['zeta', [950]], ['zfr', [120119]], ['Zfr', [8488]], ['ZHcy', [1046]], ['zhcy', [1078]], ['zigrarr', [8669]], ['zopf', [120171]], ['Zopf', [8484]], ['Zscr', [119989]], ['zscr', [120015]], ['zwj', [8205]], ['zwnj', [8204]]];
-
+var DECODE_ONLY_ENTITIES = [['NewLine', [10]]];
 var alphaIndex = {};
 var charIndex = {};
-
 createIndexes(alphaIndex, charIndex);
-
-/**
- * @constructor
- */
-function Html5Entities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
+var Html5Entities = /** @class */ (function () {
+    function Html5Entities() {
     }
-    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
-        var chr;
-        if (entity.charAt(0) === "#") {
-            var code = entity.charAt(1) === 'x' ?
-                parseInt(entity.substr(2).toLowerCase(), 16) :
-                parseInt(entity.substr(1));
-
-            if (!(isNaN(code) || code < -32768 || code > 65535)) {
-                chr = String.fromCharCode(code);
-            }
-        } else {
-            chr = alphaIndex[entity];
+    Html5Entities.prototype.decode = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        return chr || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.decode = function(str) {
-    return new Html5Entities().decode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var charInfo = charIndex[str.charCodeAt(i)];
-        if (charInfo) {
-            var alpha = charInfo[str.charCodeAt(i + 1)];
-            if (alpha) {
-                i++;
-            } else {
-                alpha = charInfo[''];
+        return str.replace(/&(#?[\w\d]+);?/g, function (s, entity) {
+            var chr;
+            if (entity.charAt(0) === "#") {
+                var code = entity.charAt(1) === 'x' ?
+                    parseInt(entity.substr(2).toLowerCase(), 16) :
+                    parseInt(entity.substr(1));
+                if (!isNaN(code) || code >= -32768) {
+                    if (code <= 65535) {
+                        chr = String.fromCharCode(code);
+                    }
+                    else {
+                        chr = surrogate_pairs_1.fromCodePoint(code);
+                    }
+                }
             }
-            if (alpha) {
-                result += "&" + alpha + ";";
-                i++;
-                continue;
+            else {
+                chr = alphaIndex[entity];
             }
+            return chr || s;
+        });
+    };
+    Html5Entities.decode = function (str) {
+        return new Html5Entities().decode(str);
+    };
+    Html5Entities.prototype.encode = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        result += str.charAt(i);
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encode = function(str) {
-    return new Html5Entities().encode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        var charInfo = charIndex[c];
-        if (charInfo) {
-            var alpha = charInfo[str.charCodeAt(i + 1)];
-            if (alpha) {
-                i++;
-            } else {
-                alpha = charInfo[''];
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var charInfo = charIndex[str.charCodeAt(i)];
+            if (charInfo) {
+                var alpha = charInfo[str.charCodeAt(i + 1)];
+                if (alpha) {
+                    i++;
+                }
+                else {
+                    alpha = charInfo[''];
+                }
+                if (alpha) {
+                    result += "&" + alpha + ";";
+                    i++;
+                    continue;
+                }
             }
-            if (alpha) {
-                result += "&" + alpha + ";";
-                i++;
-                continue;
-            }
-        }
-        if (c < 32 || c > 126) {
-            result += '&#' + c + ';';
-        } else {
             result += str.charAt(i);
+            i++;
         }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encodeNonUTF = function(str) {
-    return new Html5Entities().encodeNonUTF(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
+        return result;
+    };
+    Html5Entities.encode = function (str) {
+        return new Html5Entities().encode(str);
+    };
+    Html5Entities.prototype.encodeNonUTF = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        result += '&#' + c + ';';
-        i++
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encodeNonASCII = function(str) {
-    return new Html5Entities().encodeNonASCII(str);
- };
-
-/**
- * @param {Object} alphaIndex Passed by reference.
- * @param {Object} charIndex Passed by reference.
- */
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var c = str.charCodeAt(i);
+            var charInfo = charIndex[c];
+            if (charInfo) {
+                var alpha = charInfo[str.charCodeAt(i + 1)];
+                if (alpha) {
+                    i++;
+                }
+                else {
+                    alpha = charInfo[''];
+                }
+                if (alpha) {
+                    result += "&" + alpha + ";";
+                    i++;
+                    continue;
+                }
+            }
+            if (c < 32 || c > 126) {
+                if (c >= surrogate_pairs_1.highSurrogateFrom && c <= surrogate_pairs_1.highSurrogateTo) {
+                    result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                    i++;
+                }
+                else {
+                    result += '&#' + c + ';';
+                }
+            }
+            else {
+                result += str.charAt(i);
+            }
+            i++;
+        }
+        return result;
+    };
+    Html5Entities.encodeNonUTF = function (str) {
+        return new Html5Entities().encodeNonUTF(str);
+    };
+    Html5Entities.prototype.encodeNonASCII = function (str) {
+        if (!str || !str.length) {
+            return '';
+        }
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var c = str.charCodeAt(i);
+            if (c <= 255) {
+                result += str[i++];
+                continue;
+            }
+            if (c >= surrogate_pairs_1.highSurrogateFrom && c <= surrogate_pairs_1.highSurrogateTo) {
+                result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                i += 2;
+            }
+            else {
+                result += '&#' + c + ';';
+                i++;
+            }
+        }
+        return result;
+    };
+    Html5Entities.encodeNonASCII = function (str) {
+        return new Html5Entities().encodeNonASCII(str);
+    };
+    return Html5Entities;
+}());
+exports.Html5Entities = Html5Entities;
 function createIndexes(alphaIndex, charIndex) {
     var i = ENTITIES.length;
-    var _results = [];
     while (i--) {
-        var e = ENTITIES[i];
-        var alpha = e[0];
-        var chars = e[1];
-        var chr = chars[0];
+        var _a = ENTITIES[i], alpha = _a[0], _b = _a[1], chr = _b[0], chr2 = _b[1];
         var addChar = (chr < 32 || chr > 126) || chr === 62 || chr === 60 || chr === 38 || chr === 34 || chr === 39;
-        var charInfo;
+        var charInfo = void 0;
         if (addChar) {
             charInfo = charIndex[chr] = charIndex[chr] || {};
         }
-        if (chars[1]) {
-            var chr2 = chars[1];
+        if (chr2) {
             alphaIndex[alpha] = String.fromCharCode(chr) + String.fromCharCode(chr2);
-            _results.push(addChar && (charInfo[chr2] = alpha));
-        } else {
-            alphaIndex[alpha] = String.fromCharCode(chr);
-            _results.push(addChar && (charInfo[''] = alpha));
+            addChar && (charInfo[chr2] = alpha);
         }
+        else {
+            alphaIndex[alpha] = String.fromCharCode(chr);
+            addChar && (charInfo[''] = alpha);
+        }
+    }
+    i = DECODE_ONLY_ENTITIES.length;
+    while (i--) {
+        var _c = DECODE_ONLY_ENTITIES[i], alpha = _c[0], _d = _c[1], chr = _d[0], chr2 = _d[1];
+        alphaIndex[alpha] = String.fromCharCode(chr) + (chr2 ? String.fromCharCode(chr2) : '');
     }
 }
 
-module.exports = Html5Entities;
+
+/***/ }),
+
+/***/ "./node_modules/html-entities/lib/index.js":
+/*!*************************************************!*\
+  !*** ./node_modules/html-entities/lib/index.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var xml_entities_1 = __webpack_require__(/*! ./xml-entities */ "./node_modules/html-entities/lib/xml-entities.js");
+exports.XmlEntities = xml_entities_1.XmlEntities;
+var html4_entities_1 = __webpack_require__(/*! ./html4-entities */ "./node_modules/html-entities/lib/html4-entities.js");
+exports.Html4Entities = html4_entities_1.Html4Entities;
+var html5_entities_1 = __webpack_require__(/*! ./html5-entities */ "./node_modules/html-entities/lib/html5-entities.js");
+exports.Html5Entities = html5_entities_1.Html5Entities;
+exports.AllHtmlEntities = html5_entities_1.Html5Entities;
+
+
+/***/ }),
+
+/***/ "./node_modules/html-entities/lib/surrogate-pairs.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/html-entities/lib/surrogate-pairs.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fromCodePoint = String.fromCodePoint || function (astralCodePoint) {
+    return String.fromCharCode(Math.floor((astralCodePoint - 0x10000) / 0x400) + 0xD800, (astralCodePoint - 0x10000) % 0x400 + 0xDC00);
+};
+exports.getCodePoint = String.prototype.codePointAt ?
+    function (input, position) {
+        return input.codePointAt(position);
+    } :
+    function (input, position) {
+        return (input.charCodeAt(position) - 0xD800) * 0x400
+            + input.charCodeAt(position + 1) - 0xDC00 + 0x10000;
+    };
+exports.highSurrogateFrom = 0xD800;
+exports.highSurrogateTo = 0xDBFF;
 
 
 /***/ }),
@@ -3082,8 +2983,12 @@ module.exports = Html5Entities;
   !*** ./node_modules/html-entities/lib/xml-entities.js ***!
   \********************************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var surrogate_pairs_1 = __webpack_require__(/*! ./surrogate-pairs */ "./node_modules/html-entities/lib/surrogate-pairs.js");
 var ALPHA_INDEX = {
     '&lt': '<',
     '&gt': '>',
@@ -3096,7 +3001,6 @@ var ALPHA_INDEX = {
     '&apos;': '\'',
     '&amp;': '&'
 };
-
 var CHAR_INDEX = {
     60: 'lt',
     62: 'gt',
@@ -3104,7 +3008,6 @@ var CHAR_INDEX = {
     39: 'apos',
     38: 'amp'
 };
-
 var CHAR_S_INDEX = {
     '<': '&lt;',
     '>': '&gt;',
@@ -3112,133 +3015,109 @@ var CHAR_S_INDEX = {
     '\'': '&apos;',
     '&': '&amp;'
 };
-
-/**
- * @constructor
- */
-function XmlEntities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
+var XmlEntities = /** @class */ (function () {
+    function XmlEntities() {
     }
-    return str.replace(/<|>|"|'|&/g, function(s) {
-        return CHAR_S_INDEX[s];
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encode = function(str) {
-    return new XmlEntities().encode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    return str.replace(/&#?[0-9a-zA-Z]+;?/g, function(s) {
-        if (s.charAt(1) === '#') {
-            var code = s.charAt(2).toLowerCase() === 'x' ?
-                parseInt(s.substr(3), 16) :
-                parseInt(s.substr(2));
-
-            if (isNaN(code) || code < -32768 || code > 65535) {
+    XmlEntities.prototype.encode = function (str) {
+        if (!str || !str.length) {
+            return '';
+        }
+        return str.replace(/[<>"'&]/g, function (s) {
+            return CHAR_S_INDEX[s];
+        });
+    };
+    XmlEntities.encode = function (str) {
+        return new XmlEntities().encode(str);
+    };
+    XmlEntities.prototype.decode = function (str) {
+        if (!str || !str.length) {
+            return '';
+        }
+        return str.replace(/&#?[0-9a-zA-Z]+;?/g, function (s) {
+            if (s.charAt(1) === '#') {
+                var code = s.charAt(2).toLowerCase() === 'x' ?
+                    parseInt(s.substr(3), 16) :
+                    parseInt(s.substr(2));
+                if (!isNaN(code) || code >= -32768) {
+                    if (code <= 65535) {
+                        return String.fromCharCode(code);
+                    }
+                    else {
+                        return surrogate_pairs_1.fromCodePoint(code);
+                    }
+                }
                 return '';
             }
-            return String.fromCharCode(code);
+            return ALPHA_INDEX[s] || s;
+        });
+    };
+    XmlEntities.decode = function (str) {
+        return new XmlEntities().decode(str);
+    };
+    XmlEntities.prototype.encodeNonUTF = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        return ALPHA_INDEX[s] || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.decode = function(str) {
-    return new XmlEntities().decode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        var alpha = CHAR_INDEX[c];
-        if (alpha) {
-            result += "&" + alpha + ";";
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var c = str.charCodeAt(i);
+            var alpha = CHAR_INDEX[c];
+            if (alpha) {
+                result += "&" + alpha + ";";
+                i++;
+                continue;
+            }
+            if (c < 32 || c > 126) {
+                if (c >= surrogate_pairs_1.highSurrogateFrom && c <= surrogate_pairs_1.highSurrogateTo) {
+                    result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                    i++;
+                }
+                else {
+                    result += '&#' + c + ';';
+                }
+            }
+            else {
+                result += str.charAt(i);
+            }
             i++;
-            continue;
         }
-        if (c < 32 || c > 126) {
-            result += '&#' + c + ';';
-        } else {
-            result += str.charAt(i);
+        return result;
+    };
+    XmlEntities.encodeNonUTF = function (str) {
+        return new XmlEntities().encodeNonUTF(str);
+    };
+    XmlEntities.prototype.encodeNonASCII = function (str) {
+        if (!str || !str.length) {
+            return '';
         }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encodeNonUTF = function(str) {
-    return new XmlEntities().encodeNonUTF(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLenght = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLenght) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
+        var strLength = str.length;
+        var result = '';
+        var i = 0;
+        while (i < strLength) {
+            var c = str.charCodeAt(i);
+            if (c <= 255) {
+                result += str[i++];
+                continue;
+            }
+            if (c >= surrogate_pairs_1.highSurrogateFrom && c <= surrogate_pairs_1.highSurrogateTo) {
+                result += '&#' + surrogate_pairs_1.getCodePoint(str, i) + ';';
+                i++;
+            }
+            else {
+                result += '&#' + c + ';';
+            }
+            i++;
         }
-        result += '&#' + c + ';';
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encodeNonASCII = function(str) {
-    return new XmlEntities().encodeNonASCII(str);
- };
-
-module.exports = XmlEntities;
+        return result;
+    };
+    XmlEntities.encodeNonASCII = function (str) {
+        return new XmlEntities().encodeNonASCII(str);
+    };
+    return XmlEntities;
+}());
+exports.XmlEntities = XmlEntities;
 
 
 /***/ }),
@@ -3325,7 +3204,7 @@ function decimal(character) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var require;var require;/*!
     localForage -- Offline Storage, Improved
-    Version 1.7.3
+    Version 1.10.0
     https://localforage.github.io/localForage
     (c) 2013-2017 Mozilla, Apache License 2.0
 */
@@ -3701,7 +3580,7 @@ function isIndexedDBValid() {
     try {
         // Initialize IndexedDB; fall back to vendor-prefixed versions
         // if needed.
-        if (!idb) {
+        if (!idb || !idb.open) {
             return false;
         }
         // We mimic PouchDB here;
@@ -3712,8 +3591,12 @@ function isIndexedDBValid() {
 
         var hasFetch = typeof fetch === 'function' && fetch.toString().indexOf('[native code') !== -1;
 
-        // Safari <10.1 does not meet our requirements for IDB support (#5572)
-        // since Safari 10.1 shipped with fetch, we can use that to detect it
+        // Safari <10.1 does not meet our requirements for IDB support
+        // (see: https://github.com/pouchdb/pouchdb/issues/5572).
+        // Safari 10.1 shipped with fetch, we can use that to detect it.
+        // Note: this creates issues with `window.fetch` polyfills and
+        // overrides; see:
+        // https://github.com/localForage/localForage/issues/856
         return (!isSafari || hasFetch) && typeof indexedDB !== 'undefined' &&
         // some outdated implementations of IDB that appear on Samsung
         // and HTC Android devices <4.4 are missing IDBKeyRange
@@ -3971,7 +3854,16 @@ function _getConnection(dbInfo, upgradeNeeded) {
         };
 
         openreq.onsuccess = function () {
-            resolve(openreq.result);
+            var db = openreq.result;
+            db.onversionchange = function (e) {
+                // Triggered when the database is modified (e.g. adding an objectStore) or
+                // deleted (even when initiated by other sessions in different tabs).
+                // Closing the connection here prevents those operations from being blocked.
+                // If the database is accessed again later by this instance, the connection
+                // will be reopened or the database recreated as needed.
+                e.target.close();
+            };
+            resolve(db);
             _advanceReadiness(dbInfo);
         };
     });
@@ -4299,7 +4191,7 @@ function iterate(iterator, callback) {
                             }
                             var result = iterator(value, cursor.key, iterationNumber++);
 
-                            // when the iterator callback retuns any
+                            // when the iterator callback returns any
                             // (non-`undefined`) value, then we stop
                             // the iteration immediately
                             if (result !== void 0) {
@@ -4521,7 +4413,7 @@ function key(n, callback) {
                 try {
                     var store = transaction.objectStore(self._dbInfo.storeName);
                     var advanced = false;
-                    var req = store.openCursor();
+                    var req = store.openKeyCursor();
 
                     req.onsuccess = function () {
                         var cursor = req.result;
@@ -4575,7 +4467,7 @@ function keys(callback) {
 
                 try {
                     var store = transaction.objectStore(self._dbInfo.storeName);
-                    var req = store.openCursor();
+                    var req = store.openKeyCursor();
                     var keys = [];
 
                     req.onsuccess = function () {
@@ -4647,12 +4539,18 @@ function dropInstance(options, callback) {
                 var dropDBPromise = new Promise$1(function (resolve, reject) {
                     var req = idb.deleteDatabase(options.name);
 
-                    req.onerror = req.onblocked = function (err) {
+                    req.onerror = function () {
                         var db = req.result;
                         if (db) {
                             db.close();
                         }
-                        reject(err);
+                        reject(req.error);
+                    };
+
+                    req.onblocked = function () {
+                        // Closing all open connections in onversionchange handler should prevent this situation, but if
+                        // we do get here, it just means the request remains pending - eventually it will succeed or error
+                        console.warn('dropInstance blocked for database "' + options.name + '" until all open connections are closed');
                     };
 
                     req.onsuccess = function () {
@@ -6642,7 +6540,7 @@ process.umask = function() { return 0; };
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
-/* UAParser.js v1.0.2
+/* UAParser.js v1.0.32
    Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
    MIT License *//*
    Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
@@ -6660,7 +6558,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
     /////////////
 
 
-    var LIBVERSION  = '1.0.2',
+    var LIBVERSION  = '1.0.32',
         EMPTY       = '',
         UNKNOWN     = '?',
         FUNC_TYPE   = 'function',
@@ -6680,7 +6578,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         SMARTTV     = 'smarttv',
         WEARABLE    = 'wearable',
         EMBEDDED    = 'embedded',
-        UA_MAX_LENGTH = 255;
+        UA_MAX_LENGTH = 350;
 
     var AMAZON  = 'Amazon',
         APPLE   = 'Apple',
@@ -6697,6 +6595,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         MOTOROLA  = 'Motorola',
         OPERA   = 'Opera',
         SAMSUNG = 'Samsung',
+        SHARP   = 'Sharp',
         SONY    = 'Sony',
         XIAOMI  = 'Xiaomi',
         ZEBRA   = 'Zebra',
@@ -6874,13 +6773,14 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
 
             // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
-            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale|qqbrowserlite|qq)\/([-\w\.]+)/i,
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale|qqbrowserlite|qq|duckduckgo)\/([-\w\.]+)/i,
                                                                                 // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
             /(weibo)__([\d\.]+)/i                                               // Weibo
             ], [NAME, VERSION], [
             /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
             ], [VERSION, [NAME, 'UC'+BROWSER]], [
-            /\bqbcore\/([\w\.]+)/i                                              // WeChat Desktop for Windows Built-in Browser
+            /microm.+\bqbcore\/([\w\.]+)/i,                                     // WeChat Desktop for Windows Built-in Browser
+            /\bqbcore\/([\w\.]+).+microm/i
             ], [VERSION, [NAME, 'WeChat(Win) Desktop']], [
             /micromessenger\/([\w\.]+)/i                                        // WeChat
             ], [VERSION, [NAME, 'WeChat']], [
@@ -6908,8 +6808,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [VERSION, [NAME, FIREFOX]], [
             /\bqihu|(qi?ho?o?|360)browser/i                                     // 360
             ], [[NAME, '360 '+BROWSER]], [
-            /(oculus|samsung|sailfish)browser\/([\w\.]+)/i
-            ], [[NAME, /(.+)/, '$1 '+BROWSER], VERSION], [                      // Oculus/Samsung/Sailfish Browser
+            /(oculus|samsung|sailfish|huawei)browser\/([\w\.]+)/i
+            ], [[NAME, /(.+)/, '$1 '+BROWSER], VERSION], [                      // Oculus/Samsung/Sailfish/Huawei Browser
             /(comodo_dragon)\/([\w\.]+)/i                                       // Comodo Dragon
             ], [[NAME, /_/g, ' '], VERSION], [
             /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
@@ -6917,7 +6817,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /m?(qqbrowser|baiduboxapp|2345Explorer)[\/ ]?([\w\.]+)/i            // QQBrowser/Baidu App/2345 Browser
             ], [NAME, VERSION], [
             /(metasr)[\/ ]?([\w\.]+)/i,                                         // SouGouBrowser
-            /(lbbrowser)/i                                                      // LieBao Browser
+            /(lbbrowser)/i,                                                     // LieBao Browser
+            /\[(linkedin)app\]/i                                                // LinkedIn App for iOS & Android
             ], [NAME], [
 
             // WebView
@@ -6942,9 +6843,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i       // Chrome/OmniWeb/Arora/Tizen/Nokia
             ], [NAME, VERSION], [
 
-            /version\/([\w\.]+) .*mobile\/\w+ (safari)/i                        // Mobile Safari
+            /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i                      // Mobile Safari
             ], [VERSION, [NAME, 'Mobile Safari']], [
-            /version\/([\w\.]+) .*(mobile ?safari|safari)/i                     // Safari & Safari Mobile
+            /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i                // Safari & Safari Mobile
             ], [VERSION, NAME], [
             /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i                      // Safari < 3.0
             ], [NAME, [VERSION, strMapper, oldSafariMap]], [
@@ -7013,7 +6914,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /////////////////////////
 
             // Samsung
-            /\b(sch-i[89]0\d|shw-m380s|sm-[pt]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+            /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
             ], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [
             /\b((?:s[cgp]h|gt|sm)-\w+|galaxy nexus)/i,
             /samsung[- ]([-\w]+)/i,
@@ -7032,7 +6933,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [
             /(?:huawei|honor)([-\w ]+)[;\)]/i,
-            /\b(nexus 6p|\w{2,4}-[atu]?[ln][01259x][012359][an]?)\b(?!.+d\/s)/i
+            /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
 
             // Xiaomi
@@ -7040,7 +6941,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
             /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
             /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
-            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
             ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
             /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i                        // Mi Pad tablets
             ],[[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
@@ -7092,7 +6993,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
 
             // Sony
-            /droid.+ ([c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+            /droid.+ (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
             ], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [
             /sony tablet [ps]/i,
             /\b(?:sony)?sgp\w+(?: bui|\))/i
@@ -7131,7 +7032,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // ZTE
             /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
-            /(alcatel|geeksphone|nexian|panasonic|sony)[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+            /(alcatel|geeksphone|nexian|panasonic|sony(?!-bra))[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
             ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
 
             // Acer
@@ -7145,7 +7046,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // Sharp
             /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, MOBILE]], [
+            ], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
 
             // MIXED
             /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[-_ ]?([-\w]*)/i,
@@ -7257,8 +7158,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
             /droid.+aft(\w)( bui|\))/i                                          // Fire TV
             ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
-            /\(dtv[\);].+(aquos)/i                                              // Sharp
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, SMARTTV]], [
+            /\(dtv[\);].+(aquos)/i,
+            /(aquos-tv[\w ]+)\)/i                                               // Sharp
+            ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]],[
+            /(bravia[\w ]+)( bui|\))/i                                              // Sony
+            ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [
+            /(mitv-\w{5}) bui/i                                                 // Xiaomi
+            ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [
             /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
             /hbbtv\/\d+\.\d+\.\d+ +\([\w ]*; *(\w[^;]*);([^;]*)/i               // HbbTV devices
             ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
@@ -7295,7 +7201,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [TYPE, TABLET]], [
             /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i                      // Unidentifiable Tablet
             ], [[TYPE, TABLET]], [
-            /(phone|mobile(?:[;\/]| safari)|pda(?=.+windows ce))/i              // Unidentifiable Mobile
+            /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i    // Unidentifiable Mobile
             ], [[TYPE, MOBILE]], [
             /(android[-\w\. ]{0,9});.+buil/i                                    // Generic Android Device
             ], [MODEL, [VENDOR, 'Generic']]
@@ -7341,7 +7247,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [[NAME, 'Mac OS'], [VERSION, /_/g, '.']], [
 
             // Mobile OSes
-            /droid ([\w\.]+)\b.+(android[- ]x86)/i                              // Android-x86
+            /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i                    // Android-x86/HarmonyOS
             ], [VERSION, NAME], [                                               // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
             /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i,
             /(blackberry)\w*\/([\w\.]*)/i,                                      // Blackberry
@@ -7616,12 +7522,12 @@ var LOG_LEVEL_ERROR = 2;
 var LOG_LEVEL_WARNING = 3;
 var LOG_LEVEL_INFO = 4;
 var LOG_LEVEL_DEBUG = 5;
+
 /**
  * @module Debug
  * @param {object} config
  * @ignore
  */
-
 function Debug(config) {
   config = config || {};
   var context = this.context;
@@ -7629,12 +7535,10 @@ function Debug(config) {
   var settings = config.settings;
   var logFn = [];
   var instance, showLogTimestamp, showCalleeName, startTime;
-
   function setup() {
     showLogTimestamp = true;
     showCalleeName = true;
     startTime = new Date().getTime();
-
     if (typeof window !== 'undefined' && window.console) {
       logFn[LOG_LEVEL_FATAL] = getLogFn(window.console.error);
       logFn[LOG_LEVEL_ERROR] = getLogFn(window.console.error);
@@ -7643,15 +7547,14 @@ function Debug(config) {
       logFn[LOG_LEVEL_DEBUG] = getLogFn(window.console.debug);
     }
   }
-
   function getLogFn(fn) {
     if (fn && fn.bind) {
       return fn.bind(window.console);
-    } // if not define, return the default function for reporting logs
-
-
+    }
+    // if not define, return the default function for reporting logs
     return window.console.log.bind(window.console);
   }
+
   /**
    * Retrieves a logger which can be used to write logging information in browser console.
    * @param {object} instance Object for which the logger is created. It is used
@@ -7660,8 +7563,6 @@ function Debug(config) {
    * @returns {Logger}
    * @instance
    */
-
-
   function getLogger(instance) {
     return {
       fatal: fatal.bind(instance),
@@ -7671,6 +7572,7 @@ function Debug(config) {
       debug: debug.bind(instance)
     };
   }
+
   /**
    * Prepends a timestamp in milliseconds to each log message.
    * @param {boolean} value Set to true if you want to see a timestamp in each log message.
@@ -7678,11 +7580,10 @@ function Debug(config) {
    * @memberof module:Debug
    * @instance
    */
-
-
   function setLogTimestampVisible(value) {
     showLogTimestamp = value;
   }
+
   /**
    * Prepends the callee object name, and media type if available, to each log message.
    * @param {boolean} value Set to true if you want to see the callee object name and media type in each log message.
@@ -7690,86 +7591,68 @@ function Debug(config) {
    * @memberof module:Debug
    * @instance
    */
-
-
   function setCalleeNameVisible(value) {
     showCalleeName = value;
   }
-
   function fatal() {
     for (var _len = arguments.length, params = new Array(_len), _key = 0; _key < _len; _key++) {
       params[_key] = arguments[_key];
     }
-
     doLog.apply(void 0, [LOG_LEVEL_FATAL, this].concat(params));
   }
-
   function error() {
     for (var _len2 = arguments.length, params = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       params[_key2] = arguments[_key2];
     }
-
     doLog.apply(void 0, [LOG_LEVEL_ERROR, this].concat(params));
   }
-
   function warn() {
     for (var _len3 = arguments.length, params = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
       params[_key3] = arguments[_key3];
     }
-
     doLog.apply(void 0, [LOG_LEVEL_WARNING, this].concat(params));
   }
-
   function info() {
     for (var _len4 = arguments.length, params = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
       params[_key4] = arguments[_key4];
     }
-
     doLog.apply(void 0, [LOG_LEVEL_INFO, this].concat(params));
   }
-
   function debug() {
     for (var _len5 = arguments.length, params = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
       params[_key5] = arguments[_key5];
     }
-
     doLog.apply(void 0, [LOG_LEVEL_DEBUG, this].concat(params));
   }
-
   function doLog(level, _this) {
     var message = '';
     var logTime = null;
-
     if (showLogTimestamp) {
       logTime = new Date().getTime();
       message += '[' + (logTime - startTime) + ']';
     }
-
     if (showCalleeName && _this && _this.getClassName) {
       message += '[' + _this.getClassName() + ']';
-
       if (_this.getType) {
         message += '[' + _this.getType() + ']';
       }
     }
-
     if (message.length > 0) {
       message += ' ';
     }
-
     for (var _len6 = arguments.length, params = new Array(_len6 > 2 ? _len6 - 2 : 0), _key6 = 2; _key6 < _len6; _key6++) {
       params[_key6 - 2] = arguments[_key6];
     }
-
     Array.apply(null, params).forEach(function (item) {
       message += item + ' ';
-    }); // log to console if the log level is high enough
+    });
 
+    // log to console if the log level is high enough
     if (logFn[level] && settings.get().debug.logLevel >= level) {
       logFn[level](message);
-    } // send log event regardless of log level
+    }
 
-
+    // send log event regardless of log level
     if (settings && settings.get().debug.dispatchEvent) {
       eventBus.trigger(_events_Events__WEBPACK_IMPORTED_MODULE_1__["default"].LOG, {
         message: message,
@@ -7777,7 +7660,6 @@ function Debug(config) {
       });
     }
   }
-
   instance = {
     getLogger: getLogger,
     setLogTimestampVisible: setLogTimestampVisible,
@@ -7786,7 +7668,6 @@ function Debug(config) {
   setup();
   return instance;
 }
-
 Debug.__dashjs_factory_name = 'Debug';
 var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getSingletonFactory(Debug);
 factory.LOG_LEVEL_NONE = LOG_LEVEL_NONE;
@@ -7845,21 +7726,16 @@ __webpack_require__.r(__webpack_exports__);
 
 var EVENT_PRIORITY_LOW = 0;
 var EVENT_PRIORITY_HIGH = 5000;
-
 function EventBus() {
   var handlers = {};
-
   function on(type, listener, scope) {
     var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-
     if (!type) {
       throw new Error('event type cannot be null or undefined');
     }
-
     if (!listener || typeof listener !== 'function') {
       throw new Error('listener must be a function: ' + listener);
     }
-
     var priority = options.priority || EVENT_PRIORITY_LOW;
     if (getHandlerIdx(type, listener, scope) >= 0) return;
     handlers[type] = handlers[type] || [];
@@ -7868,38 +7744,31 @@ function EventBus() {
       scope: scope,
       priority: priority
     };
-
     if (scope && scope.getStreamId) {
       handler.streamId = scope.getStreamId();
     }
-
     if (scope && scope.getType) {
       handler.mediaType = scope.getType();
     }
-
     if (options && options.mode) {
       handler.mode = options.mode;
     }
-
     var inserted = handlers[type].some(function (item, idx) {
       if (item && priority > item.priority) {
         handlers[type].splice(idx, 0, handler);
         return true;
       }
     });
-
     if (!inserted) {
       handlers[type].push(handler);
     }
   }
-
   function off(type, listener, scope) {
     if (!type || !listener || !handlers[type]) return;
     var idx = getHandlerIdx(type, listener, scope);
     if (idx < 0) return;
     handlers[type][idx] = null;
   }
-
   function trigger(type) {
     var payload = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var filters = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -7907,39 +7776,31 @@ function EventBus() {
     payload = payload || {};
     if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
     payload.type = type;
-
     if (filters.streamId) {
       payload.streamId = filters.streamId;
     }
-
     if (filters.mediaType) {
       payload.mediaType = filters.mediaType;
     }
-
     handlers[type].filter(function (handler) {
       if (!handler) {
         return false;
       }
-
       if (filters.streamId && handler.streamId && handler.streamId !== filters.streamId) {
         return false;
       }
-
       if (filters.mediaType && handler.mediaType && handler.mediaType !== filters.mediaType) {
         return false;
-      } // This is used for dispatching DASH events. By default we use the onStart mode. Consequently we filter everything that has a non matching mode and the onReceive events for handlers that did not specify a mode.
-
-
+      }
+      // This is used for dispatching DASH events. By default we use the onStart mode. Consequently we filter everything that has a non matching mode and the onReceive events for handlers that did not specify a mode.
       if (filters.mode && handler.mode && handler.mode !== filters.mode || !handler.mode && filters.mode && filters.mode === _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_MODE_ON_RECEIVE) {
         return false;
       }
-
       return true;
     }).forEach(function (handler) {
       return handler && handler.callback.call(handler.scope, payload);
     });
   }
-
   function getHandlerIdx(type, listener, scope) {
     var idx = -1;
     if (!handlers[type]) return idx;
@@ -7951,11 +7812,9 @@ function EventBus() {
     });
     return idx;
   }
-
   function reset() {
     handlers = {};
   }
-
   var instance = {
     on: on,
     off: off,
@@ -7964,7 +7823,6 @@ function EventBus() {
   };
   return instance;
 }
-
 EventBus.__dashjs_factory_name = 'EventBus';
 var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(EventBus);
 factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
@@ -8013,7 +7871,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @module FactoryMaker
  * @ignore
@@ -8023,7 +7880,6 @@ var FactoryMaker = function () {
   var singletonContexts = [];
   var singletonFactories = {};
   var classFactories = {};
-
   function extend(name, childInstance, override, context) {
     if (!context[name] && childInstance) {
       context[name] = {
@@ -8032,6 +7888,7 @@ var FactoryMaker = function () {
       };
     }
   }
+
   /**
    * Use this method from your extended object.  this.factory is injected into your object.
    * this.factory.getSingletonInstance(this.context, 'VideoModel')
@@ -8044,19 +7901,16 @@ var FactoryMaker = function () {
    * @memberof module:FactoryMaker
    * @instance
    */
-
-
   function getSingletonInstance(context, className) {
     for (var i in singletonContexts) {
       var obj = singletonContexts[i];
-
       if (obj.context === context && obj.name === className) {
         return obj.instance;
       }
     }
-
     return null;
   }
+
   /**
    * Use this method to add an singleton instance to the system.  Useful for unit testing to mock objects etc.
    *
@@ -8066,24 +7920,21 @@ var FactoryMaker = function () {
    * @memberof module:FactoryMaker
    * @instance
    */
-
-
   function setSingletonInstance(context, className, instance) {
     for (var i in singletonContexts) {
       var obj = singletonContexts[i];
-
       if (obj.context === context && obj.name === className) {
         singletonContexts[i].instance = instance;
         return;
       }
     }
-
     singletonContexts.push({
       name: className,
       context: context,
       instance: instance
     });
   }
+
   /**
    * Use this method to remove all singleton instances associated with a particular context.
    *
@@ -8091,96 +7942,85 @@ var FactoryMaker = function () {
    * @memberof module:FactoryMaker
    * @instance
    */
-
-
   function deleteSingletonInstances(context) {
     singletonContexts = singletonContexts.filter(function (x) {
       return x.context !== context;
     });
   }
+
   /*------------------------------------------------------------------------------------------*/
+
   // Factories storage Management
 
   /*------------------------------------------------------------------------------------------*/
 
-
   function getFactoryByName(name, factoriesArray) {
     return factoriesArray[name];
   }
-
   function updateFactory(name, factory, factoriesArray) {
     if (name in factoriesArray) {
       factoriesArray[name] = factory;
     }
   }
+
   /*------------------------------------------------------------------------------------------*/
+
   // Class Factories Management
 
   /*------------------------------------------------------------------------------------------*/
 
-
   function updateClassFactory(name, factory) {
     updateFactory(name, factory, classFactories);
   }
-
   function getClassFactoryByName(name) {
     return getFactoryByName(name, classFactories);
   }
-
   function getClassFactory(classConstructor) {
     var factory = getFactoryByName(classConstructor.__dashjs_factory_name, classFactories);
-
     if (!factory) {
       factory = function factory(context) {
         if (context === undefined) {
           context = {};
         }
-
         return {
           create: function create() {
             return merge(classConstructor, context, arguments);
           }
         };
       };
-
       classFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
     }
 
     return factory;
   }
+
   /*------------------------------------------------------------------------------------------*/
+
   // Singleton Factory MAangement
 
   /*------------------------------------------------------------------------------------------*/
 
-
   function updateSingletonFactory(name, factory) {
     updateFactory(name, factory, singletonFactories);
   }
-
   function getSingletonFactoryByName(name) {
     return getFactoryByName(name, singletonFactories);
   }
-
   function getSingletonFactory(classConstructor) {
     var factory = getFactoryByName(classConstructor.__dashjs_factory_name, singletonFactories);
-
     if (!factory) {
       factory = function factory(context) {
         var instance;
-
         if (context === undefined) {
           context = {};
         }
-
         return {
           getInstance: function getInstance() {
             // If we don't have an instance yet check for one on the context
             if (!instance) {
               instance = getSingletonInstance(context, classConstructor.__dashjs_factory_name);
-            } // If there's no instance on the context then create one
-
-
+            }
+            // If there's no instance on the context then create one
             if (!instance) {
               instance = merge(classConstructor, context, arguments);
               singletonContexts.push({
@@ -8189,28 +8029,24 @@ var FactoryMaker = function () {
                 instance: instance
               });
             }
-
             return instance;
           }
         };
       };
-
       singletonFactories[classConstructor.__dashjs_factory_name] = factory; // store factory
     }
 
     return factory;
   }
-
   function merge(classConstructor, context, args) {
     var classInstance;
     var className = classConstructor.__dashjs_factory_name;
     var extensionObject = context[className];
-
     if (extensionObject) {
       var extension = extensionObject.instance;
-
       if (extensionObject.override) {
         //Override public methods in parent but keep parent.
+
         classInstance = classConstructor.apply({
           context: context
         }, args);
@@ -8219,7 +8055,6 @@ var FactoryMaker = function () {
           factory: instance,
           parent: classInstance
         }, args);
-
         for (var prop in extension) {
           if (classInstance.hasOwnProperty(prop)) {
             classInstance[prop] = extension[prop];
@@ -8227,6 +8062,7 @@ var FactoryMaker = function () {
         }
       } else {
         //replace parent object completely with new object. Same as dijon.
+
         return extension.apply({
           context: context,
           factory: instance
@@ -8237,16 +8073,14 @@ var FactoryMaker = function () {
       classInstance = classConstructor.apply({
         context: context
       }, args);
-    } // Add getClassName function to class instance prototype (used by Debug)
+    }
 
-
+    // Add getClassName function to class instance prototype (used by Debug)
     classInstance.getClassName = function () {
       return className;
     };
-
     return classInstance;
   }
-
   instance = {
     extend: extend,
     getSingletonInstance: getSingletonInstance,
@@ -8261,7 +8095,6 @@ var FactoryMaker = function () {
   };
   return instance;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (FactoryMaker);
 
 /***/ }),
@@ -8282,10 +8115,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../streaming/vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /* harmony import */ var _EventBus__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./EventBus */ "./src/core/EventBus.js");
 /* harmony import */ var _events_Events__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./events/Events */ "./src/core/events/Events.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -8316,6 +8149,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -8423,7 +8257,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                scheduleWhilePaused: true
  *            },
  *            text: {
- *                defaultEnabled: true
+ *                defaultEnabled: true,
+ *                webvtt: {
+ *                    customRenderingEnabled: false
+ *                }
  *            },
  *            liveCatchup: {
  *                maxDrift: NaN,
@@ -8734,6 +8571,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @typedef {Object} Text
  * @property {number} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {object} [webvtt={customRenderingEnabled=false}]
+ * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
+ * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
 
 /**
@@ -9038,10 +8878,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @class
  * @ignore
  */
-
 function Settings() {
   var _retryIntervals, _retryAttempts;
-
   var instance;
   var context = this.context;
   var eventBus = Object(_EventBus__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
@@ -9052,11 +8890,11 @@ function Settings() {
     'streaming.liveCatchup.playbackRate.min': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN,
     'streaming.liveCatchup.playbackRate.max': _events_Events__WEBPACK_IMPORTED_MODULE_6__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX
   };
+
   /**
    * @const {PlayerSettings} defaultSettings
    * @ignore
    */
-
   var defaultSettings = {
     debug: {
       logLevel: _core_Debug__WEBPACK_IMPORTED_MODULE_2__["default"].LOG_LEVEL_WARNING,
@@ -9141,7 +8979,10 @@ function Settings() {
         scheduleWhilePaused: true
       },
       text: {
-        defaultEnabled: true
+        defaultEnabled: true,
+        webvtt: {
+          customRenderingEnabled: false
+        }
       },
       liveCatchup: {
         maxDrift: NaN,
@@ -9230,9 +9071,10 @@ function Settings() {
       }
     }
   };
-  var settings = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(defaultSettings); //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
-  //regard it as an error and log it.
+  var settings = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(defaultSettings);
 
+  //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
+  //regard it as an error and log it.
   function mixinSettings(source, dest, path) {
     for (var n in source) {
       if (source.hasOwnProperty(n)) {
@@ -9241,7 +9083,6 @@ function Settings() {
             mixinSettings(source[n], dest[n], path.slice() + n + '.');
           } else {
             dest[n] = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(source[n]);
-
             if (DISPATCH_KEY_MAP[path + n]) {
               eventBus.trigger(DISPATCH_KEY_MAP[path + n]);
             }
@@ -9252,16 +9093,16 @@ function Settings() {
       }
     }
   }
+
   /**
    * Return the settings object. Don't copy/store this object, you won't get updates.
    * @func
    * @instance
    */
-
-
   function get() {
     return settings;
   }
+
   /**
    * @func
    * @instance
@@ -9273,25 +9114,21 @@ function Settings() {
    * Implementers of new settings should add it in an approriate namespace to the defaultSettings object and give it a default value (that is not undefined).
    *
    */
-
-
   function update(settingsObj) {
     if (_typeof(settingsObj) === 'object') {
       mixinSettings(settingsObj, settings, '');
     }
   }
+
   /**
    * Resets the settings object. Everything is set to its default value.
    * @func
    * @instance
    *
    */
-
-
   function reset() {
     settings = _Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].clone(defaultSettings);
   }
-
   instance = {
     get: get,
     update: update,
@@ -9299,7 +9136,6 @@ function Settings() {
   };
   return instance;
 }
-
 Settings.__dashjs_factory_name = 'Settings';
 var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(Settings);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -9319,14 +9155,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path_browserify__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
 /* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(ua_parser_js__WEBPACK_IMPORTED_MODULE_1__);
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -9369,18 +9203,15 @@ var Utils = /*#__PURE__*/function () {
   function Utils() {
     _classCallCheck(this, Utils);
   }
-
   _createClass(Utils, null, [{
     key: "mixin",
     value: function mixin(dest, source, copy) {
       var s;
       var empty = {};
-
       if (dest) {
         for (var name in source) {
           if (source.hasOwnProperty(name)) {
             s = source[name];
-
             if (!(name in dest) || dest[name] !== s && (!(name in empty) || empty[name] !== s)) {
               if (_typeof(dest[name]) === 'object' && dest[name] !== null) {
                 dest[name] = Utils.mixin(dest[name], s, copy);
@@ -9391,7 +9222,6 @@ var Utils = /*#__PURE__*/function () {
           }
         }
       }
-
       return dest;
     }
   }, {
@@ -9402,11 +9232,9 @@ var Utils = /*#__PURE__*/function () {
       }
 
       var r;
-
       if (src instanceof Array) {
         // array
         r = [];
-
         for (var i = 0, l = src.length; i < l; ++i) {
           if (i in src) {
             r.push(Utils.clone(src[i]));
@@ -9415,7 +9243,6 @@ var Utils = /*#__PURE__*/function () {
       } else {
         r = {};
       }
-
       return Utils.mixin(r, src, Utils.clone);
     }
   }, {
@@ -9425,7 +9252,6 @@ var Utils = /*#__PURE__*/function () {
         if (!params || params.length === 0) {
           return url;
         }
-
         var modifiedUrl = new URL(url);
         params.forEach(function (param) {
           if (param.key && param.value) {
@@ -9441,24 +9267,20 @@ var Utils = /*#__PURE__*/function () {
     key: "parseHttpHeaders",
     value: function parseHttpHeaders(headerStr) {
       var headers = {};
-
       if (!headerStr) {
         return headers;
-      } // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
+      }
+
+      // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
       // which send a string starting with a "\n" character
-
-
       var headerPairs = headerStr.trim().split("\r\n");
-
       for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
         var headerPair = headerPairs[i];
         var index = headerPair.indexOf(": ");
-
         if (index > 0) {
           headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
         }
       }
-
       return headers;
     }
   }, {
@@ -9476,49 +9298,47 @@ var Utils = /*#__PURE__*/function () {
     key: "generateHashCode",
     value: function generateHashCode(string) {
       var hash = 0;
-
       if (string.length === 0) {
         return hash;
       }
-
       for (var i = 0; i < string.length; i++) {
         var chr = string.charCodeAt(i);
         hash = (hash << 5) - hash + chr;
         hash |= 0;
       }
-
       return hash;
     }
+
     /**
      * Compares both urls and returns a relative url (target relative to original)
      * @param {string} original
      * @param {string} target
      * @return {string|*}
      */
-
   }, {
     key: "getRelativeUrl",
     value: function getRelativeUrl(originalUrl, targetUrl) {
       try {
         var original = new URL(originalUrl);
-        var target = new URL(targetUrl); // Unify the protocol to compare the origins
+        var target = new URL(targetUrl);
 
+        // Unify the protocol to compare the origins
         original.protocol = target.protocol;
-
         if (original.origin !== target.origin) {
           return targetUrl;
-        } // Use the relative path implementation of the path library. We need to cut off the actual filename in the end to get the relative path
+        }
 
+        // Use the relative path implementation of the path library. We need to cut off the actual filename in the end to get the relative path
+        var relativePath = path_browserify__WEBPACK_IMPORTED_MODULE_0___default.a.relative(original.pathname.substr(0, original.pathname.lastIndexOf('/')), target.pathname.substr(0, target.pathname.lastIndexOf('/')));
 
-        var relativePath = path_browserify__WEBPACK_IMPORTED_MODULE_0___default.a.relative(original.pathname.substr(0, original.pathname.lastIndexOf('/')), target.pathname.substr(0, target.pathname.lastIndexOf('/'))); // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash in front of the filename
-
+        // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash in front of the filename
         var startIndexOffset = relativePath.length === 0 ? 1 : 0;
-        relativePath += target.pathname.substr(target.pathname.lastIndexOf('/') + startIndexOffset, target.pathname.length - 1); // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of the two candidates.
+        relativePath += target.pathname.substr(target.pathname.lastIndexOf('/') + startIndexOffset, target.pathname.length - 1);
 
+        // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of the two candidates.
         if (target.pathname.length < relativePath.length) {
           return target.pathname;
         }
-
         return relativePath;
       } catch (e) {
         return targetUrl;
@@ -9528,7 +9348,6 @@ var Utils = /*#__PURE__*/function () {
     key: "parseUserAgent",
     value: function parseUserAgent() {
       var ua = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
       try {
         var uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
         return Object(ua_parser_js__WEBPACK_IMPORTED_MODULE_1__["UAParser"])(uaString);
@@ -9537,10 +9356,8 @@ var Utils = /*#__PURE__*/function () {
       }
     }
   }]);
-
   return Utils;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (Utils);
 
 /***/ }),
@@ -9555,24 +9372,19 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ErrorsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ErrorsBase */ "./src/core/errors/ErrorsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -9608,132 +9420,128 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  * Errors declaration
  * @class
  */
-
 var Errors = /*#__PURE__*/function (_ErrorsBase) {
   _inherits(Errors, _ErrorsBase);
-
   var _super = _createSuper(Errors);
-
   function Errors() {
     var _this;
-
     _classCallCheck(this, Errors);
-
     _this = _super.call(this);
+
     /**
      * Error code returned when a manifest parsing error occurs
      */
-
     _this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE = 10;
+
     /**
      * Error code returned when a manifest loading error occurs
      */
-
     _this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 11;
+
     /**
      * Error code returned when a xlink loading error occurs
      */
-
     _this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
+
     /**
      * Error code returned when no segment ranges could be determined from the sidx box
      */
-
     _this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
+
     /**
      * Error code returned when the time synchronization failed
      */
-
     _this.TIME_SYNC_FAILED_ERROR_CODE = 16;
+
     /**
      * Error code returned when loading a fragment failed
      */
-
     _this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 17;
+
     /**
      * Error code returned when the FragmentLoader did not receive a request object
      */
-
     _this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 18;
+
     /**
      * Error code returned when the BaseUrl resolution failed
      */
-
     _this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 19;
+
     /**
      * Error code returned when the append operation in the SourceBuffer failed
      */
-
     _this.APPEND_ERROR_CODE = 20;
+
     /**
      * Error code returned when the remove operation in the SourceBuffer failed
      */
-
     _this.REMOVE_ERROR_CODE = 21;
+
     /**
      * Error code returned when updating the internal objects after loading an MPD failed
      */
-
     _this.DATA_UPDATE_FAILED_ERROR_CODE = 22;
+
     /**
      * Error code returned when MediaSource is not supported by the browser
      */
-
     _this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 23;
+
     /**
      * Error code returned when Protected contents are not supported
      */
-
     _this.CAPABILITY_MEDIAKEYS_ERROR_CODE = 24;
+
     /**
      * Error code returned when loading the manifest failed
      */
-
     _this.DOWNLOAD_ERROR_ID_MANIFEST_CODE = 25;
+
     /**
      * Error code returned when loading the sidx failed
      */
-
     _this.DOWNLOAD_ERROR_ID_SIDX_CODE = 26;
+
     /**
      * Error code returned when loading the media content failed
      */
-
     _this.DOWNLOAD_ERROR_ID_CONTENT_CODE = 27;
+
     /**
      * Error code returned when loading the init segment failed
      */
-
     _this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE = 28;
+
     /**
      * Error code returned when loading the XLink content failed
      */
-
     _this.DOWNLOAD_ERROR_ID_XLINK_CODE = 29;
+
     /**
      * Error code returned when parsing the MPD resulted in a logical error
      */
-
     _this.MANIFEST_ERROR_ID_PARSE_CODE = 31;
+
     /**
      * Error code returned when no stream (period) has been detected in the manifest
      */
-
     _this.MANIFEST_ERROR_ID_NOSTREAMS_CODE = 32;
+
     /**
      * Error code returned when something wrong has happened during parsing and appending subtitles (TTML or VTT)
      */
-
     _this.TIMED_TEXT_ERROR_ID_PARSE_CODE = 33;
+
     /**
      * Error code returned when a 'muxed' media type has been detected in the manifest. This type is not supported
      */
 
     _this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE = 34;
+
     /**
      * Error code returned when a media source type is not supported
      */
-
     _this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
     _this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
     _this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
@@ -9753,10 +9561,8 @@ var Errors = /*#__PURE__*/function (_ErrorsBase) {
     _this.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE = 'Error creating source buffer of type : ';
     return _this;
   }
-
-  return Errors;
+  return _createClass(Errors);
 }(_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var errors = new Errors();
 /* harmony default export */ __webpack_exports__["default"] = (errors);
 
@@ -9771,12 +9577,12 @@ var errors = new Errors();
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -9807,7 +9613,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
@@ -9816,14 +9621,12 @@ var ErrorsBase = /*#__PURE__*/function () {
   function ErrorsBase() {
     _classCallCheck(this, ErrorsBase);
   }
-
   _createClass(ErrorsBase, [{
     key: "extend",
     value: function extend(errors, config) {
       if (!errors) return;
       var override = config ? config.override : false;
       var publicOnly = config ? config.publicOnly : false;
-
       for (var err in errors) {
         if (!errors.hasOwnProperty(err) || this[err] && !override) continue;
         if (publicOnly && errors[err].indexOf('public_') === -1) continue;
@@ -9831,10 +9634,8 @@ var ErrorsBase = /*#__PURE__*/function () {
       }
     }
   }]);
-
   return ErrorsBase;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (ErrorsBase);
 
 /***/ }),
@@ -9849,24 +9650,19 @@ var ErrorsBase = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventsBase */ "./src/core/events/EventsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -9898,6 +9694,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * These are internal events that should not be needed at the player level.
  * If you find and event in here that you would like access to from MediaPlayer level
@@ -9905,17 +9702,12 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  * @class
  * @ignore
  */
-
 var CoreEvents = /*#__PURE__*/function (_EventsBase) {
   _inherits(CoreEvents, _EventsBase);
-
   var _super = _createSuper(CoreEvents);
-
   function CoreEvents() {
     var _this;
-
     _classCallCheck(this, CoreEvents);
-
     _this = _super.call(this);
     _this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     _this.BUFFERING_COMPLETED = 'bufferingCompleted';
@@ -9965,10 +9757,8 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
     return _this;
   }
-
-  return CoreEvents;
+  return _createClass(CoreEvents);
 }(_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (CoreEvents);
 
 /***/ }),
@@ -9983,24 +9773,19 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _CoreEvents__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CoreEvents */ "./src/core/events/CoreEvents.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -10031,27 +9816,20 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
 
-
 var Events = /*#__PURE__*/function (_CoreEvents) {
   _inherits(Events, _CoreEvents);
-
   var _super = _createSuper(Events);
-
   function Events() {
     _classCallCheck(this, Events);
-
     return _super.apply(this, arguments);
   }
-
-  return Events;
+  return _createClass(Events);
 }(_CoreEvents__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var events = new Events();
 /* harmony default export */ __webpack_exports__["default"] = (events);
 
@@ -10066,12 +9844,12 @@ var events = new Events();
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -10102,7 +9880,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
@@ -10111,14 +9888,12 @@ var EventsBase = /*#__PURE__*/function () {
   function EventsBase() {
     _classCallCheck(this, EventsBase);
   }
-
   _createClass(EventsBase, [{
     key: "extend",
     value: function extend(events, config) {
       if (!events) return;
       var override = config ? config.override : false;
       var publicOnly = config ? config.publicOnly : false;
-
       for (var evt in events) {
         if (!events.hasOwnProperty(evt) || this[evt] && !override) continue;
         if (publicOnly && events[evt].indexOf('public_') === -1) continue;
@@ -10126,10 +9901,8 @@ var EventsBase = /*#__PURE__*/function () {
       }
     }
   }]);
-
   return EventsBase;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (EventsBase);
 
 /***/ }),
@@ -10187,7 +9960,6 @@ __webpack_require__.r(__webpack_exports__);
 
 var DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
 var SEGMENT_START_TIME_DELTA = 0.001;
-
 function DashHandler(config) {
   config = config || {};
   var eventBus = config.eventBus;
@@ -10199,69 +9971,55 @@ function DashHandler(config) {
   var timelineConverter = config.timelineConverter;
   var baseURLController = config.baseURLController;
   var instance, logger, lastSegment, isDynamicManifest, mediaHasFinished;
-
   function setup() {
     logger = debug.getLogger(instance);
     resetInitialSettings();
     eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
   }
-
   function initialize(isDynamic) {
     isDynamicManifest = isDynamic;
     mediaHasFinished = false;
     segmentsController.initialize(isDynamic);
   }
-
   function getStreamId() {
     return streamInfo.id;
   }
-
   function getType() {
     return type;
   }
-
   function getStreamInfo() {
     return streamInfo;
   }
-
   function resetInitialSettings() {
     lastSegment = null;
   }
-
   function reset() {
     resetInitialSettings();
     eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
   }
-
   function _setRequestUrl(request, destination, representation) {
     var baseURL = baseURLController.resolve(representation.path);
     var url, serviceLocation;
-
     if (!baseURL || destination === baseURL.url || !urlUtils.isRelative(destination)) {
       url = destination;
     } else {
       url = baseURL.url;
       serviceLocation = baseURL.serviceLocation;
-
       if (destination) {
         url = urlUtils.resolve(destination, url);
       }
     }
-
     if (urlUtils.isRelative(url)) {
       return false;
     }
-
     request.url = url;
     request.serviceLocation = serviceLocation;
     return true;
   }
-
   function getInitRequest(mediaInfo, representation) {
     if (!representation) return null;
     return _generateInitRequest(mediaInfo, representation, getType());
   }
-
   function _generateInitRequest(mediaInfo, representation, mediaType) {
     var request = new _streaming_vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_0__["default"]();
     var period = representation.adaptation.period;
@@ -10274,18 +10032,15 @@ function DashHandler(config) {
     request.quality = representation.index;
     request.mediaInfo = mediaInfo;
     request.representationId = representation.id;
-
     if (_setRequestUrl(request, representation.initialization, representation)) {
       request.url = Object(_utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_4__["replaceTokenForTemplate"])(request.url, 'Bandwidth', representation.bandwidth);
       return request;
     }
   }
-
   function _getRequestForSegment(mediaInfo, segment) {
     if (segment === null || segment === undefined) {
       return null;
     }
-
     var request = new _streaming_vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_0__["default"]();
     var representation = segment.representation;
     var bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
@@ -10311,79 +10066,72 @@ function DashHandler(config) {
     request.mediaInfo = mediaInfo;
     request.adaptationIndex = representation.adaptation.index;
     request.representationId = representation.id;
-
     if (_setRequestUrl(request, url, representation)) {
       return request;
     }
   }
-
   function isLastSegmentRequested(representation, bufferingTime) {
     if (!representation || !lastSegment) {
       return false;
-    } // Either transition from dynamic to static was done or no next static segment found
+    }
 
-
+    // Either transition from dynamic to static was done or no next static segment found
     if (mediaHasFinished) {
       return true;
-    } // Period is endless
+    }
 
-
+    // Period is endless
     if (!isFinite(representation.adaptation.period.duration)) {
       return false;
-    } // we are replacing existing stuff in the buffer for instance after a track switch
+    }
 
-
+    // we are replacing existing stuff in the buffer for instance after a track switch
     if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
       return false;
-    } // Additional segment references may be added to the last period.
+    }
+
+    // Additional segment references may be added to the last period.
     // Additional periods may be added to the end of the MPD.
     // Segment references SHALL NOT be added to any period other than the last period.
     // An MPD update MAY combine adding segment references to the last period with adding of new periods. An MPD update that adds content MAY be combined with an MPD update that removes content.
     // The index of the last requested segment is higher than the number of available segments.
     // For SegmentTimeline and SegmentTemplate the index does not include the startNumber.
     // For SegmentList the index includes the startnumber which is why the numberOfSegments includes this as well
-
-
     if (representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.numberOfSegments) && !isNaN(lastSegment.index) && lastSegment.index >= representation.mediaFinishedInformation.numberOfSegments - 1) {
       // For static manifests and Template addressing we can compare the index against the number of available segments
       if (!isDynamicManifest || representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TEMPLATE) {
         return true;
-      } // For SegmentList we need to check if the next period is signaled
+      }
+      // For SegmentList we need to check if the next period is signaled
       else if (isDynamicManifest && representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
-          return true;
-        }
-    } // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
+        return true;
+      }
+    }
+
+    // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
     // We can not simply use the index, as numberOfSegments might have decreased after an MPD update
-
-
     return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TIMELINE && representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05);
   }
-
   function getSegmentRequestForTime(mediaInfo, representation, time) {
     var request = null;
-
     if (!representation || !representation.segmentInfoType) {
       return request;
     }
-
     var segment = segmentsController.getSegmentByTime(representation, time);
-
     if (segment) {
       lastSegment = segment;
       logger.debug('Index for time ' + time + ' is ' + segment.index);
       request = _getRequestForSegment(mediaInfo, segment);
     }
-
     return request;
   }
+
   /**
    * This function returns the next segment request without modifying any internal variables. Any class (e.g CMCD Model) that needs information about the upcoming request should use this method.
    * @param {object} mediaInfo
    * @param {object} representation
    * @return {FragmentRequest|null}
    */
-
-
   function getNextSegmentRequestIdempotent(mediaInfo, representation) {
     var request = null;
     var indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
@@ -10392,24 +10140,22 @@ function DashHandler(config) {
     request = _getRequestForSegment(mediaInfo, segment);
     return request;
   }
+
   /**
    * Main function to get the next segment request.
    * @param {object} mediaInfo
    * @param {object} representation
    * @return {FragmentRequest|null}
    */
-
-
   function getNextSegmentRequest(mediaInfo, representation) {
     var request = null;
-
     if (!representation || !representation.segmentInfoType) {
       return null;
     }
-
     var indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
-    var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1); // No segment found
+    var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
 
+    // No segment found
     if (!segment) {
       // Dynamic manifest there might be something available in the next iteration
       if (isDynamicManifest && !mediaHasFinished) {
@@ -10422,91 +10168,9 @@ function DashHandler(config) {
       request = _getRequestForSegment(mediaInfo, segment);
       lastSegment = segment;
     }
-
     return request;
   }
-  /**
-   * This function returns a time for which we can generate a request. It is supposed to be as close as possible to the target time.
-   * This is useful in scenarios in which the user seeks into a gap. We will not find a valid request then and need to adjust the seektime.
-   * @param {number} time
-   * @param {object} mediaInfo
-   * @param {object} representation
-   * @param {number} targetThreshold
-   */
 
-
-  function getValidTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
-    try {
-      if (isNaN(time) || !mediaInfo || !representation) {
-        return NaN;
-      }
-
-      if (time < 0) {
-        time = 0;
-      }
-
-      if (isNaN(targetThreshold)) {
-        targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
-      }
-
-      if (getSegmentRequestForTime(mediaInfo, representation, time)) {
-        return time;
-      }
-
-      var start = representation.adaptation.period.start;
-      var end = representation.adaptation.period.start + representation.adaptation.period.duration;
-      var currentUpperTime = Math.min(time + targetThreshold, end);
-      var currentLowerTime = Math.max(time - targetThreshold, start);
-      var adjustedTime = NaN;
-      var targetRequest = null;
-
-      while (currentUpperTime <= end || currentLowerTime >= start) {
-        var upperRequest = null;
-        var lowerRequest = null;
-
-        if (currentUpperTime <= end) {
-          upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
-        }
-
-        if (currentLowerTime >= start) {
-          lowerRequest = getSegmentRequestForTime(mediaInfo, representation, currentLowerTime);
-        }
-
-        if (lowerRequest) {
-          adjustedTime = currentLowerTime;
-          targetRequest = lowerRequest;
-          break;
-        } else if (upperRequest) {
-          adjustedTime = currentUpperTime;
-          targetRequest = upperRequest;
-          break;
-        }
-
-        currentUpperTime += targetThreshold;
-        currentLowerTime -= targetThreshold;
-      }
-
-      if (targetRequest) {
-        var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
-
-        if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
-          return time;
-        } // If target time is before the start of the request use request starttime
-
-
-        if (time < targetRequest.startTime) {
-          // Apply delta to segment start time to get around rounding issues
-          return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
-        }
-
-        return Math.min(requestEndTime - targetThreshold, adjustedTime);
-      }
-
-      return adjustedTime;
-    } catch (e) {
-      return NaN;
-    }
-  }
   /**
    * This function returns a time larger than the current time for which we can generate a request.
    * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
@@ -10515,82 +10179,66 @@ function DashHandler(config) {
    * @param {object} representation
    * @param {number} targetThreshold
    */
-
-
   function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
     try {
       if (isNaN(time) || !mediaInfo || !representation) {
         return NaN;
       }
-
       if (time < 0) {
         time = 0;
       }
-
       if (isNaN(targetThreshold)) {
         targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
       }
-
       if (getSegmentRequestForTime(mediaInfo, representation, time)) {
         return time;
       }
-
       if (representation.adaptation.period.start + representation.adaptation.period.duration < time) {
         return NaN;
-      } // Only look 30 seconds ahead
+      }
 
-
-      var end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+      // If we have a duration look until the end of the duration, otherwise maximum 30 seconds
+      var end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
       var currentUpperTime = Math.min(time + targetThreshold, end);
       var adjustedTime = NaN;
       var targetRequest = null;
-
       while (currentUpperTime <= end) {
         var upperRequest = null;
-
         if (currentUpperTime <= end) {
           upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
         }
-
         if (upperRequest) {
           adjustedTime = currentUpperTime;
           targetRequest = upperRequest;
           break;
         }
-
         currentUpperTime += targetThreshold;
       }
-
       if (targetRequest) {
-        var requestEndTime = targetRequest.startTime + targetRequest.duration; // Keep the original start time in case it is covered by a segment
+        var requestEndTime = targetRequest.startTime + targetRequest.duration;
 
+        // Keep the original start time in case it is covered by a segment
         if (time > targetRequest.startTime && requestEndTime - time > targetThreshold) {
           return time;
         }
-
         if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
           // Apply delta to segment start time to get around rounding issues
           return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
         }
-
         return Math.min(requestEndTime - targetThreshold, adjustedTime);
       }
-
       return adjustedTime;
     } catch (e) {
       return NaN;
     }
   }
-
   function getCurrentIndex() {
     return lastSegment ? lastSegment.index : -1;
   }
-
   function _onDynamicToStatic() {
     logger.debug('Dynamic stream complete');
     mediaHasFinished = true;
   }
-
   instance = {
     initialize: initialize,
     getStreamId: getStreamId,
@@ -10603,13 +10251,11 @@ function DashHandler(config) {
     isLastSegmentRequested: isLastSegmentRequested,
     reset: reset,
     getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent,
-    getValidTimeCloseToTargetTime: getValidTimeCloseToTargetTime,
     getValidTimeAheadOfTargetTime: getValidTimeAheadOfTargetTime
   };
   setup();
   return instance;
 }
-
 DashHandler.__dashjs_factory_name = 'DashHandler';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(DashHandler));
 
@@ -10624,12 +10270,12 @@ DashHandler.__dashjs_factory_name = 'DashHandler';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -10660,7 +10306,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * Dash constants declaration
  * @class
@@ -10669,10 +10314,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var DashConstants = /*#__PURE__*/function () {
   function DashConstants() {
     _classCallCheck(this, DashConstants);
-
     this.init();
   }
-
   _createClass(DashConstants, [{
     key: "init",
     value: function init() {
@@ -10796,10 +10439,8 @@ var DashConstants = /*#__PURE__*/function () {
       };
     }
   }]);
-
   return DashConstants;
 }();
-
 var constants = new DashConstants();
 /* harmony default export */ __webpack_exports__["default"] = (constants);
 
@@ -10852,7 +10493,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function RepresentationController(config) {
   config = config || {};
   var eventBus = config.eventBus;
@@ -10867,80 +10507,64 @@ function RepresentationController(config) {
   var segmentsController = config.segmentsController;
   var isDynamic = config.isDynamic;
   var instance, realAdaptation, updating, voAvailableRepresentations, currentVoRepresentation;
-
   function setup() {
     resetInitialSettings();
     eventBus.on(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
   }
-
   function getStreamId() {
     return streamInfo.id;
   }
-
   function getType() {
     return type;
   }
-
   function checkConfig() {
     if (!abrController || !dashMetrics || !playbackController || !timelineConverter) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getData() {
     return realAdaptation;
   }
-
   function isUpdating() {
     return updating;
   }
-
   function getCurrentRepresentation() {
     return currentVoRepresentation;
   }
-
   function resetInitialSettings() {
     realAdaptation = null;
     updating = true;
     voAvailableRepresentations = [];
   }
-
   function reset() {
     eventBus.off(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     resetInitialSettings();
   }
-
   function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
     checkConfig();
     updating = true;
     voAvailableRepresentations = availableRepresentations;
     var rep = getRepresentationForQuality(quality);
-
     _setCurrentVoRepresentation(rep);
-
     realAdaptation = newRealAdaptation;
-
     if (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
       endDataUpdate();
       return Promise.resolve();
     }
-
     var promises = [];
-
     for (var i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
       var currentRep = voAvailableRepresentations[i];
       promises.push(_updateRepresentation(currentRep));
     }
-
     return Promise.all(promises);
   }
-
   function _updateRepresentation(currentRep) {
     return new Promise(function (resolve, reject) {
       var hasInitialization = currentRep.hasInitialization();
-      var hasSegments = currentRep.hasSegments(); // If representation has initialization and segments information we are done
-      // otherwise, it means that a request has to be made to get initialization and/or segments information
+      var hasSegments = currentRep.hasSegments();
 
+      // If representation has initialization and segments information we are done
+      // otherwise, it means that a request has to be made to get initialization and/or segments information
       var promises = [];
       promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
       promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
@@ -10948,69 +10572,54 @@ function RepresentationController(config) {
         if (data[0] && !data[0].error) {
           currentRep = _onInitLoaded(currentRep, data[0]);
         }
-
         if (data[1] && !data[1].error) {
           currentRep = _onSegmentsLoaded(currentRep, data[1]);
         }
-
         _setMediaFinishedInformation(currentRep);
-
         _onRepresentationUpdated(currentRep);
-
         resolve();
       })["catch"](function (e) {
         reject(e);
       });
     });
   }
-
   function _setMediaFinishedInformation(representation) {
     representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
   }
-
   function _onInitLoaded(representation, e) {
     if (!e || e.error || !e.representation) {
       return representation;
     }
-
     return e.representation;
   }
-
   function _onSegmentsLoaded(representation, e) {
     if (!e || e.error) return;
     var fragments = e.segments;
     var segments = [];
     var count = 0;
     var i, len, s, seg;
-
     for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
       s = fragments[i];
       seg = Object(_utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_3__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, s.startTime, s.duration, s.timescale, s.media, s.mediaRange, count);
-
       if (seg) {
         segments.push(seg);
         seg = null;
         count++;
       }
     }
-
     if (segments.length > 0) {
       representation.segments = segments;
     }
-
     return representation;
   }
-
   function _addRepresentationSwitch() {
     checkConfig();
     var now = new Date();
     var currentRepresentation = getCurrentRepresentation();
     var currentVideoTimeMs = playbackController.getTime() * 1000;
-
     if (currentRepresentation) {
       dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
-
     eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_2__["default"].REPRESENTATION_SWITCH, {
       mediaType: type,
       streamId: streamInfo.id,
@@ -11021,27 +10630,21 @@ function RepresentationController(config) {
       mediaType: type
     });
   }
-
   function getRepresentationForQuality(quality) {
     return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
   }
-
   function getQualityForRepresentation(voRepresentation) {
     return voAvailableRepresentations.indexOf(voRepresentation);
   }
-
   function isAllRepresentationsUpdated() {
     for (var i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
       var segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
-
       if (!voAvailableRepresentations[i].hasInitialization() || (segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments) {
         return false;
       }
     }
-
     return true;
   }
-
   function endDataUpdate(error) {
     updating = false;
     eventBus.trigger(events.DATA_UPDATE_COMPLETED, {
@@ -11053,71 +10656,55 @@ function RepresentationController(config) {
       mediaType: type
     });
   }
-
   function _onRepresentationUpdated(r) {
     if (!isUpdating()) return;
     var manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
     var alreadyAdded = false;
     var repInfo, repSwitch;
-
     if (manifestUpdateInfo) {
       for (var i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
         repInfo = manifestUpdateInfo.representationInfo[i];
-
         if (repInfo.index === r.index && repInfo.mediaType === getType()) {
           alreadyAdded = true;
           break;
         }
       }
-
       if (!alreadyAdded) {
         dashMetrics.addManifestUpdateRepresentationInfo(r, getType());
       }
     }
-
     if (isAllRepresentationsUpdated()) {
       abrController.setPlaybackQuality(type, streamInfo, getQualityForRepresentation(currentVoRepresentation));
       var dvrInfo = dashMetrics.getCurrentDVRInfo(type);
-
       if (dvrInfo) {
         dashMetrics.updateManifestUpdateInfo({
           latency: dvrInfo.range.end - playbackController.getTime()
         });
       }
-
       repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
-
       if (!repSwitch) {
         _addRepresentationSwitch();
       }
-
       endDataUpdate();
     }
   }
-
   function prepareQualityChange(newQuality) {
     var newRep = getRepresentationForQuality(newQuality);
-
     _setCurrentVoRepresentation(newRep);
-
     _addRepresentationSwitch();
   }
-
   function _setCurrentVoRepresentation(value) {
     currentVoRepresentation = value;
   }
-
   function onManifestValidityChanged(e) {
     if (e.newDuration) {
       var representation = getCurrentRepresentation();
-
       if (representation && representation.adaptation.period) {
         var period = representation.adaptation.period;
         period.duration = e.newDuration;
       }
     }
   }
-
   instance = {
     getStreamId: getStreamId,
     getType: getType,
@@ -11132,7 +10719,6 @@ function RepresentationController(config) {
   setup();
   return instance;
 }
-
 RepresentationController.__dashjs_factory_name = 'RepresentationController';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(RepresentationController));
 
@@ -11187,7 +10773,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function SegmentsController(config) {
   config = config || {};
   var context = this.context;
@@ -11195,55 +10780,45 @@ function SegmentsController(config) {
   var type = config.type;
   var segmentBaseController = config.segmentBaseController;
   var instance, getters;
-
   function setup() {
     getters = {};
   }
-
   function initialize(isDynamic) {
     getters[dashConstants.SEGMENT_TIMELINE] = Object(_utils_TimelineSegmentsGetter__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create(config, isDynamic);
     getters[dashConstants.SEGMENT_TEMPLATE] = Object(_utils_TemplateSegmentsGetter__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create(config, isDynamic);
     getters[dashConstants.SEGMENT_LIST] = Object(_utils_ListSegmentsGetter__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create(config, isDynamic);
     getters[dashConstants.SEGMENT_BASE] = Object(_utils_SegmentBaseGetter__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create(config, isDynamic);
   }
-
   function updateInitData(voRepresentation, hasInitialization) {
     if (hasInitialization) {
       return Promise.resolve();
     }
-
     return segmentBaseController.getSegmentBaseInitSegment({
       representation: voRepresentation,
       mediaType: type
     });
   }
-
   function updateSegmentData(voRepresentation, hasSegments) {
     if (hasSegments) {
       return Promise.resolve();
     }
-
     return segmentBaseController.getSegmentList({
       mimeType: voRepresentation.mimeType,
       representation: voRepresentation,
       mediaType: type
     });
   }
-
   function getSegmentsGetter(representation) {
     return representation ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
   }
-
   function getSegmentByIndex(representation, index, lastSegmentTime) {
     var getter = getSegmentsGetter(representation);
     return getter ? getter.getSegmentByIndex(representation, index, lastSegmentTime) : null;
   }
-
   function getSegmentByTime(representation, time) {
     var getter = getSegmentsGetter(representation);
     return getter ? getter.getSegmentByTime(representation, time) : null;
   }
-
   function getMediaFinishedInformation(representation) {
     var getter = getSegmentsGetter(representation);
     return getter ? getter.getMediaFinishedInformation(representation) : {
@@ -11251,7 +10826,6 @@ function SegmentsController(config) {
       mediaTimeOfLastSignaledSegment: NaN
     };
   }
-
   instance = {
     initialize: initialize,
     updateInitData: updateInitData,
@@ -11263,7 +10837,6 @@ function SegmentsController(config) {
   setup();
   return instance;
 }
-
 SegmentsController.__dashjs_factory_name = 'SegmentsController';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SegmentsController);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -11298,20 +10871,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
 /* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -11361,39 +10927,33 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
-
 function DashManifestModel() {
   var instance, logger, errHandler, BASE64;
   var context = this.context;
   var urlUtils = Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
-
   var isInteger = Number.isInteger || function (value) {
     return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
   };
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance().getLogger(instance);
   }
-
   function getIsTypeOf(adaptation, type) {
     if (!adaptation) {
       throw new Error('adaptation is not defined');
     }
-
     if (!type) {
       throw new Error('type is not defined');
-    } // Check for thumbnail images
+    }
 
-
+    // Check for thumbnail images
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
       var essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
-
       if (essentialProperties && essentialProperties.length > 0 && _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__["THUMBNAILS_SCHEME_ID_URIS"].indexOf(essentialProperties[0].schemeIdUri) >= 0) {
         return type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE;
       }
-    } // Check ContentComponent.contentType
+    }
 
-
+    // Check ContentComponent.contentType
     if (adaptation.ContentComponent_asArray && adaptation.ContentComponent_asArray.length > 0) {
       if (adaptation.ContentComponent_asArray.length > 1) {
         return type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MUXED;
@@ -11401,325 +10961,259 @@ function DashManifestModel() {
         return true;
       }
     }
+    var mimeTypeRegEx = type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
 
-    var mimeTypeRegEx = type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type); // Check codecs
-
+    // Check codecs
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
       var codecs = adaptation.Representation_asArray[0].codecs;
-
       if (mimeTypeRegEx.test(codecs)) {
         return true;
       }
-    } // Check Adaptation's mimeType
+    }
 
-
+    // Check Adaptation's mimeType
     if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE)) {
       return mimeTypeRegEx.test(adaptation.mimeType);
-    } // Check Representation's mimeType
+    }
 
-
+    // Check Representation's mimeType
     if (adaptation.Representation_asArray) {
       var representation;
-
       for (var i = 0; i < adaptation.Representation_asArray.length; i++) {
         representation = adaptation.Representation_asArray[i];
-
         if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE)) {
           return mimeTypeRegEx.test(representation.mimeType);
         }
       }
     }
-
     return false;
   }
-
   function getIsFragmented(adaptation) {
     if (!adaptation) {
       throw new Error('adaptation is not defined');
     }
-
     if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
       return true;
     }
-
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
       var representation = adaptation.Representation_asArray[0];
-
       if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
         return true;
       }
     }
-
     return false;
   }
-
   function getIsAudio(adaptation) {
     return getIsTypeOf(adaptation, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO);
   }
-
   function getIsVideo(adaptation) {
     return getIsTypeOf(adaptation, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO);
   }
-
   function getIsText(adaptation) {
     return getIsTypeOf(adaptation, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT);
   }
-
   function getIsMuxed(adaptation) {
     return getIsTypeOf(adaptation, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MUXED);
   }
-
   function getIsImage(adaptation) {
     return getIsTypeOf(adaptation, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE);
   }
-
   function getProducerReferenceTimesForAdaptation(adaptation) {
-    var prtArray = adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY) ? adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY] : []; // ProducerReferenceTime elements can also be contained in Representations
+    var prtArray = adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY) ? adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY] : [];
 
+    // ProducerReferenceTime elements can also be contained in Representations
     var representationsArray = adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION_ASARRAY) ? adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION_ASARRAY] : [];
     representationsArray.forEach(function (rep) {
       if (rep.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY)) {
         prtArray.push.apply(prtArray, _toConsumableArray(rep[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCERREFERENCETIME_ASARRAY]));
       }
     });
-    var prtsForAdaptation = []; // Unlikely to have multiple ProducerReferenceTimes.
+    var prtsForAdaptation = [];
 
+    // Unlikely to have multiple ProducerReferenceTimes.
     prtArray.forEach(function (prt) {
       var entry = new _vo_ProducerReferenceTime__WEBPACK_IMPORTED_MODULE_10__["default"]();
-
       if (prt.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
         entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID] = prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID];
       } else {
         // Ignore. Missing mandatory attribute
         return;
       }
-
       if (prt.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WALL_CLOCK_TIME)) {
         entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WALL_CLOCK_TIME] = prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WALL_CLOCK_TIME];
       } else {
         // Ignore. Missing mandatory attribute
         return;
       }
-
       if (prt.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME)) {
         entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME] = prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME];
       } else {
         // Ignore. Missing mandatory attribute
         return;
-      } // Not interested in other attributes for now
+      }
+
+      // Not interested in other attributes for now
       // UTC element contained must be same as that in the MPD
-
-
       prtsForAdaptation.push(entry);
     });
     return prtsForAdaptation;
   }
-
   function getLanguageForAdaptation(adaptation) {
     var lang = '';
-
     if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG)) {
       lang = adaptation.lang;
     }
-
     return lang;
   }
-
   function getViewpointForAdaptation(adaptation) {
     return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT) ? adaptation.Viewpoint : null;
   }
-
   function getRolesForAdaptation(adaptation) {
     return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE_ASARRAY) ? adaptation.Role_asArray : [];
   }
-
   function getAccessibilityForAdaptation(adaptation) {
     return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY_ASARRAY) ? adaptation.Accessibility_asArray : [];
   }
-
   function getAudioChannelConfigurationForAdaptation(adaptation) {
     return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
   }
-
   function getAudioChannelConfigurationForRepresentation(representation) {
     return representation && representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
   }
-
   function getRepresentationSortFunction() {
     return function (a, b) {
       return a.bandwidth - b.bandwidth;
     };
   }
-
   function processAdaptation(realAdaptation) {
     if (realAdaptation && Array.isArray(realAdaptation.Representation_asArray)) {
       realAdaptation.Representation_asArray.sort(getRepresentationSortFunction());
     }
-
     return realAdaptation;
   }
-
   function getRealAdaptations(manifest, periodIndex) {
     return manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
   }
-
   function getRealPeriods(manifest) {
     return manifest && manifest.Period_asArray ? manifest.Period_asArray : [];
   }
-
   function getRealPeriodForIndex(index, manifest) {
     var realPeriods = getRealPeriods(manifest);
-
     if (realPeriods.length > 0 && isInteger(index)) {
       return realPeriods[index];
     } else {
       return null;
     }
   }
-
   function getAdaptationForId(id, manifest, periodIndex) {
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
     var i, len;
-
     for (i = 0, len = realAdaptations.length; i < len; i++) {
       if (realAdaptations[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID) && realAdaptations[i].id === id) {
         return realAdaptations[i];
       }
     }
-
     return null;
   }
-
   function getAdaptationForIndex(index, manifest, periodIndex) {
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
-
     if (realAdaptations.length > 0 && isInteger(index)) {
       return realAdaptations[index];
     } else {
       return null;
     }
   }
-
   function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
     if (!realAdaptation) {
       return -1;
     }
-
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
-
     for (var i = 0; i < realAdaptations.length; i++) {
       var objectUtils = Object(_streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
-
       if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
         return i;
       }
     }
-
     return -1;
   }
-
   function getAdaptationsForType(manifest, periodIndex, type) {
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
     var i, len;
     var adaptations = [];
-
     for (i = 0, len = realAdaptations.length; i < len; i++) {
       if (getIsTypeOf(realAdaptations[i], type)) {
         adaptations.push(processAdaptation(realAdaptations[i]));
       }
     }
-
     return adaptations;
   }
-
   function getCodec(adaptation, representationId, addResolutionInfo) {
     var codec = null;
-
     if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
       var representation = isInteger(representationId) && representationId >= 0 && representationId < adaptation.Representation_asArray.length ? adaptation.Representation_asArray[representationId] : adaptation.Representation_asArray[0];
-
       if (representation) {
         codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
-
         if (addResolutionInfo && representation.width !== undefined) {
           codec += ';width="' + representation.width + '";height="' + representation.height + '"';
         }
       }
-    } // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+    }
 
-
+    // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
     if (codec) {
       codec = codec.replace(/\sprofiles=[^;]*/g, '');
     }
-
     return codec;
   }
-
   function getMimeType(adaptation) {
     return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
   }
-
   function getKID(adaptation) {
     if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CENC_DEFAULT_KID)) {
       return null;
     }
-
     return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CENC_DEFAULT_KID];
   }
-
   function getLabelsForAdaptation(adaptation) {
     if (!adaptation || !Array.isArray(adaptation.Label_asArray)) {
       return [];
     }
-
     var labelArray = [];
-
     for (var i = 0; i < adaptation.Label_asArray.length; i++) {
       labelArray.push({
         lang: adaptation.Label_asArray[i].lang,
         text: adaptation.Label_asArray[i].__text || adaptation.Label_asArray[i]
       });
     }
-
     return labelArray;
   }
-
   function getContentProtectionData(adaptation) {
     if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENTPROTECTION_ASARRAY) || adaptation.ContentProtection_asArray.length === 0) {
       return null;
     }
-
     return adaptation.ContentProtection_asArray;
   }
-
   function getIsDynamic(manifest) {
     var isDynamic = false;
-
     if (manifest && manifest.hasOwnProperty('type')) {
       isDynamic = manifest.type === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DYNAMIC;
     }
-
     return isDynamic;
   }
-
   function getId(manifest) {
     return manifest && manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID] || null;
   }
-
   function hasProfile(manifest, profile) {
     var has = false;
-
     if (manifest && manifest.profiles && manifest.profiles.length > 0) {
       has = manifest.profiles.indexOf(profile) !== -1;
     }
-
     return has;
   }
-
   function getDuration(manifest) {
-    var mpdDuration; //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
+    var mpdDuration;
+    //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
     //If the attribute is not present, the duration of the Media Presentation is unknown.
-
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA_PRESENTATION_DURATION)) {
       mpdDuration = manifest.mediaPresentationDuration;
     } else if (manifest && manifest.type == 'dynamic') {
@@ -11727,33 +11221,25 @@ function DashManifestModel() {
     } else {
       mpdDuration = Number.MAX_SAFE_INTEGER || Number.MAX_VALUE;
     }
-
     return mpdDuration;
   }
-
   function getBandwidth(representation) {
     return representation && representation.bandwidth ? representation.bandwidth : NaN;
   }
-
   function getManifestUpdatePeriod(manifest) {
     var latencyOfLastUpdate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var delay = NaN;
-
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MINIMUM_UPDATE_PERIOD)) {
       delay = manifest.minimumUpdatePeriod;
     }
-
     return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);
   }
-
   function getPublishTime(manifest) {
     return manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME) ? new Date(manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME]) : null;
   }
-
   function getRepresentationCount(adaptation) {
     return adaptation && Array.isArray(adaptation.Representation_asArray) ? adaptation.Representation_asArray.length : 0;
   }
-
   function getBitrateListForAdaptation(realAdaptation) {
     var processedRealAdaptation = processAdaptation(realAdaptation);
     var realRepresentations = processedRealAdaptation && Array.isArray(processedRealAdaptation.Representation_asArray) ? processedRealAdaptation.Representation_asArray : [];
@@ -11767,7 +11253,6 @@ function DashManifestModel() {
       };
     });
   }
-
   function getSelectionPriority(realAdaption) {
     try {
       var priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
@@ -11776,7 +11261,6 @@ function DashManifestModel() {
       return 1;
     }
   }
-
   function getEssentialPropertiesForRepresentation(realRepresentation) {
     if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
     return realRepresentation.EssentialProperty_asArray.map(function (prop) {
@@ -11786,26 +11270,21 @@ function DashManifestModel() {
       };
     });
   }
-
   function getRepresentationFor(index, adaptation) {
     return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 && isInteger(index) ? adaptation.Representation_asArray[index] : null;
   }
-
   function getRealAdaptationFor(voAdaptation) {
     if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
       var periodArray = voAdaptation.period.mpd.manifest.Period_asArray[voAdaptation.period.index];
-
       if (periodArray && periodArray.AdaptationSet_asArray && isInteger(voAdaptation.index)) {
         return processAdaptation(periodArray.AdaptationSet_asArray[voAdaptation.index]);
       }
     }
   }
-
   function getRepresentationsForAdaptation(voAdaptation) {
     var voRepresentations = [];
     var processedRealAdaptation = getRealAdaptationFor(voAdaptation);
     var segmentInfo, baseUrl;
-
     if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
       // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
       // that we are processing. Making it works properly will require much further changes and given
@@ -11813,60 +11292,47 @@ function DashManifestModel() {
       // keep this "tricky" code until the real (and good) solution comes
       if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
         var baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
-
         if (baseUrls) {
           baseUrl = baseUrls[0];
         }
       }
-
       for (var i = 0, len = processedRealAdaptation.Representation_asArray.length; i < len; ++i) {
         var realRepresentation = processedRealAdaptation.Representation_asArray[i];
         var voRepresentation = new _vo_Representation__WEBPACK_IMPORTED_MODULE_2__["default"]();
         voRepresentation.index = i;
         voRepresentation.adaptation = voAdaptation;
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
           voRepresentation.id = realRepresentation.id;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS)) {
           voRepresentation.codecs = realRepresentation.codecs;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE)) {
           voRepresentation.mimeType = realRepresentation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE];
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_PRIVATE_DATA)) {
           voRepresentation.codecPrivateData = realRepresentation.codecPrivateData;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BANDWITH)) {
           voRepresentation.bandwidth = realRepresentation.bandwidth;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH)) {
           voRepresentation.width = realRepresentation.width;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT)) {
           voRepresentation.height = realRepresentation.height;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE)) {
           voRepresentation.scanType = realRepresentation.scanType;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE)) {
           voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
         }
-
         if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
           segmentInfo = realRepresentation.SegmentBase;
           voRepresentation.segmentInfoType = _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE;
         } else if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST)) {
           segmentInfo = realRepresentation.SegmentList;
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE)) {
             voRepresentation.segmentInfoType = _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE;
           } else {
@@ -11874,42 +11340,35 @@ function DashManifestModel() {
           }
         } else if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE)) {
           segmentInfo = realRepresentation.SegmentTemplate;
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE)) {
             voRepresentation.segmentInfoType = _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE;
           } else {
             voRepresentation.segmentInfoType = _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INITIALIZATION_MINUS)) {
             voRepresentation.initialization = segmentInfo.initialization.split('$Bandwidth$').join(realRepresentation.bandwidth).split('$RepresentationID$').join(realRepresentation.id);
           }
         } else {
           voRepresentation.segmentInfoType = _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL;
         }
-
         voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
-
         if (segmentInfo) {
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INITIALIZATION)) {
             var initialization = segmentInfo.Initialization;
-
             if (initialization.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SOURCE_URL)) {
               voRepresentation.initialization = initialization.sourceURL;
             }
-
             if (initialization.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].RANGE)) {
-              voRepresentation.range = initialization.range; // initialization source url will be determined from
+              voRepresentation.range = initialization.range;
+              // initialization source url will be determined from
               // BaseURL when resolved at load time.
             }
           } else if (getIsText(processedRealAdaptation) && getIsFragmented(processedRealAdaptation) && processedRealAdaptation.mimeType && processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
             voRepresentation.range = 0;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TIMESCALE)) {
             voRepresentation.timescale = segmentInfo.timescale;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
             // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
             // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
@@ -11918,84 +11377,67 @@ function DashManifestModel() {
             voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
           } else if (realRepresentation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE)) {
             segmentInfo = realRepresentation.SegmentTemplate;
-
             if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE)) {
               voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
             }
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA)) {
             voRepresentation.media = segmentInfo.media;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START_NUMBER)) {
             voRepresentation.startNumber = segmentInfo.startNumber;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX_RANGE)) {
             voRepresentation.indexRange = segmentInfo.indexRange;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME_OFFSET)) {
             voRepresentation.presentationTimeOffset = segmentInfo.presentationTimeOffset / voRepresentation.timescale;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_OFFSET)) {
             voRepresentation.availabilityTimeOffset = segmentInfo.availabilityTimeOffset;
           } else if (baseUrl && baseUrl.availabilityTimeOffset !== undefined) {
             voRepresentation.availabilityTimeOffset = baseUrl.availabilityTimeOffset;
           }
-
           if (segmentInfo.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_COMPLETE)) {
             voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
           } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
             voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
           }
         }
-
         voRepresentation.MSETimeOffset = calcMSETimeOffset(voRepresentation);
         voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
         voRepresentations.push(voRepresentation);
       }
     }
-
     return voRepresentations;
   }
-
   function calcSegmentDuration(segmentTimeline) {
     if (!segmentTimeline || !segmentTimeline.S_asArray) {
       return NaN;
     }
-
     var s0 = segmentTimeline.S_asArray[0];
     var s1 = segmentTimeline.S_asArray[1];
     return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
   }
-
   function calcMSETimeOffset(representation) {
     // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
     var presentationOffset = representation.presentationTimeOffset;
     var periodStart = representation.adaptation.period.start;
     return periodStart - presentationOffset;
   }
-
   function getAdaptationsForPeriod(voPeriod) {
     var realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period_asArray[voPeriod.index] : null;
     var voAdaptations = [];
     var voAdaptationSet, realAdaptationSet, i;
-
     if (realPeriod && realPeriod.AdaptationSet_asArray) {
       for (i = 0; i < realPeriod.AdaptationSet_asArray.length; i++) {
         realAdaptationSet = realPeriod.AdaptationSet_asArray[i];
         voAdaptationSet = new _vo_AdaptationSet__WEBPACK_IMPORTED_MODULE_3__["default"]();
-
         if (realAdaptationSet.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
           voAdaptationSet.id = realAdaptationSet.id;
         }
-
         voAdaptationSet.index = i;
         voAdaptationSet.period = voPeriod;
-
         if (getIsMuxed(realAdaptationSet)) {
           voAdaptationSet.type = _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MUXED;
         } else if (getIsAudio(realAdaptationSet)) {
@@ -12009,14 +11451,11 @@ function DashManifestModel() {
         } else {
           logger.warn('Unknown Adaptation stream type');
         }
-
         voAdaptations.push(voAdaptationSet);
       }
     }
-
     return voAdaptations;
   }
-
   function getRegularPeriods(mpd) {
     var isDynamic = mpd ? getIsDynamic(mpd.manifest) : false;
     var voPeriods = [];
@@ -12025,35 +11464,37 @@ function DashManifestModel() {
     var voPreviousPeriod = null;
     var voPeriod = null;
     var len, i;
-
     for (i = 0, len = mpd && mpd.manifest && mpd.manifest.Period_asArray ? mpd.manifest.Period_asArray.length : 0; i < len; i++) {
-      realPeriod = mpd.manifest.Period_asArray[i]; // If the attribute @start is present in the Period, then the
+      realPeriod = mpd.manifest.Period_asArray[i];
+
+      // If the attribute @start is present in the Period, then the
       // Period is a regular Period and the PeriodStart is equal
       // to the value of this attribute.
-
       if (realPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START)) {
         voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
         voPeriod.start = realPeriod.start;
-      } // If the @start attribute is absent, but the previous Period
+      }
+      // If the @start attribute is absent, but the previous Period
       // element contains a @duration attribute then then this new
       // Period is also a regular Period. The start time of the new
       // Period PeriodStart is the sum of the start time of the previous
       // Period PeriodStart and the value of the attribute @duration
       // of the previous Period.
       else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION) && voPreviousPeriod !== null) {
-          voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
-          voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
-        } // If (i) @start attribute is absent, and (ii) the Period element
-        // is the first in the MPD, and (iii) the MPD@type is 'static',
-        // then the PeriodStart time shall be set to zero.
-        else if (i === 0 && !isDynamic) {
-            voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
-            voPeriod.start = 0;
-          } // The Period extends until the PeriodStart of the next Period.
+        voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
+        voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
+      }
+      // If (i) @start attribute is absent, and (ii) the Period element
+      // is the first in the MPD, and (iii) the MPD@type is 'static',
+      // then the PeriodStart time shall be set to zero.
+      else if (i === 0 && !isDynamic) {
+        voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
+        voPeriod.start = 0;
+      }
+
+      // The Period extends until the PeriodStart of the next Period.
       // The difference between the PeriodStart time of a Period and
       // the PeriodStart time of the following Period.
-
-
       if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
         if (voPeriod !== null) {
           voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
@@ -12061,63 +11502,49 @@ function DashManifestModel() {
           logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
         }
       }
-
       if (voPeriod !== null) {
         voPeriod.id = getPeriodId(realPeriod, i);
         voPeriod.index = i;
         voPeriod.mpd = mpd;
-
         if (realPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
           voPeriod.duration = realPeriod.duration;
         }
-
         if (voPreviousPeriod) {
           voPreviousPeriod.nextPeriodId = voPeriod.id;
         }
-
         voPeriods.push(voPeriod);
         realPreviousPeriod = realPeriod;
         voPreviousPeriod = voPeriod;
       }
-
       realPeriod = null;
       voPeriod = null;
     }
-
     if (voPeriods.length === 0) {
       return voPeriods;
-    } // The last Period extends until the end of the Media Presentation.
+    }
+
+    // The last Period extends until the end of the Media Presentation.
     // The difference between the PeriodStart time of the last Period
     // and the mpd duration
-
-
     if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
       voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
     }
-
     return voPeriods;
   }
-
   function getPeriodId(realPeriod, i) {
     if (!realPeriod) {
       throw new Error('Period cannot be null or undefined');
     }
-
     var id = _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"].DEFAULT_ID + '_' + i;
-
     if (realPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID) && realPeriod.id.length > 0 && realPeriod.id !== '__proto__') {
       id = realPeriod.id;
     }
-
     return id;
   }
-
   function getMpd(manifest) {
     var mpd = new _vo_Mpd__WEBPACK_IMPORTED_MODULE_5__["default"]();
-
     if (manifest) {
       mpd.manifest = manifest;
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_START_TIME)) {
         mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
       } else {
@@ -12125,50 +11552,39 @@ function DashManifestModel() {
           mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
         }
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_END_TIME)) {
         mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MINIMUM_UPDATE_PERIOD)) {
         mpd.minimumUpdatePeriod = manifest.minimumUpdatePeriod;
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA_PRESENTATION_DURATION)) {
         mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUGGESTED_PRESENTATION_DELAY)) {
         mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TIMESHIFT_BUFFER_DEPTH)) {
         mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_SEGMENT_DURATION)) {
         mpd.maxSegmentDuration = manifest.maxSegmentDuration;
       }
-
       if (manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME)) {
         mpd.publishTime = new Date(manifest.publishTime);
       }
     }
-
     return mpd;
   }
-
   function checkConfig() {
     if (!errHandler || !errHandler.hasOwnProperty('error')) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getEndTimeForLastPeriod(voPeriod) {
     checkConfig();
     var isDynamic = getIsDynamic(voPeriod.mpd.manifest);
     var periodEnd;
-
     if (voPeriod.mpd.manifest.mediaPresentationDuration) {
       periodEnd = voPeriod.mpd.manifest.mediaPresentationDuration;
     } else if (voPeriod.duration) {
@@ -12178,64 +11594,51 @@ function DashManifestModel() {
     } else {
       errHandler.error(new _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
     }
-
     return periodEnd;
   }
-
   function getEventsForPeriod(period) {
     var manifest = period && period.mpd && period.mpd.manifest ? period.mpd.manifest : null;
     var periodArray = manifest ? manifest.Period_asArray : null;
     var eventStreams = periodArray && period && isInteger(period.index) ? periodArray[period.index].EventStream_asArray : null;
     var events = [];
     var i, j;
-
     if (eventStreams) {
       for (i = 0; i < eventStreams.length; i++) {
         var eventStream = new _vo_EventStream__WEBPACK_IMPORTED_MODULE_9__["default"]();
         eventStream.period = period;
         eventStream.timescale = 1;
-
         if (eventStreams[i].hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
           eventStream.schemeIdUri = eventStreams[i][_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI];
         } else {
           throw new Error('Invalid EventStream. SchemeIdUri has to be set');
         }
-
         if (eventStreams[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TIMESCALE)) {
           eventStream.timescale = eventStreams[i][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TIMESCALE];
         }
-
         if (eventStreams[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
           eventStream.value = eventStreams[i][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
         }
-
         if (eventStreams[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME_OFFSET)) {
           eventStream.presentationTimeOffset = eventStreams[i][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME_OFFSET];
         }
-
         for (j = 0; eventStreams[i].Event_asArray && j < eventStreams[i].Event_asArray.length; j++) {
           var currentMpdEvent = eventStreams[i].Event_asArray[j];
           var event = new _vo_Event__WEBPACK_IMPORTED_MODULE_7__["default"]();
           event.presentationTime = 0;
           event.eventStream = eventStream;
-
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PRESENTATION_TIME)) {
             event.presentationTime = currentMpdEvent.presentationTime;
           }
-
           var presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
           event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
-
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION)) {
             event.duration = currentMpdEvent.duration / eventStream.timescale;
           }
-
           if (currentMpdEvent.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID)) {
             event.id = currentMpdEvent.id;
           } else {
             event.id = null;
           }
-
           if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
             // toString is used to manage both regular and namespaced tags
             event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
@@ -12246,93 +11649,73 @@ function DashManifestModel() {
             // string representation'.
             event.messageData = currentMpdEvent.messageData || currentMpdEvent.__cdata || currentMpdEvent.__text;
           }
-
           events.push(event);
         }
       }
     }
-
     return events;
   }
-
   function getEventStreams(inbandStreams, representation, period) {
     var eventStreams = [];
     var i;
     if (!inbandStreams) return eventStreams;
-
     for (i = 0; i < inbandStreams.length; i++) {
       var eventStream = new _vo_EventStream__WEBPACK_IMPORTED_MODULE_9__["default"]();
       eventStream.timescale = 1;
       eventStream.representation = representation;
-
       if (inbandStreams[i].hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
         eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
       } else {
         throw new Error('Invalid EventStream. SchemeIdUri has to be set');
       }
-
       if (inbandStreams[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TIMESCALE)) {
         eventStream.timescale = inbandStreams[i].timescale;
       }
-
       if (inbandStreams[i].hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
         eventStream.value = inbandStreams[i].value;
       }
-
       eventStreams.push(eventStream);
       eventStream.period = period;
     }
-
     return eventStreams;
   }
-
   function getEventStreamForAdaptationSet(manifest, adaptation, period) {
     var inbandStreams, periodArray, adaptationArray;
-
     if (manifest && manifest.Period_asArray && adaptation && adaptation.period && isInteger(adaptation.period.index)) {
       periodArray = manifest.Period_asArray[adaptation.period.index];
-
       if (periodArray && periodArray.AdaptationSet_asArray && isInteger(adaptation.index)) {
         adaptationArray = periodArray.AdaptationSet_asArray[adaptation.index];
-
         if (adaptationArray) {
           inbandStreams = adaptationArray.InbandEventStream_asArray;
         }
       }
     }
-
     return getEventStreams(inbandStreams, null, period);
   }
-
   function getEventStreamForRepresentation(manifest, representation, period) {
     var inbandStreams, periodArray, adaptationArray, representationArray;
-
     if (manifest && manifest.Period_asArray && representation && representation.adaptation && representation.adaptation.period && isInteger(representation.adaptation.period.index)) {
       periodArray = manifest.Period_asArray[representation.adaptation.period.index];
-
       if (periodArray && periodArray.AdaptationSet_asArray && isInteger(representation.adaptation.index)) {
         adaptationArray = periodArray.AdaptationSet_asArray[representation.adaptation.index];
-
         if (adaptationArray && adaptationArray.Representation_asArray && isInteger(representation.index)) {
           representationArray = adaptationArray.Representation_asArray[representation.index];
-
           if (representationArray) {
             inbandStreams = representationArray.InbandEventStream_asArray;
           }
         }
       }
     }
-
     return getEventStreams(inbandStreams, representation, period);
   }
-
   function getUTCTimingSources(manifest) {
     var isDynamic = getIsDynamic(manifest);
     var hasAST = manifest ? manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_START_TIME) : false;
     var utcTimingsArray = manifest ? manifest.UTCTiming_asArray : null;
-    var utcTimingEntries = []; // do not bother synchronizing the clock unless MPD is live,
-    // or it is static and has availabilityStartTime attribute
+    var utcTimingEntries = [];
 
+    // do not bother synchronizing the clock unless MPD is live,
+    // or it is static and has availabilityStartTime attribute
     if (isDynamic || hasAST) {
       if (utcTimingsArray) {
         // the order is important here - 23009-1 states that the order
@@ -12340,7 +11723,6 @@ function DashManifestModel() {
         // the highest, and the last the lowest priority".
         utcTimingsArray.forEach(function (utcTiming) {
           var entry = new _vo_UTCTiming__WEBPACK_IMPORTED_MODULE_6__["default"]();
-
           if (utcTiming.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
             entry.schemeIdUri = utcTiming.schemeIdUri;
           } else {
@@ -12348,84 +11730,78 @@ function DashManifestModel() {
             // are meaningless. let's just ignore this entry and
             // move on.
             return;
-          } // this is (incorrectly) interpreted as a number - schema
+          }
+
+          // this is (incorrectly) interpreted as a number - schema
           // defines it as a string
-
-
           if (utcTiming.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
             entry.value = utcTiming.value.toString();
           } else {
             // without a value, there's not a lot we can do with
             // this entry. let's just ignore this one and move on
             return;
-          } // we're not interested in the optional id or any other
-          // attributes which might be attached to the entry
+          }
 
+          // we're not interested in the optional id or any other
+          // attributes which might be attached to the entry
 
           utcTimingEntries.push(entry);
         });
       }
     }
-
     return utcTimingEntries;
   }
-
   function getBaseURLsFromElement(node) {
-    var baseUrls = []; // if node.BaseURL_asArray and node.baseUri are undefined entries
+    var baseUrls = [];
+    // if node.BaseURL_asArray and node.baseUri are undefined entries
     // will be [undefined] which entries.some will just skip
-
     var entries = node.BaseURL_asArray || [node.baseUri];
     var earlyReturn = false;
     entries.some(function (entry) {
       if (entry) {
         var baseUrl = new _vo_BaseURL__WEBPACK_IMPORTED_MODULE_8__["default"]();
         var text = entry.__text || entry;
-
         if (urlUtils.isRelative(text)) {
           // it doesn't really make sense to have relative and
           // absolute URLs at the same level, or multiple
           // relative URLs at the same level, so assume we are
           // done from this level of the MPD
-          earlyReturn = true; // deal with the specific case where the MPD@BaseURL
+          earlyReturn = true;
+
+          // deal with the specific case where the MPD@BaseURL
           // is specified and is relative. when no MPD@BaseURL
           // entries exist, that case is handled by the
           // [node.baseUri] in the entries definition.
-
           if (node.baseUri) {
             text = urlUtils.resolve(text, node.baseUri);
           }
         }
+        baseUrl.url = text;
 
-        baseUrl.url = text; // serviceLocation is optional, but we need it in order
+        // serviceLocation is optional, but we need it in order
         // to blacklist correctly. if it's not available, use
         // anything unique since there's no relationship to any
         // other BaseURL and, in theory, the url should be
         // unique so use this instead.
-
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION) && entry.serviceLocation.length) {
           baseUrl.serviceLocation = entry.serviceLocation;
         } else {
           baseUrl.serviceLocation = text;
         }
-
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY)) {
           baseUrl.dvb_priority = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY];
         }
-
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT)) {
           baseUrl.dvb_weight = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT];
         }
-
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_OFFSET)) {
           baseUrl.availabilityTimeOffset = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_OFFSET];
         }
-
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_COMPLETE)) {
           baseUrl.availabilityTimeComplete = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_COMPLETE] !== 'false';
         }
         /* NOTE: byteRange currently unused
          */
-
 
         baseUrls.push(baseUrl);
         return earlyReturn;
@@ -12433,81 +11809,67 @@ function DashManifestModel() {
     });
     return baseUrls;
   }
-
   function getContentSteering(manifest) {
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY)) {
       // Only one ContentSteering element is supported on MPD level
       var element = manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY][0];
       var entry = new _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__["default"]();
       entry.serverUrl = element.__text;
-
       if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION)) {
         entry.defaultServiceLocation = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION];
       }
-
       if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START)) {
         entry.queryBeforeStart = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START].toLowerCase() === 'true';
       }
-
       if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL)) {
         entry.proxyServerUrl = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL];
       }
-
       return entry;
     }
-
     return undefined;
   }
-
   function getLocation(manifest) {
     if (manifest && manifest.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].LOCATION)) {
       // for now, do not support multiple Locations -
       // just set Location to the first Location.
       manifest.Location = manifest.Location_asArray[0];
       return manifest.Location;
-    } // may well be undefined
+    }
 
-
+    // may well be undefined
     return undefined;
   }
-
   function getPatchLocation(manifest) {
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION)) {
       // only include support for single patch location currently
       manifest.PatchLocation = manifest.PatchLocation_asArray[0];
       return manifest.PatchLocation;
-    } // no patch location provided
+    }
 
-
+    // no patch location provided
     return undefined;
   }
-
   function getSuggestedPresentationDelay(mpd) {
     return mpd && mpd.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
   }
-
   function getAvailabilityStartTime(mpd) {
     return mpd && mpd.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
   }
-
   function getServiceDescriptions(manifest) {
     var serviceDescriptions = [];
-
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION)) {
       var _iterator = _createForOfIteratorHelper(manifest.ServiceDescription_asArray),
-          _step;
-
+        _step;
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var sd = _step.value;
           // Convert each of the properties defined in
           var id = null,
-              schemeIdUri = null,
-              latency = null,
-              playbackRate = null,
-              operatingQuality = null,
-              operatingBandwidth = null;
-
+            schemeIdUri = null,
+            latency = null,
+            playbackRate = null,
+            operatingQuality = null,
+            operatingBandwidth = null;
           for (var prop in sd) {
             if (sd.hasOwnProperty(prop)) {
               if (prop === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID) {
@@ -12545,7 +11907,6 @@ function DashManifestModel() {
               }
             }
           }
-
           serviceDescriptions.push({
             id: id,
             schemeIdUri: schemeIdUri,
@@ -12561,21 +11922,16 @@ function DashManifestModel() {
         _iterator.f();
       }
     }
-
     return serviceDescriptions;
   }
-
   function getSupplementalProperties(adaptation) {
     var supplementalProperties = {};
-
     if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY)) {
       var _iterator2 = _createForOfIteratorHelper(adaptation.SupplementalProperty_asArray),
-          _step2;
-
+        _step2;
       try {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var sp = _step2.value;
-
           if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
             supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
           }
@@ -12586,22 +11942,17 @@ function DashManifestModel() {
         _iterator2.f();
       }
     }
-
     return supplementalProperties;
   }
-
   function setConfig(config) {
     if (!config) return;
-
     if (config.errHandler) {
       errHandler = config.errHandler;
     }
-
     if (config.BASE64) {
       BASE64 = config.BASE64;
     }
   }
-
   instance = {
     getIsTypeOf: getIsTypeOf,
     getIsText: getIsText,
@@ -12658,7 +12009,6 @@ function DashManifestModel() {
   setup();
   return instance;
 }
-
 DashManifestModel.__dashjs_factory_name = 'DashManifestModel';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_14__["default"].getSingletonFactory(DashManifestModel));
 
@@ -12723,17 +12073,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function DashParser(config) {
   config = config || {};
   var context = this.context;
   var debug = config.debug;
   var instance, logger, matchers, converter, objectIron;
-
   function setup() {
     logger = debug.getLogger(instance);
     matchers = [new _matchers_DurationMatcher__WEBPACK_IMPORTED_MODULE_4__["default"](), new _matchers_DateTimeMatcher__WEBPACK_IMPORTED_MODULE_5__["default"](), new _matchers_NumericMatcher__WEBPACK_IMPORTED_MODULE_6__["default"](), new _matchers_LangMatcher__WEBPACK_IMPORTED_MODULE_7__["default"](), new _matchers_StringMatcher__WEBPACK_IMPORTED_MODULE_3__["default"]() // last in list to take precedence over NumericMatcher
     ];
+
     converter = new _externals_xml2json__WEBPACK_IMPORTED_MODULE_2__["default"]({
       escapeMode: false,
       attributePrefix: '',
@@ -12749,54 +12098,45 @@ function DashParser(config) {
       period: new _maps_SegmentValuesMap__WEBPACK_IMPORTED_MODULE_9__["default"]()
     });
   }
-
   function getMatchers() {
     return matchers;
   }
-
   function getIron() {
     return objectIron;
   }
-
   function parse(data) {
     var manifest;
     var startTime = window.performance.now();
     manifest = converter.xml_str2json(data);
-
     if (!manifest) {
       throw new Error('parsing the manifest failed');
     }
+    var jsonTime = window.performance.now();
 
-    var jsonTime = window.performance.now(); // handle full MPD and Patch ironing separately
-
+    // handle full MPD and Patch ironing separately
     if (manifest.Patch) {
       manifest = manifest.Patch; // drop root reference
       // apply iron to patch operations individually
-
       if (manifest.add_asArray) {
         manifest.add_asArray.forEach(function (operand) {
           return objectIron.run(operand);
         });
       }
-
       if (manifest.replace_asArray) {
         manifest.replace_asArray.forEach(function (operand) {
           return objectIron.run(operand);
         });
-      } // note that we don't need to iron remove as they contain no children
-
+      }
+      // note that we don't need to iron remove as they contain no children
     } else {
       manifest = manifest.MPD; // drop root reference
-
       objectIron.run(manifest);
     }
-
     var ironedTime = window.performance.now();
     logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
     manifest.protocol = 'DASH';
     return manifest;
   }
-
   instance = {
     parse: parse,
     getMatchers: getMatchers,
@@ -12805,7 +12145,6 @@ function DashParser(config) {
   setup();
   return instance;
 }
-
 DashParser.__dashjs_factory_name = 'DashParser';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(DashParser));
 
@@ -12820,12 +12159,12 @@ DashParser.__dashjs_factory_name = 'DashParser';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -12856,7 +12195,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc a property belonging to a MapNode
  * @ignore
@@ -12864,15 +12202,12 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var CommonProperty = /*#__PURE__*/function () {
   function CommonProperty(name) {
     _classCallCheck(this, CommonProperty);
-
     var getDefaultMergeForName = function getDefaultMergeForName(n) {
       return n && n.length && n.charAt(0) === n.charAt(0).toUpperCase();
     };
-
     this._name = name;
     this._merge = getDefaultMergeForName(name);
   }
-
   _createClass(CommonProperty, [{
     key: "name",
     get: function get() {
@@ -12884,10 +12219,8 @@ var CommonProperty = /*#__PURE__*/function () {
       return this._merge;
     }
   }]);
-
   return CommonProperty;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (CommonProperty);
 
 /***/ }),
@@ -12902,12 +12235,12 @@ var CommonProperty = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _CommonProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CommonProperty */ "./src/dash/parser/maps/CommonProperty.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -12938,29 +12271,23 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc a node at some level in a ValueMap
  */
 
-
 var MapNode = /*#__PURE__*/function () {
   function MapNode(name, properties, children) {
     var _this = this;
-
     _classCallCheck(this, MapNode);
-
     this._name = name || '';
     this._properties = [];
     this._children = children || [];
-
     if (Array.isArray(properties)) {
       properties.forEach(function (p) {
         _this._properties.push(new _CommonProperty__WEBPACK_IMPORTED_MODULE_0__["default"](p));
       });
     }
   }
-
   _createClass(MapNode, [{
     key: "name",
     get: function get() {
@@ -12977,10 +12304,8 @@ var MapNode = /*#__PURE__*/function () {
       return this._properties;
     }
   }]);
-
   return MapNode;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (MapNode);
 
 /***/ }),
@@ -12996,24 +12321,19 @@ var MapNode = /*#__PURE__*/function () {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MapNode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MapNode */ "./src/dash/parser/maps/MapNode.js");
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13044,28 +12364,21 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc a RepresentationBaseValuesMap type for input to objectiron
  */
 
 
-
 var RepresentationBaseValuesMap = /*#__PURE__*/function (_MapNode) {
   _inherits(RepresentationBaseValuesMap, _MapNode);
-
   var _super = _createSuper(RepresentationBaseValuesMap);
-
   function RepresentationBaseValuesMap() {
     _classCallCheck(this, RepresentationBaseValuesMap);
-
     var commonProperties = [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SAR, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAMERATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_SAMPLING_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAXIMUM_SAP_PERIOD, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START_WITH_SAP, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODING_DEPENDENCY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM];
     return _super.call(this, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_REPRESENTATION, commonProperties)])]);
   }
-
-  return RepresentationBaseValuesMap;
+  return _createClass(RepresentationBaseValuesMap);
 }(_MapNode__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (RepresentationBaseValuesMap);
 
 /***/ }),
@@ -13081,24 +12394,19 @@ var RepresentationBaseValuesMap = /*#__PURE__*/function (_MapNode) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MapNode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MapNode */ "./src/dash/parser/maps/MapNode.js");
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13129,28 +12437,21 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc a SegmentValuesMap type for input to objectiron
  */
 
 
-
 var SegmentValuesMap = /*#__PURE__*/function (_MapNode) {
   _inherits(SegmentValuesMap, _MapNode);
-
   var _super = _createSuper(SegmentValuesMap);
-
   function SegmentValuesMap() {
     _classCallCheck(this, SegmentValuesMap);
-
     var commonProperties = [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST];
     return _super.call(this, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties)])]);
   }
-
-  return SegmentValuesMap;
+  return _createClass(SegmentValuesMap);
 }(_MapNode__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (SegmentValuesMap);
 
 /***/ }),
@@ -13164,12 +12465,12 @@ var SegmentValuesMap = /*#__PURE__*/function (_MapNode) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13200,7 +12501,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc a base type for matching and converting types in manifest to
  * something more useful
@@ -13209,11 +12509,9 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var BaseMatcher = /*#__PURE__*/function () {
   function BaseMatcher(test, converter) {
     _classCallCheck(this, BaseMatcher);
-
     this._test = test;
     this._converter = converter;
   }
-
   _createClass(BaseMatcher, [{
     key: "test",
     get: function get() {
@@ -13225,10 +12523,8 @@ var BaseMatcher = /*#__PURE__*/function () {
       return this._converter;
     }
   }]);
-
   return BaseMatcher;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (BaseMatcher);
 
 /***/ }),
@@ -13243,24 +12539,19 @@ var BaseMatcher = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher */ "./src/dash/parser/matchers/BaseMatcher.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13291,7 +12582,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc matches and converts xs:datetime to Date
  */
@@ -13300,38 +12590,34 @@ var SECONDS_IN_MIN = 60;
 var MINUTES_IN_HOUR = 60;
 var MILLISECONDS_IN_SECONDS = 1000;
 var datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})(?::?)([0-9]{2}))?/;
-
 var DateTimeMatcher = /*#__PURE__*/function (_BaseMatcher) {
   _inherits(DateTimeMatcher, _BaseMatcher);
-
   var _super = _createSuper(DateTimeMatcher);
-
   function DateTimeMatcher() {
     _classCallCheck(this, DateTimeMatcher);
-
     return _super.call(this, function (attr) {
       return datetimeRegex.test(attr.value);
     }, function (str) {
       var match = datetimeRegex.exec(str);
-      var utcDate; // If the string does not contain a timezone offset different browsers can interpret it either
+      var utcDate;
+
+      // If the string does not contain a timezone offset different browsers can interpret it either
       // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
       // all browsers
+      utcDate = Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1,
+      // months start from zero
+      parseInt(match[3], 10), parseInt(match[4], 10), parseInt(match[5], 10), match[6] && parseInt(match[6], 10) || 0, match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS || 0);
 
-      utcDate = Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1, // months start from zero
-      parseInt(match[3], 10), parseInt(match[4], 10), parseInt(match[5], 10), match[6] && parseInt(match[6], 10) || 0, match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS || 0); // If the date has timezone offset take it into account as well
-
+      // If the date has timezone offset take it into account as well
       if (match[9] && match[10]) {
         var timezoneOffset = parseInt(match[9], 10) * MINUTES_IN_HOUR + parseInt(match[10], 10);
         utcDate += (match[8] === '+' ? -1 : +1) * timezoneOffset * SECONDS_IN_MIN * MILLISECONDS_IN_SECONDS;
       }
-
       return new Date(utcDate);
     });
   }
-
-  return DateTimeMatcher;
+  return _createClass(DateTimeMatcher);
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (DateTimeMatcher);
 
 /***/ }),
@@ -13348,24 +12634,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher */ "./src/dash/parser/matchers/BaseMatcher.js");
 /* harmony import */ var _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../streaming/constants/Constants */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13396,7 +12677,6 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc matches and converts xs:duration to seconds
  */
@@ -13409,42 +12689,32 @@ var SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
 var SECONDS_IN_DAY = 24 * 60 * 60;
 var SECONDS_IN_HOUR = 60 * 60;
 var SECONDS_IN_MIN = 60;
-
 var DurationMatcher = /*#__PURE__*/function (_BaseMatcher) {
   _inherits(DurationMatcher, _BaseMatcher);
-
   var _super = _createSuper(DurationMatcher);
-
   function DurationMatcher() {
     _classCallCheck(this, DurationMatcher);
-
     return _super.call(this, function (attr) {
       var attributeList = [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].MIN_BUFFER_TIME, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_PRESENTATION_DURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].MINIMUM_UPDATE_PERIOD, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].TIMESHIFT_BUFFER_DEPTH, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].MAX_SEGMENT_DURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].MAX_SUBSEGMENT_DURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].SUGGESTED_PRESENTATION_DELAY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].START, _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].START_TIME, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_2__["default"].DURATION];
       var len = attributeList.length;
-
       for (var i = 0; i < len; i++) {
         if (attr.nodeName === attributeList[i]) {
           return durationRegex.test(attr.value);
         }
       }
-
       return false;
     }, function (str) {
       //str = "P10Y10M10DT10H10M10.1S";
       var match = durationRegex.exec(str);
       var result = parseFloat(match[3] || 0) * SECONDS_IN_YEAR + parseFloat(match[5] || 0) * SECONDS_IN_MONTH + parseFloat(match[7] || 0) * SECONDS_IN_DAY + parseFloat(match[9] || 0) * SECONDS_IN_HOUR + parseFloat(match[11] || 0) * SECONDS_IN_MIN + parseFloat(match[13] || 0);
-
       if (match[1] !== undefined) {
         result = -result;
       }
-
       return result;
     });
   }
-
-  return DurationMatcher;
+  return _createClass(DurationMatcher);
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (DurationMatcher);
 
 /***/ }),
@@ -13462,26 +12732,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
 /* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/index.js");
 /* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__);
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13512,52 +12776,39 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc Matches and converts any ISO 639 language tag to BCP-47 language tags
  */
 
 
 
-
 var LangMatcher = /*#__PURE__*/function (_BaseMatcher) {
   _inherits(LangMatcher, _BaseMatcher);
-
   var _super = _createSuper(LangMatcher);
-
   function LangMatcher() {
     _classCallCheck(this, LangMatcher);
-
     return _super.call(this, function (attr, nodeName) {
       var _stringAttrsInElement;
-
       var stringAttrsInElements = (_stringAttrsInElement = {}, _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].GROUP_LABEL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LANG]), _stringAttrsInElement);
-
       if (stringAttrsInElements.hasOwnProperty(nodeName)) {
         var attrNames = stringAttrsInElements[nodeName];
-
         if (attrNames !== undefined) {
           return attrNames.indexOf(attr.name) >= 0;
         } else {
           return false;
         }
       }
-
       return false;
     }, function (str) {
       var lang = bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2___default()(str);
-
       if (lang !== undefined) {
         return lang;
       }
-
       return String(str);
     });
   }
-
-  return LangMatcher;
+  return _createClass(LangMatcher);
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (LangMatcher);
 
 /***/ }),
@@ -13572,24 +12823,19 @@ var LangMatcher = /*#__PURE__*/function (_BaseMatcher) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher */ "./src/dash/parser/matchers/BaseMatcher.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13620,31 +12866,24 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc Matches and converts xs:numeric to float
  */
 
 var numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
-
 var NumericMatcher = /*#__PURE__*/function (_BaseMatcher) {
   _inherits(NumericMatcher, _BaseMatcher);
-
   var _super = _createSuper(NumericMatcher);
-
   function NumericMatcher() {
     _classCallCheck(this, NumericMatcher);
-
     return _super.call(this, function (attr) {
       return numericRegex.test(attr.value);
     }, function (str) {
       return parseFloat(str);
     });
   }
-
-  return NumericMatcher;
+  return _createClass(NumericMatcher);
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (NumericMatcher);
 
 /***/ }),
@@ -13660,26 +12899,20 @@ var NumericMatcher = /*#__PURE__*/function (_BaseMatcher) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher */ "./src/dash/parser/matchers/BaseMatcher.js");
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13710,45 +12943,34 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc Matches and converts xs:string to string, but only for specific attributes on specific nodes
  */
 
 
-
 var StringMatcher = /*#__PURE__*/function (_BaseMatcher) {
   _inherits(StringMatcher, _BaseMatcher);
-
   var _super = _createSuper(StringMatcher);
-
   function StringMatcher() {
     _classCallCheck(this, StringMatcher);
-
     return _super.call(this, function (attr, nodeName) {
       var _stringAttrsInElement;
-
       var stringAttrsInElements = (_stringAttrsInElement = {}, _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MPD, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BYTE_RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX_RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INITIALIZATION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION_INDEX, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX_RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BITSTREAM_SWITCHING, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_URL, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA_RANGE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX_RANGE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX_RANGE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INDEX, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INITIALIZATION_MINUS, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].BITSTREAM_SWITCHING_MINUS]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ASSET_IDENTIFIER, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_STREAM, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_TYPE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].RATING, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_TYPE]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEPENDENCY_ID, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MEDIA_STREAM_STRUCTURE_ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUBSET, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS_MINUS]), _defineProperty(_stringAttrsInElement, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ID]), _stringAttrsInElement);
-
       if (stringAttrsInElements.hasOwnProperty(nodeName)) {
         var attrNames = stringAttrsInElements[nodeName];
-
         if (attrNames !== undefined) {
           return attrNames.indexOf(attr.name) >= 0;
         } else {
           return false;
         }
       }
-
       return false;
     }, function (str) {
       return String(str);
     });
   }
-
-  return StringMatcher;
+  return _createClass(StringMatcher);
 }(_BaseMatcher__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (StringMatcher);
 
 /***/ }),
@@ -13763,8 +12985,7 @@ var StringMatcher = /*#__PURE__*/function (_BaseMatcher) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13796,7 +13017,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 function ObjectIron(mappers) {
   function mergeValues(parentItem, childItem) {
     for (var name in parentItem) {
@@ -13805,24 +13025,24 @@ function ObjectIron(mappers) {
       }
     }
   }
-
   function mapProperties(properties, parent, child) {
     for (var i = 0, len = properties.length; i < len; ++i) {
       var property = properties[i];
-
       if (parent[property.name]) {
         if (child[property.name]) {
           // check to see if we should merge
           if (property.merge) {
             var parentValue = parent[property.name];
-            var childValue = child[property.name]; // complex objects; merge properties
+            var childValue = child[property.name];
 
+            // complex objects; merge properties
             if (_typeof(parentValue) === 'object' && _typeof(childValue) === 'object') {
               mergeValues(parentValue, childValue);
-            } // simple objects; merge them together
+            }
+            // simple objects; merge them together
             else {
-                child[property.name] = parentValue + childValue;
-              }
+              child[property.name] = parentValue + childValue;
+            }
           }
         } else {
           // just add the property
@@ -13831,12 +13051,10 @@ function ObjectIron(mappers) {
       }
     }
   }
-
   function mapItem(item, node) {
     for (var i = 0, len = item.children.length; i < len; ++i) {
       var childItem = item.children[i];
       var array = node[childItem.name + '_asArray'];
-
       if (array) {
         for (var v = 0, len2 = array.length; v < len2; ++v) {
           var childNode = array[v];
@@ -13846,26 +13064,20 @@ function ObjectIron(mappers) {
       }
     }
   }
-
   function run(source) {
     if (source === null || _typeof(source) !== 'object') {
       return source;
     }
-
     if (source.Period_asArray && 'period' in mappers) {
       var periodMapper = mappers.period;
       var periods = source.Period_asArray;
-
       for (var i = 0, len = periods.length; i < len; ++i) {
         var period = periods[i];
         mapItem(periodMapper, period);
-
         if ('adaptationset' in mappers) {
           var adaptationSets = period.AdaptationSet_asArray;
-
           if (adaptationSets) {
             var adaptationSetMapper = mappers.adaptationset;
-
             for (var _i = 0, _len = adaptationSets.length; _i < _len; ++_i) {
               mapItem(adaptationSetMapper, adaptationSets[_i]);
             }
@@ -13873,15 +13085,12 @@ function ObjectIron(mappers) {
         }
       }
     }
-
     return source;
   }
-
   return {
     run: run
   };
 }
-
 ObjectIron.__dashjs_factory_name = 'ObjectIron';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ObjectIron);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -13938,48 +13147,39 @@ function ListSegmentsGetter(config, isDynamic) {
   config = config || {};
   var timelineConverter = config.timelineConverter;
   var instance;
-
   function checkConfig() {
     if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getMediaFinishedInformation(representation) {
     var mediaFinishedInformation = {
       numberOfSegments: 0,
       mediaTimeOfLastSignaledSegment: NaN
     };
-
     if (!representation) {
       return mediaFinishedInformation;
     }
-
     var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
     var startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
     var offset = Math.max(startNumber - 1, 0);
     mediaFinishedInformation.numberOfSegments = offset + list.SegmentURL_asArray.length;
     return mediaFinishedInformation;
   }
-
   function getSegmentByIndex(representation, index) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
     var len = list.SegmentURL_asArray.length;
     var startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
     var offsetToSubtract = Math.max(startNumber - 1, 0);
     var relativeIndex = Math.max(index - offsetToSubtract, 0);
     var segment = null;
-
     if (relativeIndex < len) {
       var s = list.SegmentURL_asArray[relativeIndex];
       segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getIndexBasedSegment"])(timelineConverter, isDynamic, representation, index);
-
       if (segment) {
         segment.replacementTime = (startNumber + index - 1) * representation.segmentDuration;
         segment.media = s.media ? s.media : '';
@@ -13987,28 +13187,21 @@ function ListSegmentsGetter(config, isDynamic) {
         segment.indexRange = s.indexRange;
       }
     }
-
     return segment;
   }
-
   function getSegmentByTime(representation, requestedTime) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     var duration = representation.segmentDuration;
-
     if (isNaN(duration)) {
       return null;
     }
-
     var periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
     var index = Math.floor(periodTime / duration);
     return getSegmentByIndex(representation, index);
   }
-
   instance = {
     getSegmentByIndex: getSegmentByIndex,
     getSegmentByTime: getSegmentByTime,
@@ -14016,7 +13209,6 @@ function ListSegmentsGetter(config, isDynamic) {
   };
   return instance;
 }
-
 ListSegmentsGetter.__dashjs_factory_name = 'ListSegmentsGetter';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ListSegmentsGetter);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -14071,89 +13263,70 @@ function SegmentBaseGetter(config) {
   config = config || {};
   var timelineConverter = config.timelineConverter;
   var instance;
-
   function checkConfig() {
     if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getMediaFinishedInformation(representation) {
     var mediaFinishedInformation = {
       numberOfSegments: 0,
       mediaTimeOfLastSignaledSegment: NaN
     };
-
     if (!representation || !representation.segments) {
       return mediaFinishedInformation;
     }
-
     mediaFinishedInformation.numberOfSegments = representation.segments.length;
     return mediaFinishedInformation;
   }
-
   function getSegmentByIndex(representation, index) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     var len = representation.segments ? representation.segments.length : -1;
     var seg;
-
     if (index < len) {
       seg = representation.segments[index];
-
       if (seg && seg.index === index) {
         return seg;
       }
     }
-
     for (var i = 0; i < len; i++) {
       seg = representation.segments[i];
-
       if (seg && seg.index === index) {
         return seg;
       }
     }
-
     return null;
   }
-
   function getSegmentByTime(representation, requestedTime) {
     checkConfig();
     var index = getIndexByTime(representation, requestedTime);
     return getSegmentByIndex(representation, index);
   }
-
   function getIndexByTime(representation, time) {
     if (!representation) {
       return -1;
     }
-
     var segments = representation.segments;
     var ln = segments ? segments.length : null;
     var idx = -1;
     var epsilon, seg, ft, fd, i;
-
     if (segments && ln > 0) {
       for (i = 0; i < ln; i++) {
         seg = segments[i];
         ft = seg.presentationStartTime;
         fd = seg.duration;
         epsilon = fd / 2;
-
         if (time + epsilon >= ft && time - epsilon < ft + fd) {
           idx = seg.index;
           break;
         }
       }
     }
-
     return idx;
   }
-
   instance = {
     getSegmentByIndex: getSegmentByIndex,
     getSegmentByTime: getSegmentByTime,
@@ -14161,7 +13334,6 @@ function SegmentBaseGetter(config) {
   };
   return instance;
 }
-
 SegmentBaseGetter.__dashjs_factory_name = 'SegmentBaseGetter';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SegmentBaseGetter);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -14219,14 +13391,11 @@ function zeroPadToLength(numStr, minStrLength) {
   while (numStr.length < minStrLength) {
     numStr = '0' + numStr;
   }
-
   return numStr;
 }
-
 function getNumberForSegment(segment, segmentIndex) {
   return segment.representation.startNumber + segmentIndex;
 }
-
 function unescapeDollarsInTemplate(url) {
   return url ? url.split('$$').join('$') : url;
 }
@@ -14234,7 +13403,6 @@ function replaceIDForTemplate(url, value) {
   if (!value || !url || url.indexOf('$RepresentationID$') === -1) {
     return url;
   }
-
   var v = value.toString();
   return url.split('$RepresentationID$').join(v);
 }
@@ -14243,40 +13411,37 @@ function replaceTokenForTemplate(url, token, value) {
   var startPos, endPos, formatTagPos, specifier, width, paddedValue;
   var tokenLen = token.length;
   var formatTagLen = formatTag.length;
-
   if (!url) {
     return url;
-  } // keep looping round until all instances of <token> have been
+  }
+
+  // keep looping round until all instances of <token> have been
   // replaced. once that has happened, startPos below will be -1
   // and the completed url will be returned.
-
-
   while (true) {
     // check if there is a valid $<token>...$ identifier
     // if not, return the url as is.
     startPos = url.indexOf('$' + token);
-
     if (startPos < 0) {
       return url;
-    } // the next '$' must be the end of the identifier
+    }
+
+    // the next '$' must be the end of the identifier
     // if there isn't one, return the url as is.
-
-
     endPos = url.indexOf('$', startPos + tokenLen);
-
     if (endPos < 0) {
       return url;
-    } // now see if there is an additional format tag suffixed to
+    }
+
+    // now see if there is an additional format tag suffixed to
     // the identifier within the enclosing '$' characters
-
-
     formatTagPos = url.indexOf(formatTag, startPos + tokenLen);
-
     if (formatTagPos > startPos && formatTagPos < endPos) {
       specifier = url.charAt(endPos - 1);
-      width = parseInt(url.substring(formatTagPos + formatTagLen, endPos - 1), 10); // support the minimum specifiers required by IEEE 1003.1
-      // (d, i , o, u, x, and X) for completeness
+      width = parseInt(url.substring(formatTagPos + formatTagLen, endPos - 1), 10);
 
+      // support the minimum specifiers required by IEEE 1003.1
+      // (d, i , o, u, x, and X) for completeness
       switch (specifier) {
         // treat all int types as uint,
         // hence deliberate fallthrough
@@ -14285,30 +13450,24 @@ function replaceTokenForTemplate(url, token, value) {
         case 'u':
           paddedValue = zeroPadToLength(value.toString(), width);
           break;
-
         case 'x':
           paddedValue = zeroPadToLength(value.toString(16), width);
           break;
-
         case 'X':
           paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
           break;
-
         case 'o':
           paddedValue = zeroPadToLength(value.toString(8), width);
           break;
-
         default:
           return url;
       }
     } else {
       paddedValue = value;
     }
-
     url = url.substring(0, startPos) + paddedValue + url.substring(endPos + 1);
   }
 }
-
 function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
   var seg = new _vo_Segment__WEBPACK_IMPORTED_MODULE_0__["default"]();
   seg.representation = representation;
@@ -14322,53 +13481,47 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
   seg.index = index;
   return seg;
 }
-
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
-  var voPeriod = representation.adaptation.period; // Avoid requesting segments that overlap the period boundary
+  var voPeriod = representation.adaptation.period;
 
+  // Avoid requesting segments that overlap the period boundary
   if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
     return false;
   }
-
   if (isDynamic) {
     if (representation.availabilityTimeOffset === 'INF') {
       return true;
-    } // For dynamic manifests we check if the presentation start time + duration is included in the availability window
+    }
+
+    // For dynamic manifests we check if the presentation start time + duration is included in the availability window
     // SAST = Period@start + seg@presentationStartTime + seg@duration
     // ASAST = SAST - ATO
     // SAET = SAST + TSBD + seg@duration
     // refTime serves as an anchor time to compare the availability time of the segments against.
-
-
     var refTime = timelineConverter.getClientReferenceTime();
     return segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
   }
-
   return true;
 }
-
 function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
   var duration, presentationStartTime, presentationEndTime;
   duration = representation.segmentDuration;
+
   /*
    * From spec - If neither @duration attribute nor SegmentTimeline element is present, then the Representation
    * shall contain exactly one Media Segment. The MPD start time is 0 and the MPD duration is obtained
    * in the same way as for the last Media Segment in the Representation.
    */
-
   if (isNaN(duration)) {
     duration = representation.adaptation.period.duration;
   }
-
   presentationStartTime = parseFloat((representation.adaptation.period.start + index * duration).toFixed(5));
   presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
   var mediaTime = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
   var segment = getSegment(representation, duration, presentationStartTime, mediaTime, timelineConverter, presentationEndTime, isDynamic, index);
-
   if (!isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
     return null;
   }
-
   return segment;
 }
 function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
@@ -14378,11 +13531,9 @@ function getTimeBasedSegment(timelineConverter, isDynamic, representation, time,
   presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
   presentationEndTime = presentationStartTime + scaledDuration;
   seg = getSegment(representation, scaledDuration, presentationStartTime, scaledTime, timelineConverter, presentationEndTime, isDynamic, index);
-
   if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
     return null;
   }
-
   seg.replacementTime = tManifest ? tManifest : time;
   url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
   url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
@@ -14443,46 +13594,37 @@ function TemplateSegmentsGetter(config, isDynamic) {
   config = config || {};
   var timelineConverter = config.timelineConverter;
   var instance;
-
   function checkConfig() {
     if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getMediaFinishedInformation(representation) {
     var mediaFinishedInformation = {
       numberOfSegments: 0,
       mediaTimeOfLastSignaledSegment: NaN
     };
-
     if (!representation) {
       return mediaFinishedInformation;
     }
-
     var duration = representation.segmentDuration;
-
     if (isNaN(duration)) {
       mediaFinishedInformation.numberOfSegments = 1;
     } else {
       mediaFinishedInformation.numberOfSegments = Math.ceil(representation.adaptation.period.duration / duration);
     }
-
     return mediaFinishedInformation;
   }
-
   function getSegmentByIndex(representation, index) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
+    var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
 
-    var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate; // This is the index without @startNumber
-
+    // This is the index without @startNumber
     index = Math.max(index, 0);
     var seg = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getIndexBasedSegment"])(timelineConverter, isDynamic, representation, index);
-
     if (seg) {
       seg.replacementTime = Math.round((index - 1) * representation.segmentDuration * representation.timescale, 10);
       var url = template.media;
@@ -14490,29 +13632,23 @@ function TemplateSegmentsGetter(config, isDynamic) {
       url = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["replaceTokenForTemplate"])(url, 'Time', seg.replacementTime);
       seg.media = url;
     }
-
     return seg;
   }
-
   function getSegmentByTime(representation, requestedTime) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     var duration = representation.segmentDuration;
-
     if (isNaN(duration)) {
       return null;
-    } // Calculate the relative time for the requested time in this period
+    }
 
-
+    // Calculate the relative time for the requested time in this period
     var periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
     var index = Math.floor(periodTime / duration);
     return getSegmentByIndex(representation, index);
   }
-
   instance = {
     getSegmentByIndex: getSegmentByIndex,
     getSegmentByTime: getSegmentByTime,
@@ -14520,7 +13656,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
   };
   return instance;
 }
-
 TemplateSegmentsGetter.__dashjs_factory_name = 'TemplateSegmentsGetter';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(TemplateSegmentsGetter);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -14578,18 +13713,15 @@ function TimelineSegmentsGetter(config, isDynamic) {
   var timelineConverter = config.timelineConverter;
   var dashMetrics = config.dashMetrics;
   var instance;
-
   function checkConfig() {
     if (!timelineConverter) {
       throw new Error(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_1__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getMediaFinishedInformation(representation) {
     if (!representation) {
       return 0;
     }
-
     var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
     var timeline = base.SegmentTimeline;
     var time = 0;
@@ -14599,42 +13731,38 @@ function TimelineSegmentsGetter(config, isDynamic) {
     fTimescale = representation.timescale;
     fragments = timeline.S_asArray;
     len = fragments.length;
-
     for (i = 0; i < len; i++) {
       frag = fragments[i];
       repeat = 0;
-
       if (frag.hasOwnProperty('r')) {
         repeat = frag.r;
-      } // For a repeated S element, t belongs only to the first segment
+      }
 
-
+      // For a repeated S element, t belongs only to the first segment
       if (frag.hasOwnProperty('t')) {
         time = frag.t;
         scaledTime = time / fTimescale;
-      } // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+      }
+
+      // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
       // next MPD update."
-
-
       if (repeat < 0) {
         var nextFrag = fragments[i + 1];
         repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
       }
-
       for (j = 0; j <= repeat; j++) {
         availableSegments++;
         time += frag.d;
         scaledTime = time / fTimescale;
       }
-    } // We need to account for the index of the segments starting at 0. We subtract 1
+    }
 
-
+    // We need to account for the index of the segments starting at 0. We subtract 1
     return {
       numberOfSegments: availableSegments,
       mediaTimeOfLastSignaledSegment: scaledTime
     };
   }
-
   function iterateSegments(representation, iterFunc) {
     var base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
     var timeline = base.SegmentTimeline;
@@ -14645,49 +13773,41 @@ function TimelineSegmentsGetter(config, isDynamic) {
     fTimescale = representation.timescale;
     fragments = timeline.S_asArray;
     var breakIterator = false;
-
     for (i = 0, len = fragments.length; i < len && !breakIterator; i++) {
       frag = fragments[i];
       repeat = 0;
-
       if (frag.hasOwnProperty('r')) {
         repeat = frag.r;
-      } // For a repeated S element, t belongs only to the first segment
+      }
 
-
+      // For a repeated S element, t belongs only to the first segment
       if (frag.hasOwnProperty('t')) {
         time = frag.t;
-      } // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+      }
+
+      // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
       // next MPD update."
-
-
       if (repeat < 0) {
         var nextFrag = fragments[i + 1];
         repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, time / fTimescale);
       }
-
       for (j = 0; j <= repeat && !breakIterator; j++) {
         relativeIdx++;
         breakIterator = iterFunc(time, base, list, frag, fTimescale, relativeIdx, i);
-
         if (breakIterator) {
           representation.segmentDuration = frag.d / fTimescale;
         }
-
         time += frag.d;
       }
     }
   }
-
   function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
     var repeatEndTime;
-
     if (nextFrag && nextFrag.hasOwnProperty('t')) {
       repeatEndTime = nextFrag.t / fTimescale;
     } else {
       try {
         var availabilityEnd = 0;
-
         if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
           // use end of the Period
           availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
@@ -14696,36 +13816,29 @@ function TimelineSegmentsGetter(config, isDynamic) {
           var dvrWindow = dashMetrics.getCurrentDVRInfo();
           availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
         }
-
         repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
         representation.segmentDuration = frag.d / fTimescale;
       } catch (e) {
         repeatEndTime = 0;
       }
     }
-
     return Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
   }
-
   function getSegmentByIndex(representation, index, lastSegmentTime) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     var segment = null;
     var found = false;
     iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
       if (found || lastSegmentTime < 0) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
-
         if (list) {
           media = list[i].media || '';
           mediaRange = list[i].mediaRange;
         }
-
         segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, relativeIdx, frag.tManifest);
         return true;
       } else if (time >= lastSegmentTime * fTimescale - frag.d * 0.5) {
@@ -14733,23 +13846,18 @@ function TimelineSegmentsGetter(config, isDynamic) {
         // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
         found = true;
       }
-
       return false;
     });
     return segment;
   }
-
   function getSegmentByTime(representation, requestedTime) {
     checkConfig();
-
     if (!representation) {
       return null;
     }
-
     if (requestedTime === undefined) {
       requestedTime = null;
     }
-
     var segment = null;
     var requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
     iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
@@ -14757,29 +13865,23 @@ function TimelineSegmentsGetter(config, isDynamic) {
       // it is possible that this time a bit exceeds the declared end time of the last segment.
       // in this case we still need to include the last segment in the segment list.
       var scaledMediaTime = precisionRound(requiredMediaTime * fTimescale);
-
       if (scaledMediaTime < time + frag.d && scaledMediaTime >= time) {
         var media = base.media;
         var mediaRange = frag.mediaRange;
-
         if (list) {
           media = list[i].media || '';
           mediaRange = list[i].mediaRange;
         }
-
         segment = Object(_SegmentsUtils__WEBPACK_IMPORTED_MODULE_2__["getTimeBasedSegment"])(timelineConverter, isDynamic, representation, time, frag.d, fTimescale, media, mediaRange, relativeIdx, frag.tManifest);
         return true;
       }
-
       return false;
     });
     return segment;
   }
-
   function precisionRound(number) {
     return parseFloat(number.toPrecision(15));
   }
-
   instance = {
     getSegmentByIndex: getSegmentByIndex,
     getSegmentByTime: getSegmentByTime,
@@ -14787,7 +13889,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
   };
   return instance;
 }
-
 TimelineSegmentsGetter.__dashjs_factory_name = 'TimelineSegmentsGetter';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(TimelineSegmentsGetter);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -14803,8 +13904,12 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClas
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -14835,19 +13940,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var AdaptationSet = function AdaptationSet() {
+var AdaptationSet = /*#__PURE__*/_createClass(function AdaptationSet() {
   _classCallCheck(this, AdaptationSet);
-
   this.period = null;
   this.index = -1;
   this.type = null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (AdaptationSet);
 
 /***/ }),
@@ -14861,8 +13963,12 @@ var AdaptationSet = function AdaptationSet() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -14893,28 +13999,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
+
 var DEFAULT_DVB_PRIORITY = 1;
 var DEFAULT_DVB_WEIGHT = 1;
-
-var BaseURL = function BaseURL(url, serviceLocation, priority, weight) {
+var BaseURL = /*#__PURE__*/_createClass(function BaseURL(url, serviceLocation, priority, weight) {
   _classCallCheck(this, BaseURL);
-
   this.url = url || '';
-  this.serviceLocation = serviceLocation || url || ''; // DVB extensions
+  this.serviceLocation = serviceLocation || url || '';
 
+  // DVB extensions
   this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
   this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
   this.availabilityTimeOffset = 0;
   this.availabilityTimeComplete = true;
+
   /* currently unused:
    * byteRange,
    */
-};
+});
 
 BaseURL.DEFAULT_DVB_PRIORITY = DEFAULT_DVB_PRIORITY;
 BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
@@ -14931,8 +14037,12 @@ BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -14963,20 +14073,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var ContentSteering = function ContentSteering() {
+var ContentSteering = /*#__PURE__*/_createClass(function ContentSteering() {
   _classCallCheck(this, ContentSteering);
-
   this.defaultServiceLocation = null;
   this.queryBeforeStart = false;
   this.proxyServerUrl = null;
   this.serverUrl = null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (ContentSteering);
 
 /***/ }),
@@ -14990,8 +14097,12 @@ var ContentSteering = function ContentSteering() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15022,21 +14133,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var Event = function Event() {
+var Event = /*#__PURE__*/_createClass(function Event() {
   _classCallCheck(this, Event);
-
   this.duration = NaN;
   this.presentationTime = NaN;
   this.id = NaN;
   this.messageData = '';
   this.eventStream = null;
   this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
-};
+});
 
 /* harmony default export */ __webpack_exports__["default"] = (Event);
 
@@ -15051,8 +14160,12 @@ var Event = function Event() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15083,14 +14196,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var EventStream = function EventStream() {
+var EventStream = /*#__PURE__*/_createClass(function EventStream() {
   _classCallCheck(this, EventStream);
-
   this.adaptionSet = null;
   this.representation = null;
   this.period = null;
@@ -15098,8 +14209,7 @@ var EventStream = function EventStream() {
   this.value = '';
   this.schemeIdUri = '';
   this.presentationTimeOffset = 0;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (EventStream);
 
 /***/ }),
@@ -15113,8 +14223,12 @@ var EventStream = function EventStream() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15145,14 +14259,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var Mpd = function Mpd() {
+var Mpd = /*#__PURE__*/_createClass(function Mpd() {
   _classCallCheck(this, Mpd);
-
   this.manifest = null;
   this.suggestedPresentationDelay = 0;
   this.availabilityStartTime = null;
@@ -15162,8 +14274,7 @@ var Mpd = function Mpd() {
   this.publishTime = null;
   this.minimumUpdatePeriod = NaN;
   this.mediaPresentationDuration = NaN;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (Mpd);
 
 /***/ }),
@@ -15177,8 +14288,12 @@ var Mpd = function Mpd() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15209,22 +14324,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var Period = function Period() {
+var Period = /*#__PURE__*/_createClass(function Period() {
   _classCallCheck(this, Period);
-
   this.id = null;
   this.index = -1;
   this.duration = NaN;
   this.start = NaN;
   this.mpd = null;
   this.nextPeriodId = null;
-};
-
+});
 Period.DEFAULT_ID = 'defaultId';
 /* harmony default export */ __webpack_exports__["default"] = (Period);
 
@@ -15239,8 +14351,12 @@ Period.DEFAULT_ID = 'defaultId';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15271,14 +14387,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var ProducerReferenceTime = function ProducerReferenceTime() {
+var ProducerReferenceTime = /*#__PURE__*/_createClass(function ProducerReferenceTime() {
   _classCallCheck(this, ProducerReferenceTime);
-
   this.id = null;
   this.inband = false;
   this.type = 'encoder';
@@ -15286,8 +14400,7 @@ var ProducerReferenceTime = function ProducerReferenceTime() {
   this.wallClockTime = null;
   this.presentationTime = NaN;
   this.UTCTiming = null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (ProducerReferenceTime);
 
 /***/ }),
@@ -15302,12 +14415,12 @@ var ProducerReferenceTime = function ProducerReferenceTime() {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15338,7 +14451,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
@@ -15348,7 +14460,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Representation = /*#__PURE__*/function () {
   function Representation() {
     _classCallCheck(this, Representation);
-
     this.id = null;
     this.index = -1;
     this.adaptation = null;
@@ -15362,10 +14473,10 @@ var Representation = /*#__PURE__*/function () {
     this.startNumber = 1;
     this.indexRange = null;
     this.range = null;
-    this.presentationTimeOffset = 0; // Set the source buffer timeOffset to this
-
-    this.MSETimeOffset = NaN; // The information we need in the DashHandler to determine whether the last segment has been loaded
-
+    this.presentationTimeOffset = 0;
+    // Set the source buffer timeOffset to this
+    this.MSETimeOffset = NaN;
+    // The information we need in the DashHandler to determine whether the last segment has been loaded
     this.mediaFinishedInformation = {
       numberOfSegments: 0,
       mediaTimeOfLastSignaledSegment: NaN
@@ -15378,7 +14489,6 @@ var Representation = /*#__PURE__*/function () {
     this.availabilityTimeOffset = 0;
     this.availabilityTimeComplete = true;
   }
-
   _createClass(Representation, [{
     key: "hasInitialization",
     value: function hasInitialization() {
@@ -15390,10 +14500,8 @@ var Representation = /*#__PURE__*/function () {
       return this.segmentInfoType !== _constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].BASE_URL && this.segmentInfoType !== _constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].SEGMENT_BASE && !this.indexRange;
     }
   }]);
-
   return Representation;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (Representation);
 
 /***/ }),
@@ -15407,8 +14515,12 @@ var Representation = /*#__PURE__*/function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15439,39 +14551,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var Segment = function Segment() {
+var Segment = /*#__PURE__*/_createClass(function Segment() {
   _classCallCheck(this, Segment);
-
-  this.indexRange = null; // The index of the segment in the list of segments. We start at 0
-
+  this.indexRange = null;
+  // The index of the segment in the list of segments. We start at 0
   this.index = null;
   this.mediaRange = null;
   this.media = null;
-  this.duration = NaN; // this is the time that should be inserted into the media url
-
-  this.replacementTime = null; // this is the number that should be inserted into the media url
-
-  this.replacementNumber = NaN; // This is supposed to match the time encoded in the media Segment
-
-  this.mediaStartTime = NaN; // When the source buffer timeOffset is set to MSETimeOffset this is the
+  this.duration = NaN;
+  // this is the time that should be inserted into the media url
+  this.replacementTime = null;
+  // this is the number that should be inserted into the media url
+  this.replacementNumber = NaN;
+  // This is supposed to match the time encoded in the media Segment
+  this.mediaStartTime = NaN;
+  // When the source buffer timeOffset is set to MSETimeOffset this is the
   // time that will match the seekTarget and video.currentTime
-
-  this.presentationStartTime = NaN; // Do not schedule this segment until
-
-  this.availabilityStartTime = NaN; // Ignore and  discard this segment after
-
-  this.availabilityEndTime = NaN; // For dynamic mpd's, this is the wall clock time that the video
+  this.presentationStartTime = NaN;
+  // Do not schedule this segment until
+  this.availabilityStartTime = NaN;
+  // Ignore and  discard this segment after
+  this.availabilityEndTime = NaN;
+  // For dynamic mpd's, this is the wall clock time that the video
   // element currentTime should be presentationStartTime
-
   this.wallStartTime = NaN;
   this.representation = null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (Segment);
 
 /***/ }),
@@ -15485,8 +14594,12 @@ var Segment = function Segment() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -15517,19 +14630,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var UTCTiming = function UTCTiming() {
+var UTCTiming = /*#__PURE__*/_createClass(function UTCTiming() {
   _classCallCheck(this, UTCTiming);
-
   // UTCTiming is a DescriptorType and doesn't have any additional fields
   this.schemeIdUri = '';
   this.value = '';
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (UTCTiming);
 
 /***/ }),
@@ -15583,7 +14693,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function OfflineDownload(config) {
   config = config || {};
   var context = this.context;
@@ -15608,9 +14717,7 @@ function OfflineDownload(config) {
   var constants = config.constants;
   var dashConstants = config.dashConstants;
   var urlUtils = config.urlUtils;
-
   var instance, logger, _manifestURL, _offlineURL, _xmlManifest, _streams, _manifest, _isDownloadingStatus, _isComposed, _representationsToUpdate, _indexDBManifestParser, _progressionById, _progression, _status;
-
   function setup() {
     logger = debug.getLogger(instance);
     manifestUpdater.initialize();
@@ -15621,36 +14728,30 @@ function OfflineDownload(config) {
     _progression = 0;
     _status = undefined;
   }
-
   function getId() {
     return manifestId;
   }
-
   function getOfflineUrl() {
     return _offlineURL;
   }
-
   function getManifestUrl() {
     return _manifestURL;
   }
-
   function getStatus() {
     return _status;
   }
-
   function setInitialState(state) {
     _offlineURL = state.url;
     _progression = state.progress;
     _manifestURL = state.originalUrl;
     _status = state.status;
   }
+
   /**
    * Download a stream, from url of manifest
    * @param {string} url
    * @instance
    */
-
-
   function downloadFromUrl(url) {
     _manifestURL = url;
     _offlineURL = "".concat(_constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_SCHEME, "://").concat(manifestId);
@@ -15665,31 +14766,25 @@ function OfflineDownload(config) {
     };
     return createOfflineManifest(offlineManifest);
   }
-
   function initDownload() {
     manifestLoader.load(_manifestURL);
     _isDownloadingStatus = true;
   }
-
   function setupOfflineEvents() {
     eventBus.on(events.MANIFEST_UPDATED, onManifestUpdated, instance);
     eventBus.on(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
     setupIndexedDBEvents();
   }
-
   function setupIndexedDBEvents() {
     eventBus.on(events.ERROR, onError, instance);
   }
-
   function isDownloading() {
     return _isDownloadingStatus;
   }
-
   function onManifestUpdated(e) {
     if (_isComposed) {
       return;
     }
-
     if (!e.error) {
       try {
         _manifest = e.manifest;
@@ -15706,12 +14801,10 @@ function OfflineDownload(config) {
       }
     }
   }
-
   function onDownloadingStarted(e) {
     if (e.id !== manifestId) {
       return;
     }
-
     if (!e.error && manifestId !== null) {
       _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_STARTED;
       offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
@@ -15733,7 +14826,6 @@ function OfflineDownload(config) {
       });
     }
   }
-
   function OnStreamProgression(stream, downloaded, available) {
     _progressionById[stream.getStreamInfo().id] = {
       downloaded: downloaded,
@@ -15742,7 +14834,6 @@ function OfflineDownload(config) {
     var segments = 0;
     var allSegments = 0;
     var waitForAllProgress;
-
     for (var property in _progressionById) {
       if (_progressionById.hasOwnProperty(property)) {
         if (_progressionById[property] === null) {
@@ -15753,23 +14844,21 @@ function OfflineDownload(config) {
         }
       }
     }
-
     if (!waitForAllProgress) {
       // all progression have been started, we can compute global progression
-      _progression = segments / allSegments; // store progression
+      _progression = segments / allSegments;
 
+      // store progression
       offlineStoreController.getManifestById(manifestId).then(function (item) {
         item.progress = _progression;
         return updateOfflineManifest(item);
       });
     }
   }
-
   function onDownloadingFinished(e) {
     if (e.id !== manifestId) {
       return;
     }
-
     if (!e.error && manifestId !== null) {
       _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_FINISHED;
       offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
@@ -15792,14 +14881,11 @@ function OfflineDownload(config) {
       });
     }
   }
-
   function onManifestUpdateNeeded(e) {
     if (e.id !== manifestId) {
       return;
     }
-
     _representationsToUpdate = e.representations;
-
     if (_representationsToUpdate.length > 0) {
       _indexDBManifestParser.parse(_xmlManifest, _representationsToUpdate).then(function (parsedManifest) {
         if (parsedManifest !== null && manifestId !== null) {
@@ -15819,13 +14905,11 @@ function OfflineDownload(config) {
       });
     }
   }
-
   function composeStreams() {
     try {
       adapter.updatePeriods(_manifest);
       baseURLController.initialize(_manifest);
       var streamsInfo = adapter.getStreamsInfo();
-
       if (streamsInfo.length === 0) {
         _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_ERROR;
         errHandler.error({
@@ -15837,7 +14921,6 @@ function OfflineDownload(config) {
           }
         });
       }
-
       for (var i = 0, ln = streamsInfo.length; i < ln; i++) {
         var streamInfo = streamsInfo[i];
         var stream = Object(_OfflineStream__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
@@ -15866,14 +14949,12 @@ function OfflineDownload(config) {
           segmentBaseController: segmentBaseController,
           offlineStoreController: offlineStoreController
         });
+        _streams.push(stream);
 
-        _streams.push(stream); // initialise stream and get downloadable representations
-
-
+        // initialise stream and get downloadable representations
         stream.initialize(streamInfo);
         _progressionById[streamInfo.id] = null;
       }
-
       _isComposed = true;
     } catch (e) {
       logger.info(e);
@@ -15889,53 +14970,47 @@ function OfflineDownload(config) {
       });
     }
   }
-
   function getMediaInfos() {
     _streams.forEach(function (stream) {
       stream.getMediaInfos();
     });
   }
+
   /**
    * Init databsse to store fragments
    * @param {number} manifestId
    * @instance
    */
-
-
   function createFragmentStore(manifestId) {
     return offlineStoreController.createFragmentStore(manifestId);
   }
+
   /**
    * Store in database the string representation of offline manifest (with only downloaded representations)
    * @param {object} offlineManifest
    * @instance
    */
-
-
   function createOfflineManifest(offlineManifest) {
     return offlineStoreController.createOfflineManifest(offlineManifest);
   }
+
   /**
    * Store in database the string representation of offline manifest (with only downloaded representations)
    * @param {object} offlineManifest
    * @instance
    */
-
-
   function updateOfflineManifest(offlineManifest) {
     return offlineStoreController.updateOfflineManifest(offlineManifest);
   }
+
   /**
    * Triggered when manifest is loaded from internet.
    * @param {Object[]} e
    */
-
-
   function onOriginalManifestLoaded(e) {
     // unregister form event
     eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
     _xmlManifest = e.originalManifest;
-
     if (_manifest.type === dashConstants.DYNAMIC) {
       _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_ERROR;
       errHandler.error({
@@ -15949,7 +15024,6 @@ function OfflineDownload(config) {
       logger.error('Cannot handle DYNAMIC manifest');
       return;
     }
-
     if (_manifest.Period_asArray.length > 1) {
       _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_ERROR;
       errHandler.error({
@@ -15962,27 +15036,29 @@ function OfflineDownload(config) {
       });
       logger.error('MultiPeriod manifest are not yet supported');
       return;
-    } // save original manifest (for resume)
+    }
+
+    // save original manifest (for resume)
+
     // initialise offline streams
+    composeStreams(_manifest);
 
-
-    composeStreams(_manifest); // get MediaInfos
-
+    // get MediaInfos
     getMediaInfos();
     eventBus.trigger(events.STREAMS_COMPOSED);
   }
-
   function initializeAllMediasInfoList(selectedRepresentations) {
     for (var i = 0; i < _streams.length; i++) {
       _streams[i].initializeAllMediasInfoList(selectedRepresentations);
     }
   }
-
   function getSelectedRepresentations(mediaInfos) {
     var rep = {};
     rep[constants.VIDEO] = [];
     rep[constants.AUDIO] = [];
-    rep[constants.TEXT] = []; // selectedRepresentations.video.forEach(item => {
+    rep[constants.TEXT] = [];
+
+    // selectedRepresentations.video.forEach(item => {
     //     ret[constants.VIDEO].push(item.id);
     // });
     // selectedRepresentations.audio.forEach(item => {
@@ -15999,7 +15075,6 @@ function OfflineDownload(config) {
     });
     return rep;
   }
-
   function startDownload(mediaInfos) {
     try {
       var rep = getSelectedRepresentations(mediaInfos);
@@ -16022,14 +15097,13 @@ function OfflineDownload(config) {
       });
     }
   }
+
   /**
    * Create the parser used to convert original manifest in offline manifest
    * Creates a JSON object that will be stored in database
    * @param {Object[]} selectedRepresentations
    * @instance
    */
-
-
   function generateOfflineManifest(selectedRepresentations) {
     _indexDBManifestParser = Object(_utils_OfflineIndexDBManifestParser__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
       manifestId: manifestId,
@@ -16054,23 +15128,22 @@ function OfflineDownload(config) {
       return Promise.reject(err);
     });
   }
+
   /**
    * Stops downloading of fragments
    * @instance
    */
-
-
   function stopDownload() {
     if (manifestId !== null && isDownloading()) {
       for (var i = 0, ln = _streams.length; i < ln; i++) {
         _streams[i].stopOfflineStreamProcessors();
-      } // remove streams
+      }
 
-
+      // remove streams
       _streams = [];
       _isComposed = false;
-      _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_STOPPED; // update status
-
+      _status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_STOPPED;
+      // update status
       offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
         eventBus.trigger(events.OFFLINE_RECORD_STOPPED, {
           sender: this,
@@ -16082,26 +15155,23 @@ function OfflineDownload(config) {
       });
     }
   }
+
   /**
    * Delete an offline manifest (and all of its data)
    * @instance
    */
-
-
   function deleteDownload() {
     stopDownload();
   }
+
   /**
    * Resume download of a stream
    * @instance
    */
-
-
   function resumeDownload() {
     if (isDownloading()) {
       return;
     }
-
     _isDownloadingStatus = true;
     var selectedRepresentations;
     offlineStoreController.getManifestById(manifestId).then(function (item) {
@@ -16117,26 +15187,23 @@ function OfflineDownload(config) {
       initializeAllMediasInfoList(selectedRepresentations);
     });
   }
+
   /**
    * Compute the progression of download
    * @instance
    */
-
-
   function getDownloadProgression() {
     return Math.round(_progression * 100);
   }
+
   /**
    * Reset events listeners
    * @instance
    */
-
-
   function resetDownload() {
     for (var i = 0, ln = _streams.length; i < ln; i++) {
       _streams[i].reset();
     }
-
     _indexDBManifestParser = null;
     _isDownloadingStatus = false;
     _streams = [];
@@ -16144,31 +15211,26 @@ function OfflineDownload(config) {
     eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
     resetIndexedDBEvents();
   }
-
   function onError(e) {
     if (e.error.code === _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_3__["default"].INDEXEDDB_QUOTA_EXCEED_ERROR || e.error.code === _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_3__["default"].INDEXEDDB_INVALID_STATE_ERROR) {
       stopDownload();
     }
   }
-
   function resetIndexedDBEvents() {
     eventBus.on(events.ERROR, onError, instance);
   }
+
   /**
    * Reset
    * @instance
    */
-
-
   function reset() {
     if (isDownloading()) {
       resetDownload();
     }
-
     baseURLController.reset();
     manifestUpdater.reset();
   }
-
   instance = {
     reset: reset,
     getId: getId,
@@ -16189,10 +15251,8 @@ function OfflineDownload(config) {
   setup();
   return instance;
 }
-
 OfflineDownload.__dashjs_factory_name = 'OfflineDownload';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineDownload));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineDownload)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -16237,17 +15297,16 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * Initialize and Manage Offline Stream for each type
  */
-
 /**
  * @class OfflineStream
  * @description Initialize and Manage Offline Stream for each type
  * @param {Object} config - dependences
  * @ignore
  */
-
 function OfflineStream(config) {
   config = config || {};
   var context = this.context;
@@ -16274,15 +15333,13 @@ function OfflineStream(config) {
   var finishedCb = config.callbacks && config.callbacks.finished;
   var updateManifest = config.callbacks && config.callbacks.updateManifestNeeded;
   var instance, offlineStreamProcessors, startedOfflineStreamProcessors, finishedOfflineStreamProcessors, streamInfo, representationsToUpdate, allMediasInfosList, progressionById;
-
   function setup() {
     resetInitialSettings();
   }
+
   /**
    * Reset
    */
-
-
   function resetInitialSettings() {
     streamInfo = null;
     offlineStreamProcessors = [];
@@ -16292,29 +15349,28 @@ function OfflineStream(config) {
     representationsToUpdate = [];
     progressionById = {};
   }
+
   /**
    * Initialize offlinestream
    * @param {Object} initStreamInfo
    */
-
-
   function initialize(initStreamInfo) {
     streamInfo = initStreamInfo;
     eventBus.on(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
   }
-
   function getStreamId() {
     return streamInfo.id;
   }
+
   /**
    * Creates media infos list, so that user will be able to choose the representation he wants to download
    */
-
-
   function getMediaInfos() {
     var mediaInfos = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
     mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO));
-    mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.TEXT)); // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.MUXED));
+    mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.TEXT));
+
+    // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.MUXED));
     // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.IMAGE));
 
     eventBus.trigger(events.OFFLINE_RECORD_LOADEDMETADATA, {
@@ -16322,22 +15378,20 @@ function OfflineStream(config) {
       mediaInfos: mediaInfos
     });
   }
+
   /**
    * Initialize with choosen representations by user
    * @param {Object} mediasInfoList
    */
-
-
   function initializeAllMediasInfoList(mediasInfoList) {
     allMediasInfosList = mediasInfoList;
     initializeMedia(streamInfo);
   }
+
   /**
    * Initialize media for each type
    * @param {Object} streamInfo
    */
-
-
   function initializeMedia(streamInfo) {
     createOfflineStreamProcessorFor(constants.VIDEO, streamInfo);
     createOfflineStreamProcessorFor(constants.AUDIO, streamInfo);
@@ -16345,7 +15399,6 @@ function OfflineStream(config) {
     createOfflineStreamProcessorFor(constants.MUXED, streamInfo);
     createOfflineStreamProcessorFor(constants.IMAGE, streamInfo);
   }
-
   function createOfflineStreamProcessorFor(type, streamInfo) {
     // filter mediaInfo according to choosen representation id
     var allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
@@ -16354,14 +15407,14 @@ function OfflineStream(config) {
         if (allMediasInfosList[type] && allMediasInfosList[type].indexOf(bitrate.id) !== -1) {
           return true;
         }
-
         return false;
       });
     });
     allMediaInfoForType = allMediaInfoForType.filter(function (media) {
       return media.bitrateList && media.bitrateList.length > 0;
-    }); // cration of an offline stream processor for each choosen representation
+    });
 
+    // cration of an offline stream processor for each choosen representation
     allMediaInfoForType.forEach(function (mediaInfo) {
       if (mediaInfo.bitrateList) {
         mediaInfo.bitrateList.forEach(function (bitrate) {
@@ -16371,7 +15424,6 @@ function OfflineStream(config) {
     });
     return allMediaInfoForType;
   }
-
   function createStreamProcessor(mediaInfo, bitrate) {
     var streamProcessor = Object(_OfflineStreamProcessor__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
       id: manifestId,
@@ -16405,10 +15457,8 @@ function OfflineStream(config) {
     streamProcessor.initialize(mediaInfo);
     progressionById[bitrate.id] = null;
   }
-
   function onStreamCompleted() {
     finishedOfflineStreamProcessors++;
-
     if (finishedOfflineStreamProcessors === offlineStreamProcessors.length) {
       finishedCb({
         sender: this,
@@ -16417,7 +15467,6 @@ function OfflineStream(config) {
       });
     }
   }
-
   function onStreamProgression(streamProcessor, downloadedSegments, availableSegments) {
     progressionById[streamProcessor.getRepresentationId()] = {
       downloadedSegments: downloadedSegments,
@@ -16426,7 +15475,6 @@ function OfflineStream(config) {
     var segments = 0;
     var allSegments = 0;
     var waitForAllProgress;
-
     for (var property in progressionById) {
       if (progressionById.hasOwnProperty(property)) {
         if (progressionById[property] === null) {
@@ -16437,7 +15485,6 @@ function OfflineStream(config) {
         }
       }
     }
-
     if (!waitForAllProgress && progressionCb) {
       // all progression have been started, we can compute global progression
       if (allSegments > 0) {
@@ -16445,36 +15492,30 @@ function OfflineStream(config) {
       }
     }
   }
-
   function onDataUpdateCompleted(e) {
     if (e.currentRepresentation.segments && e.currentRepresentation.segments.length > 0) {
       representationsToUpdate.push(e.currentRepresentation);
     }
-
-    var sp; // data are ready fr stream processor, let's start download
-
+    var sp;
+    // data are ready fr stream processor, let's start download
     for (var i = 0; i < offlineStreamProcessors.length; i++) {
       if (offlineStreamProcessors[i].getRepresentationController().getType() === e.mediaType) {
         sp = offlineStreamProcessors[i];
         break;
       }
     }
-
     if (sp) {
       checkIfAllOfflineStreamProcessorsStarted();
     }
   }
-
   function checkIfAllOfflineStreamProcessorsStarted() {
     startedOfflineStreamProcessors++;
-
     if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
       startedCb({
         sender: this,
         id: manifestId,
         message: 'Downloading started for this stream !'
       });
-
       if (representationsToUpdate.length > 0) {
         updateManifest({
           sender: this,
@@ -16486,59 +15527,50 @@ function OfflineStream(config) {
       }
     }
   }
-
   function getStreamInfo() {
     return streamInfo;
   }
-
   function getStartTime() {
     return streamInfo ? streamInfo.start : NaN;
   }
-
   function getDuration() {
     return streamInfo ? streamInfo.duration : NaN;
   }
+
   /**
    * Stop offline stream processors
    */
-
-
   function stopOfflineStreamProcessors() {
     for (var i = 0; i < offlineStreamProcessors.length; i++) {
       offlineStreamProcessors[i].stop();
     }
   }
+
   /**
    * Start offline stream processors
    */
-
-
   function startOfflineStreamProcessors() {
     for (var i = 0; i < offlineStreamProcessors.length; i++) {
       offlineStreamProcessors[i].start();
     }
   }
-
   function deactivate() {
     var ln = offlineStreamProcessors ? offlineStreamProcessors.length : 0;
-
     for (var i = 0; i < ln; i++) {
       offlineStreamProcessors[i].removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
       offlineStreamProcessors[i].reset();
     }
   }
+
   /**
    * Reset
    */
-
-
   function reset() {
     stopOfflineStreamProcessors();
     deactivate();
     resetInitialSettings();
     eventBus.off(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
   }
-
   instance = {
     initialize: initialize,
     getStreamId: getStreamId,
@@ -16552,10 +15584,8 @@ function OfflineStream(config) {
   setup();
   return instance;
 }
-
 OfflineStream.__dashjs_factory_name = 'OfflineStream';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineStream));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineStream)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -16612,7 +15642,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function OfflineStreamProcessor(config) {
   config = config || {};
   var context = this.context;
@@ -16639,7 +15668,6 @@ function OfflineStreamProcessor(config) {
   var completedCb = config.callbacks && config.callbacks.completed;
   var progressCb = config.callbacks && config.callbacks.progression;
   var instance, logger, mediaInfo, indexHandler, representationController, fragmentModel, updating, downloadedSegments, isInitialized, segmentsController, isStopped;
-
   function setup() {
     resetInitialSettings();
     logger = debug.getLogger(instance);
@@ -16707,22 +15735,18 @@ function OfflineStreamProcessor(config) {
     eventBus.on(events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, instance);
     eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
   }
-
   function initialize(_mediaInfo) {
     mediaInfo = _mediaInfo;
     indexHandler.initialize(false);
     updateRepresentation(mediaInfo);
   }
-
   function isInitRequest(request) {
     return request.type === 'InitializationSegment';
   }
-
   function onFragmentLoadingCompleted(e) {
     if (e.sender !== fragmentModel) {
       return;
     }
-
     if (e.request !== null) {
       var isInit = isInitRequest(e.request);
       var suffix = isInit ? 'init' : e.request.index;
@@ -16737,7 +15761,6 @@ function OfflineStreamProcessor(config) {
         }
       });
     }
-
     if (e.error && e.request.serviceLocation && !isStopped) {
       fragmentModel.executeRequest(e.request);
     } else {
@@ -16745,84 +15768,71 @@ function OfflineStreamProcessor(config) {
       download();
     }
   }
-
   function onStreamRequestingCompleted(e) {
     if (e.fragmentModel !== fragmentModel) {
       return;
     }
-
     logger.info("[".concat(manifestId, "] Stream is complete"));
     stop();
     completedCb();
   }
-
   function getRepresentationController() {
     return representationController;
   }
-
   function getRepresentationId() {
     return representationController.getCurrentRepresentation().id;
   }
+
   /**
    * Stops download of fragments
    * @memberof OfflineStreamProcessor#
    */
-
-
   function stop() {
     if (isStopped) {
       return;
     }
-
     isStopped = true;
   }
-
   function removeExecutedRequestsBeforeTime(time) {
     if (fragmentModel) {
       fragmentModel.removeExecutedRequestsBeforeTime(time);
     }
   }
+
   /**
    * Execute init request for the represenation
    * @memberof OfflineStreamProcessor#
    */
-
-
   function getInitRequest() {
     if (!representationController.getCurrentRepresentation()) {
       return null;
     }
-
     return indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation());
   }
+
   /**
    * Get next request
    * @memberof OfflineStreamProcessor#
    */
-
-
   function getNextRequest() {
     return indexHandler.getNextSegmentRequest(getMediaInfo(), representationController.getCurrentRepresentation());
   }
+
   /**
    * Start download
    * @memberof OfflineStreamProcessor#
    */
-
-
   function start() {
     if (representationController) {
       if (!representationController.getCurrentRepresentation()) {
         throw new Error('Start denied to OfflineStreamProcessor');
       }
-
       isStopped = false;
       offlineStoreController.getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id).then(function (state) {
         if (state) {
           indexHandler.setCurrentIndex(state.index);
           downloadedSegments = state.downloaded;
         }
-
         download();
       })["catch"](function () {
         // start from beginining
@@ -16830,29 +15840,26 @@ function OfflineStreamProcessor(config) {
       });
     }
   }
+
   /**
    * Performs download of fragment according to type
    * @memberof OfflineStreamProcessor#
    */
-
-
   function download() {
     if (isStopped) {
       return;
     }
-
     if (isNaN(representationController.getCurrentRepresentation())) {
       var request = null;
-
       if (!isInitialized) {
         request = getInitRequest();
         isInitialized = true;
       } else {
-        request = getNextRequest(); // update progression : done here because availableSegmentsNumber is done in getNextRequest from dash handler
+        request = getNextRequest();
 
+        // update progression : done here because availableSegmentsNumber is done in getNextRequest from dash handler
         updateProgression();
       }
-
       if (request) {
         logger.info("[".concat(manifestId, "] download request : ").concat(request.url));
         fragmentModel.executeRequest(request);
@@ -16861,41 +15868,35 @@ function OfflineStreamProcessor(config) {
       }
     }
   }
+
   /**
    * Update representation
    * @param {Object} mediaInfo - mediaInfo
    * @memberof OfflineStreamProcessor#
    */
-
-
   function updateRepresentation(mediaInfo) {
     updating = true;
-    var voRepresentations = adapter.getVoRepresentations(mediaInfo); // get representation VO according to id.
+    var voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
+    // get representation VO according to id.
     var quality = voRepresentations.findIndex(function (representation) {
       return representation.id === bitrate.id;
     });
-
     if (type !== constants.VIDEO && type !== constants.AUDIO && type !== constants.TEXT) {
       updating = false;
       return;
     }
-
     representationController.updateData(null, voRepresentations, type, mediaInfo.isFragmented, quality);
   }
-
   function isUpdating() {
     return updating;
   }
-
   function getType() {
     return type;
   }
-
   function getMediaInfo() {
     return mediaInfo;
   }
-
   function getAvailableSegmentsNumber() {
     return representationController.getCurrentRepresentation().numberOfSegments + 1; // do not forget init segment
   }
@@ -16905,25 +15906,22 @@ function OfflineStreamProcessor(config) {
       progressCb(instance, downloadedSegments, getAvailableSegmentsNumber());
     }
   }
-
   function resetInitialSettings() {
     isInitialized = false;
     downloadedSegments = 0;
     updating = false;
   }
+
   /**
    * Reset
    * @memberof OfflineStreamProcessor#
    */
-
-
   function reset() {
     resetInitialSettings();
     indexHandler.reset();
     eventBus.off(events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, instance);
     eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
   }
-
   instance = {
     initialize: initialize,
     getMediaInfo: getMediaInfo,
@@ -16940,11 +15938,8 @@ function OfflineStreamProcessor(config) {
   setup();
   return instance;
 }
-
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
-var factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor);
-/* jshint ignore:line */
-
+var factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); /* jshint ignore:line */
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -16958,12 +15953,12 @@ var factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -16994,7 +15989,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * Offline constants declaration
  * @class
@@ -17003,10 +15997,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var OfflineConstants = /*#__PURE__*/function () {
   function OfflineConstants() {
     _classCallCheck(this, OfflineConstants);
-
     this.init();
   }
-
   _createClass(OfflineConstants, [{
     key: "init",
     value: function init() {
@@ -17019,10 +16011,8 @@ var OfflineConstants = /*#__PURE__*/function () {
       this.OFFLINE_STATUS_ERROR = 'error';
     }
   }]);
-
   return OfflineConstants;
 }();
-
 var constants = new OfflineConstants();
 /* harmony default export */ __webpack_exports__["default"] = (constants);
 
@@ -17083,12 +16073,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 /**
  * @module OfflineController
  * @param {Object} config - dependencies
  * @description Provides access to offline stream recording and playback functionality. This module can be accessed using the MediaPlayer API getOfflineController()
  */
-
 function OfflineController(config) {
   var context = this.context;
   var errHandler = config.errHandler;
@@ -17113,7 +16104,6 @@ function OfflineController(config) {
   var dashConstants = config.dashConstants;
   var urlUtils = config.urlUtils;
   var instance, downloads, logger, offlineStoreController, offlineUrlUtils;
-
   function setup() {
     logger = debug.getLogger(instance);
     offlineStoreController = Object(_OfflineStoreController__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
@@ -17125,24 +16115,21 @@ function OfflineController(config) {
     schemeLoaderFactory.registerLoader(_constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_SCHEME, _net_IndexDBOfflineLoader__WEBPACK_IMPORTED_MODULE_3__["default"]);
     downloads = [];
   }
+
   /*
   ---------------------------------------------------------------------------
       DOWNLOAD LIST FUNCTIONS
   ---------------------------------------------------------------------------
   */
-
-
   function getDownloadFromId(id) {
     var download = downloads.find(function (item) {
       return item.getId() === id;
     });
     return download;
   }
-
   function createDownloadFromId(id) {
     var download;
     download = getDownloadFromId(id);
-
     if (!download) {
       // create download controller
       download = Object(_OfflineDownload__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
@@ -17171,21 +16158,16 @@ function OfflineController(config) {
       });
       downloads.push(download);
     }
-
     return download;
   }
-
   function createDownloadFromStorage(offline) {
     var download = getDownloadFromId(offline.manifestId);
-
     if (!download) {
       download = createDownloadFromId(offline.manifestId);
       var status = offline.status;
-
       if (status === _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_STARTED) {
         status = _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_STATUS_STOPPED;
       }
-
       download.setInitialState({
         url: offline.url,
         progress: offline.progress,
@@ -17193,21 +16175,17 @@ function OfflineController(config) {
         status: status
       });
     }
-
     return download;
   }
-
   function removeDownloadFromId(id) {
     return new Promise(function (resolve, reject) {
       var download = getDownloadFromId(id);
       var waitForStatusChanged = false;
-
       if (download) {
         //is download running?
         if (download.isDownloading()) {
           //register status changed event
           waitForStatusChanged = true;
-
           var downloadStopped = function downloadStopped() {
             eventBus.off(events.OFFLINE_RECORD_STOPPED, downloadStopped, instance);
             return offlineStoreController.deleteDownloadById(id).then(function () {
@@ -17216,25 +16194,22 @@ function OfflineController(config) {
               reject(err);
             });
           };
-
           eventBus.on(events.OFFLINE_RECORD_STOPPED, downloadStopped, instance);
         }
-
         download.deleteDownload();
         var index = downloads.indexOf(download);
         downloads.splice(index, 1);
       }
-
       if (!waitForStatusChanged) {
         resolve();
       }
     });
   }
-
   function generateManifestId() {
     var timestamp = new Date().getTime();
     return timestamp;
   }
+
   /*
   ---------------------------------------------------------------------------
        OFFLINE CONTROLLER API
@@ -17248,8 +16223,6 @@ function OfflineController(config) {
    * @return {Promise} asynchronously resolved
    * @memberof module:OfflineController
    */
-
-
   function loadRecordsFromStorage() {
     return new Promise(function (resolve, reject) {
       offlineStoreController.getAllManifests().then(function (items) {
@@ -17263,6 +16236,7 @@ function OfflineController(config) {
       });
     });
   }
+
   /**
    * Get all records from storage
    *
@@ -17270,8 +16244,6 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function getAllRecords() {
     var records = [];
     downloads.forEach(function (download) {
@@ -17285,6 +16257,7 @@ function OfflineController(config) {
     });
     return records;
   }
+
   /**
    * Create a new content record in storage and download manifest from url
    *
@@ -17293,12 +16266,11 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function createRecord(manifestURL) {
     return new Promise(function (resolve, reject) {
-      var id = generateManifestId(); // create download controller
+      var id = generateManifestId();
 
+      // create download controller
       var download = createDownloadFromId(id);
       download.downloadFromUrl(manifestURL).then(function () {
         download.initDownload();
@@ -17311,6 +16283,7 @@ function OfflineController(config) {
       });
     });
   }
+
   /**
    * Start downloading the record with selected tracks representations
    *
@@ -17319,15 +16292,13 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function startRecord(id, mediaInfos) {
     var download = getDownloadFromId(id);
-
     if (download) {
       download.startDownload(mediaInfos);
     }
   }
+
   /**
    * Stop downloading of the record
    *
@@ -17335,15 +16306,13 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function stopRecord(id) {
     var download = getDownloadFromId(id);
-
     if (download) {
       download.stopDownload();
     }
   }
+
   /**
    * Resume downloading of the record
    *
@@ -17351,15 +16320,13 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function resumeRecord(id) {
     var download = getDownloadFromId(id);
-
     if (download) {
       download.resumeDownload();
     }
   }
+
   /**
    * Deletes a record from storage
    *
@@ -17367,13 +16334,12 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function deleteRecord(id) {
     return removeDownloadFromId(id).then(function () {
       return offlineStoreController.deleteDownloadById(id);
     });
   }
+
   /**
    * Get download progression of a record
    *
@@ -17382,40 +16348,33 @@ function OfflineController(config) {
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function getRecordProgression(id) {
     var download = getDownloadFromId(id);
-
     if (download) {
       return download.getDownloadProgression();
     }
-
     return 0;
   }
+
   /**
    * Reset all records
    * @memberof module:OfflineController
    * @instance
    */
-
-
   function resetRecords() {
     downloads.forEach(function (download) {
       download.resetDownload();
     });
   }
+
   /**
    * Reset
    * @instance
    */
-
-
   function reset() {
     resetRecords();
     schemeLoaderFactory.unregisterLoader(_constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_SCHEME);
   }
-
   instance = {
     loadRecordsFromStorage: loadRecordsFromStorage,
     createRecord: createRecord,
@@ -17431,16 +16390,11 @@ function OfflineController(config) {
   setup();
   return instance;
 }
-
 OfflineController.__dashjs_factory_name = 'OfflineController';
-var factory = dashjs.FactoryMaker.getClassFactory(OfflineController);
-/* jshint ignore:line */
-
+var factory = dashjs.FactoryMaker.getClassFactory(OfflineController); /* jshint ignore:line */
 factory.events = _events_OfflineEvents__WEBPACK_IMPORTED_MODULE_5__["default"];
 factory.errors = _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_6__["default"];
-dashjs.FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory);
-/* jshint ignore:line */
-
+dashjs.FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory); /* jshint ignore:line */
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -17488,23 +16442,21 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 /**
  * @class OfflineStoreController
  * @description This class manages database store
  * @param {object} config
  * @ignore
  */
-
 function OfflineStoreController(config) {
   config = config || {};
   var context = this.context;
   var errHandler = config.errHandler;
   var instance, indexDBStore;
-
   function setup() {
     indexDBStore = Object(_storage_IndexDBStore__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   }
-
   function createFragmentStore(manifestId, storeName) {
     try {
       indexDBStore.createFragmentStore(manifestId, storeName);
@@ -17512,97 +16464,81 @@ function OfflineStoreController(config) {
       manageDOMError(err);
     }
   }
-
   function storeFragment(manifestId, fragmentId, fragmentData) {
     return indexDBStore.storeFragment(manifestId, fragmentId, fragmentData)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function createOfflineManifest(manifest) {
     return indexDBStore.storeManifest(manifest)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function updateOfflineManifest(manifest) {
     return indexDBStore.updateManifest(manifest)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function getManifestById(manifestId) {
     return indexDBStore.getManifestById(manifestId)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function saveSelectedRepresentations(manifestId, selected) {
     return indexDBStore.saveSelectedRepresentations(manifestId, selected)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function getCurrentHigherManifestId() {
     return indexDBStore.getCurrentHigherManifestId()["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function getAllManifests() {
     return indexDBStore.getAllManifests()["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function deleteDownloadById(manifestId) {
     return indexDBStore.deleteDownloadById(manifestId)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function setDownloadingStatus(manifestId, status) {
     return indexDBStore.setDownloadingStatus(manifestId, status)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function setRepresentationCurrentState(manifestId, representationId, state) {
     return indexDBStore.setRepresentationCurrentState(manifestId, representationId, state)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function getRepresentationCurrentState(manifestId, representationId) {
     return indexDBStore.getRepresentationCurrentState(manifestId, representationId)["catch"](function (err) {
       manageDOMError(err);
     });
   }
-
   function manageDOMError(err) {
     var error;
-
     if (err) {
       switch (err.name) {
         case 'QuotaExceededError':
           error = _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_1__["default"].INDEXEDDB_QUOTA_EXCEED_ERROR;
           break;
-
         case 'InvalidStateError':
           error = _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_1__["default"].INDEXEDDB_INVALID_STATE_ERROR;
           break;
-
         case 'NotFoundError':
           error = _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_1__["default"].INDEXEDDB_NOT_FOUND_ERROR;
           break;
-
         case 'VersionError':
           error = _errors_OfflineErrors__WEBPACK_IMPORTED_MODULE_1__["default"].INDEXEDDB_VERSION_ERROR;
           break;
         // TODO : Manage all DOM cases
-      } // avoid importing DashJSError object from streaming
+      }
 
-
+      // avoid importing DashJSError object from streaming
       errHandler.error({
         code: error,
         message: err.name,
@@ -17610,7 +16546,6 @@ function OfflineStoreController(config) {
       });
     }
   }
-
   instance = {
     storeFragment: storeFragment,
     createOfflineManifest: createOfflineManifest,
@@ -17628,10 +16563,8 @@ function OfflineStoreController(config) {
   setup();
   return instance;
 }
-
 OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineStoreController));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineStoreController)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -17645,24 +16578,19 @@ OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/errors/ErrorsBase */ "./src/core/errors/ErrorsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -17698,24 +16626,20 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  * Offline Errors declaration
  * @class
  */
-
 var OfflineErrors = /*#__PURE__*/function (_ErrorsBase) {
   _inherits(OfflineErrors, _ErrorsBase);
-
   var _super = _createSuper(OfflineErrors);
-
   function OfflineErrors() {
     var _this;
-
     _classCallCheck(this, OfflineErrors);
-
     _this = _super.call(this);
+
     /**
      * Error code returned when an error occurs in offline module
      */
+    _this.OFFLINE_ERROR = 11000;
 
-    _this.OFFLINE_ERROR = 11000; // Based upon https://developer.mozilla.org/fr/docs/Web/API/DOMException
-
+    // Based upon https://developer.mozilla.org/fr/docs/Web/API/DOMException
     _this.INDEXEDDB_QUOTA_EXCEED_ERROR = 11001;
     _this.INDEXEDDB_INVALID_STATE_ERROR = 11002;
     _this.INDEXEDDB_NOT_READABLE_ERROR = 11003;
@@ -17731,10 +16655,8 @@ var OfflineErrors = /*#__PURE__*/function (_ErrorsBase) {
     _this.INDEXEDDB_UNKNOWN_ERROR = 11013;
     return _this;
   }
-
-  return OfflineErrors;
+  return _createClass(OfflineErrors);
 }(_core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var offlineErrors = new OfflineErrors();
 /* harmony default export */ __webpack_exports__["default"] = (offlineErrors);
 
@@ -17750,71 +16672,59 @@ var offlineErrors = new OfflineErrors();
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../../core/events/EventsBase */ "./src/core/events/EventsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 /**
  * These are offline events that should be sent to the player level.
  * @class
  */
-
 var OfflineEvents = /*#__PURE__*/function (_EventsBase) {
   _inherits(OfflineEvents, _EventsBase);
-
   var _super = _createSuper(OfflineEvents);
-
   function OfflineEvents() {
     var _this;
-
     _classCallCheck(this, OfflineEvents);
-
     _this = _super.call(this);
+
     /**
     * Triggered when all mediaInfo has been loaded
     * @event OfflineEvents#OFFLINE_RECORD_LOADEDMETADATA
     */
-
     _this.OFFLINE_RECORD_LOADEDMETADATA = 'public_offlineRecordLoadedmetadata';
+
     /**
     * Triggered when a record is initialized and download is started
     * @event OfflineEvents#OFFLINE_RECORD_STARTED
     */
-
     _this.OFFLINE_RECORD_STARTED = 'public_offlineRecordStarted';
+
     /**
     * Triggered when the user stop downloading a record
     * @event OfflineEvents#OFFLINE_RECORD_STOPPED
     */
-
     _this.OFFLINE_RECORD_STOPPED = 'public_offlineRecordStopped';
+
     /**
     * Triggered when all record has been downloaded
     * @event OfflineEvents#OFFLINE_RECORD_FINISHED
     */
-
     _this.OFFLINE_RECORD_FINISHED = 'public_offlineRecordFinished';
     return _this;
   }
-
-  return OfflineEvents;
+  return _createClass(OfflineEvents);
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var offlineEvents = new OfflineEvents();
 /* harmony default export */ __webpack_exports__["default"] = (offlineEvents);
 
@@ -17862,15 +16772,15 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
- // Shove both of these into the global scope
 
+
+
+// Shove both of these into the global scope
 var context = typeof window !== 'undefined' && window || global;
 var dashjs = context.dashjs;
-
 if (!dashjs) {
   dashjs = context.dashjs = {};
 }
-
 dashjs.OfflineController = _controllers_OfflineController__WEBPACK_IMPORTED_MODULE_0__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
@@ -17919,7 +16829,6 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 function IndexDBOfflineLoader(config) {
   config = config || {};
   var context = this.context;
@@ -17927,11 +16836,9 @@ function IndexDBOfflineLoader(config) {
   var constants = config.constants;
   var dashConstants = config.dashConstants;
   var instance, indexDBStore;
-
   function setup() {
     indexDBStore = Object(_storage_IndexDBStore__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   }
-
   function getManifestId(url) {
     var myURL = urlUtils.removeHostname(url);
     var parts = myURL.split('/');
@@ -17941,12 +16848,9 @@ function IndexDBOfflineLoader(config) {
    * Load manifest or fragment from indexeddb database
    * @param {object} config configuration of request
    */
-
-
   function load(config) {
     if (config.request) {
       var manifestId = getManifestId(config.request.url);
-
       if (manifestId % 1 === 0) {
         if (config.request.mediaType === constants.AUDIO || config.request.mediaType === constants.VIDEO || config.request.mediaType === constants.TEXT || config.request.mediaType === constants.MUXED || config.request.mediaType === constants.IMAGE) {
           var suffix = config.request.type === 'InitializationSegment' ? 'init' : config.request.index;
@@ -17969,10 +16873,9 @@ function IndexDBOfflineLoader(config) {
       }
     }
   }
-
-  function abort() {// nothing to do
+  function abort() {
+    // nothing to do
   }
-
   setup();
   instance = {
     load: load,
@@ -17980,11 +16883,8 @@ function IndexDBOfflineLoader(config) {
   };
   return instance;
 }
-
 IndexDBOfflineLoader.__dashjs_factory_name = 'IndexDBOfflineLoader';
-var factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader);
-/* jshint ignore:line */
-
+var factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); /* jshint ignore:line */
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -18033,19 +16933,14 @@ __webpack_require__.r(__webpack_exports__);
  * @ignore
  */
 var localforage = __webpack_require__(/*! localforage */ "./node_modules/localforage/dist/localforage.js");
-
-var entities = __webpack_require__(/*! html-entities */ "./node_modules/html-entities/index.js").XmlEntities;
-
+var entities = __webpack_require__(/*! html-entities */ "./node_modules/html-entities/lib/index.js").XmlEntities;
 function IndexDBStore() {
   var instance, manifestStore, fragmentStores;
-
   function setup() {
     fragmentStores = {};
-
     if (typeof window === 'undefined') {
       return;
     }
-
     localforage.config({
       driver: localforage.INDEXEDDB,
       name: 'dash_offline_db'
@@ -18056,7 +16951,9 @@ function IndexDBStore() {
       version: 1.0,
       storeName: 'manifest'
     });
-  } /////////////////////////////////////////
+  }
+
+  /////////////////////////////////////////
   //
   // GET/SET Methods
   //
@@ -18067,8 +16964,6 @@ function IndexDBStore() {
    * @param {string} storeName
    * @instance
    */
-
-
   function createFragmentStore(storeName) {
     if (!fragmentStores[storeName]) {
       console.log('setStore  ' + storeName);
@@ -18081,6 +16976,7 @@ function IndexDBStore() {
       fragmentStores[storeName] = fragmentStore;
     }
   }
+
   /**
    * Update download status
    * @param {number} manifestId
@@ -18088,8 +16984,6 @@ function IndexDBStore() {
    * @returns {Promise} promise
    * @instance
    */
-
-
   function setDownloadingStatus(manifestId, newStatus) {
     return getManifestById(manifestId).then(function (item) {
       item.status = newStatus;
@@ -18100,6 +16994,7 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Updat last downloaded fragment index for representationId
    * @param {number} manifestId - manifest id
@@ -18108,21 +17003,17 @@ function IndexDBStore() {
    * @returns {Promise} promise
    * @instance
    */
-
-
   function setRepresentationCurrentState(manifestId, representationId, state) {
     return getManifestById(manifestId).then(function (item) {
       if (!item.state) {
         item.state = {};
       }
-
       if (!item.state[representationId]) {
         item.state[representationId] = {
           index: -1,
           downloaded: 0
         };
       }
-
       item.state[representationId] = state;
       return updateManifest(item)["catch"](function () {
         return Promise.reject('Cannot set current index for represenation id ' + representationId);
@@ -18131,6 +17022,7 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Returns current downloaded segment index for representation
    * @param {number} manifestId - manifest id
@@ -18138,24 +17030,21 @@ function IndexDBStore() {
    * @returns {Promise} promise
    * @instance
    */
-
-
   function getRepresentationCurrentState(manifestId, representationId) {
     return getManifestById(manifestId).then(function (item) {
       var state = {
         index: -1,
         downloaded: 0
       };
-
       if (item.state && item.state[representationId]) {
         state = item.state[representationId];
       }
-
       return Promise.resolve(state);
     })["catch"](function (err) {
       return Promise.reject(err);
     });
   }
+
   /**
    * Returns a fragment from its key
    * @param {number} manifestId
@@ -18163,40 +17052,33 @@ function IndexDBStore() {
    * @returns {Promise} fragment
    * @instance
    */
-
-
   function getFragmentByKey(manifestId, key) {
     var fragmentStore = fragmentStores[manifestId];
-
     if (!fragmentStore) {
       return Promise.reject(new Error("No fragment store found for manifest ".concat(manifestId)));
     }
-
     return fragmentStore.getItem(key).then(function (value) {
       return Promise.resolve(value);
     })["catch"](function (err) {
       return Promise.reject(err);
     });
   }
+
   /**
    * Returns a manifest from its identifier
    * @param {number} id
    * @returns {Promise} {Object[]} manifests
    * @instance
    */
-
-
   function getManifestById(id) {
     return getAllManifests().then(function (array) {
       if (array) {
         var item = null;
-
         for (var i = 0; i < array.manifests.length; i++) {
           if (array.manifests[i].manifestId === parseInt(id)) {
             item = array.manifests[i];
           }
         }
-
         if (item !== null) {
           item.manifest = entities.decode(item.manifest);
           return Promise.resolve(item);
@@ -18210,13 +17092,12 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Returns all offline manifests
    * @returns {Promise} {Object[]} manifests
    * @instance
    */
-
-
   function getAllManifests() {
     return manifestStore.getItem('manifest').then(function (array) {
       return Promise.resolve(array ? array : {
@@ -18226,24 +17107,21 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Return higher manifest id
    * @returns {Promise} number
    * @instance
    */
-
-
   function getCurrentHigherManifestId() {
     return getAllManifests().then(function (array) {
       var higherManifestId = 0;
-
       if (array) {
         for (var i = 0; i < array.manifests.length; i++) {
           if (array.manifests[i].manifestId > higherManifestId) {
             higherManifestId = array.manifests[i].manifestId;
           }
         }
-
         return Promise.resolve(higherManifestId);
       } else {
         return Promise.resolve(higherManifestId);
@@ -18252,14 +17130,13 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Update manifest
    * @param {Object} manifest updated manifest
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function updateManifest(manifest) {
     return getAllManifests().then(function (array) {
       try {
@@ -18268,13 +17145,13 @@ function IndexDBStore() {
             array.manifests[i] = manifest;
           }
         }
-
         return manifestStore.setItem('manifest', array);
       } catch (err) {
         throw new Error('Any results found !');
       }
     });
   }
+
   /**
    * save selected representation by user
    * @param {Object} manifest updated manifest
@@ -18282,14 +17159,11 @@ function IndexDBStore() {
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function saveSelectedRepresentations(manifest, selected) {
     return getManifestById(manifest).then(function (item) {
       if (!item.selected) {
         item.selected = {};
       }
-
       item.selected = selected;
       return updateManifest(item)["catch"](function () {
         return Promise.reject('Cannot save selected representations');
@@ -18298,13 +17172,12 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Store a manifest in manifest array
    * @param {Object} manifest
    * @instance
    */
-
-
   function storeManifest(manifest) {
     return manifestStore.getItem('manifest').then(function (results) {
       var array = results ? results : {
@@ -18314,6 +17187,7 @@ function IndexDBStore() {
       return manifestStore.setItem('manifest', array);
     });
   }
+
   /**
    * Store a fragment in fragment store
    * @param {number} manifestId
@@ -18322,21 +17196,19 @@ function IndexDBStore() {
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function storeFragment(manifestId, fragmentId, fragmentData) {
     var fragmentStore = fragmentStores[manifestId];
-
     if (!fragmentStore) {
       return Promise.reject(new Error("No fragment store found for manifest ".concat(manifestId)));
     }
-
     return fragmentStore.setItem(fragmentId, fragmentData, function () {
       return Promise.resolve();
     })["catch"](function (err) {
       return Promise.reject(err);
     });
-  } /////////////////////////////////////////
+  }
+
+  /////////////////////////////////////////
   //
   // DROP Methods
   //
@@ -18347,8 +17219,6 @@ function IndexDBStore() {
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function dropAll() {
     return localforage.clear().then(function () {
       return Promise.resolve();
@@ -18356,13 +17226,12 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Remove framgent store given its name
    * @param {string} storeName
    * @instance
    */
-
-
   function dropFragmentStore(storeName) {
     localforage.dropInstance({
       driver: localforage.INDEXEDDB,
@@ -18376,14 +17245,13 @@ function IndexDBStore() {
     });
     return;
   }
+
   /**
    * Remove download given its id (fragmentStore + manifest entry in manifest array)
    * @param {number} manifestId
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function deleteDownloadById(manifestId) {
     return manifestStore.getItem('manifest').then(function (array) {
       if (array) {
@@ -18393,7 +17261,6 @@ function IndexDBStore() {
               array.manifests.splice(i, 1);
             }
           }
-
           return manifestStore.setItem('manifest', array).then(function () {
             return Promise.resolve('This stream has been successfull removed !');
           })["catch"](function () {
@@ -18407,14 +17274,13 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
+
   /**
    * Remove fragment store
    * @param {string} storeName
    * @returns {Promise} promise asynchronously resolved
    * @instance
    */
-
-
   function deleteFragmentStore(storeName) {
     localforage.createInstance({
       name: 'dash_offline_db',
@@ -18431,7 +17297,6 @@ function IndexDBStore() {
       return Promise.reject(err);
     });
   }
-
   setup();
   instance = {
     dropAll: dropAll,
@@ -18452,10 +17317,8 @@ function IndexDBStore() {
   };
   return instance;
 }
-
 IndexDBStore.__dashjs_factory_name = 'IndexDBStore';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(IndexDBStore));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(IndexDBStore)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -18502,10 +17365,8 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * @ignore
  */
-var Entities = __webpack_require__(/*! html-entities */ "./node_modules/html-entities/index.js").XmlEntities;
-
+var Entities = __webpack_require__(/*! html-entities */ "./node_modules/html-entities/lib/index.js").XmlEntities;
 var OFFLINE_BASE_URL = 'offline_indexeddb://';
-
 function OfflineIndexDBManifestParser(config) {
   var manifestId = config.manifestId;
   var allMediaInfos = config.allMediaInfos;
@@ -18514,10 +17375,10 @@ function OfflineIndexDBManifestParser(config) {
   var dashConstants = config.dashConstants;
   var constants = config.constants;
   var instance, DOM, logger;
-
   function setup() {
     logger = debug.getLogger(instance);
   }
+
   /**
    * Parse XML manifest
    * @param {string} XMLDoc - xml manifest
@@ -18525,22 +17386,17 @@ function OfflineIndexDBManifestParser(config) {
    * @returns {Promise} a promise that will be resolved or rejected at the end of encoding process
    * @instance
   */
-
-
   function parse(XMLDoc, representation) {
     return new Promise(function (resolve, reject) {
       DOM = new DOMParser().parseFromString(XMLDoc, 'application/xml');
       var mpd = DOM.getElementsByTagName(dashConstants.MPD) ? DOM.getElementsByTagName(dashConstants.MPD) : null;
-
       for (var i = 0; i < mpd.length; i++) {
         if (mpd[i] !== null) {
           editBaseURLAttribute(mpd[i]);
           browsePeriods(mpd[i], representation);
         }
       }
-
       var manifestEncoded = encodeManifest(DOM);
-
       if (manifestEncoded !== '') {
         resolve(manifestEncoded);
       } else {
@@ -18548,47 +17404,40 @@ function OfflineIndexDBManifestParser(config) {
       }
     });
   }
+
   /**
    * URL encode parsed manifest
    * @param {string} DOM
    * @returns {string} Url encoded XML
    * @instance
   */
-
-
   function encodeManifest(DOM) {
     logger.info('encodedManifest ' + new XMLSerializer().serializeToString(DOM));
     return new Entities().encode(new XMLSerializer().serializeToString(DOM));
   }
+
   /**
    * Update baseURL to point to local stored data P
    * @param {XML} currentMPD
    * @instance
   */
-
-
   function editBaseURLAttribute(currentMPD) {
     var basesURL, fragmentId, representationId;
     var url = "".concat(OFFLINE_BASE_URL).concat(manifestId, "/");
     basesURL = currentMPD.getElementsByTagName(dashConstants.BASE_URL);
-
     if (basesURL.length === 0) {
       // add baseURL
       var element = DOM.createElement(dashConstants.BASE_URL);
       element.innerHTML = url;
       currentMPD.appendChild(element);
     }
-
     basesURL = currentMPD.getElementsByTagName(dashConstants.BASE_URL);
-
     for (var i = 0; i < basesURL.length; i++) {
       var parent = basesURL[i].parentNode;
-
       if (parent.nodeName === dashConstants.MPD) {
         basesURL[i].innerHTML = url;
       } else if (parent.nodeName === dashConstants.REPRESENTATION) {
         var adaptationsSet = parent.parentNode;
-
         if (adaptationsSet.nodeName == dashConstants.ADAPTATION_SET) {
           if (urlUtils.isHTTPS(basesURL[i].innerHTML) || urlUtils.isHTTPURL(basesURL[i].innerHTML)) {
             fragmentId = getFragmentId(basesURL[i].innerHTML);
@@ -18607,43 +17456,37 @@ function OfflineIndexDBManifestParser(config) {
       }
     }
   }
+
   /**
    * Browse periods
    * @param {XML} currentMPD
    * @param {Object} representation
    * @instance
   */
-
-
   function browsePeriods(currentMPD, representation) {
     var periods = currentMPD.getElementsByTagName(dashConstants.PERIOD);
-
     for (var j = 0; j < periods.length; j++) {
       browseAdaptationsSet(periods[j], representation);
     }
   }
+
   /**
    * Browse adapatation set to update data (delete those taht are not choosen by user ...)
    * @param {XML} currentPeriod
    * @param {Array} representationsToUpdate
    * @instance
   */
-
-
   function browseAdaptationsSet(currentPeriod, representationsToUpdate) {
     var adaptationsSet, currentAdaptationSet, currentAdaptationType, representations;
     adaptationsSet = currentPeriod.getElementsByTagName(dashConstants.ADAPTATION_SET);
-
     for (var i = adaptationsSet.length - 1; i >= 0; i--) {
       currentAdaptationSet = adaptationsSet[i];
-
       if (currentAdaptationSet) {
         currentAdaptationType = findAdaptationType(currentAdaptationSet);
         representations = findRepresentations(currentAdaptationSet);
         findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, currentAdaptationType);
         representations = findRepresentations(currentAdaptationSet);
         deleteSegmentBase(currentAdaptationSet);
-
         if (representations.length === 0) {
           currentPeriod.removeChild(currentAdaptationSet);
         } else {
@@ -18651,25 +17494,21 @@ function OfflineIndexDBManifestParser(config) {
           for (var _i = 0; _i < representations.length; _i++) {
             var rep = representations[_i];
             var segmentList = getSegmentList(rep);
-
             if (segmentList.length >= 1) {
               editSegmentListAttributes(segmentList, rep);
             }
           }
-
-          var segmentTemplate = getSegmentTemplate(currentAdaptationSet); // segmentTemplate is defined, update attributes in order to be correctly played offline
-
+          var segmentTemplate = getSegmentTemplate(currentAdaptationSet);
+          // segmentTemplate is defined, update attributes in order to be correctly played offline
           if (segmentTemplate.length >= 1) {
             editSegmentTemplateAttributes(segmentTemplate);
-          } // detect SegmentBase use case => transfrom manifest to SegmentList in SegmentTemplate
+          }
 
-
+          // detect SegmentBase use case => transfrom manifest to SegmentList in SegmentTemplate
           if (representationsToUpdate && representationsToUpdate.length > 0) {
             var selectedRep = void 0;
-
             for (var _i2 = 0; _i2 < representations.length; _i2++) {
               var _rep = representations[_i2];
-
               for (var j = 0; representationsToUpdate && j < representationsToUpdate.length; j++) {
                 if (representationsToUpdate[j].id === _rep.id) {
                   selectedRep = representationsToUpdate[j];
@@ -18677,21 +17516,19 @@ function OfflineIndexDBManifestParser(config) {
                 }
               }
             }
-
             addSegmentTemplateAttributes(currentAdaptationSet, selectedRep);
           }
         }
       }
     }
   }
+
   /**
    * Returns type of adapation set
    * @param {XML} currentAdaptationSet
    * @returns {string|null} type
    * @instance
   */
-
-
   function findAdaptationType(currentAdaptationSet) {
     if (getIsMuxed(currentAdaptationSet)) {
       return constants.MUXED;
@@ -18704,202 +17541,167 @@ function OfflineIndexDBManifestParser(config) {
     } else if (getIsImage(currentAdaptationSet)) {
       return constants.IMAGE;
     }
-
     return null;
   }
-
   function getIsAudio(adaptation) {
     return getIsTypeOf(adaptation, constants.AUDIO);
   }
-
   function getIsVideo(adaptation) {
     return getIsTypeOf(adaptation, constants.VIDEO);
   }
-
   function getIsText(adaptation) {
     return getIsTypeOf(adaptation, constants.TEXT);
   }
-
   function getIsMuxed(adaptation) {
     return getIsTypeOf(adaptation, constants.MUXED);
   }
-
   function getIsImage(adaptation) {
     return getIsTypeOf(adaptation, constants.IMAGE);
-  } // based upon DashManifestModel, but using DomParser
+  }
 
-
+  // based upon DashManifestModel, but using DomParser
   function getIsTypeOf(adaptation, type) {
     if (!adaptation) {
       throw new Error('adaptation is not defined');
     }
-
     if (!type) {
       throw new Error('type is not defined');
     }
-
     return testMimeType(adaptation, type);
   }
-
   function testMimeType(adaptation, type) {
     var mimeTypeRegEx = type !== constants.TEXT ? new RegExp(type) : new RegExp('(vtt|ttml)');
     var mimeType = findMimeType(adaptation);
-
     if (mimeType) {
       return mimeTypeRegEx.test(mimeType);
-    } // no mime type in adaptation, search in representation
+    }
 
-
+    // no mime type in adaptation, search in representation
     var representations = findRepresentations(adaptation);
-
     if (representations) {
       for (var i = 0; i < representations.length; i++) {
         var representation = representations[i];
         mimeType = findMimeType(representation);
-
         if (mimeType) {
           return mimeTypeRegEx.test(mimeType);
         }
       }
     }
-
     return false;
   }
+
   /**
    * Returns mime-type of xml tag
    * @param {Object} tag
    * @returns {string|null} mimeType
    * @instance
   */
-
-
   function findMimeType(tag) {
     return tag.getAttribute(dashConstants.MIME_TYPE);
   }
+
   /**
    * Returns representations of adaptation set
    * @param {XML} adaptation
    * @returns {XML} representations
    * @instance
   */
-
-
   function findRepresentations(adaptation) {
     return adaptation.getElementsByTagName(dashConstants.REPRESENTATION);
   }
+
   /**
    * Return segment template list of adaptations set
    * @param {XML} currentAdaptationSet
    * @returns {XML} representations
    * @instance
   */
-
-
   function getSegmentTemplate(currentAdaptationSet) {
     return currentAdaptationSet.getElementsByTagName(dashConstants.SEGMENT_TEMPLATE);
   }
+
   /**
    * Return segment list tags of adaptations set
    * @param {XML} tag
    * @returns {XML} representations
    * @instance
   */
-
-
   function getSegmentList(tag) {
     return tag.getElementsByTagName(dashConstants.SEGMENT_LIST);
   }
-
   function deleteSegmentBase(tag) {
     var elements = tag.getElementsByTagName(dashConstants.SEGMENT_BASE);
-
     for (var i = 0; i < elements.length; i++) {
       var segmentBase = elements[i];
       segmentBase.parentNode.removeChild(segmentBase);
     }
   }
+
   /**
    * @param {XML} segmentTemplate
    * @param {object} rep
    * @instance
   */
-
-
   function addSegmentTimelineElements(segmentTemplate, rep) {
     var S = DOM.createElement('S');
-
     if (rep && rep.segments) {
       var segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
       var changedDuration = getDurationChangeArray(rep);
-
       for (var i = 0; i < changedDuration.length; i++) {
         var repeatValue = i + 1 < changedDuration.length ? changedDuration[i + 1] - changedDuration[i] - 1 : 0;
-
         if (repeatValue > 1) {
           S.setAttribute('r', repeatValue);
         }
-
         S.setAttribute('d', rep.segments[changedDuration[i]].duration);
         segmentTimelineElement.appendChild(S);
         S = DOM.createElement('S');
       }
-
       segmentTemplate.appendChild(segmentTimelineElement);
     }
   }
-
   function getDurationChangeArray(rep) {
     var array = [];
     array.push(0);
-
     for (var i = 1; i < rep.segments.length; i++) {
       if (rep.segments[i - 1].duration !== rep.segments[i].duration) {
         array.push(i);
       }
     }
-
     return array;
   }
+
   /**
    * Update attributes of segment templates to match offline urls
    * @param {Array} segmentsTemplates
    * @instance
   */
-
-
   function editSegmentTemplateAttributes(segmentsTemplates) {
     for (var i = 0; i < segmentsTemplates.length; i++) {
       var media = segmentsTemplates[i].getAttribute(dashConstants.MEDIA);
       media = '$RepresentationID$_$Number$' + media.substring(media.indexOf('.'), media.length); //id + extension
-
       segmentsTemplates[i].setAttribute(dashConstants.START_NUMBER, '0');
       segmentsTemplates[i].setAttribute(dashConstants.MEDIA, media);
       segmentsTemplates[i].setAttribute(dashConstants.INITIALIZATION_MINUS, '$RepresentationID$_init');
     }
   }
+
   /**
    * Update attributes of segment list to match offline urls
    * @param {Array} segmentLists
    * @param {Object} representation
    * @instance
   */
-
-
   function editSegmentListAttributes(segmentLists, representation) {
     var repId = representation.getAttribute(dashConstants.ID);
-
     for (var i = 0; i < segmentLists.length; i++) {
       var segmentList = segmentLists[i];
       var initialisation = segmentList.getElementsByTagName(dashConstants.INITIALIZATION);
-
       if (initialisation) {
         var sourceURL = initialisation[0].getAttribute(dashConstants.SOURCE_URL);
         sourceURL = "".concat(repId, "_init");
         initialisation[0].setAttribute(dashConstants.SOURCE_URL, sourceURL);
       }
-
       var segmentURLs = segmentList.getElementsByTagName(dashConstants.SEGMENT_URL);
-
       if (segmentURLs) {
         for (var j = 0; j < segmentURLs.length; j++) {
           var segmentUrl = segmentURLs[j];
@@ -18910,13 +17712,12 @@ function OfflineIndexDBManifestParser(config) {
       }
     }
   }
+
   /**
    * @param {XML} adaptationSet
    * @param {object} rep
    * @instance
   */
-
-
   function addSegmentTemplateAttributes(adaptationSet, rep) {
     var segmentTemplateElement = DOM.createElement(dashConstants.SEGMENT_TEMPLATE);
     segmentTemplateElement.setAttribute(dashConstants.START_NUMBER, '0');
@@ -18925,6 +17726,7 @@ function OfflineIndexDBManifestParser(config) {
     addSegmentTimelineElements(segmentTemplateElement, rep);
     adaptationSet.appendChild(segmentTemplateElement);
   }
+
   /**
    * Delete all representations except the one choosed by user
    * @param {XML} currentAdaptationSet
@@ -18932,57 +17734,49 @@ function OfflineIndexDBManifestParser(config) {
    * @param {string} adaptationType
    * @instance
   */
-
-
   function findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, adaptationType) {
     for (var i = representations.length - 1; i >= 0; i--) {
       var representation = representations[i];
       var repId = representation.getAttribute(dashConstants.ID);
-
       if (allMediaInfos[adaptationType] && allMediaInfos[adaptationType].indexOf(repId) === -1) {
         // representation is not selected, remove it
         currentAdaptationSet.removeChild(representation);
       }
     }
-  } //  UTILS
+  }
 
+  //  UTILS
   /**
    * Get id of first representation of adaptation set
    * @param {XMl} currentAdaptationSet
    * @returns {string} id
    * @instance
   */
-
-
   function getBestRepresentationId(currentAdaptationSet) {
     var bestRepresentation = currentAdaptationSet.getElementsByTagName(dashConstants.REPRESENTATION)[0];
     console.log(bestRepresentation.getAttribute(dashConstants.ID));
     return bestRepresentation.getAttribute(dashConstants.ID);
   }
+
   /**
    * Parse and returns fragments of offline url => xxxx://xxxx/fragmentId/
    * @param {string} url
    * @returns {string} fragmentId
    * @instance
   */
-
-
   function getFragmentId(url) {
-    var idxFragId = url.lastIndexOf('/'); //logger.warn('fragId : ' + url.substring(idxFragId + 1, url.length));
-
+    var idxFragId = url.lastIndexOf('/');
+    //logger.warn('fragId : ' + url.substring(idxFragId + 1, url.length));
     return url.substring(idxFragId, url.length);
   }
-
   setup();
   instance = {
     parse: parse
   };
   return instance;
 }
-
 OfflineIndexDBManifestParser.__dashjs_factory_name = 'OfflineIndexDBManifestParser';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineIndexDBManifestParser));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(OfflineIndexDBManifestParser)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -19030,33 +17824,27 @@ __webpack_require__.r(__webpack_exports__);
 
 function OfflineUrlUtils() {
   function setup() {}
-
   function getRegex() {
     return _constants_OfflineConstants__WEBPACK_IMPORTED_MODULE_0__["default"].OFFLINE_URL_REGEX;
   }
+
   /*
    * -------------------
    * SPECIFIC BEHAVIOUR
    * -------------------
    */
-
-
   function removeHostname(url) {
     return url.replace(/(^\w+:|^)\/\//, '');
   }
-
   function isRelative() {
     return false;
   }
-
   function resolve(url, baseUrl) {
     if (baseUrl.charAt(baseUrl.length - 1) !== '/') {
       baseUrl = baseUrl.concat('/');
     }
-
     return baseUrl + url;
   }
-
   setup();
   var instance = {
     getRegex: getRegex,
@@ -19066,10 +17854,8 @@ function OfflineUrlUtils() {
   };
   return instance;
 }
-
 OfflineUrlUtils.__dashjs_factory_name = 'OfflineUrlUtils';
-/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(OfflineUrlUtils));
-/* jshint ignore:line */
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(OfflineUrlUtils)); /* jshint ignore:line */
 
 /***/ }),
 
@@ -19082,8 +17868,12 @@ OfflineUrlUtils.__dashjs_factory_name = 'OfflineUrlUtils';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -19114,21 +17904,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var OfflineDownload = function OfflineDownload() {
+var OfflineDownload = /*#__PURE__*/_createClass(function OfflineDownload() {
   _classCallCheck(this, OfflineDownload);
-
   this.id = null;
   this.url = null;
   this.originalUrl = null;
   this.status = null;
   this.progress = null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (OfflineDownload);
 
 /***/ }),
@@ -19182,7 +17969,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function FragmentLoader(config) {
   config = config || {};
   var context = this.context;
@@ -19192,7 +17978,6 @@ function FragmentLoader(config) {
   var errors = config.errors;
   var streamId = config.streamId;
   var instance, urlLoader;
-
   function setup() {
     urlLoader = Object(_net_URLLoader__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
       errHandler: config.errHandler,
@@ -19207,7 +17992,6 @@ function FragmentLoader(config) {
       requestTimeout: config.settings.get().streaming.fragmentRequestTimeout
     });
   }
-
   function checkForExistence(request) {
     var report = function report(success) {
       eventBus.trigger(events.CHECK_FOR_EXISTENCE_COMPLETED, {
@@ -19215,7 +17999,6 @@ function FragmentLoader(config) {
         exists: success
       });
     };
-
     if (request) {
       var headRequest = new _vo_HeadRequest__WEBPACK_IMPORTED_MODULE_2__["default"](request.url);
       urlLoader.load({
@@ -19231,7 +18014,6 @@ function FragmentLoader(config) {
       report(false);
     }
   }
-
   function load(request) {
     var report = function report(data, error) {
       eventBus.trigger(events.LOADING_COMPLETED, {
@@ -19241,7 +18023,6 @@ function FragmentLoader(config) {
         sender: instance
       });
     };
-
     if (request) {
       urlLoader.load({
         request: request,
@@ -19251,7 +18032,6 @@ function FragmentLoader(config) {
             stream: event.stream,
             streamId: streamId
           });
-
           if (event.data) {
             eventBus.trigger(events.LOADING_DATA_PROGRESS, {
               request: request,
@@ -19281,20 +18061,17 @@ function FragmentLoader(config) {
       report(undefined, new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE, errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE));
     }
   }
-
   function abort() {
     if (urlLoader) {
       urlLoader.abort();
     }
   }
-
   function reset() {
     if (urlLoader) {
       urlLoader.abort();
       urlLoader = null;
     }
   }
-
   instance = {
     checkForExistence: checkForExistence,
     load: load,
@@ -19304,7 +18081,6 @@ function FragmentLoader(config) {
   setup();
   return instance;
 }
-
 FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_4__["default"].getClassFactory(FragmentLoader));
 
@@ -19320,24 +18096,19 @@ FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/events/EventsBase */ "./src/core/events/EventsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -19369,24 +18140,20 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * @class
  * @implements EventsBase
  */
-
 var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
   _inherits(MediaPlayerEvents, _EventsBase);
-
   var _super = _createSuper(MediaPlayerEvents);
-
   /**
    * @description Public facing external events to be used when developing a player that implements dash.js.
    */
   function MediaPlayerEvents() {
     var _this;
-
     _classCallCheck(this, MediaPlayerEvents);
-
     _this = _super.call(this);
     /**
      * Triggered when playback will not start yet
@@ -19394,376 +18161,370 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      * Check delay property in payload to determine time before playback will start.
      * @event MediaPlayerEvents#AST_IN_FUTURE
      */
-
     _this.AST_IN_FUTURE = 'astInFuture';
+
     /**
      * Triggered when the video element's buffer state changes to stalled.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
      */
-
     _this.BUFFER_EMPTY = 'bufferStalled';
+
     /**
      * Triggered when the video element's buffer state changes to loaded.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_LOADED
      */
-
     _this.BUFFER_LOADED = 'bufferLoaded';
+
     /**
      * Triggered when the video element's buffer state changes, either stalled or loaded. Check payload for state.
      * @event MediaPlayerEvents#BUFFER_LEVEL_STATE_CHANGED
      */
-
     _this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
+
     /**
      * Triggered when the buffer level of a media type has been updated
      * @event MediaPlayerEvents#BUFFER_LEVEL_UPDATED
      */
-
     _this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+
     /**
      * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
      * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
      */
-
     _this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
+
     /**
      * Triggered when there is an error from the element or MSE source buffer.
      * @event MediaPlayerEvents#ERROR
      */
-
     _this.ERROR = 'error';
     /**
      * Triggered when a fragment download has completed.
      * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
      */
-
     _this.FRAGMENT_LOADING_COMPLETED = 'fragmentLoadingCompleted';
+
     /**
      * Triggered when a partial fragment download has completed.
      * @event MediaPlayerEvents#FRAGMENT_LOADING_PROGRESS
      */
-
     _this.FRAGMENT_LOADING_PROGRESS = 'fragmentLoadingProgress';
     /**
      * Triggered when a fragment download has started.
      * @event MediaPlayerEvents#FRAGMENT_LOADING_STARTED
      */
-
     _this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
+
     /**
      * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
      * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
      */
-
     _this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
+
     /**
      * Triggered when {@link module:Debug} logger methods are called.
      * @event MediaPlayerEvents#LOG
      */
-
     _this.LOG = 'log';
+
     /**
      * Triggered when the manifest load is complete
      * @event MediaPlayerEvents#MANIFEST_LOADED
      */
-
     _this.MANIFEST_LOADED = 'manifestLoaded';
+
     /**
      * Triggered anytime there is a change to the overall metrics.
      * @event MediaPlayerEvents#METRICS_CHANGED
      */
-
     _this.METRICS_CHANGED = 'metricsChanged';
+
     /**
      * Triggered when an individual metric is added, updated or cleared.
      * @event MediaPlayerEvents#METRIC_CHANGED
      */
-
     _this.METRIC_CHANGED = 'metricChanged';
+
     /**
      * Triggered every time a new metric is added.
      * @event MediaPlayerEvents#METRIC_ADDED
      */
-
     _this.METRIC_ADDED = 'metricAdded';
+
     /**
      * Triggered every time a metric is updated.
      * @event MediaPlayerEvents#METRIC_UPDATED
      */
-
     _this.METRIC_UPDATED = 'metricUpdated';
+
     /**
      * Triggered when a new stream (period) starts.
      * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
      */
-
     _this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+
     /**
      * Triggered at the stream end of a period.
      * @event MediaPlayerEvents#PERIOD_SWITCH_COMPLETED
      */
-
     _this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
+
     /**
      * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
      * @event MediaPlayerEvents#QUALITY_CHANGE_REQUESTED
      */
-
     _this.QUALITY_CHANGE_REQUESTED = 'qualityChangeRequested';
+
     /**
      * Triggered when the new ABR quality is being rendered on-screen.
      * @event MediaPlayerEvents#QUALITY_CHANGE_RENDERED
      */
-
     _this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
+
     /**
      * Triggered when the new track is being rendered.
      * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
      */
-
     _this.TRACK_CHANGE_RENDERED = 'trackChangeRendered';
+
     /**
      * Triggered when a stream (period) is being loaded
      * @event MediaPlayerEvents#STREAM_INITIALIZING
      */
-
     _this.STREAM_INITIALIZING = 'streamInitializing';
+
     /**
      * Triggered when a stream (period) is loaded
      * @event MediaPlayerEvents#STREAM_UPDATED
      */
-
     _this.STREAM_UPDATED = 'streamUpdated';
+
     /**
      * Triggered when a stream (period) is activated
      * @event MediaPlayerEvents#STREAM_ACTIVATED
      */
-
     _this.STREAM_ACTIVATED = 'streamActivated';
+
     /**
      * Triggered when a stream (period) is deactivated
      * @event MediaPlayerEvents#STREAM_DEACTIVATED
      */
-
     _this.STREAM_DEACTIVATED = 'streamDeactivated';
+
     /**
      * Triggered when a stream (period) is activated
      * @event MediaPlayerEvents#STREAM_INITIALIZED
      */
-
     _this.STREAM_INITIALIZED = 'streamInitialized';
+
     /**
      * Triggered when the player has been reset.
      * @event MediaPlayerEvents#STREAM_TEARDOWN_COMPLETE
      */
-
     _this.STREAM_TEARDOWN_COMPLETE = 'streamTeardownComplete';
+
     /**
      * Triggered once all text tracks detected in the MPD are added to the video element.
      * @event MediaPlayerEvents#TEXT_TRACKS_ADDED
      */
-
     _this.TEXT_TRACKS_ADDED = 'allTextTracksAdded';
+
     /**
      * Triggered when a text track is added to the video element's TextTrackList
      * @event MediaPlayerEvents#TEXT_TRACK_ADDED
      */
-
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+
     /**
      * Triggered when a ttml chunk is parsed.
      * @event MediaPlayerEvents#TTML_PARSED
      */
-
     _this.TTML_PARSED = 'ttmlParsed';
+
     /**
      * Triggered when a ttml chunk has to be parsed.
      * @event MediaPlayerEvents#TTML_TO_PARSE
      */
-
     _this.TTML_TO_PARSE = 'ttmlToParse';
+
     /**
      * Triggered when a caption is rendered.
      * @event MediaPlayerEvents#CAPTION_RENDERED
      */
-
     _this.CAPTION_RENDERED = 'captionRendered';
+
     /**
      * Triggered when the caption container is resized.
      * @event MediaPlayerEvents#CAPTION_CONTAINER_RESIZE
      */
-
     _this.CAPTION_CONTAINER_RESIZE = 'captionContainerResize';
+
     /**
      * Sent when enough data is available that the media can be played,
      * at least for a couple of frames.  This corresponds to the
      * HAVE_ENOUGH_DATA readyState.
      * @event MediaPlayerEvents#CAN_PLAY
      */
-
     _this.CAN_PLAY = 'canPlay';
+
     /**
      * This corresponds to the CAN_PLAY_THROUGH readyState.
      * @event MediaPlayerEvents#CAN_PLAY_THROUGH
      */
-
     _this.CAN_PLAY_THROUGH = 'canPlayThrough';
+
     /**
      * Sent when playback completes.
      * @event MediaPlayerEvents#PLAYBACK_ENDED
      */
-
     _this.PLAYBACK_ENDED = 'playbackEnded';
+
     /**
      * Sent when an error occurs.  The element's error
      * attribute contains more information.
      * @event MediaPlayerEvents#PLAYBACK_ERROR
      */
-
     _this.PLAYBACK_ERROR = 'playbackError';
+
     /**
      * Sent when playback is not allowed (for example if user gesture is needed).
      * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
      */
-
     _this.PLAYBACK_NOT_ALLOWED = 'playbackNotAllowed';
+
     /**
      * The media's metadata has finished loading; all attributes now
      * contain as much useful information as they're going to.
      * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
      */
-
     _this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+
     /**
      * The event is fired when the frame at the current playback position of the media has finished loading;
      * often the first frame
      * @event MediaPlayerEvents#PLAYBACK_LOADED_DATA
      */
-
     _this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
+
     /**
      * Sent when playback is paused.
      * @event MediaPlayerEvents#PLAYBACK_PAUSED
      */
-
     _this.PLAYBACK_PAUSED = 'playbackPaused';
+
     /**
      * Sent when the media begins to play (either for the first time, after having been paused,
      * or after ending and then restarting).
      *
      * @event MediaPlayerEvents#PLAYBACK_PLAYING
      */
-
     _this.PLAYBACK_PLAYING = 'playbackPlaying';
+
     /**
      * Sent periodically to inform interested parties of progress downloading
      * the media. Information about the current amount of the media that has
      * been downloaded is available in the media element's buffered attribute.
      * @event MediaPlayerEvents#PLAYBACK_PROGRESS
      */
-
     _this.PLAYBACK_PROGRESS = 'playbackProgress';
+
     /**
      * Sent when the playback speed changes.
      * @event MediaPlayerEvents#PLAYBACK_RATE_CHANGED
      */
-
     _this.PLAYBACK_RATE_CHANGED = 'playbackRateChanged';
+
     /**
      * Sent when a seek operation completes.
      * @event MediaPlayerEvents#PLAYBACK_SEEKED
      */
-
     _this.PLAYBACK_SEEKED = 'playbackSeeked';
+
     /**
      * Sent when a seek operation begins.
      * @event MediaPlayerEvents#PLAYBACK_SEEKING
      */
-
     _this.PLAYBACK_SEEKING = 'playbackSeeking';
+
     /**
      * Sent when the video element reports stalled
      * @event MediaPlayerEvents#PLAYBACK_STALLED
      */
-
     _this.PLAYBACK_STALLED = 'playbackStalled';
+
     /**
      * Sent when playback of the media starts after having been paused;
      * that is, when playback is resumed after a prior pause event.
      *
      * @event MediaPlayerEvents#PLAYBACK_STARTED
      */
-
     _this.PLAYBACK_STARTED = 'playbackStarted';
+
     /**
      * The time indicated by the element's currentTime attribute has changed.
      * @event MediaPlayerEvents#PLAYBACK_TIME_UPDATED
      */
-
     _this.PLAYBACK_TIME_UPDATED = 'playbackTimeUpdated';
+
     /**
      * Sent when the video element reports that the volume has changed
      * @event MediaPlayerEvents#PLAYBACK_VOLUME_CHANGED
      */
-
     _this.PLAYBACK_VOLUME_CHANGED = 'playbackVolumeChanged';
+
     /**
      * Sent when the media playback has stopped because of a temporary lack of data.
      *
      * @event MediaPlayerEvents#PLAYBACK_WAITING
      */
-
     _this.PLAYBACK_WAITING = 'playbackWaiting';
+
     /**
      * Manifest validity changed - As a result of an MPD validity expiration event.
      * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
      */
-
     _this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
+
     /**
      * Dash events are triggered at their respective start points on the timeline.
      * @event MediaPlayerEvents#EVENT_MODE_ON_START
      */
-
     _this.EVENT_MODE_ON_START = 'eventModeOnStart';
+
     /**
      * Dash events are triggered as soon as they were parsed.
      * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
      */
-
     _this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
+
     /**
      * Event that is dispatched whenever the player encounters a potential conformance validation that might lead to unexpected/not optimal behavior
      * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
      */
-
     _this.CONFORMANCE_VIOLATION = 'conformanceViolation';
+
     /**
      * Event that is dispatched whenever the player switches to a different representation
      * @event MediaPlayerEvents#REPRESENTATION_SWITCH
      */
-
     _this.REPRESENTATION_SWITCH = 'representationSwitch';
+
     /**
      * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
      * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
      */
-
     _this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
     /**
      * Triggered when a content steering request has completed.
      * @event MediaPlayerEvents#CONTENT_STEERING_REQUEST_COMPLETED
      */
-
     _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
     return _this;
   }
-
-  return MediaPlayerEvents;
+  return _createClass(MediaPlayerEvents);
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var mediaPlayerEvents = new MediaPlayerEvents();
 /* harmony default export */ __webpack_exports__["default"] = (mediaPlayerEvents);
 
@@ -19778,12 +18539,12 @@ var mediaPlayerEvents = new MediaPlayerEvents();
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -19814,7 +18575,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * Constants declaration
  * @class
@@ -19824,10 +18584,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Constants = /*#__PURE__*/function () {
   function Constants() {
     _classCallCheck(this, Constants);
-
     this.init();
   }
-
   _createClass(Constants, [{
     key: "init",
     value: function init() {
@@ -19837,236 +18595,236 @@ var Constants = /*#__PURE__*/function () {
        *  @static
        */
       this.STREAM = 'stream';
+
       /**
        *  @constant {string} VIDEO Video media type
        *  @memberof Constants#
        *  @static
        */
-
       this.VIDEO = 'video';
+
       /**
        *  @constant {string} AUDIO Audio media type
        *  @memberof Constants#
        *  @static
        */
-
       this.AUDIO = 'audio';
+
       /**
        *  @constant {string} TEXT Text media type
        *  @memberof Constants#
        *  @static
        */
-
       this.TEXT = 'text';
+
       /**
        *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
        *  @memberof Constants#
        *  @static
        */
-
       this.MUXED = 'muxed';
+
       /**
        *  @constant {string} IMAGE Image media type
        *  @memberof Constants#
        *  @static
        */
-
       this.IMAGE = 'image';
+
       /**
        *  @constant {string} STPP STTP Subtitles format
        *  @memberof Constants#
        *  @static
        */
-
       this.STPP = 'stpp';
+
       /**
        *  @constant {string} TTML STTP Subtitles format
        *  @memberof Constants#
        *  @static
        */
-
       this.TTML = 'ttml';
+
       /**
        *  @constant {string} VTT STTP Subtitles format
        *  @memberof Constants#
        *  @static
        */
-
       this.VTT = 'vtt';
+
       /**
        *  @constant {string} WVTT STTP Subtitles format
        *  @memberof Constants#
        *  @static
        */
-
       this.WVTT = 'wvtt';
+
       /**
        *  @constant {string} Content Steering
        *  @memberof Constants#
        *  @static
        */
-
       this.CONTENT_STEERING = 'contentSteering';
+
       /**
        *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+
       /**
        *  @constant {string} ABR_STRATEGY_BOLA Adaptive bitrate algorithm based on Bola (buffer level)
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_STRATEGY_BOLA = 'abrBola';
+
       /**
        *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_STRATEGY_L2A = 'abrL2A';
+
       /**
        *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_STRATEGY_LoLP = 'abrLoLP';
+
       /**
        *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+
       /**
        *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
+
       /**
        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
        *  @memberof Constants#
        *  @static
        */
-
       this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+
       /**
       *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
       *  @memberof Constants#
       *  @static
       */
-
       this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
+
       /**
        *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
        *  @memberof Constants#
        *  @static
        */
-
       this.LIVE_CATCHUP_MODE_DEFAULT = 'liveCatchupModeDefault';
+
       /**
        *  @constant {string} LIVE_CATCHUP_MODE_LOLP Throughput calculation based on moof parsing
        *  @memberof Constants#
        *  @static
        */
-
       this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
+
       /**
        *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
        *  @memberof Constants#
        *  @static
        */
-
       this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+
       /**
        *  @constant {string} EWMA Exponential moving average
        *  @memberof Constants#
        *  @static
        */
-
       this.MOVING_AVERAGE_EWMA = 'ewma';
+
       /**
        *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
        *  @memberof Constants#
        *  @static
        */
-
       this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
+
       /**
        *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
        *  @memberof Constants#
        *  @static
        */
-
       this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
       /**
        *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+
       /**
        *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+
       /**
        *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SELECTION_MODE_FIRST_TRACK = 'firstTrack';
+
       /**
        *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+
       /**
        *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY = 'highestEfficiency';
+
       /**
        *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
       /**
        *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
        *  @memberof Constants#
        *  @static
        */
-
       this.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY = 'highestSelectionPriority';
+
       /**
        *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
        *  @memberof Constants#
        *  @static
        */
-
       this.CMCD_MODE_QUERY = 'query';
+
       /**
        *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
        *  @memberof Constants#
        *  @static
        */
-
       this.CMCD_MODE_HEADER = 'header';
       this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
@@ -20096,10 +18854,8 @@ var Constants = /*#__PURE__*/function () {
       };
     }
   }]);
-
   return Constants;
 }();
-
 var constants = new Constants();
 /* harmony default export */ __webpack_exports__["default"] = (constants);
 
@@ -20114,12 +18870,12 @@ var constants = new Constants();
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -20150,7 +18906,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * Metrics Constants declaration
  * @class
@@ -20159,10 +18914,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var MetricsConstants = /*#__PURE__*/function () {
   function MetricsConstants() {
     _classCallCheck(this, MetricsConstants);
-
     this.init();
   }
-
   _createClass(MetricsConstants, [{
     key: "init",
     value: function init() {
@@ -20187,10 +18940,8 @@ var MetricsConstants = /*#__PURE__*/function () {
       this.HTTP_REQUEST_DVB_REPORTING_TYPE = 'DVBReporting';
     }
   }]);
-
   return MetricsConstants;
 }();
-
 var constants = new MetricsConstants();
 /* harmony default export */ __webpack_exports__["default"] = (constants);
 
@@ -20206,24 +18957,19 @@ var constants = new MetricsConstants();
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/events/EventsBase */ "./src/core/events/EventsBase.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -20255,36 +19001,30 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 /**
  * @class
  * @implements EventsBase
  */
-
 var MetricsReportingEvents = /*#__PURE__*/function (_EventsBase) {
   _inherits(MetricsReportingEvents, _EventsBase);
-
   var _super = _createSuper(MetricsReportingEvents);
-
   function MetricsReportingEvents() {
     var _this;
-
     _classCallCheck(this, MetricsReportingEvents);
-
     _this = _super.call(this);
     _this.METRICS_INITIALISATION_COMPLETE = 'internal_metricsReportingInitialized';
     _this.BECAME_REPORTING_PLAYER = 'internal_becameReportingPlayer';
+
     /**
      * Triggered when CMCD data was generated for a HTTP request
      * @event MetricsReportingEvents#CMCD_DATA_GENERATED
      */
-
     _this.CMCD_DATA_GENERATED = 'cmcdDataGenerated';
     return _this;
   }
-
-  return MetricsReportingEvents;
+  return _createClass(MetricsReportingEvents);
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 var metricsReportingEvents = new MetricsReportingEvents();
 /* harmony default export */ __webpack_exports__["default"] = (metricsReportingEvents);
 
@@ -20308,12 +19048,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /* harmony import */ var _dash_models_DashManifestModel__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/models/DashManifestModel */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _core_Utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Utils */ "./src/core/Utils.js");
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -20374,20 +19111,15 @@ var STREAM_TYPES = {
   LIVE: 'l'
 };
 var RTP_SAFETY_FACTOR = 5;
-
 function CmcdModel() {
   var dashManifestModel, instance, internalData, abrController, dashMetrics, playbackController, streamProcessors, _isStartup, _bufferLevelStarved, _initialMediaRequestsDone;
-
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-
   function setup() {
     dashManifestModel = Object(_dash_models_DashManifestModel__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-
     _resetInitialSettings();
   }
-
   function initialize() {
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
@@ -20395,23 +19127,18 @@ function CmcdModel() {
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
   }
-
   function setConfig(config) {
     if (!config) return;
-
     if (config.abrController) {
       abrController = config.abrController;
     }
-
     if (config.dashMetrics) {
       dashMetrics = config.dashMetrics;
     }
-
     if (config.playbackController) {
       playbackController = config.playbackController;
     }
   }
-
   function _resetInitialSettings() {
     internalData = {
       pr: 1,
@@ -20424,14 +19151,11 @@ function CmcdModel() {
     _bufferLevelStarved = {};
     _isStartup = {};
     _initialMediaRequestsDone = {};
-
     _updateStreamProcessors();
   }
-
   function _onPeriodSwitchComplete() {
     _updateStreamProcessors();
   }
-
   function _updateStreamProcessors() {
     if (!playbackController) return;
     var streamController = playbackController.getStreamController();
@@ -20441,16 +19165,12 @@ function CmcdModel() {
     if (!activeStream) return;
     streamProcessors = activeStream.getProcessors();
   }
-
   function getQueryParameter(request) {
     try {
       if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
         var cmcdData = _getCmcdData(request);
-
         var filteredCmcdData = _applyWhitelist(cmcdData);
-
         var finalPayloadString = _buildFinalString(filteredCmcdData);
-
         eventBus.trigger(_metrics_MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -20462,13 +19182,11 @@ function CmcdModel() {
           value: finalPayloadString
         };
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   function _applyWhitelist(cmcdData) {
     try {
       var enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
@@ -20482,17 +19200,13 @@ function CmcdModel() {
       return cmcdData;
     }
   }
-
   function _copyParameters(data, parameterNames) {
     var copiedData = {};
-
     var _iterator = _createForOfIteratorHelper(parameterNames),
-        _step;
-
+      _step;
     try {
       for (_iterator.s(); !(_step = _iterator.n()).done;) {
         var name = _step.value;
-
         if (data[name]) {
           copiedData[name] = data[name];
         }
@@ -20502,23 +19216,16 @@ function CmcdModel() {
     } finally {
       _iterator.f();
     }
-
     return copiedData;
   }
-
   function getHeaderParameters(request) {
     try {
       if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
         var cmcdData = _getCmcdData(request);
-
         var cmcdObjectHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['br', 'd', 'ot', 'tb']));
-
         var cmcdRequestHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']));
-
         var cmcdStatusHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bs', 'rtp']));
-
         var cmcdSessionHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['cid', 'pr', 'sf', 'sid', 'st', 'v']));
-
         var headers = {
           'CMCD-Object': _buildFinalString(cmcdObjectHeader),
           'CMCD-Request': _buildFinalString(cmcdRequestHeader),
@@ -20533,29 +19240,24 @@ function CmcdModel() {
         });
         return headers;
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   function _applyWhitelistByKeys(keys) {
     var enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
     return keys.filter(function (key) {
       return enabledCMCDKeys.includes(key);
     });
   }
-
   function _getCmcdData(request) {
     try {
       var cmcdData = null;
-
       if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_6__["HTTPRequest"].MPD_TYPE) {
         return _getCmcdDataForMpd(request);
       } else if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_6__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
         _initForMediaType(request.mediaType);
-
         return _getCmcdDataForMediaSegment(request);
       } else if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_6__["HTTPRequest"].INIT_SEGMENT_TYPE) {
         return _getCmcdDataForInitSegment(request);
@@ -20564,50 +19266,34 @@ function CmcdModel() {
       } else if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_6__["HTTPRequest"].LICENSE) {
         return _getCmcdDataForLicense(request);
       }
-
       return cmcdData;
     } catch (e) {
       return null;
     }
   }
-
   function _getCmcdDataForLicense(request) {
     var data = _getGenericCmcdData(request);
-
     data.ot = OBJECT_TYPES.ENCRYPTION_KEY;
     return data;
   }
-
   function _getCmcdDataForMpd() {
     var data = _getGenericCmcdData();
-
     data.ot = OBJECT_TYPES.MANIFEST;
     return data;
   }
-
   function _getCmcdDataForMediaSegment(request) {
     var data = _getGenericCmcdData();
-
     var encodedBitrate = _getBitrateByRequest(request);
-
     var d = _getObjectDurationByRequest(request);
-
     var mtp = _getMeasuredThroughputByType(request.mediaType);
-
     var dl = _getDeadlineByType(request.mediaType);
-
     var bl = _getBufferLevelByType(request.mediaType);
-
     var tb = _getTopBitrateByType(request.mediaType);
-
     var pr = internalData.pr;
-
     var nextRequest = _probeNextRequest(request.mediaType);
-
     var ot;
     if (request.mediaType === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO) ot = OBJECT_TYPES.VIDEO;
     if (request.mediaType === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) ot = OBJECT_TYPES.AUDIO;
-
     if (request.mediaType === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT) {
       if (request.mediaInfo.mimeType === 'application/mp4') {
         ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
@@ -20615,15 +19301,11 @@ function CmcdModel() {
         ot = OBJECT_TYPES.CAPTION;
       }
     }
-
     var rtp = settings.get().streaming.cmcd.rtp;
-
     if (!rtp) {
       rtp = _calculateRtp(request);
     }
-
     data.rtp = rtp;
-
     if (nextRequest) {
       if (request.url !== nextRequest.url) {
         data.nor = encodeURIComponent(_core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].getRelativeUrl(request.url, nextRequest.url));
@@ -20631,108 +19313,83 @@ function CmcdModel() {
         data.nrr = nextRequest.range;
       }
     }
-
     if (encodedBitrate) {
       data.br = encodedBitrate;
     }
-
     if (ot) {
       data.ot = ot;
     }
-
     if (!isNaN(d)) {
       data.d = d;
     }
-
     if (!isNaN(mtp)) {
       data.mtp = mtp;
     }
-
     if (!isNaN(dl)) {
       data.dl = dl;
     }
-
     if (!isNaN(bl)) {
       data.bl = bl;
     }
-
     if (!isNaN(tb)) {
       data.tb = tb;
     }
-
     if (!isNaN(pr) && pr !== 1) {
       data.pr = pr;
     }
-
     if (_bufferLevelStarved[request.mediaType]) {
       data.bs = true;
       _bufferLevelStarved[request.mediaType] = false;
     }
-
     if (_isStartup[request.mediaType] || !_initialMediaRequestsDone[request.mediaType]) {
       data.su = true;
       _isStartup[request.mediaType] = false;
       _initialMediaRequestsDone[request.mediaType] = true;
     }
-
     return data;
   }
-
   function _initForMediaType(mediaType) {
     if (!_initialMediaRequestsDone.hasOwnProperty(mediaType)) {
       _initialMediaRequestsDone[mediaType] = false;
     }
-
     if (!_isStartup.hasOwnProperty(mediaType)) {
       _isStartup[mediaType] = false;
     }
-
     if (!_bufferLevelStarved.hasOwnProperty(mediaType)) {
       _bufferLevelStarved[mediaType] = false;
     }
   }
-
   function _getCmcdDataForInitSegment() {
     var data = _getGenericCmcdData();
-
     data.ot = OBJECT_TYPES.INIT;
     data.su = true;
     return data;
   }
-
   function _getCmcdDataForOther() {
     var data = _getGenericCmcdData();
-
     data.ot = OBJECT_TYPES.OTHER;
     return data;
   }
-
   function _getGenericCmcdData() {
     var data = {};
     var cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
     data.v = CMCD_VERSION;
     data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
     data.sid = "".concat(data.sid);
-
     if (cid) {
       data.cid = "".concat(cid);
     }
-
     if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
       data.pr = internalData.pr;
     }
-
     if (internalData.st) {
       data.st = internalData.st;
     }
-
     if (internalData.sf) {
       data.sf = internalData.sf;
     }
-
     return data;
   }
-
   function _getBitrateByRequest(request) {
     try {
       var quality = request.quality;
@@ -20742,7 +19399,6 @@ function CmcdModel() {
       return null;
     }
   }
-
   function _getTopBitrateByType(mediaType) {
     try {
       var info = abrController.getTopBitrateInfoFor(mediaType);
@@ -20751,7 +19407,6 @@ function CmcdModel() {
       return null;
     }
   }
-
   function _getObjectDurationByRequest(request) {
     try {
       return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
@@ -20759,7 +19414,6 @@ function CmcdModel() {
       return null;
     }
   }
-
   function _getMeasuredThroughputByType(mediaType) {
     try {
       return parseInt(abrController.getThroughputHistory().getSafeAverageThroughput(mediaType) / 100) * 100;
@@ -20767,42 +19421,34 @@ function CmcdModel() {
       return null;
     }
   }
-
   function _getDeadlineByType(mediaType) {
     try {
       var playbackRate = internalData.pr;
       var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-
       if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
         return parseInt(bufferLevel / playbackRate * 10) * 100;
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   function _getBufferLevelByType(mediaType) {
     try {
       var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-
       if (!isNaN(bufferLevel)) {
         return parseInt(bufferLevel * 10) * 100;
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   function _onPlaybackRateChanged(data) {
     try {
       internalData.pr = data.playbackRate;
     } catch (e) {}
   }
-
   function _onManifestLoaded(data) {
     try {
       var isDynamic = dashManifestModel.getIsDynamic(data.data);
@@ -20812,7 +19458,6 @@ function CmcdModel() {
       internalData.sf = "".concat(sf);
     } catch (e) {}
   }
-
   function _onBufferLevelStateChanged(data) {
     try {
       if (data.state && data.mediaType) {
@@ -20820,7 +19465,6 @@ function CmcdModel() {
           if (!_bufferLevelStarved[data.mediaType]) {
             _bufferLevelStarved[data.mediaType] = true;
           }
-
           if (!_isStartup[data.mediaType]) {
             _isStartup[data.mediaType] = true;
           }
@@ -20828,65 +19472,55 @@ function CmcdModel() {
       }
     } catch (e) {}
   }
-
   function _onPlaybackSeeked() {
     for (var key in _bufferLevelStarved) {
       if (_bufferLevelStarved.hasOwnProperty(key)) {
         _bufferLevelStarved[key] = true;
       }
     }
-
     for (var _key in _isStartup) {
       if (_isStartup.hasOwnProperty(_key)) {
         _isStartup[_key] = true;
       }
     }
   }
-
   function _buildFinalString(cmcdData) {
     try {
       if (!cmcdData) {
         return null;
       }
-
       var keys = Object.keys(cmcdData).sort(function (a, b) {
         return a.localeCompare(b);
       });
       var length = keys.length;
       var cmcdString = keys.reduce(function (acc, key, index) {
         if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
-
         if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
           acc += "".concat(key, "=").concat(JSON.stringify(cmcdData[key]));
         } else {
           acc += "".concat(key, "=").concat(cmcdData[key]);
         }
-
         if (index < length - 1) {
           acc += ',';
         }
-
         return acc;
       }, '');
-      cmcdString = cmcdString.replace(/=true/g, ''); // Remove last comma at the end
+      cmcdString = cmcdString.replace(/=true/g, '');
 
+      // Remove last comma at the end
       cmcdString = cmcdString.replace(/,\s*$/, '');
       return cmcdString;
     } catch (e) {
       return null;
     }
   }
-
   function _probeNextRequest(mediaType) {
     if (!streamProcessors || streamProcessors.length === 0) return;
-
     var _iterator2 = _createForOfIteratorHelper(streamProcessors),
-        _step2;
-
+      _step2;
     try {
       for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
         var streamProcessor = _step2.value;
-
         if (streamProcessor.getType() === mediaType) {
           return streamProcessor.probeNextRequest();
         }
@@ -20897,27 +19531,22 @@ function CmcdModel() {
       _iterator2.f();
     }
   }
-
   function _calculateRtp(request) {
     // Get the values we need
     var playbackRate = playbackController.getPlaybackRate();
     if (!playbackRate) playbackRate = 1;
     var quality = request.quality,
-        mediaType = request.mediaType,
-        mediaInfo = request.mediaInfo,
-        duration = request.duration;
-
+      mediaType = request.mediaType,
+      mediaInfo = request.mediaInfo,
+      duration = request.duration;
     var currentBufferLevel = _getBufferLevelByType(mediaType);
-
     if (currentBufferLevel === 0) currentBufferLevel = 500;
-    var bitrate = mediaInfo.bitrateList[quality].bandwidth; // Calculate RTP
+    var bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
+    // Calculate RTP
     var segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
-
     var timeToLoad = currentBufferLevel / playbackRate / 1000; // Calculate time available to load file in seconds
-
     var minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-
     var rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
     var maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
@@ -20925,16 +19554,13 @@ function CmcdModel() {
 
     return rtp;
   }
-
   function reset() {
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].MANIFEST_LOADED, _onManifestLoaded, this);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-
     _resetInitialSettings();
   }
-
   instance = {
     getQueryParameter: getQueryParameter,
     getHeaderParameters: getHeaderParameters,
@@ -20945,7 +19571,6 @@ function CmcdModel() {
   setup();
   return instance;
 }
-
 CmcdModel.__dashjs_factory_name = 'CmcdModel';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_3__["default"].getSingletonFactory(CmcdModel));
 
@@ -21003,20 +19628,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var DEFAULT_XHR_WITH_CREDENTIALS = false;
-
 function CustomParametersModel() {
   var instance, utcTimingSources, xhrWithCredentials, licenseRequestFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, customAbrRules;
   var context = this.context;
   var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
-
   function setup() {
     xhrWithCredentials = {
       "default": DEFAULT_XHR_WITH_CREDENTIALS
     };
-
     _resetInitialSettings();
   }
-
   function _resetInitialSettings() {
     licenseRequestFilters = [];
     licenseResponseFilters = [];
@@ -21025,133 +19646,118 @@ function CustomParametersModel() {
     customInitialTrackSelectionFunction = null;
     utcTimingSources = [];
   }
-
   function reset() {
     _resetInitialSettings();
   }
-
   function setConfig() {}
+
   /**
    * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
    * @param {function} customFunc - the custom function that returns the initial track
    */
-
-
   function setCustomInitialTrackSelectionFunction(customFunc) {
     customInitialTrackSelectionFunction = customFunc;
   }
+
   /**
    * Resets the custom initial track selection
    */
-
-
   function resetCustomInitialTrackSelectionFunction() {
     customInitialTrackSelectionFunction = null;
   }
+
   /**
    * Returns the initial track selection function
    * @return {function}
    */
-
-
   function getCustomInitialTrackSelectionFunction() {
     return customInitialTrackSelectionFunction;
   }
+
   /**
    * Returns all license request filters
    * @return {array}
    */
-
-
   function getLicenseRequestFilters() {
     return licenseRequestFilters;
   }
+
   /**
    * Returns all license response filters
    * @return {array}
    */
-
-
   function getLicenseResponseFilters() {
     return licenseResponseFilters;
   }
+
   /**
    * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
    * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
    * The filters are applied in the order they are registered.
    * @param {function} filter - the license request filter callback
    */
-
-
   function registerLicenseRequestFilter(filter) {
     licenseRequestFilters.push(filter);
   }
+
   /**
    * Registers a license response filter. This enables application to manipulate/overwrite the response data
    * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
    * The filters are applied in the order they are registered.
    * @param {function} filter - the license response filter callback
    */
-
-
   function registerLicenseResponseFilter(filter) {
     licenseResponseFilters.push(filter);
   }
+
   /**
    * Unregisters a license request filter.
    * @param {function} filter - the license request filter callback
    */
-
-
   function unregisterLicenseRequestFilter(filter) {
     _unregisterFilter(licenseRequestFilters, filter);
   }
+
   /**
    * Unregisters a license response filter.
    * @param {function} filter - the license response filter callback
    */
-
-
   function unregisterLicenseResponseFilter(filter) {
     _unregisterFilter(licenseResponseFilters, filter);
   }
+
   /**
    * Returns all custom capabilities filter
    * @return {array}
    */
-
-
   function getCustomCapabilitiesFilters() {
     return customCapabilitiesFilters;
   }
+
   /**
    * Registers a custom capabilities filter. This enables application to filter representations to use.
    * The provided callback function shall return a boolean based on whether or not to use the representation.
    * The filters are applied in the order they are registered.
    * @param {function} filter - the custom capabilities filter callback
    */
-
-
   function registerCustomCapabilitiesFilter(filter) {
     customCapabilitiesFilters.push(filter);
   }
+
   /**
    * Unregisters a custom capabilities filter.
    * @param {function} filter - the custom capabilities filter callback
    */
-
-
   function unregisterCustomCapabilitiesFilter(filter) {
     _unregisterFilter(customCapabilitiesFilters, filter);
   }
+
   /**
    * Unregister a filter from the list of existing filers.
    * @param {array} filters
    * @param {function} filter
    * @private
    */
-
-
   function _unregisterFilter(filters, filter) {
     var index = -1;
     filters.some(function (item, i) {
@@ -21163,24 +19769,22 @@ function CustomParametersModel() {
     if (index < 0) return;
     filters.splice(index, 1);
   }
+
   /**
    * Iterate through the list of custom ABR rules and find the right rule by name
    * @param {string} rulename
    * @return {number} rule number
    */
-
-
   function _findAbrCustomRuleIndex(rulename) {
     var i;
-
     for (i = 0; i < customAbrRules.length; i++) {
       if (customAbrRules[i].rulename === rulename) {
         return i;
       }
     }
-
     return -1;
   }
+
   /**
    * Add a custom ABR Rule
    * Rule will be apply on next stream if a stream is being played
@@ -21190,15 +19794,11 @@ function CustomParametersModel() {
    * @param {object} rule - the rule object instance
    * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
    */
-
-
   function addAbrCustomRule(type, rulename, rule) {
     if (typeof type !== 'string' || type !== _rules_abr_ABRRulesCollection__WEBPACK_IMPORTED_MODULE_4__["default"].ABANDON_FRAGMENT_RULES && type !== _rules_abr_ABRRulesCollection__WEBPACK_IMPORTED_MODULE_4__["default"].QUALITY_SWITCH_RULES || typeof rulename !== 'string') {
       throw _constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].BAD_ARGUMENT_ERROR;
     }
-
     var index = _findAbrCustomRuleIndex(rulename);
-
     if (index === -1) {
       // add rule
       customAbrRules.push({
@@ -21212,18 +19812,16 @@ function CustomParametersModel() {
       customAbrRules[index].rule = rule;
     }
   }
+
   /**
    * Remove a custom ABR Rule
    *
    * @param {string} rulename - name of the rule to be removed
    */
-
-
   function removeAbrCustomRule(rulename) {
     if (rulename) {
-      var index = _findAbrCustomRuleIndex(rulename); //if no rulename custom rule has been found, do nothing
-
-
+      var index = _findAbrCustomRuleIndex(rulename);
+      //if no rulename custom rule has been found, do nothing
       if (index !== -1) {
         // remove rule
         customAbrRules.splice(index, 1);
@@ -21233,54 +19831,48 @@ function CustomParametersModel() {
       customAbrRules = [];
     }
   }
+
   /**
    * Remove all custom rules
    */
-
-
   function removeAllAbrCustomRule() {
     customAbrRules = [];
   }
+
   /**
    * Return all ABR custom rules
    * @return {array}
    */
-
-
   function getAbrCustomRules() {
     return customAbrRules;
   }
+
   /**
    * Add a UTC timing source at the top of the list
    * @param {string} schemeIdUri
    * @param {string} value
    */
-
-
   function addUTCTimingSource(schemeIdUri, value) {
     removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
-
     var vo = new _dash_vo_UTCTiming__WEBPACK_IMPORTED_MODULE_0__["default"]();
     vo.schemeIdUri = schemeIdUri;
     vo.value = value;
     utcTimingSources.push(vo);
   }
+
   /**
    * Return all UTC timing sources
    * @return {array}
    */
-
-
   function getUTCTimingSources() {
     return utcTimingSources;
   }
+
   /**
    * Remove a specific timing source from the array
    * @param {string} schemeIdUri
    * @param {string} value
    */
-
-
   function removeUTCTimingSource(schemeIdUri, value) {
     Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_3__["checkParameterType"])(schemeIdUri, 'string');
     Object(_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_3__["checkParameterType"])(value, 'string');
@@ -21290,24 +19882,21 @@ function CustomParametersModel() {
       }
     });
   }
+
   /**
    * Remove all timing sources
    */
-
-
   function clearDefaultUTCTimingSources() {
     utcTimingSources = [];
   }
+
   /**
    * Add the default timing source to the list
    */
-
-
   function restoreDefaultUTCTimingSources() {
     var defaultUtcTimingSource = settings.get().streaming.utcSynchronization.defaultTimingSource;
     addUTCTimingSource(defaultUtcTimingSource.scheme, defaultUtcTimingSource.value);
   }
-
   function setXHRWithCredentialsForType(type, value) {
     if (!type) {
       Object.keys(xhrWithCredentials).forEach(function (key) {
@@ -21317,12 +19906,10 @@ function CustomParametersModel() {
       xhrWithCredentials[type] = !!value;
     }
   }
-
   function getXHRWithCredentialsForType(type) {
     var useCreds = xhrWithCredentials[type];
     return useCreds === undefined ? xhrWithCredentials["default"] : useCreds;
   }
-
   instance = {
     getCustomInitialTrackSelectionFunction: getCustomInitialTrackSelectionFunction,
     setCustomInitialTrackSelectionFunction: setCustomInitialTrackSelectionFunction,
@@ -21353,7 +19940,6 @@ function CustomParametersModel() {
   setup();
   return instance;
 }
-
 CustomParametersModel.__dashjs_factory_name = 'CustomParametersModel';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(CustomParametersModel));
 
@@ -21402,11 +19988,11 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 var FRAGMENT_MODEL_LOADING = 'loading';
 var FRAGMENT_MODEL_EXECUTED = 'executed';
 var FRAGMENT_MODEL_CANCELED = 'canceled';
 var FRAGMENT_MODEL_FAILED = 'failed';
-
 function FragmentModel(config) {
   config = config || {};
   var eventBus = config.eventBus;
@@ -21417,7 +20003,6 @@ function FragmentModel(config) {
   var streamInfo = config.streamInfo;
   var type = config.type;
   var instance, logger, executedRequests, loadingRequests;
-
   function setup() {
     logger = debug.getLogger(instance);
     resetInitialSettings();
@@ -21425,28 +20010,22 @@ function FragmentModel(config) {
     eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
     eventBus.on(events.LOADING_ABANDONED, onLoadingAborted, instance);
   }
-
   function getStreamId() {
     return streamInfo.id;
   }
-
   function getType() {
     return type;
   }
-
   function isFragmentLoaded(request) {
     var isEqualComplete = function isEqualComplete(req1, req2) {
       return req1.action === _vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_1__["default"].ACTION_COMPLETE && req1.action === req2.action;
     };
-
     var isEqualMedia = function isEqualMedia(req1, req2) {
       return !isNaN(req1.index) && req1.startTime === req2.startTime && req1.adaptationIndex === req2.adaptationIndex && req1.type === req2.type;
     };
-
     var isEqualInit = function isEqualInit(req1, req2) {
       return isNaN(req1.index) && isNaN(req2.index) && req1.quality === req2.quality;
     };
-
     var check = function check(requests) {
       var isLoaded = false;
       requests.some(function (req) {
@@ -21457,33 +20036,31 @@ function FragmentModel(config) {
       });
       return isLoaded;
     };
-
     if (!request) {
       return false;
     }
-
     return check(executedRequests);
   }
-
   function isFragmentLoadedOrPending(request) {
     var isLoaded = false;
     var i = 0;
-    var req; // First, check if the fragment has already been loaded
+    var req;
 
-    isLoaded = isFragmentLoaded(request); // Then, check if the fragment is about to be loeaded
+    // First, check if the fragment has already been loaded
+    isLoaded = isFragmentLoaded(request);
 
+    // Then, check if the fragment is about to be loeaded
     if (!isLoaded) {
       for (i = 0; i < loadingRequests.length; i++) {
         req = loadingRequests[i];
-
         if (request.url === req.url && request.startTime === req.startTime) {
           isLoaded = true;
         }
       }
     }
-
     return isLoaded;
   }
+
   /**
    *
    * Gets an array of {@link FragmentRequest} objects
@@ -21497,8 +20074,6 @@ function FragmentModel(config) {
    * @returns {Array}
    * @memberof FragmentModel#
    */
-
-
   function getRequests(filter) {
     var states = filter ? filter.state instanceof Array ? filter.state : [filter.state] : [];
     var filteredRequests = [];
@@ -21508,60 +20083,50 @@ function FragmentModel(config) {
     });
     return filteredRequests;
   }
-
   function getRequestThreshold(req) {
     return isNaN(req.duration) ? 0.25 : Math.min(req.duration / 8, 0.5);
   }
-
   function removeExecutedRequestsBeforeTime(time) {
     executedRequests = executedRequests.filter(function (req) {
       var threshold = getRequestThreshold(req);
       return isNaN(req.startTime) || (time !== undefined ? req.startTime >= time - threshold : false);
     });
   }
-
   function removeExecutedRequestsAfterTime(time) {
     executedRequests = executedRequests.filter(function (req) {
       return isNaN(req.startTime) || (time !== undefined ? req.startTime < time : false);
     });
   }
-
   function removeExecutedRequestsInTimeRange(start, end) {
     if (end <= start + 0.5) {
       return;
     }
-
     executedRequests = executedRequests.filter(function (req) {
       var threshold = getRequestThreshold(req);
       return isNaN(req.startTime) || req.startTime >= end - threshold || isNaN(req.duration) || req.startTime + req.duration <= start + threshold;
     });
-  } // Remove requests that are not "represented" by any of buffered ranges
+  }
 
-
+  // Remove requests that are not "represented" by any of buffered ranges
   function syncExecutedRequestsWithBufferedRange(bufferedRanges, streamDuration) {
     if (!bufferedRanges || bufferedRanges.length === 0) {
       removeExecutedRequestsBeforeTime();
       return;
     }
-
     var start = 0;
-
     for (var i = 0, ln = bufferedRanges.length; i < ln; i++) {
       removeExecutedRequestsInTimeRange(start, bufferedRanges.start(i));
       start = bufferedRanges.end(i);
     }
-
     if (streamDuration > 0) {
       removeExecutedRequestsInTimeRange(start, streamDuration);
     }
   }
-
   function abortRequests() {
     logger.debug('abort requests');
     fragmentLoader.abort();
     loadingRequests = [];
   }
-
   function executeRequest(request) {
     switch (request.action) {
       case _vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_1__["default"].ACTION_DOWNLOAD:
@@ -21569,12 +20134,10 @@ function FragmentModel(config) {
         loadingRequests.push(request);
         loadCurrentFragment(request);
         break;
-
       default:
         logger.warn('Unknown request action.');
     }
   }
-
   function loadCurrentFragment(request) {
     eventBus.trigger(events.FRAGMENT_LOADING_STARTED, {
       request: request
@@ -21584,73 +20147,57 @@ function FragmentModel(config) {
     });
     fragmentLoader.load(request);
   }
-
   function getRequestForTime(arr, time, threshold) {
     // loop through the executed requests and pick the one for which the playback interval matches the given time
     var lastIdx = arr.length - 1;
-
     for (var i = lastIdx; i >= 0; i--) {
       var req = arr[i];
       var start = req.startTime;
       var end = start + req.duration;
       threshold = !isNaN(threshold) ? threshold : getRequestThreshold(req);
-
       if (!isNaN(start) && !isNaN(end) && time + threshold >= start && time - threshold < end || isNaN(start) && isNaN(time)) {
         return req;
       }
     }
-
     return null;
   }
-
   function filterRequests(arr, filter) {
     // for time use a specific filtration function
     if (filter.hasOwnProperty('time')) {
       return [getRequestForTime(arr, filter.time, filter.threshold)];
     }
-
     return arr.filter(function (request) {
       for (var prop in filter) {
         if (prop === 'state') continue;
         if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
       }
-
       return true;
     });
   }
-
   function getRequestsForState(state) {
     var requests;
-
     switch (state) {
       case FRAGMENT_MODEL_LOADING:
         requests = loadingRequests;
         break;
-
       case FRAGMENT_MODEL_EXECUTED:
         requests = executedRequests;
         break;
-
       default:
         requests = [];
     }
-
     return requests;
   }
-
   function addSchedulingInfoMetrics(request, state) {
     dashMetrics.addSchedulingInfo(request, state);
     dashMetrics.addRequestsQueue(request.mediaType, loadingRequests, executedRequests);
   }
-
   function onLoadingCompleted(e) {
     if (e.sender !== fragmentLoader) return;
     loadingRequests.splice(loadingRequests.indexOf(e.request), 1);
-
     if (e.response && !e.error) {
       executedRequests.push(e.request);
     }
-
     addSchedulingInfoMetrics(e.request, e.error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
     eventBus.trigger(events.FRAGMENT_LOADING_COMPLETED, {
       request: e.request,
@@ -21662,7 +20209,6 @@ function FragmentModel(config) {
       mediaType: type
     });
   }
-
   function onLoadingInProgress(e) {
     if (e.sender !== fragmentLoader) return;
     eventBus.trigger(events.FRAGMENT_LOADING_PROGRESS, {
@@ -21675,7 +20221,6 @@ function FragmentModel(config) {
       mediaType: type
     });
   }
-
   function onLoadingAborted(e) {
     if (e.sender !== fragmentLoader) return;
     eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, {
@@ -21685,28 +20230,22 @@ function FragmentModel(config) {
       mediaType: type
     });
   }
-
   function resetInitialSettings() {
     executedRequests = [];
     loadingRequests = [];
   }
-
   function reset() {
     eventBus.off(events.LOADING_COMPLETED, onLoadingCompleted, this);
     eventBus.off(events.LOADING_DATA_PROGRESS, onLoadingInProgress, this);
     eventBus.off(events.LOADING_ABANDONED, onLoadingAborted, this);
-
     if (fragmentLoader) {
       fragmentLoader.reset();
     }
-
     resetInitialSettings();
   }
-
   function addExecutedRequest(request) {
     executedRequests.push(request);
   }
-
   instance = {
     getStreamId: getStreamId,
     getType: getType,
@@ -21725,7 +20264,6 @@ function FragmentModel(config) {
   setup();
   return instance;
 }
-
 FragmentModel.__dashjs_factory_name = 'FragmentModel';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(FragmentModel);
 factory.FRAGMENT_MODEL_LOADING = FRAGMENT_MODEL_LOADING;
@@ -21780,10 +20318,9 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
-
 function LowLatencyThroughputModel() {
-  var LLTM_MAX_MEASUREMENTS = 10; // factor (<1) is used to reduce the real needed download time when at very bleeding live edge
-
+  var LLTM_MAX_MEASUREMENTS = 10;
+  // factor (<1) is used to reduce the real needed download time when at very bleeding live edge
   var LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR = 0.8;
   var LLTM_OPTIMISTIC_ESTIMATE_FACTOR = 0.6;
   var LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE = 1.05;
@@ -21792,17 +20329,15 @@ function LowLatencyThroughputModel() {
   var instance;
   var logger;
   var measurements = {};
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance().getLogger(instance);
   }
+
   /**
    * Linear regression with least squares method to get a trend function for buffer lavel at chunk receive timestamps
    * @param {*} chunkMeasurements
    * @returns linear trend function
    */
-
-
   function createBufferLevelTrendFunction(chunkMeasurements) {
     var result = {};
     var sumX = 0;
@@ -21810,21 +20345,18 @@ function LowLatencyThroughputModel() {
     var sumXY = 0;
     var sumXSq = 0;
     var N = chunkMeasurements.length;
-
     for (var i = 0; i < N; ++i) {
       sumX += chunkMeasurements[i].chunkDownloadTimeRelativeMS;
       sumY += chunkMeasurements[i].bufferLevel;
       sumXY += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].bufferLevel;
       sumXSq += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].chunkDownloadTimeRelativeMS;
     }
-
     result.m = (sumXY - sumX * sumY / N) / (sumXSq - sumX * sumX / N);
     result.b = sumY / N - result.m * sumX / N;
     return function (x) {
       return result.m * x + result.b;
     };
   }
-
   function isBufferSafeAndStable(lastMeasurements) {
     var isBufferSafeAndStable = true;
     var lastBitrate;
@@ -21835,14 +20367,14 @@ function LowLatencyThroughputModel() {
       // inner segment buffer stability
       if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95) {
         isBufferSafeAndStable = false;
-      } // inter segment buffer stability
+      }
 
-
+      // inter segment buffer stability
       if (m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegements < 0.8) {
         isBufferSafeAndStable = false;
-      } // representation bitrate remained at least constant
+      }
 
-
+      // representation bitrate remained at least constant
       if (!lastBitrate) {
         lastBitrate = m.bitrate;
       } else if (lastBitrate > m.bitrate) {
@@ -21851,96 +20383,90 @@ function LowLatencyThroughputModel() {
     });
     return isBufferSafeAndStable;
   }
+
   /**
    * Based on the MPD, timing and buffer information of the last recent segments and their chunks
    * the most stable download time (in milliseconds) is calculated.
    * @param {*} request HTTPLoader request object
    * @returns download time in milliseconds of last fetched segment
    */
-
-
   function getEstimatedDownloadDurationMS(request) {
     var lastMeasurement = measurements[request.mediaType].slice(-1).pop();
-    var lastThreeMeasurements = measurements[request.mediaType].slice(-3); // calculate and remember the buffer level trend during the last fetched segment
+    var lastThreeMeasurements = measurements[request.mediaType].slice(-3);
 
+    // calculate and remember the buffer level trend during the last fetched segment
     var lastChunkRelativeTimeMS = lastMeasurement.chunkMeasurements.slice(-1).pop().chunkDownloadTimeRelativeMS;
     lastMeasurement.bufferLevelAtSegmentStart = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS / 2);
     lastMeasurement.bufferLevelAtSegmentEnd = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS);
     var isBufferStable = isBufferSafeAndStable(lastThreeMeasurements);
-    var selectedOptimisticFactor = isBufferStable ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR; // fetch duration was longer than segment duration, but buffer was stable
+    var selectedOptimisticFactor = isBufferStable ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
 
+    // fetch duration was longer than segment duration, but buffer was stable
     if (lastMeasurement.isBufferStable && lastMeasurement.segDurationMS * LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE < lastMeasurement.fetchDownloadDurationMS) {
       return lastMeasurement.fetchDownloadDurationMS;
-    } // buffer is drying or fetch took too long
-
-
+    }
+    // buffer is drying or fetch took too long
     if (!isBufferStable || lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
       return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
-    } // did we requested a fully available segment? -> most accurate throughput calculation
+    }
+
+    // did we requested a fully available segment? -> most accurate throughput calculation
     // we use adjusted availability start time to decide
     // Note: this "download mode" usually happens at startup and if requests are delayed artificially
-
-
     if (lastMeasurement.adjustedAvailabilityStartTimeMS <= lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS - lastMeasurement.segDurationMS) {
       return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
-    } // get all chunks that have been downloaded before fetch reached bleeding live edge
+    }
+
+    // get all chunks that have been downloaded before fetch reached bleeding live edge
     // the remaining chunks loaded at production rate we will approximated
-
-
     var chunkAvailablePeriod = lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS - lastMeasurement.adjustedAvailabilityStartTimeMS;
     var chunkBytesBBLE = 0; // BBLE -> Before bleeding live edge
-
     var chunkDownloadtimeMSBBLE = 0;
     var chunkCount = 0;
-
     for (var index = 0; index < lastMeasurement.chunkMeasurements.length; index++) {
       var chunk = lastMeasurement.chunkMeasurements[index];
-
       if (chunkAvailablePeriod < chunkDownloadtimeMSBBLE + chunk.chunkDownloadDurationMS) {
         break;
       }
-
       chunkDownloadtimeMSBBLE += chunk.chunkDownloadDurationMS;
       chunkBytesBBLE += chunk.chunkBytes;
       chunkCount++;
     }
-
     if (chunkAvailablePeriod < 0) {
       logger.warn('request time was before adjusted availibitly start time');
-    } // there have to be some chunks available (20% of max count)
+    }
+
+    // there have to be some chunks available (20% of max count)
     // otherwise we are at bleeding live edge and the few chunks are insufficient to estimate correctly
-
-
     if (chunkBytesBBLE && chunkDownloadtimeMSBBLE && chunkCount > lastMeasurement.chunkMeasurements.length * 0.2) {
       var downloadThroughput = chunkBytesBBLE / chunkDownloadtimeMSBBLE; // bytes per millesecond
-
-      var estimatedDownloadtimeMS = lastMeasurement.segmentBytes / downloadThroughput; // if real download was shorter then report this incl. semi optimistical estimate factor
-
+      var estimatedDownloadtimeMS = lastMeasurement.segmentBytes / downloadThroughput;
+      // if real download was shorter then report this incl. semi optimistical estimate factor
       if (lastMeasurement.fetchDownloadDurationMS < estimatedDownloadtimeMS) {
         return lastMeasurement.fetchDownloadDurationMS * selectedOptimisticFactor;
       }
-
       return estimatedDownloadtimeMS * selectedOptimisticFactor;
-    } // when we are to tight at live edge and it's stable then
+    }
+
+    // when we are to tight at live edge and it's stable then
     // we start to optimistically estimate download time
     // in such a way that a switch to next rep will be possible
     // optimistical estimate: assume download was fast enough for next higher rendition
-
-
     var nextHigherBitrate = lastMeasurement.bitrate;
     lastMeasurement.bitrateList.some(function (b) {
       if (b.bandwidth > lastMeasurement.bitrate) {
         nextHigherBitrate = b.bandwidth;
         return true;
       }
-    }); // already highest bitrate?
+    });
+    // already highest bitrate?
 
     if (nextHigherBitrate === lastMeasurement.bitrate) {
       return lastMeasurement.fetchDownloadDurationMS * selectedOptimisticFactor;
     }
-
     return selectedOptimisticFactor * lastMeasurement.segmentBytes * 8 * 1000 / nextHigherBitrate;
   }
+
   /**
    * Get calculated value for a safe artificial delay of the next request to allow to accumulate some chunks.
    * This allows better line throughput measurement.
@@ -21948,23 +20474,21 @@ function LowLatencyThroughputModel() {
    * @param {*} currentBufferLevel current buffer level in milliseconds
    * @returns delay in milliseconds
    */
-
-
   function getThroughputCapacityDelayMS(request, currentBufferLevelMS) {
     var lastThreeMeasurements = measurements[request.mediaType] && measurements[request.mediaType].slice(-3);
-
     if (!lastThreeMeasurements || lastThreeMeasurements.length < 3) {
       return 0;
-    } // in case not stable buffer, no artificially delay for the next request
+    }
 
-
+    // in case not stable buffer, no artificially delay for the next request
     if (!isBufferSafeAndStable(lastThreeMeasurements)) {
       return 0;
-    } // allowed artificial delay is the min of quater of buffer level in milliseconds and LLTM_MAX_DELAY_MS
+    }
 
-
+    // allowed artificial delay is the min of quater of buffer level in milliseconds and LLTM_MAX_DELAY_MS
     return currentBufferLevelMS / 4 > LLTM_MAX_DELAY_MS ? LLTM_MAX_DELAY_MS : currentBufferLevelMS / 4;
   }
+
   /**
    * Add some measurement data for bookkeeping and being able to derive decisions on estimated throughput.
    * @param {*} request HTTPLoader object to get MPD and media info from
@@ -21973,13 +20497,10 @@ function LowLatencyThroughputModel() {
    * @param {*} requestTimeMS Timestamp at which the fetch was initiated
    * @param {*} throughputCapacityDelayMS An artificial delay that was used for this request
    */
-
-
   function addMeasurement(request, fetchDownloadDurationMS, chunkMeasurements, requestTimeMS, throughputCapacityDelayMS) {
     if (request && request.mediaType && !measurements[request.mediaType]) {
       measurements[request.mediaType] = [];
     }
-
     var bitrateEntry = request.mediaInfo.bitrateList.find(function (item) {
       return item.id === request.representationId;
     });
@@ -22002,14 +20523,12 @@ function LowLatencyThroughputModel() {
       fetchDownloadDurationMS: fetchDownloadDurationMS,
       throughputCapacityDelayMS: throughputCapacityDelayMS,
       getEstimatedBufferLevel: createBufferLevelTrendFunction(chunkMeasurements.slice(1)) // don't use first chunk's buffer level
-
-    }); // maintain only a maximum amount of most recent measurements
-
+    });
+    // maintain only a maximum amount of most recent measurements
     if (measurements[request.mediaType].length > LLTM_MAX_MEASUREMENTS) {
       measurements[request.mediaType].shift();
     }
   }
-
   instance = {
     setup: setup,
     addMeasurement: addMeasurement,
@@ -22019,7 +20538,6 @@ function LowLatencyThroughputModel() {
   setup();
   return instance;
 }
-
 LowLatencyThroughputModel.__dashjs_factory_name = 'LowLatencyThroughputModel';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(LowLatencyThroughputModel));
 
@@ -22039,19 +20557,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _utils_RequestModifier__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/RequestModifier */ "./src/streaming/utils/RequestModifier.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
+function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) { ; } } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -22086,13 +20597,14 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
+
+
 /**
  * @module FetchLoader
  * @ignore
  * @description Manages download of resources via HTTP using fetch.
  * @param {Object} cfg - dependencies from parent
  */
-
 function FetchLoader(cfg) {
   cfg = cfg || {};
   var context = this.context;
@@ -22101,11 +20613,9 @@ function FetchLoader(cfg) {
   var boxParser = cfg.boxParser;
   var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
   var instance, dashMetrics;
-
   function setup(cfg) {
     dashMetrics = cfg.dashMetrics;
   }
-
   function load(httpRequest) {
     if (requestModifier && requestModifier.modifyRequest) {
       Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_3__["modifyRequest"])(httpRequest, requestModifier).then(function () {
@@ -22115,32 +20625,25 @@ function FetchLoader(cfg) {
       request(httpRequest);
     }
   }
-
   function request(httpRequest) {
     // Variables will be used in the callback functions
     var requestStartTime = new Date();
     var request = httpRequest.request;
-    var headers = new Headers();
-    /*jshint ignore:line*/
-
+    var headers = new Headers(); /*jshint ignore:line*/
     if (request.range) {
       headers.append('Range', 'bytes=' + request.range);
     }
-
     if (httpRequest.headers) {
       for (var header in httpRequest.headers) {
         var value = httpRequest.headers[header];
-
         if (value) {
           headers.append(header, value);
         }
       }
     }
-
     if (!request.requestStartDate) {
       request.requestStartDate = requestStartTime;
     }
-
     if (requestModifier && requestModifier.modifyRequestHeader) {
       // modifyRequestHeader expects a XMLHttpRequest object so,
       // to keep backward compatibility, we should expose a setRequestHeader method
@@ -22154,17 +20657,12 @@ function FetchLoader(cfg) {
         url: httpRequest.url
       });
     }
-
     var abortController;
-
     if (typeof window.AbortController === 'function') {
-      abortController = new AbortController();
-      /*jshint ignore:line*/
-
+      abortController = new AbortController(); /*jshint ignore:line*/
       httpRequest.abortController = abortController;
       abortController.signal.onabort = httpRequest.onabort;
     }
-
     var reqOptions = {
       method: httpRequest.method,
       headers: headers,
@@ -22177,14 +20675,12 @@ function FetchLoader(cfg) {
     new Promise(function (resolve) {
       if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
         throughputCapacityDelayMS = lowLatencyThroughputModel.getThroughputCapacityDelayMS(request, dashMetrics.getCurrentBufferLevel(request.mediaType) * 1000);
-
         if (throughputCapacityDelayMS) {
           // safely delay the "fetch" call a bit to be able to meassure the throughput capacity of the line.
           // this will lead to first few chunks downloaded at max network speed
           return setTimeout(resolve, throughputCapacityDelayMS);
         }
       }
-
       resolve();
     }).then(function () {
       var markBeforeFetch = Date.now();
@@ -22192,20 +20688,15 @@ function FetchLoader(cfg) {
         if (!httpRequest.response) {
           httpRequest.response = {};
         }
-
         httpRequest.response.status = response.status;
         httpRequest.response.statusText = response.statusText;
         httpRequest.response.responseURL = response.url;
-
         if (!response.ok) {
           httpRequest.onerror();
         }
-
         var responseHeaders = '';
-
         var _iterator = _createForOfIteratorHelper(response.headers.keys()),
-            _step;
-
+          _step;
         try {
           for (_iterator.s(); !(_step = _iterator.n()).done;) {
             var key = _step.value;
@@ -22216,9 +20707,7 @@ function FetchLoader(cfg) {
         } finally {
           _iterator.f();
         }
-
         httpRequest.response.responseHeaders = responseHeaders;
-
         if (!response.body) {
           // Fetch returning a ReadableStream response body is not currently supported by all browsers.
           // Browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
@@ -22236,13 +20725,11 @@ function FetchLoader(cfg) {
             return;
           });
         }
-
         var totalBytes = parseInt(response.headers.get('Content-Length'), 10);
         var bytesReceived = 0;
         var signaledFirstByte = false;
         var remaining = new Uint8Array();
         var offset = 0;
-
         if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
           var fetchMeassurement = function fetchMeassurement(stream) {
             var reader = stream.getReader();
@@ -22251,7 +20738,6 @@ function FetchLoader(cfg) {
               var value = args.value;
               var done = args.done;
               markB = Date.now();
-
               if (value && value.length) {
                 var chunkDownloadDurationMS = markB - markA;
                 var chunkBytes = value.length;
@@ -22263,7 +20749,6 @@ function FetchLoader(cfg) {
                   bufferLevel: dashMetrics.getCurrentBufferLevel(request.mediaType)
                 });
               }
-
               if (done) {
                 var fetchDuration = markB - markBeforeFetch;
                 var bytesAllChunks = measurement.reduce(function (prev, curr) {
@@ -22279,37 +20764,29 @@ function FetchLoader(cfg) {
                 });
                 return;
               }
-
               markA = Date.now();
               return reader.read().then(processFetch);
             });
           }; // tee'ing streams is supported by all current major browsers
           // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/tee
-
-
           var markA = markBeforeFetch;
           var markB = 0;
-
           var _response$body$tee = response.body.tee(),
-              _response$body$tee2 = _slicedToArray(_response$body$tee, 2),
-              forMeasure = _response$body$tee2[0],
-              forConsumer = _response$body$tee2[1];
-
+            _response$body$tee2 = _slicedToArray(_response$body$tee, 2),
+            forMeasure = _response$body$tee2[0],
+            forConsumer = _response$body$tee2[1];
           fetchMeassurement(forMeasure);
           httpRequest.reader = forConsumer.getReader();
         } else {
           httpRequest.reader = response.body.getReader();
         }
-
         var downloadedData = [];
         var startTimeData = [];
         var endTimeData = [];
         var lastChunkWasFinished = true;
-
         var processResult = function processResult(_ref) {
           var value = _ref.value,
-              done = _ref.done;
-
+            done = _ref.done;
           // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
           if (done) {
             if (remaining) {
@@ -22319,17 +20796,14 @@ function FetchLoader(cfg) {
                 // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
                 var calculatedThroughput = null;
                 var calculatedTime = null;
-
                 if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                   calculatedThroughput = calculateThroughputByChunkData(startTimeData, endTimeData);
-
                   if (calculatedThroughput) {
                     calculatedTime = bytesReceived * 8 / calculatedThroughput;
                   }
                 } else if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA) {
                   calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                 }
-
                 httpRequest.progress({
                   loaded: bytesReceived,
                   total: isNaN(totalBytes) ? bytesReceived : totalBytes,
@@ -22338,15 +20812,12 @@ function FetchLoader(cfg) {
                   stream: true
                 });
               }
-
               httpRequest.response.response = remaining.buffer;
             }
-
             httpRequest.onload();
             httpRequest.onend();
             return;
           }
-
           if (value && value.length > 0) {
             remaining = concatTypedArray(remaining, value);
             bytesReceived += value.length;
@@ -22354,54 +20825,47 @@ function FetchLoader(cfg) {
               ts: Date.now(),
               bytes: value.length
             });
-
             if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && lastChunkWasFinished) {
               // Parse the payload and capture the the 'moof' box
               var _boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], remaining, offset);
-
               if (_boxesInfo.found) {
                 // Store the beginning time of each chunk download in array StartTimeData
                 lastChunkWasFinished = false;
                 startTimeData.push({
                   ts: performance.now(),
-
                   /* jshint ignore:line */
                   bytes: value.length
                 });
               }
             }
-
             var boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
-
             if (boxesInfo.found) {
-              var end = boxesInfo.lastCompletedOffset + boxesInfo.size; // Store the end time of each chunk download  with its size in array EndTimeData
+              var end = boxesInfo.lastCompletedOffset + boxesInfo.size;
 
+              // Store the end time of each chunk download  with its size in array EndTimeData
               if (calculationMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && !lastChunkWasFinished) {
                 lastChunkWasFinished = true;
                 endTimeData.push({
                   ts: performance.now(),
-
                   /* jshint ignore:line */
                   bytes: remaining.length
                 });
-              } // If we are going to pass full buffer, avoid copying it and pass
+              }
+
+              // If we are going to pass full buffer, avoid copying it and pass
               // complete buffer. Otherwise clone the part of the buffer that is completed
               // and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
               // keeps a reference to the original data
-
-
               var data;
-
               if (end === remaining.length) {
                 data = remaining;
                 remaining = new Uint8Array();
               } else {
                 data = new Uint8Array(remaining.subarray(0, end));
                 remaining = remaining.subarray(end);
-              } // Announce progress but don't track traces. Throughput measures are quite unstable
+              }
+              // Announce progress but don't track traces. Throughput measures are quite unstable
               // when they are based in small amount of data
-
-
               httpRequest.progress({
                 data: data.buffer,
                 lengthComputable: false,
@@ -22409,9 +20873,9 @@ function FetchLoader(cfg) {
               });
               offset = 0;
             } else {
-              offset = boxesInfo.lastCompletedOffset; // Call progress so it generates traces that will be later used to know when the first byte
+              offset = boxesInfo.lastCompletedOffset;
+              // Call progress so it generates traces that will be later used to know when the first byte
               // were received
-
               if (!signaledFirstByte) {
                 httpRequest.progress({
                   lengthComputable: false,
@@ -22421,10 +20885,8 @@ function FetchLoader(cfg) {
               }
             }
           }
-
           read(httpRequest, processResult);
         };
-
         read(httpRequest, processResult);
       })["catch"](function (e) {
         if (httpRequest.onerror) {
@@ -22433,7 +20895,6 @@ function FetchLoader(cfg) {
       });
     });
   }
-
   function read(httpRequest, processResult) {
     httpRequest.reader.read().then(processResult)["catch"](function (e) {
       if (httpRequest.onerror && httpRequest.response.status === 200) {
@@ -22442,18 +20903,15 @@ function FetchLoader(cfg) {
       }
     });
   }
-
   function concatTypedArray(remaining, data) {
     if (remaining.length === 0) {
       return data;
     }
-
     var result = new Uint8Array(remaining.length + data.length);
     result.set(remaining);
     result.set(data, remaining.length);
     return result;
   }
-
   function abort(request) {
     if (request.abortController) {
       // For firefox and edge
@@ -22463,25 +20921,23 @@ function FetchLoader(cfg) {
       try {
         request.reader.cancel();
         request.onabort();
-      } catch (e) {// throw exceptions (TypeError) when reader was previously closed,
+      } catch (e) {
+        // throw exceptions (TypeError) when reader was previously closed,
         // for example, because a network issue
       }
     }
   }
-
   function calculateDownloadedTime(downloadedData, bytesReceived) {
     try {
       downloadedData = downloadedData.filter(function (data) {
         return data.bytes > bytesReceived / 4 / downloadedData.length;
       });
-
       if (downloadedData.length > 1) {
         var time = 0;
         var avgTimeDistance = (downloadedData[downloadedData.length - 1].ts - downloadedData[0].ts) / downloadedData.length;
         downloadedData.forEach(function (data, index) {
           // To be counted the data has to be over a threshold
           var next = downloadedData[index + 1];
-
           if (next) {
             var distance = next.ts - data.ts;
             time += distance < avgTimeDistance ? distance : 0;
@@ -22489,42 +20945,36 @@ function FetchLoader(cfg) {
         });
         return time;
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   function calculateThroughputByChunkData(startTimeData, endTimeData) {
     try {
-      var datum, datumE; // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-
+      var datum, datumE;
+      // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
       datum = startTimeData.filter(function (data, i) {
         return i < startTimeData.length - 1;
       });
       datumE = endTimeData.filter(function (dataE, i) {
         return i < endTimeData.length - 1;
       });
-      var chunkThroughputs = []; // Compute the average throughput of the filtered chunk data
-
+      var chunkThroughputs = [];
+      // Compute the average throughput of the filtered chunk data
       if (datum.length > 1) {
         var shortDurationBytesReceived = 0;
         var shortDurationStartTime = 0;
-
         for (var i = 0; i < datum.length; i++) {
           if (datum[i] && datumE[i]) {
             var chunkDownloadTime = datumE[i].ts - datum[i].ts;
-
             if (chunkDownloadTime > 1) {
               chunkThroughputs.push(8 * datumE[i].bytes / chunkDownloadTime);
             } else {
               if (shortDurationStartTime === 0) {
                 shortDurationStartTime = datum[i].ts;
               }
-
               var cumulatedChunkDownloadTime = datumE[i].ts - shortDurationStartTime;
-
               if (cumulatedChunkDownloadTime > 1) {
                 chunkThroughputs.push(8 * shortDurationBytesReceived / cumulatedChunkDownloadTime);
                 shortDurationBytesReceived = 0;
@@ -22536,7 +20986,6 @@ function FetchLoader(cfg) {
             }
           }
         }
-
         if (chunkThroughputs.length > 0) {
           var sumOfChunkThroughputs = chunkThroughputs.reduce(function (a, b) {
             return a + b;
@@ -22544,13 +20993,11 @@ function FetchLoader(cfg) {
           return sumOfChunkThroughputs / chunkThroughputs.length;
         }
       }
-
       return null;
     } catch (e) {
       return null;
     }
   }
-
   instance = {
     load: load,
     abort: abort,
@@ -22559,7 +21006,6 @@ function FetchLoader(cfg) {
   };
   return instance;
 }
-
 FetchLoader.__dashjs_factory_name = 'FetchLoader';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(FetchLoader);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -22589,8 +21035,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _models_LowLatencyThroughputModel__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../models/LowLatencyThroughputModel */ "./src/streaming/models/LowLatencyThroughputModel.js");
 /* harmony import */ var _models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../models/CustomParametersModel */ "./src/streaming/models/CustomParametersModel.js");
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -22635,13 +21083,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+
 /**
  * @module HTTPLoader
  * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependencies from parent
  */
-
 function HTTPLoader(cfg) {
   cfg = cfg || {};
   var context = this.context;
@@ -22655,10 +21103,8 @@ function HTTPLoader(cfg) {
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
   var settings = Object(_core_Settings__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
   var instance, requests, delayedRequests, retryRequests, downloadErrorToRequestTypeMap, cmcdModel, customParametersModel, lowLatencyThroughputModel, logger;
-
   function setup() {
     var _downloadErrorToReque;
-
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance().getLogger(instance);
     requests = [];
     delayedRequests = [];
@@ -22668,7 +21114,6 @@ function HTTPLoader(cfg) {
     customParametersModel = Object(_models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
     downloadErrorToRequestTypeMap = (_downloadErrorToReque = {}, _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MPD_TYPE, errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].XLINK_EXPANSION_TYPE, errors.DOWNLOAD_ERROR_ID_XLINK_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].INIT_SEGMENT_TYPE, errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE, errors.DOWNLOAD_ERROR_ID_CONTENT_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].INDEX_SEGMENT_TYPE, errors.DOWNLOAD_ERROR_ID_CONTENT_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].BITSTREAM_SWITCHING_SEGMENT_TYPE, errors.DOWNLOAD_ERROR_ID_CONTENT_CODE), _defineProperty(_downloadErrorToReque, _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].OTHER_TYPE, errors.DOWNLOAD_ERROR_ID_CONTENT_CODE), _downloadErrorToReque);
   }
-
   function internalLoad(config, remainingAttempts) {
     var request = config.request;
     var traces = [];
@@ -22679,53 +21124,44 @@ function HTTPLoader(cfg) {
     var lastTraceReceivedCount = 0;
     var fileLoaderType = null;
     var httpRequest;
-
     if (!requestModifier || !dashMetrics || !errHandler) {
       throw new Error('config object is not correct or missing');
     }
-
     var handleLoaded = function handleLoaded(success) {
       needFailureReport = false;
       request.requestStartDate = requestStartTime;
       request.requestEndDate = new Date();
       request.firstByteDate = request.firstByteDate || requestStartTime;
       request.fileLoaderType = fileLoaderType;
-
       if (!request.checkExistenceOnly) {
         var responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
         var responseStatus = httpRequest.response ? httpRequest.response.status : null;
         var responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() : httpRequest.response ? httpRequest.response.responseHeaders : [];
         dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
-
         if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MPD_TYPE) {
           dashMetrics.addManifestUpdate(request);
         }
       }
     };
-
     var onloadend = function onloadend() {
       if (requests.indexOf(httpRequest) === -1) {
         return;
       } else {
         requests.splice(requests.indexOf(httpRequest), 1);
       }
-
       if (needFailureReport) {
         handleLoaded(false);
-
         if (remainingAttempts > 0) {
           // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
           try {
             if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
               // Only trigger a sync if the loading failed for the first time
               var initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE);
-
               if (initialNumberOfAttempts === remainingAttempts) {
                 eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].ATTEMPT_BACKGROUND_SYNC);
               }
             }
           } catch (e) {}
-
           remainingAttempts--;
           var retryRequest = {
             config: config
@@ -22737,46 +21173,37 @@ function HTTPLoader(cfg) {
             } else {
               retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
             }
-
             internalLoad(config, remainingAttempts);
           }, mediaPlayerModel.getRetryIntervalsForType(request.type));
         } else {
           if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
             return;
           }
-
           errHandler.error(new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_4__["default"](downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
             request: request,
             response: httpRequest.response
           }));
-
           if (config.error) {
             config.error(request, 'error', httpRequest.response.statusText);
           }
-
           if (config.complete) {
             config.complete(request, httpRequest.response.statusText);
           }
         }
       }
     };
-
     var progress = function progress(event) {
       var currentTime = new Date();
-
       if (firstProgress) {
         firstProgress = false;
-
         if (!event.lengthComputable || event.lengthComputable && event.total !== event.loaded) {
           request.firstByteDate = currentTime;
         }
       }
-
       if (event.lengthComputable) {
         request.bytesLoaded = event.loaded;
         request.bytesTotal = event.total;
       }
-
       if (!event.noTrace) {
         traces.push({
           s: lastTraceTime,
@@ -22786,47 +21213,37 @@ function HTTPLoader(cfg) {
         lastTraceTime = currentTime;
         lastTraceReceivedCount = event.loaded;
       }
-
       if (config.progress && event) {
         config.progress(event);
       }
     };
-
     var onload = function onload() {
       if (httpRequest.response.status >= 200 && httpRequest.response.status <= 299) {
         handleLoaded(true);
-
         if (config.success) {
           config.success(httpRequest.response.response, httpRequest.response.statusText, httpRequest.response.responseURL);
         }
-
         if (config.complete) {
           config.complete(request, httpRequest.response.statusText);
         }
       }
     };
-
     var onabort = function onabort() {
       if (config.abort) {
         config.abort(request);
       }
     };
-
     var ontimeout = function ontimeout(event) {
       var timeoutMessage;
-
       if (event.lengthComputable) {
         var percentageComplete = event.loaded / event.total * 100;
         timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
       } else {
         timeoutMessage = 'Request timeout: non-computable download size';
       }
-
       logger.warn(timeoutMessage);
     };
-
     var loader;
-
     if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
       loader = Object(_FetchLoader__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
         requestModifier: requestModifier,
@@ -22843,22 +21260,17 @@ function HTTPLoader(cfg) {
       });
       fileLoaderType = _constants_Constants__WEBPACK_IMPORTED_MODULE_11__["default"].FILE_LOADER_TYPES.XHR;
     }
-
     var headers = null;
     var modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
-
     if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
       var cmcdMode = settings.get().streaming.cmcd.mode;
-
       if (cmcdMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_11__["default"].CMCD_MODE_QUERY) {
         var additionalQueryParameter = _getAdditionalQueryParameter(request);
-
         modifiedUrl = _core_Utils__WEBPACK_IMPORTED_MODULE_6__["default"].addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
       } else if (cmcdMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_11__["default"].CMCD_MODE_HEADER) {
         headers = cmcdModel.getHeaderParameters(request);
       }
     }
-
     request.url = modifiedUrl;
     var verb = request.checkExistenceOnly ? _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].HEAD : _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].GET;
     var withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
@@ -22876,10 +21288,10 @@ function HTTPLoader(cfg) {
       loader: loader,
       timeout: requestTimeout,
       headers: headers
-    }; // Adds the ability to delay single fragment loading time to control buffer.
+    };
 
+    // Adds the ability to delay single fragment loading time to control buffer.
     var now = new Date().getTime();
-
     if (isNaN(request.delayLoadingTime) || now >= request.delayLoadingTime) {
       // no delay - just send
       requests.push(httpRequest);
@@ -22896,7 +21308,6 @@ function HTTPLoader(cfg) {
         } else {
           delayedRequests.splice(delayedRequests.indexOf(delayedRequest), 1);
         }
-
         try {
           requestStartTime = new Date();
           lastTraceTime = requestStartTime;
@@ -22908,29 +21319,25 @@ function HTTPLoader(cfg) {
       }, request.delayLoadingTime - now);
     }
   }
-
   function _getAdditionalQueryParameter(request) {
     try {
       var additionalQueryParameter = [];
       var cmcdQueryParameter = cmcdModel.getQueryParameter(request);
-
       if (cmcdQueryParameter) {
         additionalQueryParameter.push(cmcdQueryParameter);
       }
-
       return additionalQueryParameter;
     } catch (e) {
       return [];
     }
   }
+
   /**
    * Initiates a download of the resource described by config.request
    * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
    * @memberof module:HTTPLoader
    * @instance
    */
-
-
   function load(config) {
     if (config.request) {
       internalLoad(config, mediaPlayerModel.getRetryAttemptsForType(config.request.type));
@@ -22940,17 +21347,16 @@ function HTTPLoader(cfg) {
       }
     }
   }
+
   /**
    * Aborts any inflight downloads
    * @memberof module:HTTPLoader
    * @instance
    */
-
-
   function abort() {
     retryRequests.forEach(function (t) {
-      clearTimeout(t.timeout); // abort request in order to trigger LOADING_ABANDONED event
-
+      clearTimeout(t.timeout);
+      // abort request in order to trigger LOADING_ABANDONED event
       if (t.config.request && t.config.abort) {
         t.config.abort(t.config.request);
       }
@@ -22964,17 +21370,16 @@ function HTTPLoader(cfg) {
       // MSS patch: ignore FragmentInfo requests
       if (x.request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__["HTTPRequest"].MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
         return;
-      } // abort will trigger onloadend which we don't want
+      }
+
+      // abort will trigger onloadend which we don't want
       // when deliberately aborting inflight requests -
       // set them to undefined so they are not called
-
-
       x.onloadend = x.onerror = x.onprogress = undefined;
       x.loader.abort(x);
     });
     requests = [];
   }
-
   instance = {
     load: load,
     abort: abort
@@ -22982,7 +21387,6 @@ function HTTPLoader(cfg) {
   setup();
   return instance;
 }
-
 HTTPLoader.__dashjs_factory_name = 'HTTPLoader';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_3__["default"].getClassFactory(HTTPLoader);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -23032,30 +21436,26 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 /**
  * @module
  * @description Choose right url loader for scheme
  * @ignore
  */
-
 function SchemeLoaderFactory() {
   var instance;
   var schemeLoaderMap;
-
   function registerLoader(scheme, loader) {
     schemeLoaderMap[scheme] = loader;
   }
-
   function unregisterLoader(scheme) {
     if (schemeLoaderMap[scheme]) {
       delete schemeLoaderMap[scheme];
     }
   }
-
   function unregisterAllLoader() {
     schemeLoaderMap = {};
   }
-
   function getLoader(url) {
     // iterates through schemeLoaderMap to find a loader for the scheme
     for (var scheme in schemeLoaderMap) {
@@ -23063,18 +21463,14 @@ function SchemeLoaderFactory() {
         return schemeLoaderMap[scheme];
       }
     }
-
     return _streaming_net_HTTPLoader__WEBPACK_IMPORTED_MODULE_1__["default"];
   }
-
   function reset() {
     unregisterAllLoader();
   }
-
   function setup() {
     reset();
   }
-
   setup();
   instance = {
     getLoader: getLoader,
@@ -23085,7 +21481,6 @@ function SchemeLoaderFactory() {
   };
   return instance;
 }
-
 SchemeLoaderFactory.__dashjs_factory_name = 'SchemeLoaderFactory';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(SchemeLoaderFactory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -23135,19 +21530,18 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 /**
  * @class URLLoader
  * @description  Call Offline Loader or Online Loader depending on URL
  * @param {Object} cfg - dependencies
  * @ignore
 */
-
 function URLLoader(cfg) {
   cfg = cfg || {};
   var context = this.context;
   var instance, schemeLoaderFactory, loader;
   schemeLoaderFactory = Object(_streaming_net_SchemeLoaderFactory__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
-
   function load(config) {
     if (!loader) {
       var loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
@@ -23164,23 +21558,19 @@ function URLLoader(cfg) {
         errors: cfg.errors
       });
     }
-
     loader.load(config);
   }
-
   function abort() {
     if (loader) {
       loader.abort();
     }
   }
-
   instance = {
     load: load,
     abort: abort
   };
   return instance;
 }
-
 URLLoader.__dashjs_factory_name = 'URLLoader';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(URLLoader);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -23230,18 +21620,17 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 /**
  * @module XHRLoader
  * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependencies from parent
  */
-
 function XHRLoader(cfg) {
   cfg = cfg || {};
   var requestModifier = cfg.requestModifier;
   var instance;
-
   function load(httpRequest) {
     if (requestModifier && requestModifier.modifyRequest) {
       Object(_utils_RequestModifier__WEBPACK_IMPORTED_MODULE_1__["modifyRequest"])(httpRequest, requestModifier).then(function () {
@@ -23251,42 +21640,34 @@ function XHRLoader(cfg) {
       request(httpRequest);
     }
   }
-
   function request(httpRequest) {
     // Variables will be used in the callback functions
     var requestStartTime = new Date();
     var request = httpRequest.request;
     var xhr = new XMLHttpRequest();
     xhr.open(httpRequest.method, httpRequest.url, true);
-
     if (request.responseType) {
       xhr.responseType = request.responseType;
     }
-
     if (request.range) {
       xhr.setRequestHeader('Range', 'bytes=' + request.range);
     }
-
     if (!request.requestStartDate) {
       request.requestStartDate = requestStartTime;
     }
-
     if (requestModifier && requestModifier.modifyRequestHeader) {
       xhr = requestModifier.modifyRequestHeader(xhr, {
         url: httpRequest.url
       });
     }
-
     if (httpRequest.headers) {
       for (var header in httpRequest.headers) {
         var value = httpRequest.headers[header];
-
         if (value) {
           xhr.setRequestHeader(header, value);
         }
       }
     }
-
     xhr.withCredentials = httpRequest.withCredentials;
     xhr.onload = httpRequest.onload;
     xhr.onloadend = httpRequest.onend;
@@ -23298,21 +21679,17 @@ function XHRLoader(cfg) {
     xhr.send();
     httpRequest.response = xhr;
   }
-
   function abort(request) {
     var x = request.response;
     x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
-
     x.abort();
   }
-
   instance = {
     load: load,
     abort: abort
   };
   return instance;
 }
-
 XHRLoader.__dashjs_factory_name = 'XHRLoader';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(XHRLoader);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -23360,28 +21737,29 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 var NO_CHANGE = -1;
 var PRIORITY = {
   DEFAULT: 0.5,
   STRONG: 1,
   WEAK: 0
 };
-
 function SwitchRequest(q, r, p) {
   //TODO refactor all the calls to this to use config to be like everything else.
-  var instance, quality, priority, reason; // check priority value
+  var instance, quality, priority, reason;
 
+  // check priority value
   function getPriority(p) {
-    var ret = PRIORITY.DEFAULT; // check that p is one of declared priority value
+    var ret = PRIORITY.DEFAULT;
 
+    // check that p is one of declared priority value
     if (p === PRIORITY.DEFAULT || p === PRIORITY.STRONG || p === PRIORITY.WEAK) {
       ret = p;
     }
-
     return ret;
-  } // init attributes
+  }
 
-
+  // init attributes
   quality = q === undefined ? NO_CHANGE : q;
   priority = getPriority(p);
   reason = r === undefined ? null : r;
@@ -23392,7 +21770,6 @@ function SwitchRequest(q, r, p) {
   };
   return instance;
 }
-
 SwitchRequest.__dashjs_factory_name = 'SwitchRequest';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SwitchRequest);
 factory.NO_CHANGE = NO_CHANGE;
@@ -23465,7 +21842,6 @@ __webpack_require__.r(__webpack_exports__);
 
 var QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 var ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
-
 function ABRRulesCollection(config) {
   config = config || {};
   var context = this.context;
@@ -23474,11 +21850,9 @@ function ABRRulesCollection(config) {
   var dashMetrics = config.dashMetrics;
   var settings = config.settings;
   var instance, qualitySwitchRules, abandonFragmentRules;
-
   function initialize() {
     qualitySwitchRules = [];
     abandonFragmentRules = [];
-
     if (settings.get().streaming.abr.useDefaultABRRules) {
       // If L2A is used we only need this one rule
       if (settings.get().streaming.abr.ABRStrategy === _constants_Constants__WEBPACK_IMPORTED_MODULE_10__["default"].ABR_STRATEGY_L2A) {
@@ -23486,82 +21860,74 @@ function ABRRulesCollection(config) {
           dashMetrics: dashMetrics,
           settings: settings
         }));
-      } // If LoLP is used we only need this one rule
+      }
+      // If LoLP is used we only need this one rule
       else if (settings.get().streaming.abr.ABRStrategy === _constants_Constants__WEBPACK_IMPORTED_MODULE_10__["default"].ABR_STRATEGY_LoLP) {
-          qualitySwitchRules.push(Object(_lolp_LoLpRule_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).create({
-            dashMetrics: dashMetrics
+        qualitySwitchRules.push(Object(_lolp_LoLpRule_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).create({
+          dashMetrics: dashMetrics
+        }));
+      } else {
+        // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
+        // This is controlled by useBufferOccupancyABR mechanism in AbrController.
+        qualitySwitchRules.push(Object(_BolaRule__WEBPACK_IMPORTED_MODULE_5__["default"])(context).create({
+          dashMetrics: dashMetrics,
+          mediaPlayerModel: mediaPlayerModel,
+          settings: settings
+        }));
+        qualitySwitchRules.push(Object(_ThroughputRule__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
+          dashMetrics: dashMetrics
+        }));
+        if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
+          qualitySwitchRules.push(Object(_InsufficientBufferRule__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
+            dashMetrics: dashMetrics,
+            settings: settings
           }));
-        } else {
-          // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
-          // This is controlled by useBufferOccupancyABR mechanism in AbrController.
-          qualitySwitchRules.push(Object(_BolaRule__WEBPACK_IMPORTED_MODULE_5__["default"])(context).create({
+        }
+        if (settings.get().streaming.abr.additionalAbrRules.switchHistoryRule) {
+          qualitySwitchRules.push(Object(_SwitchHistoryRule__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create());
+        }
+        if (settings.get().streaming.abr.additionalAbrRules.droppedFramesRule) {
+          qualitySwitchRules.push(Object(_DroppedFramesRule__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create());
+        }
+        if (settings.get().streaming.abr.additionalAbrRules.abandonRequestsRule) {
+          abandonFragmentRules.push(Object(_AbandonRequestsRule__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             settings: settings
           }));
-          qualitySwitchRules.push(Object(_ThroughputRule__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
-            dashMetrics: dashMetrics
-          }));
-
-          if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
-            qualitySwitchRules.push(Object(_InsufficientBufferRule__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
-              dashMetrics: dashMetrics,
-              settings: settings
-            }));
-          }
-
-          if (settings.get().streaming.abr.additionalAbrRules.switchHistoryRule) {
-            qualitySwitchRules.push(Object(_SwitchHistoryRule__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create());
-          }
-
-          if (settings.get().streaming.abr.additionalAbrRules.droppedFramesRule) {
-            qualitySwitchRules.push(Object(_DroppedFramesRule__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create());
-          }
-
-          if (settings.get().streaming.abr.additionalAbrRules.abandonRequestsRule) {
-            abandonFragmentRules.push(Object(_AbandonRequestsRule__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
-              dashMetrics: dashMetrics,
-              mediaPlayerModel: mediaPlayerModel,
-              settings: settings
-            }));
-          }
         }
-    } // add custom ABR rules if any
+      }
+    }
 
-
+    // add custom ABR rules if any
     var customRules = customParametersModel.getAbrCustomRules();
     customRules.forEach(function (rule) {
       if (rule.type === QUALITY_SWITCH_RULES) {
         qualitySwitchRules.push(rule.rule(context).create());
       }
-
       if (rule.type === ABANDON_FRAGMENT_RULES) {
         abandonFragmentRules.push(rule.rule(context).create());
       }
     });
   }
-
   function _getRulesWithChange(srArray) {
     return srArray.filter(function (sr) {
       return sr.quality > _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE;
     });
   }
+
   /**
    *
    * @param {array} srArray
    * @return {object} SwitchRequest
    */
-
-
   function getMinSwitchRequest(srArray) {
     var values = {};
     var newSwitchReq = null;
     var i, len, req, quality, reason;
-
     if (srArray.length === 0) {
       return;
     }
-
     values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.STRONG] = {
       quality: _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE,
       reason: null
@@ -23574,10 +21940,8 @@ function ABRRulesCollection(config) {
       quality: _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE,
       reason: null
     };
-
     for (i = 0, len = srArray.length; i < len; i += 1) {
       req = srArray[i];
-
       if (req.quality !== _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE) {
         // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
         if (values[req.priority].quality === _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE || values[req.priority].quality > req.quality) {
@@ -23586,49 +21950,37 @@ function ABRRulesCollection(config) {
         }
       }
     }
-
     if (values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.WEAK].quality !== _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE) {
       newSwitchReq = values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.WEAK];
     }
-
     if (values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.DEFAULT].quality !== _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE) {
       newSwitchReq = values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.DEFAULT];
     }
-
     if (values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.STRONG].quality !== _SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].NO_CHANGE) {
       newSwitchReq = values[_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"].PRIORITY.STRONG];
     }
-
     if (newSwitchReq) {
       quality = newSwitchReq.quality;
       reason = newSwitchReq.reason;
     }
-
     return Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create(quality, reason);
   }
-
   function getMaxQuality(rulesContext) {
     var switchRequestArray = qualitySwitchRules.map(function (rule) {
       return rule.getMaxIndex(rulesContext);
     });
-
     var activeRules = _getRulesWithChange(switchRequestArray);
-
     var maxQuality = getMinSwitchRequest(activeRules);
     return maxQuality || Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create();
   }
-
   function shouldAbandonFragment(rulesContext, streamId) {
     var abandonRequestArray = abandonFragmentRules.map(function (rule) {
       return rule.shouldAbandon(rulesContext, streamId);
     });
-
     var activeRules = _getRulesWithChange(abandonRequestArray);
-
     var shouldAbandon = getMinSwitchRequest(activeRules);
     return shouldAbandon || Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create();
   }
-
   function reset() {
     [qualitySwitchRules, abandonFragmentRules].forEach(function (rules) {
       if (rules && rules.length) {
@@ -23640,11 +21992,9 @@ function ABRRulesCollection(config) {
     qualitySwitchRules = [];
     abandonFragmentRules = [];
   }
-
   function getQualitySwitchRules() {
     return qualitySwitchRules;
   }
-
   instance = {
     initialize: initialize,
     reset: reset,
@@ -23655,7 +22005,6 @@ function ABRRulesCollection(config) {
   };
   return instance;
 }
-
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_8__["default"].getClassFactory(ABRRulesCollection);
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
@@ -23710,7 +22059,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function AbandonRequestsRule(config) {
   config = config || {};
   var ABANDON_MULTIPLIER = 1.8;
@@ -23721,53 +22069,43 @@ function AbandonRequestsRule(config) {
   var dashMetrics = config.dashMetrics;
   var settings = config.settings;
   var instance, logger, fragmentDict, abandonDict, throughputArray;
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance().getLogger(instance);
     reset();
   }
-
   function setFragmentRequestDict(type, id) {
     fragmentDict[type] = fragmentDict[type] || {};
     fragmentDict[type][id] = fragmentDict[type][id] || {};
   }
-
   function storeLastRequestThroughputByType(type, throughput) {
     throughputArray[type] = throughputArray[type] || [];
     throughputArray[type].push(throughput);
   }
-
   function shouldAbandon(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create(_SwitchRequest__WEBPACK_IMPORTED_MODULE_0__["default"].NO_CHANGE, {
       name: AbandonRequestsRule.__dashjs_factory_name
     });
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') || !rulesContext.hasOwnProperty('getRepresentationInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
       return switchRequest;
     }
-
     var mediaInfo = rulesContext.getMediaInfo();
     var mediaType = rulesContext.getMediaType();
     var streamInfo = rulesContext.getStreamInfo();
     var streamId = streamInfo ? streamInfo.id : null;
     var req = rulesContext.getCurrentRequest();
-
     if (!isNaN(req.index)) {
       setFragmentRequestDict(mediaType, req.index);
       var stableBufferTime = mediaPlayerModel.getStableBufferTime();
       var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-
       if (bufferLevel > stableBufferTime) {
         return switchRequest;
       }
-
       var fragmentInfo = fragmentDict[mediaType][req.index];
-
       if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
         return switchRequest;
-      } //setup some init info based on first progress event
+      }
 
-
+      //setup some init info based on first progress event
       if (fragmentInfo.firstByteTime === undefined) {
         throughputArray[mediaType] = [];
         fragmentInfo.firstByteTime = req.firstByteDate.getTime();
@@ -23775,21 +22113,17 @@ function AbandonRequestsRule(config) {
         fragmentInfo.bytesTotal = req.bytesTotal;
         fragmentInfo.id = req.index;
       }
-
       fragmentInfo.bytesLoaded = req.bytesLoaded;
       fragmentInfo.elapsedTime = new Date().getTime() - fragmentInfo.firstByteTime;
-
       if (fragmentInfo.bytesLoaded > 0 && fragmentInfo.elapsedTime > 0) {
         storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
       }
-
       if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE && fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD && fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
         var totalSampledValue = throughputArray[mediaType].reduce(function (a, b) {
           return a + b;
         }, 0);
         fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
         fragmentInfo.estimatedTimeOfDownload = +(fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps / 1000).toFixed(2);
-
         if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0) {
           return switchRequest;
         } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
@@ -23800,7 +22134,6 @@ function AbandonRequestsRule(config) {
           var minQuality = abrController.getMinAllowedIndexFor(mediaType, streamId);
           var newQuality = minQuality !== undefined ? Math.max(minQuality, quality) : quality;
           var estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, streamId)].bitrate;
-
           if (bytesRemaining > estimateOtherBytesTotal) {
             switchRequest.quality = newQuality;
             switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
@@ -23814,16 +22147,13 @@ function AbandonRequestsRule(config) {
         delete fragmentDict[mediaType][fragmentInfo.id];
       }
     }
-
     return switchRequest;
   }
-
   function reset() {
     fragmentDict = {};
     abandonDict = {};
     throughputArray = [];
   }
-
   instance = {
     shouldAbandon: shouldAbandon,
     reset: reset
@@ -23831,7 +22161,6 @@ function AbandonRequestsRule(config) {
   setup();
   return instance;
 }
-
 AbandonRequestsRule.__dashjs_factory_name = 'AbandonRequestsRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(AbandonRequestsRule));
 
@@ -23885,6 +22214,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 // For a description of the BOLA adaptive bitrate (ABR) algorithm, see http://arxiv.org/abs/1601.06748
 
 
@@ -23894,17 +22224,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
+
+
+
+// BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
 // BOLA_STATE_STEADY        : Buffer primed, we switch to steady operation.
 // TODO: add BOLA_STATE_SEEK and tune BOLA behavior on seeking
-
 var BOLA_STATE_ONE_BITRATE = 0;
 var BOLA_STATE_STARTUP = 1;
 var BOLA_STATE_STEADY = 2;
 var MINIMUM_BUFFER_S = 10; // BOLA should never add artificial delays if buffer is less than MINIMUM_BUFFER_S.
-
-var MINIMUM_BUFFER_PER_BITRATE_LEVEL_S = 2; // E.g. if there are 5 bitrates, BOLA switches to top bitrate at buffer = 10 + 5 * 2 = 20s.
+var MINIMUM_BUFFER_PER_BITRATE_LEVEL_S = 2;
+// E.g. if there are 5 bitrates, BOLA switches to top bitrate at buffer = 10 + 5 * 2 = 20s.
 // If Schedule Controller does not allow buffer to reach that level, it can be achieved through the placeholder buffer level.
 
 var PLACEHOLDER_BUFFER_DECAY = 0.99; // Make sure placeholder buffer does not stick around too long.
@@ -23916,7 +22248,6 @@ function BolaRule(config) {
   var mediaPlayerModel = config.mediaPlayerModel;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   var instance, logger, bolaStateDict;
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
@@ -23927,39 +22258,38 @@ function BolaRule(config) {
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
   }
-
   function utilitiesFromBitrates(bitrates) {
     return bitrates.map(function (b) {
       return Math.log(b);
-    }); // no need to worry about offset, utilities will be offset (uniformly) anyway later
-  } // NOTE: in live streaming, the real buffer level can drop below minimumBufferS, but bola should not stick to lowest bitrate by using a placeholder buffer level
+    });
+    // no need to worry about offset, utilities will be offset (uniformly) anyway later
+  }
 
-
+  // NOTE: in live streaming, the real buffer level can drop below minimumBufferS, but bola should not stick to lowest bitrate by using a placeholder buffer level
   function calculateBolaParameters(stableBufferTime, bitrates, utilities) {
     var highestUtilityIndex = utilities.reduce(function (highestIndex, u, uIndex) {
       return u > utilities[highestIndex] ? uIndex : highestIndex;
     }, 0);
-
     if (highestUtilityIndex === 0) {
       // if highestUtilityIndex === 0, then always use lowest bitrate
       return null;
     }
+    var bufferTime = Math.max(stableBufferTime, MINIMUM_BUFFER_S + MINIMUM_BUFFER_PER_BITRATE_LEVEL_S * bitrates.length);
 
-    var bufferTime = Math.max(stableBufferTime, MINIMUM_BUFFER_S + MINIMUM_BUFFER_PER_BITRATE_LEVEL_S * bitrates.length); // TODO: Investigate if following can be better if utilities are not the default Math.log utilities.
+    // TODO: Investigate if following can be better if utilities are not the default Math.log utilities.
     // If using Math.log utilities, we can choose Vp and gp to always prefer bitrates[0] at minimumBufferS and bitrates[max] at bufferTarget.
     // (Vp * (utility + gp) - bufferLevel) / bitrate has the maxima described when:
     // Vp * (utilities[0] + gp - 1) === minimumBufferS and Vp * (utilities[max] + gp - 1) === bufferTarget
     // giving:
-
     var gp = (utilities[highestUtilityIndex] - 1) / (bufferTime / MINIMUM_BUFFER_S - 1);
-    var Vp = MINIMUM_BUFFER_S / gp; // note that expressions for gp and Vp assume utilities[0] === 1, which is true because of normalization
+    var Vp = MINIMUM_BUFFER_S / gp;
+    // note that expressions for gp and Vp assume utilities[0] === 1, which is true because of normalization
 
     return {
       gp: gp,
       Vp: Vp
     };
   }
-
   function getInitialBolaState(rulesContext) {
     var initialState = {};
     var mediaInfo = rulesContext.getMediaInfo();
@@ -23970,10 +22300,8 @@ function BolaRule(config) {
     utilities = utilities.map(function (u) {
       return u - utilities[0] + 1;
     }); // normalize
-
     var stableBufferTime = mediaPlayerModel.getStableBufferTime();
     var params = calculateBolaParameters(stableBufferTime, bitrates, utilities);
-
     if (!params) {
       // only happens when there is only one bitrate level
       initialState.state = BOLA_STATE_ONE_BITRATE;
@@ -23987,10 +22315,8 @@ function BolaRule(config) {
       initialState.lastQuality = 0;
       clearBolaStateOnSeek(initialState);
     }
-
     return initialState;
   }
-
   function clearBolaStateOnSeek(bolaState) {
     bolaState.placeholderBuffer = 0;
     bolaState.mostAdvancedSegmentStart = NaN;
@@ -23999,19 +22325,18 @@ function BolaRule(config) {
     bolaState.lastSegmentDurationS = NaN;
     bolaState.lastSegmentRequestTimeMs = NaN;
     bolaState.lastSegmentFinishTimeMs = NaN;
-  } // If the buffer target is changed (can this happen mid-stream?), then adjust BOLA parameters accordingly.
+  }
 
-
+  // If the buffer target is changed (can this happen mid-stream?), then adjust BOLA parameters accordingly.
   function checkBolaStateStableBufferTime(bolaState, mediaType) {
     var stableBufferTime = mediaPlayerModel.getStableBufferTime();
-
     if (bolaState.stableBufferTime !== stableBufferTime) {
       var params = calculateBolaParameters(stableBufferTime, bolaState.bitrates, bolaState.utilities);
-
       if (params.Vp !== bolaState.Vp || params.gp !== bolaState.gp) {
         // correct placeholder buffer using two criteria:
         // 1. do not change effective buffer level at effectiveBufferLevel === MINIMUM_BUFFER_S ( === Vp * gp )
         // 2. scale placeholder buffer by Vp subject to offset indicated in 1.
+
         var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
         var effectiveBufferLevel = bufferLevel + bolaState.placeholderBuffer;
         effectiveBufferLevel -= MINIMUM_BUFFER_S;
@@ -24024,50 +22349,43 @@ function BolaRule(config) {
       }
     }
   }
-
   function getBolaState(rulesContext) {
     var mediaType = rulesContext.getMediaType();
     var bolaState = bolaStateDict[mediaType];
-
     if (!bolaState) {
       bolaState = getInitialBolaState(rulesContext);
       bolaStateDict[mediaType] = bolaState;
     } else if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
       checkBolaStateStableBufferTime(bolaState, mediaType);
     }
-
     return bolaState;
-  } // The core idea of BOLA.
+  }
 
-
+  // The core idea of BOLA.
   function getQualityFromBufferLevel(bolaState, bufferLevel) {
     var bitrateCount = bolaState.bitrates.length;
     var quality = NaN;
     var score = NaN;
-
     for (var i = 0; i < bitrateCount; ++i) {
       var s = (bolaState.Vp * (bolaState.utilities[i] + bolaState.gp) - bufferLevel) / bolaState.bitrates[i];
-
       if (isNaN(score) || s >= score) {
         score = s;
         quality = i;
       }
     }
-
     return quality;
-  } // maximum buffer level which prefers to download at quality rather than wait
+  }
 
-
+  // maximum buffer level which prefers to download at quality rather than wait
   function maxBufferLevelForQuality(bolaState, quality) {
     return bolaState.Vp * (bolaState.utilities[quality] + bolaState.gp);
-  } // the minimum buffer level that would cause BOLA to choose quality rather than a lower bitrate
+  }
 
-
+  // the minimum buffer level that would cause BOLA to choose quality rather than a lower bitrate
   function minBufferLevelForQuality(bolaState, quality) {
     var qBitrate = bolaState.bitrates[quality];
     var qUtility = bolaState.utilities[quality];
     var min = 0;
-
     for (var i = quality - 1; i >= 0; --i) {
       // for each bitrate less than bitrates[quality], BOLA should prefer quality (unless other bitrate has higher utility)
       if (bolaState.utilities[i] < bolaState.utilities[quality]) {
@@ -24080,6 +22398,7 @@ function BolaRule(config) {
 
     return min;
   }
+
   /*
    * The placeholder buffer increases the effective buffer that is used to calculate the bitrate.
    * There are two main reasons we might want to increase the placeholder buffer:
@@ -24094,11 +22413,8 @@ function BolaRule(config) {
    *    quality, then the buffer controller might decide not to download a segment. When dash.js is ready for the next
    *    segment, getMaxIndex() will be called again. We don't want this extra delay to factor in the bitrate decision.
    */
-
-
   function updatePlaceholderBuffer(bolaState, mediaType) {
     var nowMs = Date.now();
-
     if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
       // compensate for non-bandwidth-derived delays, e.g., live streaming availability, buffer controller
       var delay = 0.001 * (nowMs - bolaState.lastSegmentFinishTimeMs);
@@ -24106,60 +22422,49 @@ function BolaRule(config) {
     } else if (!isNaN(bolaState.lastCallTimeMs)) {
       // no download after last call, compensate for delay between calls
       var _delay = 0.001 * (nowMs - bolaState.lastCallTimeMs);
-
       bolaState.placeholderBuffer += Math.max(0, _delay);
     }
-
     bolaState.lastCallTimeMs = nowMs;
     bolaState.lastSegmentStart = NaN;
     bolaState.lastSegmentRequestTimeMs = NaN;
     bolaState.lastSegmentFinishTimeMs = NaN;
     checkBolaStateStableBufferTime(bolaState, mediaType);
   }
-
   function onBufferEmpty(e) {
     // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
-    var mediaType = e.mediaType; // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
-
+    var mediaType = e.mediaType;
+    // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
     var stateDict = mediaType === _constants_Constants__WEBPACK_IMPORTED_MODULE_8__["default"].AUDIO ? [_constants_Constants__WEBPACK_IMPORTED_MODULE_8__["default"].AUDIO] : bolaStateDict;
-
     for (var _mediaType in stateDict) {
       if (bolaStateDict.hasOwnProperty(_mediaType) && bolaStateDict[_mediaType].state === BOLA_STATE_STEADY) {
         bolaStateDict[_mediaType].placeholderBuffer = 0;
       }
     }
   }
-
   function onPlaybackSeeking() {
     // TODO: 1. Verify what happens if we seek mid-fragment.
     // TODO: 2. If e.g. we have 10s fragments and seek, we might want to download the first fragment at a lower quality to restart playback quickly.
     for (var mediaType in bolaStateDict) {
       if (bolaStateDict.hasOwnProperty(mediaType)) {
         var bolaState = bolaStateDict[mediaType];
-
         if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
           bolaState.state = BOLA_STATE_STARTUP; // TODO: BOLA_STATE_SEEK?
-
           clearBolaStateOnSeek(bolaState);
         }
       }
     }
   }
-
   function onMediaFragmentLoaded(e) {
     if (e && e.chunk && e.chunk.mediaInfo) {
       var bolaState = bolaStateDict[e.chunk.mediaInfo.type];
-
       if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
         var start = e.chunk.start;
-
         if (isNaN(bolaState.mostAdvancedSegmentStart) || start > bolaState.mostAdvancedSegmentStart) {
           bolaState.mostAdvancedSegmentStart = start;
           bolaState.lastSegmentWasReplacement = false;
         } else {
           bolaState.lastSegmentWasReplacement = true;
         }
-
         bolaState.lastSegmentStart = start;
         bolaState.lastSegmentDurationS = e.chunk.duration;
         bolaState.lastQuality = e.chunk.quality;
@@ -24167,11 +22472,9 @@ function BolaRule(config) {
       }
     }
   }
-
   function onMetricAdded(e) {
     if (e && e.metric === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_0__["default"].HTTP_REQUEST && e.value && e.value.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_3__["HTTPRequest"].MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
       var bolaState = bolaStateDict[e.mediaType];
-
       if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
         bolaState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
         bolaState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
@@ -24179,6 +22482,7 @@ function BolaRule(config) {
       }
     }
   }
+
   /*
    * When a new segment is downloaded, we get two notifications: onMediaFragmentLoaded() and onMetricAdded(). It is
    * possible that the quality for the downloaded segment was lower (not higher) than the quality indicated by BOLA.
@@ -24190,72 +22494,61 @@ function BolaRule(config) {
    * not grow the actual buffer. Fast switching might cause the buffer to deplete, causing BOLA to drop the bitrate.
    * We avoid this by growing the placeholder buffer.
    */
-
-
   function checkNewSegment(bolaState, mediaType) {
     if (!isNaN(bolaState.lastSegmentStart) && !isNaN(bolaState.lastSegmentRequestTimeMs) && !isNaN(bolaState.placeholderBuffer)) {
-      bolaState.placeholderBuffer *= PLACEHOLDER_BUFFER_DECAY; // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
+      bolaState.placeholderBuffer *= PLACEHOLDER_BUFFER_DECAY;
 
+      // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
       if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
         var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
         var bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
-
         var maxEffectiveBufferForLastSegment = maxBufferLevelForQuality(bolaState, bolaState.lastQuality);
         var maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
         bolaState.placeholderBuffer = Math.min(maxPlaceholderBuffer, bolaState.placeholderBuffer);
-      } // then see if we should grow placeholder buffer
+      }
 
+      // then see if we should grow placeholder buffer
 
       if (bolaState.lastSegmentWasReplacement && !isNaN(bolaState.lastSegmentDurationS)) {
         // compensate for segments that were downloaded but did not grow the buffer
         bolaState.placeholderBuffer += bolaState.lastSegmentDurationS;
       }
-
       bolaState.lastSegmentStart = NaN;
       bolaState.lastSegmentRequestTimeMs = NaN;
     }
   }
-
   function onQualityChangeRequested(e) {
     // Useful to store change requests when abandoning a download.
     if (e) {
       var bolaState = bolaStateDict[e.mediaType];
-
       if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
         bolaState.abrQuality = e.newQuality;
       }
     }
   }
-
   function onFragmentLoadingAbandoned(e) {
     if (e) {
       var bolaState = bolaStateDict[e.mediaType];
-
       if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
         // deflate placeholderBuffer - note that we want to be conservative when abandoning
         var bufferLevel = dashMetrics.getCurrentBufferLevel(e.mediaType);
         var wantEffectiveBufferLevel;
-
         if (bolaState.abrQuality > 0) {
           // deflate to point where BOLA just chooses newQuality over newQuality-1
           wantEffectiveBufferLevel = minBufferLevelForQuality(bolaState, bolaState.abrQuality);
         } else {
           wantEffectiveBufferLevel = MINIMUM_BUFFER_S;
         }
-
         var maxPlaceholderBuffer = Math.max(0, wantEffectiveBufferLevel - bufferLevel);
         bolaState.placeholderBuffer = Math.min(bolaState.placeholderBuffer, maxPlaceholderBuffer);
       }
     }
   }
-
   function getMaxIndex(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') || !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('useBufferOccupancyABR')) {
       return switchRequest;
     }
-
     var mediaInfo = rulesContext.getMediaInfo();
     var mediaType = rulesContext.getMediaType();
     var scheduleController = rulesContext.getScheduleController();
@@ -24266,19 +22559,15 @@ function BolaRule(config) {
     var isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
     var useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
     switchRequest.reason = switchRequest.reason || {};
-
     if (!useBufferOccupancyABR) {
       return switchRequest;
     }
-
     scheduleController.setTimeToLoadDelay(0);
     var bolaState = getBolaState(rulesContext);
-
     if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
       // shouldn't even have been called
       return switchRequest;
     }
-
     var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
     var throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
     var safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
@@ -24287,13 +22576,11 @@ function BolaRule(config) {
     switchRequest.reason.state = bolaState.state;
     switchRequest.reason.throughput = throughput;
     switchRequest.reason.latency = latency;
-
     if (isNaN(throughput)) {
       // isNaN(throughput) === isNaN(safeThroughput) === isNaN(latency)
       // still starting up - not enough information
       return switchRequest;
     }
-
     switch (bolaState.state) {
       case BOLA_STATE_STARTUP:
         quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
@@ -24301,11 +22588,9 @@ function BolaRule(config) {
         switchRequest.reason.throughput = safeThroughput;
         bolaState.placeholderBuffer = Math.max(0, minBufferLevelForQuality(bolaState, quality) - bufferLevel);
         bolaState.lastQuality = quality;
-
         if (!isNaN(bolaState.lastSegmentDurationS) && bufferLevel >= bolaState.lastSegmentDurationS) {
           bolaState.state = BOLA_STATE_STEADY;
         }
-
         break;
       // BOLA_STATE_STARTUP
 
@@ -24314,29 +22599,31 @@ function BolaRule(config) {
         //     This might lead BOLA to be too optimistic and to choose a bitrate that would lead to rebuffering -
         //     if the real buffer bufferLevel runs out, the placeholder buffer cannot prevent rebuffering.
         //     However, the InsufficientBufferRule takes care of this scenario.
+
         updatePlaceholderBuffer(bolaState, mediaType);
-        quality = getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.placeholderBuffer); // we want to avoid oscillations
+        quality = getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.placeholderBuffer);
+
+        // we want to avoid oscillations
         // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-
         var qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
-
         if (quality > bolaState.lastQuality && quality > qualityForThroughput) {
           // only intervene if we are trying to *increase* quality to an *unsustainable* level
           // we are only avoid oscillations - do not drop below last quality
+
           quality = Math.max(qualityForThroughput, bolaState.lastQuality);
-        } // We do not want to overfill buffer with low quality chunks.
+        }
+
+        // We do not want to overfill buffer with low quality chunks.
         // Note that there will be no delay if buffer level is below MINIMUM_BUFFER_S, probably even with some margin higher than MINIMUM_BUFFER_S.
+        var delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, quality));
 
-
-        var delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, quality)); // First reduce placeholder buffer, then tell schedule controller to pause.
-
+        // First reduce placeholder buffer, then tell schedule controller to pause.
         if (delayS <= bolaState.placeholderBuffer) {
           bolaState.placeholderBuffer -= delayS;
           delayS = 0;
         } else {
           delayS -= bolaState.placeholderBuffer;
           bolaState.placeholderBuffer = 0;
-
           if (quality < abrController.getMaxAllowedIndexFor(mediaType, streamId)) {
             // At top quality, allow schedule controller to decide how far to fill buffer.
             scheduleController.setTimeToLoadDelay(1000 * delayS);
@@ -24344,21 +22631,21 @@ function BolaRule(config) {
             delayS = 0;
           }
         }
-
         switchRequest.quality = quality;
         switchRequest.reason.throughput = throughput;
         switchRequest.reason.latency = latency;
         switchRequest.reason.bufferLevel = bufferLevel;
         switchRequest.reason.placeholderBuffer = bolaState.placeholderBuffer;
         switchRequest.reason.delay = delayS;
-        bolaState.lastQuality = quality; // keep bolaState.state === BOLA_STATE_STEADY
+        bolaState.lastQuality = quality;
+        // keep bolaState.state === BOLA_STATE_STEADY
 
         break;
       // BOLA_STATE_STEADY
 
       default:
-        logger.debug('BOLA ABR rule invoked in bad state.'); // should not arrive here, try to recover
-
+        logger.debug('BOLA ABR rule invoked in bad state.');
+        // should not arrive here, try to recover
         switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = safeThroughput;
@@ -24366,14 +22653,11 @@ function BolaRule(config) {
         bolaState.state = BOLA_STATE_STARTUP;
         clearBolaStateOnSeek(bolaState);
     }
-
     return switchRequest;
   }
-
   function resetInitialSettings() {
     bolaStateDict = {};
   }
-
   function reset() {
     resetInitialSettings();
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].BUFFER_EMPTY, onBufferEmpty, instance);
@@ -24383,7 +22667,6 @@ function BolaRule(config) {
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
   }
-
   instance = {
     getMaxIndex: getMaxIndex,
     reset: reset
@@ -24391,7 +22674,6 @@ function BolaRule(config) {
   setup();
   return instance;
 }
-
 BolaRule.__dashjs_factory_name = 'BolaRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(BolaRule));
 
@@ -24412,7 +22694,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function DroppedFramesRule() {
   var context = this.context;
   var instance, logger;
@@ -24422,33 +22703,27 @@ function DroppedFramesRule() {
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance().getLogger(instance);
   }
-
   function getMaxIndex(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
       return switchRequest;
     }
-
     var droppedFramesHistory = rulesContext.getDroppedFramesHistory();
     var streamId = rulesContext.getStreamInfo().id;
-
     if (droppedFramesHistory) {
       var dfh = droppedFramesHistory.getFrameHistory(streamId);
-
       if (!dfh || dfh.length === 0) {
         return switchRequest;
       }
-
       var droppedFrames = 0;
       var totalFrames = 0;
-      var maxIndex = _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"].NO_CHANGE; //No point in measuring dropped frames for the zeroeth index.
+      var maxIndex = _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"].NO_CHANGE;
 
+      //No point in measuring dropped frames for the zeroeth index.
       for (var i = 1; i < dfh.length; i++) {
         if (dfh[i]) {
           droppedFrames = dfh[i].droppedVideoFrames;
           totalFrames = dfh[i].totalVideoFrames;
-
           if (totalFrames > GOOD_SAMPLE_SIZE && droppedFrames / totalFrames > DROPPED_PERCENTAGE_FORBID) {
             maxIndex = i - 1;
             logger.debug('index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
@@ -24456,22 +22731,18 @@ function DroppedFramesRule() {
           }
         }
       }
-
       return Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create(maxIndex, {
         droppedFrames: droppedFrames
       });
     }
-
     return switchRequest;
   }
-
   instance = {
     getMaxIndex: getMaxIndex
   };
   setup();
   return instance;
 }
-
 DroppedFramesRule.__dashjs_factory_name = 'DroppedFramesRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(DroppedFramesRule));
 
@@ -24532,7 +22803,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function InsufficientBufferRule(config) {
   config = config || {};
   var INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
@@ -24541,19 +22811,18 @@ function InsufficientBufferRule(config) {
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   var dashMetrics = config.dashMetrics;
   var instance, logger, bufferStateDict;
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_1__["default"].BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
   }
-
   function checkConfig() {
     if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
       throw new Error(_constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].MISSING_CONFIG_ERROR);
     }
   }
+
   /**
    * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest.quality=0 until BUFFER_LOADED happens.
    * Otherwise InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
@@ -24563,15 +22832,11 @@ function InsufficientBufferRule(config) {
    * @param rulesContext
    * @return {object}
    */
-
-
   function getMaxIndex(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create();
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
       return switchRequest;
     }
-
     checkConfig();
     var mediaType = rulesContext.getMediaType();
     var currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
@@ -24581,14 +22846,13 @@ function InsufficientBufferRule(config) {
     var streamId = streamInfo ? streamInfo.id : null;
     var scheduleController = rulesContext.getScheduleController();
     var isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
-    var playbackController = scheduleController.getPlaybackController(); // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+    var playbackController = scheduleController.getPlaybackController();
 
+    // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
     var lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
-
     if (shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
       return switchRequest;
     }
-
     if (currentBufferState && currentBufferState.state === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_EMPTY) {
       logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
       switchRequest.quality = 0;
@@ -24604,14 +22868,11 @@ function InsufficientBufferRule(config) {
       switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
       switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
     }
-
     return switchRequest;
   }
-
   function shouldIgnore(lowLatencyEnabled, mediaType) {
     return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
   }
-
   function resetInitialSettings() {
     bufferStateDict = {};
     bufferStateDict[_constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO] = {
@@ -24621,11 +22882,9 @@ function InsufficientBufferRule(config) {
       ignoreCount: SEGMENT_IGNORE_COUNT
     };
   }
-
   function _onPlaybackSeeking() {
     resetInitialSettings();
   }
-
   function _onBytesAppended(e) {
     if (!isNaN(e.startTime) && (e.mediaType === _constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO || e.mediaType === _constants_Constants__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO)) {
       if (bufferStateDict[e.mediaType].ignoreCount > 0) {
@@ -24633,13 +22892,11 @@ function InsufficientBufferRule(config) {
       }
     }
   }
-
   function reset() {
     resetInitialSettings();
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_1__["default"].BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
   }
-
   instance = {
     getMaxIndex: getMaxIndex,
     reset: reset
@@ -24647,7 +22904,6 @@ function InsufficientBufferRule(config) {
   setup();
   return instance;
 }
-
 InsufficientBufferRule.__dashjs_factory_name = 'InsufficientBufferRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(InsufficientBufferRule));
 
@@ -24700,6 +22956,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 // For a description of the Learn2Adapt-LowLatency (L2A-LL) bitrate adaptation algorithm, see https://github.com/unifiedstreaming/Learn2Adapt-LowLatency/blob/master/Online_learning_for_bitrate_adaptation_in_low_latency_live_streaming_CR.pdf
 
 
@@ -24709,10 +22966,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 var L2A_STATE_ONE_BITRATE = 0; // If there is only one bitrate (or initialization failed), always return NO_CHANGE.
-
 var L2A_STATE_STARTUP = 1; // Set placeholder buffer such that we download fragments at most recently measured throughput.
-
 var L2A_STATE_STEADY = 2; // Buffer primed, we switch to steady operation.
 
 function L2ARule(config) {
@@ -24721,28 +22977,25 @@ function L2ARule(config) {
   var dashMetrics = config.dashMetrics;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   var instance, l2AStateDict, l2AParameterDict, logger;
+
   /**
    * Setup function to initialize L2ARule
    */
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance().getLogger(instance);
-
     _resetInitialSettings();
-
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].METRIC_ADDED, _onMetricAdded, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
   }
+
   /**
    * Sets the initial state of the algorithm. Calls the initialize function for the paramteters.
    * @param {object} rulesContext
    * @return {object} initialState
    * @private
    */
-
-
   function _getInitialL2AState(rulesContext) {
     var initialState = {};
     var mediaInfo = rulesContext.getMediaInfo();
@@ -24752,43 +23005,34 @@ function L2ARule(config) {
     initialState.state = L2A_STATE_STARTUP;
     initialState.bitrates = bitrates;
     initialState.lastQuality = 0;
-
     _initializeL2AParameters(mediaInfo);
-
     _clearL2AStateOnSeek(initialState);
-
     return initialState;
   }
+
   /**
    * Initializes the parameters of the algorithm. This will be done once for each media type.
    * @param {object} mediaInfo
    * @private
    */
-
-
   function _initializeL2AParameters(mediaInfo) {
     if (!mediaInfo || !mediaInfo.type) {
       return;
     }
-
     l2AParameterDict[mediaInfo.type] = {};
     l2AParameterDict[mediaInfo.type].w = []; //Vector of probabilities associated with bitrate decisions
-
     l2AParameterDict[mediaInfo.type].prev_w = []; //Vector of probabilities associated with bitrate decisions calculated in the previous step
-
     l2AParameterDict[mediaInfo.type].Q = 0; //Initialization of Lagrangian multiplier (This keeps track of the buffer displacement)
-
     l2AParameterDict[mediaInfo.type].segment_request_start_s = 0;
     l2AParameterDict[mediaInfo.type].segment_download_finish_s = 0;
     l2AParameterDict[mediaInfo.type].B_target = 1.5; //Target buffer level
   }
+
   /**
    * Clears the state object
    * @param {object} l2AState
    * @private
    */
-
-
   function _clearL2AStateOnSeek(l2AState) {
     l2AState.placeholderBuffer = 0;
     l2AState.mostAdvancedSegmentStart = NaN;
@@ -24798,102 +23042,87 @@ function L2ARule(config) {
     l2AState.lastSegmentRequestTimeMs = NaN;
     l2AState.lastSegmentFinishTimeMs = NaN;
   }
+
   /**
    * Returns the state object for a fiven media type. If the state object is not yet defined _getInitialL2AState is called
    * @param {object} rulesContext
    * @return {object} l2AState
    * @private
    */
-
-
   function _getL2AState(rulesContext) {
     var mediaType = rulesContext.getMediaType();
     var l2AState = l2AStateDict[mediaType];
-
     if (!l2AState) {
       l2AState = _getInitialL2AState(rulesContext);
       l2AStateDict[mediaType] = l2AState;
     }
-
     return l2AState;
   }
+
   /**
    * Event handler for the seeking event.
    * @private
    */
-
-
   function _onPlaybackSeeking() {
     for (var mediaType in l2AStateDict) {
       if (l2AStateDict.hasOwnProperty(mediaType)) {
         var l2aState = l2AStateDict[mediaType];
-
         if (l2aState.state !== L2A_STATE_ONE_BITRATE) {
           l2aState.state = L2A_STATE_STARTUP;
-
           _clearL2AStateOnSeek(l2aState);
         }
       }
     }
   }
+
   /**
    * Event handler for the mediaFragmentLoaded event
    * @param {object} e
    * @private
    */
-
-
   function _onMediaFragmentLoaded(e) {
     if (e && e.chunk && e.chunk.mediaInfo) {
       var l2AState = l2AStateDict[e.chunk.mediaInfo.type];
       var l2AParameters = l2AParameterDict[e.chunk.mediaInfo.type];
-
       if (l2AState && l2AState.state !== L2A_STATE_ONE_BITRATE) {
         var start = e.chunk.start;
-
         if (isNaN(l2AState.mostAdvancedSegmentStart) || start > l2AState.mostAdvancedSegmentStart) {
           l2AState.mostAdvancedSegmentStart = start;
           l2AState.lastSegmentWasReplacement = false;
         } else {
           l2AState.lastSegmentWasReplacement = true;
         }
-
         l2AState.lastSegmentStart = start;
         l2AState.lastSegmentDurationS = e.chunk.duration;
         l2AState.lastQuality = e.chunk.quality;
-
         _checkNewSegment(l2AState, l2AParameters);
       }
     }
   }
+
   /**
    * Event handler for the metricAdded event
    * @param {object} e
    * @private
    */
-
-
   function _onMetricAdded(e) {
     if (e && e.metric === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_0__["default"].HTTP_REQUEST && e.value && e.value.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_3__["HTTPRequest"].MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
       var l2AState = l2AStateDict[e.mediaType];
       var l2AParameters = l2AParameterDict[e.mediaType];
-
       if (l2AState && l2AState.state !== L2A_STATE_ONE_BITRATE) {
         l2AState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
         l2AState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
-
         _checkNewSegment(l2AState, l2AParameters);
       }
     }
   }
+
   /**
    * When a new metric has been added or a media fragment has been loaded the state is adjusted accordingly
    * @param {object} L2AState
    * @param {object} l2AParameters
    * @private
    */
-
-
   function _checkNewSegment(L2AState, l2AParameters) {
     if (!isNaN(L2AState.lastSegmentStart) && !isNaN(L2AState.lastSegmentRequestTimeMs)) {
       l2AParameters.segment_request_start_s = 0.001 * L2AState.lastSegmentRequestTimeMs;
@@ -24902,23 +23131,22 @@ function L2ARule(config) {
       L2AState.lastSegmentRequestTimeMs = NaN;
     }
   }
+
   /**
    * Event handler for the qualityChangeRequested event
    * @param {object} e
    * @private
    */
-
-
   function _onQualityChangeRequested(e) {
     // Useful to store change requests when abandoning a download.
     if (e && e.mediaType) {
       var L2AState = l2AStateDict[e.mediaType];
-
       if (L2AState && L2AState.state !== L2A_STATE_ONE_BITRATE) {
         L2AState.abrQuality = e.newQuality;
       }
     }
   }
+
   /**
    * Dot multiplication of two arrays
    * @param {array} arr1
@@ -24927,20 +23155,17 @@ function L2ARule(config) {
    * @private
    */
 
-
   function _dotmultiplication(arr1, arr2) {
     if (arr1.length !== arr2.length) {
       return -1;
     }
-
     var sumdot = 0;
-
     for (var i = 0; i < arr1.length; i++) {
       sumdot = sumdot + arr1[i] * arr2[i];
     }
-
     return sumdot;
   }
+
   /**
    * Project an n-dim vector y to the simplex Dn
    * Dn = { x : x n-dim, 1 >= x >= 0, sum(x) = 1}
@@ -24948,59 +23173,46 @@ function L2ARule(config) {
    * @param {array} arr
    * @return {array}
    */
-
-
   function euclideanProjection(arr) {
     var m = arr.length;
     var bget = false;
     var arr2 = [];
-
     for (var ii = 0; ii < m; ++ii) {
       arr2[ii] = arr[ii];
     }
-
     var s = arr.sort(function (a, b) {
       return b - a;
     });
     var tmpsum = 0;
     var tmax = 0;
     var x = [];
-
     for (var _ii = 0; _ii < m - 1; ++_ii) {
       tmpsum = tmpsum + s[_ii];
       tmax = (tmpsum - 1) / (_ii + 1);
-
       if (tmax >= s[_ii + 1]) {
         bget = true;
         break;
       }
     }
-
     if (!bget) {
       tmax = (tmpsum + s[m - 1] - 1) / m;
     }
-
     for (var _ii2 = 0; _ii2 < m; ++_ii2) {
       x[_ii2] = Math.max(arr2[_ii2] - tmax, 0);
     }
-
     return x;
   }
+
   /**
    * Returns a switch request object indicating which quality is to be played
    * @param {object} rulesContext
    * @return {object}
    */
-
-
   function getMaxIndex(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
     var horizon = 4; // Optimization horizon (The amount of steps required to achieve convergence)
-
     var vl = Math.pow(horizon, 0.99); // Cautiousness parameter, used to control aggressiveness of the bitrate decision process.
-
     var alpha = Math.max(Math.pow(horizon, 1), vl * Math.sqrt(horizon)); // Step size, used for gradient descent exploration granularity
-
     var mediaInfo = rulesContext.getMediaInfo();
     var mediaType = rulesContext.getMediaType();
     var bitrates = mediaInfo.bitrateList.map(function (b) {
@@ -25016,62 +23228,46 @@ function L2ARule(config) {
     var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
     var safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
     var throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic); // In kbits/s
-
     var react = 2; // Reactiveness to volatility (abrupt throughput drops), used to re-calibrate Lagrangian multiplier Q
-
     var latency = throughputHistory.getAverageLatency(mediaType);
     var videoModel = rulesContext.getVideoModel();
     var quality;
     var currentPlaybackRate = videoModel.getPlaybackRate();
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') || !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('useL2AABR')) {
       return switchRequest;
     }
-
     switchRequest.reason = switchRequest.reason || {};
-
     if (!useL2AABR || mediaType === _constants_Constants__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO) {
       // L2A decides bitrate only for video. Audio to be included in decision process in a later stage
       return switchRequest;
     }
-
     scheduleController.setTimeToLoadDelay(0);
-
     var l2AState = _getL2AState(rulesContext);
-
     if (l2AState.state === L2A_STATE_ONE_BITRATE) {
       // shouldn't even have been called
       return switchRequest;
     }
-
     var l2AParameter = l2AParameterDict[mediaType];
-
     if (!l2AParameter) {
       return switchRequest;
     }
-
     switchRequest.reason.state = l2AState.state;
     switchRequest.reason.throughput = throughput;
     switchRequest.reason.latency = latency;
-
     if (isNaN(throughput)) {
       // still starting up - not enough information
       return switchRequest;
     }
-
     switch (l2AState.state) {
       case L2A_STATE_STARTUP:
         quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamInfo.id, latency); //During strat-up phase abr.controller is responsible for bitrate decisions.
-
         switchRequest.quality = quality;
         switchRequest.reason.throughput = safeThroughput;
         l2AState.lastQuality = quality;
-
         if (!isNaN(l2AState.lastSegmentDurationS) && bufferLevel >= l2AParameter.B_target) {
           l2AState.state = L2A_STATE_STEADY;
           l2AParameter.Q = vl; // Initialization of Q langrangian multiplier
           // Update of probability vector w, to be used in main adaptation logic of L2A below (steady state)
-
           for (var i = 0; i < bitrateCount; ++i) {
             if (i === l2AState.lastQuality) {
               l2AParameter.prev_w[i] = 1;
@@ -25080,14 +23276,12 @@ function L2ARule(config) {
             }
           }
         }
-
         break;
       // L2A_STATE_STARTUP
-
       case L2A_STATE_STEADY:
         var diff1 = []; //Used to calculate the difference between consecutive decisions (w-w_prev)
-        // Manual calculation of latency and throughput during previous request
 
+        // Manual calculation of latency and throughput during previous request
         var throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce(function (a, b) {
           return a + b.d;
         }, 0);
@@ -25100,60 +23294,56 @@ function L2ARule(config) {
           lastthroughput = 1;
         } //To avoid division with 0 (avoid infinity) in case of an absolute network outage
 
-
         var V = l2AState.lastSegmentDurationS;
-        var sign = 1; //Main adaptation logic of L2A-LL
+        var sign = 1;
 
+        //Main adaptation logic of L2A-LL
         for (var _i = 0; _i < bitrateCount; ++_i) {
           bitrates[_i] = bitrates[_i] / 1000; // Originally in bps, now in Kbps
-
           if (currentPlaybackRate * bitrates[_i] > lastthroughput) {
             // In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
             sign = -1;
-          } // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
-
-
+          }
+          // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
           l2AParameter.w[_i] = l2AParameter.prev_w[_i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[_i] / lastthroughput)); //Lagrangian descent
-        } // Apply euclidean projection on w to ensure w expresses a probability distribution
+        }
 
-
+        // Apply euclidean projection on w to ensure w expresses a probability distribution
         l2AParameter.w = euclideanProjection(l2AParameter.w);
-
         for (var _i2 = 0; _i2 < bitrateCount; ++_i2) {
           diff1[_i2] = l2AParameter.w[_i2] - l2AParameter.prev_w[_i2];
           l2AParameter.prev_w[_i2] = l2AParameter.w[_i2];
-        } // Lagrangian multiplier Q calculation:
+        }
 
+        // Lagrangian multiplier Q calculation:
+        l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput));
 
-        l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput)); // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
-
+        // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
         var temp = [];
-
         for (var _i3 = 0; _i3 < bitrateCount; ++_i3) {
           temp[_i3] = Math.abs(bitrates[_i3] - _dotmultiplication(l2AParameter.w, bitrates));
-        } // Quality is calculated based on the probability distribution w (the output of L2A)
+        }
 
+        // Quality is calculated based on the probability distribution w (the output of L2A)
+        quality = temp.indexOf(Math.min.apply(Math, temp));
 
-        quality = temp.indexOf(Math.min.apply(Math, temp)); // We employ a cautious -stepwise- ascent
-
+        // We employ a cautious -stepwise- ascent
         if (quality > l2AState.lastQuality) {
           if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
             quality = l2AState.lastQuality + 1;
           }
-        } // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
+        }
 
-
+        // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
         if (bitrates[quality] >= lastthroughput) {
           l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
         }
-
         switchRequest.quality = quality;
         switchRequest.reason.throughput = throughput;
         switchRequest.reason.latency = latency;
         switchRequest.reason.bufferLevel = bufferLevel;
         l2AState.lastQuality = switchRequest.quality;
         break;
-
       default:
         // should not arrive here, try to recover
         logger.debug('L2A ABR rule invoked in bad state.');
@@ -25162,37 +23352,30 @@ function L2ARule(config) {
         switchRequest.reason.throughput = safeThroughput;
         switchRequest.reason.latency = latency;
         l2AState.state = L2A_STATE_STARTUP;
-
         _clearL2AStateOnSeek(l2AState);
-
     }
-
     return switchRequest;
   }
+
   /**
    * Reset objects to their initial state
    * @private
    */
-
-
   function _resetInitialSettings() {
     l2AStateDict = {};
     l2AParameterDict = {};
   }
+
   /**
    * Reset the rule
    */
-
-
   function reset() {
     _resetInitialSettings();
-
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].METRIC_ADDED, _onMetricAdded, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
   }
-
   instance = {
     getMaxIndex: getMaxIndex,
     reset: reset
@@ -25200,7 +23383,6 @@ function L2ARule(config) {
   setup();
   return instance;
 }
-
 L2ARule.__dashjs_factory_name = 'L2ARule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(L2ARule));
 
@@ -25221,20 +23403,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function SwitchHistoryRule() {
   var context = this.context;
-  var instance, logger; //MAX_SWITCH is the number of drops made. It doesn't consider the size of the drop.
+  var instance, logger;
 
-  var MAX_SWITCH = 0.075; //Before this number of switch requests(no switch or actual), don't apply the rule.
+  //MAX_SWITCH is the number of drops made. It doesn't consider the size of the drop.
+  var MAX_SWITCH = 0.075;
+
+  //Before this number of switch requests(no switch or actual), don't apply the rule.
   //must be < SwitchRequestHistory SWITCH_REQUEST_HISTORY_DEPTH to enable rule
-
   var SAMPLE_SIZE = 6;
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
   }
-
   function getMaxIndex(rulesContext) {
     var switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
     var switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
@@ -25242,13 +23423,11 @@ function SwitchHistoryRule() {
     var noDrops = 0;
     var dropSize = 0;
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create();
-
     for (var i = 0; i < switchRequests.length; i++) {
       if (switchRequests[i] !== undefined) {
         drops += switchRequests[i].drops;
         noDrops += switchRequests[i].noDrops;
         dropSize += switchRequests[i].dropSize;
-
         if (drops + noDrops >= SAMPLE_SIZE && drops / noDrops > MAX_SWITCH) {
           switchRequest.quality = i > 0 && switchRequests[i].drops > 0 ? i - 1 : i;
           switchRequest.reason = {
@@ -25262,17 +23441,14 @@ function SwitchHistoryRule() {
         }
       }
     }
-
     return switchRequest;
   }
-
   instance = {
     getMaxIndex: getMaxIndex
   };
   setup();
   return instance;
 }
-
 SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SwitchHistoryRule));
 
@@ -25325,28 +23501,22 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function ThroughputRule(config) {
   config = config || {};
   var context = this.context;
   var dashMetrics = config.dashMetrics;
   var instance;
-
   function setup() {}
-
   function checkConfig() {
     if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
       throw new Error(_constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].MISSING_CONFIG_ERROR);
     }
   }
-
   function getMaxIndex(rulesContext) {
     var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
-
     if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('useBufferOccupancyABR') || !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('getScheduleController')) {
       return switchRequest;
     }
-
     checkConfig();
     var mediaInfo = rulesContext.getMediaInfo();
     var mediaType = rulesContext.getMediaType();
@@ -25360,11 +23530,9 @@ function ThroughputRule(config) {
     var throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
     var latency = throughputHistory.getAverageLatency(mediaType);
     var useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
-
     if (isNaN(throughput) || !currentBufferState || useBufferOccupancyABR) {
       return switchRequest;
     }
-
     if (abrController.getAbandonmentStateFor(streamId, mediaType) !== _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_3__["default"].ABANDON_LOAD) {
       if (currentBufferState.state === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_3__["default"].BUFFER_LOADED || isDynamic) {
         switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
@@ -25375,13 +23543,11 @@ function ThroughputRule(config) {
         };
       }
     }
-
     return switchRequest;
   }
-
-  function reset() {// no persistent information to reset
+  function reset() {
+    // no persistent information to reset
   }
-
   instance = {
     getMaxIndex: getMaxIndex,
     reset: reset
@@ -25389,7 +23555,6 @@ function ThroughputRule(config) {
   setup();
   return instance;
 }
-
 ThroughputRule.__dashjs_factory_name = 'ThroughputRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ThroughputRule));
 
@@ -25445,38 +23610,35 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 var WEIGHT_SELECTION_MODES = {
   MANUAL: 'manual_weight_selection',
   RANDOM: 'random_weight_selection',
   DYNAMIC: 'dynamic_weight_selection'
 };
-
 function LearningAbrController() {
   var context = this.context;
   var instance, logger, somBitrateNeurons, bitrateNormalizationFactor, latencyNormalizationFactor, minBitrate, weights, sortedCenters, weightSelectionMode;
+
   /**
    * Setup the class
    */
-
   function _setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
-
     _resetInitialSettings();
   }
+
   /**
    * Reset all values
    */
-
-
   function reset() {
     _resetInitialSettings();
   }
+
   /**
    * Reset to initial settings
    * @private
    */
-
-
   function _resetInitialSettings() {
     somBitrateNeurons = null;
     bitrateNormalizationFactor = 1;
@@ -25486,36 +23648,31 @@ function LearningAbrController() {
     sortedCenters = null;
     weightSelectionMode = WEIGHT_SELECTION_MODES.DYNAMIC;
   }
+
   /**
    * Returns the maximum throughput
    * @return {number}
    * @private
    */
-
-
   function _getMaxThroughput() {
     var maxThroughput = 0;
-
     if (somBitrateNeurons) {
       for (var i = 0; i < somBitrateNeurons.length; i++) {
         var neuron = somBitrateNeurons[i];
-
         if (neuron.state.throughput > maxThroughput) {
           maxThroughput = neuron.state.throughput;
         }
       }
     }
-
     return maxThroughput;
   }
+
   /**
    *
    * @param {array} w
    * @return {number}
    * @private
    */
-
-
   function _getMagnitude(w) {
     var magnitude = w.map(function (x) {
       return Math.pow(x, 2);
@@ -25524,6 +23681,7 @@ function LearningAbrController() {
     });
     return Math.sqrt(magnitude);
   }
+
   /**
    *
    * @param {array} a
@@ -25532,8 +23690,6 @@ function LearningAbrController() {
    * @return {number}
    * @private
    */
-
-
   function _getDistance(a, b, w) {
     var sum = a.map(function (x, i) {
       return w[i] * Math.pow(x - b[i], 2);
@@ -25541,10 +23697,10 @@ function LearningAbrController() {
     .reduce(function (sum, now) {
       return sum + now;
     }); // sum
-
     var sign = sum < 0 ? -1 : 1;
     return sign * Math.sqrt(Math.abs(sum));
   }
+
   /**
    *
    * @param {object} a
@@ -25552,13 +23708,12 @@ function LearningAbrController() {
    * @return {number}
    * @private
    */
-
-
   function _getNeuronDistance(a, b) {
     var aState = [a.state.throughput, a.state.latency, a.state.rebuffer, a.state["switch"]];
     var bState = [b.state.throughput, b.state.latency, b.state.rebuffer, b.state["switch"]];
     return _getDistance(aState, bState, [1, 1, 1, 1]);
   }
+
   /**
    *
    * @param {object} winnerNeuron
@@ -25566,20 +23721,16 @@ function LearningAbrController() {
    * @param {array} x
    * @private
    */
-
-
   function _updateNeurons(winnerNeuron, somElements, x) {
     for (var i = 0; i < somElements.length; i++) {
       var somNeuron = somElements[i];
       var sigma = 0.1;
-
       var neuronDistance = _getNeuronDistance(somNeuron, winnerNeuron);
-
       var neighbourHood = Math.exp(-1 * Math.pow(neuronDistance, 2) / (2 * Math.pow(sigma, 2)));
-
       _updateNeuronState(somNeuron, x, neighbourHood);
     }
   }
+
   /**
    *
    * @param {object} neuron
@@ -25587,8 +23738,6 @@ function LearningAbrController() {
    * @param {object} neighbourHood
    * @private
    */
-
-
   function _updateNeuronState(neuron, x, neighbourHood) {
     var state = neuron.state;
     var w = [0.01, 0.01, 0.01, 0.01]; // learning rate
@@ -25598,6 +23747,7 @@ function LearningAbrController() {
     state.rebuffer = state.rebuffer + (x[2] - state.rebuffer) * w[2] * neighbourHood;
     state["switch"] = state["switch"] + (x[3] - state["switch"]) * w[3] * neighbourHood;
   }
+
   /**
    *
    * @param {object} currentNeuron
@@ -25605,16 +23755,12 @@ function LearningAbrController() {
    * @return {object}
    * @private
    */
-
-
   function _getDownShiftNeuron(currentNeuron, currentThroughput) {
     var maxSuitableBitrate = 0;
     var result = currentNeuron;
-
     if (somBitrateNeurons) {
       for (var i = 0; i < somBitrateNeurons.length; i++) {
         var n = somBitrateNeurons[i];
-
         if (n.bitrate < currentNeuron.bitrate && n.bitrate > maxSuitableBitrate && currentThroughput > n.bitrate) {
           // possible downshiftable neuron
           maxSuitableBitrate = n.bitrate;
@@ -25622,9 +23768,9 @@ function LearningAbrController() {
         }
       }
     }
-
     return result;
   }
+
   /**
    *
    * @param {object} mediaInfo
@@ -25636,65 +23782,51 @@ function LearningAbrController() {
    * @param {object} dynamicWeightsSelector
    * @return {null|*}
    */
-
-
   function getNextQuality(mediaInfo, throughput, latency, bufferSize, playbackRate, currentQualityIndex, dynamicWeightsSelector) {
     // For Dynamic Weights Selector
     var currentLatency = latency;
     var currentBuffer = bufferSize;
     var currentThroughput = throughput;
-
-    var somElements = _getSomBitrateNeurons(mediaInfo); // normalize throughput
-
-
-    var throughputNormalized = throughput / bitrateNormalizationFactor; // saturate values higher than 1
-
+    var somElements = _getSomBitrateNeurons(mediaInfo);
+    // normalize throughput
+    var throughputNormalized = throughput / bitrateNormalizationFactor;
+    // saturate values higher than 1
     if (throughputNormalized > 1) {
       throughputNormalized = _getMaxThroughput();
-    } // normalize latency
-
-
+    }
+    // normalize latency
     latency = latency / latencyNormalizationFactor;
     var targetLatency = 0;
     var targetRebufferLevel = 0;
-    var targetSwitch = 0; // 10K + video encoding is the recommended throughput
-
+    var targetSwitch = 0;
+    // 10K + video encoding is the recommended throughput
     var throughputDelta = 10000;
     logger.debug("getNextQuality called throughput:".concat(throughputNormalized, " latency:").concat(latency, " bufferSize:").concat(bufferSize, " currentQualityIndex:").concat(currentQualityIndex, " playbackRate:").concat(playbackRate));
     var currentNeuron = somElements[currentQualityIndex];
     var downloadTime = currentNeuron.bitrate * dynamicWeightsSelector.getSegmentDuration() / currentThroughput;
-    var rebuffer = Math.max(0, downloadTime - currentBuffer); // check buffer for possible stall
+    var rebuffer = Math.max(0, downloadTime - currentBuffer);
 
+    // check buffer for possible stall
     if (currentBuffer - downloadTime < dynamicWeightsSelector.getMinBuffer()) {
       logger.debug("Buffer is low for bitrate= ".concat(currentNeuron.bitrate, " downloadTime=").concat(downloadTime, " currentBuffer=").concat(currentBuffer, " rebuffer=").concat(rebuffer));
       return _getDownShiftNeuron(currentNeuron, currentThroughput).qualityIndex;
     }
-
     switch (weightSelectionMode) {
       case WEIGHT_SELECTION_MODES.MANUAL:
         _manualWeightSelection();
-
         break;
-
       case WEIGHT_SELECTION_MODES.RANDOM:
         _randomWeightSelection(somElements);
-
         break;
-
       case WEIGHT_SELECTION_MODES.DYNAMIC:
         _dynamicWeightSelection(dynamicWeightsSelector, somElements, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate);
-
         break;
-
       default:
         _dynamicWeightSelection(dynamicWeightsSelector, somElements, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate);
-
     }
-
     var minDistance = null;
     var minIndex = null;
     var winnerNeuron = null;
-
     for (var i = 0; i < somElements.length; i++) {
       var somNeuron = somElements[i];
       var somNeuronState = somNeuron.state;
@@ -25702,46 +23834,40 @@ function LearningAbrController() {
       var distanceWeights = weights.slice();
       var nextBuffer = dynamicWeightsSelector.getNextBufferWithBitrate(somNeuron.bitrate, currentBuffer, currentThroughput);
       var isBufferLow = nextBuffer < dynamicWeightsSelector.getMinBuffer();
-
       if (isBufferLow) {
         logger.debug("Buffer is low for bitrate=".concat(somNeuron.bitrate, " downloadTime=").concat(downloadTime, " currentBuffer=").concat(currentBuffer, " nextBuffer=").concat(nextBuffer));
-      } // special condition downshift immediately
-
-
+      }
+      // special condition downshift immediately
       if (somNeuron.bitrate > throughput - throughputDelta || isBufferLow) {
         if (somNeuron.bitrate !== minBitrate) {
           // encourage to pick smaller bitrates throughputWeight=100
           distanceWeights[0] = 100;
         }
-      } // calculate the distance with the target
+      }
 
-
+      // calculate the distance with the target
       var distance = _getDistance(somData, [throughputNormalized, targetLatency, targetRebufferLevel, targetSwitch], distanceWeights);
-
       if (minDistance === null || distance < minDistance) {
         minDistance = distance;
         minIndex = somNeuron.qualityIndex;
         winnerNeuron = somNeuron;
       }
-    } // update current neuron and the neighbourhood with the calculated QoE
+    }
+
+    // update current neuron and the neighbourhood with the calculated QoE
     // will punish current if it is not picked
-
-
     var bitrateSwitch = Math.abs(currentNeuron.bitrate - winnerNeuron.bitrate) / bitrateNormalizationFactor;
+    _updateNeurons(currentNeuron, somElements, [throughputNormalized, latency, rebuffer, bitrateSwitch]);
 
-    _updateNeurons(currentNeuron, somElements, [throughputNormalized, latency, rebuffer, bitrateSwitch]); // update bmu and  neighbours with targetQoE=1, targetLatency=0
-
-
+    // update bmu and  neighbours with targetQoE=1, targetLatency=0
     _updateNeurons(winnerNeuron, somElements, [throughputNormalized, targetLatency, targetRebufferLevel, bitrateSwitch]);
-
     return minIndex;
   }
+
   /**
    * Option 1: Manual weights
    * @private
    */
-
-
   function _manualWeightSelection() {
     var throughputWeight = 0.4;
     var latencyWeight = 0.4;
@@ -25749,16 +23875,16 @@ function LearningAbrController() {
     var switchWeight = 0.4;
     weights = [throughputWeight, latencyWeight, bufferWeight, switchWeight]; // throughput, latency, buffer, switch
   }
+
   /**
    * Option 2: Random (Xavier) weights
    * @param {array} somElements
    * @private
    */
-
-
   function _randomWeightSelection(somElements) {
     weights = _getXavierWeights(somElements.length, 4);
   }
+
   /**
    * Dynamic Weight Selector weights
    * @param {object} dynamicWeightsSelector
@@ -25770,21 +23896,18 @@ function LearningAbrController() {
    * @param {number} playbackRate
    * @private
    */
-
-
   function _dynamicWeightSelection(dynamicWeightsSelector, somElements, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate) {
     if (!weights) {
       weights = sortedCenters[sortedCenters.length - 1];
-    } // Dynamic Weights Selector (step 2/2: find weights)
-
-
+    }
+    // Dynamic Weights Selector (step 2/2: find weights)
     var weightVector = dynamicWeightsSelector.findWeightVector(somElements, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate);
-
     if (weightVector !== null && weightVector !== -1) {
       // null: something went wrong, -1: constraints not met
       weights = weightVector;
     }
   }
+
   /**
    *
    * @param {number }neuronCount
@@ -25792,27 +23915,22 @@ function LearningAbrController() {
    * @return {array}
    * @private
    */
-
-
   function _getXavierWeights(neuronCount, weightCount) {
     var W = [];
     var upperBound = Math.sqrt(2 / neuronCount);
-
     for (var i = 0; i < weightCount; i++) {
       W.push(Math.random() * upperBound);
     }
-
     weights = W;
     return weights;
   }
+
   /**
    *
    * @param {object} mediaInfo
    * @return {array}
    * @private
    */
-
-
   function _getSomBitrateNeurons(mediaInfo) {
     if (!somBitrateNeurons) {
       somBitrateNeurons = [];
@@ -25821,13 +23939,11 @@ function LearningAbrController() {
       minBitrate = bitrateList[0].bandwidth;
       bitrateList.forEach(function (element) {
         bitrateVector.push(element.bandwidth);
-
         if (element.bandwidth < minBitrate) {
           minBitrate = element.bandwidth;
         }
       });
       bitrateNormalizationFactor = _getMagnitude(bitrateVector);
-
       for (var i = 0; i < bitrateList.length; i++) {
         var neuron = {
           qualityIndex: i,
@@ -25842,128 +23958,106 @@ function LearningAbrController() {
         };
         somBitrateNeurons.push(neuron);
       }
-
       sortedCenters = _getInitialKmeansPlusPlusCenters(somBitrateNeurons);
     }
-
     return somBitrateNeurons;
   }
+
   /**
    *
    * @param {number} size
    * @return {array}
    * @private
    */
-
-
   function _getRandomData(size) {
     var dataArray = [];
-
     for (var i = 0; i < size; i++) {
-      var data = [Math.random() * _getMaxThroughput(), //throughput
-      Math.random(), //latency
-      Math.random(), //buffersize
+      var data = [Math.random() * _getMaxThroughput(),
+      //throughput
+      Math.random(),
+      //latency
+      Math.random(),
+      //buffersize
       Math.random() //switch
       ];
+
       dataArray.push(data);
     }
-
     return dataArray;
   }
+
   /**
    *
    * @param {array} somElements
    * @return {array}
    * @private
    */
-
-
   function _getInitialKmeansPlusPlusCenters(somElements) {
     var centers = [];
-
     var randomDataSet = _getRandomData(Math.pow(somElements.length, 2));
-
     centers.push(randomDataSet[0]);
     var distanceWeights = [1, 1, 1, 1];
-
     for (var k = 1; k < somElements.length; k++) {
       var nextPoint = null;
       var _maxDistance = null;
-
       for (var i = 0; i < randomDataSet.length; i++) {
         var currentPoint = randomDataSet[i];
         var minDistance = null;
-
         for (var j = 0; j < centers.length; j++) {
           var distance = _getDistance(currentPoint, centers[j], distanceWeights);
-
           if (minDistance === null || distance < minDistance) {
             minDistance = distance;
           }
         }
-
         if (_maxDistance === null || minDistance > _maxDistance) {
           nextPoint = currentPoint;
           _maxDistance = minDistance;
         }
       }
-
       centers.push(nextPoint);
-    } // find the least similar center
+    }
 
-
+    // find the least similar center
     var maxDistance = null;
     var leastSimilarIndex = null;
-
     for (var _i = 0; _i < centers.length; _i++) {
       var _distance = 0;
-
       for (var _j = 0; _j < centers.length; _j++) {
         if (_i === _j) continue;
         _distance += _getDistance(centers[_i], centers[_j], distanceWeights);
       }
-
       if (maxDistance === null || _distance > maxDistance) {
         maxDistance = _distance;
         leastSimilarIndex = _i;
       }
-    } // move centers to sortedCenters
+    }
 
-
+    // move centers to sortedCenters
     var sortedCenters = [];
     sortedCenters.push(centers[leastSimilarIndex]);
     centers.splice(leastSimilarIndex, 1);
-
     while (centers.length > 0) {
       var _minDistance = null;
       var minIndex = null;
-
       for (var _i2 = 0; _i2 < centers.length; _i2++) {
         var _distance2 = _getDistance(sortedCenters[0], centers[_i2], distanceWeights);
-
         if (_minDistance === null || _distance2 < _minDistance) {
           _minDistance = _distance2;
           minIndex = _i2;
         }
       }
-
       sortedCenters.push(centers[minIndex]);
       centers.splice(minIndex, 1);
     }
-
     return sortedCenters;
   }
-
   instance = {
     getNextQuality: getNextQuality,
     reset: reset
   };
-
   _setup();
-
   return instance;
 }
-
 LearningAbrController.__dashjs_factory_name = 'LearningAbrController';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LearningAbrController));
 
@@ -26019,21 +24113,17 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
-
 function LoLpQoeEvaluator() {
   var instance, voPerSegmentQoeInfo, segmentDuration, maxBitrateKbps, minBitrateKbps;
-
   function _setup() {
     _resetInitialSettings();
   }
-
   function _resetInitialSettings() {
     voPerSegmentQoeInfo = null;
     segmentDuration = null;
     maxBitrateKbps = null;
     minBitrateKbps = null;
   }
-
   function setupPerSegmentQoe(sDuration, maxBrKbps, minBrKbps) {
     // Set up Per Segment QoeInfo
     voPerSegmentQoeInfo = _createQoeInfo('segment', sDuration, maxBrKbps, minBrKbps);
@@ -26041,7 +24131,6 @@ function LoLpQoeEvaluator() {
     maxBitrateKbps = maxBrKbps;
     minBitrateKbps = minBrKbps;
   }
-
   function _createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps) {
     /*
      * [Weights][Source: Abdelhak Bentaleb, 2020 (last updated: 30 Mar 2020)]
@@ -26051,29 +24140,32 @@ function LoLpQoeEvaluator() {
      * latencyPenalty:          if L ≤ 1.1 seconds then = min encoding bitrate * 0.05, otherwise = max encoding bitrate * 0.1
      * playbackSpeedPenalty:    min encoding bitrate, e.g. 200kbps
      */
+
     // Create new QoeInfo object
     var qoeInfo = new _QoeInfo__WEBPACK_IMPORTED_MODULE_1__["default"]();
-    qoeInfo.type = fragmentType; // Set weight: bitrateReward
-    // set some safe value, else consider throwing error
+    qoeInfo.type = fragmentType;
 
+    // Set weight: bitrateReward
+    // set some safe value, else consider throwing error
     if (!fragmentDuration) {
       qoeInfo.weights.bitrateReward = 1;
     } else {
       qoeInfo.weights.bitrateReward = fragmentDuration;
-    } // Set weight: bitrateSwitchPenalty
+    }
+
+    // Set weight: bitrateSwitchPenalty
     // qoeInfo.weights.bitrateSwitchPenalty = 0.02;
+    qoeInfo.weights.bitrateSwitchPenalty = 1;
 
-
-    qoeInfo.weights.bitrateSwitchPenalty = 1; // Set weight: rebufferPenalty
+    // Set weight: rebufferPenalty
     // set some safe value, else consider throwing error
-
     if (!maxBitrateKbps) {
       qoeInfo.weights.rebufferPenalty = 1000;
     } else {
       qoeInfo.weights.rebufferPenalty = maxBitrateKbps;
-    } // Set weight: latencyPenalty
+    }
 
-
+    // Set weight: latencyPenalty
     qoeInfo.weights.latencyPenalty = [];
     qoeInfo.weights.latencyPenalty.push({
       threshold: 1.1,
@@ -26082,74 +24174,70 @@ function LoLpQoeEvaluator() {
     qoeInfo.weights.latencyPenalty.push({
       threshold: 100000000,
       penalty: maxBitrateKbps * 0.1
-    }); // Set weight: playbackSpeedPenalty
+    });
 
+    // Set weight: playbackSpeedPenalty
     if (!minBitrateKbps) qoeInfo.weights.playbackSpeedPenalty = 200; // set some safe value, else consider throwing error
     else qoeInfo.weights.playbackSpeedPenalty = minBitrateKbps;
     return qoeInfo;
   }
-
   function logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
     if (voPerSegmentQoeInfo) {
       _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, voPerSegmentQoeInfo);
     }
   }
-
   function _logMetricsInQoeInfo(bitrate, rebufferTime, latency, playbackSpeed, qoeInfo) {
     // Update: bitrate Weighted Sum value
-    qoeInfo.bitrateWSum += qoeInfo.weights.bitrateReward * bitrate; // Update: bitrateSwitch Weighted Sum value
+    qoeInfo.bitrateWSum += qoeInfo.weights.bitrateReward * bitrate;
 
+    // Update: bitrateSwitch Weighted Sum value
     if (qoeInfo.lastBitrate) {
       qoeInfo.bitrateSwitchWSum += qoeInfo.weights.bitrateSwitchPenalty * Math.abs(bitrate - qoeInfo.lastBitrate);
     }
+    qoeInfo.lastBitrate = bitrate;
 
-    qoeInfo.lastBitrate = bitrate; // Update: rebuffer Weighted Sum value
+    // Update: rebuffer Weighted Sum value
+    qoeInfo.rebufferWSum += qoeInfo.weights.rebufferPenalty * rebufferTime;
 
-    qoeInfo.rebufferWSum += qoeInfo.weights.rebufferPenalty * rebufferTime; // Update: latency Weighted Sum value
-
+    // Update: latency Weighted Sum value
     for (var i = 0; i < qoeInfo.weights.latencyPenalty.length; i++) {
       var latencyRange = qoeInfo.weights.latencyPenalty[i];
-
       if (latency <= latencyRange.threshold) {
         qoeInfo.latencyWSum += latencyRange.penalty * latency;
         break;
       }
-    } // Update: playbackSpeed Weighted Sum value
+    }
 
+    // Update: playbackSpeed Weighted Sum value
+    qoeInfo.playbackSpeedWSum += qoeInfo.weights.playbackSpeedPenalty * Math.abs(1 - playbackSpeed);
 
-    qoeInfo.playbackSpeedWSum += qoeInfo.weights.playbackSpeedPenalty * Math.abs(1 - playbackSpeed); // Update: Total Qoe value
-
+    // Update: Total Qoe value
     qoeInfo.totalQoe = qoeInfo.bitrateWSum - qoeInfo.bitrateSwitchWSum - qoeInfo.rebufferWSum - qoeInfo.latencyWSum - qoeInfo.playbackSpeedWSum;
-  } // Returns current Per Segment QoeInfo
+  }
 
-
+  // Returns current Per Segment QoeInfo
   function getPerSegmentQoe() {
     return voPerSegmentQoeInfo;
-  } // For one-time use only
+  }
+
+  // For one-time use only
   // Returns totalQoe based on a single set of metrics.
-
-
   function calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
     var singleUseQoeInfo = null;
-
     if (segmentDuration && maxBitrateKbps && minBitrateKbps) {
       singleUseQoeInfo = _createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
     }
-
     if (singleUseQoeInfo) {
       _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
-
       return singleUseQoeInfo.totalQoe;
     } else {
       // Something went wrong..
       return 0;
     }
   }
-
   function reset() {
     _resetInitialSettings();
   }
-
   instance = {
     setupPerSegmentQoe: setupPerSegmentQoe,
     logSegmentMetrics: logSegmentMetrics,
@@ -26157,12 +24245,9 @@ function LoLpQoeEvaluator() {
     calculateSingleUseQoe: calculateSingleUseQoe,
     reset: reset
   };
-
   _setup();
-
   return instance;
 }
-
 LoLpQoeEvaluator.__dashjs_factory_name = 'LoLpQoeEvaluator';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpQoeEvaluator));
 
@@ -26230,21 +24315,19 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 var DWS_TARGET_LATENCY = 1.5;
 var DWS_BUFFER_MIN = 0.3;
-
 function LoLPRule(config) {
   config = config || {};
   var dashMetrics = config.dashMetrics;
   var context = this.context;
   var logger, instance, learningController, qoeEvaluator;
-
   function _setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance().getLogger(instance);
     learningController = Object(_LearningAbrController__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create();
     qoeEvaluator = Object(_LoLpQoEEvaluator__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create();
   }
-
   function getMaxIndex(rulesContext) {
     try {
       var switchRequest = Object(_SwitchRequest__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create();
@@ -26259,45 +24342,37 @@ function LoLPRule(config) {
       var isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
       var playbackController = scheduleController.getPlaybackController();
       var latency = playbackController.getCurrentLiveLatency();
-
       if (!rulesContext.useLoLPABR() || mediaType === _constants_Constants__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO) {
         return switchRequest;
       }
-
       if (!latency) {
         latency = 0;
       }
-
       var playbackRate = playbackController.getPlaybackRate();
       var throughputHistory = abrController.getThroughputHistory();
       var throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
       logger.debug("Throughput ".concat(Math.round(throughput), " kbps"));
-
       if (isNaN(throughput) || !bufferStateVO) {
         return switchRequest;
       }
-
       if (abrController.getAbandonmentStateFor(streamInfo.id, mediaType) === _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_5__["default"].ABANDON_LOAD) {
         return switchRequest;
-      } // QoE parameters
+      }
 
-
+      // QoE parameters
       var bitrateList = mediaInfo.bitrateList; // [{bandwidth: 200000, width: 640, height: 360}, ...]
-
       var segmentDuration = rulesContext.getRepresentationInfo().fragmentDuration;
       var minBitrateKbps = bitrateList[0].bandwidth / 1000.0; // min bitrate level
-
       var maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0; // max bitrate level
-
       for (var i = 0; i < bitrateList.length; i++) {
         // in case bitrateList is not sorted as expected
         var b = bitrateList[i].bandwidth / 1000.0;
         if (b > maxBitrateKbps) maxBitrateKbps = b;else if (b < minBitrateKbps) {
           minBitrateKbps = b;
         }
-      } // Learning rule pre-calculations
+      }
 
-
+      // Learning rule pre-calculations
       var currentBitrate = bitrateList[currentQuality].bandwidth;
       var currentBitrateKbps = currentBitrate / 1000.0;
       var httpRequest = dashMetrics.getCurrentHttpRequest(mediaType, true);
@@ -26305,20 +24380,20 @@ function LoLPRule(config) {
       var segmentRebufferTime = lastFragmentDownloadTime > segmentDuration ? lastFragmentDownloadTime - segmentDuration : 0;
       qoeEvaluator.setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps);
       qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
+
       /*
       * Dynamic Weights Selector (step 1/2: initialization)
       */
-
       var dynamicWeightsSelector = Object(_LoLpWeightSelector__WEBPACK_IMPORTED_MODULE_6__["default"])(context).create({
         targetLatency: DWS_TARGET_LATENCY,
         bufferMin: DWS_BUFFER_MIN,
         segmentDuration: segmentDuration,
         qoeEvaluator: qoeEvaluator
       });
+
       /*
        * Select next quality
        */
-
       switchRequest.quality = learningController.getNextQuality(mediaInfo, throughput * 1000, latency, currentBufferLevel, playbackRate, currentQuality, dynamicWeightsSelector);
       switchRequest.reason = {
         throughput: throughput,
@@ -26326,45 +24401,37 @@ function LoLPRule(config) {
       };
       switchRequest.priority = _SwitchRequest__WEBPACK_IMPORTED_MODULE_4__["default"].PRIORITY.STRONG;
       scheduleController.setTimeToLoadDelay(0);
-
       if (switchRequest.quality !== currentQuality) {
         console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
       }
-
       return switchRequest;
     } catch (e) {
       throw e;
     }
   }
+
   /**
    * Reset objects to their initial state
    * @private
    */
-
-
   function _resetInitialSettings() {
     learningController.reset();
     qoeEvaluator.reset();
   }
+
   /**
    * Reset the rule
    */
-
-
   function reset() {
     _resetInitialSettings();
   }
-
   instance = {
     getMaxIndex: getMaxIndex,
     reset: reset
   };
-
   _setup();
-
   return instance;
 }
-
 LoLPRule.__dashjs_factory_name = 'LoLPRule';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(LoLPRule));
 
@@ -26425,26 +24492,26 @@ function LoLpWeightSelector(config) {
   var segmentDuration = config.segmentDuration;
   var qoeEvaluator = config.qoeEvaluator;
   var instance, valueList, weightTypeCount, weightOptions, previousLatency;
+
   /**
    *
    * @private
    */
-
   function _setup() {
     _resetInitialSettings();
   }
+
   /**
    *
    * @private
    */
-
-
   function _resetInitialSettings() {
     valueList = [0.2, 0.4, 0.6, 0.8, 1];
     weightTypeCount = 4;
     weightOptions = _getPermutations(valueList, weightTypeCount);
     previousLatency = 0;
   }
+
   /**
    * Next, at each segment boundary, ABR to input current neurons and target state (only used in Method II) to find the desired weight vector
    * @param {array} neurons
@@ -26456,14 +24523,13 @@ function LoLpWeightSelector(config) {
    * @return {null}
    * @private
    */
-
-
   function findWeightVector(neurons, currentLatency, currentBuffer, currentRebuffer, currentThroughput, playbackRate) {
     var maxQoE = null;
     var winnerWeights = null;
     var winnerBitrate = null;
-    var deltaLatency = Math.abs(currentLatency - previousLatency); // For each neuron, m
+    var deltaLatency = Math.abs(currentLatency - previousLatency);
 
+    // For each neuron, m
     neurons.forEach(function (neuron) {
       // For each possible weight vector, z
       // E.g. For [ throughput, latency, buffer, playbackRate, QoE ]
@@ -26471,6 +24537,7 @@ function LoLpWeightSelector(config) {
       weightOptions.forEach(function (weightVector) {
         // Apply weightVector to neuron, compute utility and determine winnerWeights
         // Method I: Utility based on QoE given current state
+
         var weightsObj = {
           throughput: weightVector[0],
           latency: weightVector[1],
@@ -26481,15 +24548,12 @@ function LoLpWeightSelector(config) {
         var nextBuffer = getNextBuffer(currentBuffer, downloadTime);
         var rebuffer = Math.max(0.00001, downloadTime - nextBuffer);
         var wt;
-
         if (weightsObj.buffer === 0) {
           wt = 10;
         } else {
           wt = 1 / weightsObj.buffer;
         }
-
         var weightedRebuffer = wt * rebuffer;
-
         if (weightsObj.latency === 0) {
           wt = 10;
         } else {
@@ -26498,22 +24562,22 @@ function LoLpWeightSelector(config) {
 
         var weightedLatency = wt * neuron.state.latency;
         var totalQoE = qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, playbackRate);
-
         if ((maxQoE === null || totalQoE > maxQoE) && _checkConstraints(currentLatency, nextBuffer, deltaLatency)) {
           maxQoE = totalQoE;
           winnerWeights = weightVector;
           winnerBitrate = neuron.bitrate;
         }
       });
-    }); // winnerWeights was found, check if constraints are satisfied
+    });
 
+    // winnerWeights was found, check if constraints are satisfied
     if (winnerWeights === null && winnerBitrate === null) {
       winnerWeights = -1;
     }
-
     previousLatency = currentLatency;
     return winnerWeights;
   }
+
   /**
    *
    * @param {number} nextLatency
@@ -26522,8 +24586,6 @@ function LoLpWeightSelector(config) {
    * @return {boolean}
    * @private
    */
-
-
   function _checkConstraints(nextLatency, nextBuffer, deltaLatency) {
     // A1
     // disabled till we find a better way of estimating latency
@@ -26531,9 +24593,9 @@ function LoLpWeightSelector(config) {
     if (nextLatency > targetLatency + deltaLatency) {
       return false;
     }
-
     return nextBuffer >= bufferMin;
   }
+
   /**
    *
    * @param {array} list
@@ -26541,56 +24603,49 @@ function LoLpWeightSelector(config) {
    * @return {*}
    * @private
    */
-
-
   function _getPermutations(list, length) {
     // Copy initial values as arrays
     var perm = list.map(function (val) {
       return [val];
-    }); // Our permutation generator
-
+    });
+    // Our permutation generator
     var generate = function generate(perm, length, currLen) {
       // Reached desired length
       if (currLen === length) {
         return perm;
-      } // For each existing permutation
-
-
+      }
+      // For each existing permutation
       var len = perm.length;
-
       for (var i = 0; i < len; i++) {
-        var currPerm = perm.shift(); // Create new permutation
-
+        var currPerm = perm.shift();
+        // Create new permutation
         for (var k = 0; k < list.length; k++) {
           perm.push(currPerm.concat(list[k]));
         }
-      } // Recurse
-
-
+      }
+      // Recurse
       return generate(perm, length, currLen + 1);
-    }; // Start with size 1 because of initial values
-
-
+    };
+    // Start with size 1 because of initial values
     return generate(perm, length, 1);
   }
+
   /**
    *
    * @return {number}
    */
-
-
   function getMinBuffer() {
     return bufferMin;
   }
+
   /**
    *
    * @return {number}
    */
-
-
   function getSegmentDuration() {
     return segmentDuration;
   }
+
   /**
    *
    * @param {number} bitrateToDownload
@@ -26598,33 +24653,27 @@ function LoLpWeightSelector(config) {
    * @param {number} currentThroughput
    * @return {number}
    */
-
-
   function getNextBufferWithBitrate(bitrateToDownload, currentBuffer, currentThroughput) {
     var downloadTime = bitrateToDownload * segmentDuration / currentThroughput;
     return getNextBuffer(currentBuffer, downloadTime);
   }
+
   /**
    *
    * @param {number} currentBuffer
    * @param {number} downloadTime
    * @return {number}
    */
-
-
   function getNextBuffer(currentBuffer, downloadTime) {
     var segmentDuration = getSegmentDuration();
     var nextBuffer;
-
     if (downloadTime > segmentDuration) {
       nextBuffer = currentBuffer - segmentDuration;
     } else {
       nextBuffer = currentBuffer + segmentDuration - downloadTime;
     }
-
     return nextBuffer;
   }
-
   instance = {
     getMinBuffer: getMinBuffer,
     getSegmentDuration: getSegmentDuration,
@@ -26632,12 +24681,9 @@ function LoLpWeightSelector(config) {
     getNextBuffer: getNextBuffer,
     findWeightVector: findWeightVector
   };
-
   _setup();
-
   return instance;
 }
-
 LoLpWeightSelector.__dashjs_factory_name = 'LoLpWeightSelector';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpWeightSelector));
 
@@ -26652,8 +24698,12 @@ LoLpWeightSelector.__dashjs_factory_name = 'LoLpWeightSelector';
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -26684,40 +24734,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var QoeInfo = function QoeInfo() {
+var QoeInfo = /*#__PURE__*/_createClass(function QoeInfo() {
   _classCallCheck(this, QoeInfo);
-
   // Type e.g. 'segment'
-  this.type = null; // Store lastBitrate for calculation of bitrateSwitchWSum
+  this.type = null;
 
-  this.lastBitrate = null; // Weights for each Qoe factor
+  // Store lastBitrate for calculation of bitrateSwitchWSum
+  this.lastBitrate = null;
 
+  // Weights for each Qoe factor
   this.weights = {};
   this.weights.bitrateReward = null;
   this.weights.bitrateSwitchPenalty = null;
   this.weights.rebufferPenalty = null;
   this.weights.latencyPenalty = null;
-  this.weights.playbackSpeedPenalty = null; // Weighted Sum for each Qoe factor
+  this.weights.playbackSpeedPenalty = null;
 
+  // Weighted Sum for each Qoe factor
   this.bitrateWSum = 0; // kbps
-
   this.bitrateSwitchWSum = 0; // kbps
-
   this.rebufferWSum = 0; // seconds
-
   this.latencyWSum = 0; // seconds
-
   this.playbackSpeedWSum = 0; // e.g. 0.95, 1.0, 1.05
+
   // Store total Qoe value based on current Weighted Sum values
-
   this.totalQoe = 0;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (QoeInfo);
 
 /***/ }),
@@ -26783,7 +24829,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'];
-
 function ThumbnailTracks(config) {
   var context = this.context;
   var adapter = config.adapter;
@@ -26796,7 +24841,6 @@ function ThumbnailTracks(config) {
   var dashConstants = config.dashConstants;
   var urlUtils = Object(_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   var instance, tracks, dashHandler, currentTrackIndex, mediaInfo, segmentsController, loader, boxParser;
-
   function setup() {
     reset();
     loader = Object(_streaming_net_XHRLoader__WEBPACK_IMPORTED_MODULE_7__["default"])(context).create({});
@@ -26822,37 +24866,32 @@ function ThumbnailTracks(config) {
       events: events,
       dashConstants: dashConstants,
       urlUtils: urlUtils
-    }); // initialize controllers
+    });
 
+    // initialize controllers
     dashHandler.initialize(adapter ? adapter.getIsDynamic() : false);
   }
-
   function addTracks() {
     if (!streamInfo || !adapter) {
       return;
-    } // Extract thumbnail tracks
+    }
 
-
+    // Extract thumbnail tracks
     mediaInfo = adapter.getMediaInfoForType(streamInfo, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE);
-
     if (!mediaInfo) {
       return;
     }
-
     var voReps = adapter.getVoRepresentations(mediaInfo);
-
     if (voReps && voReps.length > 0) {
       voReps.forEach(function (rep) {
         if (rep.segmentInfoType === _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media || rep.segmentInfoType === _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) {
           _createTrack(rep);
         }
-
         if (rep.segmentInfoType === _dash_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE) {
           _createTrack(rep, true);
         }
       });
     }
-
     if (tracks.length > 0) {
       // Sort bitrates and select the lowest bitrate rendition
       tracks.sort(function (a, b) {
@@ -26860,7 +24899,6 @@ function ThumbnailTracks(config) {
       });
     }
   }
-
   function _createTrack(representation, useSegmentBase) {
     var track = new _vo_ThumbnailTrackInfo__WEBPACK_IMPORTED_MODULE_3__["default"]();
     track.id = representation.id;
@@ -26869,12 +24907,10 @@ function ThumbnailTracks(config) {
     track.height = representation.height;
     track.tilesHor = 1;
     track.tilesVert = 1;
-
     if (representation.essentialProperties) {
       representation.essentialProperties.forEach(function (p) {
         if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
           var vars = p.value.split('x');
-
           if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
             track.tilesHor = parseInt(vars[0], 10);
             track.tilesVert = parseInt(vars[1], 10);
@@ -26882,7 +24918,6 @@ function ThumbnailTracks(config) {
         }
       });
     }
-
     if (useSegmentBase) {
       segmentsController.updateSegmentData(representation).then(function (data) {
         _handleUpdatedSegmentData(track, representation, data);
@@ -26893,7 +24928,6 @@ function ThumbnailTracks(config) {
       track.timescale = representation.timescale;
       track.templateUrl = buildTemplateUrl(representation);
     }
-
     if (track.tilesHor > 0 && track.tilesVert > 0) {
       // Precalculate width and heigth per tile for perf reasons
       track.widthPerTile = track.width / track.tilesHor;
@@ -26901,12 +24935,9 @@ function ThumbnailTracks(config) {
       tracks.push(track);
     }
   }
-
   function _handleUpdatedSegmentData(track, representation, data) {
     var cache = [];
-
     var segments = _normalizeSegments(data, representation);
-
     representation.segments = segments;
     track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
 
@@ -26918,7 +24949,6 @@ function ThumbnailTracks(config) {
           return true;
         }
       });
-
       if (cached) {
         callback(cached);
       } else {
@@ -26952,85 +24982,66 @@ function ThumbnailTracks(config) {
       }
     };
   }
-
   function _normalizeSegments(data, representation) {
     var segments = [];
     var count = 0;
     var i, len, s, seg;
-
     for (i = 0, len = data.segments.length; i < len; i++) {
       s = data.segments[i];
       seg = Object(_dash_utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_5__["getTimeBasedSegment"])(timelineConverter, adapter.getIsDynamic(), representation, s.startTime, s.duration, s.timescale, s.media, s.mediaRange, count);
-
       if (seg) {
         segments.push(seg);
         seg = null;
         count++;
       }
     }
-
     return segments;
   }
-
   function buildTemplateUrl(representation) {
     var templateUrl = urlUtils.isRelative(representation.media) ? urlUtils.resolve(representation.media, baseURLController.resolve(representation.path).url) : representation.media;
-
     if (!templateUrl) {
       return '';
     }
-
     return Object(_dash_utils_SegmentsUtils__WEBPACK_IMPORTED_MODULE_5__["replaceIDForTemplate"])(templateUrl, representation.id);
   }
-
   function getTracks() {
     return tracks;
   }
-
   function getCurrentTrackIndex() {
     return currentTrackIndex;
   }
-
   function getCurrentTrack() {
     if (currentTrackIndex < 0) {
       return null;
     }
-
     return tracks[currentTrackIndex];
   }
-
   function setTrackByIndex(index) {
     if (!tracks || tracks.length === 0) {
       return;
-    } // select highest bitrate in case selected index is higher than bitrate list length
-
-
+    }
+    // select highest bitrate in case selected index is higher than bitrate list length
     if (index >= tracks.length) {
       index = tracks.length - 1;
     }
-
     currentTrackIndex = index;
   }
-
   function getThumbnailRequestForTime(time) {
     var currentVoRep;
     var voReps = adapter.getVoRepresentations(mediaInfo);
-
     for (var i = 0; i < voReps.length; i++) {
       if (tracks[currentTrackIndex].id === voReps[i].id) {
         currentVoRep = voReps[i];
         break;
       }
     }
-
     return dashHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
   }
-
   function reset() {
     tracks = [];
     currentTrackIndex = -1;
     mediaInfo = null;
   }
-
   instance = {
     getTracks: getTracks,
     addTracks: addTracks,
@@ -27043,7 +25054,6 @@ function ThumbnailTracks(config) {
   setup();
   return instance;
 }
-
 ThumbnailTracks.__dashjs_factory_name = 'ThumbnailTracks';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(ThumbnailTracks));
 
@@ -27100,34 +25110,30 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function BoxParser()
-/*config*/
-{
+function BoxParser( /*config*/
+) {
   var logger, instance;
   var context = this.context;
-
   function setup() {
     logger = Object(_core_Debug__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance().getLogger(instance);
   }
+
   /**
    * @param {ArrayBuffer} data
    * @returns {IsoFile|null}
    * @memberof BoxParser#
    */
-
-
   function parse(data) {
     if (!data) return null;
-
     if (data.fileStart === undefined) {
       data.fileStart = 0;
     }
-
     var parsedFile = codem_isoboxer__WEBPACK_IMPORTED_MODULE_3___default.a.parseBuffer(data);
     var dashIsoFile = Object(_IsoFile__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
     dashIsoFile.setData(parsedFile);
     return dashIsoFile;
   }
+
   /**
    * From the list of type boxes to look for, returns the latest one that is fully completed (header + payload). This
    * method only looks into the list of top boxes and doesn't analyze nested boxes.
@@ -27137,30 +25143,24 @@ function BoxParser()
    * @returns {IsoBoxSearchInfo}
    * @memberof BoxParser#
    */
-
-
   function findLastTopIsoBoxCompleted(types, buffer, offset) {
     if (offset === undefined) {
       offset = 0;
-    } // 8 = size (uint32) + type (4 characters)
+    }
 
-
+    // 8 = size (uint32) + type (4 characters)
     if (!buffer || offset + 8 >= buffer.byteLength) {
       return new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](0, false);
     }
-
     var data = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
     var boxInfo;
     var lastCompletedOffset = 0;
-
     while (offset < data.byteLength) {
       var boxSize = parseUint32(data, offset);
       var boxType = parseIsoBoxType(data, offset + 4);
-
       if (boxSize === 0) {
         break;
       }
-
       if (offset + boxSize <= data.byteLength) {
         if (types.indexOf(boxType) >= 0) {
           boxInfo = new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](offset, true, boxSize);
@@ -27168,17 +25168,13 @@ function BoxParser()
           lastCompletedOffset = offset + boxSize;
         }
       }
-
       offset += boxSize;
     }
-
     if (!boxInfo) {
       return new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](lastCompletedOffset, false);
     }
-
     return boxInfo;
   }
-
   function getSamplesInfo(ab) {
     if (!ab || ab.byteLength === 0) {
       return {
@@ -27188,11 +25184,10 @@ function BoxParser()
         numSequences: NaN
       };
     }
-
-    var isoFile = parse(ab); // zero or more moofs
-
-    var moofBoxes = isoFile.getBoxes('moof'); // exactly one mfhd per moof
-
+    var isoFile = parse(ab);
+    // zero or more moofs
+    var moofBoxes = isoFile.getBoxes('moof');
+    // exactly one mfhd per moof
     var mfhdBoxes = isoFile.getBoxes('mfhd');
     var sampleDuration, sampleCompositionTimeOffset, sampleCount, sampleSize, sampleDts, sampleList, sample, i, j, k, l, m, n, dataOffset, lastSequenceNumber, numSequences, totalDuration;
     numSequences = isoFile.getBoxes('moof').length;
@@ -27201,29 +25196,25 @@ function BoxParser()
     sampleList = [];
     var subsIndex = -1;
     var nextSubsSample = -1;
-
     for (l = 0; l < moofBoxes.length; l++) {
-      var moofBox = moofBoxes[l]; // zero or more trafs per moof
-
+      var moofBox = moofBoxes[l];
+      // zero or more trafs per moof
       var trafBoxes = moofBox.getChildBoxes('traf');
-
       for (j = 0; j < trafBoxes.length; j++) {
-        var trafBox = trafBoxes[j]; // exactly one tfhd per traf
-
-        var tfhdBox = trafBox.getChildBox('tfhd'); // zero or one tfdt per traf
-
+        var trafBox = trafBoxes[j];
+        // exactly one tfhd per traf
+        var tfhdBox = trafBox.getChildBox('tfhd');
+        // zero or one tfdt per traf
         var tfdtBox = trafBox.getChildBox('tfdt');
-        sampleDts = tfdtBox.baseMediaDecodeTime; // zero or more truns per traf
-
-        var trunBoxes = trafBox.getChildBoxes('trun'); // zero or more subs per traf
-
+        sampleDts = tfdtBox.baseMediaDecodeTime;
+        // zero or more truns per traf
+        var trunBoxes = trafBox.getChildBoxes('trun');
+        // zero or more subs per traf
         var subsBoxes = trafBox.getChildBoxes('subs');
-
         for (k = 0; k < trunBoxes.length; k++) {
           var trunBox = trunBoxes[k];
           sampleCount = trunBox.sample_count;
           dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
-
           for (i = 0; i < sampleCount; i++) {
             sample = trunBox.samples[i];
             sampleDuration = sample.sample_duration !== undefined ? sample.sample_duration : tfhdBox.default_sample_duration;
@@ -27237,37 +25228,30 @@ function BoxParser()
               'size': sampleSize,
               'subSizes': [sampleSize]
             };
-
             if (subsBoxes) {
               for (m = 0; m < subsBoxes.length; m++) {
                 var subsBox = subsBoxes[m];
-
                 if (subsIndex < subsBox.entry_count - 1 && i > nextSubsSample) {
                   subsIndex++;
                   nextSubsSample += subsBox.entries[subsIndex].sample_delta;
                 }
-
                 if (i == nextSubsSample) {
                   sampleData.subSizes = [];
                   var entry = subsBox.entries[subsIndex];
-
                   for (n = 0; n < entry.subsample_count; n++) {
                     sampleData.subSizes.push(entry.subsamples[n].subsample_size);
                   }
                 }
               }
             }
-
             sampleList.push(sampleData);
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
           }
         }
-
         totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
       }
     }
-
     return {
       sampleList: sampleList,
       lastSequenceNumber: lastSequenceNumber,
@@ -27275,43 +25259,36 @@ function BoxParser()
       numSequences: numSequences
     };
   }
-
   function getMediaTimescaleFromMoov(ab) {
     var isoFile = parse(ab);
     var mdhdBox = isoFile ? isoFile.getBox('mdhd') : undefined;
     return mdhdBox ? mdhdBox.timescale : NaN;
   }
-
   function parseUint32(data, offset) {
     return data[offset + 3] >>> 0 | data[offset + 2] << 8 >>> 0 | data[offset + 1] << 16 >>> 0 | data[offset] << 24 >>> 0;
   }
-
   function parseIsoBoxType(data, offset) {
     return String.fromCharCode(data[offset++]) + String.fromCharCode(data[offset++]) + String.fromCharCode(data[offset++]) + String.fromCharCode(data[offset]);
   }
-
   function findInitRange(data) {
     var initRange = null;
     var start, end;
     var isoFile = parse(data);
-
     if (!isoFile) {
       return initRange;
     }
-
     var ftyp = isoFile.getBox('ftyp');
     var moov = isoFile.getBox('moov');
     logger.debug('Searching for initialization.');
-
     if (moov && moov.isComplete) {
       start = ftyp ? ftyp.offset : moov.offset;
       end = moov.offset + moov.size - 1;
       initRange = start + '-' + end;
       logger.debug('Found the initialization.  Range: ' + initRange);
     }
-
     return initRange;
   }
+
   /**
    * Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
    * @param {array} types
@@ -27319,29 +25296,22 @@ function BoxParser()
    * @param {number} offset
    * @return {IsoBoxSearchInfo}
    */
-
-
   function parsePayload(types, buffer, offset) {
     if (offset === undefined) {
       offset = 0;
     }
-
     if (!buffer || offset + 8 >= buffer.byteLength) {
       return new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](0, false);
     }
-
     var data = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
     var boxInfo;
     var lastCompletedOffset = 0;
-
     while (offset < data.byteLength) {
       var boxSize = parseUint32(data, offset);
       var boxType = parseIsoBoxType(data, offset + 4);
-
       if (boxSize === 0) {
         break;
       }
-
       if (offset + boxSize <= data.byteLength) {
         if (types.indexOf(boxType) >= 0) {
           boxInfo = new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](offset, true, boxSize, boxType);
@@ -27349,17 +25319,13 @@ function BoxParser()
           lastCompletedOffset = offset + boxSize;
         }
       }
-
       offset += boxSize;
     }
-
     if (!boxInfo) {
       return new _vo_IsoBoxSearchInfo__WEBPACK_IMPORTED_MODULE_4__["default"](lastCompletedOffset, false);
     }
-
     return boxInfo;
   }
-
   instance = {
     parse: parse,
     findLastTopIsoBoxCompleted: findLastTopIsoBoxCompleted,
@@ -27371,7 +25337,6 @@ function BoxParser()
   setup();
   return instance;
 }
-
 BoxParser.__dashjs_factory_name = 'BoxParser';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getSingletonFactory(BoxParser));
 
@@ -27418,6 +25383,8 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 /**
  * @module DefaultURLUtils
  * @description Provides utility functions for operating on URLs.
@@ -27426,13 +25393,13 @@ __webpack_require__.r(__webpack_exports__);
  * determining whether a URL is relative/absolute, resolving two paths etc.
  * @ignore
  */
-
 function DefaultURLUtils() {
   var resolveFunction;
   var schemeRegex = /^[a-z][a-z0-9+\-_.]*:/i;
   var httpUrlRegex = /^https?:\/\//i;
   var httpsUrlRegex = /^https:\/\//i;
   var originRegex = /^([a-z][a-z0-9+\-_.]*:\/\/[^\/]+)\/?/i;
+
   /**
    * Resolves a url given an optional base url
    * Uses window.URL to do the resolution.
@@ -27444,7 +25411,6 @@ function DefaultURLUtils() {
    * @instance
    * @private
    */
-
   var nativeURLResolver = function nativeURLResolver(url, baseUrl) {
     try {
       return new window.URL(url, baseUrl).toString();
@@ -27452,6 +25418,7 @@ function DefaultURLUtils() {
       return url;
     }
   };
+
   /**
    * Resolves a url given an optional base url
    * Does not resolve ./, ../ etc but will do enough to construct something
@@ -27465,42 +25432,35 @@ function DefaultURLUtils() {
    * @instance
    * @private
    */
-
-
   var dumbURLResolver = function dumbURLResolver(url, baseUrl) {
     var baseUrlParseFunc = parseBaseUrl;
-
     if (!baseUrl) {
       return url;
     }
-
     if (!isRelative(url)) {
       return url;
     }
-
     if (isPathAbsolute(url)) {
       baseUrlParseFunc = parseOrigin;
     }
-
     if (isSchemeRelative(url)) {
       baseUrlParseFunc = parseScheme;
     }
-
     var base = baseUrlParseFunc(baseUrl);
     var joinChar = base.charAt(base.length - 1) !== '/' && url.charAt(0) !== '/' ? '/' : '';
     return [base, url].join(joinChar);
   };
-
   function setup() {
     try {
       var u = new window.URL('x', 'http://y'); // eslint-disable-line
-
       resolveFunction = nativeURLResolver;
-    } catch (e) {// must be IE11/Node etc
+    } catch (e) {
+      // must be IE11/Node etc
     } finally {
       resolveFunction = resolveFunction || dumbURLResolver;
     }
   }
+
   /**
    * Returns a string that contains the Base URL of a URL, if determinable.
    * @param {string} url - full url
@@ -27508,27 +25468,22 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function parseBaseUrl(url) {
     var slashIndex = url.indexOf('/');
     var lastSlashIndex = url.lastIndexOf('/');
-
     if (slashIndex !== -1) {
       // if there is only '//'
       if (lastSlashIndex === slashIndex + 1) {
         return url;
       }
-
       if (url.indexOf('?') !== -1) {
         url = url.substring(0, url.indexOf('?'));
       }
-
       return url.substring(0, lastSlashIndex + 1);
     }
-
     return '';
   }
+
   /**
    * Returns a string that contains the scheme and origin of a URL,
    * if determinable.
@@ -27537,17 +25492,14 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function parseOrigin(url) {
     var matches = url.match(originRegex);
-
     if (matches) {
       return matches[1];
     }
-
     return '';
   }
+
   /**
    * Returns a string that contains the fragment of a URL without scheme,
    * if determinable.
@@ -27556,13 +25508,11 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function removeHostname(url) {
     var urlParts = /^(?:\w+\:\/\/)?([^\/]+)(.*)$/.exec(url); //[1] = host / [2] = path
-
     return urlParts[2].substring(1);
   }
+
   /**
    * Returns a string that contains the scheme of a URL, if determinable.
    * @param {string} url - full url
@@ -27570,17 +25520,14 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function parseScheme(url) {
     var matches = url.match(schemeRegex);
-
     if (matches) {
       return matches[0];
     }
-
     return '';
   }
+
   /**
    * Determines whether the url is relative.
    * @return {boolean}
@@ -27588,11 +25535,10 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function isRelative(url) {
     return !schemeRegex.test(url);
   }
+
   /**
    * Determines whether the url is path-absolute.
    * @return {bool}
@@ -27600,11 +25546,10 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function isPathAbsolute(url) {
     return isRelative(url) && url.charAt(0) === '/';
   }
+
   /**
    * Determines whether the url is scheme-relative.
    * @return {bool}
@@ -27612,11 +25557,10 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function isSchemeRelative(url) {
     return url.indexOf('//') === 0;
   }
+
   /**
    * Determines whether the url is an HTTP-URL as defined in ISO/IEC
    * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
@@ -27625,11 +25569,10 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function isHTTPURL(url) {
     return httpUrlRegex.test(url);
   }
+
   /**
    * Determines whether the supplied url has https scheme
    * @return {bool}
@@ -27637,11 +25580,10 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function isHTTPS(url) {
     return httpsUrlRegex.test(url);
   }
+
   /**
    * Resolves a url given an optional base url
    * @return {string}
@@ -27650,12 +25592,9 @@ function DefaultURLUtils() {
    * @memberof module:DefaultURLUtils
    * @instance
    */
-
-
   function resolve(url, baseUrl) {
     return resolveFunction(url, baseUrl);
   }
-
   setup();
   var instance = {
     parseBaseUrl: parseBaseUrl,
@@ -27671,7 +25610,6 @@ function DefaultURLUtils() {
   };
   return instance;
 }
-
 DefaultURLUtils.__dashjs_factory_name = 'DefaultURLUtils';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(DefaultURLUtils));
 
@@ -27723,76 +25661,64 @@ __webpack_require__.r(__webpack_exports__);
 
 function IsoFile() {
   var instance, parsedIsoFile;
+
   /**
   * @param {string} type
   * @returns {IsoBox|null}
   * @memberof IsoFile#
   */
-
   function getBox(type) {
     if (!type || !parsedIsoFile || !parsedIsoFile.boxes || parsedIsoFile.boxes.length === 0 || typeof parsedIsoFile.fetch !== 'function') return null;
     return convertToDashIsoBox(parsedIsoFile.fetch(type));
   }
+
   /**
   * @param {string} type
   * @returns {Array|null} array of {@link IsoBox}
   * @memberof IsoFile#
   */
-
-
   function getBoxes(type) {
     var boxes = [];
-
     if (!type || !parsedIsoFile || typeof parsedIsoFile.fetchAll !== 'function') {
       return boxes;
     }
-
     var boxData = parsedIsoFile.fetchAll(type);
     var box;
-
     for (var i = 0, ln = boxData.length; i < ln; i++) {
       box = convertToDashIsoBox(boxData[i]);
-
       if (box) {
         boxes.push(box);
       }
     }
-
     return boxes;
   }
+
   /**
   * @param {string} value
   * @memberof IsoFile#
   */
-
-
   function setData(value) {
     parsedIsoFile = value;
   }
+
   /**
   * @returns {IsoBox|null}
   * @memberof IsoFile#
   */
-
-
   function getLastBox() {
     if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
     var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
     var boxes = getBoxes(type);
     return boxes.length > 0 ? boxes[boxes.length - 1] : null;
   }
-
   function convertToDashIsoBox(boxData) {
     if (!boxData) return null;
     var box = new _vo_IsoBox__WEBPACK_IMPORTED_MODULE_0__["default"](boxData);
-
     if (boxData.hasOwnProperty('_incomplete')) {
       box.isComplete = !boxData._incomplete;
     }
-
     return box;
   }
-
   instance = {
     getBox: getBox,
     getBoxes: getBoxes,
@@ -27801,7 +25727,6 @@ function IsoFile() {
   };
   return instance;
 }
-
 IsoFile.__dashjs_factory_name = 'IsoFile';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(IsoFile));
 
@@ -27851,14 +25776,16 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
+
 /**
  * @module ObjectUtils
  * @ignore
  * @description Provides utility functions for objects
  */
-
 function ObjectUtils() {
   var instance;
+
   /**
    * Returns true if objects are equal
    * @return {boolean}
@@ -27867,17 +25794,14 @@ function ObjectUtils() {
    * @memberof module:ObjectUtils
    * @instance
    */
-
   function areEqual(obj1, obj2) {
     return fast_deep_equal__WEBPACK_IMPORTED_MODULE_1___default()(obj1, obj2);
   }
-
   instance = {
     areEqual: areEqual
   };
   return instance;
 }
-
 ObjectUtils.__dashjs_factory_name = 'ObjectUtils';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ObjectUtils));
 
@@ -27925,6 +25849,7 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 function modifyRequest(httpRequest, requestModifier) {
   var request = {
     url: httpRequest.url,
@@ -27938,20 +25863,17 @@ function modifyRequest(httpRequest, requestModifier) {
     });
   });
 }
-
 function RequestModifier() {
   var instance;
-
   function modifyRequestURL(url) {
     return url;
-  } // eslint-disable-next-line no-unused-vars
+  }
 
-
+  // eslint-disable-next-line no-unused-vars
   function modifyRequestHeader(request, _ref) {
     var url = _ref.url;
     return request;
   }
-
   instance = {
     modifyRequest: null,
     modifyRequestURL: modifyRequestURL,
@@ -27959,7 +25881,6 @@ function RequestModifier() {
   };
   return instance;
 }
-
 RequestModifier.__dashjs_factory_name = 'RequestModifier';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(RequestModifier));
 
@@ -27979,8 +25900,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "checkRange", function() { return checkRange; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "checkIsVideoOrAudioType", function() { return checkIsVideoOrAudioType; });
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28019,7 +25939,6 @@ function checkParameterType(parameter, type) {
 }
 function checkInteger(parameter) {
   var isInt = parameter !== null && !isNaN(parameter) && parameter % 1 === 0;
-
   if (!isInt) {
     throw _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].BAD_ARGUMENT_ERROR + ' : argument is not an integer';
   }
@@ -28080,6 +25999,8 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
+
 /**
  * @module URLUtils
  * @ignore
@@ -28088,30 +26009,25 @@ __webpack_require__.r(__webpack_exports__);
  * should probably include other things provided all over the place such as
  * determining whether a URL is relative/absolute, resolving two paths etc.
  */
-
 function URLUtils() {
   var instance;
   var defaultURLUtils;
   var regexUtils = [];
   var context = this.context;
-
   function getUtils(url) {
     var i;
-
     for (i = 0; i < regexUtils.length; i++) {
       var regex = regexUtils[i].regex;
-
       if (regex.test(url)) {
         return regexUtils[i].utils;
       }
     }
-
     return defaultURLUtils;
   }
-
   function setup() {
     defaultURLUtils = Object(_DefaultURLUtils__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
   }
+
   /**
    * Register a module to handle specific url.
    * @param {regex} regex - url regex
@@ -28119,19 +26035,17 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function registerUrlRegex(regex, utils) {
     regexUtils.push({
       regex: regex,
       utils: utils
     });
   }
-
   function internalCall(functionName, url, baseUrl) {
     var utils = getUtils(baseUrl || url);
     return utils && typeof utils[functionName] === 'function' ? utils[functionName](url, baseUrl) : defaultURLUtils[functionName](url, baseUrl);
   }
+
   /**
    * Returns a string that contains the Base URL of a URL, if determinable.
    * @param {string} url - full url
@@ -28139,11 +26053,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function parseBaseUrl(url) {
     return internalCall('parseBaseUrl', url);
   }
+
   /**
    * Returns a string that contains the scheme and origin of a URL,
    * if determinable.
@@ -28152,11 +26065,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function parseOrigin(url) {
     return internalCall('parseOrigin', url);
   }
+
   /**
    * Returns a string that contains the fragment of a URL without scheme,
    * if determinable.
@@ -28165,11 +26077,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function removeHostname(url) {
     return internalCall('removeHostname', url);
   }
+
   /**
    * Returns a string that contains the scheme of a URL, if determinable.
    * @param {string} url - full url
@@ -28177,11 +26088,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function parseScheme(url) {
     return internalCall('parseScheme', url);
   }
+
   /**
    * Determines whether the url is relative.
    * @return {boolean}
@@ -28189,11 +26099,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function isRelative(url) {
     return internalCall('isRelative', url);
   }
+
   /**
    * Determines whether the url is path-absolute.
    * @return {bool}
@@ -28201,11 +26110,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function isPathAbsolute(url) {
     return internalCall('isPathAbsolute', url);
   }
+
   /**
    * Determines whether the url is scheme-relative.
    * @return {bool}
@@ -28213,11 +26121,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function isSchemeRelative(url) {
     return internalCall('isSchemeRelative', url);
   }
+
   /**
    * Determines whether the url is an HTTP-URL as defined in ISO/IEC
    * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
@@ -28226,11 +26133,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function isHTTPURL(url) {
     return internalCall('isHTTPURL', url);
   }
+
   /**
    * Determines whether the supplied url has https scheme
    * @return {bool}
@@ -28238,11 +26144,10 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function isHTTPS(url) {
     return internalCall('isHTTPS', url);
   }
+
   /**
    * Resolves a url given an optional base url
    * @return {string}
@@ -28251,12 +26156,9 @@ function URLUtils() {
    * @memberof module:URLUtils
    * @instance
    */
-
-
   function resolve(url, baseUrl) {
     return internalCall('resolve', url, baseUrl);
   }
-
   setup();
   instance = {
     registerUrlRegex: registerUrlRegex,
@@ -28273,7 +26175,6 @@ function URLUtils() {
   };
   return instance;
 }
-
 URLUtils.__dashjs_factory_name = 'URLUtils';
 var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(URLUtils);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
@@ -28289,8 +26190,12 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSing
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28321,19 +26226,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var DashJSError = function DashJSError(code, message, data) {
+var DashJSError = /*#__PURE__*/_createClass(function DashJSError(code, message, data) {
   _classCallCheck(this, DashJSError);
-
   this.code = code || null;
   this.message = message || null;
   this.data = data || null;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (DashJSError);
 
 /***/ }),
@@ -28348,12 +26250,12 @@ var DashJSError = function DashJSError(code, message, data) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28385,15 +26287,15 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
 /**
  * @class
  * @ignore
  */
-
 var FragmentRequest = /*#__PURE__*/function () {
   function FragmentRequest(url) {
     _classCallCheck(this, FragmentRequest);
-
     this.action = FragmentRequest.ACTION_DOWNLOAD;
     this.startTime = NaN;
     this.mediaStartTime = NaN;
@@ -28419,7 +26321,6 @@ var FragmentRequest = /*#__PURE__*/function () {
     this.responseType = 'arraybuffer';
     this.representationId = null;
   }
-
   _createClass(FragmentRequest, [{
     key: "isInitializationRequest",
     value: function isInitializationRequest() {
@@ -28434,10 +26335,8 @@ var FragmentRequest = /*#__PURE__*/function () {
       this.mediaType = info && info.mediaType ? info.mediaType : null;
     }
   }]);
-
   return FragmentRequest;
 }();
-
 FragmentRequest.ACTION_DOWNLOAD = 'download';
 FragmentRequest.ACTION_COMPLETE = 'complete';
 /* harmony default export */ __webpack_exports__["default"] = (FragmentRequest);
@@ -28454,24 +26353,19 @@ FragmentRequest.ACTION_COMPLETE = 'complete';
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _FragmentRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FragmentRequest */ "./src/streaming/vo/FragmentRequest.js");
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28502,31 +26396,23 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
 
-
 var HeadRequest = /*#__PURE__*/function (_FragmentRequest) {
   _inherits(HeadRequest, _FragmentRequest);
-
   var _super = _createSuper(HeadRequest);
-
   function HeadRequest(url) {
     var _this;
-
     _classCallCheck(this, HeadRequest);
-
     _this = _super.call(this, url);
     _this.checkForExistenceOnly = true;
     return _this;
   }
-
-  return HeadRequest;
+  return _createClass(HeadRequest);
 }(_FragmentRequest__WEBPACK_IMPORTED_MODULE_0__["default"]);
-
 /* harmony default export */ __webpack_exports__["default"] = (HeadRequest);
 
 /***/ }),
@@ -28540,12 +26426,12 @@ var HeadRequest = /*#__PURE__*/function (_FragmentRequest) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28576,7 +26462,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
@@ -28584,30 +26469,24 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var IsoBox = /*#__PURE__*/function () {
   function IsoBox(boxData) {
     _classCallCheck(this, IsoBox);
-
     this.offset = boxData._offset;
     this.type = boxData.type;
     this.size = boxData.size;
     this.boxes = [];
-
     if (boxData.boxes) {
       for (var i = 0; i < boxData.boxes.length; i++) {
         this.boxes.push(new IsoBox(boxData.boxes[i]));
       }
     }
-
     this.isComplete = true;
-
     switch (boxData.type) {
       case 'sidx':
         this.timescale = boxData.timescale;
         this.earliest_presentation_time = boxData.earliest_presentation_time;
         this.first_offset = boxData.first_offset;
         this.references = boxData.references;
-
         if (boxData.references) {
           this.references = [];
-
           for (var _i = 0; _i < boxData.references.length; _i++) {
             var reference = {
               reference_type: boxData.references[_i].reference_type,
@@ -28617,9 +26496,7 @@ var IsoBox = /*#__PURE__*/function () {
             this.references.push(reference);
           }
         }
-
         break;
-
       case 'emsg':
         this.id = boxData.id;
         this.version = boxData.version === 1 ? 1 : 0;
@@ -28630,20 +26507,16 @@ var IsoBox = /*#__PURE__*/function () {
         this.event_duration = boxData.event_duration;
         this.message_data = boxData.message_data;
         break;
-
       case 'mdhd':
         this.timescale = boxData.timescale;
         break;
-
       case 'mfhd':
         this.sequence_number = boxData.sequence_number;
         break;
-
       case 'subs':
         this.entry_count = boxData.entry_count;
         this.entries = boxData.entries;
         break;
-
       case 'tfhd':
         this.base_data_offset = boxData.base_data_offset;
         this.sample_description_index = boxData.sample_description_index;
@@ -28652,23 +26525,19 @@ var IsoBox = /*#__PURE__*/function () {
         this.default_sample_flags = boxData.default_sample_flags;
         this.flags = boxData.flags;
         break;
-
       case 'tfdt':
         this.version = boxData.version;
         this.baseMediaDecodeTime = boxData.baseMediaDecodeTime;
         this.flags = boxData.flags;
         break;
-
       case 'trun':
         this.sample_count = boxData.sample_count;
         this.first_sample_flags = boxData.first_sample_flags;
         this.data_offset = boxData.data_offset;
         this.flags = boxData.flags;
         this.samples = boxData.samples;
-
         if (boxData.samples) {
           this.samples = [];
-
           for (var _i2 = 0, ln = boxData.samples.length; _i2 < ln; _i2++) {
             var sample = {
               sample_size: boxData.samples[_i2].sample_size,
@@ -28678,11 +26547,9 @@ var IsoBox = /*#__PURE__*/function () {
             this.samples.push(sample);
           }
         }
-
         break;
     }
   }
-
   _createClass(IsoBox, [{
     key: "getChildBox",
     value: function getChildBox(type) {
@@ -28696,20 +26563,16 @@ var IsoBox = /*#__PURE__*/function () {
     key: "getChildBoxes",
     value: function getChildBoxes(type) {
       var boxes = [];
-
       for (var i = 0; i < this.boxes.length; i++) {
         if (this.boxes[i].type === type) {
           boxes.push(this.boxes[i]);
         }
       }
-
       return boxes;
     }
   }]);
-
   return IsoBox;
 }();
-
 /* harmony default export */ __webpack_exports__["default"] = (IsoBox);
 
 /***/ }),
@@ -28723,8 +26586,12 @@ var IsoBox = /*#__PURE__*/function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28755,19 +26622,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var IsoBoxSearchInfo = function IsoBoxSearchInfo(lastCompletedOffset, found, size) {
+var IsoBoxSearchInfo = /*#__PURE__*/_createClass(function IsoBoxSearchInfo(lastCompletedOffset, found, size) {
   _classCallCheck(this, IsoBoxSearchInfo);
-
   this.lastCompletedOffset = lastCompletedOffset;
   this.found = found;
   this.size = size;
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (IsoBoxSearchInfo);
 
 /***/ }),
@@ -28781,8 +26645,12 @@ var IsoBoxSearchInfo = function IsoBoxSearchInfo(lastCompletedOffset, found, siz
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28813,14 +26681,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @class
  * @ignore
  */
-var ThumbnailTrackInfo = function ThumbnailTrackInfo() {
+var ThumbnailTrackInfo = /*#__PURE__*/_createClass(function ThumbnailTrackInfo() {
   _classCallCheck(this, ThumbnailTrackInfo);
-
   this.bitrate = 0;
   this.width = 0;
   this.height = 0;
@@ -28833,8 +26699,7 @@ var ThumbnailTrackInfo = function ThumbnailTrackInfo() {
   this.timescale = 0;
   this.templateUrl = '';
   this.id = '';
-};
-
+});
 /* harmony default export */ __webpack_exports__["default"] = (ThumbnailTrackInfo);
 
 /***/ }),
@@ -28850,8 +26715,12 @@ var ThumbnailTrackInfo = function ThumbnailTrackInfo() {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HTTPRequest", function() { return HTTPRequest; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HTTPRequestTrace", function() { return HTTPRequestTrace; });
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28882,20 +26751,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * @classdesc This Object holds reference to the HTTPRequest for manifest, fragment and xlink loading.
  * Members which are not defined in ISO23009-1 Annex D should be prefixed by a _ so that they are ignored
  * by Metrics Reporting code.
  * @ignore
  */
-var HTTPRequest =
+var HTTPRequest = /*#__PURE__*/_createClass(
 /**
  * @class
  */
 function HTTPRequest() {
   _classCallCheck(this, HTTPRequest);
-
   /**
    * Identifier of the TCP connection on which the HTTP request was sent.
    * @public
@@ -28913,111 +26780,93 @@ function HTTPRequest() {
    * - other
    * @public
    */
-
   this.type = null;
   /**
    * The original URL (before any redirects or failures)
    * @public
    */
-
   this.url = null;
   /**
    * The actual URL requested, if different from above
    * @public
    */
-
   this.actualurl = null;
   /**
    * The contents of the byte-range-spec part of the HTTP Range header.
    * @public
    */
-
   this.range = null;
   /**
    * Real-Time | The real time at which the request was sent.
    * @public
    */
-
   this.trequest = null;
   /**
    * Real-Time | The real time at which the first byte of the response was received.
    * @public
    */
-
   this.tresponse = null;
   /**
    * The HTTP response code.
    * @public
    */
-
   this.responsecode = null;
   /**
    * The duration of the throughput trace intervals (ms), for successful requests only.
    * @public
    */
-
   this.interval = null;
   /**
    * Throughput traces, for successful requests only.
    * @public
    */
-
   this.trace = [];
+
   /**
    * Type of stream ("audio" | "video" etc..)
    * @public
    */
-
   this._stream = null;
   /**
    * Real-Time | The real time at which the request finished.
    * @public
    */
-
   this._tfinish = null;
   /**
    * The duration of the media requests, if available, in seconds.
    * @public
    */
-
   this._mediaduration = null;
   /**
    * The media segment quality
    * @public
    */
-
   this._quality = null;
   /**
    * all the response headers from request.
    * @public
    */
-
   this._responseHeaders = null;
   /**
    * The selected service location for the request. string.
    * @public
    */
-
   this._serviceLocation = null;
   /**
    * The type of the loader that was used. Distinguish between fetch loader and xhr loader
    */
-
   this._fileLoaderType = null;
-};
+});
 /**
  * @classdesc This Object holds reference to the progress of the HTTPRequest.
  * @ignore
  */
-
-
-var HTTPRequestTrace =
+var HTTPRequestTrace = /*#__PURE__*/_createClass(
 /**
  * @class
  */
 function HTTPRequestTrace() {
   _classCallCheck(this, HTTPRequestTrace);
-
   /**
    * Real-Time | Measurement stream start.
    * @public
@@ -29027,16 +26876,13 @@ function HTTPRequestTrace() {
    * Measurement stream duration (ms).
    * @public
    */
-
   this.d = null;
   /**
    * List of integers counting the bytes received in each trace interval within the measurement stream.
    * @public
    */
-
   this.b = [];
-};
-
+});
 HTTPRequest.GET = 'GET';
 HTTPRequest.HEAD = 'HEAD';
 HTTPRequest.MPD_TYPE = 'MPD';
