@@ -100,6 +100,11 @@ function ThroughputHistory(config) {
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
 
+        if (httpRequest.etp) {
+            // use etp (estimated throughput time, in kbits/s) from CMSD response headers
+            throughput = httpRequest.etp;
+        }
+
         checkSettingsForMediaType(mediaType);
 
         if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {

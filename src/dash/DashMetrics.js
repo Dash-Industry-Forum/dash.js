@@ -345,7 +345,7 @@ function DashMetrics(config) {
      * @instance
      * @ignore
      */
-    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, traces) {
+    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, etp, traces) {
         metricsModel.addHttpRequest(request.mediaType,
             null,
             request.type,
@@ -360,6 +360,7 @@ function DashMetrics(config) {
             responseStatus,
             request.duration,
             responseHeaders,
+            etp,
             traces,
             request.fileLoaderType);
     }

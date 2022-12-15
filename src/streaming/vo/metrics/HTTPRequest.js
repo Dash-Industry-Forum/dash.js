@@ -97,6 +97,11 @@ class HTTPRequest {
          * @public
          */
         this.trace = [];
+        /**
+         * the estimated throughput for this request from CMSD response headers.
+         * @public
+         */
+        this.etp = null;
 
         /**
          * Type of stream ("audio" | "video" etc..)

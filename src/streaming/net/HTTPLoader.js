@@ -126,12 +126,13 @@ function HTTPLoader(cfg) {
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
                     httpRequest.response ? httpRequest.response.responseHeaders : [];
 
+                let etp = null;
                 if (settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled) {
-                    cmsdModel.parseResponseHeaders(responseHeaders);
                     cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType);
+                    etp = cmsdModel.getEstimatedThroughput(request.mediaType);
                 }
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, etp, success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
