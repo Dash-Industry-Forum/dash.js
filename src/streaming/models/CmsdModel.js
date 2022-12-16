@@ -80,6 +80,13 @@ const OBJECT_TYPES = {
 //     LIVE: 'l'
 // };
 
+const PERSISTENT_PARAMS = [
+    CMSD_KEYS.MAX_SUGGESTED_BITRATE,
+    CMSD_KEYS.STREAM_TYPE,
+    CMSD_KEYS.STREAMING_FORMAT,
+    CMSD_KEYS.VERSION
+];
+
 const MEDIATYPE_TO_OBJECTTYPE = {
     'video': OBJECT_TYPES.VIDEO,
     'audio': OBJECT_TYPES.AUDIO,
@@ -111,6 +118,17 @@ function CmsdModel() {
     function _resetInitialSettings() {
         _staticParamsDict = {};
         _dynamicParamsDict = {};
+    }
+
+    function _clearParams(params) {
+        if (!params) {
+            return;
+        }
+        Object.keys(params).forEach(key => {
+            if (!PERSISTENT_PARAMS.includes(key)) {
+                delete params[key];
+            }
+        })
     }
 
     function _parseParameterValue(value) {
@@ -216,6 +234,10 @@ function CmsdModel() {
         } else if (mediaType) {
             ot = _mediaTypetoObjectType(mediaType)
         }
+
+        // Clear previously received params except persistent ones 
+        _clearParams(_staticParamsDict[ot]);
+        _clearParams(_dynamicParamsDict[ot]);
 
         // Merge params with previously received params 
         if (staticParams) {
