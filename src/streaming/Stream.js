@@ -854,7 +854,7 @@ function Stream(config) {
                 promises.push(streamProcessor.updateStreamInfo(streamInfo));
                 let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
 
-                // Filter out embedded text track before creating StreamProcessor
+                // Filter out embedded text track before updating media info in  StreamProcessor
                 allMediaForType = allMediaForType.filter(mediaInfo => {
                     return !mediaInfo.isEmbedded;
                 });
