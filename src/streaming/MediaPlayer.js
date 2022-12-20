@@ -61,10 +61,7 @@ import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
 import Settings from '../core/Settings';
-import {
-    getVersionString
-}
-    from '../core/Version';
+import {getVersionString} from '../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
