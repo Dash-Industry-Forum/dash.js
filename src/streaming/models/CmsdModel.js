@@ -260,6 +260,18 @@ function CmsdModel() {
         return etp ? etp : null
     }
 
+    function getResponseDelay(type) {
+        let ot = _mediaTypetoObjectType(type);
+        let rd = _getParamValueForObjectType(CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
+        return rd ? rd : null
+    }
+
+    function getRoundTripTime(type) {
+        let ot = _mediaTypetoObjectType(type);
+        let rd = _getParamValueForObjectType(CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
+        return rd ? rd : null
+    }
+
     function reset() {
         _resetInitialSettings();
     }
@@ -270,7 +282,9 @@ function CmsdModel() {
         reset,
         parseResponseHeaders,
         getMaxBitrate,
-        getEstimatedThroughput
+        getEstimatedThroughput,
+        getResponseDelay,
+        getRoundTripTime,
     };
 
     setup();

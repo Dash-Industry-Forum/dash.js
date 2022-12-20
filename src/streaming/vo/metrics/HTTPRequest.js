@@ -98,7 +98,17 @@ class HTTPRequest {
          */
         this.trace = [];
         /**
-         * the estimated throughput for this request from CMSD response headers.
+         * The time elapsed between the receipt of the request and when the first byte of the body becomes available to send to the client.
+         * @public
+         */
+        this.rd = null;
+        /**
+         * The estimated round trip time between client and server.
+         * @public
+         */
+        this.rtt = null;
+        /**
+         * The estimated throughput for this request from CMSD response headers.
          * @public
          */
         this.etp = null;
