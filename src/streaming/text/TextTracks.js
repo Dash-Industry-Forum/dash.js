@@ -400,6 +400,35 @@ function TextTracks(config) {
         }
     }
 
+    function _extendLastCue(cue, track) {
+        if (track.cues.length === 0) {
+            return false;
+        }
+        const prevCue = track.cues[track.cues.length - 1];
+        // Check previous cue endTime with current cue startTime
+        // (should we consider an epsilon margin, for example to get around rounding issues?)
+        if (prevCue.endTime === cue.startTime) {
+            return false;
+        }
+        // Compare cues except cueID, startTime and endTime
+        const excludedProps = ['cueID', 'startTime', 'endTime'];
+        if (JSON.stringify(_cueToJson(prevCue, excludedProps)) !== JSON.stringify(_cueToJson(cue, excludedProps))) {
+            return false;
+        }
+        track.cues[track.cues.length - 1].endTime = cue.endTime;
+        return true;
+    }
+
+    function _cueToJson (cue, propsExcluded) {
+        let _cue = {};
+        Object.keys(cue).forEach(function(key) {
+            if (propsExcluded && !propsExcluded.includes(key)) {
+                _cue[key] = cue[key];
+            }
+        });
+        return _cue;
+    };
+
     /*
      * Add captions to track, store for later adding, or add captions added before
      */
@@ -434,7 +463,9 @@ function TextTracks(config) {
                             }
                             track.manualCueList.push(cue);
                         } else {
-                            track.addCue(cue);
+                            if (!_extendLastCue(cue,track)) {
+                                track.addCue(cue);
+                            }
                         }
 
                     }
