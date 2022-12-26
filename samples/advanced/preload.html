@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Preload Video example</title>
+    <title>Preload example</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -66,8 +66,16 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Preload video</h3>
-                    <p>A sample showing how to preload a video.</p>
+                    <h3>Preload content</h3>
+                    <p>This example shows how to use preload feature of dash.js, which allows to initialize streaming
+                        and start downloading the content before the player is attached to an HTML5 video element. This
+                        feature can be used to optimize content-insertion on platforms which provide only a single
+                        decoder.</p>
+                    <p>When this page is loaded, dash.js downloads media segments into a virtual buffer. Once the
+                        "Attach View" button is clicked, a video element is attached to dash.js and the downloaded data
+                        will be appended to the newly created
+                        Source Buffers.</p>
+                    <p>Note that for this feature to work "cacheInitSegments" must be activated.</p>
                 </div>
             </div>
             <div class="col-md-8">
