@@ -131,7 +131,7 @@ function Stream(config) {
         registerEvents();
         registerProtectionEvents();
         textController.initializeForStream(streamInfo);
-        eventBus.trigger(Events.STREAM_UPDATED, {streamInfo: streamInfo});
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
     /**
@@ -545,7 +545,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
-        eventBus.trigger(Events.STREAM_DEACTIVATED, {streamInfo});
+        eventBus.trigger(Events.STREAM_DEACTIVATED, { streamInfo });
     }
 
     function getIsActive() {
@@ -553,34 +553,38 @@ function Stream(config) {
     }
 
     function setMediaSource(mediaSource) {
-        const promises = [];
-        for (let i = 0; i < streamProcessors.length;) {
-            if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
-                promises.push(streamProcessors[i].setMediaSource(mediaSource));
-                i++;
-            } else {
-                streamProcessors[i].reset();
-                streamProcessors.splice(i, 1);
+        return new Promise((resolve, reject) => {
+            const promises = [];
+            for (let i = 0; i < streamProcessors.length;) {
+                if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
+                    promises.push(streamProcessors[i].setMediaSource(mediaSource));
+                    i++;
+                } else {
+                    streamProcessors[i].reset();
+                    streamProcessors.splice(i, 1);
+                }
             }
-        }
 
-        Promise.all(promises)
-            .then(() => {
-                for (let i = 0; i < streamProcessors.length; i++) {
-                    //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
-                    //so do this after the buffers are created above.
-                    streamProcessors[i].dischargePreBuffer();
-                }
+            Promise.all(promises)
+                .then(() => {
+                    for (let i = 0; i < streamProcessors.length; i++) {
+                        //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
+                        //so do this after the buffers are created above.
+                        streamProcessors[i].dischargePreBuffer();
+                    }
 
-                if (streamProcessors.length === 0) {
-                    const msg = 'No streams to play.';
-                    errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
-                    logger.fatal(msg);
-                }
-            })
-            .catch((e) => {
-                logger.error(e);
-            })
+                    if (streamProcessors.length === 0) {
+                        const msg = 'No streams to play.';
+                        errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
+                        logger.fatal(msg);
+                    }
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
+                    reject(e);
+                })
+        })
     }
 
     function resetInitialSettings(keepBuffers) {
@@ -816,7 +820,7 @@ function Stream(config) {
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
         hasFinishedBuffering = true;
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo}, {streamInfo});
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
     }
 
     function onDataUpdateCompleted(e) {
@@ -929,7 +933,7 @@ function Stream(config) {
                 .then(() => {
                     isUpdating = false;
                     _checkIfInitializationCompleted();
-                    eventBus.trigger(Events.STREAM_UPDATED, {streamInfo: streamInfo});
+                    eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
                     resolve();
                 })
 
