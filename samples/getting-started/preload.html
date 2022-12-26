@@ -29,13 +29,13 @@
             ttmlRenderingDiv;
 
         function init() {
-            var url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+            var url = 'https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd';
 
             player = dashjs.MediaPlayer().create();
             player.initialize(null, url, true);
             player.updateSettings({
                 debug: {logLevel: 5},
-                streaming: {cacheInitSegments: true, text: {defaultEnabled: false}}
+                streaming: {cacheInitSegments: true}
             });
             player.preload();
         }

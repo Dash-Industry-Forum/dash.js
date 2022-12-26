@@ -443,9 +443,11 @@ function StreamController() {
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
             if (streamActivated) {
                 // Set the media source for all StreamProcessors
-                activeStream.setMediaSource(mediaSource);
-                // Start text processing now that we have a video element
-                activeStream.initializeForTextWithMediaSource(mediaSource);
+                activeStream.setMediaSource(mediaSource)
+                    .then(() => {
+                        // Start text processing now that we have a video element
+                        activeStream.initializeForTextWithMediaSource(mediaSource);
+                    })
             } else {
                 _activateStream(seekTime, keepBuffers);
             }
