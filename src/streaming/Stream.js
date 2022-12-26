@@ -422,7 +422,6 @@ function Stream(config) {
 
     /**
      * Creates the StreamProcessor for a given media type.
-     * @param {object} initialMediaInfo
      * @param {array} allMediaForType
      * @param {object} mediaSource
      * @private
@@ -529,9 +528,10 @@ function Stream(config) {
     }
 
     function setMediaSource(mediaSource) {
+        const promises = [];
         for (let i = 0; i < streamProcessors.length;) {
             if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
-                streamProcessors[i].setMediaSource(mediaSource);
+                promises.push(streamProcessors[i].setMediaSource(mediaSource));
                 i++;
             } else {
                 streamProcessors[i].reset();
@@ -539,11 +539,23 @@ function Stream(config) {
             }
         }
 
-        if (streamProcessors.length === 0) {
-            const msg = 'No streams to play.';
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
-            logger.fatal(msg);
-        }
+        Promise.all(promises)
+            .then(() => {
+                for (let i = 0; i < streamProcessors.length; i++) {
+                    //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
+                    //so do this after the buffers are created above.
+                    streamProcessors[i].dischargePreBuffer();
+                }
+
+                if (streamProcessors.length === 0) {
+                    const msg = 'No streams to play.';
+                    errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
+                    logger.fatal(msg);
+                }
+            })
+            .catch((e) => {
+                logger.error(e);
+            })
     }
 
     function resetInitialSettings(keepBuffers) {

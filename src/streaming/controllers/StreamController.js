@@ -336,7 +336,7 @@ function StreamController() {
             }
             const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
             logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
+            eventBus.trigger(Events.AST_IN_FUTURE, {delay: waitingTime});
             waitForPlaybackStartTimeout = setTimeout(() => {
                 _initializeForFirstStream(streamsInfo);
             }, waitingTime);
@@ -365,7 +365,7 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
-        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
+        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, {startTime});
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
     }
@@ -408,8 +408,11 @@ function StreamController() {
             });
             playbackController.initialize(getActiveStreamInfo(), !!previousStream);
 
+            // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
                 _openMediaSource(seekTime, keepBuffers);
+            } else {
+                _activateStream(seekTime, keepBuffers);
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -422,7 +425,7 @@ function StreamController() {
      * @param {boolean} keepBuffers
      * @private
      */
-    function _openMediaSource(seekTime, keepBuffers) {
+    function _openMediaSource(seekTime, keepBuffers, streamActivated) {
         let sourceUrl;
 
         function _onMediaSourceOpen() {
@@ -437,7 +440,11 @@ function StreamController() {
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
-            _activateStream(seekTime, keepBuffers);
+            if (streamActivated) {
+                activeStream.setMediaSource(mediaSource);
+            } else {
+                _activateStream(seekTime, keepBuffers);
+            }
         }
 
         function _open() {
@@ -479,13 +486,13 @@ function StreamController() {
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(seekTime)) {
-                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
+                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime}, {streamId: activeStream.getId()});
                     playbackController.seek(seekTime, false, true);
                     activeStream.startScheduleControllers();
                 }
 
                 isStreamSwitchingInProgress = false;
-                eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
+                eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {toStreamInfo: getActiveStreamInfo()});
             });
     }
 
@@ -844,7 +851,7 @@ function StreamController() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
+                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -1300,7 +1307,7 @@ function StreamController() {
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            _openMediaSource(seekTime, false);
+            _openMediaSource(seekTime, false, true);
         }
     }
 
@@ -1544,7 +1551,7 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, { data: manifestModel.getValue().url });
+                eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
             }
         }
 

@@ -272,6 +272,8 @@ function DashAdapter() {
             }
         }
 
+        // Handle mediaInfos that support adaptation-set-switching:2016. We save compatible mediaInfos within each other to have easy access
+
         return mediaArr;
     }
 

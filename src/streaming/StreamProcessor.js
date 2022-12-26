@@ -263,7 +263,6 @@ function StreamProcessor(config) {
     /**
      * When a seek within the corresponding period occurs this function initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
-     * @param {number} oldTime
      * @private
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
@@ -400,6 +399,7 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {object} e
      * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
@@ -522,13 +522,10 @@ function StreamProcessor(config) {
             return null;
         }
 
-        // Use time just whenever is strictly needed
-        const useTime = shouldUseExplicitTimeForRequest;
-
         if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-            if (useTime) {
+            if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
@@ -829,6 +826,10 @@ function StreamProcessor(config) {
         return bufferController;
     }
 
+    function dischargePreBuffer() {
+        bufferController.dischargePreBuffer();
+    }
+
     function getFragmentModel() {
         return fragmentModel;
     }
@@ -905,7 +906,7 @@ function StreamProcessor(config) {
     }
 
     function setMediaSource(mediaSource) {
-        bufferController.setMediaSource(mediaSource);
+        return bufferController.setMediaSource(mediaSource, mediaInfo);
     }
 
     function getScheduleController() {
@@ -948,12 +949,10 @@ function StreamProcessor(config) {
         const representation = representationController && representationInfo ?
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-        let request = dashHandler.getNextSegmentRequestIdempotent(
+        return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
             representation
         );
-
-        return request;
     }
 
     function _onMediaFragmentLoaded(e) {
@@ -1187,6 +1186,7 @@ function StreamProcessor(config) {
         getType,
         isUpdating,
         getBufferController,
+        dischargePreBuffer,
         getFragmentModel,
         getScheduleController,
         getRepresentationController,
