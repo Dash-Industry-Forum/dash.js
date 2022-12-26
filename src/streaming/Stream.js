@@ -131,7 +131,7 @@ function Stream(config) {
         registerEvents();
         registerProtectionEvents();
         textController.initializeForStream(streamInfo);
-        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
+        eventBus.trigger(Events.STREAM_UPDATED, {streamInfo: streamInfo});
     }
 
     /**
@@ -225,17 +225,6 @@ function Stream(config) {
         });
     }
 
-    /**
-     *
-     * @param {object} mediaSource
-     * @param {array} previousBufferSinks
-     * @return {Promise<Array>}
-     * @private
-     */
-    function _initializeMedia(mediaSource, previousBufferSinks) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks);
-    }
-
     function startPreloading(mediaSource, previousBuffers) {
         return new Promise((resolve, reject) => {
 
@@ -266,6 +255,17 @@ function Stream(config) {
      *
      * @param {object} mediaSource
      * @param {array} previousBufferSinks
+     * @return {Promise<Array>}
+     * @private
+     */
+    function _initializeMedia(mediaSource, previousBufferSinks) {
+        return _commonMediaInitialization(mediaSource, previousBufferSinks);
+    }
+
+    /**
+     *
+     * @param {object} mediaSource
+     * @param {array} previousBufferSinks
      * @return {Promise<array>}
      * @private
      */
@@ -280,7 +280,8 @@ function Stream(config) {
             let element = videoModel.getElement();
 
             MEDIA_TYPES.forEach((mediaType) => {
-                if (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName)))) {
+                // If we are preloading without a video element we can not start texttrack handling.
+                if (!(mediaType === Constants.TEXT && !mediaSource) && (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))) {
                     _initializeMediaForType(mediaType, mediaSource);
                 }
             });
@@ -297,8 +298,10 @@ function Stream(config) {
                         _checkIfInitializationCompleted();
                     }
 
-                    // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
-                    textController.createTracks(streamInfo);
+                    if (mediaSource) {
+                        // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
+                        textController.createTracks(streamInfo);
+                    }
 
                     resolve(bufferSinks);
                 })
@@ -306,9 +309,26 @@ function Stream(config) {
                     reject(e);
                 });
         });
-
     }
 
+    /**
+     * We call this function if segments have been preloaded without a video element. Once the video element is attached MSE is available
+     * @param mediaSource
+     * @returns {Promise<unknown>}
+     */
+    function initializeForTextWithMediaSource(mediaSource) {
+        return new Promise((resolve, reject) => {
+            _initializeMediaForType(Constants.TEXT, mediaSource);
+            createBufferSinkForText()
+                .then(() => {
+                    textController.createTracks(streamInfo);
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                })
+        })
+    }
 
     /**
      * Initialize for a given media type. Creates a corresponding StreamProcessor
@@ -498,6 +518,11 @@ function Stream(config) {
         });
     }
 
+    function createBufferSinkForText() {
+        const sp = _getProcessorByType(Constants.TEXT);
+        return sp.createBufferSinks()
+    }
+
     /**
      * Partially resets some of the Stream elements. This function is called when preloading of streams is canceled or a stream switch occurs.
      * @memberof Stream#
@@ -520,7 +545,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
-        eventBus.trigger(Events.STREAM_DEACTIVATED, { streamInfo });
+        eventBus.trigger(Events.STREAM_DEACTIVATED, {streamInfo});
     }
 
     function getIsActive() {
@@ -791,7 +816,7 @@ function Stream(config) {
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
         hasFinishedBuffering = true;
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo}, {streamInfo});
     }
 
     function onDataUpdateCompleted(e) {
@@ -904,7 +929,7 @@ function Stream(config) {
                 .then(() => {
                     isUpdating = false;
                     _checkIfInitializationCompleted();
-                    eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
+                    eventBus.trigger(Events.STREAM_UPDATED, {streamInfo: streamInfo});
                     resolve();
                 })
 
@@ -1018,6 +1043,7 @@ function Stream(config) {
         getHasAudioTrack,
         getHasVideoTrack,
         startPreloading,
+        initializeForTextWithMediaSource,
         getThumbnailController,
         getBitrateListFor,
         updateData,
