@@ -407,7 +407,7 @@ function TextTracks(config) {
         const prevCue = track.cues[track.cues.length - 1];
         // Check previous cue endTime with current cue startTime
         // (should we consider an epsilon margin, for example to get around rounding issues?)
-        if (prevCue.endTime === cue.startTime) {
+        if (prevCue.endTime !== cue.startTime) {
             return false;
         }
         // Compare cues except cueID, startTime and endTime
@@ -463,7 +463,7 @@ function TextTracks(config) {
                             }
                             track.manualCueList.push(cue);
                         } else {
-                            if (!_extendLastCue(cue,track)) {
+                            if (!_extendLastCue(cue, track)) {
                                 track.addCue(cue);
                             }
                         }
