@@ -401,7 +401,7 @@ function TextTracks(config) {
     }
 
     function _extendLastCue(cue, track) {
-        if (track.cues.length === 0) {
+        if (!track.cues || track.cues.length === 0) {
             return false;
         }
         const prevCue = track.cues[track.cues.length - 1];
