@@ -13,6 +13,7 @@ module.exports = function (config) {
             'karma-webpack',
             'karma-mocha',
             'karma-chai',
+            'karma-coverage',
             'karma-mocha-reporter',
             'karma-chrome-launcher',
         ],
@@ -23,7 +24,6 @@ module.exports = function (config) {
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
             {pattern: 'test/unit/*.js', watched: false},
-            //{pattern: 'test/unit/streaming.text.TextTracks.js', watched: false},
             {pattern: 'src/**/*.js', watched: false, included: false, nocache: true},
             {pattern: 'test/unit/data/**/*', watched: false, included: false, served: true}
         ],
@@ -43,15 +43,22 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             // add webpack as preprocessor
-            'test/unit/*.js': ['webpack']
-            //'test/unit/streaming.text.TextTracks.js': ['webpack']
+            'src/**/*.js': ['coverage'],
+            'test/unit/*.js': ['webpack'],
         },
 
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha'],
+        reporters: ['mocha', 'coverage'],
+
+        // optionally, configure the reporter
+        coverageReporter: {
+            type: 'html',
+            dir: 'test/coverage/'
+        },
+
 
         webpack: {
             cache: false,
@@ -63,7 +70,7 @@ module.exports = function (config) {
         },
 
         // web server port
-        port: 9876,
+        port: 9999,
 
 
         // enable / disable colors in the output (reporters and logs)

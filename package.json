@@ -13,9 +13,8 @@
         "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
         "coverage": "nyc --reporter=text --reporter=lcov --reporter=text-summary --report-dir='./coverage' npm run test",
-        "test": "mocha test/unit --require mochahook",
+        "test": "karma start karma.unit.conf.js",
         "test-browserunit": "karma start build/karma.conf.js",
-        "test-browserunit-complete": "karma start karma.unit.conf.js",
         "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
         "prepare": "node githook.js",
         "prepack": "npm run build"
@@ -39,6 +38,7 @@
         "karma": "^6.4.1",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^3.1.1",
+        "karma-coverage": "^2.2.0",
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
         "karma-sourcemap-loader": "^0.3.8",

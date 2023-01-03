@@ -4,7 +4,7 @@ const TYPES = {
     BLOB: 'BLOB',
     ARRAY_BUFFER: 'ARRAY_BUFFER'
 }
-const HTTP_SERVER = 'http://localhost:9876/base/test/unit';
+const HTTP_SERVER = 'http://localhost:9999/base/test/unit';
 
 class FileLoader {
     static async loadTextFile(url, options) {
