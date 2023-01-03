@@ -36,6 +36,26 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import {renderHTML} from 'imsc';
 
+const CUE_PROPS_TO_COMPARE = [
+    'text',
+    'images',
+    'embeddedImages',
+    'align',
+    'fontSize',
+    'id',
+    'isd',
+    'line',
+    'lineAlign',
+    'lineHeight',
+    'linePadding',
+    'position',
+    'positionAlign',
+    'region',
+    'size',
+    'snapToLines',
+    'vertical',
+];
+
 function TextTracks(config) {
 
     const context = this.context;
@@ -406,28 +426,27 @@ function TextTracks(config) {
         }
         const prevCue = track.cues[track.cues.length - 1];
         // Check previous cue endTime with current cue startTime
-        // (should we consider an epsilon margin, for example to get around rounding issues?)
+        // (should we consider an epsilon margin? for example to get around rounding issues)
         if (prevCue.endTime !== cue.startTime) {
             return false;
         }
-        // Compare cues except cueID, startTime and endTime
-        const excludedProps = ['cueID', 'startTime', 'endTime'];
-        if (JSON.stringify(_cueToJson(prevCue, excludedProps)) !== JSON.stringify(_cueToJson(cue, excludedProps))) {
+        // Compare cues content
+        if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
             return false;
         }
-        track.cues[track.cues.length - 1].endTime = cue.endTime;
+        prevCue.endTime = cue.endTime;
         return true;
     }
 
-    function _cueToJson (cue, propsExcluded) {
-        let _cue = {};
-        Object.keys(cue).forEach(function(key) {
-            if (propsExcluded && !propsExcluded.includes(key)) {
-                _cue[key] = cue[key];
+    function _cuesContentAreEqual(cue1, cue2, props) {
+        for (let i = 0; i < props.length; i++) {
+            const key = props[i];
+            if (JSON.stringify(cue1[key]) !== JSON.stringify(cue2[key])) {
+                return false;
             }
-        });
-        return _cue;
-    };
+        };
+        return true;
+    }
 
     /*
      * Add captions to track, store for later adding, or add captions added before
@@ -464,6 +483,7 @@ function TextTracks(config) {
                             track.manualCueList.push(cue);
                         } else {
                             if (!_extendLastCue(cue, track)) {
+                                console.log('### add cue', cue);
                                 track.addCue(cue);
                             }
                         }
