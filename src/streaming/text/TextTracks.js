@@ -483,7 +483,6 @@ function TextTracks(config) {
                             track.manualCueList.push(cue);
                         } else {
                             if (!_extendLastCue(cue, track)) {
-                                console.log('### add cue', cue);
                                 track.addCue(cue);
                             }
                         }
