@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+    browser-tools: circleci/browser-tools@1.4.0
 
 executors:
   dashjs-executor:
@@ -81,6 +83,7 @@ jobs:
     build-and-unit-test:
         executor: dashjs-executor
         steps:
+            - browser-tools/install-browser-tools
             - checkout
             - dependencies_setup
             - build_unit_test_steps
@@ -96,6 +99,7 @@ jobs:
     merge-build-and-unit-test:
         executor: dashjs-executor
         steps:
+            - browser-tools/install-browser-tools
             - checkout
             - run:
                 name: Merge into development virtually
