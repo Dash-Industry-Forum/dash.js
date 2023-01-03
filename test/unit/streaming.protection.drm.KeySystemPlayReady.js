@@ -3,15 +3,13 @@ import BASE64 from '../../externals/base64';
 import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
-const jsdom = require('jsdom').JSDOM;
 
 describe('KeySystemPlayready', function () {
 
 
     let  context = {};
     let settings = Settings(context).getInstance();
-    let keySystem,
-        DOMParser;
+    let keySystem;
     let cdmData = null;
 
 
@@ -25,14 +23,10 @@ describe('KeySystemPlayready', function () {
     describe('Not well initialized', () => {
         beforeEach(function () {
             keySystem = KeySystemPlayReady(context).getInstance();
-            if (typeof DOMParser === 'undefined') {
-                global.DOMParser = new jsdom().window.DOMParser;
-            }
         });
 
         afterEach(function () {
             keySystem = null;
-            global.DOMParser = undefined;
             context = {};
         });
 
@@ -56,14 +50,10 @@ describe('KeySystemPlayready', function () {
     describe('Well initialized', () => {
         beforeEach(function () {
             keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
-            if (typeof DOMParser === 'undefined') {
-                global.DOMParser = new jsdom().window.DOMParser;
-            }
         });
 
         afterEach(function () {
             keySystem = null;
-            global.DOMParser = undefined;
             context = {};
         });
 

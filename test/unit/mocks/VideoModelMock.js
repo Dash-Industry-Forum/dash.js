@@ -1,5 +1,3 @@
-import VideoElementMock from './VideoElementMock';
-
 class VideoModelMock {
     constructor() {
         this.isplaying = false;
@@ -12,7 +10,7 @@ class VideoModelMock {
         this.State = 'ready';
         this.tracks = [];
         this.source = null;
-        this.element = new VideoElementMock();
+        this.element = document.createElement('video');
         this.height = 600;
         this.width = 800;
         this.events = {};
@@ -169,7 +167,13 @@ class VideoModelMock {
     }
 
     getCurrentCue(textTrack) {
-        return this.element.getCurrentCue(textTrack);
+        const textTrackList = this.element.textTracks;
+        const track = textTrackList.getTrackById(textTrack.id);
+        console.log('track', track);
+        if (!track) {
+            return null;
+        }
+        return track.cues[0];
     }
 
     getTTMLRenderingDiv() {

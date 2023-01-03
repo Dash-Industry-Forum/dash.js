@@ -245,8 +245,8 @@ describe('URLUtils', function () {
 
         it('should resolve a baseurl and relative url (2)', () => {
             const baseUrl = 'http://www.example.com/path/index.html';
-            const url = './MPDs/example.mpd';
-            const expected = 'http://www.example.com/path/./MPDs/example.mpd';
+            const url = 'test/MPDs/example.mpd';
+            const expected = 'http://www.example.com/path/test/MPDs/example.mpd';
 
             const result = urlUtils.resolve(url, baseUrl);
 
@@ -305,28 +305,11 @@ describe('URLUtils', function () {
 
         let instance;
         before(function () {
-            if (typeof window === 'undefined') {
-                global.window = {
-                    URL: (a, b) => {
-                        if (!a || !b) {
-                            throw new Error();
-                        }
-
-                        return {
-                            toString: () => {
-                                return b + a;
-                            }
-                        };
-                    }
-                };
-            }
-
             // new instance on new context to pick up window.URL
             instance = URLUtils({}).getInstance();
         });
 
         after(function () {
-            delete global.window;
         });
 
         it('should return url when baseurl is invalid', () => {
