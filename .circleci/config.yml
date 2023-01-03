@@ -4,7 +4,7 @@ executors:
   dashjs-executor:
     working_directory: ~/repo
     docker:
-      - image: cimg/node:10.20.1
+      - image: cimg/node:16.18.1
 
 commands:
     dependencies_setup:
