@@ -132,11 +132,11 @@ jobs:
             - run:
                 name: Run functional tests for one vector (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
             - run:
                 name: Run functional tests for smoke vectors (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             - store_test_results:
                 path: test/functional/reports
 
