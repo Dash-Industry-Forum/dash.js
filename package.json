@@ -12,7 +12,6 @@
         "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
         "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
-        "coverage": "nyc --reporter=text --reporter=lcov --reporter=text-summary --report-dir='./coverage' npm run test",
         "test": "karma start karma.unit.conf.js",
         "test-browserunit": "karma start build/karma.conf.js",
         "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
