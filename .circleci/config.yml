@@ -49,6 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
+            - browser-tools/install-browser-tools
             - run:
                 name: Build and run unit tests
                 command: |
@@ -83,7 +84,6 @@ jobs:
     build-and-unit-test:
         executor: dashjs-executor
         steps:
-            - browser-tools/install-browser-tools
             - checkout
             - dependencies_setup
             - build_unit_test_steps
@@ -99,7 +99,6 @@ jobs:
     merge-build-and-unit-test:
         executor: dashjs-executor
         steps:
-            - browser-tools/install-browser-tools
             - checkout
             - run:
                 name: Merge into development virtually
