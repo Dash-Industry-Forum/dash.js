@@ -9,9 +9,9 @@ import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import DebugMock from './mocks/DebugMock';
 import ISOBoxer from 'codem-isoboxer';
+import FileLoader from './helpers/FileLoader';
 
 const expect = require('chai').expect;
-const fs = require('fs');
 
 const context = {};
 const playbackController = PlaybackController(context).getInstance();
@@ -51,18 +51,16 @@ describe('MssFragmentProcessor', function () {
         expect(mssFragmentProcessor.processFragment.bind(mssFragmentProcessor, { request: { type: 'MediaSegment' } })).to.throw('e parameter is missing or malformed');
     });
 
-    it('should throw an error when attempting to call processFragment for mp4 media live segment without tfrf box', () => {
-        const file = fs.readFileSync(__dirname + '/data/mss/mss_moof_tfdt.mp4');
-        const arrayBuffer = new Uint8Array(file).buffer;
+    it('should throw an error when attempting to call processFragment for mp4 media live segment without tfrf box', async() => {
+        const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof_tfdt.mp4');
         const e = { request: { type: 'MediaSegment', mediaInfo: { index: 0 } }, response: arrayBuffer };
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
     });
 
-    it('should not throw an error when attempting to call processFragment for mp4 media live segment with tfrf box', () => {
-        const file = fs.readFileSync(__dirname + '/data/mss/mss_moof.mp4');
-        const arrayBuffer = new Uint8Array(file).buffer;
+    it('should not throw an error when attempting to call processFragment for mp4 media live segment with tfrf box', async () => {
+        const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof.mp4');
         const e = { request: { type: 'MediaSegment', mediaInfo: { index: 0 } }, response: arrayBuffer };
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).not.to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);

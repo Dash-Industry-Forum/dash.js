@@ -1,5 +1,5 @@
 import EventBus from '../../src/core/EventBus';
-import { EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE } from '../../src/streaming/MediaPlayerEvents';
+import mediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 
 const chai = require('chai');
 const sinon = require('sinon');
@@ -49,11 +49,11 @@ describe('EventBus', function () {
         const spy = sinon.spy();
         const spy2 = sinon.spy();
 
-        eventBus.on('EVENT_TEST', spy, null, { mode: EVENT_MODE_ON_START });
-        eventBus.on('EVENT_TEST', spy2, null, { mode: EVENT_MODE_ON_RECEIVE });
+        eventBus.on('EVENT_TEST', spy, null, { mode: mediaPlayerEvents.EVENT_MODE_ON_START });
+        eventBus.on('EVENT_TEST', spy2, null, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
-        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_START });
-        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
+        eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_START });
+        eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
         assert.equal(spy.calledOnce, true);
         assert.equal(spy2.calledOnce, true);
@@ -64,7 +64,7 @@ describe('EventBus', function () {
 
         eventBus.on('EVENT_TEST', spy, null);
 
-        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
+        eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
         assert.equal(spy.notCalled, true);
     });
@@ -74,8 +74,8 @@ describe('EventBus', function () {
 
         eventBus.on('EVENT_TEST', spy, null);
 
-        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_START });
-        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
+        eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_START });
+        eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
         assert.equal(spy.calledOnce, true);
     });

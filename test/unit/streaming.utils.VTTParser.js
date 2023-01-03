@@ -1,7 +1,7 @@
 import VTTParser from '../../src/streaming/utils/VTTParser';
+import FileLoader from './helpers/FileLoader';
 
 const expect = require('chai').expect;
-const fs = require('fs');
 
 const context = {};
 const vttParser = VTTParser(context).getInstance();
@@ -14,8 +14,8 @@ describe('VTTParser', function () {
         expect(vttSubtitlesArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return an array with a size of 8 when parse is called and data is vttSample', function () {
-        let vtt_file = fs.readFileSync(__dirname + '/data/subtitles/vttSample.vtt', 'utf8');
+    it('should return an array with a size of 8 when parse is called and data is vttSample', async () => {
+        let vtt_file = await FileLoader.loadTextFile('/data/subtitles/vttSample.vtt');
         const vttSubtitlesArray = vttParser.parse(vtt_file);
 
         expect(vttSubtitlesArray).to.be.instanceOf(Array);    // jshint ignore:line
