@@ -411,9 +411,9 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when an inband prft (ProducerReferenceTime) boxes has been received.
-         * @event MediaPlayerEvents#INBAND_PRFT_RECEIVED
+         * @event MediaPlayerEvents#INBAND_PRFT
          */
-        this.INBAND_PRFT_RECEIVED = 'inbandPrftReceived';
+        this.INBAND_PRFT = 'inbandPrft';
     }
 }
 

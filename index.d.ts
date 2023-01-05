@@ -725,7 +725,7 @@ declare namespace dashjs {
         FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
         FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
-        INBAND_PRFT_RECEIVED: 'inbandPrftReceived';
+        INBAND_PRFT_RECEIVED: 'inbandPrft';
         KEY_ADDED: 'public_keyAdded';
         KEY_ERROR: 'public_keyError';
         KEY_MESSAGE: 'public_keyMessage';
@@ -948,7 +948,7 @@ declare namespace dashjs {
         type: MediaPlayerEvents['INBAND_PRFT_RECEIVED'];
         streamInfo: StreamInfo;
         mediaType: MediaType;
-        
+        data: object
     }
 
     export class KeyError {

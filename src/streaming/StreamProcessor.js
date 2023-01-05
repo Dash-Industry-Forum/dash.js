@@ -997,7 +997,7 @@ function StreamProcessor(config) {
                     const timescale = voRepresentation.timescale;
                     const prfts = _handleInbandPrfts(isoFile, timescale);
                     if (prfts && prfts.length) {
-                        eventBus.trigger(MediaPlayerEvents.INBAND_PRFT_RECEIVED,
+                        eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
                             {
                                 data: {
                                     id: producerReferenceTimes[0].id,
