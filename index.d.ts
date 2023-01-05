@@ -158,6 +158,7 @@ declare namespace dashjs {
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
             enableManifestTimescaleMismatchFix?: boolean,
+            parseInbandPrft?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -724,6 +725,7 @@ declare namespace dashjs {
         FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
         FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
+        INBAND_PRFT_RECEIVED: 'inbandPrftReceived';
         KEY_ADDED: 'public_keyAdded';
         KEY_ERROR: 'public_keyError';
         KEY_MESSAGE: 'public_keyMessage';
@@ -940,6 +942,13 @@ declare namespace dashjs {
         streamProcessor: object;
         request: object;
         mediaType: MediaType;
+    }
+
+    export interface InbandPrftReceivedEvent extends Event {
+        type: MediaPlayerEvents['INBAND_PRFT_RECEIVED'];
+        streamInfo: StreamInfo;
+        mediaType: MediaType;
+        
     }
 
     export class KeyError {

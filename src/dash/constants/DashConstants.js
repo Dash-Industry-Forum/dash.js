@@ -91,6 +91,8 @@ class DashConstants {
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
+        this.INBAND = 'inband';
+        this.TYPE = 'type';
         this.ACCESSIBILITY = 'Accessibility';
         this.ROLE = 'Role';
         this.RATING = 'Rating';

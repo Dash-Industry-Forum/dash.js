@@ -40,13 +40,13 @@ import FactoryMaker from '../core/FactoryMaker';
 import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
+import MediaPlayerEvents from './MediaPlayerEvents';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
 import DashJSError from './vo/DashJSError';
 import Debug from '../core/Debug';
 import RequestModifier from './utils/RequestModifier';
 import URLUtils from '../streaming/utils/URLUtils';
-import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
@@ -984,6 +984,34 @@ function StreamProcessor(config) {
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
         if (currentRepresentation && voRepresentation) {
+
+            let isoFile;
+
+            // Check for inband prft:
+            // - only on media segment
+            // - and if a ProducerReferenceTime of type "inband" is set for current representation
+            if (settings.get().streaming.parseInbandPrft && e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                const producerReferenceTimes = adapter.getProducerReferenceTimes(streamInfo, currentRepresentation.mediaInfo);
+                if (producerReferenceTimes && producerReferenceTimes.length && producerReferenceTimes[0].inband) {
+                    isoFile = isoFile ? isoFile : boxParser.parse(bytes);
+                    const timescale = voRepresentation.timescale;
+                    const prfts = _handleInbandPrfts(isoFile, timescale);
+                    if (prfts && prfts.length) {
+                        eventBus.trigger(MediaPlayerEvents.INBAND_PRFT_RECEIVED,
+                            {
+                                data: {
+                                    id: producerReferenceTimes[0].id,
+                                    type: producerReferenceTimes[0].type,
+                                    prfts
+
+                                }
+                            },
+                            { streamId: streamInfo.id, mediaType: type }
+                        );    
+                    }
+                }
+            }
+    
             const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
             const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
@@ -994,7 +1022,8 @@ function StreamProcessor(config) {
                     index: chunk.index
                 })[0];
 
-                const events = _handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+                isoFile = isoFile ? isoFile : boxParser.parse(bytes);
+                const events = _handleInbandEvents(isoFile, request, eventStreamMedia, eventStreamTrack);
                 eventBus.trigger(Events.INBAND_EVENTS,
                     { events: events },
                     { streamId: streamInfo.id }
@@ -1003,7 +1032,36 @@ function StreamProcessor(config) {
         }
     }
 
-    function _handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+    function _handleInbandPrfts(isoFile, timescale) {
+        const prftBoxes = isoFile.getBoxes('prft');
+
+        const prfts = [];
+        prftBoxes.forEach(prft => {
+            prfts.push(_parsePrftBox(prft, timescale));
+        });
+
+        return prfts;
+    }
+
+    function _parsePrftBox(prft, timescale) {
+        // Get NTP timestamp according to IETF RFC 5905, relative to 1/1/1900
+        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
+        ntpTimestamp = ntpToUTC(ntpTimestamp);
+
+        const mediaTime = (prft.media_time / timescale);
+
+        return {
+            ntpTimestamp,
+            mediaTime
+        }
+    }
+
+    function ntpToUTC(ntpTimeStamp) {
+        const start = new Date(Date.UTC(1900, 0, 1, 0, 0, 0));
+        return new Date(start.getTime() + ntpTimeStamp).getTime();
+    }    
+
+    function _handleInbandEvents(isoFile, request, mediaInbandEvents, trackInbandEvents) {
         try {
             const eventStreams = {};
             const events = [];
@@ -1014,7 +1072,6 @@ function StreamProcessor(config) {
                 eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
             }
 
-            const isoFile = BoxParser(context).getInstance().parse(data);
             const eventBoxes = isoFile.getBoxes('emsg');
 
             if (!eventBoxes || eventBoxes.length === 0) {

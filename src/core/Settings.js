@@ -69,6 +69,7 @@ import Events from './events/Events';
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            enableManifestTimescaleMismatchFix: false,
+ *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -685,6 +686,8 @@ import Events from './events/Events';
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [parseInbandPrft=false]
+ * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
@@ -794,6 +797,7 @@ function Settings() {
             applyContentSteering: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
+            parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
