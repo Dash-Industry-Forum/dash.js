@@ -241,6 +241,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -958,6 +959,9 @@ function StreamProcessor(config) {
     }
 
     function _onInitFragmentLoaded(e) {
+        if (!settings.get().streaming.enableManifestTimescaleMismatchFix) {
+            return;
+        }
         const chunk = e.chunk;
         const bytes = chunk.bytes;
         const quality = chunk.quality;
