@@ -36,7 +36,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import BoxParser from '../utils/BoxParser';
 import InitCache from '../utils/InitCache';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
@@ -67,7 +66,6 @@ function BufferController(config) {
 
     let instance,
         logger,
-        boxParser,
         isBufferingCompleted,
         bufferLevel,
         criticalBufferLevel,
@@ -88,7 +86,6 @@ function BufferController(config) {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        boxParser = BoxParser(context).getInstance();
         initCache = InitCache(context).getInstance();
 
         resetInitialSettings();
@@ -211,13 +208,6 @@ function BufferController(config) {
         }
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         _appendToBuffer(e.chunk);
-
-        // Check timescale from init segment (in case different from manifest)
-        const timescale = boxParser.getMediaTimescaleFromMoov(e.chunk.bytes);
-        const representationInfo = representationController.getRepresentationForQuality(e.chunk.quality);
-        if (representationInfo) {
-            representationInfo.timescale = timescale;
-        }
     }
 
     /**
