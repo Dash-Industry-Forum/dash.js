@@ -68,6 +68,7 @@ import Events from './events/Events';
  *            applyContentSteering: true,
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
+ *            enableManifestTimescaleMismatchFix: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -681,6 +682,8 @@ import Events from './events/Events';
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestDurationMismatchFix=true]
+ * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
+ * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
@@ -791,6 +794,7 @@ function Settings() {
             applyContentSteering: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
+            enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
                 useMediaCapabilitiesApi: false

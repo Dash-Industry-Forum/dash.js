@@ -96,6 +96,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -240,6 +241,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -953,6 +955,21 @@ function StreamProcessor(config) {
             mediaInfo,
             representation
         );
+    }
+
+    function _onInitFragmentLoaded(e) {
+        if (!settings.get().streaming.enableManifestTimescaleMismatchFix) {
+            return;
+        }
+        const chunk = e.chunk;
+        const bytes = chunk.bytes;
+        const quality = chunk.quality;
+        const currentRepresentation = getRepresentationInfo(quality);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        if (currentRepresentation && voRepresentation) {
+            const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            voRepresentation.timescale = timescale;
+        }
     }
 
     function _onMediaFragmentLoaded(e) {

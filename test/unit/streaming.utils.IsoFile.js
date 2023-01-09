@@ -1,8 +1,8 @@
 import IsoFile from '../../src/streaming/utils/IsoFile';
 import ISOBoxer from 'codem-isoboxer';
+import FileLoader from './helpers/FileLoader';
 
 const expect = require('chai').expect;
-const fs = require('fs');
 
 const context = {};
 const isoFile = IsoFile(context).create();
@@ -83,9 +83,8 @@ describe('IsoFile', function () {
     });
 
     describe('when a correct parsed file has been set', () => {
-        before(function () {
-            const file = fs.readFileSync(__dirname + '/data/mss/mss_moof.mp4');
-            const arrayBuffer = new Uint8Array(file).buffer;
+        before(async () => {
+            const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof.mp4');
             const parsedFile = ISOBoxer.parseBuffer(arrayBuffer);
             isoFile.setData(parsedFile);
         });
