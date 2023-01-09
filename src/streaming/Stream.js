@@ -520,7 +520,11 @@ function Stream(config) {
 
     function createBufferSinkForText() {
         const sp = _getProcessorByType(Constants.TEXT);
-        return sp.createBufferSinks()
+        if (sp) {
+            return sp.createBufferSinks()
+        }
+
+        return Promise.resolve();
     }
 
     /**
