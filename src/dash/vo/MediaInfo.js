@@ -54,7 +54,6 @@ class MediaInfo {
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
-        this.adaptationSetSwitchingMediaInfos = [];
     }
 
 }

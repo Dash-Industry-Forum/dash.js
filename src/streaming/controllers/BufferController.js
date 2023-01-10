@@ -349,7 +349,7 @@ function BufferController(config) {
             });
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
-            _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, {chunk: chunk});
+            _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
 
@@ -826,7 +826,7 @@ function BufferController(config) {
         if (playbackController) {
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
             bufferLevel = Math.max(getBufferLength(playbackController.getTime() || 0, tolerance), 0);
-            _triggerEvent(Events.BUFFER_LEVEL_UPDATED, {mediaType: type, bufferLevel: bufferLevel});
+            _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
     }
@@ -866,7 +866,7 @@ function BufferController(config) {
 
         bufferState = state;
 
-        _triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, {state: state});
+        _triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state });
         _triggerEvent(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY);
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
@@ -1011,7 +1011,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting streamprocessor time to', e.from);
-            _triggerEvent(Events.SEEK_TARGET, {time: e.from});
+            _triggerEvent(Events.SEEK_TARGET, { time: e.from });
         }
 
         if (isPruningInProgress) {
@@ -1176,7 +1176,7 @@ function BufferController(config) {
 
     function _triggerEvent(eventType, data) {
         let payload = data || {};
-        eventBus.trigger(eventType, payload, {streamId: streamInfo.id, mediaType: type});
+        eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
     }
 
     function resetInitialSettings(errored, keepBuffers) {

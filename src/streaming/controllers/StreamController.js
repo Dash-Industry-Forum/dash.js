@@ -336,7 +336,7 @@ function StreamController() {
             }
             const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
             logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-            eventBus.trigger(Events.AST_IN_FUTURE, {delay: waitingTime});
+            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
             waitForPlaybackStartTimeout = setTimeout(() => {
                 _initializeForFirstStream(streamsInfo);
             }, waitingTime);
@@ -365,7 +365,7 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
-        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, {startTime});
+        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
     }
@@ -492,13 +492,13 @@ function StreamController() {
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(seekTime)) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime}, {streamId: activeStream.getId()});
+                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
                     playbackController.seek(seekTime, false, true);
                     activeStream.startScheduleControllers();
                 }
 
                 isStreamSwitchingInProgress = false;
-                eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {toStreamInfo: getActiveStreamInfo()});
+                eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
             });
     }
 
@@ -857,7 +857,7 @@ function StreamController() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -1557,7 +1557,7 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestModel.getValue().url});
+                eventBus.trigger(Events.PROTECTION_DESTROYED, { data: manifestModel.getValue().url });
             }
         }
 
