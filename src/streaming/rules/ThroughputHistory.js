@@ -86,8 +86,8 @@ function ThroughputHistory(config) {
         }
 
         // Use response delay and and round trip time from CMSD response headers if available
-        const latencyTimeInMilliseconds = httpRequest.rd ? httpRequest.rd : (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
-        const downloadTimeInMilliseconds = httpRequest.rtt ? httpRequest.rtt : (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
+        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
+        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
         let throughputMeasureTime = 0, throughput = 0;
 
@@ -101,9 +101,14 @@ function ThroughputHistory(config) {
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
 
-        if (httpRequest.etp) {
-            // use etp (estimated throughput time, in kbits/s) from CMSD response headers
-            throughput = httpRequest.etp;
+        // Get estimated throughput (etp, in kbits/s) from CMSD response headers
+        if (httpRequest.cmsd) {
+            const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp ? httpRequest.cmsd.dynamic.etp : null;
+            if (etp) {
+                // Apply weight ratio on etp
+                const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
+                throughput = (throughput * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+            }
         }
 
         checkSettingsForMediaType(mediaType);

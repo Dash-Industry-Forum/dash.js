@@ -134,7 +134,7 @@ function MetricsModel(config) {
         return vo;
     }
 
-    function addHttpRequest(mediaType, tcpid, type, url, quality, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, rd, rtt, etp, traces, fileLoaderType) {
+    function addHttpRequest(mediaType, tcpid, type, url, quality, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, cmsd, traces, fileLoaderType) {
         let vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
@@ -162,9 +162,7 @@ function MetricsModel(config) {
                 null, // unknown, probably a 302
                 mediaduration,
                 null,
-                rd,
-                rtt,
-                etp,
+                cmsd,
                 null,
                 fileLoaderType
             );
@@ -179,9 +177,7 @@ function MetricsModel(config) {
         vo.trequest = trequest;
         vo.tresponse = tresponse;
         vo.responsecode = responsecode;
-        vo.rd = rd;
-        vo.rtt = rtt;
-        vo.etp = etp;
+        vo.cmsd = cmsd;
 
         vo._tfinish = tfinish;
         vo._stream = mediaType;

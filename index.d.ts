@@ -335,7 +335,11 @@ declare namespace dashjs {
                 enabledKeys?: Array<string>
             },
             cmsd?: {
-                enabled?: boolean
+                enabled?: boolean,
+                abr?: {
+                    useMb: boolean,
+                    etpWeightRatio?: number
+                }
             }
         };
         errors?: {

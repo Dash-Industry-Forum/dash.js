@@ -126,17 +126,9 @@ function HTTPLoader(cfg) {
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
                     httpRequest.response ? httpRequest.response.responseHeaders : null;
 
-                let rd = null;
-                let rtt = null;
-                let etp = null;
-                if (settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled) {
-                    cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType);
-                    rd = cmsdModel.getResponseDelay(request.mediaType);
-                    rtt = cmsdModel.getRoundTripTime(request.mediaType);
-                    etp = cmsdModel.getEstimatedThroughput(request.mediaType);
-                }
+                const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, rd, rtt, etp, success ? traces : null);
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, cmsd, success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);

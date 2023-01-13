@@ -98,23 +98,10 @@ class HTTPRequest {
          */
         this.trace = [];
         /**
-         * The time elapsed between the receipt of the request and when the first byte of the body becomes available to send to the client.
-         * This value is retrieved from CMSD reponse headers.
+         * The CMSD static and dynamic values retrieved from CMSD response headers.
          * @public
          */
-        this.rd = null;
-        /**
-         * The estimated round trip time between client and server.
-         * This value is retrieved from CMSD reponse headers.
-         * @public
-         */
-        this.rtt = null;
-        /**
-         * The estimated throughput for this request.
-         * This value is retrieved from CMSD reponse headers.
-         * @public
-         */
-        this.etp = null;
+        this.cmsd = null;
 
         /**
          * Type of stream ("audio" | "video" etc..)

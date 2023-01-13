@@ -216,8 +216,12 @@ import Events from './events/Events';
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *            },
  *            cmsd: {
- *                enabled: false
- *            }
+ *                enabled: false,
+ *                abr: {
+ *                    useMb: true,
+ *                    etpWeightRatio: 0
+ *                }
+ *           }
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -661,7 +665,17 @@ import Events from './events/Events';
 /**
  * @typedef {Object} module:Settings~CmsdSettings
  * @property {boolean} [enabled=false]
- * Enable or disable the CMSD parsing.
+ * Enable or disable the CMSD response headers parsing.
+ * @property {module:Settings~CmsdAbrSettings} [abr]
+ * Sets additional ABR rules based on CMSD response headers.
+ */
+
+/**
+ * @typedef {Object} CmsdAbrSettings
+ * @property {boolean} [useMb=true]
+ * Enable/disable maximum suggested bitrate that the player should use in ABR algorithms.
+ * @property {number} [etpWeightRatio=0]
+ * Sets the weight ratio that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
  */
 
 /**
@@ -983,7 +997,11 @@ function Settings() {
                 enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
             },
             cmsd: {
-                enabled: false
+                enabled: false,
+                abr: {
+                    useMb: true,
+                    etpWeightRatio: 0
+                }
             }
         },
         errors: {

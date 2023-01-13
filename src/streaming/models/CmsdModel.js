@@ -246,6 +246,11 @@ function CmsdModel() {
         if (dynamicParams) {
             _dynamicParamsDict[ot] = Object.assign(_dynamicParamsDict[ot] || {}, dynamicParams);
         }
+
+        return {
+            static: staticParams,
+            dynamic: dynamicParams
+        }
     }
 
     function getMaxBitrate(type) {
