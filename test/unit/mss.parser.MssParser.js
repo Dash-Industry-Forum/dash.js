@@ -5,31 +5,13 @@ import Constants from '../../src/streaming/constants/Constants';
 import DebugMock from './mocks/DebugMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import FileLoader from './helpers/FileLoader';
 
 const expect = require('chai').expect;
-const fs = require('fs');
-const jsdom = require('jsdom').JSDOM;
 
 describe('MssParser', function () {
 
     let mssParser;
-
-    beforeEach(function () {
-        if (typeof window === 'undefined') {
-            global.window = {
-                performance: {
-                    now: function () {
-                        return Date.now();
-                    }
-                },
-                DOMParser:  new jsdom().window.DOMParser
-            };
-        }
-    });
-
-    afterEach(function () {
-        delete global.window;
-    });
 
     beforeEach(function () {
         mssParser = MssParser().create({
@@ -43,8 +25,8 @@ describe('MssParser', function () {
         expect(mssParser).to.exist; // jshint ignore:line
     });
 
-    it('should parse a smooth streaming manifest', function () {
-        let xml = fs.readFileSync(__dirname + '/data/mss/manifest.xml', 'utf8');
+    it('should parse a smooth streaming manifest', async () => {
+        let xml = await FileLoader.loadTextFile('/data/mss/manifest.xml');
         let manifest = mssParser.parse(xml);
         expect(manifest).to.exist; // jshint ignore:line
         expect(manifest.protocol).to.equal('MSS');
@@ -67,8 +49,8 @@ describe('MssParser', function () {
             }
         }
     });
-    it('should skip video adaptations if fourCC attribute is not found', function () {
-        let xml = fs.readFileSync(__dirname + '/data/mss/manifestFourCCError.xml', 'utf8');
+    it('should skip video adaptations if fourCC attribute is not found',  async () => {
+        let xml = await FileLoader.loadTextFile('/data/mss/manifestFourCCError.xml');
         let manifest = mssParser.parse(xml);
         let adaptations = manifest.Period.AdaptationSet_asArray;
         expect(manifest).to.exist; // jshint ignore:line
@@ -82,8 +64,8 @@ describe('MssParser', function () {
         expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
     });
 
-    it('should map mss subtype to dash role', function () {
-        let xml = fs.readFileSync(__dirname + '/data/mss/manifestSubtype.xml', 'utf8');
+    it('should map mss subtype to dash role', async () => {
+        let xml = await FileLoader.loadTextFile('/data/mss/manifestSubtype.xml');
         let manifest = mssParser.parse(xml);
         expect(manifest).to.exist; // jshint ignore:line
         expect(manifest.protocol).to.equal('MSS');

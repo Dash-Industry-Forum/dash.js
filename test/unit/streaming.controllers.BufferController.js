@@ -48,10 +48,6 @@ describe('BufferController', function () {
     const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
 
     beforeEach(function () {
-        global.navigator = {
-            userAgent: 'node.js'
-        };
-
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
             streamInfo: streamInfo,
@@ -71,8 +67,6 @@ describe('BufferController', function () {
     });
 
     afterEach(function () {
-        delete global.navigator;
-
         bufferController.reset();
         bufferController = null;
 

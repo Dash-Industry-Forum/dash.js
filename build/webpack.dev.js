@@ -1,6 +1,5 @@
 const { merge } = require('webpack-merge');
 const common = require('./webpack.base.js').config;
-const webpack = require("webpack");
 const path = require('path');
 
 const config = merge(common, {
@@ -14,20 +13,14 @@ const config = merge(common, {
         filename: '[name].debug.js',
     },
     devServer: {
-        contentBase: path.join(__dirname, '../'),
-        open: true,
-        openPage: 'samples/index.html',
+        static: {
+            directory: path.join(__dirname, '../'),
+        },
+        open: ['samples/index.html'],
         hot: true,
         compress: true,
-        port: 3000,
-        watchOptions: {
-            aggregateTimeout: 300,
-            poll: 1000
-        }
-    },
-    plugins: [
-        new webpack.HotModuleReplacementPlugin(),
-    ]
+        port: 3000
+    }
 });
 
 module.exports = config;

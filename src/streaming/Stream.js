@@ -853,6 +853,12 @@ function Stream(config) {
                 const currentMediaInfo = streamProcessor.getMediaInfo();
                 promises.push(streamProcessor.updateStreamInfo(streamInfo));
                 let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
+
+                // Filter out embedded text track before updating media info in  StreamProcessor
+                allMediaForType = allMediaForType.filter(mediaInfo => {
+                    return !mediaInfo.isEmbedded;
+                });
+
                 // Check if AdaptationSet has not been removed in MPD update
                 if (allMediaForType) {
                     // Remove the current mediaInfo objects before adding the updated ones

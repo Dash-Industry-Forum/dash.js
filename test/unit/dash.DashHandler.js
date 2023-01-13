@@ -111,13 +111,7 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-        })
 
-        afterEach(() => {
-            segRequestStub.restore();
-        });
-
-        beforeEach(() => {
             dummyRepresentation = {
                 index: 0,
                 adaptation: {
@@ -151,6 +145,10 @@ describe('DashHandler', function () {
             };
             dummyMediaInfo = {};
         })
+
+        afterEach(() => {
+            segRequestStub.restore();
+        });
 
         it('should return NaN if no parameters are passed', () => {
             const result = dashHandler.getValidTimeAheadOfTargetTime()

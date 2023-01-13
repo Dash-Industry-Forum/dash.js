@@ -124,7 +124,7 @@ function HTTPLoader(cfg) {
                 const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
                 const responseStatus = httpRequest.response ? httpRequest.response.status : null;
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                    httpRequest.response ? httpRequest.response.responseHeaders : [];
+                    httpRequest.response ? httpRequest.response.responseHeaders : null;
 
                 let rd = null;
                 let rtt = null;
