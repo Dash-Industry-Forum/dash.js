@@ -228,6 +228,7 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
                 webvtt?: {
                     customRenderingEnabled?: number
                 }

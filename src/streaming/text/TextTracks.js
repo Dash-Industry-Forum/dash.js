@@ -421,6 +421,9 @@ function TextTracks(config) {
     }
 
     function _extendLastCue(cue, track) {
+        if (!settings.get().streaming.text.extendSegmentedCues) {
+            return false;
+        }
         if (!track.cues || track.cues.length === 0) {
             return false;
         }

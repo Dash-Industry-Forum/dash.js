@@ -139,6 +139,7 @@ import Events from './events/Events';
  *            },
  *            text: {
  *                defaultEnabled: true,
+ *                extendSegmentedCues: true,
  *                webvtt: {
  *                    customRenderingEnabled: false
  *                }
@@ -452,6 +453,8 @@ import Events from './events/Events';
  * @typedef {Object} Text
  * @property {number} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {number} [extendSegmentedCues=true]
+ * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
  * @property {object} [webvtt={customRenderingEnabled=false}]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
@@ -865,6 +868,7 @@ function Settings() {
             },
             text: {
                 defaultEnabled: true,
+                extendSegmentedCues: true,
                 webvtt: {
                     customRenderingEnabled: false
                 }
