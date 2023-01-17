@@ -358,6 +358,16 @@ function DashManifestModel() {
         return adaptation[DashConstants.CENC_DEFAULT_KID];
     }
 
+    function getInitializationPrincipal(adaptation) {
+        if (
+            !adaptation ||
+            !adaptation.hasOwnProperty(DashConstants.INITIALIZATION_PRINCIPAL)
+        ) {
+            return null;
+        }
+        return adaptation[DashConstants.INITIALIZATION_PRINCIPAL];
+    }
+
     function getLabelsForAdaptation(adaptation) {
         if (!adaptation || !Array.isArray(adaptation.Label_asArray)) {
             return [];
@@ -1259,6 +1269,7 @@ function DashManifestModel() {
         getSelectionPriority,
         getMimeType,
         getKID,
+        getInitializationPrincipal,
         getLabelsForAdaptation,
         getContentProtectionData,
         getIsDynamic,

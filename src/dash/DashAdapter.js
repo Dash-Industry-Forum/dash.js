@@ -1051,6 +1051,8 @@ function DashAdapter() {
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
         mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
+        mediaInfo.initializationPrincipal = dashManifestModel.getInitializationPrincipal(realAdaptation);
+
 
         if (mediaInfo.contentProtection) {
             // Get the default key ID and apply it to all key systems

@@ -178,6 +178,18 @@ function VideoModel() {
         }
     }
 
+    function setWebRTCSource(source) {
+        if (element) {
+            if (source) {
+                element.srcObject = source;
+            } else {
+                element.srcObject = null;
+                element.removeAttribute('srcObject');
+                element.load();
+            }
+        }
+    }
+
     function getSource() {
         return element ? element.src : null;
     }
@@ -445,6 +457,7 @@ function VideoModel() {
         getElement,
         setElement,
         setSource,
+        setWebRTCSource,
         getSource,
         getTTMLRenderingDiv,
         setTTMLRenderingDiv,

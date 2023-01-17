@@ -35,9 +35,7 @@ import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import {
-    PlayList, PlayListTrace
-} from '../vo/metrics/PlayList';
+import { PlayList, PlayListTrace } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import URLUtils from '../utils/URLUtils';
@@ -48,23 +46,103 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import 'regenerator-runtime/runtime.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
-
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    let pc;
+    function setupWebRTC() {
+        console.log('Setting Up WebRTC');
+        var configuration = {
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true,
+        };
 
-    let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
-        dashMetrics, mediaSourceController, timeSyncController, baseURLController, segmentBaseController,
-        uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils, errHandler,
-        timelineConverter, streams, activeStream, protectionController, textController, protectionData, autoPlay,
-        isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController,
-        serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback,
-        playbackEndedTimerInterval, bufferSinks, preloadingStreams, supportsChangeType, settings, firstLicenseIsFetched,
-        waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        pc = new RTCPeerConnection({
+            configuration: configuration,
+            iceServers: [],
+        });
+        pc.onnegotiationneeded = (event) => {};
+        pc.onconnectionstatechange = (event) => {};
+        pc.onicecandidate = () => {};
+        pc.ontrack = (event) => {
+            console.log('WebRTC Track added');
+            const remoteStream = event.streams[0];
+            if (!remoteStream) return;
+            if (!mediaSource) {
+                mediaSourceController.attachWebRTCSource(
+                    videoModel,
+                    remoteStream
+                );
+            } else {
+                mediaSourceController.detachMediaSource(videoModel);
+                mediaSourceController.attachWebRTCSource(
+                    videoModel,
+                    remoteStream
+                );
+            }
+            mediaPlayer.setWebRTCActive(true);
+        };
+    }
+
+    function destroyWebRTC() {
+        console.log('Destroying WebRTC connection');
+        pc.close();
+        pc = null;
+    }
+    setupWebRTC();
+    let instance,
+        logger,
+        capabilities,
+        capabilitiesFilter,
+        manifestUpdater,
+        manifestLoader,
+        manifestModel,
+        adapter,
+        dashMetrics,
+        mediaSourceController,
+        timeSyncController,
+        baseURLController,
+        segmentBaseController,
+        uriFragmentModel,
+        abrController,
+        mediaController,
+        eventController,
+        initCache,
+        urlUtils,
+        errHandler,
+        timelineConverter,
+        streams,
+        activeStream,
+        protectionController,
+        textController,
+        protectionData,
+        autoPlay,
+        isStreamSwitchingInProgress,
+        hasMediaError,
+        hasInitialisationError,
+        mediaSource,
+        videoModel,
+        playbackController,
+        serviceDescriptionController,
+        mediaPlayerModel,
+        customParametersModel,
+        isPaused,
+        initialPlayback,
+        playbackEndedTimerInterval,
+        bufferSinks,
+        preloadingStreams,
+        supportsChangeType,
+        settings,
+        firstLicenseIsFetched,
+        waitForPlaybackStartTimeout,
+        providedStartTime,
+        mediaPlayer,
+        errorInformation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -409,6 +487,48 @@ function StreamController() {
         }
     }
 
+    async function _openMediaSourceForWebRTC(sourceUrl) {
+        function _onMediaSourceOpen() {
+            if (!mediaSource || mediaSource.readyState !== 'open') return;
+
+            logger.debug('MediaSource is open!');
+            window.URL.revokeObjectURL(sourceUrl);
+            mediaSource.removeEventListener('sourceopen', _onMediaSourceOpen);
+            mediaSource.removeEventListener(
+                'webkitsourceopen',
+                _onMediaSourceOpen
+            );
+        }
+
+        mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
+        mediaSource.addEventListener(
+            'webkitsourceopen',
+            _onMediaSourceOpen,
+            false
+        );
+        let whppServerUrl = 'https://' + sourceUrl.replace(/(^\w+:|^)\/\//, '');
+
+        let response = await fetch(whppServerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        });
+        const location = response.headers.get('location'); 
+        const { offer: remoteOffer } = await response.json();
+
+        await pc.setRemoteDescription(
+            new RTCSessionDescription({ sdp: remoteOffer, type: 'offer' })
+        );
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await fetch(location, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                answer: answer.sdp
+            }),
+        });
+    }
     /**
      * Setup the Media Source. Open MSE and attach event listeners
      * @param {number} seekTime
@@ -595,8 +715,24 @@ function StreamController() {
 
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
-
-        activeStream.prepareTrackChange(e);
+        if (
+            e.newMediaInfo.initializationPrincipal &&
+            e.newMediaInfo.initializationPrincipal.startsWith('whpp://')
+        ) {
+            if (!pc) setupWebRTC();
+            _openMediaSourceForWebRTC(e.newMediaInfo.initializationPrincipal);
+        } else {
+            if (
+                e.oldMediaInfo &&
+                e.oldMediaInfo.initializationPrincipal.startsWith('whpp://')
+            ) {
+                mediaSourceController.detachWebRTCSource(videoModel);
+                destroyWebRTC();
+                mediaPlayer.setWebRTCActive(false);
+                mediaPlayer.initialize(videoModel.getElement(), null, true);
+            }
+            if (activeStream) activeStream.prepareTrackChange(e);
+        }
     }
 
     /**
@@ -696,7 +832,6 @@ function StreamController() {
      * @private
      */
     function _onBufferLevelUpdated(e) {
-
         // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
@@ -1259,12 +1394,15 @@ function StreamController() {
                 }
             });
 
-            // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
-            capabilitiesFilter.filterUnsupportedFeatures(manifest)
-                .then(() => {
-                    baseURLController.initialize(manifest);
-                    timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
-                });
+            // WebRTC TODO: It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
+            // capabilitiesFilter.filterUnsupportedFeatures(manifest)
+            // .then(() => {
+            baseURLController.initialize(manifest);
+            timeSyncController.attemptSync(
+                allUTCTimingSources,
+                adapter.getIsDynamic()
+            );
+            // });
         } else {
             hasInitialisationError = true;
             reset();
@@ -1286,7 +1424,6 @@ function StreamController() {
     function hasAudioTrack() {
         return activeStream ? activeStream.getHasAudioTrack() : false;
     }
-
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
@@ -1407,6 +1544,11 @@ function StreamController() {
         if (config.capabilities) {
             capabilities = config.capabilities;
         }
+
+        if (config.mediaPlayer) {
+            mediaPlayer = config.mediaPlayer;
+        }
+
         if (config.capabilitiesFilter) {
             capabilitiesFilter = config.capabilitiesFilter;
         }

@@ -160,6 +160,7 @@ function MediaPlayer() {
         videoModel,
         uriFragmentModel,
         domStorage,
+        webRTCActive,
         segmentBaseController;
 
     /*
@@ -217,7 +218,7 @@ function MediaPlayer() {
             playbackController = config.playbackController;
         }
         if (config.serviceDescriptionController) {
-            serviceDescriptionController = config.serviceDescriptionController
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -648,6 +649,14 @@ function MediaPlayer() {
      */
     function setPlaybackRate(value) {
         getVideoElement().playbackRate = value;
+    }
+
+    function setWebRTCActive(active) {
+        webRTCActive = active;
+    }
+
+    function getWebRTCActive(active) {
+        return webRTCActive;
     }
 
     /**
@@ -2050,7 +2059,8 @@ function MediaPlayer() {
             settings,
             baseURLController,
             uriFragmentModel,
-            segmentBaseController
+            segmentBaseController,
+            mediaPlayer: instance,
         });
 
         gapController.setConfig({
@@ -2399,7 +2409,9 @@ function MediaPlayer() {
         updateSettings,
         resetSettings,
         reset,
-        destroy
+        destroy,
+        setWebRTCActive,
+        getWebRTCActive,
     };
 
     setup();
