@@ -408,8 +408,11 @@ function StreamController() {
             });
             playbackController.initialize(getActiveStreamInfo(), !!previousStream);
 
+            // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
-                _openMediaSource(seekTime, keepBuffers);
+                _openMediaSource(seekTime, keepBuffers, false);
+            } else {
+                _activateStream(seekTime, keepBuffers);
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -420,9 +423,10 @@ function StreamController() {
      * Setup the Media Source. Open MSE and attach event listeners
      * @param {number} seekTime
      * @param {boolean} keepBuffers
+     * @param {boolean} streamActivated
      * @private
      */
-    function _openMediaSource(seekTime, keepBuffers) {
+    function _openMediaSource(seekTime, keepBuffers, streamActivated = false) {
         let sourceUrl;
 
         function _onMediaSourceOpen() {
@@ -437,7 +441,16 @@ function StreamController() {
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
-            _activateStream(seekTime, keepBuffers);
+            if (streamActivated) {
+                // Set the media source for all StreamProcessors
+                activeStream.setMediaSource(mediaSource)
+                    .then(() => {
+                        // Start text processing now that we have a video element
+                        activeStream.initializeForTextWithMediaSource(mediaSource);
+                    })
+            } else {
+                _activateStream(seekTime, keepBuffers);
+            }
         }
 
         function _open() {
@@ -1300,7 +1313,7 @@ function StreamController() {
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            _openMediaSource(seekTime, false);
+            _openMediaSource(seekTime, false, true);
         }
     }
 
@@ -1380,7 +1393,7 @@ function StreamController() {
 
         // Reset MSE
         logger.warn(`MediaSource has been resetted. Resuming playback from time ${time}`);
-        _openMediaSource(time, false);
+        _openMediaSource(time, false, false);
     }
 
     function getActiveStreamInfo() {
