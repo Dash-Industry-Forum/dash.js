@@ -36,6 +36,26 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import {renderHTML} from 'imsc';
 
+const CUE_PROPS_TO_COMPARE = [
+    'text',
+    'images',
+    'embeddedImages',
+    'align',
+    'fontSize',
+    'id',
+    'isd',
+    'line',
+    'lineAlign',
+    'lineHeight',
+    'linePadding',
+    'position',
+    'positionAlign',
+    'region',
+    'size',
+    'snapToLines',
+    'vertical',
+];
+
 function TextTracks(config) {
 
     const context = this.context;
@@ -400,6 +420,37 @@ function TextTracks(config) {
         }
     }
 
+    function _extendLastCue(cue, track) {
+        if (!settings.get().streaming.text.extendSegmentedCues) {
+            return false;
+        }
+        if (!track.cues || track.cues.length === 0) {
+            return false;
+        }
+        const prevCue = track.cues[track.cues.length - 1];
+        // Check previous cue endTime with current cue startTime
+        // (should we consider an epsilon margin? for example to get around rounding issues)
+        if (prevCue.endTime !== cue.startTime) {
+            return false;
+        }
+        // Compare cues content
+        if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
+            return false;
+        }
+        prevCue.endTime = cue.endTime;
+        return true;
+    }
+
+    function _cuesContentAreEqual(cue1, cue2, props) {
+        for (let i = 0; i < props.length; i++) {
+            const key = props[i];
+            if (JSON.stringify(cue1[key]) !== JSON.stringify(cue2[key])) {
+                return false;
+            }
+        };
+        return true;
+    }
+
     /*
      * Add captions to track, store for later adding, or add captions added before
      */
@@ -434,7 +485,9 @@ function TextTracks(config) {
                             }
                             track.manualCueList.push(cue);
                         } else {
-                            track.addCue(cue);
+                            if (!_extendLastCue(cue, track)) {
+                                track.addCue(cue);
+                            }
                         }
 
                     }

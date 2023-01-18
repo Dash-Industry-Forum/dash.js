@@ -96,6 +96,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -240,6 +241,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -263,7 +265,6 @@ function StreamProcessor(config) {
     /**
      * When a seek within the corresponding period occurs this function initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
-     * @param {number} oldTime
      * @private
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
@@ -400,6 +401,7 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {object} e
      * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
@@ -523,13 +525,10 @@ function StreamProcessor(config) {
             return null;
         }
 
-        // Use time just whenever is strictly needed
-        const useTime = shouldUseExplicitTimeForRequest;
-
         if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-            if (useTime) {
+            if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
@@ -830,6 +829,10 @@ function StreamProcessor(config) {
         return bufferController;
     }
 
+    function dischargePreBuffer() {
+        bufferController.dischargePreBuffer();
+    }
+
     function getFragmentModel() {
         return fragmentModel;
     }
@@ -906,7 +909,7 @@ function StreamProcessor(config) {
     }
 
     function setMediaSource(mediaSource) {
-        bufferController.setMediaSource(mediaSource);
+        return bufferController.setMediaSource(mediaSource, mediaInfo);
     }
 
     function getScheduleController() {
@@ -949,12 +952,25 @@ function StreamProcessor(config) {
         const representation = representationController && representationInfo ?
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-        let request = dashHandler.getNextSegmentRequestIdempotent(
+        return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
             representation
         );
+    }
 
-        return request;
+    function _onInitFragmentLoaded(e) {
+        if (!settings.get().streaming.enableManifestTimescaleMismatchFix) {
+            return;
+        }
+        const chunk = e.chunk;
+        const bytes = chunk.bytes;
+        const quality = chunk.quality;
+        const currentRepresentation = getRepresentationInfo(quality);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        if (currentRepresentation && voRepresentation) {
+            const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            voRepresentation.timescale = timescale;
+        }
     }
 
     function _onMediaFragmentLoaded(e) {
@@ -1188,6 +1204,7 @@ function StreamProcessor(config) {
         getType,
         isUpdating,
         getBufferController,
+        dischargePreBuffer,
         getFragmentModel,
         getScheduleController,
         getRepresentationController,
