@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import { modifyRequest } from '../utils/RequestModifier';
 
 /**
  * @module FetchLoader
@@ -54,7 +55,16 @@ function FetchLoader(cfg) {
     }
 
     function load(httpRequest) {
+        if (requestModifier && requestModifier.modifyRequest) {
+            modifyRequest(httpRequest, requestModifier)
+                .then(() => request(httpRequest));
+        }
+        else {
+            request(httpRequest);
+        }
+    }
 
+    function request(httpRequest) {
         // Variables will be used in the callback functions
         const requestStartTime = new Date();
         const request = httpRequest.request;
@@ -77,7 +87,7 @@ function FetchLoader(cfg) {
             request.requestStartDate = requestStartTime;
         }
 
-        if (requestModifier) {
+        if (requestModifier && requestModifier.modifyRequestHeader) {
             // modifyRequestHeader expects a XMLHttpRequest object so,
             // to keep backward compatibility, we should expose a setRequestHeader method
             // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
@@ -176,7 +186,7 @@ function FetchLoader(cfg) {
                             reader.read().then(function processFetch(args) {
                                 const value = args.value;
                                 const done = args.done;
-                                markB = Date.now()
+                                markB = Date.now();
 
                                 if (value && value.length) {
                                     const chunkDownloadDurationMS = markB - markA;

@@ -291,6 +291,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
     $scope.applyServiceDescription = true;
+    $scope.applyContentSteering = true;
     $scope.useSuggestedPresentationDelay = true;
     $scope.videoAutoSwitchSelected = true;
     $scope.forceQualitySwitchSelected = false;
@@ -566,6 +567,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             streaming: {
                 applyServiceDescription: $scope.applyServiceDescription
+            }
+        });
+    };
+
+    $scope.toggleApplyContentSteering = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                applyContentSteering: $scope.applyContentSteering
             }
         });
     };
@@ -2037,6 +2046,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     function setAdditionalPlaybackOptions() {
         var currentConfig = $scope.player.getSettings();
         $scope.applyServiceDescription = currentConfig.streaming.applyServiceDescription;
+        $scope.applyContentSteering = currentConfig.streaming.applyContentSteering;
         $scope.scheduleWhilePausedSelected = currentConfig.streaming.scheduling.scheduleWhilePaused;
         $scope.calcSegmentAvailabilityRangeFromTimelineSelected = currentConfig.streaming.timeShiftBuffer.calcFromSegmentTimeline;
         $scope.reuseExistingSourceBuffersSelected = currentConfig.streaming.buffer.reuseExistingSourceBuffers;

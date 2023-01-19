@@ -12,7 +12,7 @@ import AdapterMock from './mocks/AdapterMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
-import ServiceDescriptionController from '../../src/streaming/controllers/ServiceDescriptionController';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const expect = require('chai').expect;

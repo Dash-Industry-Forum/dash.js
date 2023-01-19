@@ -1,0 +1,18 @@
+name: deploy
+
+on:
+    push:
+        branches:
+            - 'master'
+
+jobs:
+    deploy_staging:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
+        uses: ./.github/workflows/deploy.yml
+        with:
+            envname: latest
+            deploy_path: '/377335/dash.js'
+        secrets:
+            host: ${{secrets.HOST}}
+            user: ${{secrets.USER}}
+            private_key: ${{secrets.PRIVATE_KEY}}

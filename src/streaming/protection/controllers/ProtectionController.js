@@ -80,7 +80,7 @@ function ProtectionController(config) {
 
     let instance,
         logger,
-        pendingKeySystemData,
+        pendingKeySessionsToHandle,
         mediaInfoArr,
         protDataSet,
         sessionType,
@@ -92,7 +92,7 @@ function ProtectionController(config) {
 
     function setup() {
         logger = debug.getLogger(instance);
-        pendingKeySystemData = [];
+        pendingKeySessionsToHandle = [];
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
@@ -127,134 +127,149 @@ function ProtectionController(config) {
         checkConfig();
 
         mediaInfoArr.push(mediaInfo);
+    }
 
-        // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
-        // and video will be the same. Just use one valid MediaInfo object
-        let supportedKS = protectionKeyController.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection, protDataSet, sessionType);
+    /**
+     * Once all mediaInfo objects have been added to our mediaInfoArray we can select a key system or check if the kid has changed and we need to trigger a new license request
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function handleKeySystemFromManifest() {
+        if (!mediaInfoArr || mediaInfoArr.length === 0) {
+            return;
+        }
 
-        if (supportedKS && supportedKS.length > 0) {
-            _selectKeySystem(supportedKS, true);
+        let supportedKeySystems = [];
+        mediaInfoArr.forEach((mInfo) => {
+            const currentKs = protectionKeyController.getSupportedKeySystemsFromContentProtection(mInfo.contentProtection, protDataSet, sessionType);
+            // We assume that the same key systems are signaled for each AS. We can use the first entry we found
+            if (currentKs.length > 0) {
+                if (supportedKeySystems.length === 0) {
+                    supportedKeySystems = currentKs;
+                }
+                // Save config for creating key session once we selected a key system
+                pendingKeySessionsToHandle.push(currentKs);
+            }
+        })
+
+        if (supportedKeySystems && supportedKeySystems.length > 0) {
+            _selectKeySystemOrUpdateKeySessions(supportedKeySystems, true);
         }
     }
 
     /**
      * Selects a key system if we dont have any one yet. Otherwise we use the existing key system and trigger a new license request if the initdata has changed
-     * @param {array} supportedKS
+     * @param {array} supportedKs
+     * @private
+     */
+    function _handleKeySystemFromPssh(supportedKs) {
+        pendingKeySessionsToHandle.push(supportedKs);
+        _selectKeySystemOrUpdateKeySessions(supportedKs, false);
+    }
+
+    /**
+     * Select the key system or update one of our existing key sessions
+     * @param {array} supportedKs
      * @param {boolean} fromManifest
      * @private
      */
-    function _selectKeySystem(supportedKS, fromManifest) {
-
-        // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
-        if (keySystemSelectionInProgress) {
-            pendingKeySystemData.push(supportedKS);
-        }
-
+    function _selectKeySystemOrUpdateKeySessions(supportedKs, fromManifest) {
         // First time, so we need to select a key system
-        else if (!selectedKeySystem) {
-            _selectInitialKeySystem(supportedKS, fromManifest);
+        if (!selectedKeySystem && !keySystemSelectionInProgress) {
+            _selectInitialKeySystem(supportedKs, fromManifest);
         }
 
         // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
         else if (selectedKeySystem) {
-            _initiateWithExistingKeySystem(supportedKS);
+            _handleKeySessions();
         }
     }
 
     /**
      * We do not have a key system yet. Select one
-     * @param {array} supportedKS
+     * @param {array} supportedKs
      * @param {boolean} fromManifest
      * @private
      */
-    function _selectInitialKeySystem(supportedKS, fromManifest) {
-        keySystemSelectionInProgress = true;
-        const requestedKeySystems = [];
+    function _selectInitialKeySystem(supportedKs, fromManifest) {
+        if (!keySystemSelectionInProgress) {
+            keySystemSelectionInProgress = true;
+            const requestedKeySystems = [];
 
-        // Reorder key systems according to priority order provided in protectionData
-        supportedKS = supportedKS.sort((ksA, ksB) => {
-            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
-            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-            return indexA - indexB;
-        });
-
-        pendingKeySystemData.push(supportedKS);
-
-        // Add all key systems to our request list since we have yet to select a key system
-        for (let i = 0; i < supportedKS.length; i++) {
-            const keySystemConfiguration = _getKeySystemConfiguration(supportedKS[i]);
-            requestedKeySystems.push({
-                ks: supportedKS[i].ks,
-                configs: [keySystemConfiguration],
-                protData: supportedKS[i].protData
+            // Reorder key systems according to priority order provided in protectionData
+            supportedKs = supportedKs.sort((ksA, ksB) => {
+                let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKs.length;
+                let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKs.length;
+                return indexA - indexB;
             });
-        }
 
-        let keySystemAccess;
+            // Add all key systems to our request list since we have yet to select a key system
+            for (let i = 0; i < supportedKs.length; i++) {
+                const keySystemConfiguration = _getKeySystemConfiguration(supportedKs[i]);
+                requestedKeySystems.push({
+                    ks: supportedKs[i].ks,
+                    configs: [keySystemConfiguration],
+                    protData: supportedKs[i].protData
+                });
+            }
 
-        protectionModel.requestKeySystemAccess(requestedKeySystems)
-            .then((event) => {
-                keySystemAccess = event.data;
-                let selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
-                logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
-                return protectionModel.selectKeySystem(keySystemAccess);
-            })
-            .then((keySystem) => {
-                selectedKeySystem = keySystem;
-                keySystemSelectionInProgress = false;
+            let keySystemAccess;
 
-                if (!protectionModel) {
-                    return;
-                }
+            protectionModel.requestKeySystemAccess(requestedKeySystems)
+                .then((event) => {
+                    keySystemAccess = event.data;
+                    let selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
+                    logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
+                    return protectionModel.selectKeySystem(keySystemAccess);
+                })
+                .then((keySystem) => {
+                    selectedKeySystem = keySystem;
+                    keySystemSelectionInProgress = false;
 
-                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
-
-                // Set server certificate from protData
-                const protData = _getProtDataForKeySystem(selectedKeySystem);
-                if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-                    protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
-                }
-
-                // Create key sessions for the different AdaptationSets
-                let ksIdx;
-                for (let i = 0; i < pendingKeySystemData.length; i++) {
-                    for (ksIdx = 0; ksIdx < pendingKeySystemData[i].length; ksIdx++) {
-                        if (selectedKeySystem === pendingKeySystemData[i][ksIdx].ks) {
-                            const current = pendingKeySystemData[i][ksIdx]
-                            _loadOrCreateKeySession(current)
-                            break;
-                        }
+                    if (!protectionModel) {
+                        return;
                     }
-                }
-            })
-            .catch((event) => {
-                selectedKeySystem = null;
-                keySystemSelectionInProgress = false;
-                if (!fromManifest) {
-                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-                        data: null,
-                        error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
-                    });
-                }
-            })
+
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
+
+                    // Set server certificate from protData
+                    const protData = _getProtDataForKeySystem(selectedKeySystem);
+                    if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+                    }
+
+                    _handleKeySessions();
+                })
+                .catch((event) => {
+                    selectedKeySystem = null;
+                    keySystemSelectionInProgress = false;
+                    if (!fromManifest) {
+                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                            data: null,
+                            error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+                        });
+                    }
+                })
+        }
     }
 
     /**
-     * If we have already selected a keysytem we only need to create a new key session and issue a new license request if the init data has changed.
-     * @param {array} supportedKS
+     * If we have already selected a key system we only need to create a new key session and issue a new license request if the init data has changed.
      * @private
      */
-    function _initiateWithExistingKeySystem(supportedKS) {
-        const ksIdx = supportedKS.findIndex((entry) => {
-            return entry.ks === selectedKeySystem;
-        });
-
-        const current = supportedKS[ksIdx];
-        if (ksIdx === -1 || !current.initData) {
-            return;
+    function _handleKeySessions() {
+        // Create key sessions for the different AdaptationSets
+        let ksIdx;
+        for (let i = 0; i < pendingKeySessionsToHandle.length; i++) {
+            for (ksIdx = 0; ksIdx < pendingKeySessionsToHandle[i].length; ksIdx++) {
+                if (selectedKeySystem === pendingKeySessionsToHandle[i][ksIdx].ks) {
+                    const current = pendingKeySessionsToHandle[i][ksIdx]
+                    _loadOrCreateKeySession(current)
+                    break;
+                }
+            }
         }
-
-        _loadOrCreateKeySession(current);
+        pendingKeySessionsToHandle = [];
     }
 
     /**
@@ -595,7 +610,7 @@ function ProtectionController(config) {
         needkeyRetries = [];
 
         mediaInfoArr = [];
-        pendingKeySystemData = [];
+        pendingKeySessionsToHandle = [];
     }
 
     /**
@@ -1065,13 +1080,13 @@ function ProtectionController(config) {
 
             logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-            const supportedKS = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
-            if (supportedKS.length === 0) {
+            const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
+            if (supportedKs.length === 0) {
                 logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
                 return;
             }
 
-            _selectKeySystem(supportedKS, false);
+            _handleKeySystemFromPssh(supportedKs);
         }
     }
 
@@ -1096,6 +1111,7 @@ function ProtectionController(config) {
     instance = {
         initializeForMedia,
         clearMediaInfoArray,
+        handleKeySystemFromManifest,
         createKeySession,
         loadKeySession,
         removeKeySession,

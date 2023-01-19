@@ -45,6 +45,8 @@ declare namespace dashjs {
 
         clearMediaInfoArray(): void;
 
+        handleKeySystemFromManifest(): void;
+
         createKeySession(ksInfo: KeySystemInfo): void;
 
         loadKeySession(ksInfo: KeySystemInfo): void;
@@ -68,10 +70,6 @@ declare namespace dashjs {
         getKeySystems(): KeySystem[];
 
         setKeySystems(keySystems: KeySystem[]): void;
-
-        setLicenseRequestFilters(filters: RequestFilter[]): void;
-
-        setLicenseResponseFilters(filters: ResponseFilter[]): void;
 
         stop(): void;
 
@@ -136,6 +134,7 @@ declare namespace dashjs {
         isText: boolean;
         KID: any | null;
         bitrateList: Bitrate[];
+        supplementalProperties: object;
     }
 
     export class ProtectionMediaInfo {
@@ -153,9 +152,12 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
             applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -192,6 +194,8 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
+                useChangeTypeForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -223,11 +227,18 @@ declare namespace dashjs {
                 scheduleWhilePaused?: boolean
             },
             text?: {
-                defaultEnabled?: boolean
+                defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
+                webvtt?: {
+                    customRenderingEnabled?: number
+                }
             },
             liveCatchup?: {
                 maxDrift?: number;
-                playbackRate?: number;
+                playbackRate?:{
+                    min?: number,
+                    max?: number
+                },
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string
@@ -250,6 +261,7 @@ declare namespace dashjs {
             }
             selectionModeForInitialTrack?: TrackSelectionMode
             fragmentRequestTimeout?: number;
+            manifestRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?: number;
                 'XLinkExpansion'?: number;
@@ -441,7 +453,7 @@ declare namespace dashjs {
 
         on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
         
-        on(type: string, listener: (e: Event) => void, scope?: object): void;
+        on(type: string, listener: (e: Event) => void, scope?: object, options?:object): void;
 
         
         off(type: string, listener: (e: any) => void, scope?: object): void;
@@ -607,6 +619,10 @@ declare namespace dashjs {
         getDashAdapter(): DashAdapter;
 
         getOfflineController(): OfflineController;
+
+        triggerSteeringRequest(): Promise<any>;
+
+        getCurrentSteeringResponseData(): object;
 
         getSettings(): MediaPlayerSettingClass;
 

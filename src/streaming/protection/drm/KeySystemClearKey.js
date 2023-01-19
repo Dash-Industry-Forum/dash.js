@@ -81,7 +81,7 @@ function KeySystemClearKey(config) {
 
             if (!initData && cencContentProtection) {
                 const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection['cenc:default_KID']);
-                const data = {kids: [cencDefaultKid]};
+                const data = { kids: [cencDefaultKid] };
                 initData = new TextEncoder().encode(JSON.stringify(data));
             }
 
@@ -97,7 +97,9 @@ function KeySystemClearKey(config) {
             kid = btoa(kid.match(/\w{2}/g).map((a) => {
                 return String.fromCharCode(parseInt(a, 16));
             }).join(''));
-            return kid.replace(/=/g, '');
+            return kid.replace(/=/g, '')
+                .replace(/\//g, '_')
+                .replace(/\+/g, '-');
         } catch (e) {
             return null;
         }

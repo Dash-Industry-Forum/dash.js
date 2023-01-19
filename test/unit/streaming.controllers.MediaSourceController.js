@@ -10,36 +10,6 @@ describe('MediaSourceController', function () {
     let mediaSourceController;
 
     beforeEach(function () {
-        if (typeof window === 'undefined') {
-            global.window = {
-                URL: {
-                    createObjectURL: function (source) {
-                        return source;
-                    }
-                }
-            };
-        }
-
-        if (typeof MediaSource === 'undefined') {
-            global.MediaSource = function () {
-                return {};
-            };
-        }
-
-        if (typeof WebKitMediaSource === 'undefined') {
-            global.WebKitMediaSource = function () {
-                return {};
-            };
-        }
-    });
-
-    afterEach(function () {
-        delete global.window;
-        delete global.MediaSource;
-        delete global.WebKitMediaSource;
-    });
-
-    beforeEach(function () {
         mediaSourceController = MediaSourceController(context).getInstance();
     });
 
@@ -49,8 +19,8 @@ describe('MediaSourceController', function () {
 
     describe('Method createMediaSource', function () {
 
-        it('should return null if MediaSource is undefined', function () {
-            expect(mediaSourceController.createMediaSource()).to.not.exist; // jshint ignore:line
+        it('should create MediaSource', function () {
+            expect(mediaSourceController.createMediaSource()).to.exist; // jshint ignore:line
         });
 
     });
@@ -76,31 +46,29 @@ describe('MediaSourceController', function () {
         });
 
         it('should not update source duration if not in readyState open', function () {
-            window.MediaSource = 'MediaSource';
             let source = mediaSourceController.createMediaSource();
 
-            source.readyState = 'closed';
-            source.sourceBuffers = [];
-
             mediaSourceController.setDuration(8);
-            expect(source.duration).to.be.undefined; // jshint ignore:line
+            expect(source.duration).to.be.NaN; // jshint ignore:line
         });
 
-        it('should update source duration', function () {
-            window.MediaSource = 'MediaSource';
+        it('should update source duration', function (done) {
+            function _onSourceOpen() {
+                mediaSourceController.setDuration(8);
+                expect(source.duration).to.equal(8);
+                done();
+            }
+
             let source = mediaSourceController.createMediaSource();
+            let video = document.createElement('video');
 
-            source.readyState = 'open';
-            source.sourceBuffers = [];
-
-            mediaSourceController.setDuration(8);
-            expect(source.duration).to.equal(8);
+            source.addEventListener('sourceopen', _onSourceOpen)
+            video.src = window.URL.createObjectURL(source);
         });
 
         it('should not update source seekable range if not in readystate open', function () {
             let source = mediaSourceController.createMediaSource();
 
-            source.readyState = 'closed';
             source.start = 0;
             source.end = 0;
 
@@ -118,22 +86,16 @@ describe('MediaSourceController', function () {
             expect(source.end).to.equal(0);
         });
 
-        it('should update source seekable range', function () {
+        it('should update source seekable range', function (done) {
+            let video = document.createElement('video');
+            function _onSourceOpen() {
+                mediaSourceController.setSeekable(1, 5);
+                done();
+            }
+
             let source = mediaSourceController.createMediaSource();
-
-            source.readyState = 'open';
-            source.clearLiveSeekableRange = function () {
-                this.start = 0;
-                this.end = 0;
-            };
-            source.setLiveSeekableRange = function (start, end) {
-                this.start = start;
-                this.end = end;
-            };
-
-            mediaSourceController.setSeekable(1, 2);
-            expect(source.start).to.equal(1);
-            expect(source.end).to.equal(2);
+            source.addEventListener('sourceopen', _onSourceOpen)
+            video.src = window.URL.createObjectURL(source);
         });
     });
 

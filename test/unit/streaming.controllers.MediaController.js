@@ -334,99 +334,129 @@ describe('MediaController', function () {
     });
 
     describe('Initial Track Management', function () {
+        const streamInfo = {
+            id: 'id'
+        };
+        const frTrack = {
+            type: trackType,
+            streamInfo: streamInfo,
+            lang: 'fr',
+            viewpoint: 'viewpoint',
+            roles: 1,
+            accessibility: 1,
+            audioChannelConfiguration: 1
+        };
+        const qtzTrack = {
+            type: trackType,
+            streamInfo: streamInfo,
+            lang: 'qtz',
+            viewpoint: 'viewpoint',
+            roles: 1,
+            accessibility: 1,
+            audioChannelConfiguration: 1
+        };
+        const enTrack = {
+            type: trackType,
+            streamInfo: streamInfo,
+            lang: 'en',
+            viewpoint: null,
+            roles: ['Main'],
+            accessibility: [],
+            audioChannelConfiguration: 6,
+            selectionPriority: 5
+        };
+        const enADTrack = {
+            type: trackType,
+            streamInfo: streamInfo,
+            lang: 'en',
+            viewpoint: null,
+            roles: ['alternate'],
+            accessibility: ['1','description'],
+            audioChannelConfiguration: 6,
+            selectionPriority: 3
+        };
+        const esTrack = {
+            type: trackType,
+            streamInfo: streamInfo,
+            lang: 'es',
+            viewpoint: null,
+            roles: ['dub'],
+            accessibility: [],
+            audioChannelConfiguration: 2,
+            selectionPriority: 4
+        };
 
         it('should check initial media settings to choose initial track', function () {
-            let streamInfo = {
-                id: 'id'
-            };
-            let track = {
-                type: trackType,
-                streamInfo: streamInfo,
-                lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
-            };
-
-            mediaController.addTrack(track);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
-            expect(trackList).to.have.lengthOf(1);
-            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
-                lang: 'fr',
+                lang: 'qtz',
                 viewpoint: 'viewpoint'
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
 
+        });
+
+        it('should check initial media settings to choose initial track with 639-2 3-letter code', function () {
+            mediaController.addTrack(qtzTrack);
+            mediaController.addTrack(frTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], frTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'fre',
+                viewpoint: 'viewpoint'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true; // jshint ignore:line
         });
 
         it('should check initial media settings to choose initial track with a string/regex lang', function () {
-            const streamInfo = {
-                id: 'id'
-            };
-            const track = {
-                type: trackType,
-                streamInfo: streamInfo,
-                lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
-            };
-
-            mediaController.addTrack(track);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
-            expect(trackList).to.have.lengthOf(1);
-            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
-                lang: 'fr|en|qtz',
+                lang: /fr|en|qtz/,
                 viewpoint: 'viewpoint'
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true; // jshint ignore:line
         });
 
         it('should check initial media settings to choose initial track with a regex lang', function () {
-            const streamInfo = {
-                id: 'id'
-            };
-            const frTrack = {
-                type: trackType,
-                streamInfo: streamInfo,
-                lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
-            };
-            const qtzTrack = {
-                type: trackType,
-                streamInfo: streamInfo,
-                lang: 'qtz',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
-            };
-
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);
 
@@ -449,6 +479,114 @@ describe('MediaController', function () {
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
         });
+
+        it('should check initial media settings to choose initial track with a lang and absent accessibility setting', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            mediaController.addTrack(esTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(3);
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'en'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true; // jshint ignore:line
+        });
+
+        it('should check initial media settings to choose initial track with a lang and empty accessibility setting', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            mediaController.addTrack(esTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(3);
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'en',
+                accessibility: ''
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true; // jshint ignore:line
+        });
+
+        it('should check initial media settings to choose initial track with a lang and accessibility', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            mediaController.addTrack(esTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(3);
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'en',
+                accessibility: 'description'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.true; // jshint ignore:line
+        });
+
+        it('should check initial media settings to choose initial accessibility track where media has no accessibility for requested language', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            mediaController.addTrack(esTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(3);
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'es',
+                accessibility: 'description'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true; // jshint ignore:line
+        });
+
     });
 
     describe('Initial Track Selection', function () {

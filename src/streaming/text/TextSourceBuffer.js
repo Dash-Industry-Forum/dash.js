@@ -50,8 +50,10 @@ function TextSourceBuffer(config) {
     const videoModel = config.videoModel;
     const textTracks = config.textTracks;
     const vttParser = config.vttParser;
+    const vttCustomRenderingParser = config.vttCustomRenderingParser;
     const ttmlParser = config.ttmlParser;
     const streamInfo = config.streamInfo;
+    const settings = config.settings;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -296,7 +298,7 @@ function TextSourceBuffer(config) {
     function _appendFragmentedSttp(bytes, sampleList, codecType) {
         let i, j;
 
-        parser = parser !== null ? parser : getParser(codecType);
+        parser = parser !== null ? parser : _getParser(codecType);
 
         for (i = 0; i < sampleList.length; i++) {
             const sample = sampleList[i];
@@ -389,7 +391,7 @@ function TextSourceBuffer(config) {
         ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
 
         try {
-            result = getParser(codecType).parse(ccContent, 0);
+            result = _getParser(codecType).parse(ccContent, 0);
             textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             if (instance.buffered) {
                 instance.buffered.add(chunk.start, chunk.end);
@@ -485,6 +487,7 @@ function TextSourceBuffer(config) {
                 textTracks.addCaptions(trackIndex, 0, captionsArray);
             }
         }
+
         return newCue;
     }
 
@@ -562,10 +565,10 @@ function TextSourceBuffer(config) {
         return isDefault;
     }
 
-    function getParser(codecType) {
+    function _getParser(codecType) {
         let parser;
         if (codecType.search(Constants.VTT) >= 0) {
-            parser = vttParser;
+            parser = settings.get().streaming.text.webvtt.customRenderingEnabled && vttCustomRenderingParser ? vttCustomRenderingParser : vttParser;
         } else if (codecType.search(Constants.TTML) >= 0 || codecType.search(Constants.STPP) >= 0) {
             parser = ttmlParser;
         }

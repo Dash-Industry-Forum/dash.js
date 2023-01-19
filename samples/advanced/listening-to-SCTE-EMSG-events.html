@@ -25,7 +25,7 @@
 
     <script class="code">
         var player;
-        const URL = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
+        const mpd = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
         const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
         const EVENT_MODE_ON_START = dashjs.MediaPlayer.events.EVENT_MODE_ON_START;
         const EVENT_MODE_ON_RECEIVE = dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE;
@@ -35,7 +35,7 @@
             player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
             player.on(SCHEMEIDURI, showStartEvent, null); /* Default mode is onStart, no need to specify a mode */
             player.on(SCHEMEIDURI, showReceiveEvent, null, { mode: EVENT_MODE_ON_RECEIVE });
-            player.initialize(document.querySelector("video"), URL, true);
+            player.initialize(document.querySelector("video"), mpd, true);
         }
 
         function showStartEvent(e) {

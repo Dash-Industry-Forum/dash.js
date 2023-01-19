@@ -28,10 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {
-    HTTPRequest
-}
-    from '../../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
 
 
 const DEFAULT_UTC_TIMING_SOURCE = {
@@ -138,6 +135,10 @@ class MediaPlayerModelMock {
             [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
             [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
         };
+    }
+
+    getCatchupPlaybackRates() {
+        return { min: -0.5, max: 0.5 };
     }
 
     getStableBufferTime() {

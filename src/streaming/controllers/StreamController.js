@@ -54,6 +54,28 @@ const DVR_WAITING_OFFSET = 2;
 function StreamController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+
+
+    let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
+        dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
+        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
+        errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
+        autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
+        playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
+        supportsChangeType, settings,
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation, mediaPlayer;
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+        timeSyncController = TimeSyncController(context).getInstance();
+        mediaSourceController = MediaSourceController(context).getInstance();
+        initCache = InitCache(context).getInstance();
+        urlUtils = URLUtils(context).getInstance();
+
+        resetInitialSettings();
+    }
+
     let pc;
     function setupWebRTC() {
         console.log('Setting Up WebRTC');
@@ -95,64 +117,6 @@ function StreamController() {
         pc = null;
     }
     setupWebRTC();
-    let instance,
-        logger,
-        capabilities,
-        capabilitiesFilter,
-        manifestUpdater,
-        manifestLoader,
-        manifestModel,
-        adapter,
-        dashMetrics,
-        mediaSourceController,
-        timeSyncController,
-        baseURLController,
-        segmentBaseController,
-        uriFragmentModel,
-        abrController,
-        mediaController,
-        eventController,
-        initCache,
-        urlUtils,
-        errHandler,
-        timelineConverter,
-        streams,
-        activeStream,
-        protectionController,
-        textController,
-        protectionData,
-        autoPlay,
-        isStreamSwitchingInProgress,
-        hasMediaError,
-        hasInitialisationError,
-        mediaSource,
-        videoModel,
-        playbackController,
-        serviceDescriptionController,
-        mediaPlayerModel,
-        customParametersModel,
-        isPaused,
-        initialPlayback,
-        playbackEndedTimerInterval,
-        bufferSinks,
-        preloadingStreams,
-        supportsChangeType,
-        settings,
-        firstLicenseIsFetched,
-        waitForPlaybackStartTimeout,
-        providedStartTime,
-        mediaPlayer,
-        errorInformation;
-
-    function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
-        timeSyncController = TimeSyncController(context).getInstance();
-        mediaSourceController = MediaSourceController(context).getInstance();
-        initCache = InitCache(context).getInstance();
-        urlUtils = URLUtils(context).getInstance();
-
-        resetInitialSettings();
-    }
 
     function initialize(autoPl, protData) {
         _checkConfig();
@@ -329,10 +293,15 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
+                    if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
+                        return contentSteeringController.loadSteeringData();
+                    }
+                    return Promise.resolve();
+                })
+                .then(() => {
                     if (!activeStream) {
                         _initializeForFirstStream(streamsInfo);
                     }
-
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
@@ -396,6 +365,7 @@ function StreamController() {
      */
     function _initializeForFirstStream(streamsInfo) {
 
+
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
@@ -414,12 +384,13 @@ function StreamController() {
             return;
         }
 
-        // Apply Service description parameters.
+
+        // Calculate the producer reference time offsets if given
         if (settings.get().streaming.applyProducerReferenceTime) {
             serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
         }
 
-
+        // Apply Service description parameters.
         const manifestInfo = streamsInfo[0].manifestInfo;
         if (settings.get().streaming.applyServiceDescription) {
             serviceDescriptionController.applyServiceDescription(manifestInfo);
@@ -435,7 +406,6 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
-
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
@@ -609,15 +579,14 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const oldTime = playbackController.getTime();
         const newTime = e.seekTime;
         const seekToStream = getStreamForTime(newTime);
 
         if (!seekToStream || seekToStream === activeStream) {
-            _cancelPreloading(oldTime, newTime);
+            _cancelPreloading();
             _handleInnerPeriodSeek(e);
         } else if (seekToStream && seekToStream !== activeStream) {
-            _cancelPreloading(oldTime, newTime, seekToStream);
+            _cancelPreloading(seekToStream);
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
@@ -626,19 +595,12 @@ function StreamController() {
 
     /**
      * Cancels the preloading of certain streams based on the position we are seeking to.
-     * @param {number} oldTime
-     * @param {number} newTime
-     * @param {boolean} isInnerPeriodSeek
+     * @param {object} seekToStream
      * @private
      */
-    function _cancelPreloading(oldTime, newTime, seekToStream = null) {
-        // Inner period seek forward
-        if (oldTime <= newTime && !seekToStream) {
-            _deactivateAllPreloadingStreams();
-        }
-
-        // Inner period seek: If we seek backwards we might need to prune the period(s) that are currently being prebuffered. For now deactivate everything
-        else if (oldTime > newTime && !seekToStream) {
+    function _cancelPreloading(seekToStream = null) {
+        // Inner period seek
+        if (!seekToStream) {
             _deactivateAllPreloadingStreams();
         }
 
@@ -665,6 +627,7 @@ function StreamController() {
     /**
      * Handle an inner period seek. Prepare all StreamProcessors for the seek.
      * @param {object} e
+     * @param {number} oldTime
      * @private
      */
     function _handleInnerPeriodSeek(e) {
@@ -869,7 +832,7 @@ function StreamController() {
      * @private
      */
     function _onLiveDelaySettingUpdated() {
-        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0) {
+        if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
@@ -904,6 +867,14 @@ function StreamController() {
         }
         if (initialPlayback) {
             initialPlayback = false;
+        }
+        if (initialSteeringRequest) {
+            initialSteeringRequest = false;
+            // If this is the initial playback attempt and we have not yet triggered content steering now is the time
+            if (settings.get().streaming.applyContentSteering && !contentSteeringController.shouldQueryBeforeStart()) {
+                contentSteeringController.loadSteeringData();
+            }
+
         }
         isPaused = false;
     }
@@ -1051,6 +1022,7 @@ function StreamController() {
         }
         if (e && e.isLast) {
             _stopPlaybackEndedTimerInterval();
+            contentSteeringController.stopSteeringRequestTimer();
         }
     }
 
@@ -1588,6 +1560,9 @@ function StreamController() {
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
+        }
         if (config.textController) {
             textController = config.textController;
         }
@@ -1627,6 +1602,7 @@ function StreamController() {
         hasMediaError = false;
         hasInitialisationError = false;
         initialPlayback = true;
+        initialSteeringRequest = true;
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;

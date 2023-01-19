@@ -121,7 +121,7 @@ function HTTPLoader(cfg) {
                 const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
                 const responseStatus = httpRequest.response ? httpRequest.response.status : null;
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                    httpRequest.response ? httpRequest.response.responseHeaders : [];
+                    httpRequest.response ? httpRequest.response.responseHeaders : null;
 
                 dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
 
@@ -271,7 +271,7 @@ function HTTPLoader(cfg) {
         }
 
         let headers = null;
-        let modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
         if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
             const cmcdMode = settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {

@@ -109,6 +109,13 @@ class Constants {
         this.WVTT = 'wvtt';
 
         /**
+         *  @constant {string} Content Steering
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CONTENT_STEERING = 'contentSteering';
+
+        /**
          *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
          *  @memberof Constants#
          *  @static

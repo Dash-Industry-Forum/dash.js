@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Content Steering</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #start, #receive {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+
+        .border {
+            border: 2px solid #dee2e6 !important;
+        }
+    </style>
+
+    <script class="code">
+        let player;
+        let mpd = "";
+
+        function init() {
+            player = dashjs.MediaPlayer().create();
+            document.getElementById('load-button').addEventListener('click', function () {
+                _load();
+            })
+            player.initialize(document.querySelector("video"), null, true);
+
+            player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
+            player.on(dashjs.MediaPlayer.events.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, null);
+        }
+
+        function _load() {
+            mpd = document.getElementById('manifest').value;
+            player.attachSource(mpd);
+        }
+
+        function _onFragmentLoadingStarted(e) {
+            try {
+                if (e && e.mediaType && (e.mediaType === 'video' || e.mediaType === 'audio') && e.request) {
+                    if (e.request.serviceLocation) {
+                        const element = document.getElementById(`${e.mediaType}-service-location`);
+                        element.innerText = e.request.serviceLocation;
+
+                        if (e.request.serviceLocation === 'alpha') {
+                            document.getElementById('img-alpha-cdn').classList.remove('d-none');
+                            document.getElementById('img-beta-cdn').classList.add('d-none');
+                        } else {
+                            document.getElementById('img-alpha-cdn').classList.add('d-none');
+                            document.getElementById('img-beta-cdn').classList.remove('d-none');
+                        }
+                    }
+                    if (e.request.url) {
+                        const element = document.getElementById(`${e.mediaType}-request-url`);
+                        element.innerText = e.request.url;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function _onContentSteeringRequestCompleted(e) {
+            try {
+                if (e) {
+                    document.getElementById(`steering-request-timestamp`).innerText = new Date().toISOString();
+                    if (e.url) {
+                        const element = document.getElementById(`steering-request-url`);
+                        element.innerText = e.url;
+                    }
+                    if (e.currentSteeringResponseData) {
+                        document.getElementById(`steering-version`).innerText = e.currentSteeringResponseData.version;
+                        document.getElementById(`steering-ttl`).innerText = e.currentSteeringResponseData.ttl;
+                        document.getElementById(`steering-reload-uri`).innerText = e.currentSteeringResponseData.reloadUri;
+                        document.getElementById(`steering-service-location-priority`).innerText = e.currentSteeringResponseData.serviceLocationPriority.toString();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <h1>Content Steering</h1>
+            <div class="col-md-5">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4>Description</h4>
+                    <p>Content distributors often use multiple Content Delivery Networks (CDNs) to
+                        distribute their content to the end-users. They may upload a copy of their catalogue
+                        to each CDN, or more commonly have all CDNs pull the content from a common
+                        origin. Alternate URLs are generated, one for each CDN, that point at identical
+                        content. DASH players may access alternate URLs in the event of delivery
+                        problems. </p>
+                    <p><b>Content steering</b> describes a deterministic capability for a content
+                        distributor to switch the content source that a player uses either at start-up or
+                        midstream, by means of a remote steering service. The DASH implementation of
+                        Content Steering also supports the notion of a proxy steering server which can
+                        switch a mobile client between broadcast and unicast sources. </p>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4>Architecture</h4>
+                    <img src="img/steering.png" class="img-fluid" alt="Steering architecture illustration">
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="input-group mb-3">
+                    <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                           value="http://localhost:3333/steering-content/bbb/dash.mpd">
+                    <button type="button" id="load-button" class="btn btn-success">Load MPD
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <video controls="true" muted></video>
+            </div>
+            <div class="col-md-6">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4>CDN Selection</h4>
+                    <img src="img/content-steering-simulation-alpha-cdn.drawio.png" id="img-alpha-cdn"
+                         class="img-fluid d-none" alt="Steering alpha CDN">
+                    <img src="img/content-steering-simulation-beta-cdn.drawio.png" id="img-beta-cdn"
+                         class="img-fluid d-none" alt="Steering alpha beta">
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4> Fragment Requests</h4>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Service Location</th>
+                            <th scope="col">Request URL</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Audio</td>
+                            <td id="audio-service-location"></td>
+                            <td id="audio-request-url"></td>
+                        </tr>
+                        <tr>
+                            <td>Video</td>
+                            <td id="video-service-location"></td>
+                            <td id="video-request-url"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-12 mt-2">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4> Steering Data</h4>
+                    <table class="table table-condensed">
+                        <thead>
+                        <tr>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Request URL</th>
+                            <th scope="col">Response</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                        <tr>
+                            <td id="steering-request-timestamp"></td>
+                            <td id="steering-request-url"></td>
+                            <td id="steering-response">
+                                <ul>
+                                    <li>Version: <span id="steering-version"></span></li>
+                                    <li>Reload URI: <span id="steering-reload-uri"></span></li>
+                                    <li>Service Location Priority: <span id="steering-service-location-priority"></span>
+                                    </li>
+                                    <li>TTL: <span id="steering-ttl"></span></li>
+                                </ul>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

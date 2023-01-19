@@ -41,7 +41,7 @@ import DashConstants from './constants/DashConstants';
 
 
 const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
-
+const SEGMENT_START_TIME_DELTA = 0.001;
 
 function DashHandler(config) {
 
@@ -301,88 +301,6 @@ function DashHandler(config) {
     }
 
     /**
-     * This function returns a time for which we can generate a request. It is supposed to be as close as possible to the target time.
-     * This is useful in scenarios in which the user seeks into a gap. We will not find a valid request then and need to adjust the seektime.
-     * @param {number} time
-     * @param {object} mediaInfo
-     * @param {object} representation
-     * @param {number} targetThreshold
-     */
-    function getValidTimeCloseToTargetTime(time, mediaInfo, representation, targetThreshold) {
-        try {
-
-            if (isNaN(time) || !mediaInfo || !representation) {
-                return NaN;
-            }
-
-            if (time < 0) {
-                time = 0;
-            }
-
-            if (isNaN(targetThreshold)) {
-                targetThreshold = DEFAULT_ADJUST_SEEK_TIME_THRESHOLD;
-            }
-
-            if (getSegmentRequestForTime(mediaInfo, representation, time)) {
-                return time;
-            }
-
-            const start = representation.adaptation.period.start;
-            const end = representation.adaptation.period.start + representation.adaptation.period.duration;
-            let currentUpperTime = Math.min(time + targetThreshold, end);
-            let currentLowerTime = Math.max(time - targetThreshold, start);
-            let adjustedTime = NaN;
-            let targetRequest = null;
-
-            while (currentUpperTime <= end || currentLowerTime >= start) {
-                let upperRequest = null;
-                let lowerRequest = null;
-                if (currentUpperTime <= end) {
-                    upperRequest = getSegmentRequestForTime(mediaInfo, representation, currentUpperTime);
-                }
-                if (currentLowerTime >= start) {
-                    lowerRequest = getSegmentRequestForTime(mediaInfo, representation, currentLowerTime);
-                }
-
-                if (lowerRequest) {
-                    adjustedTime = currentLowerTime;
-                    targetRequest = lowerRequest;
-                    break;
-                } else if (upperRequest) {
-                    adjustedTime = currentUpperTime;
-                    targetRequest = upperRequest;
-                    break;
-                }
-
-                currentUpperTime += targetThreshold;
-                currentLowerTime -= targetThreshold;
-            }
-
-            if (targetRequest) {
-                const requestEndTime = targetRequest.startTime + targetRequest.duration;
-
-                // Keep the original start time in case it is covered by a segment
-                if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
-                    return time;
-                }
-
-                // If target time is before the start of the request use request starttime
-                if (time < targetRequest.startTime) {
-                    return targetRequest.startTime;
-                }
-
-                return Math.min(requestEndTime - targetThreshold, adjustedTime);
-            }
-
-            return adjustedTime;
-
-
-        } catch (e) {
-            return NaN;
-        }
-    }
-
-    /**
      * This function returns a time larger than the current time for which we can generate a request.
      * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
      * @param {number} time
@@ -413,8 +331,8 @@ function DashHandler(config) {
                 return NaN;
             }
 
-            // Only look 30 seconds ahead
-            const end = Math.min(representation.adaptation.period.start + representation.adaptation.period.duration, time + 30);
+            // If we have a duration look until the end of the duration, otherwise maximum 30 seconds
+            const end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
             let targetRequest = null;
@@ -439,13 +357,13 @@ function DashHandler(config) {
                 const requestEndTime = targetRequest.startTime + targetRequest.duration;
 
                 // Keep the original start time in case it is covered by a segment
-                if (time >= targetRequest.startTime && requestEndTime - time > targetThreshold) {
+                if (time > targetRequest.startTime && requestEndTime - time > targetThreshold) {
                     return time;
                 }
 
-                // If target time is before the start of the request use request starttime
-                if (time < targetRequest.startTime) {
-                    return targetRequest.startTime;
+                if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
+                    // Apply delta to segment start time to get around rounding issues
+                    return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
                 }
 
                 return Math.min(requestEndTime - targetThreshold, adjustedTime);
@@ -480,7 +398,6 @@ function DashHandler(config) {
         isLastSegmentRequested,
         reset,
         getNextSegmentRequestIdempotent,
-        getValidTimeCloseToTargetTime,
         getValidTimeAheadOfTargetTime
     };
 

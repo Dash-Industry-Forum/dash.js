@@ -194,6 +194,12 @@
                            ng-change="toggleLiveCatchupEnabled()" ng-checked="liveCatchupEnabled">
                     Live catchup
                 </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Use the ContentSteering information from the MPD if enabled">
+                    <input type="checkbox" id="applyContentSteering" ng-model="applyContentSteering"
+                           ng-change="toggleApplyContentSteering()" ng-checked="applyContentSteering">
+                   Apply ContentSteering
+                </label>
                 <div class="sub-options-item">
                     <div class="sub-options-item-title">Catchup mechanism</div>
                     <div class="sub-options-item-body">

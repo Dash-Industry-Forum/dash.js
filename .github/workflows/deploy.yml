@@ -1,0 +1,53 @@
+name: deploy
+
+on:
+    workflow_call:
+        inputs:
+            envname:
+                required: true
+                type: string
+            deploy_path:
+                required: true
+                type: string
+        secrets:
+            host:
+                required: true
+            user:
+                required: true
+            private_key:
+                required: true
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        
+        steps:
+            -   uses: actions/checkout@v2
+            -   name: Use Node.js
+                uses: actions/setup-node@v2
+                with:
+                    node-version: "14.x"
+            -   name: Install dependencies
+                run: npm install
+            -   name: Run build
+                run: npm run build
+            -   name: Find and Replace
+                uses: jacobtomlinson/gha-find-replace@v2
+                env:
+                    replacement_string: ${{ format('{0} - commit <a href="https://github.com/Dash-Industry-Forum/dash.js/commit/{1}">{2}</a>', github.ref_name, github.sha, github.sha)}}
+                with:
+                    find: "<!-- commit-info -->"
+                    replace: ${{env.replacement_string}}
+                    include: "samples/dash-if-reference-player/index.html"
+            -   name: Copy to deploy directory for deployment
+                run: |
+                    mkdir ${{inputs.envname}}
+                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}} 
+            -   name: Install SSH Key
+                uses: shimataro/ssh-key-action@v2
+                with:
+                    key: ${{ secrets.private_key }}
+                    known_hosts: unnecessary
+
+            -   name: Deploy with rsync
+                run: rsync -av -c -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}

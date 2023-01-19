@@ -39,6 +39,7 @@ import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime';
+import ContentSteering from '../vo/ContentSteering';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -214,8 +215,7 @@ function DashManifestModel() {
         let lang = '';
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.LANG)) {
-            //Filter out any other characters not allowed according to RFC5646
-            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g, '');
+            lang = adaptation.lang;
         }
 
         return lang;
@@ -1126,6 +1126,32 @@ function DashManifestModel() {
         return baseUrls;
     }
 
+    function getContentSteering(manifest) {
+        if (manifest && manifest.hasOwnProperty(DashConstants.CONTENT_STEERING_AS_ARRAY)) {
+            // Only one ContentSteering element is supported on MPD level
+            const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
+            const entry = new ContentSteering();
+
+            entry.serverUrl =  element.__text;
+
+            if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
+                entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
+            }
+
+            if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
+                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
+            }
+
+            if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
+                entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
+            }
+
+            return entry;
+        }
+
+        return undefined;
+    }
+
     function getLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
             // for now, do not support multiple Locations -
@@ -1293,6 +1319,7 @@ function DashManifestModel() {
         getUTCTimingSources,
         getBaseURLsFromElement,
         getRepresentationSortFunction,
+        getContentSteering,
         getLocation,
         getPatchLocation,
         getSuggestedPresentationDelay,
