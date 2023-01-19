@@ -55,7 +55,6 @@ function StreamController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
-
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
@@ -75,48 +74,6 @@ function StreamController() {
 
         resetInitialSettings();
     }
-
-    let pc;
-    function setupWebRTC() {
-        console.log('Setting Up WebRTC');
-        var configuration = {
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true,
-        };
-
-        pc = new RTCPeerConnection({
-            configuration: configuration,
-            iceServers: [],
-        });
-        pc.onnegotiationneeded = (event) => {};
-        pc.onconnectionstatechange = (event) => {};
-        pc.onicecandidate = () => {};
-        pc.ontrack = (event) => {
-            console.log('WebRTC Track added');
-            const remoteStream = event.streams[0];
-            if (!remoteStream) return;
-            if (!mediaSource) {
-                mediaSourceController.attachWebRTCSource(
-                    videoModel,
-                    remoteStream
-                );
-            } else {
-                mediaSourceController.detachMediaSource(videoModel);
-                mediaSourceController.attachWebRTCSource(
-                    videoModel,
-                    remoteStream
-                );
-            }
-            mediaPlayer.setWebRTCActive(true);
-        };
-    }
-
-    function destroyWebRTC() {
-        console.log('Destroying WebRTC connection');
-        pc.close();
-        pc = null;
-    }
-    setupWebRTC();
 
     function initialize(autoPl, protData) {
         _checkConfig();
@@ -457,48 +414,6 @@ function StreamController() {
         }
     }
 
-    async function _openMediaSourceForWebRTC(sourceUrl) {
-        function _onMediaSourceOpen() {
-            if (!mediaSource || mediaSource.readyState !== 'open') return;
-
-            logger.debug('MediaSource is open!');
-            window.URL.revokeObjectURL(sourceUrl);
-            mediaSource.removeEventListener('sourceopen', _onMediaSourceOpen);
-            mediaSource.removeEventListener(
-                'webkitsourceopen',
-                _onMediaSourceOpen
-            );
-        }
-
-        mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
-        mediaSource.addEventListener(
-            'webkitsourceopen',
-            _onMediaSourceOpen,
-            false
-        );
-        let whppServerUrl = 'https://' + sourceUrl.replace(/(^\w+:|^)\/\//, '');
-
-        let response = await fetch(whppServerUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-        });
-        const location = response.headers.get('location'); 
-        const { offer: remoteOffer } = await response.json();
-
-        await pc.setRemoteDescription(
-            new RTCSessionDescription({ sdp: remoteOffer, type: 'offer' })
-        );
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await fetch(location, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                answer: answer.sdp
-            }),
-        });
-    }
     /**
      * Setup the Media Source. Open MSE and attach event listeners
      * @param {number} seekTime
@@ -679,19 +594,17 @@ function StreamController() {
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
         if (
-            e.newMediaInfo.initializationPrincipal &&
-            e.newMediaInfo.initializationPrincipal.startsWith('whpp://')
+            e.newMediaInfo.mimeType && e.newMediaInfo.initializationPrincipal &&
+            e.newMediaInfo.mimeType === "video RTP/AVP"
         ) {
-            if (!pc) setupWebRTC();
-            _openMediaSourceForWebRTC(e.newMediaInfo.initializationPrincipal);
+            mediaSourceController.detachMediaSource(videoModel);
+            mediaSourceController.attachWebRTCSource(videoModel, e.newMediaInfo.initializationPrincipal);
         } else {
             if (
                 e.oldMediaInfo &&
-                e.oldMediaInfo.initializationPrincipal.startsWith('whpp://')
+                e.oldMediaInfo.mimeType === "video RTP/AVP"
             ) {
                 mediaSourceController.detachWebRTCSource(videoModel);
-                destroyWebRTC();
-                mediaPlayer.setWebRTCActive(false);
                 mediaPlayer.initialize(videoModel.getElement(), null, true);
             }
             if (activeStream) activeStream.prepareTrackChange(e);

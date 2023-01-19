@@ -656,7 +656,6 @@ function Stream(config) {
         hasFinishedBuffering = false;
 
         let mediaInfo = e.newMediaInfo;
-        let manifest = manifestModel.getValue();
 
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 

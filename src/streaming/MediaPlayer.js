@@ -159,7 +159,6 @@ function MediaPlayer() {
         videoModel,
         uriFragmentModel,
         domStorage,
-        webRTCActive,
         segmentBaseController;
 
     /*
@@ -666,14 +665,6 @@ function MediaPlayer() {
      */
     function setPlaybackRate(value) {
         getVideoElement().playbackRate = value;
-    }
-
-    function setWebRTCActive(active) {
-        webRTCActive = active;
-    }
-
-    function getWebRTCActive(active) {
-        return webRTCActive;
     }
 
     /**
@@ -2476,9 +2467,7 @@ function MediaPlayer() {
         updateSettings,
         resetSettings,
         reset,
-        destroy,
-        setWebRTCActive,
-        getWebRTCActive,
+        destroy
     };
 
     setup();
