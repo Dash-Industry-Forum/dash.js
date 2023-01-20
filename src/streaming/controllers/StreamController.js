@@ -321,8 +321,6 @@ function StreamController() {
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
-
-
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
@@ -595,14 +593,14 @@ function StreamController() {
         _deactivateAllPreloadingStreams();
         if (
             e.newMediaInfo.mimeType && e.newMediaInfo.initializationPrincipal &&
-            e.newMediaInfo.mimeType === "video RTP/AVP"
+            e.newMediaInfo.mimeType === 'video RTP/AVP'
         ) {
             mediaSourceController.detachMediaSource(videoModel);
             mediaSourceController.attachWebRTCSource(videoModel, e.newMediaInfo.initializationPrincipal);
         } else {
             if (
                 e.oldMediaInfo &&
-                e.oldMediaInfo.mimeType === "video RTP/AVP"
+                e.oldMediaInfo.mimeType === 'video RTP/AVP'
             ) {
                 mediaSourceController.detachWebRTCSource(videoModel);
                 mediaPlayer.initialize(videoModel.getElement(), null, true);

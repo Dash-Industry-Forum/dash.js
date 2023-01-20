@@ -131,9 +131,10 @@ function RepresentationController(config) {
             // If representation has initialization and segments information we are done
             // otherwise, it means that a request has to be made to get initialization and/or segments information
             const promises = [];
-
-            promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-            promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            if (currentRep.mimeType !== 'video RTP/AVP') {
+                promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
+                promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            }
 
             Promise.all(promises)
                 .then((data) => {

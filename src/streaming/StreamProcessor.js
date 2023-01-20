@@ -559,6 +559,9 @@ function StreamProcessor(config) {
     }
 
     function _onBufferLevelStateChanged(e) {
+        if (mediaInfo.mimeType === 'video RTP/AVP') {
+            return;
+        }
         dashMetrics.addBufferState(type, e.state, scheduleController.getBufferTarget());
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             logger.info('Buffer is empty! Stalling!');
@@ -1045,6 +1048,10 @@ function StreamProcessor(config) {
 
         if (buffer) {
             return Promise.resolve(buffer);
+        }
+
+        if (mediaInfo.mimeType === 'video RTP/AVP') {
+            return Promise.resolve(null);
         }
 
         return bufferController ? bufferController.createBufferSink(mediaInfo, previousBufferSinks) : Promise.resolve(null);
