@@ -649,25 +649,6 @@ function Stream(config) {
         }
     }
 
-    function prepareTrackChangeForWebRTC(e) {
-        if (!isActive || !streamInfo) {
-            return;
-        }
-        hasFinishedBuffering = false;
-
-        let mediaInfo = e.newMediaInfo;
-
-        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
-
-        let processor = getProcessorForMediaInfo(mediaInfo);
-        if (!processor) return;
-
-        let currentTime = playbackController.getTime();
-        logger.info(
-            'Stream -  Process track changed at current time ' + currentTime
-        );
-    }
-
     function prepareTrackChange(e) {
         if (!isActive || !streamInfo) {
             return;
@@ -1040,8 +1021,7 @@ function Stream(config) {
         setPreloaded,
         startScheduleControllers,
         prepareTrackChange,
-        prepareQualityChange,
-        prepareTrackChangeForWebRTC,
+        prepareQualityChange
     };
 
     setup();
