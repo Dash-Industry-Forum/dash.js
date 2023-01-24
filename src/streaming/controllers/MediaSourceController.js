@@ -77,11 +77,12 @@ function MediaSourceController() {
     }
 
     function detachMediaSource(videoModel) {
-        if (videoModel.srcObject && video.srcObject.getVideoTracks())
-            video.srcObject.getVideoTracks().forEach((track) => {
+        if (videoModel.srcObject && videoModel.srcObject.getVideoTracks()) {
+            videoModel.srcObject.getVideoTracks().forEach((track) => {
                 track.stop();
-                video.srcObject.removeTrack(track);
+                videoModel.srcObject.removeTrack(track);
             });
+        }
         videoModel.setSource(null);
     }
 

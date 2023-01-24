@@ -34,7 +34,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
-import { WebRTCPlayer } from "@eyevinn/webrtc-player";
+import { WebRTCPlayer } from '@eyevinn/webrtc-player';
 
 
 const READY_STATES_TO_EVENT_NAMES = new Map([
@@ -189,7 +189,7 @@ function VideoModel() {
                 }
                 webrtcPlayer = new WebRTCPlayer({
                     video: element,
-                    type: "whep",
+                    type: 'whep',
                 });
                 webrtcPlayer.load(new URL(whepSource));
             } else {
