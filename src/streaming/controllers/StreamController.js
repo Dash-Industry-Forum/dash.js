@@ -40,7 +40,6 @@ import {
 } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
-import URLUtils from '../utils/URLUtils';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import MediaSourceController from './MediaSourceController';
@@ -59,7 +58,7 @@ function StreamController() {
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
-        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
+        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache,
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
@@ -72,7 +71,6 @@ function StreamController() {
         timeSyncController = TimeSyncController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         initCache = InitCache(context).getInstance();
-        urlUtils = URLUtils(context).getInstance();
 
         resetInitialSettings();
     }
