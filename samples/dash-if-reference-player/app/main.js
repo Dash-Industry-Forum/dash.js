@@ -143,6 +143,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Time (sec)' },
             latency: { data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS' },
+            mtp: { data: [], selected: false, color: '#FFC400', label: 'Measured throughput (kpbs)' },
+            etp: { data: [], selected: false, color: '#1712B3', label: 'Estimated throughput (kpbs)' },
             liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' },
             playbackRate: { data: [], selected: false, color: '#65080c', label: 'Playback Rate' }
         },
@@ -155,6 +157,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Time (sec)' },
             latency: { data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)' },
             droppedFPS: { data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS' },
+            mtp: { data: [], selected: false, color: '#FFC400', label: 'Measured throughput (kpbs)' },
+            etp: { data: [], selected: false, color: '#1712B3', label: 'Estimated throughput (kpbs)' },
             liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' },
             playbackRate: { data: [], selected: false, color: '#65080c', label: 'Playback Rate' }
         }
@@ -261,6 +265,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoDownload = '';
     $scope.videoRatioCount = 0;
     $scope.videoRatio = '';
+    $scope.videoMtp = 0;
+    $scope.videoEtp = 0;
     $scope.videoLiveLatency = 0;
     $scope.videoPlaybackRate = 1.00;
 
@@ -277,6 +283,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioDownload = '';
     $scope.audioRatioCount = 0;
     $scope.audioRatio = '';
+    $scope.audioMtp = 0;
+    $scope.audioEtp = 0;
     $scope.audioLiveLatency = 0;
     $scope.audioPlaybackRate = 1.00;
 
@@ -284,6 +292,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.autoPlaySelected = true;
     $scope.cmcdEnabled = false;
     $scope.cmsdEnabled = false;
+    $scope.cmsdApplyMb = false;
+    $scope.cmsdEtpWeightRatio = 0;
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
@@ -876,9 +886,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleCmcdEnabled = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'cmcd': {
-                    'enabled': $scope.cmcdEnabled
+            streaming: {
+                cmcd: {
+                    enabled: $scope.cmcdEnabled
                 }
             }
         });
@@ -886,9 +896,33 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleCmsdEnabled = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'cmsd': {
-                    'enabled': $scope.cmsdEnabled
+            streaming: {
+                cmsd: {
+                    enabled: $scope.cmsdEnabled
+                }
+            }
+        });
+    };
+
+    $scope.toggleCmsdApplyMb = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmsd: {
+                    abr: {
+                        applyMb: $scope.cmsdApplyMb
+                    }
+                }
+            }
+        });
+    };
+
+    $scope.updateCmsdEtpWeightRatio = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                cmsd: {
+                    abr: {
+                        etpWeightRatio: parseInt($scope.cmsdEtpWeightRatio)
+                    }
                 }
             }
         });
@@ -1087,6 +1121,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             default:
                 $scope.player.updateSettings({ streaming: { cmcd: { mode: 'query' } } });
         }
+    };
+
+    $scope.isCMSDEnabled = function () {
+        return $scope.player.getSettings().streaming.cmsd.enabled;
     };
 
     $scope.hasLogo = function (item) {
@@ -1823,7 +1861,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     function calculateHTTPMetrics(type, requests) {
         var latency = {},
             download = {},
-            ratio = {};
+            ratio = {},
+            mtp = {},
+            etp = {};
 
         var requestWindow = requests.slice(-20).filter(function (req) {
             return req.responsecode >= 200 && req.responsecode < 300 && req.type === 'MediaSegment' && req._stream === type && !!req._mediaduration;
@@ -1881,10 +1921,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 count: durationTimes.length
             };
 
+            const request = requestWindow[requestWindow.length - 1];
+            etp[type] = request.cmsd && request.cmsd.dynamic && request.cmsd.dynamic.etp ? request.cmsd.dynamic.etp : 0;
+
             return {
                 latency: latency,
                 download: download,
-                ratio: ratio
+                ratio: ratio,
+                etp: etp
             };
 
         }
@@ -1972,6 +2016,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
             var liveLatency = 0;
             var playbackRate = 1.00
+            var mtp = $scope.player.getAverageThroughput(type);
             if ($scope.isDynamic) {
                 liveLatency = $scope.player.getCurrentLiveLatency();
                 playbackRate = parseFloat($scope.player.getPlaybackRate().toFixed(2));
@@ -1988,6 +2033,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 $scope[type + 'Download'] = httpMetrics.download[type].low.toFixed(2) + ' | ' + httpMetrics.download[type].average.toFixed(2) + ' | ' + httpMetrics.download[type].high.toFixed(2);
                 $scope[type + 'Latency'] = httpMetrics.latency[type].low.toFixed(2) + ' | ' + httpMetrics.latency[type].average.toFixed(2) + ' | ' + httpMetrics.latency[type].high.toFixed(2);
                 $scope[type + 'Ratio'] = httpMetrics.ratio[type].low.toFixed(2) + ' | ' + httpMetrics.ratio[type].average.toFixed(2) + ' | ' + httpMetrics.ratio[type].high.toFixed(2);
+                $scope[type + 'Etp'] = (httpMetrics.etp[type] / 1000).toFixed(3);
+                $scope[type + 'Mtp'] = (mtp / 1000).toFixed(3);
             }
 
             if ($scope.chartCount % 2 === 0) {
@@ -2003,6 +2050,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2), time);
                     $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2), time);
                     $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2), time);
+                    $scope.plotPoint('etp', type, (httpMetrics.etp[type] / 1000).toFixed(3), time);
+                    $scope.plotPoint('mtp', type, (mtp / 1000).toFixed(3), time);
                 }
                 $scope.safeApply();
             }
@@ -2169,6 +2218,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     }
 
+    function setCMSDSettings() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.cmsdEnabled = currentConfig.streaming.cmsd.enabled;
+        $scope.cmsdApplyMb = currentConfig.streaming.cmsd.abr.applyMb;
+        $scope.cmsdEtpWeightRatio = currentConfig.streaming.cmsd.abr.etpWeightRatio;
+    }
+
     function getUrlVars() {
         var vars = {};
         window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
@@ -2232,6 +2288,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setTrackSwitchModeSettings();
             setInitialLogLevel();
             setCMCDSettings();
+            setCMSDSettings();
 
             checkLocationProtocol();
 
