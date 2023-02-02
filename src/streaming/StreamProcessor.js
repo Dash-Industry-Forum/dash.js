@@ -987,28 +987,16 @@ function StreamProcessor(config) {
 
             let isoFile;
 
-            // Check for inband prft:
-            // - only on media segment
-            // - and if a ProducerReferenceTime of type "inband" is set for current representation
+            // Check for inband prft on media segment (if enabled)
             if (settings.get().streaming.parseInbandPrft && e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                const producerReferenceTimes = adapter.getProducerReferenceTimes(streamInfo, currentRepresentation.mediaInfo);
-                if (producerReferenceTimes && producerReferenceTimes.length && producerReferenceTimes[0].inband) {
-                    isoFile = isoFile ? isoFile : boxParser.parse(bytes);
-                    const timescale = voRepresentation.timescale;
-                    const prfts = _handleInbandPrfts(isoFile, timescale);
-                    if (prfts && prfts.length) {
-                        eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
-                            {
-                                data: {
-                                    id: producerReferenceTimes[0].id,
-                                    type: producerReferenceTimes[0].type,
-                                    prfts
-
-                                }
-                            },
-                            { streamId: streamInfo.id, mediaType: type }
-                        );    
-                    }
+                isoFile = isoFile ? isoFile : boxParser.parse(bytes);
+                const timescale = voRepresentation.timescale;
+                const prfts = _handleInbandPrfts(isoFile, timescale);
+                if (prfts && prfts.length) {
+                    eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
+                        { data: prfts },
+                        { streamId: streamInfo.id, mediaType: type }
+                    );    
                 }
             }
     
@@ -1044,13 +1032,30 @@ function StreamProcessor(config) {
     }
 
     function _parsePrftBox(prft, timescale) {
-        // Get NTP timestamp according to IETF RFC 5905, relative to 1/1/1900
+        // Get prft type according to box flags
+        let type = 'unknown';
+        switch (prft.flags) {
+            case 0:
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.ENCODER;
+                break;
+            case 16: 
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.APPLICATION;
+                break;
+            case 24: 
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.CAPTURED;
+                break;
+            default:
+                break;
+        }
+
+        // Get NPT timestamp according to IETF RFC 5905, relative to 1/1/1900
         let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
         ntpTimestamp = ntpToUTC(ntpTimestamp);
 
         const mediaTime = (prft.media_time / timescale);
 
         return {
+            type,
             ntpTimestamp,
             mediaTime
         }

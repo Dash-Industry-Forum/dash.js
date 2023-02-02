@@ -156,6 +156,11 @@ class DashConstants {
             TTL: 'TTL',
             RELOAD_URI: 'RELOAD-URI',
             SERVICE_LOCATION_PRIORITY : 'SERVICE-LOCATION-PRIORITY'
+        };
+        this.PRODUCER_REFERENCE_TIME_TYPE = {
+            ENCODER: 'encoder',
+            CAPTURED: 'captured',
+            APPLICATION: 'application'
         }
     }
 
