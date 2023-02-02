@@ -421,6 +421,9 @@ function TextTracks(config) {
     }
 
     function _extendLastCue(cue, track) {
+        if (!settings.get().streaming.text.extendSegmentedCues) {
+            return false;
+        }
         if (!track.cues || track.cues.length === 0) {
             return false;
         }
@@ -489,7 +492,7 @@ function TextTracks(config) {
 
                     }
                 } else {
-                    logger.error('impossible to display subtitles.');
+                    logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
                 }
             } catch (e) {
                 // Edge crash, delete everything and start adding again
