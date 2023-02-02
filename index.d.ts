@@ -337,7 +337,7 @@ declare namespace dashjs {
             cmsd?: {
                 enabled?: boolean,
                 abr?: {
-                    useMb: boolean,
+                    applyMb: boolean,
                     etpWeightRatio?: number
                 }
             }

@@ -218,7 +218,7 @@ import Events from './events/Events';
  *            cmsd: {
  *                enabled: false,
  *                abr: {
- *                    useMb: true,
+ *                    applyMb: false,
  *                    etpWeightRatio: 0
  *                }
  *           }
@@ -672,8 +672,8 @@ import Events from './events/Events';
 
 /**
  * @typedef {Object} CmsdAbrSettings
- * @property {boolean} [useMb=true]
- * Enable/disable maximum suggested bitrate that the player should use in ABR algorithms.
+ * @property {boolean} [applyMb=false]
+ * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
  * @property {number} [etpWeightRatio=0]
  * Sets the weight ratio that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
  */
@@ -999,7 +999,7 @@ function Settings() {
             cmsd: {
                 enabled: false,
                 abr: {
-                    useMb: true,
+                    applyMb: false,
                     etpWeightRatio: 0
                 }
             }
