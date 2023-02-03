@@ -160,6 +160,7 @@ import Events from './events/Events';
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
+ *            fragmentRequestProgressTimeout: 2000,
  *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -742,6 +743,9 @@ import Events from './events/Events';
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
  *
+ * @property {number} [fragmentRequestProgressTimeout=2000]
+ * Time in milliseconds before timing out on loading progress of a media fragment.
+ *
  * @property {number} [manifestRequestTimeout=10000]
  * Time in milliseconds before timing out on loading a manifest.
  *
@@ -901,6 +905,7 @@ function Settings() {
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
             fragmentRequestTimeout: 20000,
+            fragmentRequestProgressTimeout: 2000,
             manifestRequestTimeout: 10000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
