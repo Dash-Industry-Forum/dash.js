@@ -389,6 +389,17 @@ function MediaPlayer() {
                 serviceDescriptionController
             });
 
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                abrController,
+                eventBus,
+                requestModifier: RequestModifier(context).getInstance()
+            })
+
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
@@ -2170,17 +2181,6 @@ function MediaPlayer() {
             dashMetrics,
             playbackController
         });
-
-        contentSteeringController.setConfig({
-            adapter,
-            errHandler,
-            dashMetrics,
-            mediaPlayerModel,
-            manifestModel,
-            abrController,
-            eventBus,
-            requestModifier: RequestModifier(context).getInstance()
-        })
 
         // initialises controller
         abrController.initialize();
