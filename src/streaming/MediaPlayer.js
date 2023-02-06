@@ -52,6 +52,7 @@ import AbrController from './controllers/AbrController';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
+import CmsdModel from './models/CmsdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -156,6 +157,7 @@ function MediaPlayer() {
         dashMetrics,
         manifestModel,
         cmcdModel,
+        cmsdModel,
         videoModel,
         uriFragmentModel,
         domStorage,
@@ -334,6 +336,8 @@ function MediaPlayer() {
             manifestModel = ManifestModel(context).getInstance();
 
             cmcdModel = CmcdModel(context).getInstance();
+
+            cmsdModel = CmsdModel(context).getInstance();
 
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
@@ -2083,6 +2087,7 @@ function MediaPlayer() {
         }
         textController.reset();
         cmcdModel.reset();
+        cmsdModel.reset();
     }
 
     function _createPlaybackControllers() {
@@ -2170,6 +2175,7 @@ function MediaPlayer() {
             domStorage,
             mediaPlayerModel,
             customParametersModel,
+            cmsdModel,
             dashMetrics,
             adapter,
             videoModel,
@@ -2182,6 +2188,8 @@ function MediaPlayer() {
             playbackController
         });
 
+        cmsdModel.setConfig({});
+
         // initialises controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
@@ -2189,6 +2197,7 @@ function MediaPlayer() {
         gapController.initialize();
         catchupController.initialize();
         cmcdModel.initialize();
+        cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
     }

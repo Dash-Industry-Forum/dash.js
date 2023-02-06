@@ -12,6 +12,7 @@ import AdapterMock from './mocks/AdapterMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
+import CmsdModel from '../../src/streaming/models/CmsdModel';
 import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
@@ -35,6 +36,7 @@ describe('AbrController', function () {
     const streamControllerMock = new StreamControllerMock();
     const customParametersModel = CustomParametersModel(context).getInstance();
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const cmsdModel = CmsdModel(context).getInstance();
     const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
     const playbackControllerMock = new PlaybackControllerMock();
 
@@ -50,6 +52,7 @@ describe('AbrController', function () {
             adapter: adapterMock,
             domStorage: domStorageMock,
             mediaPlayerModel,
+            cmsdModel,
             settings: settings,
             streamController: streamControllerMock,
             customParametersModel
