@@ -69,16 +69,6 @@ const OBJECT_TYPES = {
     OTHER: 'o',
     STREAM: 'stream' // Specific value for parameters without object type, which apply for all media/objects
 };
-// const STREAMING_FORMATS = {
-//     DASH: 'd',
-//     HLS: 'h',
-//     MSS: 's',
-//     OTHER: 'o'
-// };
-// const STREAM_TYPES = {
-//     VOD: 'v',
-//     LIVE: 'l'
-// };
 
 const PERSISTENT_PARAMS = [
     CMSD_KEYS.MAX_SUGGESTED_BITRATE,
