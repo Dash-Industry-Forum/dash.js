@@ -106,7 +106,9 @@ function ThroughputHistory(config) {
             if (etp) {
                 // Apply weight ratio on etp
                 const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
-                throughput = (throughput * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                if (etpWeightRatio > 0 && etpWeightRatio <= 1) {
+                    throughput = (throughput * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                }
             }
         }
 
