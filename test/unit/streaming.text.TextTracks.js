@@ -3,6 +3,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import VoHelper from './helpers/VOHelper';
 import VideoModelMock from './mocks/VideoModelMock';
+import Settings from '../../src/core/Settings';
 
 const SUBTITLE_DATA = 'subtitle lign 1';
 const chai = require('chai');
@@ -13,59 +14,30 @@ const eventBus = EventBus(context).getInstance();
 describe('TextTracks', function () {
 
     const voHelper = new VoHelper();
-    let videoModelMock = new VideoModelMock();
     const streamInfo = voHelper.getDummyStreamInfo();
+    const settings = Settings(context).getInstance();
     let textTracks;
+    let videoModelMock;
 
     beforeEach(function () {
-        if (typeof document === 'undefined') {
-            global.document = {
-                getElementById: function () {
-                    return 0;
-                },
-                createElement: function () {
-                    return {sheet: ''};
-                },
-                head: {
-                    removeChild: function () {
-                    },
-                    appendChild: function () {
-                    }
-                }
-            };
-        }
-
-        if (typeof window === 'undefined') {
-            global.window = {};
-            global.window.TextTrackCue = function (start, end, data) {
-                this.start = start;
-                this.end = end;
-                this.data = data;
-            };
-        }
-
-        if (typeof navigator === 'undefined') {
-            global.navigator = {};
-        }
     });
 
     afterEach(function () {
-        delete global.document;
-        delete global.window;
-        delete global.navigator;
+        settings.reset();
     });
 
     beforeEach(function () {
+        videoModelMock = new VideoModelMock();
         textTracks = TextTracks(context).create({
             videoModel: videoModelMock,
-            streamInfo
+            streamInfo,
+            settings
         });
         textTracks.initialize();
     });
 
     afterEach(function () {
         textTracks.deleteAllTextTracks();
-        videoModelMock.getElement().reset();
     });
 
     describe('Method getTrackIdxForId', function () {
@@ -103,7 +75,7 @@ describe('TextTracks', function () {
     });
 
     describe('Method addCaptions', function () {
-        it('should call addCue function of when a call to addCaptions is made', function () {
+        it('should call addCue function when a call to addCaptions is made', function () {
             textTracks.addTextTrack({
                 index: 0,
                 kind: 'subtitles',
@@ -116,7 +88,7 @@ describe('TextTracks', function () {
 
             textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
 
-            expect(videoModelMock.getCurrentCue(track).data).to.equal(SUBTITLE_DATA);
+            expect(videoModelMock.getCurrentCue(track).text).to.equal(SUBTITLE_DATA);
         });
     });
 });

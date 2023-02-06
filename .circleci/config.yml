@@ -1,10 +1,12 @@
 version: 2.1
+orbs:
+    browser-tools: circleci/browser-tools@1.4.0
 
 executors:
   dashjs-executor:
     working_directory: ~/repo
     docker:
-      - image: cimg/node:10.20.1
+      - image: cimg/node:16.18.1
 
 commands:
     dependencies_setup:
@@ -47,6 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
+            - browser-tools/install-browser-tools
             - run:
                 name: Build and run unit tests
                 command: |
@@ -84,14 +87,6 @@ jobs:
             - checkout
             - dependencies_setup
             - build_unit_test_steps
-            - deploy:
-                name: Deploy
-                command: |
-                    if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
-                        node deploy.js --host=$DEPLOY_HOST --user=$DEPLOY_USER --password=$DEPLOY_PASSWORD
-                    else
-                        echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
-                    fi
 
     merge-build-and-unit-test:
         executor: dashjs-executor
@@ -129,11 +124,11 @@ jobs:
             - run:
                 name: Run functional tests for one vector (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
             - run:
                 name: Run functional tests for smoke vectors (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             - store_test_results:
                 path: test/functional/reports
 

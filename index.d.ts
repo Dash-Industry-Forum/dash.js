@@ -157,6 +157,7 @@ declare namespace dashjs {
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -226,7 +227,11 @@ declare namespace dashjs {
                 scheduleWhilePaused?: boolean
             },
             text?: {
-                defaultEnabled?: boolean
+                defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
+                webvtt?: {
+                    customRenderingEnabled?: number
+                }
             },
             liveCatchup?: {
                 maxDrift?: number;

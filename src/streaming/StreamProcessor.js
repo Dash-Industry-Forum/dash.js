@@ -96,6 +96,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -240,6 +241,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -267,6 +269,17 @@ function StreamProcessor(config) {
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
         return new Promise((resolve) => {
+
+            // If we seek to a buffered area we can keep requesting where we left before the seek
+            // If we seek back then forwards buffering will stop until we are below our buffer goal
+            // If we seek forwards then pruneBuffer() will make sure that the bufferToKeep setting is respected
+            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
+            if (hasBufferAtTargetTime) {
+                bufferController.pruneBuffer();
+                resolve();
+                return;
+            }
+
             // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
             scheduleController.clearScheduleTimer();
             fragmentModel.abortRequests();
@@ -316,8 +329,8 @@ function StreamProcessor(config) {
                 .catch((e) => {
                     logger.error(e);
                 });
-        });
 
+        })
     }
 
     /**
@@ -388,6 +401,7 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {object} e
      * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
@@ -474,7 +488,8 @@ function StreamProcessor(config) {
                 mediaType: type
             });
             bufferController.segmentRequestingCompleted(segmentIndex);
-            scheduleController.clearScheduleTimer();
+            //Keep ABR alive by generating new request until playback ends
+            _noValidRequest();
             return;
         }
 
@@ -510,13 +525,10 @@ function StreamProcessor(config) {
             return null;
         }
 
-        // Use time just whenever is strictly needed
-        const useTime = shouldUseExplicitTimeForRequest;
-
         if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-            if (useTime) {
+            if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
@@ -817,6 +829,10 @@ function StreamProcessor(config) {
         return bufferController;
     }
 
+    function dischargePreBuffer() {
+        bufferController.dischargePreBuffer();
+    }
+
     function getFragmentModel() {
         return fragmentModel;
     }
@@ -893,7 +909,7 @@ function StreamProcessor(config) {
     }
 
     function setMediaSource(mediaSource) {
-        bufferController.setMediaSource(mediaSource);
+        return bufferController.setMediaSource(mediaSource, mediaInfo);
     }
 
     function getScheduleController() {
@@ -936,12 +952,25 @@ function StreamProcessor(config) {
         const representation = representationController && representationInfo ?
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-        let request = dashHandler.getNextSegmentRequestIdempotent(
+        return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
             representation
         );
+    }
 
-        return request;
+    function _onInitFragmentLoaded(e) {
+        if (!settings.get().streaming.enableManifestTimescaleMismatchFix) {
+            return;
+        }
+        const chunk = e.chunk;
+        const bytes = chunk.bytes;
+        const quality = chunk.quality;
+        const currentRepresentation = getRepresentationInfo(quality);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        if (currentRepresentation && voRepresentation) {
+            const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            voRepresentation.timescale = timescale;
+        }
     }
 
     function _onMediaFragmentLoaded(e) {
@@ -1175,6 +1204,7 @@ function StreamProcessor(config) {
         getType,
         isUpdating,
         getBufferController,
+        dischargePreBuffer,
         getFragmentModel,
         getScheduleController,
         getRepresentationController,
