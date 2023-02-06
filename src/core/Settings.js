@@ -678,7 +678,7 @@ import Events from './events/Events';
  * @property {boolean} [applyMb=false]
  * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
  * @property {number} [etpWeightRatio=0]
- * Sets the weight ratio that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
+ * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
  */
 
 /**

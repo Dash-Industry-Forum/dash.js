@@ -921,7 +921,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             streaming: {
                 cmsd: {
                     abr: {
-                        etpWeightRatio: parseInt($scope.cmsdEtpWeightRatio)
+                        etpWeightRatio: parseFloat($scope.cmsdEtpWeightRatio)
                     }
                 }
             }
