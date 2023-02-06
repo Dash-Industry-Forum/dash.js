@@ -128,7 +128,7 @@ function HTTPLoader(cfg) {
 
                 const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, cmsd, success ? traces : null);
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
