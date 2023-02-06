@@ -361,8 +361,8 @@ function DashMetrics(config) {
             request.duration,
             responseHeaders,
             traces,
-            cmsd,
-            request.fileLoaderType);
+            request.fileLoaderType,
+            cmsd);
     }
 
     /**
