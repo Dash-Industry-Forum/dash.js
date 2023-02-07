@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mediaplayer only example</title>
+    
+    <script class="code" src="../../dist/dash.mediaplayer.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+
+            video = document.querySelector('video');
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, url, false);
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Mediaplayer only</h3>
+                    <p>A sample showing how to use the dash.mediaplayer bundle. This bundle does not contain any code
+                        for playback of DRM protected content.</p>
+                    <p>Note that you need to run "npm build" first when trying
+                        this demo locally.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

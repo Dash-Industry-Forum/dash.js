@@ -1,0 +1,218 @@
+version: 2.1
+
+executors:
+  dashjs-executor:
+    working_directory: ~/repo
+    docker:
+      - image: cimg/node:10.20.1
+
+commands:
+    dependencies_setup:
+        steps:
+            - restore_cache:
+                keys:
+                    - v1-dependencies-{{ checksum "package.json" }}
+                    # fallback to using the latest cache if no exact match is found
+                    - v1-dependencies-
+            - run:
+                name: Install dependencies
+                command: npm install
+            - save_cache:
+                paths:
+                    - node_modules
+                key: v1-dependencies-{{ checksum "package.json" }}
+
+    functional_precondition:
+        steps:
+            - run:
+                name: Check if preconditions are met for functional tests
+                command: |
+                    if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
+                        echo "BrowserStack not configured, functional tests will not be executed."
+                        circleci-agent step halt
+                    fi
+
+    functional_test_setup:
+        steps:
+            - run:
+                name: Download the browserstack binary file to create a tunnel
+                command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
+            - run:
+                name: Unzip the browserstack binary file
+                command: unzip BrowserStackLocal-linux-x64.zip
+            - run:
+                name: Run browserstack with provided access key
+                command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
+                background: true
+
+    build_unit_test_steps:
+        steps:
+            - run:
+                name: Build and run unit tests
+                command: |
+                    npm run build
+                    npm run test
+
+    functional_steps:
+            steps:
+                - functional_precondition
+                - checkout
+                - dependencies_setup
+                - build_unit_test_steps
+                - functional_test_setup
+
+    run_test_suite:
+        parameters:
+            browser:
+                default: "chrome"
+                type: string
+            protocol:
+                default: "https"
+                type: string
+            groupname:
+                default: ""
+                type: string
+        steps:
+            - run:
+                name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+jobs:
+    build-and-unit-test:
+        executor: dashjs-executor
+        steps:
+            - checkout
+            - dependencies_setup
+            - build_unit_test_steps
+            - deploy:
+                name: Deploy
+                command: |
+                    if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
+                        node deploy.js --host=$DEPLOY_HOST --user=$DEPLOY_USER --password=$DEPLOY_PASSWORD
+                    else
+                        echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
+                    fi
+
+    merge-build-and-unit-test:
+        executor: dashjs-executor
+        steps:
+            - checkout
+            - run:
+                name: Merge into development virtually
+                command: |
+                    git config --global user.email "circleci@example.com"
+                    git config --global user.name "CircleCI"
+                    git checkout development
+                    git merge --no-edit --no-ff $CIRCLE_BRANCH
+            - dependencies_setup
+            - build_unit_test_steps
+
+    functional-tests-smoke:
+        executor: dashjs-executor
+        steps:
+            - functional_precondition
+            - checkout
+            - run:
+                name: Virtual merge into development branch
+                command: |
+                    if [ "${CIRCLE_BRANCH}" = "development" ]; then
+                        echo "On development branch already, no merge needed"
+                    else
+                        git config --global user.email "circleci@example.com"
+                        git config --global user.name "CircleCI"
+                        git checkout development
+                        git merge --no-edit --no-ff $CIRCLE_BRANCH
+                    fi
+            - dependencies_setup
+            - build_unit_test_steps
+            - functional_test_setup
+            - run:
+                name: Run functional tests for one vector (chrome / https)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+            - run:
+                name: Run functional tests for smoke vectors (chrome / https)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-VOD_LIVE:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                groupname: VOD (Static MPD)
+            - run_test_suite:
+                groupname: LIVE (Dynamic MPD)
+            - run_test_suite:
+                groupname: Live Low Latency
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-DRM:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                groupname: DRM (modern)
+            - run_test_suite:
+                groupname: DRM Content (conservative/legacy)
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-Subtitles_Thumbnails_Audio_Smooth:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                groupname: Subtitles and Captions
+            - run_test_suite:
+                groupname: Thumbnails
+            - run_test_suite:
+                groupname: Audio-only
+            - run_test_suite:
+                groupname: Smooth Streaming
+            
+            - store_test_results:
+                path: test/functional/reports
+
+    functional-tests-only-http:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            - run_test_suite:
+                protocol: http
+            - store_test_results:
+                path: test/functional/reports
+
+workflows:
+    version: 2
+    commit-workflow:
+        jobs:
+            - build-and-unit-test # run unit tests on feature branch
+            - merge-build-and-unit-test:  # run unit tests on virtually merged feature branch
+                filters:
+                    branches:
+                        ignore:
+                            - development # skiping redundant job if already on development
+            - functional-tests-smoke:
+                filters:
+                    branches:
+                        ignore: # as creds are available only for non-forked branches
+                            - /pull\/[0-9]+/
+
+    scheduled-workflow:
+        triggers:
+            - schedule:
+                cron: "0 0 * * 0,3"
+                filters:
+                    branches:
+                        only:
+                            - development
+        jobs:
+            - functional-tests-VOD_LIVE
+            - functional-tests-DRM
+            - functional-tests-Subtitles_Thumbnails_Audio_Smooth
+            - functional-tests-only-http
+

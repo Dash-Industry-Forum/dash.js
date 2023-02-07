@@ -1,0 +1,99 @@
+{
+    "items": [
+        {
+            "name": "Video on Demand (VoD)",
+            "submenu": [
+                {
+                    "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                    "name": "Segment Template, number based",
+                    "description": "Segment Template, number based"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+                    "name": "Segment Base",
+                    "description": "Segment Base"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd",
+                    "name": "Segment Timeline, time based",
+                    "description": "Segment Timeline, time based"
+                },                
+                {
+                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "name": "Clear Segment List",
+                    "description": "Clear Segment List"
+                },
+                {
+                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "name": "TTML Segmented Subtitles VoD",
+                    "description": "TTML Segmented Subtitles VoD"
+                },                
+                {
+                    "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd",
+                    "name": "Multi Audio",
+                    "description": "Multi Audio"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
+                    "name": "Multiperiod with presentationTimeOffset",
+                    "description": "Multiperiod with presentationTimeOffset"
+                },
+                {
+                    "name": "1080p with PlayReady and Widevine DRM, single key",
+                    "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+                            },
+                            "httpTimeout": 5000
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+                            "httpRequestHeaders": {
+                                "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+                            },
+                            "httpTimeout": 5000
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "axinom"
+                },
+                {
+                    "name": "1080p with W3C Clear Key, single key",
+                    "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+                    "protData": {
+                        "org.w3.clearkey": {
+                            "clearkeys": {
+                                "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+                            }
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "axinom"
+                }
+            ]
+        },
+        {
+            "name": "Live content",
+            "submenu": [
+                {
+                    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+                    "name": "Segment Template without manifest updates",
+                    "description": "Segment Template without manifest updates"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
+                    "name": "Segment Timeline",
+                    "description": "Segment Timeline"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+                    "name": "Multiperiod Segment Template",
+                    "description": "Multiperiod Segment Template"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Buffer cleanup</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+
+            player.updateSettings({
+                streaming: {
+                    buffer: {
+                        bufferPruningInterval: 10,
+                        bufferToKeep: 20,
+                    }
+                }
+            });
+
+
+            player.initialize(video, url, true);
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Buffer cleanup</h3>
+                    <p>Example showing how to define the parameters for buffer cleanup/pruning in dash.js. The following settings are used:</p>
+                    <ul>
+                        <li><b>bufferPruningInterval:</b>The interval (in seconds) in which the buffer is checked and pruned.</li>
+                        <li><b>bufferToKeep:</b><p>Defines the buffer that is kept in source buffer in seconds.</p>
+                            <p>0|--bufferToPrune--|--bufferToKeep--|currentTime|</p></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <meta name="theme-color" content="#db5945">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-theme.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="app/offline/css/offline.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <link rel="manifest" href="./manifest.json">
+
+    <!--Libs-->
+    <script src="app/lib/jquery/jquery-3.1.1.min.js"></script>
+
+    <script src="app/lib/angular/angular.min.js"></script>
+    <script src="app/lib/angular/angular-resource.min.js"></script>
+    <script src="app/lib/angular/angular-flot.js"></script>
+
+    <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
+
+    <script src="app/lib/flot/jquery.flot.min.js"></script>
+    <script src="app/lib/flot/jquery.flot.resize.min.js"></script>
+    <script src="app/lib/flot/jquery.flot.axislabels.js"></script>
+    <!-- App -->
+    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.mss.debug.js"></script>
+    <script src="../../dist/dash.offline.debug.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="app/main.js"></script>
+    <script src="app/offline/services/downloadService.js"></script>
+    <script src="app/offline/directives/download.js"></script>
+    <script src="app/rules/DownloadRatioRule.js"></script>
+    <script src="app/rules/ThroughputRule.js"></script>
+
+</head>
+<body ng-controller="DashController" >
+
+    <!-- Mobile Stream Menu-->
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+                <ul>
+                    <span>Offline Manifests</span>
+                    <li ng-repeat="item in availableStreams">
+                        <span ng-show="item.manifest" ng-click="setStream(item.manifest)">{{item.manifest.fragmentStore}} : {{item.manifest.originalURL}}</span>
+                        <span class="btn btn-danger btn-sm" ng-click="deleteStream(item.manifest.manifestId);$event.stopPropagation();">Delete</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TITLE BAR -->
+    <div class="container">
+        <div class="row title-header">
+
+            <div class="branding">
+              <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+              <span id="big-title">Offline Mode</span>
+                <span ng-bind="version"></span>
+                <span id="commit-info"><!-- commit-info --></span>
+            </div>
+        </div>
+        <!-- ALERT POPUP -->
+        <div class="alert alert-success" role="alert">
+            {{successMessage}}
+        </div>
+        <div class="alert alert-warning" role="alert">
+            {{warningMessage}}
+        </div>
+
+        <div class="alert alert-danger" role="alert">
+            {{dangerMessage}}
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div id="desktop-streams" class="input-group-btn">
+                    <button ng-click="refreshAvailableStreams();" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        Streams <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                        <li class="dropdown-submenu" ng-if="item.submenu" ng-repeat="item in availableStreams" ng-mouseover="onStreamItemHover(item)">
+                            <a tabindex="-1" href="#">{{item.name}}</a>
+                            <ul class="dropdown-menu">
+                                <li class="dropdown-submenu" ng-repeat="subitem in item.submenu" ng-if="subitem.submenu">
+                                    <a tabindex="-1" href="#">{{subitem.name}}</a>
+                                    <ul class="dropdown-menu">
+                                        <li ng-repeat="subsubitem in subitem.submenu">
+                                            <a title="{{ subsubitem.moreInfo && 'See ' + subsubitem.moreInfo + ' for more information' || undefined }}"
+                                               ng-click="setStream(subsubitem)">{{subsubitem.name}}</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li ng-repeat="subitem in item.submenu" ng-if="subitem.url">
+                                    <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}"
+                                       ng-click="setStream(subitem)">{{subitem.name}}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div id="mobile-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
+                        Stored Stream <span class="caret"></span>
+                    </button>
+                </div>
+                <input type="text" class="form-control" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)" ng-cloak>{{getOptionsButtonLabel()}}</button>
+                    <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
+                    <button class="btn btn-default" type="button" ng-click="doDownload()">Download</button>
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                </span>
+            </div>
+        </div>
+
+                <!-- OPTIONS MENU-->
+                <div ng-cloak class="row options-wrapper" ng-class="{'options-show':optionsGutter, 'options-hide':!optionsGutter}">
+                        <div class="options-item">
+                            <div class="options-item-title">Playback</div>
+                            <div class="options-item-body">
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables automatic startup of the media once the media is loaded">
+                                    <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="autoPlaySelected">
+                                    Auto-Play
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables looping of the media once playback has completed">
+                                    <input type="checkbox" id="loop-cb" ng-checked="loopSelected">
+                                    Loop
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables scheduling fragments whiled paused increasing the buffer.">
+                                    <input type="checkbox" ng-model="scheduleWhilePausedSelected" ng-change="toggleScheduleWhilePaused()" ng-checked="scheduleWhilePausedSelected">
+                                    Schedule While Paused
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables local storage of player state (last bitrate, a/v or text track etc). This is then used when the next time media is played.">
+                                    <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected" ng-change="toggleLocalStorage()" ng-checked="localStorageSelected">
+                                    Allow Local Storage
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables jump small gaps (discontinuities) in the media streams">
+                                    <input type="checkbox" id="jumpGapsCB" ng-model="jumpGapsSelected" ng-change="toggleJumpGaps()" ng-checked="jumpGapsSelected">
+                                    Jump Small Gaps
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="">
+                                    <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected" ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
+                                    Low Latency Mode
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enables faster ABR switching (time to render). Only when the new quality is higher than the current.">
+                                    <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
+                                    Fast Switching ABR
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="Dynamically switch between BOLA and Throughput strategies.">
+                                    <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
+                                    ABR Strategy: Dynamic
+                                </label>
+                                <label  data-toggle="tooltip" data-placement="right"
+                                        title="Choose bitrate based on buffer level.">
+                                    <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrBola')">
+                                    ABR Strategy: BOLA
+                                </label>
+                                <label  data-toggle="tooltip" data-placement="right"
+                                        title="Choose bitrate based on recent throughput.">
+                                    <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy" ng-click="changeABRStrategy('abrThroughput')">
+                                    ABR Strategy: Throughput
+                                </label>
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="ABR - Use custom ABR rules">
+                                    <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected" ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
+                                    Use Custom ABR Rules
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="options-item">
+                            <div class="options-item-title">Initial Settings</div>
+                            <div class="options-item-body">
+                                <label class="options-label">Audio:</label>
+                                <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                                <label class="options-label">Video:</label>
+                                <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">        <label class="options-label">Text:</label>
+                                <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
+                                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                                       title="Enable subtitle on loading text">
+                                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
+                                    Enable Text At Loading
+                                </label>
+
+                            </div>
+                        </div>
+                        <div class="options-item">
+                            <div class="options-item-title">Track Switch Mode</div>
+                            <div class="options-item-body">
+                                <label class="options-label">Audio:</label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="When a track is switched, the portion of the buffer that contains old track data is cleared">
+                                    <input  type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')" >
+                                    always replace
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
+                                    <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio" ng-click="changeTrackSwitchMode('neverReplace', 'audio')">
+                                    never replace
+                                </label>
+                                <label class="options-label">Video:</label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="When a track is switched, the portion of the buffer that contains old track data is cleared">
+                                    <input  type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video" checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" >
+                                    always replace
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
+                                    <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video" ng-click="changeTrackSwitchMode('neverReplace', 'video')">
+                                    never replace
+                                </label>
+                            </div>
+                        </div>
+                        <div class="options-item">
+                            <div class="options-item-title">Debug</div>
+                            <div class="options-item-body">
+                                <label class="options-label">Log Level:</label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="Don't write any log message in browser console">
+                                    <input  type="radio" id="log-none" value="none" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                                    NONE
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="Sets log level of to LOG_LEVEL_FATAL">
+                                       <input  type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                                    FATAL
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                       title="Sets log level of to LOG_LEVEL_ERROR">
+                                       <input  type="radio" id="log-error" value="error" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                                    ERROR
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                        title="Sets log level of to LOG_LEVEL_WARNING">
+                                       <input  type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                                    WARNING
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                        title="Sets log level of to LOG_LEVEL_INFO">
+                                       <input  type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked" ng-click="setLogLevel()" >
+                                    INFO
+                                </label>
+                                <label data-toggle="tooltip" data-placement="right"
+                                        title="Sets log level of to LOG_LEVEL_DEBUG">
+                                       <input  type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
+                                    DEBUG
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+        <!--VIDEO PLAYER / CONTROLS -->
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <div id="videoContainer" class="videoContainer">
+                    <video></video>
+                    <div id="video-caption"></div>
+                    <div id="videoController" class="video-controller unselectable" ng-cloak>
+                        <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Bitrate List">
+                            <span class="icon-bitrate"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                        <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Track List">
+                            <span class="icon-tracks"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Closed Caption / Subtitles">
+                            <span class="icon-caption"></span>
+                        </div>
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+                        <div class="seekContainer">
+                            <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                            </div>
+                        </div>
+                        <div id="thumbnail-container" class="thumbnail-container">
+                            <div id="thumbnail-elem" class="thumbnail-elem"></div>
+                            <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container col-md-4">
+                <!-- DOWNLOAD SECTION -->
+                <div class="download-list">
+                    <h2>Records</h2>
+                    <h4 ng-if="downloads.length ===0">No available offline streams</h4>
+                    <div ng-repeat="download in downloads">
+                        <dash-download download="download" on-load="onLoadDownload" on-created="onCreated"></dash-download>
+                    </div>
+                </div>
+                <!-- NETWORK STATUS !-->
+                <h2><b>Network Status</b>
+                <span class="label label-info lb-md">
+                    {{isOffline}}
+                </span>
+                </h2>
+            <!-- NETWORK STATUS !-->
+            </div>
+
+        </div>
+
+        <!-- SELECT REPRESENTATION SECTION -->
+        <div id="representationModal" class="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Select Your Downloading Representations</h5>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group" >
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'video' }">
+                                    <div class="qualityLabelTitle">Video {{media.id}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="video" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.width}}x{{bitrate.height}}@{{bitrate.bandwidth}}bps
+                                    </div>
+                                </div>
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'audio' }">
+                                    <div class="qualityLabelTitle">Audio {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="audio" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
+                                </div>
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'text' }">
+                                    <div class="qualityLabelTitle">Text {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="text" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
+                                </div>
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'fragmentedText' }">
+                                    <div class="qualityLabelTitle">Text {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="fragmentedText" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" ng-click="onCancelDownload()">Cancel</button>
+                        <button type="button" class="btn btn-primary" ng-click="onStartDownload()">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR MODAL -->
+        <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header errorModalHeader">
+                        <h5 class="modal-title" id="errorModalLabel">Error {{errorType}}</h5>
+                    </div>
+                    <div class="modal-body">
+                        {{error}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+      </div>
+
+    </div>
+
+</body>
+</html>

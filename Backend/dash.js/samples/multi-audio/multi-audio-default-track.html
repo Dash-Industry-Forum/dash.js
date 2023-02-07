@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multi Audio - Initial Track</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd";
+            var attachSourceButton = document.getElementById('attach_button');
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({
+                streaming: {
+                    debug: {
+                        logLevel: 5
+                    }
+                }
+            })
+            player.initialize(video, null, false);
+            
+            attachSourceButton.onclick = function () {
+                player.attachSource(url);
+                player.setInitialMediaSettingsFor('audio', {
+                    lang: 'et-ET'
+                })
+                player.play();
+            }
+        }
+
+        function check() {
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+                var div = document.getElementById('http-warning');
+                div.innerHTML = out;
+                div.style.display = ''
+            }
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Multi Audio - Initial Track</h3>
+                    <p>This example illustrates how to select a default audio language for playback. </p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div>
+                    <video controls="true"></video>
+                </div>
+                <div>
+                    <button class="btn-primary" id="attach_button">(Re)attach Source</button>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top:20px">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        check();
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "../Janus"
+	},
+	{
+		"path": "../dashplayer"
+	}
+],
+  "settings": {}
+}

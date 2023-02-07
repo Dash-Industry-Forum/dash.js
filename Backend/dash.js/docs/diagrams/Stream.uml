@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js</OriginalElement>
+  <nodes>
+    <node x="43.0" y="259.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/Debug.js</node>
+    <node x="542.0" y="330.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js</node>
+    <node x="198.0" y="546.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/EventController.js</node>
+    <node x="234.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js</node>
+    <node x="435.0" y="25.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js</node>
+    <node x="0.0" y="71.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/FragmentController.js</node>
+    <node x="47.0" y="442.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/utils/LiveEdgeFinder.js</node>
+    <node x="220.0" y="164.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;</node>
+    <node x="408.0" y="475.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js</node>
+    <node x="535.0" y="162.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/models/VideoModel.js</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/StreamProcessor.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/models/VideoModel.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/Debug.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/EventController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/utils/LiveEdgeFinder.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Debug#2202;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventBus#2117;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#EventController#1943;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#Events#2158;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FactoryMaker#2237;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#FragmentController#2004;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#LiveEdgeFinder#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#StreamProcessor#1894;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/Stream.js#VideoModel#2071;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/controllers/FragmentController.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="363.5" y="288.0" />
+  <SelectedNodes>
+    <node>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/models/VideoModel.js</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

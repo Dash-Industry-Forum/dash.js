@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Dash.js Protection Module testing</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <style>
+        .inputForm div {
+            margin-bottom: 10px;
+        }
+
+        label {
+            width: 135px;
+            display: inline-block;
+        }
+
+        input[type="text"] {
+            width: 500px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="inputForm">
+        <div>
+            <input type="button" value="GetLicense" onclick="getLicense()">
+        </div>
+    </div>
+
+    <script>
+
+        function getLicense() {
+
+            // Configuration for stream "Axinom Test Content (conservative/legacy) / 1080p with PlayReady and Widevine DRM, single key
+            var config = {
+                // From manifest
+                KID: '6e5a1d26-2757-47d7-8046-eaa5d1d34b5a',
+                audioPssh: 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQblodJidXR9eARuql0dNLWg==',
+                videoPssh: 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQblodJidXR9eARuql0dNLWg==',
+                // From protData['com.widevine.alpha']
+                serverURL: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+                httpRequestHeaders: {
+                    "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
+                },
+                audioRobustness: "SW_SECURE_CRYPTO",
+                videoRobustness: "SW_SECURE_DECODE"
+            }
+
+            // Create MediaPlayer and get ProtectionController
+            var mediaPlayer = dashjs.MediaPlayer().create();
+            var protectionController = mediaPlayer.getProtectionController();
+
+            // Set ProtectionData for Widevine key system
+            var protData = {
+                'com.widevine.alpha': config
+            };
+            protectionController.setProtectionData(protData);
+
+            // Create audio/video infos
+            var audioInfo = {
+                codec: 'audio/mp4;codecs="mp4a.40.2"',
+                type: 'audio',
+                contentProtection: [{
+                    value: 'Widevine',
+                    schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+                    pssh: {
+                        __prefix: 'cenc',
+                        __text: config.audioPssh
+                    },
+                    'cenc:default_KID': config.KID
+                }]
+            };
+            var videoInfo = {
+                codec: 'video/mp4;codecs="avc1.640015"',
+                type: 'video',
+                contentProtection: [{
+                    value: 'Widevine',
+                    schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+                    pssh: {
+                        __prefix: 'cenc',
+                        __text: config.videoPssh
+                    },
+                    'cenc:default_KID': config.KID
+                }]
+            };
+
+            var sessionToken = null;
+
+            // Listen for 'keySystemAccessComplete' event to check if KeySystem is available
+            mediaPlayer.on(dashjs.MediaPlayer.events.KEY_SYSTEM_ACCESS_COMPLETE, function (e) {
+                if (e.error) {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] KEY_SYSTEM_ACCESS_COMPLETE: ', e);
+                }
+            });
+
+            // Listen for 'keySessionCreated' event to get session token
+            mediaPlayer.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function (e) {
+                if (e.error) {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] KEY_SESSION_CREATED: ', e);
+                } else {
+                    console.log('[DASHJS-PROTECTION-PLUGIN] KEY_SESSION_CREATED: ', e);
+                    sessionToken = e.data;
+                }
+            });
+
+            // Listen for 'licenseRequestComplete' to check for licenser request/response error
+            mediaPlayer.on(dashjs.MediaPlayer.events.LICENSE_REQUEST_COMPLETE, function (e) {
+                if (e.error) {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] LICENSE_REQUEST_COMPLETE: ', e);
+                } else {
+                    console.log('[DASHJS-PROTECTION-PLUGIN] LICENSE_REQUEST_COMPLETE: ', e);
+                }
+            });
+
+            // Listen for 'keystatuseschange' event to check if license has been successfully received and stored
+            mediaPlayer.on(dashjs.MediaPlayer.events.KEY_STATUSES_CHANGED, function (e) {
+                console.log('[DASHJS-PROTECTION-PLUGIN] KEY_STATUSES_CHANGED: ', e);
+                e.data.session.keyStatuses.forEach(function(status, keyId) {
+                    console.log("[DASHJS-PROTECTION-PLUGIN] status = " + status + " for session " + sessionToken.session.sessionId);
+                    switch (status) {
+                        case "expired":
+                            break;
+                        case "output-restricted":
+                            break;
+                        case "usable":
+                            // console.log('[DASHJS-PROTECTION-PLUGIN] SESSION: ', sessionToken.session);
+                            // Now, since license has been received, close the MediaKeySession to release its resources
+                            protectionController.closeKeySession(sessionToken);
+                            break;
+                        default:
+                    }
+                });
+
+            });
+
+            // Listen for 'keySessionClosed' event to ensure session has been successfully closed in order to enable (re)loading it afterwards (and avoid QutoExceededError)
+            mediaPlayer.on(dashjs.MediaPlayer.events.KEY_SESSION_CLOSED, function (e) {
+                if (e.error) {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] KEY_SESSION_CLOSED: ', e);
+                } else {
+                    console.log('[DASHJS-PROTECTION-PLUGIN] KEY_SESSION_CLOSED: ', e);
+                }
+            });
+
+            // Listen for errors
+            mediaPlayer.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+                if (e.error === 'key_session' || e.error === 'key_message') {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] PROTECTION ERROR: ', e);
+                } else {
+                    console.error('[DASHJS-PROTECTION-PLUGIN] ERROR: ', e);
+                }
+            });
+            mediaPlayer.on(dashjs.MediaPlayer.events.KEY_ERROR, function (e) {
+                console.error('[DASHJS-PROTECTION-PLUGIN] KEY_ERROR: ', e);
+            });
+
+            // Initialize ProtectionController in order to initialize MediaKey session and then initiate license retrieval process
+            protectionController.initializeForMedia(videoInfo);
+        }
+    </script>
+</body>
+
+</html>

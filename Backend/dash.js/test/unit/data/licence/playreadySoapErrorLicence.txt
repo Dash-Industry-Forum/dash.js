@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<soap:Fault>
+			<faultcode xmlns="http://schemas.xmlsoap.org/soap/envelope/">soap:Server</faultcode>
+			<faultstring xmlns="http://schemas.xmlsoap.org/soap/envelope/">PFS_LICENSE_CREATION_FAILURE</faultstring>
+			<detail xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+				<Exception>
+					<StatusCode>0x8004C600</StatusCode>
+					<Message>&lt;![CDATA[Problème lors de l'acquisition de la licence. Merci de réessayer ultérieurement.]]&gt;</Message>
+				</Exception>
+			</detail>
+		</soap:Fault>
+	</soap:Body>
+</soap:Envelope>

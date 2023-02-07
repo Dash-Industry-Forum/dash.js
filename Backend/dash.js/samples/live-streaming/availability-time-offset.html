@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live stream with availabilityTimeOffset</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 100%;
+        }
+        .clock {
+            color: #000;
+            font-size: 60pt
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = " https://livesim.dashif.org/livesim/ato_10/testpic_2s/Manifest.mpd";
+
+            setInterval(function () {
+                if (player && player.isReady()) {
+                    var d = new Date();
+                    var seconds = d.getSeconds();
+                    document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
+                    var minutes = d.getMinutes();
+                    document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
+                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUTC()));
+                    document.querySelector('#videoBuffer').innerHTML = player.getBufferLength() + 's';
+                }
+            }, 1000);
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, url, true);
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Live stream with availabilityTimeOffset</h3>
+                    <p>Example showing how dash.js handles live streams with an availabilityTimeOffset(ATO). In this
+                        case the ATO is set to 10 seconds. Consequently media segments are available 10 seconds earlier
+                        compared to their usual availability start time. As a result, the buffer level will be up to 10
+                        seconds higher than the live latency.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-5 border rounded-3 mt-1">
+                    <h3>Wall Clock reference time</h3>
+                    <div class="clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-7">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-5">
+                <div class="p-5 border rounded-3 mt-1">
+                    <h4>Debug information</h4>
+                    <div>
+                        <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span id="videoDelay"></span>
+                        </div>
+                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="videoBuffer"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

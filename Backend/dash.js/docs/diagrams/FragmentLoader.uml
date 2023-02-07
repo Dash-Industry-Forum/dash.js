@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js</OriginalElement>
+  <nodes>
+    <node x="277.0" y="459.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/DashJSError.js</node>
+    <node x="0.0" y="193.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js</node>
+    <node x="76.0" y="404.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js</node>
+    <node x="193.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js</node>
+    <node x="201.0" y="158.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;</node>
+    <node x="417.0" y="87.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/HeadRequest.js</node>
+    <node x="411.0" y="367.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/DashJSError.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#DashJSError#1922;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#EventBus#1966;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#Events#2009;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#FactoryMaker#2055;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#HeadRequest#1878;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/FragmentLoader.js#XHRLoader#1841;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/HeadRequest.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="309.5" y="244.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

@@ -95,7 +95,10 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
-        if (bufferController.getIsBufferingCompleted()) return;
+
+        //return if both buffering and playback have ended
+        if (bufferController.getIsBufferingCompleted() &&
+            playbackController.getEnded()) return; 
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;

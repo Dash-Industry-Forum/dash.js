@@ -38,7 +38,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import { PlayList, PlayListTrace } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
-import URLUtils from '../utils/URLUtils';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import MediaSourceController from './MediaSourceController';
@@ -57,7 +56,7 @@ function StreamController() {
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
-        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache, urlUtils,
+        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache,
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
@@ -70,7 +69,6 @@ function StreamController() {
         timeSyncController = TimeSyncController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         initCache = InitCache(context).getInstance();
-        urlUtils = URLUtils(context).getInstance();
 
         resetInitialSettings();
     }
@@ -404,8 +402,11 @@ function StreamController() {
             });
             playbackController.initialize(getActiveStreamInfo(), !!previousStream);
 
+            // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
-                _openMediaSource(seekTime, keepBuffers);
+                _openMediaSource(seekTime, keepBuffers, false);
+            } else {
+                _activateStream(seekTime, keepBuffers);
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -416,9 +417,10 @@ function StreamController() {
      * Setup the Media Source. Open MSE and attach event listeners
      * @param {number} seekTime
      * @param {boolean} keepBuffers
+     * @param {boolean} streamActivated
      * @private
      */
-    function _openMediaSource(seekTime, keepBuffers) {
+    function _openMediaSource(seekTime, keepBuffers, streamActivated = false) {
         let sourceUrl;
 
         function _onMediaSourceOpen() {
@@ -433,7 +435,16 @@ function StreamController() {
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
-            _activateStream(seekTime, keepBuffers);
+            if (streamActivated) {
+                // Set the media source for all StreamProcessors
+                activeStream.setMediaSource(mediaSource)
+                    .then(() => {
+                        // Start text processing now that we have a video element
+                        activeStream.initializeForTextWithMediaSource(mediaSource);
+                    })
+            } else {
+                _activateStream(seekTime, keepBuffers);
+            }
         }
 
         function _open() {
@@ -1267,15 +1278,6 @@ function StreamController() {
             }
 
             let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
-            const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
-
-            //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
-            allUTCTimingSources.forEach(function (item) {
-                if (item.value.replace(/.*?:\/\//g, '') === settings.get().streaming.utcSynchronization.defaultTimingSource.value.replace(/.*?:\/\//g, '')) {
-                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
-                    logger.debug('Matching default timing source protocol to manifest protocol: ', item.value);
-                }
-            });
 
             // WebRTC TODO: It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
             // capabilitiesFilter.filterUnsupportedFeatures(manifest)
@@ -1311,7 +1313,7 @@ function StreamController() {
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            _openMediaSource(seekTime, false);
+            _openMediaSource(seekTime, false, true);
         }
     }
 
@@ -1391,7 +1393,7 @@ function StreamController() {
 
         // Reset MSE
         logger.warn(`MediaSource has been resetted. Resuming playback from time ${time}`);
-        _openMediaSource(time, false);
+        _openMediaSource(time, false, false);
     }
 
     function getActiveStreamInfo() {

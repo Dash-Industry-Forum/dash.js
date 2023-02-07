@@ -492,7 +492,7 @@ function TextTracks(config) {
 
                     }
                 } else {
-                    logger.error('impossible to display subtitles.');
+                    logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
                 }
             } catch (e) {
                 // Edge crash, delete everything and start adding again

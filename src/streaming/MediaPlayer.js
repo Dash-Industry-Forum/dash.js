@@ -389,6 +389,17 @@ function MediaPlayer() {
                 serviceDescriptionController
             });
 
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                abrController,
+                eventBus,
+                requestModifier: RequestModifier(context).getInstance()
+            })
+
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
@@ -520,6 +531,28 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+     *
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+     * @instance
+     */
+    function preload() {
+        if (videoModel.getElement() || streamingInitialized) {
+            return false;
+        }
+        if (source) {
+            _initializePlayback();
+        } else {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+    }
 
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
@@ -2150,17 +2183,6 @@ function MediaPlayer() {
             playbackController
         });
 
-        contentSteeringController.setConfig({
-            adapter,
-            errHandler,
-            dashMetrics,
-            mediaPlayerModel,
-            manifestModel,
-            abrController,
-            eventBus,
-            requestModifier: RequestModifier(context).getInstance()
-        })
-
         // initialises controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
@@ -2381,6 +2403,7 @@ function MediaPlayer() {
         attachView,
         attachSource,
         isReady,
+        preload,
         play,
         isPaused,
         pause,

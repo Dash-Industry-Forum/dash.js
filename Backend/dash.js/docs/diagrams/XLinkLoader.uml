@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JavaScript-modules-diagram</ID>
+  <OriginalElement>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js</OriginalElement>
+  <nodes>
+    <node x="69.0" y="61.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/DashJSError.js</node>
+    <node x="0.0" y="265.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js</node>
+    <node x="278.0" y="0.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js</node>
+    <node x="295.0" y="488.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js</node>
+    <node x="46.0" y="440.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/metrics/HTTPRequest.js#HTTPRequest#1834;</node>
+    <node x="444.0" y="91.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/TextRequest.js</node>
+    <node x="434.0" y="394.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js</node>
+    <node x="201.0" y="162.0">/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/FactoryMaker.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/metrics/HTTPRequest.js#HTTPRequest#1834;">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/TextRequest.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/EventBus.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/core/events/Events.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/vo/DashJSError.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+    <edge source="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;" target="/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XHRLoader.js">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="1.0" x="321.0" y="259.0" />
+  <SelectedNodes>
+    <node>/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#DashJSError#1841;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#EventBus#2020;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#Events#2061;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#FactoryMaker#2105;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#HTTPRequest#1923;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#TextRequest#1976;/Users/dsparaci/Development/projects/dash-client-dev/dash.js/src/streaming/XlinkLoader.js#XHRLoader#1885;</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>All</Category>
+  </Categories>
+  <VISIBILITY>Details</VISIBILITY>
+</Diagram>
+

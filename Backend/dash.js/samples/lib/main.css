@@ -1,0 +1,25 @@
+.bd-callout {
+    padding: 1.25rem;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e9ecef;
+    border-left-width: .25rem;
+    border-radius: .25rem;
+}
+
+.margin-top-row {
+    margin-top: 10px;
+}
+
+.bi-info-square {
+    color: #007bff
+}
+
+.btn-success {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.menu {
+    line-height: 1.2;
+}

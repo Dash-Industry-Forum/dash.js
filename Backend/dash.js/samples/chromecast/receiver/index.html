@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html ng-app="DashCastReceiverApp" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Baseline Dash JavaScript Player</title>
+        <meta name="description" content="" />
+        <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/style.css">
+
+        <script src="http://code.jquery.com/jquery.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+
+        <!-- Chromecast -->
+        <script src="https://www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
+
+        <!-- Unminified Dash -->
+        <!--script src="../../../dist/dash.all.debug.js"></script-->
+        <!--dash.all.min.js should be used in production over dash.all.debug.js
+            Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+        <script src="../../../dist/dash.all.min.js"></script>
+
+        <script src="js/DashPlayerService.js"></script>
+        <script src="js/CastReceiverController.js"></script>
+        <script src="js/app.js"></script>
+
+        <style>
+            html, body {
+                background: #000000;
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+    </head>
+
+    <body ng-controller="CastReceiverController">
+        <div class="dash-video-player">
+            <div id="loading_spinner" class="loading_spinner" ng-show="showSpinner"></div>
+
+            <video id="media" ng-show="showVideo"></video>
+            <div id="video-caption"></div>
+        </div>
+
+        <div class="stats-holder" ng-show="showStats">
+            <div class="panel panel-info panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Video</h3>
+                </div>
+                <div class="panel-body">
+                    <span>{{videoBitrate}} kbps</span>
+                    <span>Rep Index: {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span>
+                    <span>Buffer Length: {{videoBufferLength}}</span>
+                    <span>Dropped Frames: {{videoDroppedFrames}}</span>
+                </div>
+            </div>
+            <div class="panel panel-success panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Audio</h3>
+                </div>
+                <div class="panel-body">
+                    <span>{{audioBitrate}} kbps</span>
+                    <span>Rep Index: {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span>
+                    <span>Buffer Length: {{audioBufferLength}}</span>
+                    <span>Dropped Frames: {{audioDroppedFrames}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="scrubber" class="progress scrubber">
+            <div id="scrubber-content" class="progress-bar progress-bar-success" role="progressbar"></div>
+        </div>
+    </body>
+</html>
