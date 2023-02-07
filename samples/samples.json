@@ -728,6 +728,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Preload content",
+                "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and start downloading the content before the player is attached to an HTML5 video element. This feature can be used to optimize content-insertion on platforms which provide only a single decoder.",
+                "href": "advanced/preload.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

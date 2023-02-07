@@ -21,32 +21,8 @@ describe('TextController', function () {
     const settings = Settings(context).getInstance();
     let textController;
 
-    beforeEach(function () {
-        if (typeof document === 'undefined') {
-            global.document = {
-                getElementById: function () {
-                    return 1;
-                },
-                head: {
-                    removeChild: function () {
-                    }
-                }
-            };
-        }
-        if (typeof window === 'undefined') {
-            global.window = {};
-        }
-        if (typeof navigator === 'undefined') {
-            global.navigator = {};
-        }
-    });
 
     afterEach(function () {
-        if (typeof window !== 'undefined' && global !== window) {
-            delete global.document;
-        }
-        delete global.window;
-        delete global.navigator;
         settings.reset();
     });
 

@@ -15,7 +15,7 @@ const errorHandlerMock = new ErrorHandlerMock();
 const dashManifestModel = DashManifestModel(context).getInstance();
 
 const TEST_URL = 'http://www.example.com/';
-const RELATIVE_TEST_URL = './';
+const RELATIVE_TEST_URL = 'test/';
 const SERVICE_LOCATION = 'testServiceLocation';
 const EMPTY_STRING = '';
 

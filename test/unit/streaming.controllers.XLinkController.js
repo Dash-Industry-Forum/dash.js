@@ -6,9 +6,8 @@ import EventBus from '../../src/core/EventBus';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import DebugMock from './mocks/DebugMock';
+import FileLoader from './helpers/FileLoader';
 
-const fs = require('fs');
-const jsdom = require('jsdom').JSDOM;
 const chai = require('chai');
 const expect = chai.expect;
 
@@ -44,23 +43,6 @@ describe('XlinkController', function () {
     }
 
     beforeEach(function () {
-        if (typeof window === 'undefined') {
-            global.window = {
-                performance: {
-                    now: function () {
-                        return Date.now();
-                    }
-                },
-                DOMParser: new jsdom().window.DOMParser
-            };
-        }
-    });
-
-    afterEach(function () {
-        delete global.window;
-    });
-
-    beforeEach(function () {
         xLinkController = XlinkController(context).create({});
     });
 
@@ -78,9 +60,13 @@ describe('XlinkController', function () {
         }
         eventBus.on(Events.XLINK_READY, onXLinkReady, this);
 
-        let xml = fs.readFileSync(__dirname + '/data/dash/manifest.xml', 'utf8');
-
-        manifest = parseManifest('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd', xml, xLinkController);
-        xLinkController.resolveManifestOnLoad(manifest);
+        FileLoader.loadTextFile('/data/dash/manifest.xml')
+            .then((xml) => {
+                manifest = parseManifest('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd', xml, xLinkController);
+                xLinkController.resolveManifestOnLoad(manifest);
+            })
+            .catch((e) => {
+                done(e);
+            })
     });
 });

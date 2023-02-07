@@ -52,6 +52,7 @@ import AbrController from './controllers/AbrController';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
+import CmsdModel from './models/CmsdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -156,6 +157,7 @@ function MediaPlayer() {
         dashMetrics,
         manifestModel,
         cmcdModel,
+        cmsdModel,
         videoModel,
         uriFragmentModel,
         domStorage,
@@ -335,6 +337,8 @@ function MediaPlayer() {
 
             cmcdModel = CmcdModel(context).getInstance();
 
+            cmsdModel = CmsdModel(context).getInstance();
+
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
             });
@@ -388,6 +392,17 @@ function MediaPlayer() {
                 playbackController,
                 serviceDescriptionController
             });
+
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                abrController,
+                eventBus,
+                requestModifier: RequestModifier(context).getInstance()
+            })
 
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
@@ -520,6 +535,28 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+     *
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+     * @instance
+     */
+    function preload() {
+        if (videoModel.getElement() || streamingInitialized) {
+            return false;
+        }
+        if (source) {
+            _initializePlayback();
+        } else {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+    }
 
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
@@ -2050,6 +2087,7 @@ function MediaPlayer() {
         }
         textController.reset();
         cmcdModel.reset();
+        cmsdModel.reset();
     }
 
     function _createPlaybackControllers() {
@@ -2137,6 +2175,7 @@ function MediaPlayer() {
             domStorage,
             mediaPlayerModel,
             customParametersModel,
+            cmsdModel,
             dashMetrics,
             adapter,
             videoModel,
@@ -2149,16 +2188,7 @@ function MediaPlayer() {
             playbackController
         });
 
-        contentSteeringController.setConfig({
-            adapter,
-            errHandler,
-            dashMetrics,
-            mediaPlayerModel,
-            manifestModel,
-            abrController,
-            eventBus,
-            requestModifier: RequestModifier(context).getInstance()
-        })
+        cmsdModel.setConfig({});
 
         // initialises controller
         abrController.initialize();
@@ -2167,6 +2197,7 @@ function MediaPlayer() {
         gapController.initialize();
         catchupController.initialize();
         cmcdModel.initialize();
+        cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
     }
@@ -2380,6 +2411,7 @@ function MediaPlayer() {
         attachView,
         attachSource,
         isReady,
+        preload,
         play,
         isPaused,
         pause,
