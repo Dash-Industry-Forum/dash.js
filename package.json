@@ -57,6 +57,7 @@
         "yargs": "16.0.3"
     },
     "dependencies": {
+        "@eyevinn/webrtc-player": "^0.9.1",
         "bcp-47-match": "^1.0.3",
         "bcp-47-normalize": "^1.1.1",
         "codem-isoboxer": "0.3.6",

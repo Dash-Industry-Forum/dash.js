@@ -698,7 +698,6 @@ function Stream(config) {
         if (!isActive || !streamInfo) {
             return;
         }
-
         hasFinishedBuffering = false;
 
         let mediaInfo = e.newMediaInfo;

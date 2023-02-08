@@ -216,7 +216,7 @@ function MediaPlayer() {
             playbackController = config.playbackController;
         }
         if (config.serviceDescriptionController) {
-            serviceDescriptionController = config.serviceDescriptionController
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
@@ -2135,7 +2135,8 @@ function MediaPlayer() {
             settings,
             baseURLController,
             uriFragmentModel,
-            segmentBaseController
+            segmentBaseController,
+            mediaPlayer: instance,
         });
 
         gapController.setConfig({

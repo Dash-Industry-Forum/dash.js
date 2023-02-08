@@ -49,6 +49,7 @@ class DashConstants {
         this.REPRESENTATION_INDEX = 'RepresentationIndex';
         this.SUB_REPRESENTATION = 'SubRepresentation';
         this.INITIALIZATION = 'Initialization';
+        this.INITIALIZATION_PRINCIPAL = 'initializationPrincipal';
         this.INITIALIZATION_MINUS = 'initialization';
         this.MPD = 'MPD';
         this.PERIOD = 'Period';

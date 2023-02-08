@@ -35,9 +35,7 @@ import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import {
-    PlayList, PlayListTrace
-} from '../vo/metrics/PlayList';
+import { PlayList, PlayListTrace } from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
@@ -47,12 +45,12 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import 'regenerator-runtime/runtime.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
-
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -64,7 +62,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
         supportsChangeType, settings,
-        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation, mediaPlayer;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -321,8 +319,6 @@ function StreamController() {
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
-
-
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
@@ -606,8 +602,22 @@ function StreamController() {
 
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
-
-        activeStream.prepareTrackChange(e);
+        if (
+            e.newMediaInfo.mimeType && e.newMediaInfo.initializationPrincipal &&
+            e.newMediaInfo.mimeType === 'video RTP/AVP'
+        ) {
+            mediaSourceController.detachMediaSource(videoModel);
+            mediaSourceController.attachWebRTCSource(videoModel, e.newMediaInfo.initializationPrincipal);
+        } else {
+            if (
+                e.oldMediaInfo &&
+                e.oldMediaInfo.mimeType === 'video RTP/AVP'
+            ) {
+                mediaSourceController.detachWebRTCSource(videoModel);
+                mediaPlayer.initialize(videoModel.getElement(), null, true);
+            }
+            if (activeStream) activeStream.prepareTrackChange(e);
+        }
     }
 
     /**
@@ -707,7 +717,6 @@ function StreamController() {
      * @private
      */
     function _onBufferLevelUpdated(e) {
-
         // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
@@ -1270,12 +1279,15 @@ function StreamController() {
 
             let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
 
-            // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
-            capabilitiesFilter.filterUnsupportedFeatures(manifest)
-                .then(() => {
-                    baseURLController.initialize(manifest);
-                    timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
-                });
+            // WebRTC TODO: It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
+            // capabilitiesFilter.filterUnsupportedFeatures(manifest)
+            // .then(() => {
+            baseURLController.initialize(manifest);
+            timeSyncController.attemptSync(
+                allUTCTimingSources,
+                adapter.getIsDynamic()
+            );
+            // });
         } else {
             hasInitialisationError = true;
             reset();
@@ -1297,7 +1309,6 @@ function StreamController() {
     function hasAudioTrack() {
         return activeStream ? activeStream.getHasAudioTrack() : false;
     }
-
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
@@ -1418,6 +1429,11 @@ function StreamController() {
         if (config.capabilities) {
             capabilities = config.capabilities;
         }
+
+        if (config.mediaPlayer) {
+            mediaPlayer = config.mediaPlayer;
+        }
+
         if (config.capabilitiesFilter) {
             capabilitiesFilter = config.capabilitiesFilter;
         }

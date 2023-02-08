@@ -39,6 +39,7 @@ class MediaInfo {
         this.type = null;
         this.streamInfo = null;
         this.representationCount = 0;
+        this.initializationPrincipal = null;
         this.labels = null;
         this.lang = null;
         this.viewpoint = null;
@@ -55,7 +56,6 @@ class MediaInfo {
         this.selectionPriority = 1;
         this.supplementalProperties = {};
     }
-
 }
 
 export default MediaInfo;

@@ -66,7 +66,23 @@ function MediaSourceController() {
         return objectURL;
     }
 
+    function attachWebRTCSource(videoModel, src) {
+        videoModel.setWebRTCSource(src);
+
+        return src;
+    }
+
+    function detachWebRTCSource(videoModel) {
+        videoModel.setWebRTCSource(null);
+    }
+
     function detachMediaSource(videoModel) {
+        if (videoModel.srcObject && videoModel.srcObject.getVideoTracks()) {
+            videoModel.srcObject.getVideoTracks().forEach((track) => {
+                track.stop();
+                videoModel.srcObject.removeTrack(track);
+            });
+        }
         videoModel.setSource(null);
     }
 
@@ -126,7 +142,9 @@ function MediaSourceController() {
         detachMediaSource,
         setDuration,
         setSeekable,
-        signalEndOfStream
+        signalEndOfStream,
+        attachWebRTCSource,
+        detachWebRTCSource,
     };
 
     setup();
