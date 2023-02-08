@@ -228,6 +228,7 @@ function HTTPLoader(cfg) {
             if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
+                    logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
                     httpRequest.response.onabort = null;
                     httpRequest.loader.abort(httpRequest);
                     onloadend();
