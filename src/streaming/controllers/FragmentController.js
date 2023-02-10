@@ -39,7 +39,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import Errors from '../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import SegmentResponseModifier from "../utils/SegmentResponseModifier";
+import SegmentResponseModifier from '../utils/SegmentResponseModifier';
 
 function FragmentController(config) {
 
