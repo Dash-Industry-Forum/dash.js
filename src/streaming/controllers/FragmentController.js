@@ -39,6 +39,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import Errors from '../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import SegmentResponseModifier from "../utils/SegmentResponseModifier";
 
 function FragmentController(config) {
 
@@ -50,6 +51,7 @@ function FragmentController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
     const debug = Debug(context).getInstance();
+    const segmentResponseModifier = SegmentResponseModifier(context).getInstance();
     const streamInfo = config.streamInfo;
 
     let instance,
@@ -151,19 +153,32 @@ function FragmentController(config) {
             return;
         }
         const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
-        eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED,
-            {
-                chunk: chunk,
-                request: request
-            },
-            { streamId: strInfo.id, mediaType: request.mediaType }
-        );
+        segmentResponseModifier.modifyResponseAsync(chunk)
+            .then((modifiedChunk) => {
+                eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED,
+                    {
+                        chunk: modifiedChunk,
+                        request: request
+                    },
+                    { streamId: strInfo.id, mediaType: request.mediaType }
+                );
+            })
+            .catch((e) => {
+                logger.error(e);
+                eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED,
+                    {
+                        chunk: chunk,
+                        request: request
+                    },
+                    { streamId: strInfo.id, mediaType: request.mediaType }
+                );
+            })
     }
 
     instance = {
-        getStreamId: getStreamId,
-        getModel: getModel,
-        reset: reset
+        getStreamId,
+        getModel,
+        reset
     };
 
     setup();
