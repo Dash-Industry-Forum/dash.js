@@ -488,8 +488,7 @@ function StreamProcessor(config) {
                 mediaType: type
             });
             bufferController.segmentRequestingCompleted(segmentIndex);
-            //Keep ABR alive by generating new request until playback ends
-            _noValidRequest();
+            scheduleController.clearScheduleTimer();
             return;
         }
 
