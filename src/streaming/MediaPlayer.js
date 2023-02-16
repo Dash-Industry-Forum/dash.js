@@ -1885,11 +1885,13 @@ function MediaPlayer() {
             uriFragmentModel.initialize(urlOrManifest);
         }
 
-        if (startTime == null || isNaN(startTime)) {
+        if (startTime == null) {
             startTime = NaN;
         }
 
-        startTime = Math.max(0, startTime);
+        if (!isNaN(startTime)) {
+            startTime = Math.max(0, startTime);
+        }
 
         source = urlOrManifest;
 
