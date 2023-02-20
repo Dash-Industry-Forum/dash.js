@@ -33,7 +33,13 @@ const config = {
                 ]
             }
         ]
-    }
+    },
+    //Webpack 5 no longer polyfills Node.js core modules automatically
+    resolve: {
+        fallback: {
+            stream: require.resolve('stream-browserify'),
+        },
+    },
 }
 
 module.exports = {config};

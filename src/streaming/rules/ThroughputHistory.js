@@ -100,6 +100,18 @@ function ThroughputHistory(config) {
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
 
+        // Get estimated throughput (etp, in kbits/s) from CMSD response headers
+        if (httpRequest.cmsd) {
+            const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp ? httpRequest.cmsd.dynamic.etp : null;
+            if (etp) {
+                // Apply weight ratio on etp
+                const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
+                if (etpWeightRatio > 0 && etpWeightRatio <= 1) {
+                    throughput = (throughput * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                }
+            }
+        }
+
         checkSettingsForMediaType(mediaType);
 
         if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {

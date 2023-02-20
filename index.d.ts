@@ -157,6 +157,7 @@ declare namespace dashjs {
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -227,6 +228,7 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
                 webvtt?: {
                     customRenderingEnabled?: number
                 }
@@ -332,6 +334,13 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
                 enabledKeys?: Array<string>
+            },
+            cmsd?: {
+                enabled?: boolean,
+                abr?: {
+                    applyMb: boolean,
+                    etpWeightRatio?: number
+                }
             }
         };
         errors?: {
