@@ -105,6 +105,7 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
+        let progressTimeout = null;
         let fileLoaderType = null;
         let httpRequest;
 
@@ -137,6 +138,10 @@ function HTTPLoader(cfg) {
         };
 
         const onloadend = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (requests.indexOf(httpRequest) === -1) {
                 return;
             } else {
@@ -220,6 +225,21 @@ function HTTPLoader(cfg) {
                 lastTraceReceivedCount = event.loaded;
             }
 
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
+
+            if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
+                progressTimeout = setTimeout(function () {
+                    // No more progress => abort request and treat as an error
+                    logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
+                    httpRequest.response.onabort = null;
+                    httpRequest.loader.abort(httpRequest);
+                    onloadend();
+                }, settings.get().streaming.fragmentRequestProgressTimeout);
+            }
+
             if (config.progress && event) {
                 config.progress(event);
             }
@@ -240,6 +260,10 @@ function HTTPLoader(cfg) {
         };
 
         const onabort = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (config.abort) {
                 config.abort(request);
             }
