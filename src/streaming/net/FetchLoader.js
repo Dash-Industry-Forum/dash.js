@@ -434,6 +434,7 @@ function FetchLoader(cfg) {
                             }
                             let cumulatedChunkDownloadTime = datumE[i].ts - shortDurationStartTime;
                             if (cumulatedChunkDownloadTime > 1) {
+                                shortDurationBytesReceived += datumE[i].bytes;
                                 chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
                                 shortDurationStartTime = 0;
                             } else {
