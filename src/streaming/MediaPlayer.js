@@ -52,6 +52,7 @@ import AbrController from './controllers/AbrController';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
+import CmsdModel from './models/CmsdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -156,6 +157,7 @@ function MediaPlayer() {
         dashMetrics,
         manifestModel,
         cmcdModel,
+        cmsdModel,
         videoModel,
         uriFragmentModel,
         domStorage,
@@ -335,6 +337,8 @@ function MediaPlayer() {
 
             cmcdModel = CmcdModel(context).getInstance();
 
+            cmsdModel = CmsdModel(context).getInstance();
+
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
             });
@@ -388,6 +392,17 @@ function MediaPlayer() {
                 playbackController,
                 serviceDescriptionController
             });
+
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                abrController,
+                eventBus,
+                requestModifier: RequestModifier(context).getInstance()
+            })
 
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
@@ -1870,11 +1885,13 @@ function MediaPlayer() {
             uriFragmentModel.initialize(urlOrManifest);
         }
 
-        if (startTime == null || isNaN(startTime)) {
+        if (startTime == null) {
             startTime = NaN;
         }
 
-        startTime = Math.max(0, startTime);
+        if (!isNaN(startTime)) {
+            startTime = Math.max(0, startTime);
+        }
 
         source = urlOrManifest;
 
@@ -2072,6 +2089,7 @@ function MediaPlayer() {
         }
         textController.reset();
         cmcdModel.reset();
+        cmsdModel.reset();
     }
 
     function _createPlaybackControllers() {
@@ -2159,6 +2177,7 @@ function MediaPlayer() {
             domStorage,
             mediaPlayerModel,
             customParametersModel,
+            cmsdModel,
             dashMetrics,
             adapter,
             videoModel,
@@ -2171,16 +2190,7 @@ function MediaPlayer() {
             playbackController
         });
 
-        contentSteeringController.setConfig({
-            adapter,
-            errHandler,
-            dashMetrics,
-            mediaPlayerModel,
-            manifestModel,
-            abrController,
-            eventBus,
-            requestModifier: RequestModifier(context).getInstance()
-        })
+        cmsdModel.setConfig({});
 
         // initialises controller
         abrController.initialize();
@@ -2189,6 +2199,7 @@ function MediaPlayer() {
         gapController.initialize();
         catchupController.initialize();
         cmcdModel.initialize();
+        cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
     }

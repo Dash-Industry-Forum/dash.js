@@ -334,6 +334,13 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
                 enabledKeys?: Array<string>
+            },
+            cmsd?: {
+                enabled?: boolean,
+                abr?: {
+                    applyMb: boolean,
+                    etpWeightRatio?: number
+                }
             }
         };
         errors?: {

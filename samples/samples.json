@@ -739,6 +739,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Segment manipulation",
+                "description": "This sample shows how to use dash.js to modify the segment before the data is appended to the Sourcebuffer.",
+                "href": "advanced/modify-segment-response.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

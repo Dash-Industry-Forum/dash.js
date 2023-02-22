@@ -34,6 +34,7 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
+import CmsdModel from '../models/CmsdModel';
 import Utils from '../../core/Utils';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
@@ -70,6 +71,7 @@ function HTTPLoader(cfg) {
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
+        cmsdModel,
         customParametersModel,
         lowLatencyThroughputModel,
         logger;
@@ -80,6 +82,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        cmsdModel = CmsdModel(context).getInstance();
         lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
 
@@ -124,7 +127,9 @@ function HTTPLoader(cfg) {
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
                     httpRequest.response ? httpRequest.response.responseHeaders : null;
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
+                const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);

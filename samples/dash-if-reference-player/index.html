@@ -835,6 +835,26 @@
                        ng-change="updateCmcdEnabledKeys()">
             </div>
         </div>
+        <div class="options-item">
+            <div class="options-item-title">CMSD</div>
+            <div class="options-item-body">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables parsing of CMSD response header parameters">
+                    <input type="checkbox" ng-model="cmsdEnabled" ng-change="toggleCmsdEnabled()"
+                           ng-checked="cmsdEnabled">
+                    Enable CMSD Parsing
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Apply maximum suggested bitrate from CMSD response headers">
+                    <input type="checkbox" id="cmsdApplyMb" ng-model="cmsdApplyMb"
+                           ng-change="toggleCmsdApplyMb()" ng-checked="cmsdApplyMb">
+                    Apply maximum suggested bitrate
+                </label>
+                <label class="options-label">Etp weight ratio:</label>
+                <input type="text" class="form-control" placeholder="weight ratio" ng-model="cmsdEtpWeightRatio"
+                       ng-change="updateCmsdEtpWeightRatio()">
+            </div>
+        </div>
 
     </div>
 
@@ -995,6 +1015,22 @@
                                        title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio
                                     (min|avg|max) :</label> {{videoRatio}}
                             </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="mtpCB" type="checkbox"
+                                       ng-model="chartState.video.mtp.selected"
+                                       ng-change="enableChartByName('mtp', 'video')">
+                                <label class="text-primary" for="mtpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="etpCB" type="checkbox"
+                                       ng-model="chartState.video.etp.selected"
+                                       ng-change="enableChartByName('etp', 'video')">
+                                <label class="text-primary" for="etpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{videoEtp}} Mbps
+                            </div>
                             <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
                                        ng-model="chartState.video.liveLatency.selected"
@@ -1084,7 +1120,23 @@
                                        title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio
                                     (min|avg|max) :</label> {{audioRatio}}
                             </div>
-                            <div class="text-success">
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="mtpCB" type="checkbox"
+                                       ng-model="chartState.video.mtp.selected"
+                                       ng-change="enableChartByName('mtp', 'audio')">
+                                <label class="text-primary" for="mtpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="etpCB" type="checkbox"
+                                       ng-model="chartState.audio.etp.selected"
+                                       ng-change="enableChartByName('etp', 'audio')">
+                                <label class="text-primary" for="etpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{audioEtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
                                        ng-model="chartState.audio.liveLatency.selected"
                                        ng-change="enableChartByName('liveLatency', 'audio')">

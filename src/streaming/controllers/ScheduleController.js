@@ -97,8 +97,9 @@ function ScheduleController(config) {
     function startScheduleTimer(value) {
 
         //return if both buffering and playback have ended
-        if (bufferController.getIsBufferingCompleted() &&
-            playbackController.getEnded()) return; 
+        if (bufferController.getIsBufferingCompleted()) {
+            return;
+        }
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
@@ -151,7 +152,7 @@ function ScheduleController(config) {
                 startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
             }
         } catch (e) {
-            startScheduleTimer(playbackController.getLowLatencyModeEnabled()  ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+            startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
         }
     }
 
@@ -196,7 +197,7 @@ function ScheduleController(config) {
     function _shouldClearScheduleTimer() {
         try {
             return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
-                    (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
+                (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
