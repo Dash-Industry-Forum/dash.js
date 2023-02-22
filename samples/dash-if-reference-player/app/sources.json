@@ -78,6 +78,11 @@
             "acronym": "VDMS",
             "name": "Verizon Media",
             "url": "https://www.verizonmedia.com/"
+        },
+        "eyevinn": {
+            "acronym": "Eyevinn",
+            "Name": "Eyevinn Technology",
+            "url": "https://www.eyevinn.se/"
         }
     },
     "items": [
@@ -304,6 +309,16 @@
                     "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
                     "name": "Low Latency (Multi-Rate) (livesim-chunked)",
                     "provider": "dashif"
+                }
+            ]
+        },
+        {
+            "name": "WebRTC",
+            "submenu": [
+                {
+                    "url": "https://mpdwhep.lab.sto.eyevinn.technology:8443/manifest.mpd",
+                    "name": "WebRTC WHEP and MPEG-DASH",
+                    "provider": "eyevinn"
                 }
             ]
         },
