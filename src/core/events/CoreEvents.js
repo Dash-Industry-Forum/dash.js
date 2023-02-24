@@ -46,6 +46,7 @@ class CoreEvents extends EventsBase {
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
         this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
+        this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.INBAND_EVENTS = 'inbandEvents';

@@ -91,9 +91,9 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
-        _currentTime = currentTime;
-        waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
-            if (element) {
+        if (element) {
+            _currentTime = currentTime;
+            waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
                 // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
                 // providing playbackRate property equals to zero.
                 if (element.currentTime === _currentTime) {
@@ -118,8 +118,8 @@ function VideoModel() {
                         }, 400);
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     function stickTimeToBuffered(time) {

@@ -118,6 +118,9 @@ function NotFragmentedTextBufferController(config) {
         return false;
     }
 
+    function dischargePreBuffer() {
+    }
+
     function getBufferLevel() {
         return 0;
     }
@@ -227,6 +230,7 @@ function NotFragmentedTextBufferController(config) {
         getType,
         getBufferControllerType,
         createBufferSink,
+        dischargePreBuffer,
         getBuffer,
         getBufferLevel,
         getRangeAt,

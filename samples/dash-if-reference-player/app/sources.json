@@ -78,6 +78,11 @@
             "acronym": "VDMS",
             "name": "Verizon Media",
             "url": "https://www.verizonmedia.com/"
+        },
+        "broadpeak": {
+            "acronym": "Broadpeak",
+            "name": "Broadpeak",
+            "url": "https://www.broadpeak.tv/"
         }
     },
     "items": [
@@ -110,9 +115,9 @@
                     "provider": "envivio"
                 },
                 {
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd",
                     "name": "SegmentTemplate/Number, live profile",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {
@@ -304,6 +309,16 @@
                     "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
                     "name": "Low Latency (Multi-Rate) (livesim-chunked)",
                     "provider": "dashif"
+                },
+                {
+                    "url": "https://explo.broadpeak.tv:8343/bpk-tv/spring/lowlat/index.mpd",
+                    "name": "Live low latency (SegmentTemplate, CMSD)",
+                    "provider": "broadpeak"
+                },
+                {
+                    "url": "https://explo.broadpeak.tv:8343/bpk-tv/spring/lowlat/index_timeline.mpd",
+                    "name": "Live low latency (SegmentTimeline, CMSD)",
+                    "provider": "broadpeak"
                 }
             ]
         },
@@ -364,14 +379,14 @@
                 },
                 {
                     "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
                     "name": "BBC R&D EBU-TT-D Subtitling Test",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
@@ -1225,15 +1240,15 @@
                     "provider": "dashif"
                 },
                 {
-                    "name": "128k AAC-LC Stereo 1kHz Tone (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "name": "HE and LC AAC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "name": "AAC-LC Surround (4 active channels) in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-surround-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {

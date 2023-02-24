@@ -95,8 +95,10 @@ describe('Stream', function () {
         });
 
         it('should trigger MANIFEST_ERROR_ID_NOSTREAMS_CODE error when setMediaSource is called but streamProcessors array is empty', () => {
-            stream.setMediaSource();
-            expect(errHandlerMock.errorCode).to.be.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE); // jshint ignore:line
+            stream.setMediaSource()
+                .then(() => {
+                    expect(errHandlerMock.errorCode).to.be.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE); // jshint ignore:line
+                })
         });
 
         it('should return an null when getId is called but streamInfo attribute is null or undefined', () => {

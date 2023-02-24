@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-    browser-tools: circleci/browser-tools@1.4.0
+    browser-tools: circleci/browser-tools@1.4.1
 
 executors:
   dashjs-executor:
@@ -87,14 +87,6 @@ jobs:
             - checkout
             - dependencies_setup
             - build_unit_test_steps
-            - deploy:
-                name: Deploy
-                command: |
-                    if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
-                        node deploy.js --host=$DEPLOY_HOST --user=$DEPLOY_USER --password=$DEPLOY_PASSWORD
-                    else
-                        echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
-                    fi
 
     merge-build-and-unit-test:
         executor: dashjs-executor

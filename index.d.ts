@@ -229,6 +229,7 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
                 webvtt?: {
                     customRenderingEnabled?: number
                 }
@@ -261,6 +262,7 @@ declare namespace dashjs {
             }
             selectionModeForInitialTrack?: TrackSelectionMode
             fragmentRequestTimeout?: number;
+            fragmentRequestProgressTimeout?: number;
             manifestRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?: number;
@@ -334,6 +336,13 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
                 enabledKeys?: Array<string>
+            },
+            cmsd?: {
+                enabled?: boolean,
+                abr?: {
+                    applyMb: boolean,
+                    etpWeightRatio?: number
+                }
             }
         };
         errors?: {
