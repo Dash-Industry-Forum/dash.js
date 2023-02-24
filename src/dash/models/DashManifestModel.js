@@ -203,6 +203,14 @@ function DashManifestModel() {
                 return;
             }
 
+            if (prt.hasOwnProperty(DashConstants.INBAND)) {
+                entry[DashConstants.INBAND] = prt[DashConstants.INBAND] !== 'false';
+            }
+
+            if (prt.hasOwnProperty(DashConstants.TYPE)) {
+                entry[DashConstants.TYPE] = prt[DashConstants.TYPE];
+            }
+
             // Not interested in other attributes for now
             // UTC element contained must be same as that in the MPD
             prtsForAdaptation.push(entry);
