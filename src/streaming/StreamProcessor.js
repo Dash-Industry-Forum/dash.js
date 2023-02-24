@@ -50,6 +50,8 @@ import URLUtils from '../streaming/utils/URLUtils';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import TimeUtils from './utils/TimeUtils';
+
 
 function StreamProcessor(config) {
 
@@ -1049,7 +1051,7 @@ function StreamProcessor(config) {
 
         // Get NPT timestamp according to IETF RFC 5905, relative to 1/1/1900
         let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
-        ntpTimestamp = ntpToUTC(ntpTimestamp);
+        ntpTimestamp = TimeUtils(context).getInstance().ntpToUTC(ntpTimestamp);
 
         const mediaTime = (prft.media_time / timescale);
 
@@ -1059,11 +1061,6 @@ function StreamProcessor(config) {
             mediaTime
         }
     }
-
-    function ntpToUTC(ntpTimeStamp) {
-        const start = new Date(Date.UTC(1900, 0, 1, 0, 0, 0));
-        return new Date(start.getTime() + ntpTimeStamp).getTime();
-    }    
 
     function _handleInbandEvents(isoFile, request, mediaInbandEvents, trackInbandEvents) {
         try {
