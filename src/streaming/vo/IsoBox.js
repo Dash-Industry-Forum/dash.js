@@ -114,8 +114,15 @@ class IsoBox {
                     }
                 }
                 break;
+            case 'prft':
+                this.version = boxData.version;
+                this.reference_track_ID = boxData.reference_track_ID;
+                this.ntp_timestamp_sec = boxData.ntp_timestamp_sec;
+                this.ntp_timestamp_frac = boxData.ntp_timestamp_frac;
+                this.media_time = boxData.media_time;
+                this.flags = boxData.flags;
+                break;
         }
-
     }
 
     getChildBox(type) {
