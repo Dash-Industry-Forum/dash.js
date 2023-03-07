@@ -254,6 +254,8 @@ function TextController(config) {
                 }
             }
         }
+
+        return true
     }
 
     function isTextEnabled() {
@@ -268,6 +270,7 @@ function TextController(config) {
     function enableForcedTextStreaming(enable) {
         checkParameterType(enable, 'boolean');
         forceTextStreaming = enable;
+        return true
     }
 
     function setTextTrack(streamId, idx) {

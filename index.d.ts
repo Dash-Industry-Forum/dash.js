@@ -98,9 +98,7 @@ declare namespace dashjs {
 
         //added to exported
         getQualityForRepresentation(voRepresentation: Representation): number;
-
-        //check if the other functions not marked with _ also need to be exported
-
+        
         reset(): void;
     }
 
@@ -1264,9 +1262,9 @@ declare namespace dashjs {
 
         updatePortalSize(): void;
 
-        enableText(enable: boolean): void;
+        enableText(enable: boolean): boolean;
 
-        enableForcedTextStreaming(value: boolean): void;
+        enableForcedTextStreaming(value: boolean): boolean;
 
         isTextEnabled(): boolean;
 
