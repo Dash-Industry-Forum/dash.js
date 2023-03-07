@@ -55,7 +55,6 @@ class Representation {
         this.MSETimeOffset = NaN;
         // The information we need in the DashHandler to determine whether the last segment has been loaded
         this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-        this.availableSegmentsNumber = 0;
         this.bandwidth = NaN;
         this.width = NaN;
         this.height = NaN;
@@ -63,7 +62,7 @@ class Representation {
         this.maxPlayoutRate = NaN;
         this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
-        this.frameRate = NaN;
+        this.frameRate = null;
     }
 
     hasInitialization() {

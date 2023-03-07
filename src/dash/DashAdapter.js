@@ -590,7 +590,7 @@ function DashAdapter() {
     /**
      * Returns the availabilityStartTime as specified in the manifest
      * @param {object} externalManifest Omit this value if no external manifest should be used
-     * @returns {Date} availabilityStartTime
+     * @returns {number} availabilityStartTime
      * @memberOf module:DashAdapter
      * @instance
      */
@@ -749,7 +749,7 @@ function DashAdapter() {
     /**
      * Returns the base urls for a given element
      * @param {object} node
-     * @returns {BaseURL}
+     * @returns {BaseURL[]}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
@@ -760,7 +760,7 @@ function DashAdapter() {
 
     /**
      * Returns the function to sort the Representations
-     * @returns {number}
+     * @returns {function}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore

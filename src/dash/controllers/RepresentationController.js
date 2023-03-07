@@ -321,7 +321,6 @@ function RepresentationController(config) {
         updateData,
         getCurrentRepresentation,
         getRepresentationForQuality,
-        getQualityForRepresentation,
         prepareQualityChange,
         reset
     };

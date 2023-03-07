@@ -95,9 +95,6 @@ declare namespace dashjs {
         getRepresentationForQuality(quality: number): object | null;
 
         prepareQualityChange(newQuality: number): void;
-
-        //added to exported
-        getQualityForRepresentation(voRepresentation: Representation): number;
         
         reset(): void;
     }
@@ -157,7 +154,7 @@ declare namespace dashjs {
 
         getAudioChannelConfigurationForRepresentation(adaptation: object): any[];
 
-        getRepresentationSortFunction(): number;
+        getRepresentationSortFunction(): (a: object, b: object) => number;
 
         processAdaptation(realAdaptation: object): object;
 
@@ -438,6 +435,7 @@ declare namespace dashjs {
         isFragmented: any | null;
         isEmbedded: any | null;
         selectionPriority: number;
+        supplementalProperties: object;
     }
 
     export interface Mpd {
@@ -593,7 +591,7 @@ declare namespace dashjs {
 
         getBaseURLsFromElement(node: object): BaseURL[]; 
 
-        getRepresentationSortFunction(): number;
+        getRepresentationSortFunction(): (a: object, b: object) => number;
 
         getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
 
