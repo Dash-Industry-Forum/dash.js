@@ -11,14 +11,14 @@ class ObjectsHelper {
             getCurrentTrack: () => {
             },
             getStreamInfo: () => {
-                return {id: 'DUMMY_STREAM-01', manifestInfo: {isDynamic: true}};
+                return { id: 'DUMMY_STREAM-01', manifestInfo: { isDynamic: true } };
             },
             getMediaInfo: () => {
                 return {
                     bitrateList: [
-                        {bandwidth: 1000000},
-                        {bandwidth: 2000000},
-                        {bandwidth: 3000000},
+                        { bandwidth: 1000000 },
+                        { bandwidth: 2000000 },
+                        { bandwidth: 3000000 },
                     ],
                     mimeType: "video/mp4"
                 }
@@ -53,15 +53,15 @@ class ObjectsHelper {
             calcAvailabilityStartTimeFromPresentationTime: () => 0,
             calcAvailabilityEndTimeFromPresentationTime: () => 0,
             calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
-            calcTimeShiftBufferWindow : () => {
-                return {start, end};
+            calcTimeShiftBufferWindow: () => {
+                return { start, end };
             },
-            calcAvailabilityWindow  : () => {
-                return {start, end};
+            calcAvailabilityWindow: () => {
+                return { start, end };
             },
             calcMediaTimeFromPresentationTime: () => undefined,
             calcSegmentAvailabilityWindowForRepresentation: () => {
-                return {start: start, end: end};
+                return { start: start, end: end };
             },
             isTimeSyncCompleted: () => {
                 return true;
@@ -72,6 +72,9 @@ class ObjectsHelper {
             setRange: (range) => {
                 start = range.start;
                 end = range.end;
+            },
+            calcPresentationTimeFromWallTime: (wallTime, period) => {
+                return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() * 1000) / 1000);
             }
         };
     }

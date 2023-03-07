@@ -50,6 +50,7 @@ function VideoModel() {
         element,
         _currentTime,
         TTMLRenderingDiv,
+        vttRenderingDiv,
         previousPlaybackRate;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
@@ -90,9 +91,9 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
-        _currentTime = currentTime;
-        waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
-            if (element) {
+        if (element) {
+            _currentTime = currentTime;
+            waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
                 // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
                 // providing playbackRate property equals to zero.
                 if (element.currentTime === _currentTime) {
@@ -117,8 +118,8 @@ function VideoModel() {
                         }, 400);
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     function stickTimeToBuffered(time) {
@@ -186,6 +187,10 @@ function VideoModel() {
         return TTMLRenderingDiv;
     }
 
+    function getVttRenderingDiv() {
+        return vttRenderingDiv;
+    }
+
     function setTTMLRenderingDiv(div) {
         TTMLRenderingDiv = div;
         // The styling will allow the captions to match the video window size and position.
@@ -195,6 +200,10 @@ function VideoModel() {
         TTMLRenderingDiv.style.pointerEvents = 'none';
         TTMLRenderingDiv.style.top = 0;
         TTMLRenderingDiv.style.left = 0;
+    }
+
+    function setVttRenderingDiv(div) {
+        vttRenderingDiv = div;
     }
 
     function setStallState(type, state) {
@@ -448,6 +457,8 @@ function VideoModel() {
         getSource,
         getTTMLRenderingDiv,
         setTTMLRenderingDiv,
+        getVttRenderingDiv,
+        setVttRenderingDiv,
         getPlaybackQuality,
         addEventListener,
         removeEventListener,

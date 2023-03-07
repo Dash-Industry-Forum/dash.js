@@ -35,6 +35,9 @@ import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
 import GapController from './controllers/GapController';
+import CatchupController from './controllers/CatchupController';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -49,6 +52,7 @@ import AbrController from './controllers/AbrController';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
+import CmsdModel from './models/CmsdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -57,10 +61,7 @@ import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
 import Settings from '../core/Settings';
-import {
-    getVersionString
-}
-    from '../core/Version';
+import {getVersionString} from '../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
@@ -78,6 +79,7 @@ import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
+import CustomParametersModel from './models/CustomParametersModel';
 
 /**
  * The media types
@@ -140,6 +142,7 @@ function MediaPlayer() {
         offlineController,
         adapter,
         mediaPlayerModel,
+        customParametersModel,
         errHandler,
         baseURLController,
         capabilities,
@@ -148,16 +151,17 @@ function MediaPlayer() {
         textController,
         gapController,
         playbackController,
+        serviceDescriptionController,
+        contentSteeringController,
+        catchupController,
         dashMetrics,
         manifestModel,
         cmcdModel,
+        cmsdModel,
         videoModel,
         uriFragmentModel,
         domStorage,
-        segmentBaseController,
-        licenseRequestFilters,
-        licenseResponseFilters,
-        customCapabilitiesFilters;
+        segmentBaseController;
 
     /*
     ---------------------------------------------------------------------------
@@ -179,11 +183,9 @@ function MediaPlayer() {
         segmentBaseController = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
-        customCapabilitiesFilters = [];
     }
 
     /**
@@ -215,8 +217,20 @@ function MediaPlayer() {
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
+        }
+        if (config.catchupController) {
+            catchupController = config.catchupController;
+        }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
+        }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
         }
         if (config.abrController) {
             abrController = config.abrController;
@@ -242,14 +256,17 @@ function MediaPlayer() {
      *
      * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
      * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-     * @param {boolean=} AutoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, AutoPlay) {
+    function initialize(view, source, autoPlay, startTime = NaN) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -298,6 +315,18 @@ function MediaPlayer() {
                 gapController = GapController(context).getInstance();
             }
 
+            if (!catchupController) {
+                catchupController = CatchupController(context).getInstance();
+            }
+
+            if (!serviceDescriptionController) {
+                serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+            }
+
+            if (!contentSteeringController) {
+                contentSteeringController = ContentSteeringController(context).getInstance();
+            }
+
             if (!capabilitiesFilter) {
                 capabilitiesFilter = CapabilitiesFilter(context).getInstance();
             }
@@ -307,6 +336,8 @@ function MediaPlayer() {
             manifestModel = ManifestModel(context).getInstance();
 
             cmcdModel = CmcdModel(context).getInstance();
+
+            cmsdModel = CmsdModel(context).getInstance();
 
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
@@ -328,7 +359,11 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter: adapter
+                adapter
+            });
+
+            serviceDescriptionController.setConfig({
+                adapter
             });
 
             if (!segmentBaseController) {
@@ -348,12 +383,29 @@ function MediaPlayer() {
 
             // configure controllers
             mediaController.setConfig({
-                domStorage: domStorage,
-                settings: settings
+                domStorage,
+                settings,
+                customParametersModel
             });
 
+            mediaPlayerModel.setConfig({
+                playbackController,
+                serviceDescriptionController
+            });
+
+            contentSteeringController.setConfig({
+                adapter,
+                errHandler,
+                dashMetrics,
+                mediaPlayerModel,
+                manifestModel,
+                abrController,
+                eventBus,
+                requestModifier: RequestModifier(context).getInstance()
+            })
+
             restoreDefaultUTCTimingSources();
-            setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+            setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
             // Detect and initialize offline module to support offline contents playback
             _detectOffline();
@@ -364,7 +416,7 @@ function MediaPlayer() {
         }
 
         if (source) {
-            attachSource(source);
+            attachSource(source, startTime);
         }
 
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
@@ -392,6 +444,9 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+        if (customParametersModel) {
+            customParametersModel.reset();
+        }
 
         settings.reset();
 
@@ -409,9 +464,6 @@ function MediaPlayer() {
      */
     function destroy() {
         reset();
-        licenseRequestFilters = [];
-        licenseResponseFilters = [];
-        customCapabilitiesFilters = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -485,6 +537,28 @@ function MediaPlayer() {
     */
 
     /**
+     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+     *
+     * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @see {@link module:MediaPlayer#attachView attachView()}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+     * @instance
+     */
+    function preload() {
+        if (videoModel.getElement() || streamingInitialized) {
+            return false;
+        }
+        if (source) {
+            _initializePlayback();
+        } else {
+            throw SOURCE_NOT_ATTACHED_ERROR;
+        }
+    }
+
+    /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
      * This method will call play on the native Video Element.
      *
@@ -498,7 +572,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         if (!autoPlay || (isPaused() && playbackInitialized)) {
-            playbackController.play();
+            playbackController.play(true);
         }
     }
 
@@ -534,7 +608,8 @@ function MediaPlayer() {
      * Sets the currentTime property of the attached video element.  If it is a live stream with a
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
-     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+     * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
@@ -552,8 +627,30 @@ function MediaPlayer() {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
+        if (value < 0) {
+            value = 0;
+        }
+
         let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        playbackController.seek(s);
+
+        // For VoD limit the seek to the duration of the content
+        const videoElement = getVideoElement();
+        if (!playbackController.getIsDynamic() && videoElement.duration) {
+            s = Math.min(videoElement.duration, s);
+        }
+
+        playbackController.seek(s, false, false, true);
+    }
+
+    /**
+     * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
+     */
+    function seekToOriginalLive() {
+        if (!playbackInitialized || !isDynamic()) {
+            return;
+        }
+
+        playbackController.seekToOriginalLive();
     }
 
     /**
@@ -582,6 +679,19 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         return playbackController.getIsDynamic();
+    }
+
+    /**
+     * Returns a boolean that indicates whether the player is operating in low latency mode.
+     * @return {boolean}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getLowLatencyModeEnabled() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getLowLatencyModeEnabled();
     }
 
     /**
@@ -719,7 +829,7 @@ function MediaPlayer() {
             return 0;
         }
 
-        let liveDelay = playbackController.getLiveDelay();
+        let liveDelay = playbackController.getOriginalLiveDelay();
 
         let val = metric.range.start + value;
 
@@ -728,6 +838,20 @@ function MediaPlayer() {
         }
 
         return val;
+    }
+
+    /**
+     * Returns the target live delay
+     * @returns {number} The target live delay
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getTargetLiveDelay() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        return playbackController.getOriginalLiveDelay();
     }
 
     /**
@@ -973,7 +1097,7 @@ function MediaPlayer() {
      * @instance
      */
     function addABRCustomRule(type, rulename, rule) {
-        mediaPlayerModel.addABRCustomRule(type, rulename, rule);
+        customParametersModel.addAbrCustomRule(type, rulename, rule);
     }
 
     /**
@@ -984,16 +1108,24 @@ function MediaPlayer() {
      * @instance
      */
     function removeABRCustomRule(rulename) {
-        mediaPlayerModel.removeABRCustomRule(rulename);
+        customParametersModel.removeAbrCustomRule(rulename);
     }
 
     /**
-     * Remove all custom rules
+     * Remove all ABR custom rules
      * @memberof module:MediaPlayer
      * @instance
      */
     function removeAllABRCustomRule() {
-        mediaPlayerModel.removeABRCustomRule();
+        customParametersModel.removeAllAbrCustomRule();
+    }
+
+    /**
+     * Returns all ABR custom rules
+     * @return {Array}
+     */
+    function getABRCustomRules() {
+        return customParametersModel.getAbrCustomRules();
     }
 
     /**
@@ -1026,7 +1158,7 @@ function MediaPlayer() {
      * @instance
      */
     function addUTCTimingSource(schemeIdUri, value) {
-        mediaPlayerModel.addUTCTimingSource(schemeIdUri, value);
+        customParametersModel.addUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1040,7 +1172,7 @@ function MediaPlayer() {
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
-        mediaPlayerModel.removeUTCTimingSource(schemeIdUri, value);
+        customParametersModel.removeUTCTimingSource(schemeIdUri, value);
     }
 
     /**
@@ -1055,7 +1187,7 @@ function MediaPlayer() {
      * @instance
      */
     function clearDefaultUTCTimingSources() {
-        mediaPlayerModel.clearDefaultUTCTimingSources();
+        customParametersModel.clearDefaultUTCTimingSources();
     }
 
     /**
@@ -1072,7 +1204,7 @@ function MediaPlayer() {
      * @instance
      */
     function restoreDefaultUTCTimingSources() {
-        mediaPlayerModel.restoreDefaultUTCTimingSources();
+        customParametersModel.restoreDefaultUTCTimingSources();
     }
 
     /**
@@ -1101,7 +1233,7 @@ function MediaPlayer() {
      * @instance
      */
     function setXHRWithCredentialsForType(type, value) {
-        mediaPlayerModel.setXHRWithCredentialsForType(type, value);
+        customParametersModel.setXHRWithCredentialsForType(type, value);
     }
 
     /**
@@ -1114,7 +1246,7 @@ function MediaPlayer() {
      * @instance
      */
     function getXHRWithCredentialsForType(type) {
-        return mediaPlayerModel.getXHRWithCredentialsForType(type);
+        return customParametersModel.getXHRWithCredentialsForType(type);
     }
 
     /*
@@ -1331,6 +1463,13 @@ function MediaPlayer() {
         videoModel.setTTMLRenderingDiv(div);
     }
 
+    function attachVttRenderingDiv(div) {
+        if (!videoModel.getElement()) {
+            throw ELEMENT_NOT_ATTACHED_ERROR;
+        }
+        videoModel.setVttRenderingDiv(div);
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -1428,7 +1567,7 @@ function MediaPlayer() {
     /**
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
      * is following: <br />
-     * {lang: langValue (can be either a string or a regex to match),
+     * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
@@ -1486,6 +1625,95 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
+        Custom filter and callback functions
+
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCustomCapabilitiesFilter(filter) {
+        customParametersModel.registerCustomCapabilitiesFilter(filter);
+    }
+
+    /**
+     * Unregisters a custom capabilities filter.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCustomCapabilitiesFilter(filter) {
+        customParametersModel.unregisterCustomCapabilitiesFilter(filter);
+    }
+
+    /**
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * @param {function} customFunc - the custom function that returns the initial track
+     */
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
+    }
+
+    /**
+     * Resets the custom initial track selection
+     */
+    function resetCustomInitialTrackSelectionFunction() {
+        customParametersModel.resetCustomInitialTrackSelectionFunction(null);
+
+    }
+
+    /**
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseRequestFilter(filter) {
+        customParametersModel.registerLicenseRequestFilter(filter);
+    }
+
+    /**
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseResponseFilter(filter) {
+        customParametersModel.registerLicenseResponseFilter(filter);
+    }
+
+    /**
+     * Unregisters a license request filter.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseRequestFilter(filter) {
+        customParametersModel.unregisterLicenseRequestFilter(filter);
+    }
+
+    /**
+     * Unregisters a license response filter.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseResponseFilter(filter) {
+        customParametersModel.unregisterLicenseResponseFilter(filter);
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
         PROTECTION MANAGEMENT
 
     ---------------------------------------------------------------------------
@@ -1529,122 +1757,6 @@ function MediaPlayer() {
             streamController.setProtectionData(protectionData);
         }
     }
-
-    /**
-     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the license request filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerLicenseRequestFilter(filter) {
-        licenseRequestFilters.push(filter);
-        if (protectionController) {
-            protectionController.setLicenseRequestFilters(licenseRequestFilters);
-        }
-    }
-
-    /**
-     * Registers a license response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the license response filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerLicenseResponseFilter(filter) {
-        licenseResponseFilters.push(filter);
-        if (protectionController) {
-            protectionController.setLicenseResponseFilters(licenseResponseFilters);
-        }
-    }
-
-    /**
-     * Unregisters a license request filter.
-     * @param {function} filter - the license request filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterLicenseRequestFilter(filter) {
-        unregisterFilter(licenseRequestFilters, filter);
-        if (protectionController) {
-            protectionController.setLicenseRequestFilters(licenseRequestFilters);
-        }
-    }
-
-    /**
-     * Unregisters a license response filter.
-     * @param {function} filter - the license response filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterLicenseResponseFilter(filter) {
-        unregisterFilter(licenseResponseFilters, filter);
-        if (protectionController) {
-            protectionController.setLicenseResponseFilters(licenseResponseFilters);
-        }
-    }
-
-    /**
-     * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return a boolean based on whether or not to use the representation.
-     * The filters are applied in the order they are registered.
-     * @param {function} filter - the custom capabilities filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function registerCustomCapabilitiesFilter(filter) {
-        customCapabilitiesFilters.push(filter);
-        if (capabilitiesFilter) {
-            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
-        }
-    }
-
-    /**
-     * Unregisters a custom capabilities filter.
-     * @param {function} filter - the custom capabilities filter callback
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function unregisterCustomCapabilitiesFilter(filter) {
-        unregisterFilter(customCapabilitiesFilters, filter);
-        if (capabilitiesFilter) {
-            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
-        }
-    }
-
-    function unregisterFilter(filters, filter) {
-        let index = -1;
-        filters.some((item, i) => {
-            if (item === filter) {
-                index = i;
-                return true;
-            }
-        });
-        if (index < 0) return;
-        filters.splice(index, 1);
-    }
-
-    /**
-     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
-     * @param {function} customFunc - the custom function that returns the initial track
-     */
-    function setCustomInitialTrackSelectionFunction(customFunc) {
-        if (mediaController) {
-            mediaController.setCustomInitialTrackSelectionFunction(customFunc);
-        }
-    }
-
-    /**
-     * Resets the custom initial track selection
-     */
-    function resetCustomInitialTrackSelectionFunction() {
-        if (mediaController) {
-            mediaController.setCustomInitialTrackSelectionFunction(null);
-        }
-    }
-
 
     /*
     ---------------------------------------------------------------------------
@@ -1754,20 +1866,31 @@ function MediaPlayer() {
      *
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     *
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * For live content
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      *
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance
      */
-    function attachSource(urlOrManifest) {
+    function attachSource(urlOrManifest, startTime = NaN) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
         if (typeof urlOrManifest === 'string') {
             uriFragmentModel.initialize(urlOrManifest);
+        }
+
+        if (startTime == null) {
+            startTime = NaN;
+        }
+
+        if (!isNaN(startTime)) {
+            startTime = Math.max(0, startTime);
         }
 
         source = urlOrManifest;
@@ -1777,7 +1900,7 @@ function MediaPlayer() {
         }
 
         if (isReady()) {
-            _initializePlayback();
+            _initializePlayback(startTime);
         }
     }
 
@@ -1918,6 +2041,26 @@ function MediaPlayer() {
         return adapter;
     }
 
+    /**
+     * Triggers a request to the content steering server to update the steering information.
+     * @return {Promise<any>}
+     */
+    function triggerSteeringRequest() {
+        if (contentSteeringController) {
+            return contentSteeringController.loadSteeringData();
+        }
+    }
+
+    /**
+     * Returns the current response data of the content steering server
+     * @return {object}
+     */
+    function getCurrentSteeringResponseData() {
+        if (contentSteeringController) {
+            return contentSteeringController.getCurrentSteeringResponseData();
+        }
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -1928,7 +2071,10 @@ function MediaPlayer() {
         adapter.reset();
         streamController.reset();
         gapController.reset();
+        catchupController.reset();
         playbackController.reset();
+        serviceDescriptionController.reset();
+        contentSteeringController.reset();
         abrController.reset();
         mediaController.reset();
         segmentBaseController.reset();
@@ -1943,6 +2089,7 @@ function MediaPlayer() {
         }
         textController.reset();
         cmcdModel.reset();
+        cmsdModel.reset();
     }
 
     function _createPlaybackControllers() {
@@ -1966,12 +2113,12 @@ function MediaPlayer() {
 
         capabilitiesFilter.setConfig({
             capabilities,
+            customParametersModel,
             adapter,
             settings,
             manifestModel,
             errHandler
         });
-        capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
 
         streamController.setConfig({
             capabilities,
@@ -1979,6 +2126,7 @@ function MediaPlayer() {
             manifestLoader,
             manifestModel,
             mediaPlayerModel,
+            customParametersModel,
             protectionController,
             textController,
             adapter,
@@ -1987,6 +2135,8 @@ function MediaPlayer() {
             timelineConverter,
             videoModel,
             playbackController,
+            serviceDescriptionController,
+            contentSteeringController,
             abrController,
             mediaController,
             settings,
@@ -2006,18 +2156,28 @@ function MediaPlayer() {
 
         playbackController.setConfig({
             streamController,
+            serviceDescriptionController,
             dashMetrics,
-            mediaPlayerModel,
             adapter,
             videoModel,
             timelineConverter,
             settings
         });
 
+        catchupController.setConfig({
+            streamController,
+            playbackController,
+            mediaPlayerModel,
+            videoModel,
+            settings
+        })
+
         abrController.setConfig({
             streamController,
             domStorage,
             mediaPlayerModel,
+            customParametersModel,
+            cmsdModel,
             dashMetrics,
             adapter,
             videoModel,
@@ -2030,12 +2190,17 @@ function MediaPlayer() {
             playbackController
         });
 
+        cmsdModel.setConfig({});
+
         // initializes controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
         gapController.initialize();
+        catchupController.initialize();
         cmcdModel.initialize();
+        cmsdModel.initialize();
+        contentSteeringController.initialize();
         segmentBaseController.initialize();
     }
 
@@ -2068,21 +2233,19 @@ function MediaPlayer() {
                 capabilities = Capabilities(context).getInstance();
             }
             protectionController = protection.createProtectionSystem({
-                debug: debug,
-                errHandler: errHandler,
-                videoModel: videoModel,
-                capabilities: capabilities,
-                eventBus: eventBus,
+                debug,
+                errHandler,
+                videoModel,
+                customParametersModel,
+                capabilities,
+                eventBus,
                 events: Events,
-                BASE64: BASE64,
+                BASE64,
                 constants: Constants,
-                cmcdModel: cmcdModel,
-                settings: settings
+                cmcdModel,
+                settings
             });
-            if (protectionController) {
-                protectionController.setLicenseRequestFilters(licenseRequestFilters);
-                protectionController.setLicenseResponseFilters(licenseResponseFilters);
-            }
+
             return protectionController;
         }
 
@@ -2213,7 +2376,11 @@ function MediaPlayer() {
         return utcValue;
     }
 
-    function _initializePlayback() {
+    /**
+     *
+     * @private
+     */
+    function _initializePlayback(startTime = NaN) {
 
         if (offlineController) {
             offlineController.resetRecords();
@@ -2225,9 +2392,9 @@ function MediaPlayer() {
             _createPlaybackControllers();
 
             if (typeof source === 'string') {
-                streamController.load(source);
+                streamController.load(source, startTime);
             } else {
-                streamController.loadWithManifest(source);
+                streamController.loadWithManifest(source, startTime);
             }
         }
 
@@ -2246,12 +2413,15 @@ function MediaPlayer() {
         attachView,
         attachSource,
         isReady,
+        preload,
         play,
         isPaused,
         pause,
         isSeeking,
         isDynamic,
+        getLowLatencyModeEnabled,
         seek,
+        seekToOriginalLive,
         setPlaybackRate,
         getPlaybackRate,
         setMute,
@@ -2265,6 +2435,7 @@ function MediaPlayer() {
         getActiveStream,
         getDVRWindowSize,
         getDVRSeekOffset,
+        getTargetLiveDelay,
         convertToTimeCode,
         formatUTC,
         getVersion,
@@ -2297,6 +2468,7 @@ function MediaPlayer() {
         addABRCustomRule,
         removeABRCustomRule,
         removeAllABRCustomRule,
+        getABRCustomRules,
         getAverageThroughput,
         retrieveManifest,
         addUTCTimingSource,
@@ -2317,10 +2489,13 @@ function MediaPlayer() {
         setCustomInitialTrackSelectionFunction,
         resetCustomInitialTrackSelectionFunction,
         attachTTMLRenderingDiv,
+        attachVttRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,
         getDashAdapter,
         getOfflineController,
+        triggerSteeringRequest,
+        getCurrentSteeringResponseData,
         getSettings,
         updateSettings,
         resetSettings,

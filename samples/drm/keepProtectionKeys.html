@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>DRM - Keep MediaKeySession example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code">
+        function init() {
+            var protData = {
+                "com.widevine.alpha": {
+                    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+                    "httpRequestHeaders": {
+                        "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+                    },
+                    "httpTimeout": 5000,
+                    priority: 0
+                },
+                "com.microsoft.playready": {
+                    "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+                    "httpRequestHeaders": {
+                        "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+                    },
+                    "httpTimeout": 5000,
+                    priority: 1
+                }
+            };
+            var video,
+                player,
+                url = "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd";
+            var attachSourceButton = document.getElementById('attach_button');
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({
+                streaming: {
+                    debug: {
+                        logLevel: 5
+                    },
+                    protection: {
+                        keepProtectionMediaKeys: true
+                    }
+                }
+            })
+            player.initialize(video, null, true);
+            player.setProtectionData(protData);
+
+            attachSourceButton.onclick = function () {
+                player.attachSource(url);
+            }
+        }
+
+        function check() {
+            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+                var div = document.getElementById('http-warning');
+                div.innerHTML = out;
+                div.style.display = ''
+            }
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>DRM - Keep MediaKeySession</h3>
+                    <p>The ProtectionController and the created MediaKeys and MediaKeySessions will be preserved during
+                        the MediaPlayer lifetime. </p>
+                    <p>To observe the effect of the "keepProtectionMediaKeys"
+                        property open the developer tools and check the network requests for license request. Only for
+                        the first playback attempt license requests will be visible. For any subsequent playback attempt
+                        the existing MediaKeySession is reused and no additional license requests are performed.</p>
+                    <p>For a detailed explanation on DRM playback in dash.js checkout the
+                        <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
+                           target="_blank">Wiki</a>.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div>
+                    <video controls="true"></video>
+                </div>
+                <div>
+                    <button class="btn-primary" id="attach_button">(Re)attach Source</button>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top:20px">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        check();
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

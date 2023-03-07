@@ -28,10 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {
-    HTTPRequest
-}
-    from '../../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
 
 
 const DEFAULT_UTC_TIMING_SOURCE = {
@@ -111,7 +108,6 @@ class MediaPlayerModelMock {
     }
 
     setup() {
-        this.UTCTimingSources = [];
         this.fastSwitchEnabled = false;
         this.liveDelay = null; // Explicitly state that default is null
         this.stableBufferTime = -1;
@@ -141,49 +137,8 @@ class MediaPlayerModelMock {
         };
     }
 
-    //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
-    findABRCustomRuleIndex(rulename) {
-        let i;
-        for (i = 0; i < this.customABRRule.length; i++) {
-            if (this.customABRRule[i].rulename === rulename) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    getABRCustomRules() {
-        return this.customABRRule;
-    }
-
-    addABRCustomRule(type, rulename, rule) {
-
-        let index = this.findABRCustomRuleIndex(rulename);
-        if (index === -1) {
-            // add rule
-            this.customABRRule.push({
-                type: type,
-                rulename: rulename,
-                rule: rule
-            });
-        } else {
-            // update rule
-            this.customABRRule[index].type = type;
-            this.customABRRule[index].rule = rule;
-        }
-    }
-
-    removeABRCustomRule(rulename) {
-        if (rulename) {
-            let index = this.findABRCustomRuleIndex(rulename);
-            if (index !== -1) {
-                // remove rule
-                this.customABRRule.splice(index, 1);
-            }
-        } else {
-            //if no rulename is defined, remove all ABR custome rules
-            this.customABRRule = [];
-        }
+    getCatchupPlaybackRates() {
+        return { min: -0.5, max: 0.5 };
     }
 
     getStableBufferTime() {
@@ -206,64 +161,12 @@ class MediaPlayerModelMock {
         return this.retryIntervals[type];
     }
 
-    getLiveDelay() {
-        return this.liveDelay ? this.liveDelay : this.settings.get().streaming.delay.liveDelay;
-    }
-
-    setUTCTimingSources(value) {
-        this.UTCTimingSources = value;
-    }
-
-    addUTCTimingSource(schemeIdUri, value) {
-        this.removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
-        let vo = {};
-        vo.schemeIdUri = schemeIdUri;
-        vo.value = value;
-        this.UTCTimingSources.push(vo);
-    }
-
-    getUTCTimingSources() {
-        return this.UTCTimingSources;
-    }
-
-    removeUTCTimingSource(schemeIdUri, value) {
-        for (let i = 0; i < this.UTCTimingSources.length; i++) {
-            if (this.UTCTimingSources[i].schemeIdUri === schemeIdUri && this.UTCTimingSources[i].value === value) {
-                this.UTCTimingSources.splice(i, 1);
-            }
-        }
-    }
-
-    clearDefaultUTCTimingSources() {
-        this.UTCTimingSources = [];
-    }
-
-    restoreDefaultUTCTimingSources() {
-        this.addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
-    }
-
-    setXHRWithCredentialsForType(type, value) {
-        if (!type) {
-            Object.keys(this.xhrWithCredentials).forEach(key => {
-                this.setXHRWithCredentialsForType(key, value);
-            });
-        } else {
-            this.xhrWithCredentials[type] = !!value;
-        }
-    }
-
-    getXHRWithCredentialsForType(type) {
-        const useCreds = this.xhrWithCredentials[type];
-
-        if (useCreds === undefined) {
-            return this.xhrWithCredentials.default;
-        }
-
-        return useCreds;
-    }
-
     reset() {
         this.setup();
+    }
+
+    setConfig() {
+
     }
 }
 

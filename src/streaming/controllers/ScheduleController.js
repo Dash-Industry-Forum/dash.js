@@ -95,7 +95,11 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
-        if (bufferController.getIsBufferingCompleted()) return;
+
+        //return if both buffering and playback have ended
+        if (bufferController.getIsBufferingCompleted()) {
+            return;
+        }
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
@@ -145,10 +149,10 @@ function ScheduleController(config) {
                 }
 
             } else {
-                startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+                startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
             }
         } catch (e) {
-            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+            startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
         }
     }
 
@@ -193,7 +197,7 @@ function ScheduleController(config) {
     function _shouldClearScheduleTimer() {
         try {
             return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
-                    (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
+                (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }

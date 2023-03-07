@@ -168,15 +168,15 @@ function OfflineStreamProcessor(config) {
             let suffix = isInit ? 'init' : e.request.index;
             let fragmentName = e.request.representationId + '_' + suffix;
             offlineStoreController.storeFragment(manifestId, fragmentName, e.response)
-            .then(() => {
-                if (!isInit) {
-                    // store current index and downloadedSegments number
-                    offlineStoreController.setRepresentationCurrentState(manifestId, e.request.representationId, {
-                        index: e.request.index,
-                        downloaded: downloadedSegments
-                    } );
-                }
-            });
+                .then(() => {
+                    if (!isInit) {
+                        // store current index and downloadedSegments number
+                        offlineStoreController.setRepresentationCurrentState(manifestId, e.request.representationId, {
+                            index: e.request.index,
+                            downloaded: downloadedSegments
+                        });
+                    }
+                });
         }
 
         if (e.error && e.request.serviceLocation && !isStopped) {
@@ -196,7 +196,7 @@ function OfflineStreamProcessor(config) {
         completedCb();
     }
 
-    function getRepresentationController () {
+    function getRepresentationController() {
         return representationController;
     }
 
@@ -225,7 +225,7 @@ function OfflineStreamProcessor(config) {
     /**
      * Execute init request for the represenation
      * @memberof OfflineStreamProcessor#
-    */
+     */
     function getInitRequest() {
         if (!representationController.getCurrentRepresentation()) {
             return null;
@@ -237,7 +237,7 @@ function OfflineStreamProcessor(config) {
     /**
      * Get next request
      * @memberof OfflineStreamProcessor#
-    */
+     */
     function getNextRequest() {
         return indexHandler.getNextSegmentRequest(getMediaInfo(), representationController.getCurrentRepresentation());
     }
@@ -245,7 +245,7 @@ function OfflineStreamProcessor(config) {
     /**
      * Start download
      * @memberof OfflineStreamProcessor#
-    */
+     */
     function start() {
         if (representationController) {
             if (!representationController.getCurrentRepresentation()) {
@@ -254,23 +254,24 @@ function OfflineStreamProcessor(config) {
             isStopped = false;
 
             offlineStoreController.getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id)
-            .then((state) => {
-                if (state) {
-                    indexHandler.setCurrentIndex(state.index);
-                    downloadedSegments = state.downloaded;
-                }
-                download();
-            }).catch(() => {
-                // start from beginining
-                download();
-            });
+                .then((state) => {
+                    if (state) {
+                        indexHandler.setCurrentIndex(state.index);
+                        downloadedSegments = state.downloaded;
+                    }
+                    download();
+                })
+                .catch(() => {
+                    // start from beginining
+                    download();
+                });
         }
     }
 
     /**
      * Performs download of fragment according to type
      * @memberof OfflineStreamProcessor#
-    */
+     */
     function download() {
         if (isStopped) {
             return;
@@ -312,7 +313,7 @@ function OfflineStreamProcessor(config) {
             return representation.id === bitrate.id;
         });
 
-        if (type !== constants.VIDEO && type !== constants.AUDIO  && type !== constants.TEXT) {
+        if (type !== constants.VIDEO && type !== constants.AUDIO && type !== constants.TEXT) {
             updating = false;
             return;
         }
@@ -336,7 +337,7 @@ function OfflineStreamProcessor(config) {
         return representationController.getCurrentRepresentation().numberOfSegments + 1; // do not forget init segment
     }
 
-    function updateProgression () {
+    function updateProgression() {
         if (progressCb) {
             progressCb(instance, downloadedSegments, getAvailableSegmentsNumber());
         }
@@ -351,7 +352,7 @@ function OfflineStreamProcessor(config) {
     /**
      * Reset
      * @memberof OfflineStreamProcessor#
-    */
+     */
     function reset() {
         resetInitialSettings();
         indexHandler.reset();
@@ -378,6 +379,7 @@ function OfflineStreamProcessor(config) {
 
     return instance;
 }
+
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
 const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); /* jshint ignore:line */
 export default factory;

@@ -1,5 +1,11 @@
+.videoContainer{
+    position: relative;
+}
+
 video {
     width: 100%;
+    height: auto;
+    margin: auto;
 }
 
 #manifest {
@@ -29,4 +35,17 @@ video {
 #metric-chart {
     max-height: 400px;
     min-height: 400px;
+}
+
+.video-controller {
+    margin-top: -5px !important;
+}
+
+.dash-video-player {
+    background: #000000;
+}
+
+.btn-success:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
 }

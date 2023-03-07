@@ -116,13 +116,12 @@ function MetricsModel(config) {
         }
     }
 
-    function appendHttpTrace(httpRequest, s, d, b, t) {
+    function appendHttpTrace(httpRequest, s, d, b) {
         let vo = new HTTPRequestTrace();
 
         vo.s = s;
         vo.d = d;
         vo.b = b;
-        vo._t = t;
 
         httpRequest.trace.push(vo);
 
@@ -135,7 +134,7 @@ function MetricsModel(config) {
         return vo;
     }
 
-    function addHttpRequest(mediaType, tcpid, type, url, quality, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
+    function addHttpRequest(mediaType, tcpid, type, url, quality, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces, fileLoaderType, cmsd) {
         let vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
@@ -163,7 +162,9 @@ function MetricsModel(config) {
                 null, // unknown, probably a 302
                 mediaduration,
                 null,
-                null
+                null,
+                fileLoaderType,
+                cmsd
             );
 
             vo.actualurl = actualurl;
@@ -176,6 +177,7 @@ function MetricsModel(config) {
         vo.trequest = trequest;
         vo.tresponse = tresponse;
         vo.responsecode = responsecode;
+        vo.cmsd = cmsd;
 
         vo._tfinish = tfinish;
         vo._stream = mediaType;
@@ -183,10 +185,11 @@ function MetricsModel(config) {
         vo._quality = quality;
         vo._responseHeaders = responseHeaders;
         vo._serviceLocation = serviceLocation;
+        vo._fileLoaderType = fileLoaderType;
 
         if (traces) {
             traces.forEach(trace => {
-                appendHttpTrace(vo, trace.s, trace.d, trace.b, trace.t);
+                appendHttpTrace(vo, trace.s, trace.d, trace.b);
             });
         } else {
             // The interval and trace shall be absent for redirect and failure records.

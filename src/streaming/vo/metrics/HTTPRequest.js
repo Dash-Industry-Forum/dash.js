@@ -97,6 +97,11 @@ class HTTPRequest {
          * @public
          */
         this.trace = [];
+        /**
+         * The CMSD static and dynamic values retrieved from CMSD response headers.
+         * @public
+         */
+        this.cmsd = null;
 
         /**
          * Type of stream ("audio" | "video" etc..)
@@ -128,6 +133,10 @@ class HTTPRequest {
          * @public
          */
         this._serviceLocation = null;
+        /**
+         * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+         */
+        this._fileLoaderType = null;
     }
 }
 
@@ -137,8 +146,8 @@ class HTTPRequest {
  */
 class HTTPRequestTrace {
     /**
-    * @class
-    */
+     * @class
+     */
     constructor() {
         /**
          * Real-Time | Measurement stream start.
@@ -155,11 +164,6 @@ class HTTPRequestTrace {
          * @public
          */
         this.b = [];
-        /**
-         * Measurement throughput in kbits/s
-         * @public
-         */
-         this._t = null;
     }
 }
 
@@ -174,6 +178,7 @@ HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
+HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
 HTTPRequest.OTHER_TYPE = 'other';
 
-export { HTTPRequest, HTTPRequestTrace };
+export {HTTPRequest, HTTPRequestTrace};

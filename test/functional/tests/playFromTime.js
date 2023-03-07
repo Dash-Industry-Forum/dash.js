@@ -30,7 +30,8 @@ exports.register = function (stream) {
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
             originalUrl = stream.url;
-            if (!stream.dynamic) {
+            const isDynamic = await command.execute(player.isDynamic);
+            if (!isDynamic) {
                 let period = stream.periods[stream.periods.length - 1];
                 startTime = period.start + Math.min(TIME_OFFSET, period.duration - 5);
                 stream.url += '#t=' + startTime;
@@ -50,7 +51,8 @@ exports.register = function (stream) {
             utils.log(NAME, 'Play');
             const playing = await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
             assert.isTrue(playing);
-            const time = await command.execute(stream.dynamic ? player.getTimeAsUTC : player.getTime);
+            const isDynamic = await command.execute(player.isDynamic);
+            const time = await command.execute(isDynamic ? player.getTimeAsUTC : player.getTime);
             utils.log(NAME, 'Playback time: ' + time);
             assert.isAtLeast(time, startTime);
             assert.isAtMost(time, (startTime + 5));

@@ -15,7 +15,7 @@ const errorHandlerMock = new ErrorHandlerMock();
 const dashManifestModel = DashManifestModel(context).getInstance();
 
 const TEST_URL = 'http://www.example.com/';
-const RELATIVE_TEST_URL = './';
+const RELATIVE_TEST_URL = 'test/';
 const SERVICE_LOCATION = 'testServiceLocation';
 const EMPTY_STRING = '';
 
@@ -1107,6 +1107,153 @@ describe('DashManifestModel', function () {
             });
         });
 
+        describe('getProducerReferenceTimesForAdaptation', () => {
+            it('returns an empty Array when no ProducerReferenceTimes are present on a node', () => {
+                const node = {};
+
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(obj).to.be.empty;                // jshint ignore:line
+            });
+
+            it('returns an empty Array where a single ProducerReferenceTime element on a node has missing mandatory attributes', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:00Z'
+                            // missing presentationTime
+                        }
+                    ]
+                };
+
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(obj).to.be.empty;                // jshint ignore:line
+            });
+
+            it('returns an Array of ProducerReferenceTime elements with mandatory attributes', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
+                            [DashConstants.PRESENTATION_TIME]: 0
+                        },
+                        {
+                            [DashConstants.ID]: 5,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:05Z',
+                            [DashConstants.PRESENTATION_TIME]: 1
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(4);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:04Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(0);
+                expect(obj[1][DashConstants.ID]).to.equal(5);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:05Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                /* jshint ignore:end */
+            });
+
+            it('returns ProducerReferenceTimes with correct default attribute values', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                        {
+                            [DashConstants.ID]: 4,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
+                            [DashConstants.PRESENTATION_TIME]: 0
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+
+                expect(obj).to.be.instanceOf(Array);        // jshint ignore:line
+                expect(obj).to.have.lengthOf(1);            // jshint ignore:line
+                expect(obj[0].type).to.equal('encoder');    // jshint ignore:line
+            });
+
+            it('returns ProducerReferenceTimes within representations', () => {
+                const node = {
+                    [DashConstants.REPRESENTATION_ASARRAY]: [
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                                {
+                                    [DashConstants.ID]: 1,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                                    [DashConstants.PRESENTATION_TIME]: 0
+                                }
+                            ]
+                        },
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 1
+                                }
+                            ]
+                        },
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(0);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                /* jshint ignore:end */
+
+            });
+
+            it('returns ProducerReferenceTimes at both AdaptationSet and Representation level', () => {
+                const node = {
+                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                        {
+                            [DashConstants.ID]: 1,
+                            [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
+                            [DashConstants.PRESENTATION_TIME]: 1
+                        }
+                    ],
+                    [DashConstants.REPRESENTATION_ASARRAY]: [
+                        {
+                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                                {
+                                    [DashConstants.ID]: 2,
+                                    [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
+                                    [DashConstants.PRESENTATION_TIME]: 2
+                                }
+                            ]
+                        }
+                    ]
+                };
+                const obj = dashManifestModel.getProducerReferenceTimesForAdaptation(node);
+                /* jshint ignore:start */
+                expect(obj).to.be.instanceOf(Array);
+                expect(obj).to.have.lengthOf(2);
+                expect(obj[0][DashConstants.ID]).to.equal(1);
+                expect(obj[0][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:01Z');
+                expect(obj[0][DashConstants.PRESENTATION_TIME]).to.equal(1);
+                expect(obj[1][DashConstants.ID]).to.equal(2);
+                expect(obj[1][DashConstants.WALL_CLOCK_TIME]).to.equal('1970-01-01T00:00:02Z');
+                expect(obj[1][DashConstants.PRESENTATION_TIME]).to.equal(2);
+                /* jshint ignore:end */
+            });
+
+        });
+
+
         describe('getSelectionPriority', () => {
 
             it('should return 1 when adaptation is not defined', () => {
@@ -1132,6 +1279,60 @@ describe('DashManifestModel', function () {
 
                 expect(priority).to.equal(5);
             })
+        })
+
+        describe('getContentSteering', () => {
+
+            it('should return undefined if no manifest is given', () => {
+                expect(dashManifestModel.getContentSteering()).to.be.undefined;
+            })
+
+            it('should return undefined if manifest is given but no content steering data is present', () => {
+                expect(dashManifestModel.getContentSteering({})).to.be.undefined;
+            })
+
+            it('should return content steering data from manifest', () => {
+                const manifestData = {
+                    ContentSteering_asArray: [
+                        {
+                            'defaultServiceLocation': 'beta',
+                            'queryBeforeStart': 'true',
+                            'proxyServerURL': 'http://someUrl',
+                            '__text': 'http://localhost:3333/content-steering'
+                        }
+                    ]
+                }
+                const data = dashManifestModel.getContentSteering(manifestData);
+                expect(data.defaultServiceLocation).to.be.equal('beta');
+                expect(data.queryBeforeStart).to.be.true;
+                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
+            })
+
+            it('should return first content steering element from manifest if multiple elements are present', () => {
+                const manifestData = {
+                    ContentSteering_asArray: [
+                        {
+                            'defaultServiceLocation': 'beta',
+                            'queryBeforeStart': 'true',
+                            'proxyServerURL': 'http://someUrl',
+                            '__text': 'http://localhost:3333/content-steering'
+                        },
+                        {
+                            'defaultServiceLocation': 'alpha',
+                            'queryBeforeStart': 'false',
+                            'proxyServerURL': 'http://someUrl2',
+                            '__text': 'http://localhost:3333/content-steering/2'
+                        }
+                    ]
+                }
+                const data = dashManifestModel.getContentSteering(manifestData);
+                expect(data.defaultServiceLocation).to.be.equal('beta');
+                expect(data.queryBeforeStart).to.be.true;
+                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
+            })
+
         })
     });
 });

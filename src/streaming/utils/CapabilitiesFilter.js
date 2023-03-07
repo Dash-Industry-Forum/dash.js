@@ -13,8 +13,8 @@ function CapabilitiesFilter() {
         adapter,
         capabilities,
         settings,
-        logger,
-        customCapabilitiesFilters;
+        customParametersModel,
+        logger;
 
 
     function setup() {
@@ -36,6 +36,10 @@ function CapabilitiesFilter() {
 
         if (config.settings) {
             settings = config.settings;
+        }
+
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
         }
 
     }
@@ -127,7 +131,7 @@ function CapabilitiesFilter() {
 
             as.Representation_asArray.forEach((rep, i) => {
                 const codec = adapter.getCodec(as, i, false);
-                const config = _createConfiguration(type,rep, codec);
+                const config = _createConfiguration(type, rep, codec);
 
                 configurations.push(config);
                 promises.push(capabilities.supportsCodec(config, type));
@@ -224,6 +228,7 @@ function CapabilitiesFilter() {
     }
 
     function _applyCustomFilters(manifest) {
+        const customCapabilitiesFilters = customParametersModel.getCustomCapabilitiesFilters();
         if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
             return;
         }
@@ -244,14 +249,9 @@ function CapabilitiesFilter() {
         });
     }
 
-    function setCustomCapabilitiesFilters(customFilters) {
-        customCapabilitiesFilters = customFilters;
-    }
-
     instance = {
         setConfig,
-        filterUnsupportedFeatures,
-        setCustomCapabilitiesFilters
+        filterUnsupportedFeatures
     };
 
     setup();

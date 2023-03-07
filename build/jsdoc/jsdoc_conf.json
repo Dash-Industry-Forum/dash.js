@@ -3,27 +3,32 @@
         "allowUnknownTags": true
     },
     "source": {
-        "include": ["./src/", "README.md"]
+        "include": [
+            "./src/",
+            "README.md"
+        ]
     },
-    "plugins": [ "plugins/markdown" ],
+    "plugins": [
+        "plugins/markdown"
+    ],
     "markdown": {
         "hardwrap": true
     },
     "templates": {
-		"cleverLinks"           : true,
-		"monospaceLinks"        : true,
-		"dateFormat"            : "ddd MMM Do YYYY",
-		"outputSourceFiles"     : true,
-		"outputSourcePath"      : true,
-		"systemName"            : "Dash JS",
-		"copyright"             : "<h3>Dash.js <a href=\"http://gruntjs.com/\"><img src=\"https://gruntjs.com/cdn/builtwith.png\" alt=\"Built with Grunt\"></a></h3>",
-		"footer"                : "",
-		"navType"               : "horizontal",
-		"theme"                 : "spacelab",
-		"linenums"              : true,
-		"collapseSymbols"       : false,
-		"inverseNav"            : true,
-        "highlightTutorialCode" : true
+        "cleverLinks": true,
+        "monospaceLinks": true,
+        "dateFormat": "ddd MMM Do YYYY",
+        "outputSourceFiles": true,
+        "outputSourcePath": true,
+        "systemName": "dash.js",
+        "copyright": "<h3>DASH Industry Forum</h3>",
+        "footer": "",
+        "navType": "horizontal",
+        "theme": "spacelab",
+        "linenums": true,
+        "collapseSymbols": true,
+        "inverseNav": true,
+        "highlightTutorialCode": true
     },
     "opts": {
         "template": "../../node_modules/ink-docstrap/template",

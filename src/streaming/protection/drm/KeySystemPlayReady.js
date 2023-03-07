@@ -49,6 +49,7 @@ function KeySystemPlayReady(config) {
     let instance;
     let messageFormat = 'utf-16';
     const BASE64 = config.BASE64;
+    const settings = config.settings;
 
     function checkConfig() {
         if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {
@@ -61,6 +62,15 @@ function KeySystemPlayReady(config) {
             xmlDoc;
         const headers = {};
         const parser = new DOMParser();
+
+        if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
+            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+            if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
+                headers['Content-Type'] = 'text/xml; charset=utf-8';
+                return headers;
+            }
+        }
+
         const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
@@ -89,6 +99,14 @@ function KeySystemPlayReady(config) {
     function getLicenseRequestFromMessage(message) {
         let licenseRequest = null;
         const parser = new DOMParser();
+
+        if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
+            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+            if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
+                return message;
+            }
+        }
+
         const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();

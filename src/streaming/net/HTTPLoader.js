@@ -34,6 +34,7 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
+import CmsdModel from '../models/CmsdModel';
 import Utils from '../../core/Utils';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
@@ -41,12 +42,13 @@ import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
 import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
+import CustomParametersModel from '../models/CustomParametersModel';
 
 /**
  * @module HTTPLoader
  * @ignore
  * @description Manages download of resources via HTTP.
- * @param {Object} cfg - dependancies from parent
+ * @param {Object} cfg - dependencies from parent
  */
 function HTTPLoader(cfg) {
 
@@ -69,6 +71,8 @@ function HTTPLoader(cfg) {
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
+        cmsdModel,
+        customParametersModel,
         lowLatencyThroughputModel,
         logger;
 
@@ -78,7 +82,9 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        cmsdModel = CmsdModel(context).getInstance();
         lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
+        customParametersModel = CustomParametersModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -99,6 +105,8 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
+        let progressTimeout = null;
+        let fileLoaderType = null;
         let httpRequest;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
@@ -111,14 +119,17 @@ function HTTPLoader(cfg) {
             request.requestStartDate = requestStartTime;
             request.requestEndDate = new Date();
             request.firstByteDate = request.firstByteDate || requestStartTime;
+            request.fileLoaderType = fileLoaderType;
 
             if (!request.checkExistenceOnly) {
                 const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
                 const responseStatus = httpRequest.response ? httpRequest.response.status : null;
                 const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                    httpRequest.response ? httpRequest.response.responseHeaders : [];
+                    httpRequest.response ? httpRequest.response.responseHeaders : null;
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
+                const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
@@ -127,6 +138,10 @@ function HTTPLoader(cfg) {
         };
 
         const onloadend = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (requests.indexOf(httpRequest) === -1) {
                 return;
             } else {
@@ -203,12 +218,26 @@ function HTTPLoader(cfg) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
-                    t: event.throughput
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
                 });
 
                 lastTraceTime = currentTime;
                 lastTraceReceivedCount = event.loaded;
+            }
+
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
+
+            if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
+                progressTimeout = setTimeout(function () {
+                    // No more progress => abort request and treat as an error
+                    logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
+                    httpRequest.response.onabort = null;
+                    httpRequest.loader.abort(httpRequest);
+                    onloadend();
+                }, settings.get().streaming.fragmentRequestProgressTimeout);
             }
 
             if (config.progress && event) {
@@ -231,6 +260,10 @@ function HTTPLoader(cfg) {
         };
 
         const onabort = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (config.abort) {
                 config.abort(request);
             }
@@ -247,8 +280,9 @@ function HTTPLoader(cfg) {
             logger.warn(timeoutMessage);
         };
 
+
         let loader;
-        if (settings.get().streaming.lowLatencyEnabled && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,
                 lowLatencyThroughputModel,
@@ -257,14 +291,16 @@ function HTTPLoader(cfg) {
             loader.setup({
                 dashMetrics
             });
+            fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
         } else {
             loader = XHRLoader(context).create({
                 requestModifier: requestModifier
             });
+            fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
         }
 
         let headers = null;
-        let modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
         if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
             const cmcdMode = settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
@@ -276,7 +312,7 @@ function HTTPLoader(cfg) {
         }
         request.url = modifiedUrl;
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
-        const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
+        const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
 
         httpRequest = {

@@ -33,8 +33,8 @@ import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory';
 
 /**
  * @class URLLoader
- * @description  Call Offline Loader or Online Loader dependaing on URL
- * @param {Object} cfg - dependances
+ * @description  Call Offline Loader or Online Loader depending on URL
+ * @param {Object} cfg - dependencies
  * @ignore
 */
 function URLLoader(cfg) {

@@ -225,17 +225,6 @@ function Stream(config) {
         });
     }
 
-    /**
-     *
-     * @param {object} mediaSource
-     * @param {array} previousBufferSinks
-     * @return {Promise<Array>}
-     * @private
-     */
-    function _initializeMedia(mediaSource, previousBufferSinks) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks);
-    }
-
     function startPreloading(mediaSource, previousBuffers) {
         return new Promise((resolve, reject) => {
 
@@ -266,6 +255,17 @@ function Stream(config) {
      *
      * @param {object} mediaSource
      * @param {array} previousBufferSinks
+     * @return {Promise<Array>}
+     * @private
+     */
+    function _initializeMedia(mediaSource, previousBufferSinks) {
+        return _commonMediaInitialization(mediaSource, previousBufferSinks);
+    }
+
+    /**
+     *
+     * @param {object} mediaSource
+     * @param {array} previousBufferSinks
      * @return {Promise<array>}
      * @private
      */
@@ -274,13 +274,14 @@ function Stream(config) {
             checkConfig();
 
             isUpdating = true;
-            addInlineEvents();
+            _addInlineEvents();
 
 
             let element = videoModel.getElement();
 
             MEDIA_TYPES.forEach((mediaType) => {
-                if (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName)))) {
+                // If we are preloading without a video element we can not start texttrack handling.
+                if (!(mediaType === Constants.TEXT && !mediaSource) && (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))) {
                     _initializeMediaForType(mediaType, mediaSource);
                 }
             });
@@ -297,8 +298,10 @@ function Stream(config) {
                         _checkIfInitializationCompleted();
                     }
 
-                    // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
-                    textController.createTracks(streamInfo);
+                    if (mediaSource) {
+                        // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
+                        textController.createTracks(streamInfo);
+                    }
 
                     resolve(bufferSinks);
                 })
@@ -306,9 +309,26 @@ function Stream(config) {
                     reject(e);
                 });
         });
-
     }
 
+    /**
+     * We call this function if segments have been preloaded without a video element. Once the video element is attached MSE is available
+     * @param mediaSource
+     * @returns {Promise<unknown>}
+     */
+    function initializeForTextWithMediaSource(mediaSource) {
+        return new Promise((resolve, reject) => {
+            _initializeMediaForType(Constants.TEXT, mediaSource);
+            createBufferSinkForText()
+                .then(() => {
+                    textController.createTracks(streamInfo);
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                })
+        })
+    }
 
     /**
      * Initialize for a given media type. Creates a corresponding StreamProcessor
@@ -350,7 +370,6 @@ function Stream(config) {
 
         if (embeddedMediaInfos.length > 0) {
             mediaController.setInitialMediaSettingsForType(type, streamInfo);
-            textController.setInitialSettings(mediaController.getInitialSettings(type));
             textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
         }
 
@@ -423,7 +442,6 @@ function Stream(config) {
 
     /**
      * Creates the StreamProcessor for a given media type.
-     * @param {object} initialMediaInfo
      * @param {array} allMediaForType
      * @param {object} mediaSource
      * @private
@@ -500,6 +518,15 @@ function Stream(config) {
         });
     }
 
+    function createBufferSinkForText() {
+        const sp = _getProcessorByType(Constants.TEXT);
+        if (sp) {
+            return sp.createBufferSinks()
+        }
+
+        return Promise.resolve();
+    }
+
     /**
      * Partially resets some of the Stream elements. This function is called when preloading of streams is canceled or a stream switch occurs.
      * @memberof Stream#
@@ -530,21 +557,38 @@ function Stream(config) {
     }
 
     function setMediaSource(mediaSource) {
-        for (let i = 0; i < streamProcessors.length;) {
-            if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
-                streamProcessors[i].setMediaSource(mediaSource);
-                i++;
-            } else {
-                streamProcessors[i].reset();
-                streamProcessors.splice(i, 1);
+        return new Promise((resolve, reject) => {
+            const promises = [];
+            for (let i = 0; i < streamProcessors.length;) {
+                if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
+                    promises.push(streamProcessors[i].setMediaSource(mediaSource));
+                    i++;
+                } else {
+                    streamProcessors[i].reset();
+                    streamProcessors.splice(i, 1);
+                }
             }
-        }
 
-        if (streamProcessors.length === 0) {
-            const msg = 'No streams to play.';
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
-            logger.fatal(msg);
-        }
+            Promise.all(promises)
+                .then(() => {
+                    for (let i = 0; i < streamProcessors.length; i++) {
+                        //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
+                        //so do this after the buffers are created above.
+                        streamProcessors[i].dischargePreBuffer();
+                    }
+
+                    if (streamProcessors.length === 0) {
+                        const msg = 'No streams to play.';
+                        errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
+                        logger.fatal(msg);
+                    }
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
+                    reject(e);
+                })
+        })
     }
 
     function resetInitialSettings(keepBuffers) {
@@ -694,10 +738,12 @@ function Stream(config) {
         }
     }
 
-    function addInlineEvents() {
+    function _addInlineEvents() {
         if (eventController) {
             const events = adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            if (events && events.length > 0) {
+                eventController.addInlineEvents(events, streamInfo.id);
+            }
         }
     }
 
@@ -728,6 +774,7 @@ function Stream(config) {
                     }
                 }
             }
+            protectionController.handleKeySystemFromManifest();
         }
 
         if (error) {
@@ -787,7 +834,7 @@ function Stream(config) {
 
     function onInbandEvents(e) {
         if (eventController) {
-            eventController.addInbandEvents(e.events);
+            eventController.addInbandEvents(e.events, streamInfo.id);
         }
     }
 
@@ -842,7 +889,7 @@ function Stream(config) {
             streamInfo = updatedStreamInfo;
 
             if (eventController) {
-                addInlineEvents();
+                _addInlineEvents();
             }
 
             let promises = [];
@@ -851,6 +898,12 @@ function Stream(config) {
                 const currentMediaInfo = streamProcessor.getMediaInfo();
                 promises.push(streamProcessor.updateStreamInfo(streamInfo));
                 let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
+
+                // Filter out embedded text track before updating media info in  StreamProcessor
+                allMediaForType = allMediaForType.filter(mediaInfo => {
+                    return !mediaInfo.isEmbedded;
+                });
+
                 // Check if AdaptationSet has not been removed in MPD update
                 if (allMediaForType) {
                     // Remove the current mediaInfo objects before adding the updated ones
@@ -998,6 +1051,7 @@ function Stream(config) {
         getHasAudioTrack,
         getHasVideoTrack,
         startPreloading,
+        initializeForTextWithMediaSource,
         getThumbnailController,
         getBitrateListFor,
         updateData,

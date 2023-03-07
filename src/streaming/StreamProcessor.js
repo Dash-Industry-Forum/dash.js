@@ -40,16 +40,18 @@ import FactoryMaker from '../core/FactoryMaker';
 import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
+import MediaPlayerEvents from './MediaPlayerEvents';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
 import DashJSError from './vo/DashJSError';
 import Debug from '../core/Debug';
 import RequestModifier from './utils/RequestModifier';
 import URLUtils from '../streaming/utils/URLUtils';
-import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import TimeUtils from './utils/TimeUtils';
+
 
 function StreamProcessor(config) {
 
@@ -96,6 +98,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -240,6 +243,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
@@ -267,6 +271,17 @@ function StreamProcessor(config) {
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
         return new Promise((resolve) => {
+
+            // If we seek to a buffered area we can keep requesting where we left before the seek
+            // If we seek back then forwards buffering will stop until we are below our buffer goal
+            // If we seek forwards then pruneBuffer() will make sure that the bufferToKeep setting is respected
+            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
+            if (hasBufferAtTargetTime) {
+                bufferController.pruneBuffer();
+                resolve();
+                return;
+            }
+
             // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
             scheduleController.clearScheduleTimer();
             fragmentModel.abortRequests();
@@ -316,8 +331,8 @@ function StreamProcessor(config) {
                 .catch((e) => {
                     logger.error(e);
                 });
-        });
 
+        })
     }
 
     /**
@@ -388,6 +403,7 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {object} e
      * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
@@ -441,7 +457,7 @@ function StreamProcessor(config) {
         if (settings.get().streaming.gaps.enableSeekFix && (shouldUseExplicitTimeForRequest || playbackController.getTime() === 0)) {
             let adjustedTime;
             if (!isDynamic) {
-                adjustedTime = dashHandler.getValidTimeCloseToTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
+                adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold);
             } else if (isDynamic && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
                 // If we find a valid request ahead of the current time then we are in a gap. Segments are only added at the end of the timeline
                 adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, mediaInfo, representation, settings.get().streaming.gaps.threshold,);
@@ -510,13 +526,10 @@ function StreamProcessor(config) {
             return null;
         }
 
-        // Use time just whenever is strictly needed
-        const useTime = shouldUseExplicitTimeForRequest;
-
         if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-            if (useTime) {
+            if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
@@ -531,7 +544,7 @@ function StreamProcessor(config) {
      * @private
      */
     function _noValidRequest() {
-        scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+        scheduleController.startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
     }
 
     function _onDataUpdateCompleted(e) {
@@ -607,7 +620,7 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
         representationController.prepareQualityChange(newQuality);
 
-        // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
+        // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
         // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
         fragmentModel.abortRequests();
@@ -659,7 +672,7 @@ function StreamProcessor(config) {
     function _prepareForFastQualitySwitch(representationInfo) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5;
+        let safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
@@ -670,6 +683,7 @@ function StreamProcessor(config) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
+            // The quality we originally requested was lower than the new quality
             if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                 const targetTime = time + safeBufferLevel;
                 setExplicitBufferingTime(targetTime);
@@ -815,6 +829,10 @@ function StreamProcessor(config) {
         return bufferController;
     }
 
+    function dischargePreBuffer() {
+        bufferController.dischargePreBuffer();
+    }
+
     function getFragmentModel() {
         return fragmentModel;
     }
@@ -891,7 +909,7 @@ function StreamProcessor(config) {
     }
 
     function setMediaSource(mediaSource) {
-        bufferController.setMediaSource(mediaSource);
+        return bufferController.setMediaSource(mediaSource, mediaInfo);
     }
 
     function getScheduleController() {
@@ -934,12 +952,25 @@ function StreamProcessor(config) {
         const representation = representationController && representationInfo ?
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-        let request = dashHandler.getNextSegmentRequestIdempotent(
+        return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
             representation
         );
+    }
 
-        return request;
+    function _onInitFragmentLoaded(e) {
+        if (!settings.get().streaming.enableManifestTimescaleMismatchFix) {
+            return;
+        }
+        const chunk = e.chunk;
+        const bytes = chunk.bytes;
+        const quality = chunk.quality;
+        const currentRepresentation = getRepresentationInfo(quality);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        if (currentRepresentation && voRepresentation) {
+            const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            voRepresentation.timescale = timescale;
+        }
     }
 
     function _onMediaFragmentLoaded(e) {
@@ -953,8 +984,24 @@ function StreamProcessor(config) {
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
         if (currentRepresentation && voRepresentation) {
-            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
+
+            let isoFile;
+
+            // Check for inband prft on media segment (if enabled)
+            if (settings.get().streaming.parseInbandPrft && e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                isoFile = isoFile ? isoFile : boxParser.parse(bytes);
+                const timescale = voRepresentation.timescale;
+                const prfts = _handleInbandPrfts(isoFile, timescale);
+                if (prfts && prfts.length) {
+                    eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
+                        { data: prfts },
+                        { streamId: streamInfo.id, mediaType: type }
+                    );    
+                }
+            }
+    
+            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
+            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
             if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
                 const request = fragmentModel.getRequests({
@@ -963,7 +1010,8 @@ function StreamProcessor(config) {
                     index: chunk.index
                 })[0];
 
-                const events = _handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+                isoFile = isoFile ? isoFile : boxParser.parse(bytes);
+                const events = _handleInbandEvents(isoFile, request, eventStreamMedia, eventStreamTrack);
                 eventBus.trigger(Events.INBAND_EVENTS,
                     { events: events },
                     { streamId: streamInfo.id }
@@ -972,7 +1020,48 @@ function StreamProcessor(config) {
         }
     }
 
-    function _handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+    function _handleInbandPrfts(isoFile, timescale) {
+        const prftBoxes = isoFile.getBoxes('prft');
+
+        const prfts = [];
+        prftBoxes.forEach(prft => {
+            prfts.push(_parsePrftBox(prft, timescale));
+        });
+
+        return prfts;
+    }
+
+    function _parsePrftBox(prft, timescale) {
+        // Get prft type according to box flags
+        let type = 'unknown';
+        switch (prft.flags) {
+            case 0:
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.ENCODER;
+                break;
+            case 16: 
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.APPLICATION;
+                break;
+            case 24: 
+                type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.CAPTURED;
+                break;
+            default:
+                break;
+        }
+
+        // Get NPT timestamp according to IETF RFC 5905, relative to 1/1/1900
+        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
+        ntpTimestamp = TimeUtils(context).getInstance().ntpToUTC(ntpTimestamp);
+
+        const mediaTime = (prft.media_time / timescale);
+
+        return {
+            type,
+            ntpTimestamp,
+            mediaTime
+        }
+    }
+
+    function _handleInbandEvents(isoFile, request, mediaInbandEvents, trackInbandEvents) {
         try {
             const eventStreams = {};
             const events = [];
@@ -983,7 +1072,6 @@ function StreamProcessor(config) {
                 eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
             }
 
-            const isoFile = BoxParser(context).getInstance().parse(data);
             const eventBoxes = isoFile.getBoxes('emsg');
 
             if (!eventBoxes || eventBoxes.length === 0) {
@@ -1173,6 +1261,7 @@ function StreamProcessor(config) {
         getType,
         isUpdating,
         getBufferController,
+        dischargePreBuffer,
         getFragmentModel,
         getScheduleController,
         getRepresentationController,

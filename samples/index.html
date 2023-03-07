@@ -28,12 +28,12 @@
         #tab-list {
             margin-bottom: 10px;
         }
-        
+
         .card-footer {
             border: none;
             background: #FFFFFF;
         }
-        
+
         .card-title > a {
             text-decoration: none;
         }
@@ -55,9 +55,12 @@
 
             <h2>Samples</h2>
 
-            <p class="lead"><a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"> dash.js </a> is a reference client implementation by the <a href="http://dashif.org" target="_blank">DASH Industry Forum</a> (DASH-IF) for the playback of MPEG-DASH via JavaScript
+            <p class="lead"><a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"> dash.js </a> is a
+                reference client implementation by the <a href="http://dashif.org" target="_blank">DASH Industry
+                    Forum</a> (DASH-IF) for the playback of MPEG-DASH via JavaScript
                 and compliant
-                MSE/EME platforms. This page provides a starting point with multiple samples to explore the various dash.js features and settings.</p>
+                MSE/EME platforms. This page provides a starting point with multiple samples to explore the various
+                dash.js features and settings.</p>
 
             <p class="lead">A reference UI encapsulating the main functionality of dash.js is available <a
                 target="_blank" href="dash-if-reference-player/index.html"> here </a>.
@@ -104,8 +107,8 @@
         <div class="card h-100 shadow-sm">
             <img class="card-img-top" src="">
             <div class="card-body">
-                <h5 class="card-title" ></h5>
-                <p class="card-text" ></p>
+                <h5 class="card-title"></h5>
+                <p class="card-text"></p>
             </div>
             <div class="card-footer">
                 <div class="d-flex justify-content-between align-items-center">
@@ -122,6 +125,8 @@
         $.getJSON('samples.json', function (json) {
             sampleData = json;
             drawSampleData();
+            selectSection();
+            registerCallbacks();
         });
     });
 
@@ -132,17 +137,38 @@
         });
     }
 
+    function selectSection() {
+        try {
+            var hash = decodeURI(window.location.hash);
+            var element = document.querySelector(hash + '-tab')
+            var tab = new bootstrap.Tab(element)
+            tab.show();
+        } catch (e) {
+            
+        }
+    }
+    
+    function registerCallbacks() {
+        var tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]')
+        tabEls.forEach(function (tabEl) {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                location.hash = event.target.attributes.href.nodeValue;
+            })    
+        })
+    }
+
     function drawSection(section) {
+        var idFromName = nameToId(section.section)
         var $tab = $('<li class="nav-item" role="presentation">\n' +
             '        <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#home"\n' +
             '                type="button" role="tab" aria-controls="home" aria-selected="true">Home\n' +
             '        </button>\n' +
             '    </li>');
         var $link = $tab.find('button');
-        $link.attr('id', nameToId(section.section) + '-tab');
-        $link.attr('data-bs-target', '#' + nameToId(section.section));
-        $link.attr('aria-controls', nameToId(section.section));
-        $link.attr('href', '#' + nameToId(section.section));
+        $link.attr('id', idFromName + '-tab');
+        $link.attr('data-bs-target', '#' + idFromName);
+        $link.attr('aria-controls', idFromName);
+        $link.attr('href', '#' + idFromName);
         $link.html(section.section);
         if (section.active) {
             $link.addClass('active');
@@ -152,9 +178,9 @@
         var $tabContainer = $('    <div class="tab-pane fade show" id="home" role="tabpanel" aria-labelledby="home-tab"></div>');
         var $tabContainerRow = $('<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-2"></div>');
 
-        $tabContainer.attr('id', nameToId(section.section));
-        $tabContainer.attr('aria-labelledby', nameToId(section.section) + '-tab');
-        $tabContainerRow.attr('id', nameToId(section.section) + '-tab-container-row');
+        $tabContainer.attr('id', idFromName);
+        $tabContainer.attr('aria-labelledby', idFromName + '-tab');
+        $tabContainerRow.attr('id', idFromName + '-tab-container-row');
 
         $($tabContainer).append($tabContainerRow);
         $('#tab-content').append($tabContainer);
@@ -172,15 +198,15 @@
             $card.find('p').html(sample.description);
             $card.find('a').attr('href', sample.href);
             $card.find('small').text(section.section);
-            
+
             var labels = '';
-            
-            if(sample.labels && sample.labels.length > 0) {
+
+            if (sample.labels && sample.labels.length > 0) {
                 sample.labels.forEach(function (label) {
                     labels += '<span class="badge bg-secondary me-1">' + label + '</span>';
                 })
             }
-            
+
             $card.find('span').append(labels);
 
             $tabContainerRow.append($card);

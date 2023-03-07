@@ -42,6 +42,7 @@
 
 .time-display{
     float:left;
+    min-width: 72px;
 }
 
 .duration-display{

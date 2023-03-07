@@ -4,14 +4,17 @@
     <meta charset="utf-8">
     <title>Low latency streaming - Testplayer</title>
 
-    <script src="../../../dist/dash.all.debug.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2/dist/chart.min.js"></script>
-
     <!-- Bootstrap core CSS -->
     <link href="../../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../../contrib/akamai/controlbar/controlbar.css">
     <link href="../../lib/main.css" rel="stylesheet">
     <link href="main.css" rel="stylesheet">
+
+    <script src="../../../dist/dash.all.debug.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2/dist/chart.min.js"></script>
+    <script src="../../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../lib/sweetalert2/sweetalert2.all.min.js"></script>
 
 </head>
 <body>
@@ -34,9 +37,13 @@
                     <div class="alert alert-warning mt-4" role="alert">
                         <ul>
                             <li>All the
-                                additional ABR rules defined in "ABR - Additional" will be automatically disabled for L2A-LL and
-                                LoL+. Both, L2A-LL and LoL+ are standalone rules.</li>
-                            <li>It is not possible to switch between the ABR rules dynamically. In order change the ABR rule reload the stream.</li>
+                                additional ABR rules defined in "ABR - Additional" will be automatically disabled for
+                                L2A-LL and
+                                LoL+. Both, L2A-LL and LoL+ are standalone rules.
+                            </li>
+                            <li>It is not possible to switch between the ABR rules dynamically. In order change the ABR
+                                rule reload the stream.
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -44,181 +51,169 @@
         </div>
         <div class="row mt-4">
             <div class="col-lg-12">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="p-5 border rounded-3">
-                            <h4>Settings</h4>
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>General</h6>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Target latency (sec)</span>
-                                        <input type="number" id="target-latency" class="form-control" value="3"
-                                               step="0.1">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Min drift (sec)</span>
-                                        <input id="min-drift" class="form-control" value="0.02" min="0" max="0.5"
-                                               step="0.01" type="number">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Max drift (sec)</span>
-                                        <input id="max-drift" class="form-control" value="0"
-                                               step="0.5" min="0" type="number">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Catch-up playback rate</span>
-                                        <input type="number" id="catchup-playback-rate" class="form-control" value="0.1"
-                                               step="0.01" max="0.5" min="0.0">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text"> Live catchup latency threshold (sec):</span>
-                                        <input type="number" class="form-control" value="60" min="0"
-                                               id="catchup-threshold">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6>ABR - General</h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="abr-general"
-                                               value="abrDynamic"
-                                               id="abrDynamic"
-                                               checked>
-                                        <label class="form-check-label" for="abrDynamic">
-                                            Dynamic
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="abr-general" value="abrBola"
-                                               id="abrBola">
-                                        <label class="form-check-label" for="abrBola">
-                                            BOLA
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" value="abrThroughput"
-                                               name="abr-general"
-                                               id="abrThroughput">
-                                        <label class="form-check-label" for="abrThroughput">
-                                            Throughput
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="abr-general" value="abrL2A"
-                                               id="abrL2A">
-                                        <label class="form-check-label" for="abrL2A">
-                                            L2A-LL
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="abr-general" value="abrLoLP"
-                                               id="abrLoLP">
-                                        <label class="form-check-label" for="abrLoLP">
-                                            LoL+
-                                        </label>
-                                    </div>
-                                    <h6 class="mt-4">ABR - Additional</h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="abr-additional-insufficient"
-                                               checked>
-                                        <label class="form-check-label" for="abr-additional-insufficient">
-                                            InsufficientBufferRule
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="abr-additional-switch"
-                                               checked>
-                                        <label class="form-check-label" for="abr-additional-switch">
-                                            SwitchHistoryRule
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="abr-additional-dropped"
-                                               checked>
-                                        <label class="form-check-label" for="abr-additional-dropped">
-                                            DroppedFramesRule
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="abr-additional-abandon">
-                                        <label class="form-check-label" for="abr-additional-abandon">
-                                            AbandonRequestRule
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6>Catchup mechanism</h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="catchup"
-                                               value="liveCatchupModeDefault" id="liveCatchupModeDefault"
-                                               checked>
-                                        <label class="form-check-label" for="liveCatchupModeDefault">
-                                            Default
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="catchup"
-                                               value="liveCatchupModeLoLP"
-                                               id="liveCatchupModeLoLP">
-                                        <label class="form-check-label" for="liveCatchupModeLoLP">
-                                            LoL+ based
-                                        </label>
-                                    </div>
-                                    <h6 class="mt-4">Throughput calculation</h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="throughput-calc"
-                                               value="abrFetchThroughputCalculationDownloadedData" id="abrFetchThroughputCalculationDownloadedData">
-                                        <label class="form-check-label" for="abrFetchThroughputCalculationDownloadedData">
-                                            data chunks
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="throughput-calc"
-                                               value="abrFetchThroughputCalculationMoofParsing" id="abrFetchThroughputCalculationMoofParsing"
-                                               checked>
-                                        <label class="form-check-label" for="abrFetchThroughputCalculationMoofParsing">
-                                            moof parsing
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="throughput-calc"
-                                               value="abrFetchThroughputCalculationAAST" id="abrFetchThroughputCalculationAAST">
-                                        <label class="form-check-label" for="abrFetchThroughputCalculationAAST">
-                                            AAST decisioning
-                                        </label>
-                                    </div>
-                                </div>
+                <div class="p-5 border rounded-3">
+                    <h4>Settings</h4>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>General</h6>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Target latency (sec)</span>
+                                <input type="number" id="target-latency" class="form-control" value="3"
+                                       step="0.5">
                             </div>
-                            <div class="row mt-4">
-                                <div class="col-md-6">
-                                    <button type="button" id="apply-settings-button" class="btn btn-success">Apply
-                                    </button>
-                                </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Max drift (sec)</span>
+                                <input id="max-drift" class="form-control" value="0"
+                                       step="0.5" min="0" type="number">
                             </div>
-                            <div class="row mt-4">
-                                <div class="col-lg-12">
-                                    <h4>Export settings</h4>
-                                    <hr>
-                                    <p>Click on "Generate settings URL" and copy/paste the URL below to automatically adjust the settings.</p>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <span class="input-group-text">Settings Url</span>
-                                        <input type="text" id="export-settings-url" class="form-control" >
-                                    </div>
-                                    <button type="button" id="export-settings-button" class="btn btn-warning">Generate
-                                        settings URL
-                                    </button>
-                                </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Maximum catch-up playback rate</span>
+                                <input type="number" id="max-catchup-playback-rate" class="form-control" value="0.1"
+                                       step="0.05" max="0.5" min="0.0">
                             </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Minimum catch-up playback rate</span>
+                                <input type="number" id="min-catchup-playback-rate" class="form-control" value="-0.1"
+                                       step="0.05" max="0.0" min="-0.5">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>ABR - General</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="abr-general"
+                                       value="abrDynamic"
+                                       id="abrDynamic"
+                                       checked>
+                                <label class="form-check-label" for="abrDynamic">
+                                    Dynamic
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="abr-general" value="abrBola"
+                                       id="abrBola">
+                                <label class="form-check-label" for="abrBola">
+                                    BOLA
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" value="abrThroughput"
+                                       name="abr-general"
+                                       id="abrThroughput">
+                                <label class="form-check-label" for="abrThroughput">
+                                    Throughput
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="abr-general" value="abrL2A"
+                                       id="abrL2A">
+                                <label class="form-check-label" for="abrL2A">
+                                    L2A-LL
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="abr-general" value="abrLoLP"
+                                       id="abrLoLP">
+                                <label class="form-check-label" for="abrLoLP">
+                                    LoL+
+                                </label>
+                            </div>
+                            <h6 class="mt-4">ABR - Additional</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-additional-insufficient"
+                                       checked>
+                                <label class="form-check-label" for="abr-additional-insufficient">
+                                    InsufficientBufferRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-additional-switch"
+                                       checked>
+                                <label class="form-check-label" for="abr-additional-switch">
+                                    SwitchHistoryRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-additional-dropped"
+                                       checked>
+                                <label class="form-check-label" for="abr-additional-dropped">
+                                    DroppedFramesRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-additional-abandon">
+                                <label class="form-check-label" for="abr-additional-abandon">
+                                    AbandonRequestRule
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Catchup mechanism</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup"
+                                       value="liveCatchupModeDefault" id="liveCatchupModeDefault"
+                                       checked>
+                                <label class="form-check-label" for="liveCatchupModeDefault">
+                                    Default
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup"
+                                       value="liveCatchupModeLoLP"
+                                       id="liveCatchupModeLoLP">
+                                <label class="form-check-label" for="liveCatchupModeLoLP">
+                                    LoL+ based
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="live-catchup-enabled"
+                                       checked>
+                                <label class="form-check-label" for="live-catchup-enabled">
+                                    Enabled
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Throughput calculation</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-calc"
+                                       value="abrFetchThroughputCalculationDownloadedData"
+                                       id="abrFetchThroughputCalculationDownloadedData">
+                                <label class="form-check-label"
+                                       for="abrFetchThroughputCalculationDownloadedData">
+                                    data chunks
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-calc"
+                                       value="abrFetchThroughputCalculationMoofParsing"
+                                       id="abrFetchThroughputCalculationMoofParsing"
+                                       checked>
+                                <label class="form-check-label" for="abrFetchThroughputCalculationMoofParsing">
+                                    moof parsing
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-calc"
+                                       value="abrFetchThroughputCalculationAAST"
+                                       id="abrFetchThroughputCalculationAAST">
+                                <label class="form-check-label" for="abrFetchThroughputCalculationAAST">
+                                    AAST decisioning
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <button type="button" id="apply-settings-button" class="btn btn-success">Apply
+                            </button>
+                            <button type="button" id="export-settings-button" class="btn btn-warning">Copy Settings URL
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row mt-2">
 
         </div>
-        <div class="row mt-2">
+        <div class="row mt-4">
             <div class="col-md-12">
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">Manifest URL</span>
@@ -232,8 +227,39 @@
             </div>
         </div>
         <div class="row mt-2">
-            <div class="col-md-7">
-                <video controls="true"></video>
+            <div class="col-md-7 dash-video-player">
+                <div id="videoContainer" class="videoContainer">
+                    <video></video>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                            <span class="icon-bitrate"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                        <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                            <span class="icon-tracks"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                            <span class="icon-caption"></span>
+                        </div>
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+                        <div class="seekContainer">
+                            <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-5">
                 <div class="p-5 border rounded-3 mt-1">
@@ -253,15 +279,9 @@
                             id="video-max-index"></span></div>
                         <div><span class="metric-value">Video Bitrate Downloading kbits/s: </span><span
                             id="video-bitrate"></span></div>
-                        <div><span class="metric-value">Min. drift: </span> <span
-                            id="mindrift-tag"></span></div>
                         <div><span class="metric-value"> Playback rate: </span><span
                             id="playbackrate-tag"></span>
                         </div>
-                        <div><span
-                            class="metric-value">Live catchup latency threshold: </span><span
-                            id="catchup-threshold-tag"></span></div>
-
                     </div>
                 </div>
             </div>
@@ -289,7 +309,7 @@
                 <div class="input-group input-group-sm mb-3 mt-2">
                     <span class="input-group-text">Number of data points</span>
                     <input type="number" id="chart-number-of-entries" class="form-control" value="30"
-                           step="1" >
+                           step="1">
                 </div>
                 <button type="button" id="chart-settings-button" class="btn btn-success">Apply
                 </button>

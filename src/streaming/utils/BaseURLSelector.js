@@ -37,23 +37,27 @@ import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
-import { checkParameterType } from '../utils/SupervisorTools';
+import {checkParameterType} from '../utils/SupervisorTools';
+import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
+import Settings from '../../core/Settings';
 
 function BaseURLSelector() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         serviceLocationBlacklistController,
         basicSelector,
         dvbSelector,
+        contentSteeringSelector,
         selector;
 
     function setup() {
         serviceLocationBlacklistController = BlacklistController(context).create({
-            updateEventName:        Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
-            addBlacklistEventName:    Events.SERVICE_LOCATION_BLACKLIST_ADD
+            updateEventName: Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            addBlacklistEventName: Events.SERVICE_LOCATION_BLACKLIST_ADD
         });
 
         basicSelector = BasicSelector(context).create({
@@ -64,12 +68,20 @@ function BaseURLSelector() {
             blacklistController: serviceLocationBlacklistController
         });
 
+        contentSteeringSelector = ContentSteeringSelector(context).create();
+        contentSteeringSelector.setConfig({
+            blacklistController: serviceLocationBlacklistController
+        })
+
         selector = basicSelector;
     }
 
     function setConfig(config) {
         if (config.selector) {
             selector = config.selector;
+        }
+        if (config.contentSteeringSelector) {
+            contentSteeringSelector = config.contentSteeringSelector;
         }
     }
 
@@ -82,17 +94,23 @@ function BaseURLSelector() {
         if (!data) {
             return;
         }
-        const baseUrls = data.baseUrls;
-        const selectedIdx = data.selectedIdx;
+
+        // Check if we got any instructions from the content steering element in the MPD or from the content steering server
+        if(settings.get().streaming.applyContentSteering) {
+            const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
+            if (!isNaN(steeringIndex) && steeringIndex !== -1) {
+                data.selectedIdx = steeringIndex;
+            }
+        }
 
         // Once a random selection has been carried out amongst a group of BaseURLs with the same
         // @priority attribute value, then that choice should be re-used if the selection needs to be made again
         // unless the blacklist has been modified or the available BaseURLs have changed.
-        if (!isNaN(selectedIdx)) {
-            return baseUrls[selectedIdx];
+        if (!isNaN(data.selectedIdx)) {
+            return data.baseUrls[data.selectedIdx];
         }
 
-        let selectedBaseUrl = selector.select(baseUrls);
+        let selectedBaseUrl = selector.select(data.baseUrls);
 
         if (!selectedBaseUrl) {
             eventBus.trigger(Events.URL_RESOLUTION_FAILED, {
@@ -107,7 +125,7 @@ function BaseURLSelector() {
             return;
         }
 
-        data.selectedIdx = baseUrls.indexOf(selectedBaseUrl);
+        data.selectedIdx = data.baseUrls.indexOf(selectedBaseUrl);
 
         return selectedBaseUrl;
     }

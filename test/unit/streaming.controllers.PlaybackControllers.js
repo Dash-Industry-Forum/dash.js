@@ -4,12 +4,12 @@ import EventBus from '../../src/core/EventBus';
 import Settings from '../../src/core/Settings';
 
 import VideoModelMock from './mocks/VideoModelMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import StreamMock from './mocks/StreamMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 import AdapterMock from './mocks/AdapterMock';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
 
 const expect = require('chai').expect;
 const context = {};
@@ -20,9 +20,9 @@ const eventBus = EventBus(context).getInstance();
 describe('PlaybackController', function () {
 
     let playbackController,
+        serviceDescriptionController,
         videoModelMock,
         dashMetricsMock,
-        mediaPlayerModelMock,
         streamMock,
         streamControllerMock,
         uriFragmentModelMock,
@@ -33,21 +33,21 @@ describe('PlaybackController', function () {
         settings = Settings(context).getInstance();
         videoModelMock = new VideoModelMock();
         dashMetricsMock = new DashMetricsMock();
-        mediaPlayerModelMock = new MediaPlayerModelMock({ settings });
         streamMock = new StreamMock();
         streamControllerMock = new StreamControllerMock();
         uriFragmentModelMock = new URIFragmentModelMock();
         adapterMock = new AdapterMock();
         playbackController = PlaybackController(context).getInstance();
+        serviceDescriptionController = ServiceDescriptionController(context).getInstance();
 
         playbackController.setConfig({
             videoModel: videoModelMock,
             dashMetrics: dashMetricsMock,
-            mediaPlayerModel: mediaPlayerModelMock,
             streamController: streamControllerMock,
             uriFragmentModel: uriFragmentModelMock,
             adapter: adapterMock,
-            settings: settings
+            serviceDescriptionController,
+            settings: settings,
         });
 
         streamControllerMock.initialize([streamMock]);
@@ -110,6 +110,7 @@ describe('PlaybackController', function () {
 
             beforeEach(function () {
                 settings.reset();
+                serviceDescriptionController.reset();
                 manifestInfo = {}
             })
 
@@ -131,6 +132,22 @@ describe('PlaybackController', function () {
                 const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
 
                 expect(liveDelay).to.equal(10);
+            })
+
+            it('should return live delay based on Service Description', function () {
+                let dummyManifestInfo = {
+                    serviceDescriptions: [{
+                        latency: {
+                            target: 5000,
+                            max: 8000,
+                            min: 3000
+                        }
+                    }]
+                }
+                serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(5);
             })
 
             it('should return live delay based on suggestedPresentationDelay', function () {
@@ -168,6 +185,8 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(13);
@@ -180,6 +199,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.be.NaN
@@ -193,6 +213,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
 
                 expect(liveDelay).to.equal(20);
@@ -206,6 +227,7 @@ describe('PlaybackController', function () {
                         target: 13000
                     }
                 }]
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
                 const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
 
                 expect(liveDelay).to.equal(10);
@@ -234,17 +256,6 @@ describe('PlaybackController', function () {
             it('should seek the video', function () {
                 playbackController.seek(10);
                 expect(videoModelMock.time).to.equal(10);
-            });
-
-            it('should seek and trigger Events.PLAYBACK_SEEK_ASKED event', function (done) {
-
-                let onSeekedAsked = function () {
-                    eventBus.off(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked);
-                    done();
-                };
-                eventBus.on(Events.PLAYBACK_SEEK_ASKED, onSeekedAsked, this);
-
-                playbackController.seek(10);
             });
 
             it('should return if video is seeking', function () {

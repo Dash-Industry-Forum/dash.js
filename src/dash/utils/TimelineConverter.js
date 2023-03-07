@@ -331,10 +331,10 @@ function TimelineConverter() {
             if (segment.hasOwnProperty('r')) {
                 repeat = segment.r;
             }
-            d += (segment.d / timescale) * (1 + repeat);
+            d += segment.d * (1 + repeat);
         }
 
-        range.end = range.start + d;
+        range.end = calcPresentationTimeFromMediaTime((segments[0].t + d) / timescale, voRepresentation);
 
         return range;
     }

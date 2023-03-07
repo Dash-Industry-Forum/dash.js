@@ -46,6 +46,7 @@ class CoreEvents extends EventsBase {
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
         this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
+        this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.INBAND_EVENTS = 'inbandEvents';
@@ -81,6 +82,11 @@ class CoreEvents extends EventsBase {
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
         this.SEEK_TARGET = 'seekTarget';
+        this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+        this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+        this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+        this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
+        this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
     }
 }
 

@@ -2,6 +2,7 @@ import CapabilitiesFilter from '../../src/streaming/utils/CapabilitiesFilter';
 import AdapterMock from './mocks/AdapterMock';
 import CapabilitiesMock from './mocks/CapabilitiesMock';
 import Settings from '../../src/core/Settings';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
 const expect = require('chai').expect;
 
@@ -9,6 +10,7 @@ let adapterMock;
 let capabilitiesFilter;
 let settings;
 let capabilitiesMock;
+let customParametersModel = CustomParametersModel({}).getInstance();
 
 describe('CapabilitiesFilter', function () {
     beforeEach(function () {
@@ -19,12 +21,15 @@ describe('CapabilitiesFilter', function () {
 
         settings = Settings({}).getInstance();
         capabilitiesMock = new CapabilitiesMock();
+        customParametersModel.reset();
 
         capabilitiesFilter = CapabilitiesFilter({}).getInstance();
+
         capabilitiesFilter.setConfig({
             adapter: adapterMock,
             capabilities: capabilitiesMock,
-            settings: settings
+            settings: settings,
+            customParametersModel
         });
     });
 
@@ -357,9 +362,9 @@ describe('CapabilitiesFilter', function () {
                     }]
                 };
 
-                capabilitiesFilter.setCustomCapabilitiesFilters([function (representation) {
+                customParametersModel.registerCustomCapabilitiesFilter(function (representation) {
                     return representation.height <= 720;
-                }]);
+                });
 
                 capabilitiesFilter.filterUnsupportedFeatures(manifest)
                     .then(() => {

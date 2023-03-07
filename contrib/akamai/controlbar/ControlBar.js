@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
+/**
  * @module ControlBar
  * @param {object=} dashjsMediaPlayer - dashjs reference
  * @param {boolean=} displayUTCTimeCodes - true if time is displayed in UTC format, false otherwise
@@ -51,7 +51,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var lastVolumeLevel = NaN;
     var seeking = false;
     var videoControllerVisibleTimeout = 0;
-    var liveThresholdSecs = 12;
+    var liveThresholdSecs = 1;
     var textTrackList = {};
     var forceQuality = false;
     var video,
@@ -359,7 +359,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var seekLive = function () {
-        self.player.seek(self.player.duration());
+        self.player.seekToOriginalLive();
     };
 
     //************************************************************************************
@@ -384,7 +384,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
         if (self.player.isDynamic() && self.player.duration()) {
             var liveDelay = self.player.duration() - value;
-            if (liveDelay < liveThresholdSecs) {
+            var targetLiveDelay = self.player.getTargetLiveDelay();
+
+            if (liveDelay < targetLiveDelay + liveThresholdSecs) {
                 durationDisplay.classList.add('live');
             } else {
                 durationDisplay.classList.remove('live');
@@ -428,7 +430,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var enterFullscreen = function () {
         var element = videoContainer || video;
-        if(!document.fullscreenElement){
+        if (!document.fullscreenElement) {
             if (element.requestFullscreen) {
                 element.requestFullscreen();
             } else if (element.msRequestFullscreen) {
@@ -464,7 +466,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
 
             if (document.exitFullscreen) {
-            document.exitFullscreen();
+                document.exitFullscreen();
             } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
             } else if (document.msExitFullscreen) {

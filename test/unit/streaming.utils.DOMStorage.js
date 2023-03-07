@@ -30,7 +30,7 @@ describe('DOMStorage', function () {
 
     describe('Well initialized and window is unknown', function () {
         beforeEach(function () {
-            domStorage = DOMStorage(context).getInstance({settings: settings});
+            domStorage = DOMStorage(context).getInstance({ settings: settings });
         });
 
         afterEach(function () {
@@ -43,27 +43,15 @@ describe('DOMStorage', function () {
             expect(savedBitrateSettings).to.be.NaN; // jshint ignore:line
         });
 
-        it('should return null when getSavedMediaSettings is called and config object has been set properly', function () {
+        it('should return undefined when getSavedMediaSettings is called and config object has been set properly', function () {
             const savedMediaSettings = domStorage.getSavedMediaSettings('video');
-            expect(savedMediaSettings).to.be.null; // jshint ignore:line
+            expect(savedMediaSettings).to.be.undefined; // jshint ignore:line
         });
     });
 
     describe('Well initialized and window is defined', function () {
         beforeEach(function () {
-            if (typeof window === 'undefined') {
-                global.window = {
-                    localStorage: {setItem() {},
-                                   removeItem() {},
-                                   getItem() {return null;}}
-                };
-
-                global.localStorage = {setItem() {},
-                    removeItem() {},
-                    getItem() {return null;}
-                };
-            }
-            domStorage = DOMStorage(context).getInstance({settings: settings});
+            domStorage = DOMStorage(context).getInstance({ settings: settings });
         });
 
         afterEach(function () {

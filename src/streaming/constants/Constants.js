@@ -109,6 +109,13 @@ class Constants {
         this.WVTT = 'wvtt';
 
         /**
+         *  @constant {string} Content Steering
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CONTENT_STEERING = 'contentSteering';
+
+        /**
          *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
          *  @memberof Constants#
          *  @static
@@ -279,8 +286,8 @@ class Constants {
         this.UTF8 = 'utf-8';
         this.SCHEME_ID_URI = 'schemeIdUri';
         this.START_TIME = 'starttime';
-        this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
-        this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+        this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
+        this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
         this.XML = 'XML';
         this.ARRAY_BUFFER = 'ArrayBuffer';
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
@@ -292,6 +299,10 @@ class Constants {
             HAVE_FUTURE_DATA: 3,
             HAVE_ENOUGH_DATA: 4
         };
+        this.FILE_LOADER_TYPES = {
+            FETCH: 'fetch_loader',
+            XHR: 'xhr_loader'
+        }
     }
 
     constructor() {

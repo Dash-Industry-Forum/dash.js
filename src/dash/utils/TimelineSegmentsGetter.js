@@ -113,7 +113,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const list = base.SegmentURL_asArray;
 
         let time = 0;
-        let scaledTime = 0;
         let relativeIdx = -1;
 
         let fragments,
@@ -139,27 +138,25 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // For a repeated S element, t belongs only to the first segment
             if (frag.hasOwnProperty('t')) {
                 time = frag.t;
-                scaledTime = time / fTimescale;
             }
 
             // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
                 const nextFrag = fragments[i + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, time / fTimescale);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
                 relativeIdx++;
 
-                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, relativeIdx, i);
+                breakIterator = iterFunc(time, base, list, frag, fTimescale, relativeIdx, i);
 
                 if (breakIterator) {
                     representation.segmentDuration = frag.d / fTimescale;
                 }
 
                 time += frag.d;
-                scaledTime = time / fTimescale;
             }
         }
     }
@@ -201,7 +198,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         let found = false;
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
+        iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
             if (found || lastSegmentTime < 0) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
@@ -224,8 +221,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     frag.tManifest);
 
                 return true;
-            } else if (scaledTime >= lastSegmentTime - frag.d * 0.5 / fTimescale) { // same logic, if deviation is
-                // 50% of segment duration, segment is found if scaledTime is greater than or equal to (startTime of previous segment - half of the previous segment duration)
+            } else if (time >= (lastSegmentTime * fTimescale) - (frag.d * 0.5)) { // same logic, if deviation is
+                // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
                 found = true;
             }
 
@@ -249,11 +246,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
+        iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
-            if ((requiredMediaTime < (scaledTime + (frag.d / fTimescale))) && requiredMediaTime >= scaledTime) {
+            const scaledMediaTime = precisionRound(requiredMediaTime * fTimescale);
+            if (scaledMediaTime < (time + frag.d) && scaledMediaTime >= time) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
 
@@ -283,6 +281,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return segment;
     }
 
+    function precisionRound(number) {
+        return parseFloat(number.toPrecision(15));
+    }
 
     instance = {
         getSegmentByIndex,

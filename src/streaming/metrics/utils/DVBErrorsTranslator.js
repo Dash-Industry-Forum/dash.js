@@ -77,8 +77,8 @@ function DVBErrorsTranslator(config) {
 
     function onServiceLocationChanged(e) {
         report({
-            errorcode:          DVBErrors.BASE_URL_CHANGED,
-            servicelocation:    e.entry
+            errorcode: DVBErrors.BASE_URL_CHANGED,
+            servicelocation: e.entry
         });
     }
 
@@ -90,26 +90,26 @@ function DVBErrorsTranslator(config) {
 
     function handleHttpMetric(vo) {
         if ((vo.responsecode === 0) ||      // connection failure - unknown
-                (vo.responsecode == null) || // Generated on .catch() and when uninitialized
-                (vo.responsecode >= 400) || // HTTP error status code
-                (vo.responsecode < 100) ||  // unknown status codes
-                (vo.responsecode >= 600)) { // unknown status codes
+            (vo.responsecode == null) || // Generated on .catch() and when uninitialised
+            (vo.responsecode >= 400) || // HTTP error status code
+            (vo.responsecode < 100) ||  // unknown status codes
+            (vo.responsecode >= 600)) { // unknown status codes
             report({
-                errorcode:          vo.responsecode || DVBErrors.CONNECTION_ERROR,
-                url:                vo.url,
-                terror:             vo.tresponse,
-                servicelocation:    vo._serviceLocation
+                errorcode: vo.responsecode || DVBErrors.CONNECTION_ERROR,
+                url: vo.url,
+                terror: vo.tresponse,
+                servicelocation: vo._serviceLocation
             });
         }
     }
 
     function onMetricEvent(e) {
         switch (e.metric) {
-        case metricsConstants.HTTP_REQUEST:
-            handleHttpMetric(e.value);
-            break;
-        default:
-            break;
+            case metricsConstants.HTTP_REQUEST:
+                handleHttpMetric(e.value);
+                break;
+            default:
+                break;
         }
     }
 

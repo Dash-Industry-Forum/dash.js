@@ -1,10 +1,12 @@
 version: 2.1
+orbs:
+    browser-tools: circleci/browser-tools@1.4.1
 
 executors:
   dashjs-executor:
     working_directory: ~/repo
     docker:
-      - image: cimg/node:10.20.1
+      - image: cimg/node:16.18.1
 
 commands:
     dependencies_setup:
@@ -47,6 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
+            - browser-tools/install-browser-tools
             - run:
                 name: Build and run unit tests
                 command: |
@@ -69,14 +72,14 @@ commands:
             protocol:
                 default: "https"
                 type: string
-            streams:
-                default: "all"
+            groupname:
+                default: ""
                 type: string
         steps:
             - run:
-                name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.streams>>
+                name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --streams="<<parameters.streams>>"
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
 jobs:
     build-and-unit-test:
         executor: dashjs-executor
@@ -84,14 +87,6 @@ jobs:
             - checkout
             - dependencies_setup
             - build_unit_test_steps
-            - deploy:
-                name: Deploy
-                command: |
-                    if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
-                        node deploy.js --host=$DEPLOY_HOST --user=$DEPLOY_USER --password=$DEPLOY_PASSWORD
-                    else
-                        echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
-                    fi
 
     merge-build-and-unit-test:
         executor: dashjs-executor
@@ -129,11 +124,11 @@ jobs:
             - run:
                 name: Run functional tests for one vector (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
             - run:
                 name: Run functional tests for smoke vectors (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             - store_test_results:
                 path: test/functional/reports
 
@@ -142,11 +137,11 @@ jobs:
         steps:
             - functional_steps
             - run_test_suite:
-                streams: VOD (Static MPD)
+                groupname: VOD (Static MPD)
             - run_test_suite:
-                streams: LIVE (Dynamic MPD)
+                groupname: LIVE (Dynamic MPD)
             - run_test_suite:
-                streams: Live Low Latency
+                groupname: Live Low Latency
             - store_test_results:
                 path: test/functional/reports
 
@@ -155,9 +150,9 @@ jobs:
         steps:
             - functional_steps
             - run_test_suite:
-                streams: DRM (modern)
+                groupname: DRM (modern)
             - run_test_suite:
-                streams: DRM Content (conservative/legacy)
+                groupname: DRM Content (conservative/legacy)
             - store_test_results:
                 path: test/functional/reports
 
@@ -166,13 +161,13 @@ jobs:
         steps:
             - functional_steps
             - run_test_suite:
-                streams: Subtitles and Captions
+                groupname: Subtitles and Captions
             - run_test_suite:
-                streams: Thumbnails
+                groupname: Thumbnails
             - run_test_suite:
-                streams: Audio-only
+                groupname: Audio-only
             - run_test_suite:
-                streams: Smooth Streaming
+                groupname: Smooth Streaming
             
             - store_test_results:
                 path: test/functional/reports
@@ -205,7 +200,7 @@ workflows:
     scheduled-workflow:
         triggers:
             - schedule:
-                cron: "0 0 * * 0"
+                cron: "0 0 * * 0,3"
                 filters:
                     branches:
                         only:

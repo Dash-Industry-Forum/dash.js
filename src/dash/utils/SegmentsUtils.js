@@ -129,8 +129,7 @@ export function replaceTokenForTemplate(url, token, value) {
     }
 }
 
-function getSegment(representation, duration, presentationStartTime, mediaStartTime,
-                    timelineConverter, presentationEndTime, isDynamic, index) {
+function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
     let seg = new Segment();
 
     seg.representation = representation;

@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
+import Constants from '../constants/Constants';
 
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 10;
@@ -131,7 +132,7 @@ function GapController() {
      */
     function _onBufferReplacementStarted(e) {
         try {
-            if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
+            if (e.streamId !== streamController.getActiveStreamInfo().id || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
                 return;
             }
 
@@ -250,6 +251,22 @@ function GapController() {
     }
 
     /**
+     * Check if the currentTime exist within the buffered range
+     * @param {object} ranges
+     * @param {number} currentTime
+     * @private
+     * @return {boolean}
+     */
+    function _isTimeBuffered(ranges, currentTime) {
+        for (let i = 0, len = ranges.length; i < len; i++) {
+            if (currentTime >= ranges.start(i) && currentTime <= ranges.end(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Starts the interval that checks for gaps
      * @private
      */
@@ -289,6 +306,8 @@ function GapController() {
      * @private
      */
     function _jumpGap(currentTime, playbackStalled = false) {
+        const enableStallFix = settings.get().streaming.gaps.enableStallFix;
+        const stallSeek = settings.get().streaming.gaps.stallSeek;
         const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
         const ranges = videoModel.getBufferRange();
@@ -313,6 +332,17 @@ function GapController() {
         if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
             seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
+        }
+
+        if (enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) && _isTimeBuffered(ranges, currentTime)) {
+            if (stallSeek === 0) {
+                logger.warn(`Toggle play pause to break stall`);
+                videoModel.pause();
+                videoModel.play();
+            } else {
+                logger.warn(`Jumping ${stallSeek}s to break stall`);
+                seekToPosition = currentTime + stallSeek;
+            }
         }
 
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime && !jumpTimeoutHandler) {

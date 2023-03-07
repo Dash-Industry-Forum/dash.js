@@ -31,7 +31,7 @@
             var player = dashjs.MediaPlayer().create();
             player.setProtectionData({
                 'com.widevine.alpha': {
-                    serverURL: 'https://widevine-proxy.appspot.com/proxy?video_id=&provider='
+                    serverURL: 'https://cwip-shaka-proxy.appspot.com/no_auth'
                 }
             });
             player.initialize(videoElement, url, true);

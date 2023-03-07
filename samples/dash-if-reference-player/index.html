@@ -131,12 +131,12 @@
                             ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
-                    <!-- Testbutton -->
+                <!-- Testbutton -->
                     <button class="btn btn-default" type="button" ng-click="copyQueryUrl(); copyNotificationShow()">Copy Settings URL</button>
                 </span>
         </div>
         <div id='copyNotificationPopup' class='copyPopup'>
-            <div id='copyPopupContent' class='copyPopupContent'> URL Copied! </div>
+            <div id='copyPopupContent' class='copyPopupContent'> URL Copied!</div>
         </div>
     </div>
 
@@ -189,36 +189,32 @@
                     Jump Small Gaps
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="Enable low latency mode">
-                    <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected"
-                           ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
-                    Low latency mode
-                </label>             
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="Enable low latency mode by MPD attribute 'availabilityTimeComplete' ">
-                    <input type="checkbox" id="lowLatencyModeEnabledByManifestCB" ng-model="lowLatencyEnabledByManifest"
-                           ng-change="toggleLowLatencyByManifestMode()" ng-checked="lowLatencyEnabledByManifest">
-                    Enable low latency mode by MPD
-                </label>
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable catchup mode for non low latency streams">
                     <input type="checkbox" id="liveCatchupCB" ng-model="liveCatchupEnabled"
                            ng-change="toggleLiveCatchupEnabled()" ng-checked="liveCatchupEnabled">
                     Live catchup
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Use the ContentSteering information from the MPD if enabled">
+                    <input type="checkbox" id="applyContentSteering" ng-model="applyContentSteering"
+                           ng-change="toggleApplyContentSteering()" ng-checked="applyContentSteering">
+                   Apply ContentSteering
                 </label>
                 <div class="sub-options-item">
                     <div class="sub-options-item-title">Catchup mechanism</div>
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Default catchup mechanism to keep the desired live latency.">
-                            <input type="radio" id="liveCatchupModeDefault" autocomplete="off" ng-model="liveCatchupMode"
+                            <input type="radio" id="liveCatchupModeDefault" autocomplete="off"
+                                   ng-model="liveCatchupMode"
                                    name="catchupMode" value="liveCatchupModeDefault"
                                    ng-click="changeLiveCatchupMode('liveCatchupModeDefault')">
                             Default
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="LoL+ based catchup mechanism to keep the desired live latency.">
-                            <input type="radio" id="liveCatchupModeLoLP" autocomplete="off" ng-model="liveCatchupMode" name="catchupMode"
+                            <input type="radio" id="liveCatchupModeLoLP" autocomplete="off" ng-model="liveCatchupMode"
+                                   name="catchupMode"
                                    ng-click="changeLiveCatchupMode('liveCatchupModeLoLP')" value="liveCatchupModeLoLP">
                             LoL+ based
                         </label>
@@ -259,19 +255,22 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Dynamically switch between BOLA and Throughput strategies.">
-                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-model="ABRStrategy"
+                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked"
+                                   ng-model="ABRStrategy"
                                    ng-click="changeABRStrategy('abrDynamic')" value="abrDynamic">
                             ABR Strategy: Dynamic
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate based on buffer level.">
-                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrBola')" value="abrDynamic">
+                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy"
+                                   ng-model="ABRStrategy"
+                                   ng-click="changeABRStrategy('abrBola')" value="abrBola">
                             ABR Strategy: BOLA
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate based on recent throughput.">
-                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy"
+                                   ng-model="ABRStrategy"
                                    ng-click="changeABRStrategy('abrThroughput')" value="abrThroughput">
                             ABR Strategy: Throughput
                         </label>
@@ -307,13 +306,15 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate using the L2A algorithm.">
-                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy"
+                                   ng-model="ABRStrategy"
                                    ng-click="changeABRStrategy('abrL2A')" value="abrL2A">
                             ABR Strategy: L2A-LL
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Choose bitrate using the LoL+ algorithm.">
-                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy" ng-model="ABRStrategy"
+                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy"
+                                   ng-model="ABRStrategy"
                                    ng-click="changeABRStrategy('abrLoLP')" value="abrLoLP">
                             ABR Strategy: LoL+
                         </label>
@@ -324,24 +325,29 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Default fetch throughput calculation for low latency streaming based on downloaded data chunks.">
-                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off" ng-model="abrThroughputCalculationMode"
-                                    name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationDownloadedData"
+                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off"
+                                   ng-model="abrThroughputCalculationMode"
+                                   name="abrFetchThroughputCalculation"
+                                   value="abrFetchThroughputCalculationDownloadedData"
                                    ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationDownloadedData')">
                             Data chunks
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="LoL+ fetch throughput calculation for low latency streaming based on moof parsing.">
-                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off" ng-model="abrThroughputCalculationMode"
-                                   checked="checked" name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationMoofParsing"
+                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off"
+                                   ng-model="abrThroughputCalculationMode"
+                                   checked="checked" name="abrFetchThroughputCalculation"
+                                   value="abrFetchThroughputCalculationMoofParsing"
                                    ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing')">
                             moof parsing
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
-                            title="Further approach for measurement and estimation (FAME) for fetch throughput calculation for low latency streaming based on AAST decisioning / availability of chunk and optimistic estimation.">
-                            <input type="radio" id="abrFetchThroughputCalculationAAST" autocomplete="off" ng-model="abrThroughputCalculationMode"
-                                name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationAAST"
-                                ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationAAST')">
-                           AST decisioning
+                               title="Further approach for measurement and estimation (FAME) for fetch throughput calculation for low latency streaming based on AAST decisioning / availability of chunk and optimistic estimation.">
+                            <input type="radio" id="abrFetchThroughputCalculationAAST" autocomplete="off"
+                                   ng-model="abrThroughputCalculationMode"
+                                   name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationAAST"
+                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationAAST')">
+                            AST decisioning
                         </label>
                     </div>
                 </div>
@@ -612,12 +618,14 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Use KID=Key to specify Clearkey DRM.">
-                            <input type="radio" id="kidKey" autocomplete="off" name="inputMode" ng-model="drmClearkey.inputMode" value="kidKey">
+                            <input type="radio" id="kidKey" autocomplete="off" name="inputMode"
+                                   ng-model="drmClearkey.inputMode" value="kidKey">
                             KID=KEY
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
                                title="Use Licenseserver-URL to specify Clearkey DRM">
-                            <input type="radio" id="licenseServer" autocomplete="off" name="inputMode" ng-model="drmClearkey.inputMode" value="licenseServer">
+                            <input type="radio" id="licenseServer" autocomplete="off" name="inputMode"
+                                   ng-model="drmClearkey.inputMode" value="licenseServer">
                             License Server
                         </label>
                     </div>
@@ -627,7 +635,8 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="DRM Today">
-                            <input type="checkbox" id="drmTodayServer" ng-model="drmToday" autocomplete="off" name="inputMode">
+                            <input type="checkbox" id="drmTodayServer" ng-model="drmToday" autocomplete="off"
+                                   name="inputMode">
                             DRM Today
                         </label>
                     </div>
@@ -638,9 +647,11 @@
             <div class="options-item-title">Live delay</div>
             <div class="options-item-body">
                 <label class="options-label">Initial Live delay:</label>
-                <input type="text" class="form-control" placeholder="value seconds" ng-model="initialLiveDelay" ng-change="updateInitialLiveDelay()">
+                <input type="text" class="form-control" placeholder="value seconds" ng-model="initialLiveDelay"
+                       ng-change="updateInitialLiveDelay()">
                 <label class="options-label">Initial LiveDelayFragmentCount:</label>
-                <input type="text" class="form-control" placeholder="value number" ng-model="liveDelayFragmentCount" ng-change="updateLiveDelayFragmentCount()">
+                <input type="text" class="form-control" placeholder="value number" ng-model="liveDelayFragmentCount"
+                       ng-change="updateLiveDelayFragmentCount()">
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Use latency targets defined in ServiceDescription elements">
                     <input type="checkbox" id="applyServiceDescription" ng-model="applyServiceDescription"
@@ -659,11 +670,14 @@
             <div class="options-item-title">Initial Settings</div>
             <div class="options-item-body">
                 <label class="options-label">Initial bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate" ng-change="updateInitialBitrateVideo()">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate"
+                       ng-change="updateInitialBitrateVideo()">
                 <label class="options-label">Minimum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate" ng-change="updateMinimumBitrateVideo()">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate"
+                       ng-change="updateMinimumBitrateVideo()">
                 <label class="options-label">Maximum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate" ng-change="updateMaximumBitrateVideo()">
+                <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate"
+                       ng-change="updateMaximumBitrateVideo()">
                 <label class="options-label">Audio:</label>
                 <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'"
                        ng-model="initialSettings.audio" ng-change="updateInitialLanguageAudio()">
@@ -677,12 +691,14 @@
                        ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable subtitle on loading text">
-                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled" ng-change="toggleText()">
+                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled"
+                           ng-change="toggleText()">
                     Enable Text At Loading
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Force text streaming">
-                    <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming" ng-change="toggleForcedTextStreaming()">
+                    <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming"
+                           ng-change="toggleForcedTextStreaming()">
                     Force Text Streaming
                 </label>
 
@@ -694,26 +710,32 @@
                 <label class="options-label">Audio:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                    <input type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio" ng-model='audioTrackSwitchMode'
-                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')" value="alwaysReplace">
+                    <input type="radio" id="always-replace-audio" autocomplete="off" name="track-switch-audio"
+                           ng-model='audioTrackSwitchMode'
+                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'audio')"
+                           value="alwaysReplace">
                     always replace
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                    <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio" ng-model="audioTrackSwitchMode"
+                    <input type="radio" id="never-replace-audio" autocomplete="off" name="track-switch-audio"
+                           ng-model="audioTrackSwitchMode"
                            ng-click="changeTrackSwitchMode('neverReplace', 'audio')" value="neverReplace">
                     never replace
                 </label>
                 <label class="options-label">Video:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is cleared">
-                    <input type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video" ng-model="videoTrackSwitchMode"
-                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')" value="alwaysReplace">
+                    <input type="radio" id="always-replace-video" autocomplete="off" name="track-switch-video"
+                           ng-model="videoTrackSwitchMode"
+                           checked="checked" ng-click="changeTrackSwitchMode('alwaysReplace', 'video')"
+                           value="alwaysReplace">
                     always replace
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="When a track is switched, the portion of the buffer that contains old track data is NOT cleared">
-                    <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video" ng-model="videoTrackSwitchMode"
+                    <input type="radio" id="never-replace-video" autocomplete="off" name="track-switch-video"
+                           ng-model="videoTrackSwitchMode"
                            ng-click="changeTrackSwitchMode('neverReplace', 'video')" value="neverReplace">
                     never replace
                 </label>
@@ -725,37 +747,43 @@
                 <label class="options-label">Log Level:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Don't write any log message in browser console">
-                    <input type="radio" id="log-none" value="none" autocomplete="off" name="log-level" ng-model="currentLogLevel"
+                    <input type="radio" id="log-none" value="none" autocomplete="off" name="log-level"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     NONE
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_FATAL">
-                    <input type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level" ng-model="currentLogLevel"
+                    <input type="radio" id="log-fatal" value="fatal" autocomplete="off" name="log-level"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     FATAL
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_ERROR">
-                    <input type="radio" id="log-error" value="error" autocomplete="off" name="log-level" ng-model="currentLogLevel"
+                    <input type="radio" id="log-error" value="error" autocomplete="off" name="log-level"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     ERROR
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_WARNING">
-                    <input type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level" ng-model="currentLogLevel"
+                    <input type="radio" id="log-warning" value="warning" autocomplete="off" name="log-level"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     WARNING
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_INFO">
-                    <input type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked" ng-model="currentLogLevel"
+                    <input type="radio" id="log-info" value="info" autocomplete="off" name="log-level" checked="checked"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     INFO
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Sets log level of to LOG_LEVEL_DEBUG">
-                    <input type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level" ng-model="currentLogLevel"
+                    <input type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level"
+                           ng-model="currentLogLevel"
                            ng-click="setLogLevel()">
                     DEBUG
                 </label>
@@ -771,30 +799,60 @@
                     Enable CMCD Reporting
                 </label>
                 <label class="options-label">Session ID:</label>
-                <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId" ng-change="updateCmcdSessionId()">
+                <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId"
+                       ng-change="updateCmcdSessionId()">
                 <label class="options-label">Content ID:</label>
-                <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId" ng-change="updateCmcdContentId()">
+                <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId"
+                       ng-change="updateCmcdContentId()">
                 <label class="options-label" data-toggle="tooltip" data-placement="right"
                        title="A static value to be used as RTP parameter">Requested maximum throughput (rtp):</label>
-                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp" ng-change="updateCmcdRtp()">
+                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp"
+                       ng-change="updateCmcdRtp()">
                 <label class="options-label" data-toggle="tooltip" data-placement="right"
                        title="This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor. If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.">RTP
                     safety factor:</label>
-                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor" ng-change="updateCmcdRtpSafetyFactor()">
+                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor"
+                       ng-change="updateCmcdRtpSafetyFactor()">
                 <label class="options-label" title="Specifies the CMCD data transition mode">Transition Mode:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Send the CMCD metrics via query parameter">
-                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off" ng-model="cmcdMode"
+                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off"
+                           ng-model="cmcdMode"
                            name="cmcd-mode"
                            ng-click="setCmcdMode()">
                     Query
                 </label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Send the CMCD metrics via custom HTTP header">
-                    <input type="radio" id="cmcd-header" value="header" autocomplete="off" name="cmcd-mode" ng-model="cmcdMode"
+                    <input type="radio" id="cmcd-header" value="header" autocomplete="off" name="cmcd-mode"
+                           ng-model="cmcdMode"
                            ng-click="setCmcdMode()">
                     Header
                 </label>
+                <label class="options-label" data-toggle="tooltip" title="List of enabled cmcd keys for http headers">Enabled
+                    Header Keys</label>
+                <input type="text" class="form-control" placeholder="e.g. 'br,d,ot,...'" ng-model="cmcdEnabledKeys"
+                       ng-change="updateCmcdEnabledKeys()">
+            </div>
+        </div>
+        <div class="options-item">
+            <div class="options-item-title">CMSD</div>
+            <div class="options-item-body">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables parsing of CMSD response header parameters">
+                    <input type="checkbox" ng-model="cmsdEnabled" ng-change="toggleCmsdEnabled()"
+                           ng-checked="cmsdEnabled">
+                    Enable CMSD Parsing
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Apply maximum suggested bitrate from CMSD response headers">
+                    <input type="checkbox" id="cmsdApplyMb" ng-model="cmsdApplyMb"
+                           ng-change="toggleCmsdApplyMb()" ng-checked="cmsdApplyMb">
+                    Apply maximum suggested bitrate
+                </label>
+                <label class="options-label">Etp weight ratio:</label>
+                <input type="text" class="form-control" placeholder="weight ratio" ng-model="cmsdEtpWeightRatio"
+                       ng-change="updateCmsdEtpWeightRatio()">
             </div>
         </div>
 
@@ -858,12 +916,13 @@
         <!-- STATS TAB CONTENT -->
         <div class="col-md-3 tabs-section">
             <div class="bs-callout bs-callout-danger" id="http-warning-container" style="display: none;">
-                    <span id="http-warning-text"></span>
+                <span id="http-warning-text"></span>
             </div>
-            <div class="bs-callout bs-callout-success">
-                <h5><span class="label label-success" style="margin-right:3px">New</span>Export settings</h5>
-                Try out our new "export settings" feature and share your current dash.js settings and DRM parameters easily via URL query parameters. 
-                Click on "Copy Settings URL" on the top right and paste the URL in the address bar of your browser.
+            <div class="bs-callout bs-callout-warning">
+                <h5><span class="label label-warning" style="margin-right:3px">Updated</span>Export settings</h5>
+                Our export settings feature creates shorter URLs now.
+                Click on "Copy Settings URL" on the top right and paste the URL in the address bar of your browser. The
+                current settings are compared to the default settings and the difference is stored using query parameters.
             </div>
             <div class="bs-callout bs-callout-information">
                 <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
@@ -956,6 +1015,22 @@
                                        title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio
                                     (min|avg|max) :</label> {{videoRatio}}
                             </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="mtpCB" type="checkbox"
+                                       ng-model="chartState.video.mtp.selected"
+                                       ng-change="enableChartByName('mtp', 'video')">
+                                <label class="text-primary" for="mtpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="etpCB" type="checkbox"
+                                       ng-model="chartState.video.etp.selected"
+                                       ng-change="enableChartByName('etp', 'video')">
+                                <label class="text-primary" for="etpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{videoEtp}} Mbps
+                            </div>
                             <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
                                        ng-model="chartState.video.liveLatency.selected"
@@ -964,6 +1039,14 @@
                                        data-placement="top"
                                        title="Difference between live time and current playback position in seconds. This latency estimate does not include the time taken by the encoder to encode the content">Live
                                     Latency:</label> {{videoLiveLatency}}
+                            </div>
+                            <div class="text-success" ng-show="isDynamic">
+                                <input id="videoPlaybackRateCB" type="checkbox"
+                                       ng-model="chartState.video.playbackRate.selected"
+                                       ng-change="enableChartByName('playbackRate', 'video')">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Playback rate">Playback rate:</label> {{videoPlaybackRate}}
                             </div>
                         </div>
                     </div>
@@ -1037,7 +1120,23 @@
                                        title="The minimum, average and maximum ratio of the segment playback time to total download time over the last 4 segments">Ratio
                                     (min|avg|max) :</label> {{audioRatio}}
                             </div>
-                            <div class="text-success">
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="mtpCB" type="checkbox"
+                                       ng-model="chartState.video.mtp.selected"
+                                       ng-change="enableChartByName('mtp', 'audio')">
+                                <label class="text-primary" for="mtpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isCMSDEnabled()">
+                                <input id="etpCB" type="checkbox"
+                                       ng-model="chartState.audio.etp.selected"
+                                       ng-change="enableChartByName('etp', 'audio')">
+                                <label class="text-primary" for="etpCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{audioEtp}} Mbps
+                            </div>
+                            <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
                                        ng-model="chartState.audio.liveLatency.selected"
                                        ng-change="enableChartByName('liveLatency', 'audio')">
@@ -1045,6 +1144,14 @@
                                        data-placement="top"
                                        title="Number of seconds of difference between the real live and the playing live">Live
                                     Latency:</label> {{audioLiveLatency}}
+                            </div>
+                            <div class="text-success">
+                                <input id="audioPlaybackRateCB" type="checkbox"
+                                       ng-model="chartState.audio.playbackRate.selected"
+                                       ng-change="enableChartByName('playbackRate', 'audio')">
+                                <label class="text-primary" for="audioPlaybackRateCB" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Playback Rate">Playback Rate:</label> {{audioPlaybackRate}}
                             </div>
                         </div>
                     </div>

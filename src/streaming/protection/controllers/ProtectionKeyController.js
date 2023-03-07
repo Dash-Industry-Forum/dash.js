@@ -53,6 +53,7 @@ function ProtectionKeyController() {
         logger,
         keySystems,
         BASE64,
+        settings,
         clearkeyKeySystem,
         clearkeyW3CKeySystem;
 
@@ -67,6 +68,10 @@ function ProtectionKeyController() {
         if (config.BASE64) {
             BASE64 = config.BASE64;
         }
+
+        if(config.settings) {
+            settings = config.settings
+        }
     }
 
     function initialize() {
@@ -75,7 +80,7 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
         keySystems.push(keySystem);
 
         // Widevine

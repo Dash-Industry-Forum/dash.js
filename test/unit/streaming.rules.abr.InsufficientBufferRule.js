@@ -34,7 +34,7 @@ describe('InsufficientBufferRule', function () {
     });
 
     it('should throw an exception when attempting to call getMaxIndex While the config attribute has not been set properly', function () {
-        expect(insufficientBufferRule.getMaxIndex.bind(insufficientBufferRule, {getMediaType: {}})).to.throw(Constants.MISSING_CONFIG_ERROR);
+        expect(insufficientBufferRule.getMaxIndex.bind(insufficientBufferRule, { getMediaType: {} })).to.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should return an empty switch request when bufferState is empty', function () {
@@ -53,7 +53,18 @@ describe('InsufficientBufferRule', function () {
                 };
             },
             getRepresentationInfo: function () {
-                return {fragmentDuration: 4};
+                return { fragmentDuration: 4 };
+            },
+            getScheduleController: function () {
+                return {
+                    getPlaybackController: function () {
+                        return {
+                            getLowLatencyModeEnabled: function () {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         };
         const rule = InsufficientBufferRule(context).create({
@@ -84,7 +95,18 @@ describe('InsufficientBufferRule', function () {
                 };
             },
             getRepresentationInfo: function () {
-                return {fragmentDuration: 4};
+                return { fragmentDuration: 4 };
+            },
+            getScheduleController: function () {
+                return {
+                    getPlaybackController: function () {
+                        return {
+                            getLowLatencyModeEnabled: function () {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         };
         const rule = InsufficientBufferRule(context).create({
@@ -115,7 +137,18 @@ describe('InsufficientBufferRule', function () {
                 };
             },
             getRepresentationInfo: function () {
-                return {fragmentDuration: NaN};
+                return { fragmentDuration: NaN };
+            },
+            getScheduleController: function () {
+                return {
+                    getPlaybackController: function () {
+                        return {
+                            getLowLatencyModeEnabled: function () {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         };
         const rule = InsufficientBufferRule(context).create({
@@ -131,7 +164,7 @@ describe('InsufficientBufferRule', function () {
         let bufferState = {
             state: 'bufferLoaded'
         };
-        let representationInfo = {fragmentDuration: NaN};
+        let representationInfo = { fragmentDuration: NaN };
         const dashMetricsMock = new DashMetricsMock();
         const rulesContextMock = {
             getMediaInfo: function () {
@@ -148,6 +181,17 @@ describe('InsufficientBufferRule', function () {
             },
             getRepresentationInfo: function () {
                 return representationInfo;
+            },
+            getScheduleController: function () {
+                return {
+                    getPlaybackController: function () {
+                        return {
+                            getLowLatencyModeEnabled: function () {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -158,10 +202,10 @@ describe('InsufficientBufferRule', function () {
             settings
         });
 
-        let e = {mediaType: 'video', startTime: 0};
+        let e = { mediaType: 'video', startTime: 0 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
-        e = {mediaType: 'video', startTime: 4};//Event objects can't be reused because they get annotated by eventBus.
+        e = { mediaType: 'video', startTime: 4 };//Event objects can't be reused because they get annotated by eventBus.
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
         bufferState.state = 'bufferStalled';
@@ -175,7 +219,7 @@ describe('InsufficientBufferRule', function () {
         const bufferState = {
             state: 'bufferStalled'
         };
-        const representationInfo = {fragmentDuration: 4};
+        const representationInfo = { fragmentDuration: 4 };
         const dashMetricsMock = new DashMetricsMock();
         dashMetricsMock.addBufferState('video', bufferState);
 
@@ -194,6 +238,17 @@ describe('InsufficientBufferRule', function () {
                 return {
                     id: 'DUMMY_STREAM-01'
                 };
+            },
+            getScheduleController: function () {
+                return {
+                    getPlaybackController: function () {
+                        return {
+                            getLowLatencyModeEnabled: function () {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -205,12 +260,12 @@ describe('InsufficientBufferRule', function () {
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        let e = {mediaType: 'video', startTime: 0};
+        let e = { mediaType: 'video', startTime: 0 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        e = {mediaType: 'video', startTime: 4};
+        e = { mediaType: 'video', startTime: 4 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(0);

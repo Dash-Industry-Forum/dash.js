@@ -29,7 +29,7 @@
             /* Extend RequestModifier class and implement our own behaviour */
             player.extend("RequestModifier", function () {
                 return {
-                    modifyRequestHeader: function (xhr) {
+                    modifyRequestHeader: function (xhr, {url}) {
                         /* Add custom header. Requires to set up Access-Control-Allow-Headers in your */
                         /* response header in the server side. Reference: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader */
                         /* xhr.setRequestHeader('DASH-CUSTOM-HEADER', 'MyValue'); */
@@ -38,7 +38,24 @@
                     modifyRequestURL: function (url) {
                         /* Modify url adding a custom query string parameter */
                         return url + '?customQuery=value';
-                    }
+                    },
+                    modifyRequest(request) {
+                        /* Modify the entire request. Allows for async modifications */
+                        var url = new URL(request.url);
+
+                        if (!/\.mpd$/.test(url.pathname)) {
+                            return;
+                        }
+
+                        return fetch('https://time.akamai.com')
+                            .then(function (response) {
+                                return response.text();
+                            })
+                            .then(function (text) {
+                                url.searchParams.set('now', text);
+                                request.url = url.toString();
+                            });
+                    },
                 };
             });
             player.initialize(video, url, true);

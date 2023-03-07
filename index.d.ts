@@ -299,7 +299,7 @@ declare namespace dashjs {
     export class StringMatcher extends BaseMatcher {
 
     }
-
+    
     /**
      * Dash - Parser
      **/
@@ -886,11 +886,15 @@ declare namespace dashjs {
         streaming?: {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
-            lowLatencyEnabled?: boolean,
-            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
+            applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
+            enableManifestDurationMismatchFix?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
+            parseInbandPrft?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -905,12 +909,12 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean,
-                applyServiceDescription?: boolean
+                useSuggestedPresentationDelay?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
-                //ignoreEmeEncryptedEvent?: boolean // No longer in settings
+                ignoreEmeEncryptedEvent?: boolean,
+                detectPlayreadyMessageFormat?: boolean,
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -927,13 +931,17 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
+                useChangeTypeForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
                 threshold?: number,
-                enableSeekFix?: boolean
+                enableSeekFix?: boolean,
+                enableStallFix?: boolean,
+                stallSeek?: number
             },
             utcSynchronization?: {
                 enabled?: boolean,
@@ -956,13 +964,18 @@ declare namespace dashjs {
                 scheduleWhilePaused?: boolean
             },
             text?: {
-                defaultEnabled?: boolean
+                defaultEnabled?: boolean,
+                extendSegmentedCues?: boolean,
+                webvtt?: {
+                    customRenderingEnabled?: number
+                }
             },
             liveCatchup?: {
-                minDrift?: number;
                 maxDrift?: number;
-                playbackRate?: number;
-                latencyThreshold?: number,
+                playbackRate?:{
+                    min?: number,
+                    max?: number
+                },
                 playbackBufferMin?: number,
                 enabled?: boolean
                 mode?: string
@@ -985,6 +998,8 @@ declare namespace dashjs {
             }
             selectionModeForInitialTrack?: TrackSelectionMode
             fragmentRequestTimeout?: number;
+            fragmentRequestProgressTimeout?: number;
+            manifestRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?: number;
                 'XLinkExpansion'?: number;
@@ -1055,7 +1070,15 @@ declare namespace dashjs {
                 cid?: string | null,
                 rtp?: number | null,
                 rtpSafetyFactor?: number,
-                mode?: 'query' | 'header'
+                mode?: 'query' | 'header',
+                enabledKeys?: Array<string>
+            },
+            cmsd?: {
+                enabled?: boolean,
+                abr?: {
+                    applyMb: boolean,
+                    etpWeightRatio?: number
+                }
             }
         };
         errors?: {
@@ -1075,7 +1098,7 @@ declare namespace dashjs {
     export interface MediaPlayerClass {
         setConfig(config: object): void;
 
-        initialize(view?: HTMLMediaElement, source?: string, AutoPlay?: boolean): void;
+        initialize(view?: HTMLMediaElement, source?: string, AutoPlay?: boolean, startTime?: number | string): void;
 
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
 
@@ -1092,6 +1115,8 @@ declare namespace dashjs {
         on(type: FragmentLoadingCompletedEvent['type'], listener: (e: FragmentLoadingCompletedEvent) => void, scope?: object): void;
 
         on(type: FragmentLoadingAbandonedEvent['type'], listener: (e: FragmentLoadingAbandonedEvent) => void, scope?: object): void;
+
+        on(type: InbandPrftReceivedEvent['type'], listener: (e: InbandPrftReceivedEvent) => void, scope?: object): void;
 
         on(type: KeyErrorEvent['type'], listener: (e: KeyErrorEvent) => void, scope?: object): void;
 
@@ -1151,7 +1176,9 @@ declare namespace dashjs {
 
         on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
 
-        on(type: string, listener: (e: Event) => void, scope?: object): void;
+        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
+        
+        on(type: string, listener: (e: Event) => void, scope?: object, options?:object): void;
 
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
@@ -1159,7 +1186,7 @@ declare namespace dashjs {
 
         attachView(element: HTMLElement): void;
 
-        attachSource(urlOrManifest: string | object): void;
+        attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
         isReady(): boolean;
 
@@ -1174,6 +1201,8 @@ declare namespace dashjs {
         isDynamic(): boolean;
 
         seek(value: number): void;
+
+        seekToOriginalLive(): void;
 
         setPlaybackRate(value: number): void;
 
@@ -1315,6 +1344,10 @@ declare namespace dashjs {
 
         getOfflineController(): OfflineController;
 
+        triggerSteeringRequest(): Promise<any>;
+
+        getCurrentSteeringResponseData(): object;
+
         getSettings(): MediaPlayerSettingClass;
 
         updateSettings(settings: MediaPlayerSettingClass): void;
@@ -1405,6 +1438,7 @@ declare namespace dashjs {
         FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
         FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
+        INBAND_PRFT_RECEIVED: 'inbandPrft';
         KEY_ADDED: 'public_keyAdded';
         KEY_ERROR: 'public_keyError';
         KEY_MESSAGE: 'public_keyMessage';
@@ -1440,12 +1474,12 @@ declare namespace dashjs {
         PLAYBACK_PLAYING: 'playbackPlaying';
         PLAYBACK_PROGRESS: 'playbackProgress';
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
-        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
+        PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
         PLAYBACK_WAITING: 'playbackWaiting';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
@@ -1617,6 +1651,13 @@ declare namespace dashjs {
         streamProcessor: object;
         request: object;
         mediaType: MediaType;
+    }
+
+    export interface InbandPrftReceivedEvent extends Event {
+        type: MediaPlayerEvents['INBAND_PRFT_RECEIVED'];
+        streamInfo: StreamInfo;
+        mediaType: MediaType;
+        data: object
     }
 
     export class KeyError {
@@ -2679,6 +2720,8 @@ declare namespace dashjs {
         initializeForMedia(mediaInfo: MediaInfo): void;
 
         clearMediaInfoArray(): void;
+
+        handleKeySystemFromManifest(): void;
 
         createKeySession(keySystemInfo: KeySystemInfo): void;
 

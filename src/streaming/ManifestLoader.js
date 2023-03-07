@@ -47,6 +47,7 @@ function ManifestLoader(config) {
     config = config || {};
     const context = this.context;
     const debug = config.debug;
+    const settings = config.settings;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
@@ -71,7 +72,8 @@ function ManifestLoader(config) {
             urlUtils: urlUtils,
             constants: Constants,
             dashConstants: DashConstants,
-            errors: Errors
+            errors: Errors,
+            requestTimeout: config.settings.get().streaming.manifestRequestTimeout
         });
 
         xlinkController = XlinkController(context).create({
@@ -192,6 +194,20 @@ function ManifestLoader(config) {
                     if (manifest.hasOwnProperty(Constants.LOCATION)) {
                         baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
                         logger.debug('BaseURI set by Location to: ' + baseUri);
+                    }
+
+                    // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
+                    // and the specified duration is greater than the total duration of all periods,
+                    // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
+                    if (settings &&
+                        settings.get().streaming.enableManifestDurationMismatchFix &&
+                        manifest.mediaPresentationDuration &&
+                        manifest.Period_asArray.length > 1) {
+                        const sumPeriodDurations = manifest.Period_asArray.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+                        if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
+                            logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
+                            manifest.mediaPresentationDuration = sumPeriodDurations;
+                        }
                     }
 
                     manifest.baseUri = baseUri;

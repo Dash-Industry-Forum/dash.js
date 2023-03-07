@@ -12,21 +12,10 @@ let debug, settings;
 
 describe('Debug', function () {
     before(function () {
-        if (typeof window === 'undefined') {
-            global.window = {
-                console: {
-                    log: chai.spy(),
-                    debug: chai.spy(),
-                    info: chai.spy(),
-                    warn: chai.spy(),
-                    error: chai.spy()
-                }
-            };
-        }
+        chai.spy.on(console, ['log', 'debug','info','warn','error'], () => {})
     });
 
     after(function () {
-        delete global.window;
     });
 
     beforeEach(function () {

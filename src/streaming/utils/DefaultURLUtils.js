@@ -101,9 +101,9 @@ function DefaultURLUtils() {
 
         const base = baseUrlParseFunc(baseUrl);
         const joinChar =
-              base.charAt(base.length - 1) !== '/' &&
-              url.charAt(0) !== '/' ?
-              '/' : '';
+            base.charAt(base.length - 1) !== '/' &&
+            url.charAt(0) !== '/' ?
+                '/' : '';
 
         return [base, url].join(joinChar);
     };
@@ -265,16 +265,16 @@ function DefaultURLUtils() {
     setup();
 
     const instance = {
-        parseBaseUrl:       parseBaseUrl,
-        parseOrigin:        parseOrigin,
-        parseScheme:        parseScheme,
-        isRelative:         isRelative,
-        isPathAbsolute:     isPathAbsolute,
-        isSchemeRelative:   isSchemeRelative,
-        isHTTPURL:          isHTTPURL,
-        isHTTPS:            isHTTPS,
-        removeHostname:     removeHostname,
-        resolve:            resolve
+        parseBaseUrl: parseBaseUrl,
+        parseOrigin: parseOrigin,
+        parseScheme: parseScheme,
+        isRelative: isRelative,
+        isPathAbsolute: isPathAbsolute,
+        isSchemeRelative: isSchemeRelative,
+        isHTTPURL: isHTTPURL,
+        isHTTPS: isHTTPS,
+        removeHostname: removeHostname,
+        resolve: resolve
     };
 
     return instance;

@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
+import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -55,23 +56,21 @@ function TextController(config) {
         textSourceBuffers,
         textTracks,
         vttParser,
+        vttCustomRenderingParser,
         ttmlParser,
         eventBus,
-        defaultSettings,
-        initialSettingsSet,
         allTracksAreDisabled,
         forceTextStreaming,
         textTracksAdded,
         disableTextBeforeTextTracksAdded;
 
     function setup() {
-        defaultSettings = null;
         forceTextStreaming = false;
         textTracksAdded = false;
-        initialSettingsSet = false;
         disableTextBeforeTextTracksAdded = false;
 
         vttParser = VTTParser(context).getInstance();
+        vttCustomRenderingParser = VttCustomRenderingParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
         eventBus = EventBus(context).getInstance();
 
@@ -79,14 +78,18 @@ function TextController(config) {
     }
 
     function initialize() {
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+            eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+            eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        }
     }
 
     function initializeForStream(streamInfo) {
         const streamId = streamInfo.id;
         const tracks = TextTracks(context).create({
             videoModel,
+            settings,
             streamInfo
         });
         tracks.initialize();
@@ -100,8 +103,10 @@ function TextController(config) {
             videoModel,
             textTracks: tracks,
             vttParser,
+            vttCustomRenderingParser,
             ttmlParser,
-            streamInfo
+            streamInfo,
+            settings
         });
         textSourceBuffer.initialize();
         textSourceBuffers[streamId] = textSourceBuffer;
@@ -161,11 +166,6 @@ function TextController(config) {
         textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
     }
 
-    function setInitialSettings(settings) {
-        defaultSettings = settings;
-        initialSettingsSet = true;
-    }
-
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
@@ -177,7 +177,15 @@ function TextController(config) {
             // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             setTextTrack(streamId, -1);
         } else {
-            if (defaultSettings) {
+            const currentTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
+            if (currentTrack) {
+                const defaultSettings = {
+                    lang: currentTrack.lang,
+                    role: currentTrack.roles[0],
+                    index: currentTrack.index,
+                    codec: currentTrack.codec,
+                    accessibility: currentTrack.accessibility[0]
+                };
                 tracks.some((item, idx) => {
                     // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
                     if (mediaController.matchSettings(defaultSettings, item)) {
@@ -202,18 +210,28 @@ function TextController(config) {
         textTracksAdded = true;
     }
 
-    function _onCurrentTrackChanged(event) {
-        if (!initialSettingsSet && event && event.newMediaInfo) {
-            let mediaInfo = event.newMediaInfo;
-            if (mediaInfo.type === Constants.TEXT) {
-                defaultSettings = {
-                    lang: mediaInfo.lang,
-                    role: mediaInfo.roles[0],
-                    index: mediaInfo.index,
-                    codec: mediaInfo.codec,
-                    accessibility: mediaInfo.accessibility[0]
-                };
+    function _onPlaybackTimeUpdated(e) {
+        try {
+            const streamId = e.streamId;
+
+            if (!textTracks[streamId] || isNaN(e.time)) {
+                return;
             }
+            textTracks[streamId].manualCueProcessing(e.time);
+        } catch (err) {
+        }
+    }
+
+    function _onPlaybackSeeking(e) {
+        try {
+            const streamId = e.streamId;
+
+            if (!textTracks[streamId]) {
+                return;
+            }
+            textTracks[streamId].disableManualTracks();
+        } catch (e) {
+
         }
     }
 
@@ -268,6 +286,9 @@ function TextController(config) {
             return;
         }
 
+
+        textTracks[streamId].disableManualTracks();
+
         textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
         textTracks[streamId].setCurrentTrackIdx(idx);
         textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
@@ -300,7 +321,7 @@ function TextController(config) {
                 if (mediaInfo.id ? currentFragTrack.id !== mediaInfo.id : currentFragTrack.index !== mediaInfo.index) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
-                }  else if (oldTrackIdx === -1) {
+                } else if (oldTrackIdx === -1) {
                     // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
                     // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
                     // For that reason we reactivate the StreamProcessor and the ScheduleController
@@ -352,8 +373,11 @@ function TextController(config) {
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+            eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+            eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
+        }
 
         Object.keys(textSourceBuffers).forEach((key) => {
             textSourceBuffers[key].resetEmbedded();
@@ -369,7 +393,6 @@ function TextController(config) {
         getTextSourceBuffer,
         getAllTracksAreDisabled,
         addEmbeddedTrack,
-        setInitialSettings,
         enableText,
         isTextEnabled,
         setTextTrack,
