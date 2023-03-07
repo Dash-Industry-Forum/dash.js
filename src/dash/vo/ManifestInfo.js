@@ -41,6 +41,8 @@ class ManifestInfo {
         this.duration = NaN;
         this.isDynamic = false;
         this.maxFragmentDuration = null;
+        this.serviceDescriptions = [];
+        this.protocol = null;
     }
 }
 

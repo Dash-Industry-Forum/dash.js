@@ -320,7 +320,7 @@ function ScheduleController(config) {
         switchTrack = value;
     }
 
-    function getSwitchStrack() {
+    function getSwitchTrack() {
         return switchTrack;
     }
 
@@ -445,7 +445,7 @@ function ScheduleController(config) {
         setTimeToLoadDelay,
         getTimeToLoadDelay,
         setSwitchTrack,
-        getSwitchStrack,
+        getSwitchTrack,
         startScheduleTimer,
         clearScheduleTimer,
         reset,

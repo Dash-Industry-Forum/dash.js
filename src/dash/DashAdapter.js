@@ -191,6 +191,8 @@ function DashAdapter() {
      * @param {MediaInfo} mInfoOne
      * @param {MediaInfo} mInfoTwo
      * @returns {boolean}
+     * @memberof module:DashAdapter
+     * @instance
      */
     function areMediaInfosEqual(mInfoOne, mInfoTwo) {
         if (!mInfoOne || !mInfoTwo) {
@@ -424,6 +426,8 @@ function DashAdapter() {
      * Returns the period as defined in the DashManifestModel for a given index
      * @param {number} index
      * @return {object}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getRealPeriodByIndex(index) {
         return dashManifestModel.getRealPeriodForIndex(index, voPeriods[0].mpd.manifest);
@@ -586,7 +590,7 @@ function DashAdapter() {
     /**
      * Returns the availabilityStartTime as specified in the manifest
      * @param {object} externalManifest Omit this value if no external manifest should be used
-     * @returns {string} availabilityStartTime
+     * @returns {number} availabilityStartTime
      * @memberOf module:DashAdapter
      * @instance
      */
@@ -735,6 +739,8 @@ function DashAdapter() {
      * Checks if the manifest is actually just a patch manifest
      * @param  {object} manifest
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getIsPatch(manifest) {
         return patchManifestModel.getIsPatch(manifest);
@@ -743,7 +749,7 @@ function DashAdapter() {
     /**
      * Returns the base urls for a given element
      * @param {object} node
-     * @returns {Array}
+     * @returns {BaseURL[]}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
@@ -754,7 +760,7 @@ function DashAdapter() {
 
     /**
      * Returns the function to sort the Representations
-     * @returns {*}
+     * @returns {function}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
@@ -812,7 +818,7 @@ function DashAdapter() {
      * @param {string} bufferType - String 'audio' or 'video',
      * @param {number} periodIdx - Make sure this is the period index not id
      * @return {number}
-     * @memberof module:DashAdapter
+     * @memberOf module:DashAdapter
      * @instance
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
@@ -825,6 +831,8 @@ function DashAdapter() {
      * Returns the voPeriod object for a given id
      * @param {String} id
      * @returns {object|null}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getPeriodById(id) {
         if (!id || voPeriods.length === 0) {
@@ -846,6 +854,8 @@ function DashAdapter() {
      * @param {object} adaptation
      * @param {string} type
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getIsTypeOf(adaptation, type) {
         return dashManifestModel.getIsTypeOf(adaptation, type);
@@ -861,6 +871,8 @@ function DashAdapter() {
      * @param  {object}  manifest
      * @param  {object}  patch
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function isPatchValid(manifest, patch) {
         let manifestId = dashManifestModel.getId(manifest);
@@ -883,6 +895,8 @@ function DashAdapter() {
      * Takes a given patch and applies it to the provided manifest, assumes patch is valid for manifest
      * @param  {object} manifest
      * @param  {object} patch
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function applyPatchToManifest(manifest, patch) {
         // get all operations from the patch and apply them in document order

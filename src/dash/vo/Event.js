@@ -34,6 +34,7 @@
  */
 class Event {
     constructor() {
+        this.type = '';
         this.duration = NaN;
         this.presentationTime = NaN;
         this.id = NaN;
