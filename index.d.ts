@@ -1186,6 +1186,8 @@ declare namespace dashjs {
 
         isReady(): boolean;
 
+        preload(): void;
+
         play(): void;
 
         isPaused(): boolean;
