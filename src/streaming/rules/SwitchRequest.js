@@ -42,6 +42,7 @@ function SwitchRequest(q, r, p) {
     //TODO refactor all the calls to this to use config to be like everything else.
     let instance,
         quality,
+        mediaInfo,
         priority,
         reason;
 
@@ -62,9 +63,10 @@ function SwitchRequest(q, r, p) {
     reason = (r === undefined) ? null : r;
 
     instance = {
-        quality: quality,
-        reason: reason,
-        priority: priority
+        quality,
+        mediaInfo,
+        reason,
+        priority
     };
 
     return instance;

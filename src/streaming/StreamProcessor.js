@@ -920,6 +920,7 @@ function StreamProcessor(config) {
             mediaInfo = newMediaInfo;
         }
 
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
         const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
@@ -935,7 +936,7 @@ function StreamProcessor(config) {
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
-                quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
+                quality = abrController.getQualityForBitrate([mediaInfo], bitrate, streamInfo.id);
             } else {
                 quality = abrController.getQualityFor(type, streamInfo.id);
             }
@@ -964,6 +965,10 @@ function StreamProcessor(config) {
 
     function getMediaInfo() {
         return mediaInfo;
+    }
+
+    function getMediaInfoArr() {
+        return mediaInfoArr;
     }
 
     function getMediaSource() {
@@ -1336,6 +1341,7 @@ function StreamProcessor(config) {
         prepareTrackSwitch,
         prepareQualityChange,
         getMediaInfo,
+        getMediaInfoArr,
         getMediaSource,
         setMediaSource,
         getBuffer,

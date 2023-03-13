@@ -962,12 +962,13 @@ function Settings() {
             },
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
-                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                ABRStrategy: Constants.ABR_STRATEGY_THROUGHPUT,
+                enableSupplementalPropertyAdaptationSetSwitching: true,
                 additionalAbrRules: {
-                    insufficientBufferRule: true,
-                    switchHistoryRule: true,
-                    droppedFramesRule: true,
-                    abandonRequestsRule: true
+                    insufficientBufferRule: false,
+                    switchHistoryRule: false,
+                    droppedFramesRule: false,
+                    abandonRequestsRule: false
                 },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,

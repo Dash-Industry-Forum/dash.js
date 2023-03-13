@@ -176,6 +176,7 @@ class DashConstants {
         }
         this.SEGMENT_ALIGNMENT = 'segmentAlignment';
         this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
+        this.ADAPTATION_SET_SWITCHING = 'urn:mpeg:dash:adaptation-set-switching:2016';
     }
 
     constructor () {
