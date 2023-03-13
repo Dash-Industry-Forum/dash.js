@@ -404,7 +404,7 @@ function AbrController() {
         try {
             const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
             if (maxBitrate > -1) {
-                return getQualityForBitrate([streamProcessorDict[streamId][type].getMediaInfo()], maxBitrate, streamId);
+                return getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxBitrate, streamId);
             } else {
                 return undefined;
             }
@@ -427,7 +427,7 @@ function AbrController() {
                 const mediaInfo = streamProcessorDict[streamId][type].getMediaInfo();
                 const bitrateList = getBitrateList(mediaInfo);
                 // This returns the quality index <= for the given bitrate
-                let minIdx = getQualityForBitrate([mediaInfo], minBitrate, streamId);
+                let minIdx = getQualityForBitrate(mediaInfo, minBitrate, streamId);
                 if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
                     minIdx++; // Go to the next bitrate
                 }
@@ -486,7 +486,7 @@ function AbrController() {
         // Substract audio bitrate
         const audioBitrate = _getBitrateInfoForQuality(streamId, 'audio', getQualityFor('audio', streamId));
         maxCmsdBitrate -= audioBitrate ? (audioBitrate.bitrate / 1000) : 0;
-        const maxIdx = getQualityForBitrate([streamProcessorDict[streamId][type].getMediaInfo()], maxCmsdBitrate, streamId);
+        const maxIdx = getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxCmsdBitrate, streamId);
         logger.debug('Stream ID: ' + streamId + ' [' + type + '] Apply max bit rate from CMSD: ' + maxCmsdBitrate);
         return Math.min(idx, maxIdx);
     }
@@ -784,13 +784,13 @@ function AbrController() {
     }
 
     /**
-     * @param {MediaInfo[]} mediaInfos
+     * @param {MediaInfo} mediaInfo
      * @param {number} bitrate A bitrate value, kbps
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
-    function getQualityForBitrate(mediaInfos, bitrate) {
-        const bitrateList = getBitrateList(mediaInfos);
+    function getQualityForBitrate(mediaInfo, bitrate) {
+        const bitrateList = getBitrateList(mediaInfo);
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
             const bitrateInfo = bitrateList[i];

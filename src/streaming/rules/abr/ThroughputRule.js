@@ -60,7 +60,7 @@ function ThroughputRule(config) {
 
         checkConfig();
 
-        const mediaInfos = rulesContext.getPossibleMediaInfos();
+        const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
         const scheduleController = rulesContext.getScheduleController();
@@ -79,7 +79,7 @@ function ThroughputRule(config) {
 
         if (abrController.getAbandonmentStateFor(streamId, mediaType) !== MetricsConstants.ABANDON_LOAD) {
             if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfos, throughput, streamId, latency);
+                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
                 scheduleController.setTimeToLoadDelay(0);
                 switchRequest.reason = {throughput: throughput, latency: latency};
             }
