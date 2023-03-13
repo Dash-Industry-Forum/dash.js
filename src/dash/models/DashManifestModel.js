@@ -40,6 +40,7 @@ import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime';
 import ContentSteering from '../vo/ContentSteering';
+import DescriptorType from '../vo/DescriptorType';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -230,23 +231,56 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.VIEWPOINT) ? adaptation.Viewpoint : null;
+        const vp = new DescriptorType
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.VIEWPOINT)) {
+            vp.init(adaptation.Viewpoint);
+            return vp;
+        }
+        return null;
     }
 
     function getRolesForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) ? adaptation.Role_asArray : [];
+        let role_asArray = [];
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY)) {
+            adaptation.Role_asArray.forEach(role => {
+                const r = new DescriptorType;
+                role_asArray.push(r.init(role));
+            });
+        }
+        return role_asArray
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) ? adaptation.Accessibility_asArray : [];
+        let accessibility_asArray = [];
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY)) {
+            adaptation.Accessibility_asArray.forEach(accessibility => {
+                const a = new DescriptorType;
+                accessibility_asArray.push(a.init(accessibility));
+            })
+        } 
+        return accessibility_asArray;
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
+        let audioChanCfg_asArray = [];
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY)){
+            adaptation.AudioChannelConfiguration_asArray.forEach(audioChanCfg => {
+                const acc = new DescriptorType;
+                audioChanCfg_asArray.push(acc.init(audioChanCfg));
+            })
+        }
+        return audioChanCfg_asArray;
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+        let audioChanCfg_asArray = [];
+        if (representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY)) {
+            representation.AudioChannelConfiguration_asArray.forEach(audioChanCfg => {
+                const acc = new DescriptorType;
+                audioChanCfg_asArray.push(acc.init(audioChanCfg));
+            })
+        }
+        return audioChanCfg_asArray;
     }
 
     function getRepresentationSortFunction() {

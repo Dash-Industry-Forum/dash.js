@@ -1035,7 +1035,7 @@ function DashAdapter() {
 
         let mediaInfo = new MediaInfo();
         const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint, acc, acc_rep, roles;
+        let viewpoint, acc, acc_rep, roles, accessibility;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1051,7 +1051,8 @@ function DashAdapter() {
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
         
-        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
+        accessibility = mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        accessibility.map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessibilityData = accessibilityValue;
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
@@ -1064,6 +1065,7 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
+        mediaInfo.accessibility_withSchemeIdUri = accessibility;
 
         acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
         mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
