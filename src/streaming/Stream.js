@@ -704,8 +704,6 @@ function Stream(config) {
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
-        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
-
         let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 

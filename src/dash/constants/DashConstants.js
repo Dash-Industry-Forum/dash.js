@@ -161,7 +161,8 @@ class DashConstants {
             ENCODER: 'encoder',
             CAPTURED: 'captured',
             APPLICATION: 'application'
-        }
+        };
+        this.ADAPTATION_SET_SWITCHING = 'urn:mpeg:dash:adaptation-set-switching:2016';
     }
 
     constructor () {

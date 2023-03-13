@@ -858,6 +858,7 @@ function StreamProcessor(config) {
             mediaInfo = newMediaInfo;
         }
 
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
         const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
@@ -873,7 +874,7 @@ function StreamProcessor(config) {
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
-                quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
+                quality = abrController.getQualityForBitrate([mediaInfo], bitrate, streamInfo.id);
             } else {
                 quality = abrController.getQualityFor(type, streamInfo.id);
             }
@@ -902,6 +903,10 @@ function StreamProcessor(config) {
 
     function getMediaInfo() {
         return mediaInfo;
+    }
+
+    function getMediaInfoArr() {
+        return mediaInfoArr;
     }
 
     function getMediaSource() {
@@ -996,10 +1001,10 @@ function StreamProcessor(config) {
                     eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
                         { data: prfts },
                         { streamId: streamInfo.id, mediaType: type }
-                    );    
+                    );
                 }
             }
-    
+
             const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
             const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
@@ -1038,10 +1043,10 @@ function StreamProcessor(config) {
             case 0:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.ENCODER;
                 break;
-            case 16: 
+            case 16:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.APPLICATION;
                 break;
-            case 24: 
+            case 24:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.CAPTURED;
                 break;
             default:
@@ -1049,7 +1054,7 @@ function StreamProcessor(config) {
         }
 
         // Get NPT timestamp according to IETF RFC 5905, relative to 1/1/1900
-        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
+        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2 ** 32 * 1000);
         ntpTimestamp = TimeUtils(context).getInstance().ntpToUTC(ntpTimestamp);
 
         const mediaTime = (prft.media_time / timescale);
@@ -1277,6 +1282,7 @@ function StreamProcessor(config) {
         prepareTrackSwitch,
         prepareQualityChange,
         getMediaInfo,
+        getMediaInfoArr,
         getMediaSource,
         setMediaSource,
         getBuffer,

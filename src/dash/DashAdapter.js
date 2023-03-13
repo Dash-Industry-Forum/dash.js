@@ -1095,6 +1095,19 @@ function DashAdapter() {
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
+        // Save IDs of AS that we can switch to
+        try {
+            const adaptationSetSwitching = mediaInfo.supplementalProperties[DashConstants.ADAPTATION_SET_SWITCHING];
+            if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
+                mediaInfo.adaptationSetSwitchingCompatibleIds = adaptationSetSwitching.split(',')
+                mediaInfo.adaptationSetSwitchingCompatibleIds = mediaInfo.adaptationSetSwitchingCompatibleIds.map((id) => {
+                    return parseInt(id)
+                })
+            }
+        } catch (e) {
+            return mediaInfo;
+        }
+
         return mediaInfo;
     }
 
