@@ -1035,7 +1035,7 @@ function DashAdapter() {
 
         let mediaInfo = new MediaInfo();
         const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint;
+        let viewpoint, acc, acc_rep, roles;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1044,10 +1044,13 @@ function DashAdapter() {
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
+        
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
+        mediaInfo.viewpoint_withSchemeIdUri = viewpoint ? viewpoint : undefined;
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
+        
         mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessibilityData = accessibilityValue;
@@ -1062,18 +1065,26 @@ function DashAdapter() {
             return accessibilityData;
         });
 
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+        acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
+        mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
+        mediaInfo.audioChannelConfiguration_withSchemeIdUri = acc;
 
         if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+            acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]);
+            mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
+            mediaInfo.audioChannelConfiguration_withSchemeIdUri = acc_rep;
         }
-        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
+        
+        roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
+        mediaInfo.roles = roles.map(function (role) {
             return role.value;
         });
+        mediaInfo.role_withSchemeIdUri = roles;
+        
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
@@ -1092,7 +1103,11 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
+        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
+        if (mediaInfo.supplementalProperties.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForRepresentation(realAdaptation.Representation_asArray[0]);
+            // TODO: evaluate list of representations
+        }
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;

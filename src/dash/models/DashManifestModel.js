@@ -1263,11 +1263,24 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    function getSupplementalProperties(adaptation) {
+    function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
             for (const sp of adaptation.SupplementalProperty_asArray) {
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                }
+            }
+        }
+        return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesForRepresentation(representation) {
+        const supplementalProperties = {};
+
+        if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+            for (const sp of representation.SupplementalProperty_asArray) {
                 if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
                     supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
                 }
@@ -1338,10 +1351,11 @@ function DashManifestModel() {
         getSuggestedPresentationDelay,
         getAvailabilityStartTime,
         getServiceDescriptions,
-        getSupplementalProperties,
-        setConfig,
         getSegmentAlignment,
-        getSubSegmentAlignment
+        getSubSegmentAlignment,
+        getSupplementalPropertiesForAdaptation,
+        getSupplementalPropertiesForRepresentation,
+        setConfig
     };
 
     setup();

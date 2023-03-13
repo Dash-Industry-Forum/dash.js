@@ -145,15 +145,15 @@ declare namespace dashjs {
 
         getLanguageForAdaptation(adaptation: object): string;
 
-        getViewpointForAdaptation(adaptation: object): any;
+        getViewpointForAdaptation(adaptation: object): DescriptorType;
 
-        getRolesForAdaptation(adaptation: object): any[];
+        getRolesForAdaptation(adaptation: object): DescriptorType[];
 
-        getAccessibilityForAdaotation(adaptation: object): any[];
+        getAccessibilityForAdaptation(adaptation: object): DescriptorType[];
 
-        getAudioChannelConfigurationForAdaptation(adaptation: object): any[];
+        getAudioChannelConfigurationForAdaptation(adaptation: object): DescriptorType[];
 
-        getAudioChannelConfigurationForRepresentation(adaptation: object): any[];
+        getAudioChannelConfigurationForRepresentation(adaptation: object): DescriptorType[];
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
@@ -426,9 +426,13 @@ declare namespace dashjs {
         labels: { text: string, lang?: string }[];
         lang: string | null;
         viewpoint: any | undefined | null;
+        viewpoint_withSchemeIdUri: DescriptorType[] | undefined | null;
         accessibility: any[] | null;
+        accessibility_withSchemeIdUri: DescriptorType[] | null;
         audioChannelConfiguration: any[] | null;
+        audioChannelConfiguration_withSchemeIdUri: DescriptorType[] | null;
         roles: string[] | null;
+        role_withSchemeIdUri: DescriptorType[] | null;
         codec: string | null;
         mimeType: string | null;
         contentProtection: any | null;
@@ -543,6 +547,12 @@ declare namespace dashjs {
     export class UTCTiming {
         schemeIdUri: string;
         value: string;
+    }
+
+    export class DescriptorType {
+        schemeIdUri: string;
+        value: string;
+        id: string;
     }
 
     /**
