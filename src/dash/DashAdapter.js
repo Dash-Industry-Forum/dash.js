@@ -202,12 +202,16 @@ function DashAdapter() {
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
         const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
+        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpoint_withSchemeIdUri) == JSON.stringify(mInfoTwo.viewpoint_withSchemeIdUri);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
+        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.role_withSchemeIdUri) == JSON.stringify(mInfoTwo.role_withSchemeIdUri);
         const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
+        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibility_withSchemeIdUri) == JSON.stringify(mInfoTwo.accessibility_withSchemeIdUri);
         const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
+        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfiguration_withSchemeIdUri) == JSON.stringify(mInfoTwo.audioChannelConfiguration_withSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -1129,6 +1133,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
         mediaInfo.roles = ['caption'];
+        mediaInfo.role_withSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {
