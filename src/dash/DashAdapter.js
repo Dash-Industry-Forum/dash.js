@@ -1051,8 +1051,8 @@ function DashAdapter() {
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
         
-        accessibility = mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
-        accessibility.map(function (accessibility) {
+        accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        mediaInfo.accessibility = accessibility.map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessibilityData = accessibilityValue;
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
