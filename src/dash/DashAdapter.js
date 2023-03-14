@@ -1106,11 +1106,14 @@ function DashAdapter() {
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        if (mediaInfo.supplementalProperties.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForRepresentation(realAdaptation.Representation_asArray[0]);
-            // TODO: evaluate list of representations
+        if ( (!mediaInfo.supplementalProperties || Object.keys(mediaInfo.supplementalProperties).length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
+            });
+            if ( arr.every( v => v === arr[0] ) ) {
+                mediaInfo.supplementalProperties = arr[0];
+            }
         }
-
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
