@@ -34,13 +34,13 @@
  */
 class BitrateInfo {
     constructor() {
-        this.mediaType = null;
         this.bitrate = null;
         this.width = null;
         this.height = null;
         this.scanType = null;
         this.qualityIndex = NaN;
         this.mediaInfo = null;
+        this.isTopBitrate = false;
     }
 }
 

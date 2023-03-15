@@ -60,7 +60,6 @@ function ScheduleController(config) {
         scheduleTimeout,
         hasVideoTrack,
         lastFragmentRequest,
-        topQualityIndex,
         lastInitializedQuality,
         switchTrack,
         initSegmentRequired,
@@ -113,19 +112,6 @@ function ScheduleController(config) {
         }
     }
 
-    function hasTopQualityChanged() {
-        const streamId = streamInfo.id;
-        const newTopQualityIndex = abrController.getMaxAllowedIndexFor(type, streamId);
-
-        if (isNaN(topQualityIndex) || topQualityIndex != newTopQualityIndex) {
-            logger.info('Top quality ' + type + ' index has changed from ' + topQualityIndex + ' to ' + newTopQualityIndex);
-            topQualityIndex = newTopQualityIndex;
-            return true;
-        }
-        return false;
-
-    }
-
     /**
      * Schedule the request for an init or a media segment
      */
@@ -138,11 +124,13 @@ function ScheduleController(config) {
             }
 
             if (_shouldScheduleNextRequest()) {
+                console.log('schedule next request');
                 let qualityChange = false;
                 if (checkPlaybackQuality) {
                     // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
                     // The StreamProcessor will also start the schedule timer again once the quality switch has beeen prepared. Consequently, we only call _getNextFragment if the quality is not changed.
                     qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
+                    console.log(`Quality change ${qualityChange}`);
                 }
                 if (!qualityChange) {
                     _getNextFragment();
@@ -210,7 +198,7 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || _shouldBuffer());
+            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || _shouldBuffer());
         } catch (e) {
             return false;
         }
@@ -415,7 +403,6 @@ function ScheduleController(config) {
             quality: NaN,
             adaptationIndex: NaN
         };
-        topQualityIndex = NaN;
         switchTrack = false;
         initSegmentRequired = false;
     }

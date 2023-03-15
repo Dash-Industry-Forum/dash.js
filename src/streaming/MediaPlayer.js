@@ -946,31 +946,13 @@ function MediaPlayer() {
         AUTO BITRATE
 
     ---------------------------------------------------------------------------
-    */
-    /**
-     * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     * It calls getMaxAllowedIndexFor internally
-     *
-     * @param {MediaType} type - 'video' or 'audio'
-     * @memberof module:MediaPlayer
-     * @returns {BitrateInfo | null}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getTopBitrateInfoFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        return abrController.getTopBitrateInfoFor(type);
-    }
-
     /**
      * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
      * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
      * type, thumbnails, there is no ABR algorithm and quality is set manually.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
-     * @returns {number} the quality index, 0 corresponding to the lowest bitrate
+     * @returns {BitrateInfo} The bitrate info of the currently selected quality
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -989,7 +971,8 @@ function MediaPlayer() {
 
             return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
         }
-        return abrController.getQualityFor(type);
+
+        return abrController.getCurrentBitrateInfoFor(type);
     }
 
     /**
@@ -2446,7 +2429,6 @@ function MediaPlayer() {
         getSource,
         updateSource,
         getCurrentLiveLatency,
-        getTopBitrateInfoFor,
         setAutoPlay,
         getAutoPlay,
         getDashMetrics,

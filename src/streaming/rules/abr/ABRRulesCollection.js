@@ -143,75 +143,98 @@ function ABRRulesCollection(config) {
         });
     }
 
+    /**
+     * For switch requests to be applied they need to define a bitrateInfo and a reason
+     * @param {SwitchRequest[]} srArray
+     * @returns {SwitchRequest[]}
+     * @private
+     */
     function _getRulesWithChange(srArray) {
-        return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
+        return srArray.filter((sr) => {
+            return sr.bitrateInfo && sr.reason
+        });
     }
 
     /**
      *
-     * @param {array} srArray
+     * @param {SwitchRequest[]} srArray
      * @return {object} SwitchRequest
      */
-    function getMinSwitchRequest(srArray) {
+    function _selectOptimalSwitchRequest(srArray) {
         const values = {};
         let newSwitchReq = null;
         let i,
             len,
-            req,
-            quality,
-            reason;
+            switchRequest
 
         if (srArray.length === 0) {
             return;
         }
 
-        values[SwitchRequest.PRIORITY.STRONG] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.WEAK] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.DEFAULT] = { quality: SwitchRequest.NO_CHANGE, reason: null };
+        values[SwitchRequest.PRIORITY.STRONG] = {};
+        values[SwitchRequest.PRIORITY.WEAK] = {};
+        values[SwitchRequest.PRIORITY.DEFAULT] = {};
 
         for (i = 0, len = srArray.length; i < len; i += 1) {
-            req = srArray[i];
-            if (req.quality !== SwitchRequest.NO_CHANGE) {
+            switchRequest = srArray[i];
+
+            if (switchRequest.bitrateInfo && switchRequest.reason && !isNaN(switchRequest.priority)) {
                 // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
-                if (values[req.priority].quality === SwitchRequest.NO_CHANGE || values[req.priority].quality > req.quality) {
-                    values[req.priority].quality = req.quality;
-                    values[req.priority].reason = req.reason || null;
+                if (Object.keys(values[switchRequest.priority]).length === 0 || _shouldReplaceExistingSwitchRequest(values[switchRequest.priority], switchRequest)) {
+                    values[switchRequest.priority] = switchRequest;
                 }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK].quality !== SwitchRequest.NO_CHANGE) {
+        if (Object.keys(values[SwitchRequest.PRIORITY.WEAK]).length) {
             newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT].quality !== SwitchRequest.NO_CHANGE) {
+        if (Object.keys(values[SwitchRequest.PRIORITY.DEFAULT]).length) {
             newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG].quality !== SwitchRequest.NO_CHANGE) {
+        if (Object.keys(values[SwitchRequest.PRIORITY.STRONG]).length) {
             newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
         if (newSwitchReq) {
-            quality = newSwitchReq.quality;
-            reason = newSwitchReq.reason;
+            return newSwitchReq
         }
 
-        return SwitchRequest(context).create(quality, reason);
+        return SwitchRequest(context).create();
     }
 
-    function getMaxQuality(rulesContext) {
-        const switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
-        const activeRules = _getRulesWithChange(switchRequestArray);
-        const maxQuality = getMinSwitchRequest(activeRules);
+    /**
+     * Check if we should replace the current selected switch request with the new one. We should add more logic here, for instance compare the codecs and the resolutions
+     * @param existingSwitchRequest
+     * @param currentSwitchRequest
+     * @returns {boolean}
+     * @private
+     */
+    function _shouldReplaceExistingSwitchRequest(existingSwitchRequest, currentSwitchRequest) {
+        try {
+            if (!currentSwitchRequest || !currentSwitchRequest.bitrateInfo || isNaN(currentSwitchRequest.bitrateInfo.bitrate)) {
+                return false;
+            }
 
-        return maxQuality || SwitchRequest(context).create();
+            return currentSwitchRequest.bitrateInfo.bitrate < existingSwitchRequest.bitrateInfo.bitrate
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function getBestPossibleSwitchRequest(rulesContext) {
+        const switchRequestArray = qualitySwitchRules.map(rule => rule.getSwitchRequest(rulesContext));
+        const activeSwitchRequests = _getRulesWithChange(switchRequestArray);
+
+        return _selectOptimalSwitchRequest(activeSwitchRequests);
     }
 
     function shouldAbandonFragment(rulesContext, streamId) {
         const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
         const activeRules = _getRulesWithChange(abandonRequestArray);
-        const shouldAbandon = getMinSwitchRequest(activeRules);
+        const shouldAbandon = _selectOptimalSwitchRequest(activeRules);
 
         return shouldAbandon || SwitchRequest(context).create();
     }
@@ -233,8 +256,7 @@ function ABRRulesCollection(config) {
     instance = {
         initialize,
         reset,
-        getMaxQuality,
-        getMinSwitchRequest,
+        getBestPossibleSwitchRequest,
         shouldAbandonFragment,
         getQualitySwitchRules
     };

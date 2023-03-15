@@ -152,6 +152,7 @@ function StreamProcessor(config) {
 
         representationController = RepresentationController(context).create({
             streamInfo,
+            mediaInfo,
             type,
             abrController,
             dashMetrics,
@@ -608,8 +609,17 @@ function StreamProcessor(config) {
      * @param {object} e
      */
     function prepareQualityChange(e) {
-        logger.debug(`Preparing quality switch for type ${type}`);
-        const newQuality = e.newQuality;
+        if (e.isAdaptationSetSwitch) {
+            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type}`);
+            _prepareAdaptationSwitchQualityChange(e)
+        } else {
+            logger.debug(`Preparing quality within the same AdaptationSet for type ${type}`);
+            _prepareNonAdaptationSwitchQualityChange(e)
+        }
+    }
+
+    function _prepareNonAdaptationSwitchQualityChange(e) {
+        const newQuality = e.newBitrateInfo.qualityIndex;
 
         qualityChangeInProgress = true;
 
@@ -647,6 +657,11 @@ function StreamProcessor(config) {
                 dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
                 dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
             })
+
+    }
+
+    function _prepareAdaptationSwitchQualityChange() {
+
     }
 
     function _prepareReplacementQualitySwitch() {
@@ -864,28 +879,20 @@ function StreamProcessor(config) {
 
         if (representationController) {
             const realAdaptation = representationController.getData();
-            const maxQuality = abrController.getMaxAllowedIndexFor(type, streamInfo.id);
-            const minIdx = abrController.getMinAllowedIndexFor(type, streamInfo.id);
 
-            let quality,
+            let bitrateInfo,
                 averageThroughput;
             let bitrate = null;
 
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
-                quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
+                bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate);
             } else {
-                quality = abrController.getQualityFor(type, streamInfo.id);
+                bitrateInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
             }
 
-            if (minIdx !== undefined && quality < minIdx) {
-                quality = minIdx;
-            }
-            if (quality > maxQuality) {
-                quality = maxQuality;
-            }
-            return representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo.isFragmented, quality);
+            return representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo, bitrateInfo);
         } else {
             return Promise.resolve();
         }

@@ -72,7 +72,7 @@ function LoLPRule(config) {
             let mediaType = rulesContext.getMediaInfo().type;
             let abrController = rulesContext.getAbrController();
             const streamInfo = rulesContext.getStreamInfo();
-            let currentQuality = abrController.getQualityFor(mediaType, streamInfo.id);
+            let currentQuality = abrController.getCurrentBitrateInfoFor(mediaType, streamInfo.id).qualityIndex;
             const mediaInfo = rulesContext.getMediaInfo();
             const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
             const scheduleController = rulesContext.getScheduleController();

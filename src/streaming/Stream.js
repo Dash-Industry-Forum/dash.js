@@ -410,7 +410,6 @@ function Stream(config) {
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
 
         if (initialMediaInfo) {
-            abrController.updateTopQualityIndex(initialMediaInfo);
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
             streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
         }
@@ -684,7 +683,7 @@ function Stream(config) {
             return thumbnailController.getBitrateList();
         }
         const mediaInfo = getMediaInfo(type);
-        return abrController.getBitrateList(mediaInfo);
+        return abrController.getBitrateInfoList(mediaInfo, true);
     }
 
     function onProtectionError(event) {
@@ -720,9 +719,6 @@ function Stream(config) {
         } else {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {
-                    if (mediaInfo.type === Constants.VIDEO || mediaInfo.type === Constants.AUDIO) {
-                        abrController.updateTopQualityIndex(mediaInfo);
-                    }
                     processor.prepareTrackSwitch();
                 });
         }
@@ -910,7 +906,6 @@ function Stream(config) {
                         const mInfo = allMediaForType[j];
                         streamProcessor.addMediaInfo(allMediaForType[j]);
                         if (adapter.areMediaInfosEqual(currentMediaInfo, mInfo)) {
-                            abrController.updateTopQualityIndex(mInfo);
                             promises.push(streamProcessor.selectMediaInfo(mInfo))
                         }
                     }
