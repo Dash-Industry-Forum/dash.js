@@ -705,10 +705,8 @@ function Stream(config) {
         }
 
         hasFinishedBuffering = false;
-
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
-
         let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 
@@ -726,6 +724,9 @@ function Stream(config) {
             processor.selectMediaInfo(mediaInfo)
                 .then(() => {
                     processor.prepareTrackSwitch();
+                    eventBus.trigger(Events.TRACK_CHANGE_REQUESTED, {
+                        mediaInfo
+                    });
                 });
         }
     }

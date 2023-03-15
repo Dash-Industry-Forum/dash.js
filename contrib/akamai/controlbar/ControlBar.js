@@ -110,6 +110,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, _onPlaybackPaused, this);
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlayTimeUpdate, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_ACTIVATED, _onStreamActivated, this);
+        self.player.on(dashjs.MediaPlayer.events.TRACK_CHANGE_REQUESTED, _onTrackChangeRequested, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_DEACTIVATED, _onStreamDeactivated, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
@@ -121,6 +122,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, _onPlaybackPaused, this);
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlayTimeUpdate, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_ACTIVATED, _onStreamActivated, this);
+        self.player.off(dashjs.MediaPlayer.events.TRACK_CHANGE_REQUESTED, _onTrackChangeRequested, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_DEACTIVATED, _onStreamDeactivated, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
@@ -522,6 +524,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         createCaptionSwitchMenu(streamInfo);
     };
 
+
+    var _onTrackChangeRequested = function () {
+        createBitrateSwitchMenu();
+    }
     var createBitrateSwitchMenu = function () {
         var contentFunc;
 

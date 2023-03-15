@@ -188,6 +188,12 @@ class MediaPlayerEvents extends EventsBase {
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
         /**
+         * Triggered when a new track is being selected.
+         * @event MediaPlayerEvents#TRACK_CHANGE_REQUESTED
+         */
+        this.TRACK_CHANGE_REQUESTED = 'trackChangeRequested';
+
+        /**
          * Triggered when the new track is being rendered.
          * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
          */
