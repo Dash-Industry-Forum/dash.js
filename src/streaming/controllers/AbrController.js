@@ -383,56 +383,6 @@ function AbrController() {
     }
 
     /**
-     * This function is called by the scheduleControllers to check if the quality should be changed.
-     * Consider this the main entry point for the ABR decision logic
-     * @param {string} type
-     * @param {string} streamId
-     */
-    function checkPlaybackQuality(type, streamId) {
-        try {
-
-            // Missing parameters or ABR is turned off
-            if (!type || !streamProcessorDict || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type] || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
-                return false;
-            }
-
-            const previousBitrateInfo = getCurrentBitrateInfoFor(type, streamId);
-            const rulesContext = RulesContext(context).create({
-                abrController: instance,
-                switchHistory: switchHistoryDict[streamId][type],
-                droppedFramesHistory: droppedFramesHistory,
-                streamProcessor: streamProcessorDict[streamId][type],
-                useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
-                useL2AABR: isUsingL2AAbrDict[type],
-                useLoLPABR: isUsingLoLPAbrDict[type],
-                videoModel
-            });
-            const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
-
-            if (!switchRequest || !switchRequest.bitrateInfo || !switchRequest.bitrateInfo.mediaInfo) {
-                return false;
-            }
-
-            let newQualityIndex = switchRequest.bitrateInfo.qualityIndex;
-
-            switchHistoryDict[streamId][type].push({
-                oldValue: previousBitrateInfo.qualityIndex,
-                newValue: newQualityIndex
-            });
-
-            const isAdaptationSetSwitch = previousBitrateInfo.mediaInfo !== null && !adapter.areMediaInfosEqual(switchRequest.bitrateInfo.mediaInfo, previousBitrateInfo.mediaInfo);
-            if (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD) {
-                return _changeQuality(switchRequest, previousBitrateInfo, isAdaptationSetSwitch);
-            }
-
-            return false;
-        } catch (e) {
-            logger.error(e);
-            return false;
-        }
-    }
-
-    /**
      * Update the dropped frames history values
      * @param {String} streamId
      * @private
@@ -461,25 +411,15 @@ function AbrController() {
                 if (streamId) {
                     bitrateInfoDict[streamId] = bitrateInfoDict[streamId] || {};
 
-                    if (!bitrateInfoDict[streamId].hasOwnProperty(type)) {
-                        bitrateInfoDict[streamId][type] = _getFallbackBitrateInfo();
+                    if (bitrateInfoDict[streamId].hasOwnProperty(type)) {
+                        return bitrateInfoDict[streamId][type]
                     }
-
-                    return bitrateInfoDict[streamId][type];
                 }
             }
-            return _getFallbackBitrateInfo();
+            return null
         } catch (e) {
-            return _getFallbackBitrateInfo();
+            return null;
         }
-    }
-
-    function _getFallbackBitrateInfo() {
-        const bitrateInfo = new BitrateInfo();
-        bitrateInfo.qualityIndex = 0;
-        bitrateInfo.isTopBitrate = true;
-
-        return bitrateInfo
     }
 
     function _setCurrentBitrateInfoFor(type, bitrateInfo, streamId) {
@@ -490,13 +430,52 @@ function AbrController() {
     }
 
     /**
+     * This function is called by the scheduleControllers to check if the quality should be changed.
+     * Consider this the main entry point for the ABR decision logic
+     * @param {string} type
+     * @param {string} streamId
+     */
+    function checkPlaybackQuality(type, streamId) {
+        // Missing parameters or ABR is turned off
+        if (!type || !streamProcessorDict || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type] || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
+            return false;
+        }
+
+        const previousBitrateInfo = getCurrentBitrateInfoFor(type, streamId);
+        const rulesContext = RulesContext(context).create({
+            abrController: instance,
+            switchHistory: switchHistoryDict[streamId][type],
+            droppedFramesHistory: droppedFramesHistory,
+            streamProcessor: streamProcessorDict[streamId][type],
+            useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
+            useL2AABR: isUsingL2AAbrDict[type],
+            useLoLPABR: isUsingLoLPAbrDict[type],
+            videoModel
+        });
+        const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
+
+        if (!switchRequest) {
+            return false;
+        }
+
+        let newQualityIndex = switchRequest.bitrateInfo.qualityIndex;
+
+        switchHistoryDict[streamId][type].push({
+            oldValue: previousBitrateInfo.qualityIndex,
+            newValue: newQualityIndex
+        });
+
+        return setPlaybackQuality(switchRequest)
+    }
+
+    /**
      * Sets the new playback quality. Starts from index 0.
      * If the index of the new quality is the same as the old one changeQuality will not be called.
      * @param {SwitchRequest} switchRequest
      */
     function setPlaybackQuality(switchRequest) {
         try {
-            if (!switchRequest || !switchRequest.bitrateInfo) {
+            if (!switchRequest || !switchRequest.bitrateInfo || !switchRequest.bitrateInfo.mediaInfo) {
                 return false;
             }
             const mediaInfo = switchRequest.bitrateInfo.mediaInfo;
@@ -504,13 +483,30 @@ function AbrController() {
             const streamId = streamInfo.id;
             const type = switchRequest.bitrateInfo.mediaInfo.type;
             const previousBitrateInfo = getCurrentBitrateInfoFor(type, streamId);
-            const isAdaptationSetSwitch = previousBitrateInfo && previousBitrateInfo.mediaInfo !== null && !adapter.areMediaInfosEqual(mediaInfo, previousBitrateInfo.mediaInfo);
+            const isAdaptationSetSwitch = previousBitrateInfo !== null && !adapter.areMediaInfosEqual(mediaInfo, previousBitrateInfo.mediaInfo);
+
+            if (!_isAllowedToChangeQuality(isAdaptationSetSwitch, previousBitrateInfo, switchRequest, streamId, type)) {
+                return false;
+            }
 
             return _changeQuality(switchRequest, previousBitrateInfo, isAdaptationSetSwitch);
-
         } catch (e) {
             logger.error(e)
         }
+    }
+
+    function _isAllowedToChangeQuality(isAdaptationSetSwitch, previousBitrateInfo, switchRequest, streamId, type) {
+        // No AS Switch and index stays the same as before
+        if (!isAdaptationSetSwitch && previousBitrateInfo && switchRequest.bitrateInfo.qualityIndex === previousBitrateInfo.qualityIndex) {
+            return false
+        }
+
+        // Loading is stopped
+        if (abandonmentStateDict[streamId][type].state !== MetricsConstants.ALLOW_LOAD) {
+            return false
+        }
+
+        return true
     }
 
     /**
@@ -533,9 +529,6 @@ function AbrController() {
      */
     function _changeQuality(switchRequest, previousBitrateInfo, isAdaptationSetSwitch = false) {
         try {
-            if (!previousBitrateInfo || (!isAdaptationSetSwitch && switchRequest.bitrateInfo.qualityIndex === previousBitrateInfo.qualityIndex) || switchRequest.bitrateInfo.qualityIndex === -1) {
-                return false
-            }
             const newBitrateInfo = switchRequest.bitrateInfo;
             const streamInfo = newBitrateInfo.mediaInfo.streamInfo;
             const streamId = streamInfo.id;
@@ -543,7 +536,8 @@ function AbrController() {
             const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
             const reason = switchRequest.reason;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            logger.info(`Stream ID:  ${streamInfo.id}  [ ${type} ] switch from  ${previousBitrateInfo.qualityIndex} to  ${newBitrateInfo.qualityIndex}  (buffer: ${bufferLevel} ) (${reason ? JSON.stringify(reason) : '.'})`);
+            const oldIndex = previousBitrateInfo ? previousBitrateInfo.qualityIndex : '0';
+            logger.info(`Stream ID:  ${streamInfo.id}  [ ${type} ] switch from  ${oldIndex} to  ${newBitrateInfo.qualityIndex}  (buffer: ${bufferLevel} ) (${reason ? JSON.stringify(reason) : '.'})`);
 
 
             const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
