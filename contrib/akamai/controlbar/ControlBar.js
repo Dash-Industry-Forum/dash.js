@@ -537,7 +537,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 contentFunc = function (element, index) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
-                    result += element && element.mediaInfo && element.mediaInfo.id ? ' (AS:' + element.mediaInfo.id + ')' : '';
+                    result += element && element.mediaInfo && element.mediaInfo.id ? ' (AS ID:' + element.mediaInfo.id + ')' : '';
                     return result;
                 };
 
@@ -571,6 +571,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 contentFunc = function (element) {
                     var label = getLabelForLocale(element.labels);
                     var info = '';
+
+                    if(element.id) {
+                        info += 'ID - ' + element.id + ' ';
+                    }
 
                     if (element.lang) {
                         info += 'Language - ' + element.lang + ' ';

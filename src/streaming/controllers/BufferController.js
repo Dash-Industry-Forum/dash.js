@@ -209,7 +209,7 @@ function BufferController(config) {
     function _initializeSinkForPrebuffering() {
         return new Promise((resolve, reject) => {
             const brInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
-            const requiredQuality = brInfo.qualityIndex;
+            const requiredQuality = brInfo && !isNaN(brInfo.qualityIndex) ? brInfo.qualityIndex : 0;
             sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
             updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality))
                 .then(() => {
@@ -224,7 +224,7 @@ function BufferController(config) {
     function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks) {
         return new Promise((resolve, reject) => {
             const brInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
-            const requiredQuality = brInfo.qualityIndex;
+            const requiredQuality = brInfo && !isNaN(brInfo.qualityIndex) ? brInfo.qualityIndex : 0;
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
