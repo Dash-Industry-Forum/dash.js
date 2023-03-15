@@ -32,10 +32,13 @@ import Constants from '../../streaming/constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils';
+import SwitchRequest from '../../streaming/rules/SwitchRequest';
+import BitrateInfo from '../../streaming/vo/BitrateInfo';
 
 function RepresentationController(config) {
 
     config = config || {};
+    let context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
     const abrController = config.abrController;
@@ -44,7 +47,6 @@ function RepresentationController(config) {
     const timelineConverter = config.timelineConverter;
     const type = config.type;
     const streamInfo = config.streamInfo;
-    const dashConstants = config.dashConstants;
     const segmentsController = config.segmentsController;
     const isDynamic = config.isDynamic;
     const adapter = config.adapter;
@@ -53,6 +55,7 @@ function RepresentationController(config) {
         realAdaptation,
         updating,
         voAvailableRepresentations,
+        mediaInfo,
         currentRepresentationInfo,
         currentVoRepresentation;
 
@@ -105,18 +108,20 @@ function RepresentationController(config) {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
+    function updateData(newRealAdaptation, availableRepresentations, type, mInfo, bitrateInfo) {
         checkConfig();
 
         updating = true;
 
+        mediaInfo = mInfo;
+
         voAvailableRepresentations = availableRepresentations;
 
-        const rep = getRepresentationForQuality(quality)
+        const rep = getRepresentationForQuality(bitrateInfo.qualityIndex)
         _setCurrentVoRepresentation(rep);
         realAdaptation = newRealAdaptation;
 
-        if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+        if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !mInfo.isFragmented)) {
             endDataUpdate();
             return Promise.resolve();
         }
@@ -127,7 +132,29 @@ function RepresentationController(config) {
             promises.push(_updateRepresentation(currentRep));
         }
 
-        return Promise.all(promises);
+        Promise.all(promises)
+            .then(() => {
+                let repSwitch;
+                const switchRequest = SwitchRequest(context).create();
+                switchRequest.bitrateInfo = new BitrateInfo();
+                switchRequest.bitrateInfo.qualityIndex = getQualityForRepresentation(currentVoRepresentation);
+                switchRequest.bitrateInfo.mediaInfo = mediaInfo;
+                switchRequest.reason = ''
+
+                abrController.setPlaybackQuality(switchRequest);
+                const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
+                if (dvrInfo) {
+                    dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
+                }
+
+                const currentRep = getCurrentRepresentation();
+                repSwitch = dashMetrics.getCurrentRepresentationSwitch(currentRep.adaptation.type);
+
+                if (!repSwitch) {
+                    _addRepresentationSwitch();
+                }
+                endDataUpdate();
+            })
     }
 
     function _updateRepresentation(currentRep) {
@@ -236,19 +263,6 @@ function RepresentationController(config) {
         return voAvailableRepresentations.indexOf(voRepresentation);
     }
 
-    function isAllRepresentationsUpdated() {
-        for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
-            if (!voAvailableRepresentations[i].hasInitialization() ||
-                ((segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
-            ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     function endDataUpdate(error) {
         updating = false;
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
@@ -262,13 +276,9 @@ function RepresentationController(config) {
     }
 
     function _onRepresentationUpdated(r) {
-        if (!isUpdating()) return;
-
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
-        let repInfo,
-            repSwitch;
-
+        let repInfo;
 
         if (manifestUpdateInfo) {
             for (let i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
@@ -283,21 +293,6 @@ function RepresentationController(config) {
                 dashMetrics.addManifestUpdateRepresentationInfo(r, getType());
             }
         }
-
-        if (isAllRepresentationsUpdated()) {
-            abrController.setPlaybackQuality(type, streamInfo, getQualityForRepresentation(currentVoRepresentation));
-            const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
-            if (dvrInfo) {
-                dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
-            }
-
-            repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
-
-            if (!repSwitch) {
-                _addRepresentationSwitch();
-            }
-            endDataUpdate();
-        }
     }
 
     function prepareQualityChange(newQuality) {
@@ -309,6 +304,10 @@ function RepresentationController(config) {
     function _setCurrentVoRepresentation(value) {
         currentVoRepresentation = value;
         currentRepresentationInfo = adapter.convertRepresentationToRepresentationInfo(currentVoRepresentation);
+    }
+
+    function setMediaInfo(mInfo) {
+        mediaInfo = mInfo;
     }
 
     function onManifestValidityChanged(e) {
@@ -331,6 +330,7 @@ function RepresentationController(config) {
         getCurrentRepresentationInfo,
         getRepresentationForQuality,
         prepareQualityChange,
+        setMediaInfo,
         reset
     };
 

@@ -50,7 +50,7 @@ function ThroughputRule(config) {
         }
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('useBufferOccupancyABR') ||
@@ -79,9 +79,9 @@ function ThroughputRule(config) {
 
         if (abrController.getAbandonmentStateFor(streamId, mediaType) !== MetricsConstants.ABANDON_LOAD) {
             if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
+                switchRequest.bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, throughput);
+                switchRequest.reason = { throughput: throughput, latency: latency, rule: this.getClassName() };
                 scheduleController.setTimeToLoadDelay(0);
-                switchRequest.reason = {throughput: throughput, latency: latency};
             }
         }
 
@@ -93,7 +93,7 @@ function ThroughputRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

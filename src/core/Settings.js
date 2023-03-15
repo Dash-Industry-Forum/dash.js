@@ -981,7 +981,7 @@ function Settings() {
                 },
                 minBitrate: {
                     audio: -1,
-                    video: -1
+                    video: 500
                 },
                 maxRepresentationRatio: {
                     audio: 1,

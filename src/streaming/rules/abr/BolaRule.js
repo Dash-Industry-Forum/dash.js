@@ -383,7 +383,7 @@ function BolaRule(config) {
         }
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
@@ -432,7 +432,7 @@ function BolaRule(config) {
 
         switch (bolaState.state) {
             case BOLA_STATE_STARTUP:
-                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                quality = abrController.getQualityIndexForBitrate(mediaInfo, safeThroughput, streamId, latency);
 
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = safeThroughput;
@@ -459,7 +459,7 @@ function BolaRule(config) {
 
                 // we want to avoid oscillations
                 // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-                const qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                const qualityForThroughput = abrController.getQualityIndexForBitrate(mediaInfo, safeThroughput, streamId, latency);
                 if (quality > bolaState.lastQuality && quality > qualityForThroughput) {
                     // only intervene if we are trying to *increase* quality to an *unsustainable* level
                     // we are only avoid oscillations - do not drop below last quality
@@ -502,7 +502,7 @@ function BolaRule(config) {
             default:
                 logger.debug('BOLA ABR rule invoked in bad state.');
                 // should not arrive here, try to recover
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                switchRequest.quality = abrController.getQualityIndexForBitrate(mediaInfo, safeThroughput, streamId, latency);
                 switchRequest.reason.state = bolaState.state;
                 switchRequest.reason.throughput = safeThroughput;
                 switchRequest.reason.latency = latency;
@@ -530,7 +530,7 @@ function BolaRule(config) {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex,
+        getSwitchRequest,
         reset: reset
     };
 

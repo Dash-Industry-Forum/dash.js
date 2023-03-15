@@ -110,6 +110,7 @@ function OfflineStreamProcessor(config) {
         });
 
         representationController = RepresentationController(context).create({
+            mediaInfo,
             streamInfo: streamInfo,
             type: type,
             abrController: abrController,
@@ -318,7 +319,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        representationController.updateData(null, voRepresentations, type, mediaInfo.isFragmented, quality);
+        representationController.updateData(null, voRepresentations, type, mediaInfo, quality);
     }
 
     function isUpdating() {
