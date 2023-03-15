@@ -43,7 +43,6 @@ function SwitchRequest() {
         priority = PRIORITY.DEFAULT,
         reason = null;
 
-
     instance = {
         bitrateInfo,
         reason,

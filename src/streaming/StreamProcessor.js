@@ -887,7 +887,7 @@ function StreamProcessor(config) {
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
-                bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate);
+                bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate, false, true);
             } else {
                 bitrateInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
             }

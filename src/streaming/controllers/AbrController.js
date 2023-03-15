@@ -462,27 +462,31 @@ function AbrController() {
                     bitrateInfoDict[streamId] = bitrateInfoDict[streamId] || {};
 
                     if (!bitrateInfoDict[streamId].hasOwnProperty(type)) {
-                        bitrateInfoDict[streamId][type] = _getDefaultBitrateInfo();
+                        bitrateInfoDict[streamId][type] = _getFallbackBitrateInfo();
                     }
 
                     return bitrateInfoDict[streamId][type];
                 }
             }
-            return _getDefaultBitrateInfo();
+            return _getFallbackBitrateInfo();
         } catch (e) {
-            return _getDefaultBitrateInfo();
+            return _getFallbackBitrateInfo();
         }
     }
 
-    function _getDefaultBitrateInfo(mediaInfo) {
-        const defaultBitrateInfo = new BitrateInfo();
-        defaultBitrateInfo.qualityIndex = QUALITY_DEFAULT;
+    function _getFallbackBitrateInfo() {
+        const bitrateInfo = new BitrateInfo();
+        bitrateInfo.qualityIndex = 0;
+        bitrateInfo.isTopBitrate = true;
 
-        if (mediaInfo) {
-            defaultBitrateInfo.mediaInfo = mediaInfo;
-        }
+        return bitrateInfo
+    }
 
-        return defaultBitrateInfo
+    function _setCurrentBitrateInfoFor(type, bitrateInfo, streamId) {
+        bitrateInfoDict[streamId] = bitrateInfoDict[streamId] || {};
+        const bitrateInfoList = getBitrateInfoList(bitrateInfo.mediaInfo, true, true);
+        bitrateInfo.isTopBitrate = bitrateInfo.qualityIndex === bitrateInfoList[bitrateInfoList.length - 1].qualityIndex;
+        bitrateInfoDict[streamId][type] = bitrateInfo;
     }
 
     /**
@@ -493,14 +497,14 @@ function AbrController() {
     function setPlaybackQuality(switchRequest) {
         try {
             if (!switchRequest || !switchRequest.bitrateInfo) {
-                return;
+                return false;
             }
             const mediaInfo = switchRequest.bitrateInfo.mediaInfo;
             const streamInfo = switchRequest.bitrateInfo.mediaInfo.streamInfo;
             const streamId = streamInfo.id;
             const type = switchRequest.bitrateInfo.mediaInfo.type;
             const previousBitrateInfo = getCurrentBitrateInfoFor(type, streamId);
-            const isAdaptationSetSwitch = previousBitrateInfo.mediaInfo !== null && !adapter.areMediaInfosEqual(mediaInfo, previousBitrateInfo.mediaInfo);
+            const isAdaptationSetSwitch = previousBitrateInfo && previousBitrateInfo.mediaInfo !== null && !adapter.areMediaInfosEqual(mediaInfo, previousBitrateInfo.mediaInfo);
 
             return _changeQuality(switchRequest, previousBitrateInfo, isAdaptationSetSwitch);
 
@@ -529,7 +533,7 @@ function AbrController() {
      */
     function _changeQuality(switchRequest, previousBitrateInfo, isAdaptationSetSwitch = false) {
         try {
-            if ((!isAdaptationSetSwitch && switchRequest.bitrateInfo.qualityIndex === previousBitrateInfo.qualityIndex) || switchRequest.bitrateInfo.qualityIndex === -1) {
+            if (!previousBitrateInfo || (!isAdaptationSetSwitch && switchRequest.bitrateInfo.qualityIndex === previousBitrateInfo.qualityIndex) || switchRequest.bitrateInfo.qualityIndex === -1) {
                 return false
             }
             const newBitrateInfo = switchRequest.bitrateInfo;
@@ -541,13 +545,13 @@ function AbrController() {
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             logger.info(`Stream ID:  ${streamInfo.id}  [ ${type} ] switch from  ${previousBitrateInfo.qualityIndex} to  ${newBitrateInfo.qualityIndex}  (buffer: ${bufferLevel} ) (${reason ? JSON.stringify(reason) : '.'})`);
 
-            bitrateInfoDict[streamId] = bitrateInfoDict[streamId] || {};
-            bitrateInfoDict[streamId][type] = switchRequest.bitrateInfo;
 
             const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
             if (!isNaN(bitrate)) {
                 domStorage.setSavedBitrateSettings(type, bitrate);
             }
+
+            _setCurrentBitrateInfoFor(type, switchRequest.bitrateInfo, streamId)
 
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
@@ -571,9 +575,11 @@ function AbrController() {
      *
      * @param mediaInfo
      * @param bitrate
+     * @param includeCompatibleMediaInfos
+     * @param applySettingsFilter
      */
-    function getBitrateInfoByBitrate(mediaInfo, bitrate) {
-        const bitrateList = getBitrateInfoList(mediaInfo, false, true);
+    function getBitrateInfoByBitrate(mediaInfo, bitrate, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+        const bitrateList = getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
 
         for (let i = bitrateList.length - 1; i >= 0; i--) {
             const bitrateInfo = bitrateList[i];
@@ -581,7 +587,14 @@ function AbrController() {
                 return bitrateInfo;
             }
         }
-        return _getDefaultBitrateInfo(mediaInfo)
+
+        return bitrateList[0]
+    }
+
+    function getBitrateInfoByIndex(mediaInfo, index, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+        const bitrateList = getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
+
+        return bitrateList[index];
     }
 
     /**
@@ -628,11 +641,6 @@ function AbrController() {
             bitrateInfoArray = _filterByAllowedSettings(bitrateInfoArray, hasCompatibleMediaInfos)
         }
 
-        // Assign top bitrate value to last entry
-        if (bitrateInfoArray.length > 0) {
-            bitrateInfoArray[bitrateInfoArray.length - 1].isTopBitrate = true
-        }
-
         return bitrateInfoArray;
     }
 
@@ -662,7 +670,7 @@ function AbrController() {
      */
     function _filterByPossibleBitrate(bitrateInfoArray) {
         try {
-            return bitrateInfoArray.filter((bitrateInfo) => {
+            const filteredArray = bitrateInfoArray.filter((bitrateInfo) => {
                 const type = bitrateInfo.mediaInfo.type;
                 const currentBitrate = bitrateInfo.bitrate;
                 const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
@@ -674,6 +682,12 @@ function AbrController() {
 
                 return !(minBitrate > -1 && currentBitrate < minBitrate);
             })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return bitrateInfoArray
         } catch (e) {
             logger.error(e);
             return bitrateInfoArray
@@ -694,7 +708,7 @@ function AbrController() {
             }
 
             const maxIdx = bitrateInfoArray.length - 1;
-            return bitrateInfoArray.filter((bitrateInfo) => {
+            const filteredArray = bitrateInfoArray.filter((bitrateInfo) => {
                 const type = bitrateInfo.mediaInfo.type;
                 const maxRepresentationRatio = settings.get().streaming.abr.maxRepresentationRatio[type];
 
@@ -704,6 +718,12 @@ function AbrController() {
 
                 return Math.min(bitrateInfo.qualityIndex, Math.round(maxIdx * maxRepresentationRatio));
             })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return bitrateInfoArray
         } catch (e) {
             logger.error(e);
             return bitrateInfoArray
@@ -725,9 +745,15 @@ function AbrController() {
                 setElementSize();
             }
 
-            return bitrateInfoArray.filter((bitrateInfo) => {
+            const filteredArray = bitrateInfoArray.filter((bitrateInfo) => {
                 return bitrateInfo.mediaInfo.type !== Constants.VIDEO || bitrateInfo.width <= elementWidth;
             })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return bitrateInfoArray
         } catch (e) {
             logger.error(e);
             return bitrateInfoArray
@@ -745,7 +771,7 @@ function AbrController() {
                 return bitrateInfoArray
             }
 
-            return bitrateInfoArray.filter((bitrateInfo) => {
+            const filteredArray = bitrateInfoArray.filter((bitrateInfo) => {
                 const type = bitrateInfo.mediaInfo.type;
                 let maxCmsdBitrate = cmsdModel.getMaxBitrate(type);
 
@@ -757,8 +783,13 @@ function AbrController() {
                 const audioBitrateInfo = getCurrentBitrateInfoFor(Constants.AUDIO, streamId);
                 maxCmsdBitrate -= audioBitrateInfo ? audioBitrateInfo.bitrate : 0;
                 return bitrateInfo.bitrate <= maxCmsdBitrate
-
             })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return bitrateInfoArray
         } catch (e) {
             logger.error(e);
             return bitrateInfoArray
@@ -871,6 +902,7 @@ function AbrController() {
         getThroughputHistory,
         getBitrateInfoList,
         getBitrateInfoByBitrate,
+        getBitrateInfoByIndex,
         getInitialBitrateFor,
         getCurrentBitrateInfoFor,
         getAbandonmentStateFor,

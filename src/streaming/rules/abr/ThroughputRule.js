@@ -79,7 +79,7 @@ function ThroughputRule(config) {
 
         if (abrController.getAbandonmentStateFor(streamId, mediaType) !== MetricsConstants.ABANDON_LOAD) {
             if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                switchRequest.bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, throughput);
+                switchRequest.bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, throughput, true, true);
                 switchRequest.reason = { throughput: throughput, latency: latency, rule: this.getClassName() };
                 scheduleController.setTimeToLoadDelay(0);
             }
