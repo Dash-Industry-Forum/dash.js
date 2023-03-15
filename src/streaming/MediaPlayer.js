@@ -80,6 +80,7 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
 import CustomParametersModel from './models/CustomParametersModel';
+import SwitchRequest from './rules/SwitchRequest';
 
 /**
  * The media types
@@ -1004,7 +1005,15 @@ function MediaPlayer() {
                 thumbnailController.setTrackByIndex(value);
             }
         }
-        abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { forceReplace });
+
+        const mediaInfo = streamController.getActiveStream().getMediaInfo(type);
+        if (mediaInfo) {
+            const bitrateInfo = abrController.getBitrateInfoByIndex(mediaInfo, value, true, true)
+            const switchRequest = SwitchRequest(context).create();
+            switchRequest.bitrateInfo = bitrateInfo;
+            switchRequest.reason = {forceReplace, rule: this.getClassName()}
+            abrController.setPlaybackQuality(switchRequest);
+        }
     }
 
     /**
@@ -1475,7 +1484,7 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = getActiveStream();
-        return stream ? stream.getBitrateListFor(type) : [];
+        return stream ? stream.getBitrateInfoListFor(type) : [];
     }
 
     /**

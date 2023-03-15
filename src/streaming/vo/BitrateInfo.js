@@ -42,6 +42,18 @@ class BitrateInfo {
         this.mediaInfo = null;
         this.isTopBitrate = false;
     }
+
+    static getByRepresentationAndMediaInfo(representation, mediaInfo) {
+        const bitrateInfo = new BitrateInfo();
+        bitrateInfo.bitrate = representation.bandwidth / 1000;
+        bitrateInfo.qualityIndex = representation.index;
+        bitrateInfo.width = representation.width;
+        bitrateInfo.height = representation.height;
+        bitrateInfo.scanType = representation.scanType;
+        bitrateInfo.mediaInfo = mediaInfo;
+
+        return bitrateInfo;
+    }
 }
 
 export default BitrateInfo;

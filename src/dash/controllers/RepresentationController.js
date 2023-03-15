@@ -138,12 +138,10 @@ function RepresentationController(config) {
                 .then(() => {
                     let repSwitch;
                     const switchRequest = SwitchRequest(context).create();
-                    switchRequest.bitrateInfo = new BitrateInfo();
-                    switchRequest.bitrateInfo.qualityIndex = getQualityForRepresentation(currentVoRepresentation);
-                    switchRequest.bitrateInfo.mediaInfo = mediaInfo;
-                    switchRequest.reason = ''
-
+                    switchRequest.bitrateInfo = BitrateInfo.getByRepresentationAndMediaInfo(currentVoRepresentation, mediaInfo)
+                    switchRequest.reason = { rule: this.getClassName() }
                     abrController.setPlaybackQuality(switchRequest);
+
                     const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
                     if (dvrInfo) {
                         dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
@@ -158,9 +156,9 @@ function RepresentationController(config) {
                     endDataUpdate();
                     resolve();
                 })
-                .catch((e) =>
+                .catch((e) => {
                     reject(e)
-                )
+                })
         })
     }
 
@@ -264,10 +262,6 @@ function RepresentationController(config) {
 
     function getRepresentationForQuality(quality) {
         return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
-    }
-
-    function getQualityForRepresentation(voRepresentation) {
-        return voAvailableRepresentations.indexOf(voRepresentation);
     }
 
     function endDataUpdate(error) {

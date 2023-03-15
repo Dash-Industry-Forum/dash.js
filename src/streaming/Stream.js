@@ -680,7 +680,7 @@ function Stream(config) {
      * @returns {Array}
      * @memberof Stream#
      */
-    function getBitrateListFor(type) {
+    function getBitrateInfoListFor(type) {
         checkConfig();
         if (type === Constants.IMAGE) {
             if (!thumbnailController) {
@@ -689,7 +689,7 @@ function Stream(config) {
             return thumbnailController.getBitrateList();
         }
         const mediaInfo = getMediaInfo(type);
-        return abrController.getBitrateInfoList(mediaInfo, true);
+        return abrController.getBitrateInfoList(mediaInfo, true, true);
     }
 
     function onProtectionError(event) {
@@ -1050,9 +1050,10 @@ function Stream(config) {
         getHasAudioTrack,
         getHasVideoTrack,
         startPreloading,
+        getMediaInfo,
         initializeForTextWithMediaSource,
         getThumbnailController,
-        getBitrateListFor,
+        getBitrateInfoListFor,
         updateData,
         reset,
         getProcessors,

@@ -209,8 +209,9 @@ function BufferController(config) {
     function _initializeSinkForPrebuffering() {
         return new Promise((resolve, reject) => {
             const brInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
+            const requiredQuality = brInfo.qualityIndex;
             sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
-            updateBufferTimestampOffset(_getRepresentationInfo(brInfo.qualityIndex))
+            updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality))
                 .then(() => {
                     resolve(sourceBufferSink);
                 })
