@@ -104,14 +104,12 @@ function RepresentationController(config) {
     function updateData(newRealAdaptation, availableRepresentations, type, mInfo, bitrateInfo) {
         return new Promise((resolve, reject) => {
             checkConfig();
-
             updating = true;
-
             mediaInfo = mInfo;
-
             voAvailableRepresentations = availableRepresentations;
 
-            const rep = getRepresentationForQuality(bitrateInfo.qualityIndex)
+            const qualityIndex = bitrateInfo ? bitrateInfo.qualityIndex : 0;
+            const rep = getRepresentationForQuality(qualityIndex)
             _setCurrentVoRepresentation(rep);
             realAdaptation = newRealAdaptation;
 
