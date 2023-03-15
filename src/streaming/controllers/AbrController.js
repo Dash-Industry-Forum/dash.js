@@ -83,7 +83,28 @@ function AbrController() {
 
     function setup() {
         logger = debug.getLogger(instance);
-        resetInitialSettings();
+        _resetInitialSettings();
+    }
+
+    function _resetInitialSettings() {
+        bitrateInfoDict = {};
+        abandonmentStateDict = {};
+        streamProcessorDict = {};
+        switchHistoryDict = {};
+        isUsingBufferOccupancyAbrDict = {};
+        isUsingL2AAbrDict = {};
+        isUsingLoLPAbrDict = {};
+
+        if (windowResizeEventCalled === undefined) {
+            windowResizeEventCalled = false;
+        }
+        if (droppedFramesHistory) {
+            droppedFramesHistory.reset();
+        }
+        droppedFramesHistory = undefined;
+        throughputHistory = undefined;
+        clearTimeout(abandonmentTimeout);
+        abandonmentTimeout = null;
     }
 
     /**
@@ -188,30 +209,9 @@ function AbrController() {
         }
     }
 
-    function resetInitialSettings() {
-        bitrateInfoDict = {};
-        abandonmentStateDict = {};
-        streamProcessorDict = {};
-        switchHistoryDict = {};
-        isUsingBufferOccupancyAbrDict = {};
-        isUsingL2AAbrDict = {};
-        isUsingLoLPAbrDict = {};
-
-        if (windowResizeEventCalled === undefined) {
-            windowResizeEventCalled = false;
-        }
-        if (droppedFramesHistory) {
-            droppedFramesHistory.reset();
-        }
-        droppedFramesHistory = undefined;
-        throughputHistory = undefined;
-        clearTimeout(abandonmentTimeout);
-        abandonmentTimeout = null;
-    }
-
     function reset() {
 
-        resetInitialSettings();
+        _resetInitialSettings();
 
         eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
@@ -890,24 +890,24 @@ function AbrController() {
     }
 
     instance = {
-        initialize,
-        isPlayingAtTopQuality,
+        checkPlaybackQuality,
         clearDataForStream,
         getThroughputHistory,
-        getBitrateInfoList,
+        getAbandonmentStateFor,
         getBitrateInfoByBitrate,
         getBitrateInfoByIndex,
-        getInitialBitrateFor,
+        getBitrateInfoList,
         getCurrentBitrateInfoFor,
-        getAbandonmentStateFor,
+        getInitialBitrateFor,
+        initialize,
+        isPlayingAtTopQuality,
+        registerStreamType,
+        reset,
+        setConfig,
         setPlaybackQuality,
-        checkPlaybackQuality,
         setElementSize,
         setWindowResizeEventCalled,
-        registerStreamType,
-        unRegisterStreamType,
-        setConfig,
-        reset
+        unRegisterStreamType
     };
 
     setup();

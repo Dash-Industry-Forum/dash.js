@@ -255,13 +255,12 @@ function RepresentationController(config) {
         return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
     }
 
-    function endDataUpdate(error) {
+    function endDataUpdate() {
         updating = false;
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
             {
                 data: realAdaptation,
-                currentRepresentation: currentVoRepresentation,
-                error: error
+                currentRepresentation: currentVoRepresentation
             },
             { streamId: streamInfo.id, mediaType: type }
         );

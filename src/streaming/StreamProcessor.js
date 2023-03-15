@@ -95,7 +95,6 @@ function StreamProcessor(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
@@ -241,7 +240,6 @@ function StreamProcessor(config) {
             abrController.unRegisterStreamType(getStreamId(), type);
         }
 
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
@@ -548,14 +546,13 @@ function StreamProcessor(config) {
         scheduleController.startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
     }
 
-    function _onDataUpdateCompleted(e) {
-        if (!e.error) {
-            // Update representation if no error
-            scheduleController.setCurrentRepresentation(adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation));
-            if (!bufferController.getIsBufferingCompleted()) {
-                bufferController.updateBufferTimestampOffset(e.currentRepresentation);
-            }
+    function _onDataUpdateCompleted() {
+        const currentRepresentation = representationController.getCurrentRepresentation()
+        scheduleController.setCurrentRepresentation(adapter.convertRepresentationToRepresentationInfo(currentRepresentation));
+        if (!bufferController.getIsBufferingCompleted()) {
+            bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
+
     }
 
     function _onBufferLevelStateChanged(e) {
@@ -660,8 +657,34 @@ function StreamProcessor(config) {
 
     }
 
-    function _prepareAdaptationSwitchQualityChange() {
+    function _prepareAdaptationSwitchQualityChange(e) {
+        qualityChangeInProgress = true;
 
+        fragmentModel.abortRequests();
+        // Stop scheduling until we are done with preparing the quality switch
+        scheduleController.clearScheduleTimer();
+
+        selectMediaInfo(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
+            .then(() => {
+                const representationInfo = getRepresentationInfo(e.newBitrateInfo.qualityIndex);
+                // If the switch should occur immediately we need to replace existing stuff in the buffer
+                if (e.reason && e.reason.forceReplace) {
+                    _prepareReplacementQualitySwitch();
+                }
+
+                // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
+                else if (settings.get().streaming.buffer.fastSwitchEnabled) {
+                    _prepareForFastQualitySwitch(representationInfo);
+                }
+
+                // Default quality switch. We append the new quality to the already buffered stuff
+                else {
+                    _prepareForDefaultQualitySwitch();
+                }
+
+                dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
+                dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
+            })
     }
 
     function _prepareReplacementQualitySwitch() {
@@ -868,34 +891,45 @@ function StreamProcessor(config) {
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
      * @param {object} newMediaInfo
      */
-    function selectMediaInfo(newMediaInfo) {
-        if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
-            mediaInfo = newMediaInfo;
-        }
-
-        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
-        const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
-        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-
-        if (representationController) {
-            const realAdaptation = representationController.getData();
-
-            let bitrateInfo,
-                averageThroughput;
-            let bitrate = null;
-
-            if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
-                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
-                bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
-                bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate, false, true);
-            } else {
-                bitrateInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
+    function selectMediaInfo(newMediaInfo, newBitrateInfo = null) {
+        return new Promise((resolve) => {
+            if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
+                mediaInfo = newMediaInfo;
             }
 
-            return representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo, bitrateInfo);
-        } else {
-            return Promise.resolve();
-        }
+            adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+            const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
+            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
+            if (representationController) {
+                const realAdaptation = representationController.getData();
+
+                let bitrateInfo,
+                    averageThroughput;
+                let bitrate = null;
+
+                if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
+                    averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
+                    bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
+                    bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate, false, true);
+                } else {
+                    bitrateInfo = newBitrateInfo ? newBitrateInfo : abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
+                }
+
+                representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo, bitrateInfo)
+                    .then(() => {
+                        _onDataUpdateCompleted()
+                        resolve();
+                    })
+                    .catch((e) => {
+                        logger.error(e);
+                        resolve()
+                    })
+            } else {
+                return resolve();
+            }
+        })
+
     }
 
     function addMediaInfo(newMediaInfo) {
