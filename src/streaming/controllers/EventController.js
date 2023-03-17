@@ -219,18 +219,14 @@ function EventController() {
             if (values) {
                 for (let i = 0; i < values.length; i++) {
                     let event = values[i];
-                    const currentTime = playbackController.getTime();
-                    const duration = !isNaN(event.duration) ? event.duration : 0;
-                    if (!_eventHasExpired(currentTime, duration, event.calculatedPresentationTime)) {
-                        let result = _addOrUpdateEvent(event, inlineEvents[periodId], true);
+                    let result = _addOrUpdateEvent(event, inlineEvents[periodId], true);
 
-                        if (result === EVENT_HANDLED_STATES.ADDED) {
-                            logger.debug(`Added inline event with id ${event.id} from period ${periodId}`);
-                            // If we see the event for the first time we trigger it in onReceive mode
-                            _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
-                        } else if (result === EVENT_HANDLED_STATES.UPDATED) {
-                            logger.debug(`Updated inline event with id ${event.id} from period ${periodId}`);
-                        }
+                    if (result === EVENT_HANDLED_STATES.ADDED) {
+                        logger.debug(`Added inline event with id ${event.id} from period ${periodId}`);
+                        // If we see the event for the first time we trigger it in onReceive mode
+                        _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    } else if (result === EVENT_HANDLED_STATES.UPDATED) {
+                        logger.debug(`Updated inline event with id ${event.id} from period ${periodId}`);
                     }
                 }
             }
