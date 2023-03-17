@@ -983,7 +983,7 @@ function Stream(config) {
         }
 
         // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
+        return !!(adaptation.ContentProtection || (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 && adaptation.Representation_asArray[0].ContentProtection));
     }
 
     function compareCodecs(newStream, type, previousStream = null) {
