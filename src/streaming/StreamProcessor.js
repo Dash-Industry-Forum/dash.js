@@ -700,7 +700,11 @@ function StreamProcessor(config) {
 
     function _prepareForDefaultQualitySwitch() {
         // We might have aborted the current request. We need to set an explicit buffer time based on what we already have in the buffer.
-        _bufferClearedForNonReplacement()
+        if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
+            scheduleController.startScheduleTimer();
+        } else {
+            _bufferClearedForNonReplacement()
+        }
         qualityChangeInProgress = false;
     }
 
@@ -996,10 +1000,10 @@ function StreamProcessor(config) {
                     eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
                         { data: prfts },
                         { streamId: streamInfo.id, mediaType: type }
-                    );    
+                    );
                 }
             }
-    
+
             const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
             const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
 
@@ -1038,10 +1042,10 @@ function StreamProcessor(config) {
             case 0:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.ENCODER;
                 break;
-            case 16: 
+            case 16:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.APPLICATION;
                 break;
-            case 24: 
+            case 24:
                 type = DashConstants.PRODUCER_REFERENCE_TIME_TYPE.CAPTURED;
                 break;
             default:
@@ -1049,7 +1053,7 @@ function StreamProcessor(config) {
         }
 
         // Get NPT timestamp according to IETF RFC 5905, relative to 1/1/1900
-        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2**32 * 1000);
+        let ntpTimestamp = (prft.ntp_timestamp_sec * 1000) + (prft.ntp_timestamp_frac / 2 ** 32 * 1000);
         ntpTimestamp = TimeUtils(context).getInstance().ntpToUTC(ntpTimestamp);
 
         const mediaTime = (prft.media_time / timescale);

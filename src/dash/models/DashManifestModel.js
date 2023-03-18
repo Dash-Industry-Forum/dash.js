@@ -359,6 +359,22 @@ function DashManifestModel() {
         return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
     }
 
+    function getSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
+    }
+
+    function getSubSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUB_SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SUB_SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
+    }
+
     function getKID(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.CENC_DEFAULT_KID)) {
             return null;
@@ -720,18 +736,18 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period
-            // element contains a @duration attribute then then this new
-            // Period is also a regular Period. The start time of the new
-            // Period PeriodStart is the sum of the start time of the previous
-            // Period PeriodStart and the value of the attribute @duration
+                // If the @start attribute is absent, but the previous Period
+                // element contains a @duration attribute then then this new
+                // Period is also a regular Period. The start time of the new
+                // Period PeriodStart is the sum of the start time of the previous
+                // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element
-            // is the first in the MPD, and (iii) the MPD@type is 'static',
+                // If (i) @start attribute is absent, and (ii) the Period element
+                // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
@@ -1130,7 +1146,7 @@ function DashManifestModel() {
             const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
             const entry = new ContentSteering();
 
-            entry.serverUrl =  element.__text;
+            entry.serverUrl = element.__text;
 
             if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
                 entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
@@ -1323,7 +1339,9 @@ function DashManifestModel() {
         getAvailabilityStartTime,
         getServiceDescriptions,
         getSupplementalProperties,
-        setConfig
+        setConfig,
+        getSegmentAlignment,
+        getSubSegmentAlignment
     };
 
     setup();
