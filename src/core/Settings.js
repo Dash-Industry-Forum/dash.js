@@ -854,7 +854,7 @@ function Settings() {
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
-                fastSwitchEnabled: false,
+                fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
                 bufferPruningInterval: 10,

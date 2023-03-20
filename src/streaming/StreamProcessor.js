@@ -89,7 +89,8 @@ function StreamProcessor(config) {
         qualityChangeInProgress,
         dashHandler,
         segmentsController,
-        bufferingTime;
+        bufferingTime,
+        pendingSwitchToRepresentationInfo;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -109,6 +110,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -162,6 +164,7 @@ function StreamProcessor(config) {
             eventBus,
             errors: Errors,
             isDynamic,
+            adapter,
             segmentsController
         });
 
@@ -183,6 +186,7 @@ function StreamProcessor(config) {
             textController,
             mediaController,
             bufferController,
+            representationController,
             settings
         });
 
@@ -210,6 +214,7 @@ function StreamProcessor(config) {
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
         qualityChangeInProgress = false;
+        pendingSwitchToRepresentationInfo = null;
     }
 
     function reset(errored, keepBuffers) {
@@ -254,6 +259,8 @@ function StreamProcessor(config) {
         eventBus.off(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
+
 
         resetInitialSettings();
         type = null;
@@ -549,8 +556,6 @@ function StreamProcessor(config) {
 
     function _onDataUpdateCompleted(e) {
         if (!e.error) {
-            // Update representation if no error
-            scheduleController.setCurrentRepresentation(adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation));
             if (!bufferController.getIsBufferingCompleted()) {
                 bufferController.updateBufferTimestampOffset(e.currentRepresentation);
             }
@@ -602,12 +607,33 @@ function StreamProcessor(config) {
         segmentBlacklistController.add(blacklistUrl);
     }
 
+    function _onBytesAppended(e) {
+        logger.debug(`Appended bytes for ${e.mediaType} and stream id ${e.streamId}`);
+
+        console.log(streamInfo);
+        // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
+        if (e.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
+            const lastInitializedQuality = e.quality;
+            scheduleController.setLastInitializedQuality(lastInitializedQuality);
+            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
+        }
+
+        if (pendingSwitchToRepresentationInfo) {
+            _prepareForDefaultQualitySwitch(pendingSwitchToRepresentationInfo)
+        } else {
+            scheduleController.startScheduleTimer(0);
+        }
+    }
+
     /**
      * The quality has changed which means we have switched to a different representation.
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is higher than the already buffered one.
      * @param {object} e
      */
     function prepareQualityChange(e) {
+        if (pendingSwitchToRepresentationInfo) {
+            logger.warning(`Canceling queued representation switch to ${pendingSwitchToRepresentationInfo.quality} for ${type}`);
+        }
         logger.debug(`Preparing quality switch for type ${type}`);
         const newQuality = e.newQuality;
 
@@ -616,40 +642,35 @@ function StreamProcessor(config) {
         // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
 
-        const representationInfo = getRepresentationInfo(newQuality);
-        scheduleController.setCurrentRepresentation(representationInfo);
         representationController.prepareQualityChange(newQuality);
+
+        const representationInfo = getRepresentationInfo(newQuality);
+        // If the switch should occur immediately we need to replace existing stuff in the buffer
+        if (e.reason && e.reason.forceReplace) {
+            _prepareForForceReplacementQualitySwitch(representationInfo);
+        }
+
+        // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
+        else if (settings.get().streaming.buffer.fastSwitchEnabled) {
+            _prepareForFastQualitySwitch(representationInfo);
+        }
+
+        // Default quality switch. We append the new quality to the already buffered stuff
+        else {
+            _prepareForDefaultQualitySwitch(representationInfo);
+        }
+
+        dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
+        dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
+
+    }
+
+    function _prepareForForceReplacementQualitySwitch(representationInfo) {
 
         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
         // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
         fragmentModel.abortRequests();
-
-        // In any case we need to update the MSE.timeOffset
-        bufferController.updateBufferTimestampOffset(representationInfo)
-            .then(() => {
-
-                // If the switch should occur immediately we need to replace existing stuff in the buffer
-                if (e.reason && e.reason.forceReplace) {
-                    _prepareReplacementQualitySwitch();
-                }
-
-                // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
-                else if (settings.get().streaming.buffer.fastSwitchEnabled) {
-                    _prepareForFastQualitySwitch(representationInfo);
-                }
-
-                // Default quality switch. We append the new quality to the already buffered stuff
-                else {
-                    _prepareForDefaultQualitySwitch();
-                }
-
-                dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
-                dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
-            })
-    }
-
-    function _prepareReplacementQualitySwitch() {
 
         // Inform other classes like the GapController that we are replacing existing stuff
         eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
@@ -658,7 +679,7 @@ function StreamProcessor(config) {
         }, { mediaType: type, streamId: streamInfo.id });
 
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-        bufferController.prepareForReplacementQualitySwitch()
+        bufferController.prepareForForceReplacementQualitySwitch(representationInfo)
             .then(() => {
                 _bufferClearedForReplacement();
                 qualityChangeInProgress = false;
@@ -685,27 +706,57 @@ function StreamProcessor(config) {
 
             // The quality we originally requested was lower than the new quality
             if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
-                const targetTime = time + safeBufferLevel;
-                setExplicitBufferingTime(targetTime);
-                scheduleController.setCheckPlaybackQuality(false);
-                scheduleController.startScheduleTimer();
-            } else {
-                _prepareForDefaultQualitySwitch();
+                bufferController.updateBufferTimestampOffset(representationInfo)
+                    .then(() => {
+                        // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
+                        // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
+                        // Everything that is already in the buffer queue is ok
+                        fragmentModel.abortRequests();
+                        const targetTime = time + safeBufferLevel;
+                        setExplicitBufferingTime(targetTime);
+                        scheduleController.setCheckPlaybackQuality(false);
+                        scheduleController.startScheduleTimer();
+                        qualityChangeInProgress = false;
+                    })
+                    .catch(() => {
+                        qualityChangeInProgress = false;
+                    })
+            }
+
+            // If we have buffered a higher quality do not replace anything
+            else {
+                _prepareForDefaultQualitySwitch(representationInfo);
             }
         } else {
             scheduleController.startScheduleTimer();
+            qualityChangeInProgress = false;
         }
-        qualityChangeInProgress = false;
     }
 
-    function _prepareForDefaultQualitySwitch() {
-        // We might have aborted the current request. We need to set an explicit buffer time based on what we already have in the buffer.
-        if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
-            scheduleController.startScheduleTimer();
-        } else {
-            _bufferClearedForNonReplacement()
+    function _prepareForDefaultQualitySwitch(representationInfo) {
+        // We are not canceling the current request. Check if there is still an ongoing request.
+        // If so we wait for the request to be finished and the media to be appended
+        const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
+        if (ongoingRequests && ongoingRequests.length > 0) {
+            logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
+            pendingSwitchToRepresentationInfo = representationInfo;
+            return;
         }
-        qualityChangeInProgress = false;
+
+        bufferController.updateBufferTimestampOffset(representationInfo)
+            .then(() => {
+                if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
+                    scheduleController.startScheduleTimer();
+                } else {
+                    _bufferClearedForNonReplacement()
+                }
+                pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
+            .catch(() => {
+                pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
     }
 
     /**
@@ -1173,7 +1224,6 @@ function StreamProcessor(config) {
                     });
             }
         })
-
     }
 
     /**
@@ -1202,7 +1252,6 @@ function StreamProcessor(config) {
         setExplicitBufferingTime(targetTime);
         scheduleController.startScheduleTimer();
     }
-
 
     function _createBufferControllerForType(type, isFragmented) {
         let controller = null;
