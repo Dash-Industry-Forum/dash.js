@@ -999,7 +999,7 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
-        const list = abrController.getBitrateInfoList(mediaInfo, true, false);
+        const list = abrController.getBitrateInfoList(mediaInfo, true, true);
 
         let absoluteIndex = 0;
         let i = 0;

@@ -962,7 +962,7 @@ function Settings() {
             },
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
-                ABRStrategy: Constants.ABR_STRATEGY_THROUGHPUT,
+                ABRStrategy: Constants.ABR_STRATEGY_BOLA,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 additionalAbrRules: {
                     insufficientBufferRule: false,

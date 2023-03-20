@@ -90,6 +90,16 @@
             "name": "VOD (Static MPD)",
             "submenu": [
                 {
+                    "name": "DT Vector",
+                    "url": "https://nub-to-02.svc22.main.xom.t-online.de/bpk-vod/vod/default/test-249238/test-249238/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine.entitlement.eu.theplatform.com/wv/web/ModularDrm/getRawWidevineLicense?form=json&schema=1.0&token=eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJtZGV0ZXN0LWFnZHIvMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1IiwiaXNzIjoiMSIsImV4cCI6MTY3OTM5MjU4MiwiaWF0IjoxNjc5MzA2MTgyOTM0LCJqdGkiOiIyOWFmYzMwYi1iN2VhLTQ0OTEtOGE2MS1kYjk1NDAyMDkyN2YiLCJkaWQiOiJtZGV0ZXN0LWFnZHIiLCJ1bm0iOiIxMjAwNDkwMTAwMDAwMDAwMDAxODE4MzUiLCJjdHgiOiJ7XCJpZFwiOlwiMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1XCIsXCJ1c2VyTmFtZVwiOlwiMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1XCIsXCJlbWFpbFwiOlwiXCIsXCJmdWxsTmFtZVwiOlwiXCIsXCJhdHRyaWJ1dGVzXCI6e1widXJuOnRoZXBsYXRmb3JtOmNvbnN1bWVyOmFjY291bnRcIjpcImh0dHBzOi8vYWNjb3VudHMuYXVkaWVuY2UuZGV2Lm9hLnlvLWRpZ2l0YWwuY29tL2FjY291bnRzLzI3MDkzNTM5NTkvMDNkNzYwMTYtODczYi00YTlhLWJmYWItOGQ5Njg3NDRhNjYxXCIsXCJ1cm46dGhlcGxhdGZvcm06Y29uc3VtZXI6YWNjb3VudDpwZXJzb25hXCI6XCJodHRwczovL2FjY291bnRzLmF1ZGllbmNlLmRldi5vYS55by1kaWdpdGFsLmNvbS9hY2NvdW50cy8yNzA5MzUzOTU5LzAzZDc2MDE2LTg3M2ItNGE5YS1iZmFiLThkOTY4NzQ0YTY2MS9wZXJzb25hcy9iM2MyNzA2NS1iZWQ0LTRlYjEtYTgxZC0wZjE2MzE5MTRmYWZcIn19XG4iLCJvaWQiOiIyNzA5MzUzOTU5In0.d4bU7tDl8qsylpaxLh309B-lCc5aHCsFh1zoi7EpOfItIGlBkBPCTYYsy8DfHY6PtWaiEzlmFCSmMa5D8abHTL3uxx74ZAwZ_luu9Ud0QFsxvZnhic7TFhpSmYhv0n3eSt77DCz_xp9orlcTHC-RjrvIgBWVbyWKB_wVBerISX2GfMhyaSv6e2gzobBh7LVjeIv_B9dxDsI4mx4oF52-s2ogzLIRxknP_1mQK38_hTzylyis7VqkOUAoc604F0wly_hNHSsF8znMkUJFu7D_R3Ssz7n3HD7BO56P9OmX6uPH6JNjMk2B0rOovo-5eWYw2vN6yI2rgxVzINYtuxi8yw&account=http://access.auth.theplatform.com/data/Account/2709353959&releasePid=M4AgIScQyHUQ"
+                        }
+                    },
+                    "provider": "aws"
+                },
+                {
                     "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
                     "name": "SegmentBase, ondemand profile",
                     "provider": "dashif"

@@ -42,6 +42,7 @@ class BitrateInfo {
         this.mediaInfo = null;
         this.isTopBitrate = false;
         this.representationId = null;
+        this.absoluteIndex = 0;
     }
 
     static getByRepresentationAndMediaInfo(representation, mediaInfo) {
