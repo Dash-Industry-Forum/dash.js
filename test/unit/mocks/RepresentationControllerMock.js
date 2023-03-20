@@ -6,6 +6,10 @@ function RepresentationControllerMock () {
     this.getRepresentationForQuality = function () {};
 
     this.updateRepresentation = function () {};
+
+    this.getCurrentRepresentationInfo = function () {
+        return {}
+    }
 }
 
 export default RepresentationControllerMock;
