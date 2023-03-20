@@ -683,7 +683,7 @@ function Stream(config) {
             return thumbnailController.getBitrateList();
         }
         const mediaInfo = getMediaInfo(type);
-        return abrController.getBitrateInfoList(mediaInfo, true, false);
+        return abrController.getBitrateInfoList(mediaInfo, true, true);
     }
 
     function onProtectionError(event) {

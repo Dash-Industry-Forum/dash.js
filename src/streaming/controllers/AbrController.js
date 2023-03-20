@@ -598,12 +598,13 @@ function AbrController() {
      * @returns {BitrateInfo[]} A list of {@link BitrateInfo} objects sorted by bitrate in ascending order
      * @memberof AbrController#
      */
-    function getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos = false, applySettingsFilter = false) {
+    function getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
         let bitrateInfoArray = [];
         if (!mediaInfo) {
             return bitrateInfoArray;
         }
 
+        let absoluteIndex = 0;
         const mediaInfos = _getPossibleMediaInfos(mediaInfo, includeCompatibleMediaInfos)
         mediaInfos.forEach((mediaInfo) => {
             if (mediaInfo.bitrateList) {
@@ -620,8 +621,11 @@ function AbrController() {
                     bitrateInfo.scanType = bitrateList[i].scanType;
                     bitrateInfo.mediaInfo = mediaInfo;
                     bitrateInfo.representationId = bitrateList[i].id;
+                    bitrateInfo.absoluteIndex = absoluteIndex;
                     bitrateInfoArray.push(bitrateInfo);
                 }
+
+                absoluteIndex += 1;
             }
         })
 
