@@ -549,7 +549,7 @@ function MediaPlayer() {
      */
     function preload() {
         if (videoModel.getElement() || streamingInitialized) {
-            return false;
+            return;
         }
         if (source) {
             _initializePlayback();
