@@ -610,7 +610,6 @@ function StreamProcessor(config) {
     function _onBytesAppended(e) {
         logger.debug(`Appended bytes for ${e.mediaType} and stream id ${e.streamId}`);
 
-        console.log(streamInfo);
         // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
         if (e.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
             const lastInitializedQuality = e.quality;
