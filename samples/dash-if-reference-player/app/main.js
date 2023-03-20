@@ -2000,18 +2000,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function updateMetrics(type) {
         var dashMetrics = $scope.player.getDashMetrics();
-        var dashAdapter = $scope.player.getDashAdapter();
 
         if (dashMetrics && $scope.currentStreamInfo) {
-            var period = dashAdapter.getPeriodById($scope.currentStreamInfo.id);
-            var periodIdx = period ? period.index : $scope.currentStreamInfo.index;
-
-            var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
-            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var index = $scope.player.getQualityFor(type);
+            var currentBitrateInfo = $scope.player.getQualityFor(type);
+            var availableBitrateInfos = $scope.player.getBitrateInfoListFor(type);
+            var maxIndex = availableBitrateInfos.length;
 
-            var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
             var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
             var liveLatency = 0;
@@ -2040,8 +2036,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             if ($scope.chartCount % 2 === 0) {
                 var time = getTimeForPlot();
                 $scope.plotPoint('buffer', type, bufferLevel, time);
-                $scope.plotPoint('index', type, index, time);
-                $scope.plotPoint('bitrate', type, bitrate, time);
+                $scope.plotPoint('index', type, currentBitrateInfo.qualityIndex, time);
+                $scope.plotPoint('bitrate', type, currentBitrateInfo.bitrate, time);
                 $scope.plotPoint('droppedFPS', type, droppedFPS, time);
                 $scope.plotPoint('liveLatency', type, liveLatency, time);
                 $scope.plotPoint('playbackRate', type, playbackRate, time);

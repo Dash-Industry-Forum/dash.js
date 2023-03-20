@@ -619,6 +619,7 @@ function AbrController() {
                     bitrateInfo.height = bitrateList[i].height;
                     bitrateInfo.scanType = bitrateList[i].scanType;
                     bitrateInfo.mediaInfo = mediaInfo;
+                    bitrateInfo.representationId = bitrateList[i].id;
                     bitrateInfoArray.push(bitrateInfo);
                 }
             }

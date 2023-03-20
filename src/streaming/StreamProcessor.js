@@ -890,6 +890,7 @@ function StreamProcessor(config) {
     /**
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
      * @param {object} newMediaInfo
+     * @param newBitrateInfo
      */
     function selectMediaInfo(newMediaInfo, newBitrateInfo = null) {
         return new Promise((resolve) => {
