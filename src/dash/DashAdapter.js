@@ -809,20 +809,6 @@ function DashAdapter() {
     }
 
     /**
-     * This method returns the current max index based on what is defined in the MPD.
-     * @param {string} bufferType - String 'audio' or 'video',
-     * @param {number} periodIdx - Make sure this is the period index not id
-     * @return {number}
-     * @memberOf module:DashAdapter
-     * @instance
-     */
-    function getMaxIndexForBufferType(bufferType, periodIdx) {
-        let period = getPeriod(periodIdx);
-
-        return findMaxBufferIndex(period, bufferType);
-    }
-
-    /**
      * Returns the voPeriod object for a given id
      * @param {String} id
      * @returns {object|null}
@@ -1231,32 +1217,11 @@ function DashAdapter() {
         return null;
     }
 
-    function findMaxBufferIndex(period, bufferType) {
-        let adaptationSet,
-            adaptationSetArray,
-            representationArray,
-            adaptationSetArrayIndex;
-
-        if (!period || !bufferType) return -1;
-
-        adaptationSetArray = period.AdaptationSet_asArray;
-        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
-            if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
-                return representationArray.length;
-            }
-        }
-
-        return -1;
-    }
-
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
         getBandwidthForRepresentation,
         getIndexForRepresentation,
-        getMaxIndexForBufferType,
         convertRepresentationToRepresentationInfo,
         getStreamsInfo,
         getMediaInfoForType,

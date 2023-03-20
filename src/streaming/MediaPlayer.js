@@ -980,6 +980,21 @@ function MediaPlayer() {
     }
 
     /**
+     * @param {MediaType} type
+     * @returns {Array}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function getBitrateInfoListFor(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        let stream = getActiveStream();
+        return stream ? stream.getBitrateInfoListFor(type) : [];
+    }
+
+    /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
@@ -1472,20 +1487,7 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
-    /**
-     * @param {MediaType} type
-     * @returns {Array}
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getBitrateInfoListFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        let stream = getActiveStream();
-        return stream ? stream.getBitrateInfoListFor(type) : [];
-    }
+
 
     /**
      * This method returns the list of all available streams from a given manifest

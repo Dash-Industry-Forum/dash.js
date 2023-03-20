@@ -41,6 +41,7 @@ class BitrateInfo {
         this.qualityIndex = NaN;
         this.mediaInfo = null;
         this.isTopBitrate = false;
+        this.representationId = null;
     }
 
     static getByRepresentationAndMediaInfo(representation, mediaInfo) {
@@ -50,6 +51,7 @@ class BitrateInfo {
         bitrateInfo.width = representation.width;
         bitrateInfo.height = representation.height;
         bitrateInfo.scanType = representation.scanType;
+        bitrateInfo.representationId = representation.id;
         bitrateInfo.mediaInfo = mediaInfo;
 
         return bitrateInfo;

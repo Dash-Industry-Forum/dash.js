@@ -340,6 +340,8 @@ function ScheduleController(config) {
                         mediaType: type,
                         oldQuality: lastFragmentRequest.quality,
                         newQuality: item.quality,
+                        mediaInfo: item.mediaInfo,
+                        representationId: item.representationId,
                         streamId: streamInfo.id
                     });
                 }
