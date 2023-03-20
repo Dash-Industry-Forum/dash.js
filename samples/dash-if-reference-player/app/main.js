@@ -418,11 +418,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
         var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+        var availableBitrateInfos = $scope.player.getBitrateInfoListFor(e.mediaType);
+        var maxIndex = availableBitrateInfos.length;
+        var index = $scope.player.getAbsoluteIndexForQuality(e.mediaInfo, e.currentRepresentation.id) + 1;
 
-        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.index + 1;
-        $scope[e.mediaType + 'PendingMaxIndex'] = e.numberOfRepresentations;
+        $scope[e.mediaType + 'PendingIndex'] = index;
+        $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
-        $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
+        $scope.plotPoint('pendingIndex', e.mediaType, index, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
@@ -432,8 +435,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + 'Index'] = e.newQuality + 1;
-        $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
+        const index = $scope.player.getAbsoluteIndexForQuality(e.mediaInfo, e.representationId);
+        $scope[e.mediaType + 'Index'] = index + 1;
+        $scope.plotPoint('index', e.mediaType, index + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
@@ -1559,12 +1563,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         for (var setting in settings) {
             if (typeof defaultSettings[setting] === 'object' && defaultSettings[setting] !== null && !(defaultSettings[setting] instanceof Array)) {
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
-            }
-            else if(settings[setting] !== defaultSettings[setting]){
-                if(Array.isArray(settings[setting])){
+            } else if (settings[setting] !== defaultSettings[setting]) {
+                if (Array.isArray(settings[setting])) {
                     settingDifferencesObject[setting] = _arraysEqual(settings[setting], defaultSettings[setting]) ? {} : settings[setting];
-                }
-                else {
+                } else {
                     settingDifferencesObject[setting] = settings[setting];
                 }
 
@@ -2006,6 +2008,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var currentBitrateInfo = $scope.player.getQualityFor(type);
             var availableBitrateInfos = $scope.player.getBitrateInfoListFor(type);
             var maxIndex = availableBitrateInfos.length;
+            var index = $scope.player.getAbsoluteIndexForQuality(currentBitrateInfo.mediaInfo, currentBitrateInfo.representationId) + 1;
 
 
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
@@ -2036,7 +2039,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             if ($scope.chartCount % 2 === 0) {
                 var time = getTimeForPlot();
                 $scope.plotPoint('buffer', type, bufferLevel, time);
-                $scope.plotPoint('index', type, currentBitrateInfo.qualityIndex, time);
+                $scope.plotPoint('index', type, index, time);
                 $scope.plotPoint('bitrate', type, currentBitrateInfo.bitrate, time);
                 $scope.plotPoint('droppedFPS', type, droppedFPS, time);
                 $scope.plotPoint('liveLatency', type, liveLatency, time);
