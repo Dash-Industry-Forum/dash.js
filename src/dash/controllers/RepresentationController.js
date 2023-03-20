@@ -160,6 +160,35 @@ function RepresentationController(config) {
         })
     }
 
+    function updateDataAfterAdaptationSetQualitySwitch(newRealAdaptation, availableRepresentations, type, mInfo, bitrateInfo) {
+        return new Promise((resolve, reject) => {
+            updating = true;
+            mediaInfo = mInfo;
+            voAvailableRepresentations = availableRepresentations;
+
+            const qualityIndex = bitrateInfo ? bitrateInfo.qualityIndex : 0;
+            const rep = getRepresentationForQuality(qualityIndex)
+            _setCurrentVoRepresentation(rep);
+            _addRepresentationSwitch();
+            realAdaptation = newRealAdaptation;
+
+            const promises = [];
+            for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
+                const currentRep = voAvailableRepresentations[i];
+                promises.push(_updateRepresentation(currentRep));
+            }
+
+            Promise.all(promises)
+                .then(() => {
+                    updating = false;
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e)
+                })
+        })
+    }
+
     function _updateRepresentation(currentRep) {
         return new Promise((resolve, reject) => {
             const hasInitialization = currentRep.hasInitialization();
@@ -253,6 +282,7 @@ function RepresentationController(config) {
         eventBus.trigger(MediaPlayerEvents.REPRESENTATION_SWITCH, {
             mediaType: type,
             streamId: streamInfo.id,
+            mediaInfo,
             currentRepresentation,
             numberOfRepresentations: voAvailableRepresentations.length
         }, { streamId: streamInfo.id, mediaType: type })
@@ -324,6 +354,7 @@ function RepresentationController(config) {
         getData,
         isUpdating,
         updateData,
+        updateDataAfterAdaptationSetQualitySwitch,
         getCurrentRepresentation,
         getCurrentRepresentationInfo,
         getRepresentationForQuality,

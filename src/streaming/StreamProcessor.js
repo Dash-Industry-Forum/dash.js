@@ -680,14 +680,14 @@ function StreamProcessor(config) {
 
     function _prepareAdaptationSwitchQualityChange(e) {
         qualityChangeInProgress = true;
-
-        fragmentModel.abortRequests();
-        // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
+        fragmentModel.abortRequests();
+        scheduleController.setSwitchTrack(true);
 
-        selectMediaInfo(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
+        selectMediaInfoAfterQualitySwitch(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
             .then(() => {
                 const representationInfo = getRepresentationInfo(e.newBitrateInfo.qualityIndex);
+                scheduleController.setCurrentRepresentation(representationInfo);
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
                 if (e.reason && e.reason.forceReplace) {
                     _prepareForForceReplacementQualitySwitch();
@@ -952,7 +952,7 @@ function StreamProcessor(config) {
      * @param {object} newMediaInfo
      * @param newBitrateInfo
      */
-    function selectMediaInfo(newMediaInfo, newBitrateInfo = null) {
+    function selectMediaInfo(newMediaInfo) {
         return new Promise((resolve) => {
             if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
                 mediaInfo = newMediaInfo;
@@ -974,7 +974,7 @@ function StreamProcessor(config) {
                     bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                     bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate, false, true);
                 } else {
-                    bitrateInfo = newBitrateInfo ? newBitrateInfo : abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
+                    bitrateInfo = abrController.getCurrentBitrateInfoFor(type, streamInfo.id);
                 }
 
                 representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo, bitrateInfo)
@@ -990,7 +990,30 @@ function StreamProcessor(config) {
                 return resolve();
             }
         })
+    }
 
+    function selectMediaInfoAfterQualitySwitch(newMediaInfo, newBitrateInfo) {
+        return new Promise((resolve) => {
+
+            mediaInfo = newMediaInfo;
+
+            adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+            const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
+            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
+            if (representationController) {
+                representationController.updateDataAfterAdaptationSetQualitySwitch(newRealAdaptation, voRepresentations, type, mediaInfo, newBitrateInfo)
+                    .then(() => {
+                        resolve();
+                    })
+                    .catch((e) => {
+                        logger.error(e);
+                        resolve()
+                    })
+            } else {
+                return resolve();
+            }
+        })
     }
 
     function addMediaInfo(newMediaInfo) {

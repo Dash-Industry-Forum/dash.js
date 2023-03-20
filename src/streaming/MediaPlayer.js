@@ -994,6 +994,27 @@ function MediaPlayer() {
         return stream ? stream.getBitrateInfoListFor(type) : [];
     }
 
+    function getAbsoluteIndexForQuality(mediaInfo, representationId) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+
+        const list = abrController.getBitrateInfoList(mediaInfo, true, false);
+
+        let absoluteIndex = 0;
+        let i = 0;
+        while (i < list.length && absoluteIndex === 0) {
+            const bitrateInfo = list[i];
+
+            if (bitrateInfo.representationId === representationId) {
+                absoluteIndex = i;
+            }
+            i += 1;
+        }
+
+        return absoluteIndex;
+    }
+
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
@@ -1023,10 +1044,10 @@ function MediaPlayer() {
 
         const mediaInfo = streamController.getActiveStream().getMediaInfo(type);
         if (mediaInfo) {
-            const bitrateInfo = abrController.getBitrateInfoByIndex(mediaInfo, value, true, true)
+            const bitrateInfo = abrController.getBitrateInfoByIndex(mediaInfo, value, true, false)
             const switchRequest = SwitchRequest(context).create();
             switchRequest.bitrateInfo = bitrateInfo;
-            switchRequest.reason = {forceReplace, rule: this.getClassName()}
+            switchRequest.reason = { forceReplace, rule: this.getClassName() }
             abrController.setPlaybackQuality(switchRequest);
         }
     }
@@ -2531,7 +2552,8 @@ function MediaPlayer() {
         updateSettings,
         resetSettings,
         reset,
-        destroy
+        destroy,
+        getAbsoluteIndexForQuality
     };
 
     setup();
