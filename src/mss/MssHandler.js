@@ -46,10 +46,8 @@ function MssHandler(config) {
     const events = config.events;
     const constants = config.constants;
     const initSegmentType = config.initSegmentType;
-    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const streamController = config.streamController;
-    const protectionController = config.protectionController;
     let mssParser,
         mssFragmentProcessor,
         fragmentInfoControllers,
@@ -60,17 +58,7 @@ function MssHandler(config) {
     }
 
     function createMssFragmentProcessor() {
-        mssFragmentProcessor = MssFragmentProcessor(context).create({
-            dashMetrics: dashMetrics,
-            playbackController: playbackController,
-            protectionController: protectionController,
-            streamController: streamController,
-            eventBus: eventBus,
-            constants: constants,
-            ISOBoxer: config.ISOBoxer,
-            debug: config.debug,
-            errHandler: config.errHandler
-        });
+        mssFragmentProcessor = MssFragmentProcessor(context).create(config);
     }
 
     function getStreamProcessor(type) {
