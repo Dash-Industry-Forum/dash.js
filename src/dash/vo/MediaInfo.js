@@ -55,6 +55,8 @@ class MediaInfo {
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
+        this.segmentAlignment = false;
+        this.subSegmentAlignment = false;
     }
 
 }

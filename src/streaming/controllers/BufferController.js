@@ -527,7 +527,7 @@ function BufferController(config) {
         });
     }
 
-    function prepareForReplacementQualitySwitch() {
+    function prepareForForceReplacementQualitySwitch(representationInfo) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
@@ -535,6 +535,10 @@ function BufferController(config) {
                 })
                 .then(() => {
                     return pruneAllSafely();
+                })
+                .then(() => {
+                    // In any case we need to update the MSE.timeOffset
+                    return updateBufferTimestampOffset(representationInfo)
                 })
                 .then(() => {
                     setIsBufferingCompleted(false);
@@ -1245,7 +1249,7 @@ function BufferController(config) {
         prepareForPlaybackSeek,
         prepareForReplacementTrackSwitch,
         prepareForNonReplacementTrackSwitch,
-        prepareForReplacementQualitySwitch,
+        prepareForForceReplacementQualitySwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
         getContinuousBufferTimeForTargetTime,
