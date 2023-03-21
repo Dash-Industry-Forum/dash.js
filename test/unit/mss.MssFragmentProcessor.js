@@ -62,6 +62,7 @@ describe('MssFragmentProcessor', function () {
     it('should not throw an error when attempting to call processFragment for mp4 media live segment with tfrf box', async () => {
         const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof.mp4');
         const e = { request: { type: 'MediaSegment', mediaInfo: { index: 0 } }, response: arrayBuffer };
+        mssFragmentProcessor.addBoxProcessors();
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).not.to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).not.to.equal(MssErrors.MSS_NO_TFRF_CODE);
