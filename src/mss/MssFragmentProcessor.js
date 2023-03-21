@@ -132,11 +132,6 @@ function MssFragmentProcessor(config) {
         instance;
 
     function setup() {
-        ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
-        ISOBoxer.addBoxProcessor('saio', saioProcessor);
-        ISOBoxer.addBoxProcessor('saiz', saizProcessor);
-        ISOBoxer.addBoxProcessor('senc', sencProcessor);
-
         mssFragmentMoovProcessor = MssFragmentMoovProcessor(context).create({
             protectionController: protectionController,
             constants: config.constants,
@@ -150,6 +145,13 @@ function MssFragmentProcessor(config) {
             debug: debug,
             errHandler: config.errHandler
         });
+    }
+
+    function addBoxProcessors() {
+        ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
+        ISOBoxer.addBoxProcessor('saio', saioProcessor);
+        ISOBoxer.addBoxProcessor('saiz', saizProcessor);
+        ISOBoxer.addBoxProcessor('senc', sencProcessor);
     }
 
     function generateMoov(rep) {
@@ -175,8 +177,9 @@ function MssFragmentProcessor(config) {
     }
 
     instance = {
-        generateMoov: generateMoov,
-        processFragment: processFragment
+        generateMoov,
+        processFragment,
+        addBoxProcessors
     };
 
     setup();

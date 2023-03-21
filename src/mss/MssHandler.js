@@ -63,10 +63,12 @@ function MssHandler(config) {
     });
     let mssParser,
         fragmentInfoControllers,
+        boxProcessorsAdded,
         instance;
 
     function setup() {
         fragmentInfoControllers = [];
+        boxProcessorsAdded = false;
     }
 
     function getStreamProcessor(type) {
@@ -133,6 +135,11 @@ function MssHandler(config) {
         let streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
 
+        if (!boxProcessorsAdded) {
+            mssFragmentProcessor.addBoxProcessors();
+            boxProcessorsAdded = true;
+        }
+
         // Create init segment request
         let representationController = streamProcessor.getRepresentationController();
         let representation = representationController.getCurrentRepresentation();
@@ -166,7 +173,7 @@ function MssHandler(config) {
     }
 
     function onSegmentMediaLoaded(e) {
-        if (e.error)  return;
+        if (e.error) return;
 
         let streamProcessor = getStreamProcessor(e.request.mediaType);
         if (!streamProcessor) return;
