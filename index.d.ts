@@ -91,6 +91,7 @@ declare namespace dashjs {
         //Promise.all(iterable) can be solved promise, asynchronous promise, pending promise
 
         getCurrentRepresentation(): object;
+        getCurrentRepresentationInfo(): RepresentationInfo;
 
         getRepresentationForQuality(quality: number): object | null;
 
@@ -241,6 +242,8 @@ declare namespace dashjs {
         getServiceDescriptions(manifest: object): serviceDescriptions;
 
         getSupplementalProperties(adaptation: object): object;
+        getSegmentAlignment(adaptation: object): boolean;
+        getSubSegmentAlignment(adaptation: object): boolean;
     }
 
     export interface PatchManifestModel {
@@ -436,6 +439,8 @@ declare namespace dashjs {
         isEmbedded: any | null;
         selectionPriority: number;
         supplementalProperties: object;
+        segmentAlignment: boolean;
+        subSegmentAlignment: boolean;
     }
 
     export interface Mpd {
@@ -1976,7 +1981,7 @@ declare namespace dashjs {
 
         prepareForReplacementTrackSwitch(codec: string): Promise<any>;
 
-        prepareForReplacementQualitySwitch(): Promise<any>;
+        prepareForForceReplacementQualitySwitch(representationInfo: RepresentationInfo): Promise<any>;
 
         prepareForNonReplacementTrackSwitch(codec: string): Promise<any>;
 
@@ -2171,6 +2176,8 @@ declare namespace dashjs {
         setCheckPlaybackQuality(value: object): void;
 
         setInitSegmentRequired(value: object): void;
+
+        setLastInitializedQuality(value: number): void;
 
         reset(): void;
     }

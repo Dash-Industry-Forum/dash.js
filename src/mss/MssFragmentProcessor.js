@@ -175,8 +175,8 @@ function MssFragmentProcessor(config) {
     }
 
     instance = {
-        generateMoov: generateMoov,
-        processFragment: processFragment
+        generateMoov,
+        processFragment
     };
 
     setup();

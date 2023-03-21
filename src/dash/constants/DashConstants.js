@@ -162,6 +162,8 @@ class DashConstants {
             CAPTURED: 'captured',
             APPLICATION: 'application'
         }
+        this.SEGMENT_ALIGNMENT = 'segmentAlignment';
+        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
     }
 
     constructor () {

@@ -7,6 +7,7 @@ import DashMetricsMock from './mocks/DashMetricsMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import TextControllerMock from './mocks/TextControllerMock';
+import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 
 const voHelper = new VoHelper();
 const expect = require('chai').expect;
@@ -14,7 +15,7 @@ const context = {};
 const settings = Settings(context).getInstance();
 
 let scheduleController;
-let streamInfo, adapter, dashMetrics, abrController, mediaPlayerModel, textController;
+let streamInfo, adapter, dashMetrics, abrController, mediaPlayerModel, textController, representationController;
 
 describe('ScheduleController', function () {
 
@@ -34,6 +35,7 @@ describe('ScheduleController', function () {
             abrController = new AbrControllerMock();
             mediaPlayerModel = new MediaPlayerModelMock();
             textController = new TextControllerMock();
+            representationController = new RepresentationControllerMock();
         })
 
         describe('for missing values', () => {
@@ -46,6 +48,7 @@ describe('ScheduleController', function () {
                     abrController,
                     mediaPlayerModel,
                     textController,
+                    representationController,
                     settings
                 });
                 const result = scheduleController.getBufferTarget();
@@ -53,6 +56,9 @@ describe('ScheduleController', function () {
             });
 
             it('should return NaN if representationInfo is undefined', () => {
+                representationController.getCurrentRepresentationInfo = function () {
+                    return undefined
+                }
                 scheduleController = ScheduleController(context).create({
                     streamInfo,
                     adapter,
@@ -60,6 +66,7 @@ describe('ScheduleController', function () {
                     dashMetrics,
                     abrController,
                     mediaPlayerModel,
+                    representationController,
                     settings
                 });
                 const result = scheduleController.getBufferTarget();
@@ -77,20 +84,25 @@ describe('ScheduleController', function () {
                     dashMetrics,
                     abrController,
                     mediaPlayerModel,
+                    representationController,
                     settings
                 });
             })
 
             it('should return 16 (value returns by getCurrentBufferLevel of DashMetricsMock + 1) if current representation is audio and videoTrackPresent is true', () => {
+                representationController.getCurrentRepresentationInfo = function () {
+                    return {}
+                }
                 scheduleController.initialize(true);
-                scheduleController.setCurrentRepresentation({});
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(16);
             });
 
             it('should return 12 (DEFAULT_MIN_BUFFER_TIME of MediaPlayerModelMock) if current representation is audio and videoTrackPresent is false', () => {
                 scheduleController.initialize(false);
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(12);
             });
@@ -99,7 +111,9 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: 10 };
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(settings.get().streaming.buffer.bufferTimeAtTopQuality);
             });
@@ -108,7 +122,9 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: Infinity };
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm);
             });
@@ -124,13 +140,16 @@ describe('ScheduleController', function () {
                     dashMetrics,
                     abrController,
                     mediaPlayerModel,
+                    representationController,
                     settings
                 });
             })
 
             it('should return 15 (value returns by getCurrentBufferLevel of DashMetricsMock) if current representation is video', () => {
                 scheduleController.initialize(true);
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(mediaPlayerModel.getStableBufferTime());
             });
@@ -139,7 +158,9 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: 10 };
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(settings.get().streaming.buffer.bufferTimeAtTopQuality);
             });
@@ -148,7 +169,9 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: Infinity };
-                scheduleController.setCurrentRepresentation({ mediaInfo: { streamInfo: streamInfo } });
+                representationController.getCurrentRepresentationInfo = function () {
+                    return { mediaInfo: { streamInfo: streamInfo } }
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm);
             });
@@ -166,19 +189,24 @@ describe('ScheduleController', function () {
                     abrController,
                     mediaPlayerModel,
                     textController,
+                    representationController,
                     settings
                 });
             })
 
             it('should return 0 if current representation is text, and subtitles are disabled', function () {
-                scheduleController.setCurrentRepresentation({});
+                representationController.getCurrentRepresentationInfo = function () {
+                    return {}
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(0);
             });
 
             it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if current representation is text, and subtitles are enabled', function () {
                 textController.enableText(true);
-                scheduleController.setCurrentRepresentation({fragmentDuration: 6});
+                representationController.getCurrentRepresentationInfo = function () {
+                    return {fragmentDuration: 6}
+                }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(6);
             });
