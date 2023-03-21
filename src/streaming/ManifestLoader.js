@@ -98,6 +98,7 @@ function ManifestLoader(config) {
             //do some business to transform it into a Dash Manifest
             if (mssHandler) {
                 parser = mssHandler.createMssParser();
+                mssHandler.createMssFragmentProcessor();
                 mssHandler.registerEvents();
             }
             return parser;

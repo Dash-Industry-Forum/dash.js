@@ -50,25 +50,27 @@ function MssHandler(config) {
     const playbackController = config.playbackController;
     const streamController = config.streamController;
     const protectionController = config.protectionController;
-    const mssFragmentProcessor = MssFragmentProcessor(context).create({
-        dashMetrics: dashMetrics,
-        playbackController: playbackController,
-        protectionController: protectionController,
-        streamController: streamController,
-        eventBus: eventBus,
-        constants: constants,
-        ISOBoxer: config.ISOBoxer,
-        debug: config.debug,
-        errHandler: config.errHandler
-    });
     let mssParser,
+        mssFragmentProcessor,
         fragmentInfoControllers,
-        boxProcessorsAdded,
         instance;
 
     function setup() {
         fragmentInfoControllers = [];
-        boxProcessorsAdded = false;
+    }
+
+    function createMssFragmentProcessor() {
+        mssFragmentProcessor = MssFragmentProcessor(context).create({
+            dashMetrics: dashMetrics,
+            playbackController: playbackController,
+            protectionController: protectionController,
+            streamController: streamController,
+            eventBus: eventBus,
+            constants: constants,
+            ISOBoxer: config.ISOBoxer,
+            debug: config.debug,
+            errHandler: config.errHandler
+        });
     }
 
     function getStreamProcessor(type) {
@@ -134,11 +136,6 @@ function MssHandler(config) {
     function onInitFragmentNeeded(e) {
         let streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
-
-        if (!boxProcessorsAdded) {
-            mssFragmentProcessor.addBoxProcessors();
-            boxProcessorsAdded = true;
-        }
 
         // Create init segment request
         let representationController = streamProcessor.getRepresentationController();
@@ -246,9 +243,10 @@ function MssHandler(config) {
     }
 
     instance = {
-        reset: reset,
-        createMssParser: createMssParser,
-        registerEvents: registerEvents
+        reset,
+        createMssParser,
+        createMssFragmentProcessor,
+        registerEvents
     };
 
     setup();
