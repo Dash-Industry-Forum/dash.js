@@ -63,6 +63,7 @@ function BolaRule(config) {
 
     const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
     const eventBus = EventBus(context).getInstance();
 
     let instance,
@@ -112,9 +113,8 @@ function BolaRule(config) {
     function getInitialBolaState(rulesContext) {
         const initialState = {};
         const mediaInfo = rulesContext.getMediaInfo();
-        const abrController = rulesContext.getAbrController();
         const bitrateInfos = abrController.getBitrateInfoList(mediaInfo, true, true);
-        const bitrates = bitrateInfos.map(b => b.bitrate);
+        const bitrates = bitrateInfos.map(b => b.bitrate * 1000);
         let utilities = utilitiesFromBitrates(bitrates);
         utilities = utilities.map(u => u - utilities[0] + 1); // normalize
         const stableBufferTime = mediaPlayerModel.getStableBufferTime();
@@ -132,7 +132,7 @@ function BolaRule(config) {
             initialState.Vp = params.Vp;
             initialState.gp = params.gp;
 
-            initialState.lastQuality = 0;
+            initialState.lastQuality = null;
             clearBolaStateOnSeek(initialState);
         }
 
@@ -300,7 +300,8 @@ function BolaRule(config) {
 
                 bolaState.lastSegmentStart = start;
                 bolaState.lastSegmentDurationS = e.chunk.duration;
-                bolaState.lastQuality = e.chunk.quality;
+                const bitrateInfo = abrController.getBitrateInfoByRepresentationId(e.chunk.mediaInfo, e.chunk.representationId);
+                bolaState.lastQuality = bitrateInfo;
 
                 checkNewSegment(bolaState, e.chunk.mediaInfo.type);
             }
@@ -338,7 +339,7 @@ function BolaRule(config) {
             if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
                 const bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
-                const maxEffectiveBufferForLastSegment = maxBufferLevelForQuality(bolaState, bolaState.lastQuality);
+                const maxEffectiveBufferForLastSegment = maxBufferLevelForQuality(bolaState, bolaState.lastQuality.absoluteIndex);
                 const maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
                 bolaState.placeholderBuffer = Math.min(maxPlaceholderBuffer, bolaState.placeholderBuffer);
             }
@@ -360,7 +361,7 @@ function BolaRule(config) {
         if (e) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-                bolaState.abrQuality = e.newQuality;
+                bolaState.abrBitrateInfo = e.newBitrateInfo;
             }
         }
     }
@@ -372,9 +373,9 @@ function BolaRule(config) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(e.mediaType);
                 let wantEffectiveBufferLevel;
-                if (bolaState.abrQuality > 0) {
+                if (bolaState.abrBitrateInfo && bolaState.abrBitrateInfo.absoluteIndex > 0) {
                     // deflate to point where BOLA just chooses newQuality over newQuality-1
-                    wantEffectiveBufferLevel = minBufferLevelForQuality(bolaState, bolaState.abrQuality);
+                    wantEffectiveBufferLevel = minBufferLevelForQuality(bolaState, bolaState.abrBitrateInfo.absoluteIndex);
                 } else {
                     wantEffectiveBufferLevel = MINIMUM_BUFFER_S;
                 }
@@ -396,7 +397,6 @@ function BolaRule(config) {
         const mediaType = rulesContext.getMediaType();
         const scheduleController = rulesContext.getScheduleController();
         const streamInfo = rulesContext.getStreamInfo();
-        const abrController = rulesContext.getAbrController();
         const throughputHistory = abrController.getThroughputHistory();
         const streamId = streamInfo ? streamInfo.id : null;
         const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
@@ -438,7 +438,7 @@ function BolaRule(config) {
                 switchRequest.bitrateInfo = bitrateInfo;
                 switchRequest.reason.throughput = safeThroughput;
 
-                bolaState.placeholderBuffer = Math.max(0, minBufferLevelForQuality(bolaState, bitrateInfo) - bufferLevel);
+                bolaState.placeholderBuffer = Math.max(0, minBufferLevelForQuality(bolaState, bitrateInfo.absoluteIndex) - bufferLevel);
                 bolaState.lastQuality = bitrateInfo;
 
                 if (!isNaN(bolaState.lastSegmentDurationS) && bufferLevel >= bolaState.lastSegmentDurationS) {
@@ -461,17 +461,17 @@ function BolaRule(config) {
 
                 // we want to avoid oscillations
                 // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-                const qualityForThroughput = abrController.getBitrateInfoByBitrate(mediaInfo, safeThroughput, true, true);
-                if (bitrateInfo > bolaState.lastQuality && bitrateInfo > qualityForThroughput) {
+                const bitrateInfoForThroughput = abrController.getBitrateInfoByBitrate(mediaInfo, safeThroughput, true, true);
+                if (bitrateInfo.absoluteIndex > bolaState.lastQuality.absoluteIndex && bitrateInfo.absoluteIndex > bitrateInfoForThroughput.absoluteIndex) {
                     // only intervene if we are trying to *increase* quality to an *unsustainable* level
                     // we are only avoid oscillations - do not drop below last quality
 
-                    bitrateInfo = Math.max(qualityForThroughput, bolaState.lastQuality);
+                    bitrateInfo = bitrateInfoForThroughput.absoluteIndex > bolaState.lastQuality.absoluteIndex ? bitrateInfoForThroughput : bolaState.lastQuality;
                 }
 
                 // We do not want to overfill buffer with low quality chunks.
                 // Note that there will be no delay if buffer level is below MINIMUM_BUFFER_S, probably even with some margin higher than MINIMUM_BUFFER_S.
-                let delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, bitrateInfo));
+                let delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, bitrateInfo.absoluteIndex));
 
                 // First reduce placeholder buffer, then tell schedule controller to pause.
                 if (delayS <= bolaState.placeholderBuffer) {
@@ -481,7 +481,7 @@ function BolaRule(config) {
                     delayS -= bolaState.placeholderBuffer;
                     bolaState.placeholderBuffer = 0;
 
-                    if (bitrateInfo < abrController.getMaxAllowedIndexFor(mediaType, streamId)) {
+                    if (!bitrateInfo.isTopBitrate) {
                         // At top quality, allow schedule controller to decide how far to fill buffer.
                         scheduleController.setTimeToLoadDelay(1000 * delayS);
                     } else {
@@ -489,7 +489,7 @@ function BolaRule(config) {
                     }
                 }
 
-                switchRequest.quality = bitrateInfo;
+                switchRequest.bitrateInfo = bitrateInfo;
                 switchRequest.reason.throughput = throughput;
                 switchRequest.reason.latency = latency;
                 switchRequest.reason.bufferLevel = bufferLevel;
