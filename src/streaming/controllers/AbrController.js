@@ -38,7 +38,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import RulesContext from '../rules/RulesContext';
-import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
@@ -290,7 +289,7 @@ function AbrController() {
         });
         const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext, streamId);
 
-        if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
+        if (switchRequest.bitrateInfo) {
             const fragmentModel = streamProcessor.getFragmentModel();
             const request = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_LOADING,
@@ -301,7 +300,7 @@ function AbrController() {
                 switchHistoryDict[streamId][type].reset();
                 switchHistoryDict[streamId][type].push({
                     oldValue: getCurrentBitrateInfoFor(type, streamId),
-                    newValue: switchRequest.quality,
+                    newValue: switchRequest.bitrateInfo,
                     confidence: 1,
                     reason: switchRequest.reason
                 });
@@ -326,7 +325,7 @@ function AbrController() {
      */
     function _onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
-            _pushDroppedFrames(e.streamId, e.newQuality);
+            _pushDroppedFrames(e.streamId, e.representationId);
         }
     }
 
@@ -388,11 +387,11 @@ function AbrController() {
      * @param {String} streamId
      * @private
      */
-    function _pushDroppedFrames(streamId, qualityIndex) {
-        if (droppedFramesHistory && qualityIndex !== undefined) {
+    function _pushDroppedFrames(streamId, representationId) {
+        if (droppedFramesHistory && representationId !== undefined) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
-                droppedFramesHistory.push(streamId, qualityIndex, playbackQuality);
+                droppedFramesHistory.push(streamId, representationId, playbackQuality);
             }
         }
     }
@@ -457,11 +456,9 @@ function AbrController() {
             return false;
         }
 
-        let newQualityIndex = switchRequest.bitrateInfo.qualityIndex;
-
         switchHistoryDict[streamId][type].push({
-            oldValue: previousBitrateInfo.qualityIndex,
-            newValue: newQualityIndex
+            oldValue: previousBitrateInfo,
+            newValue: switchRequest.bitrateInfo
         });
 
         return setPlaybackQuality(switchRequest)
@@ -535,8 +532,8 @@ function AbrController() {
             const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
             const reason = switchRequest.reason;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            const oldIndex = previousBitrateInfo ? previousBitrateInfo.qualityIndex : '0';
-            logger.info(`Stream ID:  ${streamInfo.id}  [ ${type} ] switch from  ${oldIndex} to  ${newBitrateInfo.qualityIndex}  (buffer: ${bufferLevel} ) (${reason ? JSON.stringify(reason) : '.'})`);
+            const oldIndex = previousBitrateInfo ? previousBitrateInfo.absoluteIndex : '0';
+            logger.info(`Stream ID:  ${streamInfo.id}  [ ${type} ] switch from  ${oldIndex} to  ${newBitrateInfo.absoluteIndex}  (buffer: ${bufferLevel} ) (${reason ? JSON.stringify(reason) : '.'})`);
 
 
             const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
@@ -590,7 +587,7 @@ function AbrController() {
         return bitrateList[index];
     }
 
-    function getBitrateInfoByRepresentationId(mediaInfo, id, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+    function getBitrateInfoByRepresentationId(mediaInfo, id, includeCompatibleMediaInfos = true, applySettingsFilter = false) {
         const bitrateList = getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
 
         return bitrateList.filter((bInfo) => {
@@ -606,13 +603,13 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
-        let bitrateInfoArray = [];
+        let combinedBitrateInfoArray = [];
         if (!mediaInfo) {
-            return bitrateInfoArray;
+            return combinedBitrateInfoArray;
         }
 
         const mediaInfos = _getPossibleMediaInfos(mediaInfo, includeCompatibleMediaInfos)
-        mediaInfos.forEach((mediaInfo) => {
+        mediaInfos.forEach((mediaInfo, index) => {
             if (mediaInfo.bitrateList) {
                 const bitrateList = mediaInfo.bitrateList;
 
@@ -627,43 +624,44 @@ function AbrController() {
                     bitrateInfo.scanType = bitrateList[i].scanType;
                     bitrateInfo.mediaInfo = mediaInfo;
                     bitrateInfo.representationId = bitrateList[i].id;
-                    bitrateInfoArray.push(bitrateInfo);
+                    bitrateInfo.mediaInfoIndex = index;
+                    combinedBitrateInfoArray.push(bitrateInfo);
                 }
 
             }
         })
 
-        //Sort by bitrate in ascending order. Lowest bitrate first
-        bitrateInfoArray.sort((a, b) => {
-            return a.bitrate - b.bitrate;
-        })
+        // Last entry is the top quality
+        if (combinedBitrateInfoArray.length > 0) {
+            combinedBitrateInfoArray[combinedBitrateInfoArray.length - 1].isTopBitrate = true;
+        }
 
         // If set to true we filter the list of options based on the provided settings
         if (applySettingsFilter) {
-            const hasCompatibleMediaInfos = mediaInfos.length > 1;
-            bitrateInfoArray = _filterByAllowedSettings(bitrateInfoArray, hasCompatibleMediaInfos)
+            combinedBitrateInfoArray = _filterByAllowedSettings(combinedBitrateInfoArray)
         }
 
-        //Add absolute index
-        bitrateInfoArray.forEach((bInfo, index) => {
+        //Sort by bitrate in ascending order. Lowest bitrate first
+        combinedBitrateInfoArray.sort((a, b) => {
+            return a.bitrate - b.bitrate;
+        })
+
+        //Set index values
+        combinedBitrateInfoArray.forEach((bInfo, index) => {
             bInfo.absoluteIndex = index
         })
 
-        // Last entry is the top quality
-        bitrateInfoArray[bitrateInfoArray.length - 1].isTopBitrate = true;
-
-        return bitrateInfoArray;
+        return combinedBitrateInfoArray;
     }
 
     /**
      * @param {BitrateInfo[]} bitrateInfoArray
-     * @param {boolean} hasCompatibleMediaInfos
      * @return {BitrateInfo[]}
      */
-    function _filterByAllowedSettings(bitrateInfoArray, hasCompatibleMediaInfos) {
+    function _filterByAllowedSettings(bitrateInfoArray) {
         try {
             bitrateInfoArray = _filterByPossibleBitrate(bitrateInfoArray);
-            bitrateInfoArray = _filterByMaxRepresentationRatio(bitrateInfoArray, hasCompatibleMediaInfos);
+            bitrateInfoArray = _filterByMaxRepresentationRatio(bitrateInfoArray);
             bitrateInfoArray = _filterByPortalSize(bitrateInfoArray);
             bitrateInfoArray = _filterByCmsdMaxBitrate(bitrateInfoArray);
 
@@ -710,14 +708,8 @@ function AbrController() {
      * @return {BitrateInfo[]}
      * @private
      */
-    function _filterByMaxRepresentationRatio(bitrateInfoArray, hasCompatibleMediaInfos = false) {
+    function _filterByMaxRepresentationRatio(bitrateInfoArray) {
         try {
-
-            // This ratio does not make sense if we switch between AdaptationSets during ABR. Ignore in this case
-            if (hasCompatibleMediaInfos) {
-                return bitrateInfoArray;
-            }
-
             const maxIdx = bitrateInfoArray.length - 1;
             const filteredArray = bitrateInfoArray.filter((bitrateInfo) => {
                 const type = bitrateInfo.mediaInfo.type;

@@ -37,7 +37,6 @@ import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferCon
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
-import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
@@ -526,7 +525,7 @@ function StreamProcessor(config) {
         }
 
         if (dashHandler) {
-            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+            const representation = representationController && representationInfo ? representationController.getRepresentationForId(representationInfo.id) : null;
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
@@ -616,16 +615,14 @@ function StreamProcessor(config) {
     }
 
     function _prepareNonAdaptationSwitchQualityChange(e) {
-        const newQuality = e.newBitrateInfo.qualityIndex;
-
         qualityChangeInProgress = true;
 
         // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
 
-        const representationInfo = getRepresentationInfo(newQuality);
+        const representationInfo = getRepresentationInfo(e.newBitrateInfo.representationId);
         scheduleController.setCurrentRepresentation(representationInfo);
-        representationController.prepareQualityChange(newQuality);
+        representationController.prepareQualityChange(representationInfo.id);
 
         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -665,7 +662,7 @@ function StreamProcessor(config) {
 
         selectMediaInfoAfterQualitySwitch(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
             .then(() => {
-                const representationInfo = getRepresentationInfo(e.newBitrateInfo.qualityIndex);
+                const representationInfo = getRepresentationInfo(e.newBitrateInfo.representationId);
                 scheduleController.setCurrentRepresentation(representationInfo);
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
                 if (e.reason && e.reason.forceReplace) {
@@ -986,17 +983,12 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
-    /**
-     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
-     * Otherwise, this function will return the current voRepresentation used by the representationController.
-     * @param {number} quality - quality index of the voRepresentaion expected.
-     */
-    function getRepresentationInfo(quality) {
+
+    function getRepresentationInfo(id = null) {
         let voRepresentation;
 
-        if (quality !== undefined) {
-            checkInteger(quality);
-            voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        if (id !== null) {
+            voRepresentation = representationController ? representationController.getRepresentationForId(id) : null;
         } else {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
@@ -1020,7 +1012,7 @@ function StreamProcessor(config) {
         const representationInfo = getRepresentationInfo();
 
         const representation = representationController && representationInfo ?
-            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+            representationController.getRepresentationForId(representationInfo.id) : null;
 
         return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
@@ -1034,9 +1026,9 @@ function StreamProcessor(config) {
         }
         const chunk = e.chunk;
         const bytes = chunk.bytes;
-        const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const id = chunk.representationId;
+        const currentRepresentation = getRepresentationInfo(id);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForId(currentRepresentation.id) : null;
         if (currentRepresentation && voRepresentation) {
             const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             voRepresentation.timescale = timescale;
@@ -1048,8 +1040,9 @@ function StreamProcessor(config) {
 
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const id = chunk.representationId;
+        const currentRepresentation = getRepresentationInfo(id);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForId(currentRepresentation.id) : null;
 
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
