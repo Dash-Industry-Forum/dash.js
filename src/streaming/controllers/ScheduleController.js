@@ -60,7 +60,7 @@ function ScheduleController(config) {
         scheduleTimeout,
         hasVideoTrack,
         lastFragmentRequest,
-        lastInitializedQuality,
+        lastInitializedRepresentationId,
         switchTrack,
         initSegmentRequired,
         checkPlaybackQuality;
@@ -145,7 +145,7 @@ function ScheduleController(config) {
         const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack) {
+        if (initSegmentRequired || currentRepresentationInfo.id !== lastInitializedRepresentationId || switchTrack) {
             if (switchTrack) {
                 logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
                 switchTrack = false;
@@ -194,7 +194,7 @@ function ScheduleController(config) {
     function _shouldScheduleNextRequest() {
         try {
             const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
-            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || _shouldBuffer());
+            return currentRepresentationInfo && (lastInitializedRepresentationId === null || switchTrack || _shouldBuffer());
         } catch (e) {
             return false;
         }
@@ -387,14 +387,14 @@ function ScheduleController(config) {
         initSegmentRequired = value;
     }
 
-    function setLastInitializedQuality(value) {
-        lastInitializedQuality = value;
+    function setLastInitializedId(value) {
+        lastInitializedRepresentationId = value;
     }
 
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
-        lastInitializedQuality = NaN;
+        lastInitializedRepresentationId = null;
         lastFragmentRequest = {
             mediaInfo: undefined,
             quality: NaN,
@@ -435,7 +435,7 @@ function ScheduleController(config) {
         getPlaybackController,
         setCheckPlaybackQuality,
         setInitSegmentRequired,
-        setLastInitializedQuality,
+        setLastInitializedId,
     };
 
     setup();

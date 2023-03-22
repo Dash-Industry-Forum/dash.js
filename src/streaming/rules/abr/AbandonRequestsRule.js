@@ -77,7 +77,6 @@ function AbandonRequestsRule(config) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
         const req = rulesContext.getCurrentRequest();
 
         if (!isNaN(req.index)) {
@@ -123,9 +122,9 @@ function AbandonRequestsRule(config) {
 
                     const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
-                    const bitrateList = abrController.getBitrateInfoList(mediaInfo, true, true);
                     const bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor, true, true);
-                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateInfo.bitrate / bitrateList[abrController.getCurrentBitrateInfoFor(mediaType, streamId).qualityIndex].bitrate;
+                    const currentBitrateInfo = abrController.getCurrentBitrateInfoFor(mediaType, streamInfo.id);
+                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateInfo.bitrate / currentBitrateInfo.bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
                         switchRequest.bitrateInfo = bitrateInfo;

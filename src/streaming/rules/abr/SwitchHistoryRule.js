@@ -1,4 +1,3 @@
-
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
@@ -21,34 +20,47 @@ function SwitchHistoryRule() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
-        const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
+        const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : {};
+        const mediaInfo = rulesContext.getMediaInfo();
+        const abrController = rulesContext.getAbrController();
+        const bitrateInfoList = abrController.getBitrateInfoList(mediaInfo, true, true);
+
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;
         const switchRequest = SwitchRequest(context).create();
 
-        for (let i = 0; i < switchRequests.length; i++) {
-            if (switchRequests[i] !== undefined) {
-                drops += switchRequests[i].drops;
-                noDrops += switchRequests[i].noDrops;
-                dropSize += switchRequests[i].dropSize;
+        for (let i = 0; i < bitrateInfoList.length; i++) {
+            const repId = bitrateInfoList[i].representationId;
+            if (repId && switchRequests[repId]) {
+                drops += switchRequests[repId].drops;
+                noDrops += switchRequests[repId].noDrops;
+                dropSize += switchRequests[repId].dropSize;
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
-                    switchRequest.quality = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
-                    switchRequest.reason = {index: switchRequest.quality, drops: drops, noDrops: noDrops, dropSize: dropSize};
+                    const index = (i > 0 && switchRequests[repId].drops > 0) ? i - 1 : i;
+                    switchRequest.bitrateInfo = abrController.getBitrateInfoByIndex(mediaInfo, index, true, true);
+                    switchRequest.reason = {
+                        index: switchRequest.quality,
+                        drops: drops,
+                        noDrops: noDrops,
+                        dropSize: dropSize,
+                        rule: this.getClassName()
+                    };
                     logger.debug('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
                     break;
                 }
             }
+
         }
 
         return switchRequest;
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

@@ -300,7 +300,7 @@ function L2ARule(config) {
      * @param {object} rulesContext
      * @return {object}
      */
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
         const horizon = 4; // Optimization horizon (The amount of steps required to achieve convergence)
         const vl = Math.pow(horizon, 0.99);// Cautiousness parameter, used to control aggressiveness of the bitrate decision process.
@@ -478,8 +478,8 @@ function L2ARule(config) {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex,
-        reset: reset
+        getSwitchRequest,
+        reset
     };
 
     setup();

@@ -300,8 +300,7 @@ function BolaRule(config) {
 
                 bolaState.lastSegmentStart = start;
                 bolaState.lastSegmentDurationS = e.chunk.duration;
-                const bitrateInfo = abrController.getBitrateInfoByRepresentationId(e.chunk.mediaInfo, e.chunk.representationId);
-                bolaState.lastQuality = bitrateInfo;
+                bolaState.lastQuality = abrController.getBitrateInfoByRepresentationId(e.chunk.mediaInfo, e.chunk.representationId);
 
                 checkNewSegment(bolaState, e.chunk.mediaInfo.type);
             }
@@ -462,11 +461,11 @@ function BolaRule(config) {
                 // we want to avoid oscillations
                 // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
                 const bitrateInfoForThroughput = abrController.getBitrateInfoByBitrate(mediaInfo, safeThroughput, true, true);
-                if (bitrateInfo.absoluteIndex > bolaState.lastQuality.absoluteIndex && bitrateInfo.absoluteIndex > bitrateInfoForThroughput.absoluteIndex) {
+                if (bitrateInfo.bitrate > bolaState.lastQuality.bitrate && bitrateInfo.bitrate > bitrateInfoForThroughput.bitrate) {
                     // only intervene if we are trying to *increase* quality to an *unsustainable* level
                     // we are only avoid oscillations - do not drop below last quality
 
-                    bitrateInfo = bitrateInfoForThroughput.absoluteIndex > bolaState.lastQuality.absoluteIndex ? bitrateInfoForThroughput : bolaState.lastQuality;
+                    bitrateInfo = bitrateInfoForThroughput.bitrate > bolaState.lastQuality.bitrate ? bitrateInfoForThroughput : bolaState.lastQuality;
                 }
 
                 // We do not want to overfill buffer with low quality chunks.

@@ -114,8 +114,7 @@ function RepresentationController(config) {
             mediaInfo = mInfo;
             voAvailableRepresentations = availableRepresentations;
 
-            const qualityIndex = bitrateInfo ? bitrateInfo.qualityIndex : 0;
-            const rep = getRepresentationForQuality(qualityIndex)
+            const rep = bitrateInfo? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
             _setCurrentVoRepresentation(rep);
             realAdaptation = newRealAdaptation;
 
@@ -165,8 +164,7 @@ function RepresentationController(config) {
             mediaInfo = mInfo;
             voAvailableRepresentations = availableRepresentations;
 
-            const qualityIndex = bitrateInfo ? bitrateInfo.qualityIndex : 0;
-            const rep = getRepresentationForQuality(qualityIndex)
+            const rep = bitrateInfo? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
             _setCurrentVoRepresentation(rep);
             _addRepresentationSwitch();
             realAdaptation = newRealAdaptation;
@@ -287,8 +285,16 @@ function RepresentationController(config) {
         }, { streamId: streamInfo.id, mediaType: type })
     }
 
-    function getRepresentationForQuality(quality) {
-        return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
+    function getRepresentationForId(id) {
+        const rep = voAvailableRepresentations.filter((rep) => {
+            return rep.id === id
+        })[0]
+
+        if(rep) {
+            return rep
+        }
+
+        return voAvailableRepresentations[0];
     }
 
     function endDataUpdate() {
@@ -322,8 +328,8 @@ function RepresentationController(config) {
         }
     }
 
-    function prepareQualityChange(newQuality) {
-        const newRep = getRepresentationForQuality(newQuality)
+    function prepareQualityChange(id) {
+        const newRep = getRepresentationForId(id)
         _setCurrentVoRepresentation(newRep);
         _addRepresentationSwitch();
     }
@@ -355,8 +361,8 @@ function RepresentationController(config) {
         updateData,
         updateDataAfterAdaptationSetQualitySwitch,
         getCurrentRepresentation,
+        getRepresentationForId,
         getCurrentRepresentationInfo,
-        getRepresentationForQuality,
         prepareQualityChange,
         setMediaInfo,
         reset

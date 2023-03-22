@@ -74,7 +74,7 @@ function InsufficientBufferRule(config) {
      * @param rulesContext
      * @return {object}
      */
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
@@ -88,10 +88,12 @@ function InsufficientBufferRule(config) {
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
         const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
+        const mediaInfo = rulesContext.getMediaInfo();
         const scheduleController = rulesContext.getScheduleController();
         const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
         const playbackController = scheduleController.getPlaybackController();
+        const abrController = rulesContext.getAbrController();
+        const bitrateInfos = abrController.getBitrateInfoList(mediaInfo, true, true);
 
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
@@ -102,20 +104,19 @@ function InsufficientBufferRule(config) {
 
         if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
-            switchRequest.quality = 0;
-            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+            switchRequest.bitrateInfo = bitrateInfos[0];
+            switchRequest.reason = { message: 'InsufficientBufferRule: Buffer is empty', rule: this.getClassName() };
         } else {
-            const mediaInfo = rulesContext.getMediaInfo();
-            const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
-
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
-            const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
-            switchRequest.quality = abrController.getQualityIndexForBitrate(mediaInfo, bitrate, streamId, latency);
-            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
+            switchRequest.quality = abrController.getBitrateInfoByBitrate(mediaInfo, bitrate, true, true);
+            switchRequest.reason = {
+                message: 'InsufficientBufferRule: being conservative to avoid immediate rebuffering',
+                rule: this.getClassName()
+            };
         }
 
         return switchRequest;
@@ -151,7 +152,7 @@ function InsufficientBufferRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

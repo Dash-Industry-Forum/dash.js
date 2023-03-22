@@ -994,12 +994,12 @@ function MediaPlayer() {
         return stream ? stream.getBitrateInfoListFor(type) : [];
     }
 
-    function getAbsoluteIndexForQuality(mediaInfo, representationId) {
+    function getAbsoluteIndexForRepresentationId(mediaInfo, representationId) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
-        const list = abrController.getBitrateInfoList(mediaInfo, true, true);
+        const list = abrController.getBitrateInfoList(mediaInfo, true, false);
 
         let absoluteIndex = 0;
         let i = 0;
@@ -2553,7 +2553,7 @@ function MediaPlayer() {
         resetSettings,
         reset,
         destroy,
-        getAbsoluteIndexForQuality
+        getAbsoluteIndexForRepresentationId
     };
 
     setup();

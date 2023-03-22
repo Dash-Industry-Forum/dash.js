@@ -30,35 +30,31 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import SwitchRequest from './SwitchRequest';
 
 const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
 
 function SwitchRequestHistory() {
-    let switchRequests = []; // running total
+    let switchRequests = {}; // running total
     let srHistory = []; // history of each switch
 
     function push(switchRequest) {
-        if (switchRequest.newValue === SwitchRequest.NO_CHANGE) {
-            switchRequest.newValue = switchRequest.oldValue;
-        }
-        if (!switchRequests[switchRequest.oldValue]) {
-            switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
+        if (!switchRequests[switchRequest.oldValue.representationId]) {
+            switchRequests[switchRequest.oldValue.representationId] = {noDrops: 0, drops: 0, dropSize: 0};
         }
 
         // Set switch details
-        let indexDiff = switchRequest.newValue - switchRequest.oldValue;
+        let indexDiff = switchRequest.newValue.absoluteIndex - switchRequest.oldValue.absoluteIndex;
         let drop = (indexDiff < 0) ? 1 : 0;
         let dropSize = drop ? -indexDiff : 0;
         let noDrop = drop ? 0 : 1;
 
         // Update running totals
-        switchRequests[switchRequest.oldValue].drops += drop;
-        switchRequests[switchRequest.oldValue].dropSize += dropSize;
-        switchRequests[switchRequest.oldValue].noDrops += noDrop;
+        switchRequests[switchRequest.oldValue.representationId].drops += drop;
+        switchRequests[switchRequest.oldValue.representationId].dropSize += dropSize;
+        switchRequests[switchRequest.oldValue.representationId].noDrops += noDrop;
 
         // Save to history
-        srHistory.push({idx: switchRequest.oldValue, noDrop: noDrop, drop: drop, dropSize: dropSize});
+        srHistory.push({idx: switchRequest.oldValue.representationId, noDrop: noDrop, drop: drop, dropSize: dropSize});
 
         // Shift earliest switch off srHistory and readjust to keep depth of running totals constant
         if ( srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH ) {

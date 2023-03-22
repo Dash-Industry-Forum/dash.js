@@ -967,7 +967,7 @@ function Settings() {
                 additionalAbrRules: {
                     insufficientBufferRule: false,
                     switchHistoryRule: false,
-                    droppedFramesRule: false,
+                    droppedFramesRule: true,
                     abandonRequestsRule: false
                 },
                 bandwidthSafetyFactor: 0.9,
@@ -981,7 +981,7 @@ function Settings() {
                 },
                 minBitrate: {
                     audio: -1,
-                    video: 500
+                    video: -1
                 },
                 maxRepresentationRatio: {
                     audio: 1,

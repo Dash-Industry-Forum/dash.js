@@ -37,7 +37,6 @@ import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferCon
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
-import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
@@ -541,7 +540,7 @@ function StreamProcessor(config) {
         }
 
         if (dashHandler) {
-            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+            const representation = representationController && representationInfo ? representationController.getRepresentationForId(representationInfo.id) : null;
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
@@ -618,9 +617,8 @@ function StreamProcessor(config) {
 
         // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
         if (e.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
-            const lastInitializedQuality = e.quality;
-            scheduleController.setLastInitializedQuality(lastInitializedQuality);
-            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
+            scheduleController.setLastInitializedId(e.representationId);
+            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.representationId);
         }
 
         if (pendingSwitchToRepresentationInfo) {
@@ -649,16 +647,14 @@ function StreamProcessor(config) {
     }
 
     function _prepareNonAdaptationSwitchQualityChange(e) {
-        const newQuality = e.newBitrateInfo.qualityIndex;
-
         qualityChangeInProgress = true;
 
         // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
 
-        representationController.prepareQualityChange(newQuality);
+        const representationInfo = getRepresentationInfo(e.newBitrateInfo.representationId);
+        representationController.prepareQualityChange(representationInfo.id);
 
-        const representationInfo = getRepresentationInfo(newQuality);
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
             _prepareForForceReplacementQualitySwitch(representationInfo);
@@ -686,7 +682,7 @@ function StreamProcessor(config) {
 
         selectMediaInfoAfterQualitySwitch(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
             .then(() => {
-                const representationInfo = getRepresentationInfo(e.newBitrateInfo.qualityIndex);
+                const representationInfo = getRepresentationInfo(e.newBitrateInfo.representationId);
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
                 if (e.reason && e.reason.forceReplace) {
                     _prepareForForceReplacementQualitySwitch();
@@ -1045,17 +1041,12 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
-    /**
-     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
-     * Otherwise, this function will return the current voRepresentation used by the representationController.
-     * @param {number} quality - quality index of the voRepresentaion expected.
-     */
-    function getRepresentationInfo(quality) {
+
+    function getRepresentationInfo(id = null) {
         let voRepresentation;
 
-        if (quality !== undefined) {
-            checkInteger(quality);
-            voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        if (id !== null) {
+            voRepresentation = representationController ? representationController.getRepresentationForId(id) : null;
         } else {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
@@ -1079,7 +1070,7 @@ function StreamProcessor(config) {
         const representationInfo = getRepresentationInfo();
 
         const representation = representationController && representationInfo ?
-            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+            representationController.getRepresentationForId(representationInfo.id) : null;
 
         return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
@@ -1093,9 +1084,9 @@ function StreamProcessor(config) {
         }
         const chunk = e.chunk;
         const bytes = chunk.bytes;
-        const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const id = chunk.representationId;
+        const currentRepresentation = getRepresentationInfo(id);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForId(currentRepresentation.id) : null;
         if (currentRepresentation && voRepresentation) {
             voRepresentation.timescale = boxParser.getMediaTimescaleFromMoov(bytes);
         }
@@ -1106,8 +1097,9 @@ function StreamProcessor(config) {
 
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const id = chunk.representationId;
+        const currentRepresentation = getRepresentationInfo(id);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForId(currentRepresentation.id) : null;
 
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality

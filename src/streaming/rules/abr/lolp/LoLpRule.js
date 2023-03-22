@@ -66,7 +66,7 @@ function LoLPRule(config) {
         qoeEvaluator = LoLpQoeEvaluator(context).create();
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         try {
             let switchRequest = SwitchRequest(context).create();
             let mediaType = rulesContext.getMediaInfo().type;
@@ -171,7 +171,7 @@ function LoLPRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 
