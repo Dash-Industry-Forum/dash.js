@@ -33,7 +33,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils';
 import SwitchRequest from '../../streaming/rules/SwitchRequest';
-import BitrateInfo from '../../streaming/vo/BitrateInfo';
 
 function RepresentationController(config) {
 
@@ -136,7 +135,7 @@ function RepresentationController(config) {
                 .then(() => {
                     let repSwitch;
                     const switchRequest = SwitchRequest(context).create();
-                    switchRequest.bitrateInfo = BitrateInfo.getByRepresentationAndMediaInfo(currentVoRepresentation, mediaInfo)
+                    switchRequest.bitrateInfo = abrController.getBitrateInfoByRepresentationId(mediaInfo, currentVoRepresentation.id)
                     switchRequest.reason = { rule: this.getClassName() }
                     abrController.setPlaybackQuality(switchRequest);
 

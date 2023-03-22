@@ -119,6 +119,7 @@ function AbrController() {
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics,
             customParametersModel,
+            abrController: instance,
             mediaPlayerModel,
             settings
         });
@@ -424,8 +425,6 @@ function AbrController() {
 
     function _setCurrentBitrateInfoFor(type, bitrateInfo, streamId) {
         bitrateInfoDict[streamId] = bitrateInfoDict[streamId] || {};
-        const bitrateInfoList = getBitrateInfoList(bitrateInfo.mediaInfo, true, true);
-        bitrateInfo.isTopBitrate = bitrateInfo.qualityIndex === bitrateInfoList[bitrateInfoList.length - 1].qualityIndex;
         bitrateInfoDict[streamId][type] = bitrateInfo;
     }
 
@@ -591,6 +590,14 @@ function AbrController() {
         return bitrateList[index];
     }
 
+    function getBitrateInfoByRepresentationId(mediaInfo, id, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+        const bitrateList = getBitrateInfoList(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
+
+        return bitrateList.filter((bInfo) => {
+            return bInfo.representationId === id;
+        })[0]
+    }
+
     /**
      * @param mediaInfo
      * @param {boolean} includeCompatibleMediaInfos Whether to include AS that are compatible and can be used for ABR switching. For instance, according to the SupplementalProperty "adaptation-set-switching-2016"
@@ -604,7 +611,6 @@ function AbrController() {
             return bitrateInfoArray;
         }
 
-        let absoluteIndex = 0;
         const mediaInfos = _getPossibleMediaInfos(mediaInfo, includeCompatibleMediaInfos)
         mediaInfos.forEach((mediaInfo) => {
             if (mediaInfo.bitrateList) {
@@ -621,11 +627,9 @@ function AbrController() {
                     bitrateInfo.scanType = bitrateList[i].scanType;
                     bitrateInfo.mediaInfo = mediaInfo;
                     bitrateInfo.representationId = bitrateList[i].id;
-                    bitrateInfo.absoluteIndex = absoluteIndex;
                     bitrateInfoArray.push(bitrateInfo);
                 }
 
-                absoluteIndex += 1;
             }
         })
 
@@ -639,6 +643,14 @@ function AbrController() {
             const hasCompatibleMediaInfos = mediaInfos.length > 1;
             bitrateInfoArray = _filterByAllowedSettings(bitrateInfoArray, hasCompatibleMediaInfos)
         }
+
+        //Add absolute index
+        bitrateInfoArray.forEach((bInfo, index) => {
+            bInfo.absoluteIndex = index
+        })
+
+        // Last entry is the top quality
+        bitrateInfoArray[bitrateInfoArray.length - 1].isTopBitrate = true;
 
         return bitrateInfoArray;
     }
@@ -901,6 +913,7 @@ function AbrController() {
         getAbandonmentStateFor,
         getBitrateInfoByBitrate,
         getBitrateInfoByIndex,
+        getBitrateInfoByRepresentationId,
         getBitrateInfoList,
         getCurrentBitrateInfoFor,
         getInitialBitrateFor,
