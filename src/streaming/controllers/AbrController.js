@@ -836,6 +836,8 @@ function AbrController() {
             bitrateInfo.width = bitrateList[i].width;
             bitrateInfo.height = bitrateList[i].height;
             bitrateInfo.scanType = bitrateList[i].scanType;
+            bitrateInfo.drmDefaultKeyId = bitrateList[i].drmDefaultKeyId;
+
             infoList.push(bitrateInfo);
         }
 
