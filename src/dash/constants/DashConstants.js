@@ -89,6 +89,7 @@ class DashConstants {
         this.CONTENT_PROTECTION = 'ContentProtection';
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
+        this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
         this.INBAND = 'inband';

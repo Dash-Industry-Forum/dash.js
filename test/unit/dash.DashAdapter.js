@@ -61,6 +61,18 @@ const manifest_without_supplemental_properties = {
     mediaPresentationDuration: 10,
     Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }]
 };
+const manifest_with_supplemental_properties = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0,
+            mimeType: Constants.AUDIO,
+            SupplementalProperty: {},
+            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'}] 
+        }]
+    }]
+};
 
 
 describe('DashAdapter', function () {
@@ -420,6 +432,7 @@ describe('DashAdapter', function () {
                 track.representationCount = 0;
                 track.lang = 'deu';
                 track.roles = ['main'];
+                track.role_withSchemeIdUri = [{schemeIdUri:'aScheme', value:'main'}];
                 track.codec = 'audio/mp4;codecs="mp4a.40.2"';
                 track.mimeType = 'audio/mp4';
 
@@ -500,6 +513,28 @@ describe('DashAdapter', function () {
 
                 expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
                 expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+            });
+
+            it('supplemental properties should be filled if correctly defined', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.AUDIO, manifest_with_supplemental_properties);
+
+                console.log("MediaInf-Len: "+mediaInfoArray.length);
+                console.log("MediaInfo: %o", mediaInfoArray);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
             });
         });
 

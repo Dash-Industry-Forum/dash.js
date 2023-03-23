@@ -231,7 +231,7 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation.Viewpoint_asArray.length) return null;
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation.Viewpoint_asArray.length) return [];
         return adaptation.Viewpoint_asArray.map( viewpoint => {
             const vp = new DescriptorType;
             return vp.init(viewpoint);
@@ -1287,7 +1287,7 @@ function DashManifestModel() {
     function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
 
-        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of adaptation.SupplementalProperty_asArray) {
                 if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
                     supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
@@ -1298,7 +1298,7 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty_asArray.length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !adaptation.SupplementalProperty_asArray.length) return [];
         return adaptation.SupplementalProperty_asArray.map( supp => {
             const s = new DescriptorType;
             return s.init(supp);
@@ -1308,7 +1308,7 @@ function DashManifestModel() {
     function getSupplementalPropertiesForRepresentation(representation) {
         const supplementalProperties = {};
 
-        if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+        if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of representation.SupplementalProperty_asArray) {
                 if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
                     supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
@@ -1319,7 +1319,7 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesAsArrayForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty_asArray.length) return [];
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !representation.SupplementalProperty_asArray.length) return [];
         return representation.SupplementalProperty_asArray.map( supp => {
             const s = new DescriptorType;
             return s.init(supp);

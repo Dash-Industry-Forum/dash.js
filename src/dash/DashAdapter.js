@@ -1053,8 +1053,8 @@ function DashAdapter() {
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
 
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint ? viewpoint[0].value : undefined;
-        mediaInfo.viewpoint_withSchemeIdUri = viewpoint ? viewpoint : [];
+        mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
+        mediaInfo.viewpoint_withSchemeIdUri = viewpoint;
         
         accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
         mediaInfo.accessibility = accessibility.map(function (accessibility) {

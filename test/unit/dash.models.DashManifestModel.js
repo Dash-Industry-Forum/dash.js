@@ -112,10 +112,11 @@ describe('DashManifestModel', function () {
             expect(language).to.equal(EMPTY_STRING);  // jshint ignore:line
         });
 
-        it('should return null when getViewpointForAdaptation is called and adaptation is undefined', () => {
+        it('should return an empty array when getViewpointForAdaptation is called and adaptation is undefined', () => {
             const viewPoint = dashManifestModel.getViewpointForAdaptation();
 
-            expect(viewPoint).to.be.null;     // jshint ignore:line
+            expect(viewPoint).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(viewPoint).to.be.empty;     // jshint ignore:line
         });
 
         it('should return an empty array when getAudioChannelConfigurationForAdaptation is called and adaptation is undefined', () => {
