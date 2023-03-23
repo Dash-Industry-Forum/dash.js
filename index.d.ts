@@ -145,7 +145,7 @@ declare namespace dashjs {
 
         getLanguageForAdaptation(adaptation: object): string;
 
-        getViewpointForAdaptation(adaptation: object): DescriptorType;
+        getViewpointForAdaptation(adaptation: object): DescriptorType[];
 
         getRolesForAdaptation(adaptation: object): DescriptorType[];
 
