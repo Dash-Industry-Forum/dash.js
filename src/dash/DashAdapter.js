@@ -1049,11 +1049,12 @@ function DashAdapter() {
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
         
-        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        mediaInfo.viewpoint_withSchemeIdUri = viewpoint ? viewpoint : undefined;
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
+
+        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
+        mediaInfo.viewpoint = viewpoint ? viewpoint[0].value : undefined;
+        mediaInfo.viewpoint_withSchemeIdUri = viewpoint ? viewpoint : [];
         
         accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
         mediaInfo.accessibility = accessibility.map(function (accessibility) {

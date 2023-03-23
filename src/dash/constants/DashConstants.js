@@ -100,6 +100,7 @@ class DashConstants {
         this.SUBSET = 'Subset';
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
+        this.VIEWPOINT_ASARRAY = 'Viewpoint_asArray';
         this.ROLE_ASARRAY = 'Role_asArray';
         this.REPRESENTATION_ASARRAY = 'Representation_asArray';
         this.PRODUCERREFERENCETIME_ASARRAY = 'ProducerReferenceTime_asArray';

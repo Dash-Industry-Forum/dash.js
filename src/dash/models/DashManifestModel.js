@@ -231,10 +231,11 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT)) return null;
-        // TODO: This should be an array, as multiple instances are allowed by 23009-1
-        const vp = new DescriptorType;
-        return vp.init(adaptation.Viewpoint);
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation.Viewpoint_asArray.length) return null;
+        return adaptation.Viewpoint_asArray.map( viewpoint => {
+            const vp = new DescriptorType;
+            return vp.init(viewpoint);
+        });
     }
 
     function getRolesForAdaptation(adaptation) {
