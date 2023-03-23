@@ -114,7 +114,7 @@ function RepresentationController(config) {
             mediaInfo = mInfo;
             voAvailableRepresentations = availableRepresentations;
 
-            const rep = bitrateInfo? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
+            const rep = bitrateInfo ? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
             _setCurrentVoRepresentation(rep);
             realAdaptation = newRealAdaptation;
 
@@ -164,7 +164,7 @@ function RepresentationController(config) {
             mediaInfo = mInfo;
             voAvailableRepresentations = availableRepresentations;
 
-            const rep = bitrateInfo? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
+            const rep = bitrateInfo ? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
             _setCurrentVoRepresentation(rep);
             _addRepresentationSwitch();
             realAdaptation = newRealAdaptation;
@@ -290,7 +290,7 @@ function RepresentationController(config) {
             return rep.id === id
         })[0]
 
-        if(rep) {
+        if (rep) {
             return rep
         }
 

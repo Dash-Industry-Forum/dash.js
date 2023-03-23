@@ -682,7 +682,7 @@ function StreamProcessor(config) {
 
         selectMediaInfoAfterQualitySwitch(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
             .then(() => {
-                const representationInfo = getRepresentationInfo(e.newBitrateInfo.representationId);
+                const representationInfo = _getRepresentationInfoByMediaInfoAndId(e.newBitrateInfo.mediaInfo, e.newBitrateInfo.representationId)
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
                 if (e.reason && e.reason.forceReplace) {
                     _prepareForForceReplacementQualitySwitch();
@@ -732,18 +732,19 @@ function StreamProcessor(config) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
         let safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
-        const request = fragmentModel.getRequests({
+        const originalRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
             threshold: 0
         })[0];
 
-        if (request && !getIsTextTrack()) {
+        if (originalRequest && !getIsTextTrack()) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
             // The quality we originally requested was lower than the new quality
-            if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
+            const originalRepresentationInfo = _getRepresentationInfoByMediaInfoAndId(originalRequest.mediaInfo, originalRequest.representationId)
+            if (originalRepresentationInfo.bandwidth < representationInfo.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                 bufferController.updateBufferTimestampOffset(representationInfo)
                     .then(() => {
                         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
@@ -795,6 +796,14 @@ function StreamProcessor(config) {
                 pendingSwitchToRepresentationInfo = null;
                 qualityChangeInProgress = false;
             })
+    }
+
+    function _getRepresentationInfoByMediaInfoAndId(mediaInfo, repId) {
+        const voRepresentations = adapter.getVoRepresentations(mediaInfo)
+        const targetRepresentation = voRepresentations.filter((rep) => {
+            return rep.id === repId
+        })[0]
+        return adapter.convertRepresentationToRepresentationInfo(targetRepresentation);
     }
 
     /**
