@@ -482,7 +482,7 @@ function StreamController() {
                 // check if change type is supported by the browser
                 if (sinks) {
                     const keys = Object.keys(sinks);
-                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
+                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
                         supportsChangeType = true;
                     }
                     bufferSinks = sinks;
