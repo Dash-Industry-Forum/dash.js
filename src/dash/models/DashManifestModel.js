@@ -231,7 +231,7 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        if (!adaptation || adaptation.hasOwnProperty(DashConstants.VIEWPOINT)) return null;
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT)) return null;
         // TODO: This should be an array, as multiple instances are allowed by 23009-1
         const vp = new DescriptorType;
         return vp.init(adaptation.Viewpoint);
@@ -1296,6 +1296,14 @@ function DashManifestModel() {
         return supplementalProperties;
     }
 
+    function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty_asArray.length) return [];
+        return adaptation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType;
+            return s.init(supp);
+        });
+    }
+
     function getSupplementalPropertiesForRepresentation(representation) {
         const supplementalProperties = {};
 
@@ -1307,6 +1315,14 @@ function DashManifestModel() {
             }
         }
         return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesAsArrayForRepresentation(representation) {
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty_asArray.length) return [];
+        return representation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType;
+            return s.init(supp);
+        });
     }
 
     function setConfig(config) {
@@ -1374,7 +1390,9 @@ function DashManifestModel() {
         getSegmentAlignment,
         getSubSegmentAlignment,
         getSupplementalPropertiesForAdaptation,
+        getSupplementalPropertiesAsArrayForAdaptation,
         getSupplementalPropertiesForRepresentation,
+        getSupplementalPropertiesAsArrayForRepresentation,
         setConfig
     };
 

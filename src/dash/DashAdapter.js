@@ -1115,9 +1115,21 @@ function DashAdapter() {
                 return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
             });
             if ( arr.every( v => v === arr[0] ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
                 mediaInfo.supplementalProperties = arr[0];
             }
         }
+        mediaInfo.supplementalPropertiesAsArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation(realAdaptation);
+        if ( (!mediaInfo.supplementalPropertiesAsArray || mediaInfo.supplementalPropertiesAsArray.length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation(repr);
+            });
+            if ( arr.every( v => v === arr[0] ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.supplementalPropertiesAsArray = arr[0];
+            }
+        }
+        
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
