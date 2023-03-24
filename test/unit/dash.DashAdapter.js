@@ -658,6 +658,74 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType); // jshint ignore:line
                     expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
                 });
+
+                it('role and accessibility should be empty if not defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(0);         // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility.length).equals(0);         // jshint ignore:line
+
+                    expect(mediaInfoArray[0].role_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                });
+
+                it('role should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audio);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(1);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].roles[0]).equals('main');                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].role_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri.length).equals(1);          // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri[0].value).equals('main'); // jshint ignore:line
+                });
+
+                it('role should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_video_with_embedded_subtitles);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(0);                          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);               // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility.length).equals(1);                      // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility[0]).equals('cea-608:CC1=eng;CC3=swe');  // jshint ignore:line
+                    expect(mediaInfoArray[1].accessibility.length).equals(0);                      // jshint ignore:line
+
+                    expect(mediaInfoArray[0].role_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri.length).equals(1);          // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015'); // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri[0].value).equals('CC1=eng;CC3=swe'); // jshint ignore:line
+                    expect(mediaInfoArray[1].accessibility_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                });
+
             });
 
         });
