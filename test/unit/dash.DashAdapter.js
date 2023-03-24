@@ -567,95 +567,97 @@ describe('DashAdapter', function () {
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);       // jshint ignore:line
             });
 
-            it('supplemental properties should be empty if not defined', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.VIDEO, manifest_without_supplemental_properties);
+            describe('mediainfo populated from manifest', function () {
+                it('supplemental properties should be empty if not defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_without_supplemental_properties);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
-                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
-            });
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+                });
 
-            it('supplemental properties should be filled if correctly defined', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.VIDEO, manifest_with_supplemental_properties);
+                it('supplemental properties should be filled if correctly defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                expect(mediaInfoArray[0].codec).to.be.null;        // jshint ignore:line
+                    expect(mediaInfoArray[0].codec).to.be.null;        // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
-                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
-            });
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
+                });
 
-            it('supplemental properties should not be filled if not set on all representations', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.VIDEO, manifest_with_supplemental_properties_on_only_one_repr);
+                it('supplemental properties should not be filled if not set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_only_one_repr);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                expect(mediaInfoArray[0].representationCount).equals(3); // jshint ignore:line
+                    expect(mediaInfoArray[0].representationCount).equals(3); // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
-                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
-                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
-            });
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+                });
 
-            it('audio channel config should be filled', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.AUDIO, manifest_with_audioChanCfg);
+                it('audio channel config should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(2);                          // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('6');                              // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(2);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('6');                              // jshint ignore:line
 
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(2);          // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[1].value).equals('0xF801'); // jshint ignore:line
-            });
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(2);          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[1].value).equals('0xF801'); // jshint ignore:line
+                });
 
-            it('audio channel config should be filled when present on Representation', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
+                it('audio channel config should be filled when present on Representation', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
-                expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);                          // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('21');                           // jshint ignore:line
+                    // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
+                    expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('21');                           // jshint ignore:line
 
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(4);          // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType); // jshint ignore:line
-                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(4);          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType); // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
+                });
             });
 
         });
