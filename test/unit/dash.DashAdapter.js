@@ -698,7 +698,7 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].role_withSchemeIdUri[0].value).equals('main'); // jshint ignore:line
                 });
 
-                it('role should be filled', function () {
+                it('accessibility should be filled', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                         id: 'defaultId_0',
                         index: 0
@@ -1383,4 +1383,58 @@ describe('DashAdapter', function () {
             });
         });
     });
+
+    describe('areMediaInfosEqual', function () {
+        var mediaInfo1;
+
+        beforeEach(function () {
+            var manifest_1 = {
+                loadedTime: new Date(),
+                mediaPresentationDuration: 10,
+                Period_asArray: [{
+                    AdaptationSet_asArray: [
+                        {
+                            id: 0, mimeType: Constants.VIDEO,
+                            Role_asArray:[],
+                            Accessibility_asArray: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'}],
+                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                                {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+                            ]
+                        }, {
+                            id: 1, mimeType: Constants.VIDEO,
+                            Role_asArray:[{schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main'}],
+                            Accessibility_asArray: [],
+                            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value4'}],
+                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                                {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}
+                            ]
+                        }
+                    ]
+                }]
+            };
+            mediaInfo1 = dashAdapter.getAllMediaInfoForType(
+                {id: 'defaultId_0', index: 0}, Constants.VIDEO,
+                manifest_1);
+        });
+
+        it('should return false if 1st MediaInfo is not set', function () {
+            var result = dashAdapter.areMediaInfosEqual(null, mediaInfo1[0]);
+            expect(result).to.be.false;
+        });
+        it('should return false if 2nd MediaInfo is not set', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], null);
+            expect(result).to.be.false;
+        });
+
+        it('should return true if MediaInfos are equal', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], mediaInfo1[0]);
+            expect(result).to.be.true;
+        });
+        it('should return false if MediaInfos are not equal', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], mediaInfo1[1]);
+            expect(result).to.be.false;
+        });
+    });
+
 });
