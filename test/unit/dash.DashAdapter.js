@@ -7,6 +7,7 @@ import cea608parser from '../../externals/cea608-parser';
 import VoHelper from './helpers/VOHelper';
 import PatchHelper from './helpers/PatchHelper.js';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import DescriptorType from '../../src/dash/vo/DescriptorType';
 
 const expect = require('chai').expect;
 
@@ -18,24 +19,29 @@ const manifest_with_audio = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
     Period_asArray: [{
-        AdaptationSet_asArray: [{
-            id: undefined,
-            mimeType: Constants.AUDIO,
-            lang: 'eng',
-            Role_asArray: [{ value: 'main' }]
-        }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }]
+        AdaptationSet_asArray: [
+            {
+                id: undefined, mimeType: Constants.AUDIO,
+                lang: 'eng', Role_asArray: [{ value: 'main' }]
+            }, {
+                id: undefined, mimeType: Constants.AUDIO,
+                lang: 'deu', Role_asArray: [{ value: 'main' }]
+            }
+        ]
     }]
 };
 const manifest_with_video_with_embedded_subtitles = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
     Period_asArray: [{
-        AdaptationSet_asArray: [{
-            id: 0,
-            mimeType: Constants.VIDEO,
-            Accessibility: { schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' },
-            Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
-        }, { id: 1, mimeType: Constants.VIDEO }]
+        AdaptationSet_asArray: [
+            {
+                id: 0, mimeType: Constants.VIDEO,
+                Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
+            }, {
+                id: 1, mimeType: Constants.VIDEO
+            }
+        ]
     }]
 };
 const manifest_with_ll_service_description = {
@@ -49,9 +55,7 @@ const manifest_with_ll_service_description = {
     }],
     Period_asArray: [{
         AdaptationSet_asArray: [{
-            id: 0,
-            mimeType: Constants.VIDEO,
-            SupplementalProperty: {},
+            id: 0, mimeType: Constants.VIDEO,
             SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }]
         }]
     }]
@@ -66,14 +70,75 @@ const manifest_with_supplemental_properties = {
     mediaPresentationDuration: 10,
     Period_asArray: [{
         AdaptationSet_asArray: [{
-            id: 0,
-            mimeType: Constants.AUDIO,
-            SupplementalProperty: {},
+            id: 0, mimeType: Constants.VIDEO,
             SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'}] 
         }]
     }]
 };
-
+const manifest_with_supplemental_properties_on_only_one_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION_ASARRAY]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'}
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000
+                },
+                {
+                    id: 12, bandwidth: 96000
+                }
+            ]
+        }]
+    }]
+};
+const manifest_with_audioChanCfg = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.AUDIO,
+            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'},
+                {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+            ]
+        }]
+    }]
+};
+const manifest_with_audioChanCfg_Repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.AUDIO,
+            [DashConstants.REPRESENTATION_ASARRAY]:[
+                {
+                    id: 11, bandwidth: 128000,
+                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'},
+                        {schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '6'},
+                        {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+                    ]
+                },{
+                    id: 12, bandwidth: 96000,
+                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '21'},
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'},
+                        {schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2'},
+                        {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xA000'}
+                    ]
+                }
+            ]
+        }]
+    }]
+};
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
@@ -522,13 +587,12 @@ describe('DashAdapter', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                     id: 'defaultId_0',
                     index: 0
-                }, Constants.AUDIO, manifest_with_supplemental_properties);
-
-                console.log("MediaInf-Len: "+mediaInfoArray.length);
-                console.log("MediaInfo: %o", mediaInfoArray);
+                }, Constants.VIDEO, manifest_with_supplemental_properties);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                expect(mediaInfoArray[0].codec).to.be.null;        // jshint ignore:line
 
                 expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
                 expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
@@ -536,6 +600,64 @@ describe('DashAdapter', function () {
                 expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
                 expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
             });
+
+            it('supplemental properties should not be filled if not set on all representations', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.VIDEO, manifest_with_supplemental_properties_on_only_one_repr);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                expect(mediaInfoArray[0].representationCount).equals(3); // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+            });
+
+            it('audio channel config should be filled', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.AUDIO, manifest_with_audioChanCfg);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(2);                          // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('6');                              // jshint ignore:line
+
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(2);          // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[1].value).equals('0xF801'); // jshint ignore:line
+            });
+
+            it('audio channel config should be filled when present on Representation', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
+                expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);                          // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('21');                           // jshint ignore:line
+
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri.length).equals(4);          // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType); // jshint ignore:line
+                expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
+            });
+
         });
 
         describe('getPatchLocation', function () {
