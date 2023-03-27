@@ -29,71 +29,35 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import FactoryMaker from '../../core/FactoryMaker';
+
 /**
+ * @module TimeUtils
  * @ignore
+ * @description Provides utility functions for time manipulation/conversion
  */
-function RNG() {
+function TimeUtils() {
 
-    // check whether secure random numbers are available. if not, revert to
-    // using Math.random
-    let crypto = window.crypto || window.msCrypto;
+    let instance;
 
-    // could just as easily use any other array type by changing line below
-    let ArrayType = Uint32Array;
-    let MAX_VALUE = Math.pow(2, ArrayType.BYTES_PER_ELEMENT * 8) - 1;
-
-    // currently there is only one client for this code, and that only uses
-    // a single random number per initialisation. may want to increase this
-    // number if more consumers in the future
-    let NUM_RANDOM_NUMBERS = 10;
-
-    let randomNumbers,
-        index,
-        instance;
-
-    function initialize() {
-        if (crypto) {
-            if (!randomNumbers) {
-                randomNumbers = new ArrayType(NUM_RANDOM_NUMBERS);
-            }
-            crypto.getRandomValues(randomNumbers);
-            index = 0;
-        }
-    }
-
-    function rand(min, max) {
-        let r;
-
-        if (!min) {
-            min = 0;
-        }
-
-        if (!max) {
-            max = 1;
-        }
-
-        if (crypto) {
-            if (index === randomNumbers.length) {
-                initialize();
-            }
-
-            r = randomNumbers[index] / MAX_VALUE;
-            index += 1;
-        } else {
-            r = Math.random();
-        }
-
-        return (r * (max - min)) + min;
-    }
+    /**
+     * Convert NTP timestamp into an UTC timestamp
+     * @return {number}
+     * @param {number} ntpTimestamp
+     * @memberof module:TimeUtils
+     * @instance
+     */
+    function ntpToUTC(ntpTimeStamp) {
+        const start = new Date(Date.UTC(1900, 0, 1, 0, 0, 0));
+        return new Date(start.getTime() + ntpTimeStamp).getTime();
+    }    
 
     instance = {
-        random: rand
+        ntpToUTC
     };
-
-    initialize();
 
     return instance;
 }
 
-RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+TimeUtils.__dashjs_factory_name = 'TimeUtils';
+export default FactoryMaker.getSingletonFactory(TimeUtils);

@@ -73,6 +73,7 @@ function AbrController() {
         videoModel,
         mediaPlayerModel,
         customParametersModel,
+        cmsdModel,
         domStorage,
         playbackIndex,
         switchHistoryDict,
@@ -243,6 +244,9 @@ function AbrController() {
         if (config.customParametersModel) {
             customParametersModel = config.customParametersModel;
         }
+        if (config.cmsdModel) {
+            cmsdModel = config.cmsdModel
+        }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -354,7 +358,7 @@ function AbrController() {
      * Returns the highest possible index taking limitations like maxBitrate, representationRatio and portal size into account.
      * @param {string} type
      * @param {string} streamId
-     * @return {number}
+     * @return {undefined|number}
      */
     function getMaxAllowedIndexFor(type, streamId) {
         try {
@@ -368,6 +372,10 @@ function AbrController() {
             idx = _checkMaxBitrate(type, streamId);
             idx = _checkMaxRepresentationRatio(idx, type, streamId);
             idx = _checkPortalSize(idx, type, streamId);
+            // Apply maximum suggested bitrate from CMSD headers if enabled 
+            if (settings.get().streaming.cmsd.enabled && settings.get().streaming.cmsd.abr.applyMb) {
+                idx = _checkCmsdMaxBitrate(idx, type, streamId);
+            }
             return idx;
         } catch (e) {
             return undefined
@@ -459,6 +467,30 @@ function AbrController() {
         }
 
         return newIdx;
+    }
+
+    /**
+     * Returns the maximum possible index from CMSD model
+     * @param type
+     * @param streamId
+     * @return {number|*}
+     */
+    function _checkCmsdMaxBitrate(idx, type, streamId) {
+        // Check CMSD max suggested bitrate only for video segments
+        if (type !== 'video') {
+            return idx;
+        }
+        // Get max suggested bitrate
+        let maxCmsdBitrate = cmsdModel.getMaxBitrate(type);
+        if (maxCmsdBitrate < 0) {
+            return idx;
+        }
+        // Substract audio bitrate
+        const audioBitrate = _getBitrateInfoForQuality(streamId, 'audio', getQualityFor('audio', streamId));
+        maxCmsdBitrate -= audioBitrate ? (audioBitrate.bitrate / 1000) : 0;
+        const maxIdx = getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxCmsdBitrate, streamId);
+        logger.debug('Stream ID: ' + streamId + ' [' + type + '] Apply max bit rate from CMSD: ' + maxCmsdBitrate);
+        return Math.min(idx, maxIdx);
     }
 
     /**

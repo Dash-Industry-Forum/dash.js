@@ -50,12 +50,12 @@ function ScheduleController(config) {
     const textController = config.textController;
     const type = config.type;
     const bufferController = config.bufferController;
+    const representationController = config.representationController
     const settings = config.settings;
 
     let instance,
         streamInfo,
         logger,
-        currentRepresentationInfo,
         timeToLoadDelay,
         scheduleTimeout,
         hasVideoTrack,
@@ -75,7 +75,6 @@ function ScheduleController(config) {
     function initialize(_hasVideoTrack) {
         hasVideoTrack = _hasVideoTrack;
 
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.on(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
@@ -90,12 +89,12 @@ function ScheduleController(config) {
         return streamInfo.id;
     }
 
-    function setCurrentRepresentation(representationInfo) {
-        currentRepresentationInfo = representationInfo;
-    }
-
     function startScheduleTimer(value) {
-        if (bufferController.getIsBufferingCompleted()) return;
+
+        //return if both buffering and playback have ended
+        if (bufferController.getIsBufferingCompleted()) {
+            return;
+        }
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
@@ -148,7 +147,7 @@ function ScheduleController(config) {
                 startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
             }
         } catch (e) {
-            startScheduleTimer(playbackController.getLowLatencyModeEnabled()  ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+            startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
         }
     }
 
@@ -157,6 +156,8 @@ function ScheduleController(config) {
      * @private
      */
     function _getNextFragment() {
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
+
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack) {
             if (switchTrack) {
@@ -193,7 +194,7 @@ function ScheduleController(config) {
     function _shouldClearScheduleTimer() {
         try {
             return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
-                    (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
+                (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
@@ -206,6 +207,7 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || _shouldBuffer());
         } catch (e) {
             return false;
@@ -218,6 +220,7 @@ function ScheduleController(config) {
      * @private
      */
     function _shouldBuffer() {
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
         if (!type || !currentRepresentationInfo) {
             return true;
         }
@@ -231,6 +234,7 @@ function ScheduleController(config) {
      */
     function getBufferTarget() {
         let bufferTarget = NaN;
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
 
         if (!type || !currentRepresentationInfo) {
             return bufferTarget;
@@ -255,6 +259,7 @@ function ScheduleController(config) {
     function _getBufferTargetForFragmentedText() {
         try {
             if (textController.isTextEnabled()) {
+                const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
                 if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of currentRepresentationInfo is not defined,
                     // call metrics function to have data in the latest scheduling info...
                     // if no metric, returns 0. In this case, rule will return false.
@@ -279,6 +284,7 @@ function ScheduleController(config) {
     function _getBufferTargetForAudio() {
         try {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             // For multiperiod we need to consider that audio and video segments might have different durations.
             // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
             // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
@@ -300,6 +306,7 @@ function ScheduleController(config) {
      */
     function _getGenericBufferTarget() {
         try {
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             const streamInfo = currentRepresentationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
@@ -316,7 +323,7 @@ function ScheduleController(config) {
         switchTrack = value;
     }
 
-    function getSwitchStrack() {
+    function getSwitchTrack() {
         return switchTrack;
     }
 
@@ -359,17 +366,7 @@ function ScheduleController(config) {
         }
     }
 
-    function _onBytesAppended(e) {
-        logger.debug(`Appended bytes for ${e.mediaType} and stream id ${streamInfo.id}`);
 
-        // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
-        if (isNaN(e.index) || isNaN(lastInitializedQuality)) {
-            lastInitializedQuality = e.quality;
-            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
-        }
-
-        startScheduleTimer(0);
-    }
 
     function _onURLResolutionFailed() {
         fragmentModel.abortRequests();
@@ -402,6 +399,10 @@ function ScheduleController(config) {
         initSegmentRequired = value;
     }
 
+    function setLastInitializedQuality(value) {
+        lastInitializedQuality = value;
+    }
+
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
@@ -417,7 +418,6 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.off(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
@@ -437,18 +437,18 @@ function ScheduleController(config) {
         initialize,
         getType,
         getStreamId,
-        setCurrentRepresentation,
         setTimeToLoadDelay,
         getTimeToLoadDelay,
         setSwitchTrack,
-        getSwitchStrack,
+        getSwitchTrack,
         startScheduleTimer,
         clearScheduleTimer,
         reset,
         getBufferTarget,
         getPlaybackController,
         setCheckPlaybackQuality,
-        setInitSegmentRequired
+        setInitSegmentRequired,
+        setLastInitializedQuality,
     };
 
     setup();

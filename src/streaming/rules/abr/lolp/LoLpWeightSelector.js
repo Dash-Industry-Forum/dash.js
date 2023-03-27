@@ -76,7 +76,7 @@ function LoLpWeightSelector(config) {
      * @param {number} currentRebuffer
      * @param {number} currentThroughput
      * @param {number} playbackRate
-     * @return {null}
+     * @return {number|null}
      * @private
      */
     function findWeightVector(neurons, currentLatency, currentBuffer, currentRebuffer, currentThroughput, playbackRate) {

@@ -69,6 +69,7 @@ import Events from './events/Events';
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            enableManifestTimescaleMismatchFix: false,
+ *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -160,6 +161,7 @@ import Events from './events/Events';
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
+ *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -215,7 +217,14 @@ import Events from './events/Events';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *            }
+ *            },
+ *            cmsd: {
+ *                enabled: false,
+ *                abr: {
+ *                    applyMb: false,
+ *                    etpWeightRatio: 0
+ *                }
+ *           }
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -659,6 +668,22 @@ import Events from './events/Events';
  */
 
 /**
+ * @typedef {Object} module:Settings~CmsdSettings
+ * @property {boolean} [enabled=false]
+ * Enable or disable the CMSD response headers parsing.
+ * @property {module:Settings~CmsdAbrSettings} [abr]
+ * Sets additional ABR rules based on CMSD response headers.
+ */
+
+/**
+ * @typedef {Object} CmsdAbrSettings
+ * @property {boolean} [applyMb=false]
+ * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
+ * @property {number} [etpWeightRatio=0]
+ * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
+ */
+
+/**
  * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
  * Maximum number of metrics that are persisted per type.
@@ -688,6 +713,8 @@ import Events from './events/Events';
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [parseInbandPrft=false]
+ * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
@@ -742,6 +769,9 @@ import Events from './events/Events';
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
  *
+ * @property {number} [fragmentRequestProgressTimeout=-1]
+ * Time in milliseconds before timing out on loading progress of a media fragment.
+ *
  * @property {number} [manifestRequestTimeout=10000]
  * Time in milliseconds before timing out on loading a manifest.
  *
@@ -758,6 +788,8 @@ import Events from './events/Events';
  * Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd
  * Settings related to Common Media Client Data reporting.
+ * @property {module:Settings~CmsdSettings} cmsd
+ * Settings related to Common Media Server Data parsing.
  */
 
 
@@ -797,6 +829,7 @@ function Settings() {
             applyContentSteering: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
+            parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -901,6 +934,7 @@ function Settings() {
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
             fragmentRequestTimeout: 20000,
+            fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
@@ -974,6 +1008,13 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+            },
+            cmsd: {
+                enabled: false,
+                abr: {
+                    applyMb: false,
+                    etpWeightRatio: 0
+                }
             }
         },
         errors: {

@@ -203,6 +203,14 @@ function DashManifestModel() {
                 return;
             }
 
+            if (prt.hasOwnProperty(DashConstants.INBAND)) {
+                entry[DashConstants.INBAND] = prt[DashConstants.INBAND] !== 'false';
+            }
+
+            if (prt.hasOwnProperty(DashConstants.TYPE)) {
+                entry[DashConstants.TYPE] = prt[DashConstants.TYPE];
+            }
+
             // Not interested in other attributes for now
             // UTC element contained must be same as that in the MPD
             prtsForAdaptation.push(entry);
@@ -349,6 +357,22 @@ function DashManifestModel() {
 
     function getMimeType(adaptation) {
         return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
+    }
+
+    function getSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
+    }
+
+    function getSubSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUB_SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SUB_SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
     }
 
     function getKID(adaptation) {
@@ -1122,7 +1146,7 @@ function DashManifestModel() {
             const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
             const entry = new ContentSteering();
 
-            entry.serverUrl =  element.__text;
+            entry.serverUrl = element.__text;
 
             if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
                 entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
@@ -1315,7 +1339,9 @@ function DashManifestModel() {
         getAvailabilityStartTime,
         getServiceDescriptions,
         getSupplementalProperties,
-        setConfig
+        setConfig,
+        getSegmentAlignment,
+        getSubSegmentAlignment
     };
 
     setup();

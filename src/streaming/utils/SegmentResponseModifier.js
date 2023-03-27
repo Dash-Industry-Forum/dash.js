@@ -29,71 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @ignore
- */
-function RNG() {
+import FactoryMaker from '../../core/FactoryMaker';
 
-    // check whether secure random numbers are available. if not, revert to
-    // using Math.random
-    let crypto = window.crypto || window.msCrypto;
+function SegmentResponseModifier() {
 
-    // could just as easily use any other array type by changing line below
-    let ArrayType = Uint32Array;
-    let MAX_VALUE = Math.pow(2, ArrayType.BYTES_PER_ELEMENT * 8) - 1;
+    let instance;
 
-    // currently there is only one client for this code, and that only uses
-    // a single random number per initialisation. may want to increase this
-    // number if more consumers in the future
-    let NUM_RANDOM_NUMBERS = 10;
-
-    let randomNumbers,
-        index,
-        instance;
-
-    function initialize() {
-        if (crypto) {
-            if (!randomNumbers) {
-                randomNumbers = new ArrayType(NUM_RANDOM_NUMBERS);
-            }
-            crypto.getRandomValues(randomNumbers);
-            index = 0;
-        }
-    }
-
-    function rand(min, max) {
-        let r;
-
-        if (!min) {
-            min = 0;
-        }
-
-        if (!max) {
-            max = 1;
-        }
-
-        if (crypto) {
-            if (index === randomNumbers.length) {
-                initialize();
-            }
-
-            r = randomNumbers[index] / MAX_VALUE;
-            index += 1;
-        } else {
-            r = Math.random();
-        }
-
-        return (r * (max - min)) + min;
+    function modifyResponseAsync(chunk) {
+        return Promise.resolve(chunk);
     }
 
     instance = {
-        random: rand
+        modifyResponseAsync
     };
-
-    initialize();
 
     return instance;
 }
 
-RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+SegmentResponseModifier.__dashjs_factory_name = 'SegmentResponseModifier';
+export default FactoryMaker.getSingletonFactory(SegmentResponseModifier);

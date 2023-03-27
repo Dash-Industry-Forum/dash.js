@@ -97,6 +97,11 @@ class HTTPRequest {
          * @public
          */
         this.trace = [];
+        /**
+         * The CMSD static and dynamic values retrieved from CMSD response headers.
+         * @public
+         */
+        this.cmsd = null;
 
         /**
          * Type of stream ("audio" | "video" etc..)

@@ -91,6 +91,8 @@ class DashConstants {
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
+        this.INBAND = 'inband';
+        this.TYPE = 'type';
         this.ACCESSIBILITY = 'Accessibility';
         this.ROLE = 'Role';
         this.RATING = 'Rating';
@@ -154,7 +156,14 @@ class DashConstants {
             TTL: 'TTL',
             RELOAD_URI: 'RELOAD-URI',
             SERVICE_LOCATION_PRIORITY : 'SERVICE-LOCATION-PRIORITY'
+        };
+        this.PRODUCER_REFERENCE_TIME_TYPE = {
+            ENCODER: 'encoder',
+            CAPTURED: 'captured',
+            APPLICATION: 'application'
         }
+        this.SEGMENT_ALIGNMENT = 'segmentAlignment';
+        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
     }
 
     constructor () {

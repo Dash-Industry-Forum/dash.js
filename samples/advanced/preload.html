@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Multiple Language EBU Timed Text Sample</title>
+    <title>Preload example</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
-
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -25,29 +24,33 @@
     </style>
 
     <script class="code">
-        /* TEST CONTENT.
-         https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd
-         https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd
-         https://livesim.dashif.org/livesim/testpic_2s/multi_subs.mpd
-        */
-        var CAPTION_URL = "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
-            video,
-            player;
+        var video,
+            player,
+            ttmlRenderingDiv;
 
         function init() {
-            var url = CAPTION_URL,
-                TTMLRenderingDiv;
-
-            video = document.querySelector('video');
-            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
+            var url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
-            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
-            controlbar = new ControlBar(player); 
-            controlbar.initialize();
+            player.initialize(null, url, true);
+            player.updateSettings({
+                debug: {logLevel: 5},
+                streaming: {cacheInitSegments: true}
+            });
+            player.preload();
         }
 
+        function attachVideoPlayer() {
+            if (!video) {
+                video = document.getElementById('video-element')
+            }
+
+            player.attachView(video);
+            ttmlRenderingDiv = document.querySelector('#ttml-rendering-div');
+            player.attachTTMLRenderingDiv(ttmlRenderingDiv);
+            var controlbar = new ControlBar(player);
+            controlbar.initialize()
+        }
     </script>
 </head>
 <body>
@@ -57,19 +60,28 @@
         <header class="pb-3 mb-4 border-bottom">
             <img class=""
                  src="../lib/img/dashjs-logo.png"
+                 alt="dashjs logo"
                  width="200">
         </header>
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Multiple Language EBU Timed Text Sample</h3>
-                    <p>Example showing content with TTML EBU timed text tracks.</p>
+                    <h3>Preload content</h3>
+                    <p>This example shows how to use preload feature of dash.js, which allows to initialize streaming
+                        and start downloading the content before the player is attached to an HTML5 video element. This
+                        feature can be used to optimize content-insertion on platforms which provide only a single
+                        decoder.</p>
+                    <p>When this page is loaded, dash.js downloads media segments into a virtual buffer. Once the
+                        "Attach View" button is clicked, a video element is attached to dash.js and the downloaded data
+                        will be appended to the newly created
+                        Source Buffers.</p>
+                    <p>Note that for this feature to work "cacheInitSegments" must be activated.</p>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="dash-video-player code">
                     <div class="videoContainer" id="videoContainer">
-                        <video preload="auto" autoplay></video>
+                        <video id="video-element"></video>
                         <div id="ttml-rendering-div"></div>
                         <div id="videoController" class="video-controller unselectable">
                             <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
@@ -106,6 +118,11 @@
         </div>
         <div class="row">
             <div class="col-md-12">
+                <button onclick="attachVideoPlayer()">Attach View</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
                 <div id="code-output"></div>
             </div>
         </div>
@@ -114,6 +131,8 @@
         </footer>
     </div>
 </main>
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         init();

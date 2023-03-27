@@ -307,6 +307,7 @@ function DashHandler(config) {
      * @param {object} mediaInfo
      * @param {object} representation
      * @param {number} targetThreshold
+     * @return {number}
      */
     function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
         try {

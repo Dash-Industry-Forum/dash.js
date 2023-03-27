@@ -48,12 +48,15 @@ class MediaInfo {
         this.codec = null;
         this.mimeType = null;
         this.contentProtection = null;
+        this.isText = false;
         this.KID = null;
         this.bitrateList = null;
         this.isFragmented = null;
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
+        this.segmentAlignment = false;
+        this.subSegmentAlignment = false;
     }
 
 }
