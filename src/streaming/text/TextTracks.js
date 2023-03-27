@@ -432,14 +432,14 @@ function TextTracks(config) {
         const prevCue = track.cues[track.cues.length - 1];
         // Check previous cue endTime with current cue startTime
         // (should we consider an epsilon margin? for example to get around rounding issues)
-        if (prevCue.endTime !== cue.startTime) {
+        if (prevCue.endTime < cue.startTime) {
             return false;
         }
         // Compare cues content
         if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
             return false;
         }
-        prevCue.endTime = cue.endTime;
+        prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
         return true;
     }
 
