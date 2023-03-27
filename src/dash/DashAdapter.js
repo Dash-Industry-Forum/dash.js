@@ -1048,7 +1048,6 @@ function DashAdapter() {
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
-        
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
 
@@ -1115,7 +1114,7 @@ function DashAdapter() {
             let arr = realAdaptation.Representation_asArray.map( repr => {
                 return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
             });
-            if ( arr.every( v => v === arr[0] ) ) {
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
                 // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
                 mediaInfo.supplementalProperties = arr[0];
             }
@@ -1125,7 +1124,7 @@ function DashAdapter() {
             let arr = realAdaptation.Representation_asArray.map( repr => {
                 return dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation(repr);
             });
-            if ( arr.every( v => v === arr[0] ) ) {
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
                 // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
                 mediaInfo.supplementalPropertiesAsArray = arr[0];
             }
