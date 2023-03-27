@@ -266,13 +266,17 @@ function MediaController() {
 
         const sameId = t1.id === t2.id;
         const sameViewpoint = t1.viewpoint === t2.viewpoint;
+        const sameViewpoint_descriptor = JSON.stringify(t1.viewpoint_withSchemeIdUri) === JSON.stringify(t2.viewpoint_withSchemeIdUri);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
         const sameRoles = t1.roles.toString() === t2.roles.toString();
+        const sameRole_descriptor = JSON.stringify(t1.role_withSchemeIdUri) === JSON.stringify(t2.role_withSchemeIdUri);
         const sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
+        const sameAccessibility_descriptor = JSON.stringify(t1.accessibility_withSchemeIdUri) === JSON.stringify(t2.accessibility_withSchemeIdUri);
         const sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
+        const sameAudioChannelConfiguration_descriptor = JSON.stringify(t1.audioChannelConfiguration_withSchemeIdUri) === JSON.stringify(t2.audioChannelConfiguration_withSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameViewpoint_descriptor && sameLang && sameRoles && sameRole_descriptor && sameAccessibility && sameAccessibility_descriptor && sameAudioChannelConfiguration && sameAudioChannelConfiguration_descriptor);
     }
 
     function setConfig(config) {
