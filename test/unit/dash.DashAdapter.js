@@ -86,17 +86,17 @@ const manifest_with_supplemental_properties_on_repr = {
                 {
                     id: 10, bandwidth: 128000,
                     [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
-                        {schemeIdUri: 'testscheme', value: 'value1'},
-                        {schemeIdUri: 'testscheme', value: 'value2'},
-                        {schemeIdUri: 'testscheme', value: 'value3'}
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'},
+                        {schemeIdUri: 'test:scheme', value: 'value3'}
                     ]
                 },
                 {
                     id: 11, bandwidth: 160000,
                     [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
-                        {schemeIdUri: 'testscheme', value: 'value1'},
-                        {schemeIdUri: 'testscheme', value: 'value2'},
-                        {schemeIdUri: 'testscheme', value: 'value3'}
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'},
+                        {schemeIdUri: 'test:scheme', value: 'value3'}
                     ]
                 }
             ]
@@ -163,6 +163,10 @@ const manifest_with_audioChanCfg_Repr = {
                         {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xA000'}
                     ]
                 }
+            ],
+            [DashConstants.VIEWPOINT_ASARRAY]: [
+                {schemeIdUri: 'urn:scheme:viewpoint', value: 'VP1'},
+                {schemeIdUri: 'urn:scheme:viewpoint', value: 'VP2'}
             ]
         }]
     }]
@@ -706,7 +710,7 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].audioChannelConfiguration_withSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
                 });
 
-                it('role and accessibility should be empty if not defined', function () {
+                it('role, accessibility and viewpoint should be empty if not defined', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                         id: 'defaultId_0',
                         index: 0
@@ -718,12 +722,15 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);  // jshint ignore:line
                     expect(mediaInfoArray[0].roles.length).equals(0);         // jshint ignore:line
                     expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);  // jshint ignore:line
-                    expect(mediaInfoArray[0].accessibility.length).equals(0);         // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility.length).equals(0); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint).to.be.undefined;      // jshint ignore:line
 
-                    expect(mediaInfoArray[0].role_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
-                    expect(mediaInfoArray[0].role_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri).to.be.instanceOf(Array);       // jshint ignore:line
+                    expect(mediaInfoArray[0].role_withSchemeIdUri.length).equals(0);              // jshint ignore:line
                     expect(mediaInfoArray[0].accessibility_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
-                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility_withSchemeIdUri.length).equals(0);     // jshint ignore:lineexpect(mediaInfoArray[0].accessibility_withSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri.length).equals(0);         // jshint ignore:line
                 });
 
                 it('role should be filled', function () {
@@ -771,6 +778,31 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].accessibility_withSchemeIdUri[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015'); // jshint ignore:line
                     expect(mediaInfoArray[0].accessibility_withSchemeIdUri[0].value).equals('CC1=eng;CC3=swe'); // jshint ignore:line
                     expect(mediaInfoArray[1].accessibility_withSchemeIdUri.length).equals(0);          // jshint ignore:line
+                });
+
+                it('viewpoint should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpoint).equals('VP1');                                                 // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri).to.be.instanceOf(Array);                       // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri.length).equals(2);                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[0]).to.be.instanceOf(DescriptorType);           // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[0].schemeIdUri).equals('urn:scheme:viewpoint'); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[0].value).equals('VP1');                        // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[0].id).to.be.null;                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[1]).to.be.instanceOf(DescriptorType);           // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[1].schemeIdUri).equals('urn:scheme:viewpoint'); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[1].value).equals('VP2');                        // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint_withSchemeIdUri[1].id).to.be.null;                              // jshint ignore:line
                 });
 
             });
