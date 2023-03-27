@@ -75,6 +75,34 @@ const manifest_with_supplemental_properties = {
         }]
     }]
 };
+const manifest_with_supplemental_properties_on_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.VIDEO,
+            // SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'},{schemeIdUri: 'test:scheme', value: 'value3'}],
+            [DashConstants.REPRESENTATION_ASARRAY]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'testscheme', value: 'value1'},
+                        {schemeIdUri: 'testscheme', value: 'value2'},
+                        {schemeIdUri: 'testscheme', value: 'value3'}
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'testscheme', value: 'value1'},
+                        {schemeIdUri: 'testscheme', value: 'value2'},
+                        {schemeIdUri: 'testscheme', value: 'value3'}
+                    ]
+                }
+            ]
+        }]
+    }]
+};
 const manifest_with_supplemental_properties_on_only_one_repr = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
@@ -600,6 +628,25 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
                     expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
+                });
+
+                it('supplemental properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].representationCount).equals(2); // jshint ignore:line
+                    expect(mediaInfoArray[0].codec).not.to.be.null;          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(3);          // jshint ignore:line
                 });
 
                 it('supplemental properties should not be filled if not set on all representations', function () {
