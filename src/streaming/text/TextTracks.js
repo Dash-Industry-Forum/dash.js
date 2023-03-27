@@ -539,7 +539,9 @@ function TextTracks(config) {
         captionContainer.style.height = actualVideoHeight + 'px';
 
         // Resolve images sources
-        _resolveImagesInContents(cue, cue.isd.contents);
+        if (cue.isd) {
+            _resolveImagesInContents(cue, cue.isd.contents);
+        }
 
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
