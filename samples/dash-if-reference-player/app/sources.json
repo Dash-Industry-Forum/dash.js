@@ -226,7 +226,12 @@
                 },
                 {
                     "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
-                    "name": "SegmentTimeline (livesim)",
+                    "name": "SegmentTimeline with $time (livesim)",
+                    "provider": "dashif"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/segtimelinenr_1/testpic_2s/Manifest.mpd",
+                    "name": "SegmentTimeline with $number (livesim)",
                     "provider": "dashif"
                 },
                 {
