@@ -188,7 +188,8 @@ function VTTParser() {
     }
 
     instance = {
-        parse: parse
+        parse: parse,
+        getCaptionStyles
     };
 
     setup();
