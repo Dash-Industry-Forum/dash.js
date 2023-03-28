@@ -426,7 +426,7 @@ declare namespace dashjs {
         labels: { text: string, lang?: string }[];
         lang: string | null;
         viewpoint: any | undefined | null;
-        viewpoint_withSchemeIdUri: DescriptorType[] | undefined | null;
+        viewpoint_withSchemeIdUri: DescriptorType[] | null;
         accessibility: any[] | null;
         accessibility_withSchemeIdUri: DescriptorType[] | null;
         audioChannelConfiguration: any[] | null;
