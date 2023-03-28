@@ -482,7 +482,7 @@ function StreamController() {
                 // check if change type is supported by the browser
                 if (sinks) {
                     const keys = Object.keys(sinks);
-                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
                         supportsChangeType = true;
                     }
                     bufferSinks = sinks;
@@ -622,7 +622,7 @@ function StreamController() {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
-            return (settings.get().streaming.buffer.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream) || firstLicenseIsFetched) && (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)));
+            return (settings.get().streaming.buffer.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream) || firstLicenseIsFetched) && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch || previousStream.isMediaCodecCompatible(nextStream, previousStream)));
         } catch (e) {
             return false;
         }
