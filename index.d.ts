@@ -1185,13 +1185,13 @@ declare namespace dashjs {
 
         extend(parentNameString: string, childInstance: object, override: boolean): void;
 
-        attachView(element: HTMLElement): void;
+        attachView(element: HTMLElement, startTime?: number | string): void;
 
         attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
         isReady(): boolean;
 
-        preload(): void;
+        preload(startTime?: number | string): void;
 
         play(): void;
 
