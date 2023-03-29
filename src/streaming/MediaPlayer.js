@@ -132,6 +132,7 @@ function MediaPlayer() {
         streamingInitialized,
         playbackInitialized,
         autoPlay,
+        providedStartTime,
         abrController,
         schemeLoaderFactory,
         timelineConverter,
@@ -552,7 +553,7 @@ function MediaPlayer() {
             return;
         }
         if (source) {
-            _initializePlayback();
+            _initializePlayback(providedStartTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
         }
@@ -1435,7 +1436,7 @@ function MediaPlayer() {
             _resetPlaybackControllers();
         }
 
-        _initializePlayback();
+        _initializePlayback(providedStartTime);
     }
 
     /**
@@ -1893,6 +1894,7 @@ function MediaPlayer() {
             startTime = Math.max(0, startTime);
         }
 
+        providedStartTime = startTime
         source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
@@ -1900,7 +1902,7 @@ function MediaPlayer() {
         }
 
         if (isReady()) {
-            _initializePlayback(startTime);
+            _initializePlayback(providedStartTime);
         }
     }
 
@@ -2380,7 +2382,7 @@ function MediaPlayer() {
      *
      * @private
      */
-    function _initializePlayback(startTime = NaN) {
+    function _initializePlayback(startTime) {
 
         if (offlineController) {
             offlineController.resetRecords();
