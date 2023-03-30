@@ -285,6 +285,10 @@ function StreamProcessor(config) {
             const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
             if (hasBufferAtTargetTime) {
                 bufferController.pruneBuffer();
+                const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
+                if (_shouldSetBufferingComplete(continuousBufferTime)) {
+                    bufferController.setIsBufferingCompleted(true);
+                }
                 resolve();
                 return;
             }
@@ -306,7 +310,7 @@ function StreamProcessor(config) {
                     const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
 
                     // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
-                    if (!isNaN(continuousBufferTime) && !isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && continuousBufferTime >= streamInfo.start + streamInfo.duration) {
+                    if (_shouldSetBufferingComplete(continuousBufferTime)) {
                         bufferController.setIsBufferingCompleted(true);
                         resolve();
                     } else {
@@ -340,6 +344,10 @@ function StreamProcessor(config) {
                 });
 
         })
+    }
+
+    function _shouldSetBufferingComplete(continuousBufferTime) {
+        return !isNaN(continuousBufferTime) && !isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && continuousBufferTime >= streamInfo.start + streamInfo.duration
     }
 
     /**
@@ -1022,8 +1030,7 @@ function StreamProcessor(config) {
         const currentRepresentation = getRepresentationInfo(quality);
         const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
         if (currentRepresentation && voRepresentation) {
-            const timescale = boxParser.getMediaTimescaleFromMoov(bytes);
-            voRepresentation.timescale = timescale;
+            voRepresentation.timescale = boxParser.getMediaTimescaleFromMoov(bytes);
         }
     }
 
