@@ -423,7 +423,7 @@ declare namespace dashjs {
         type: MediaType | null;
         streamInfo: StreamInfo | null;
         representationCount: number;
-        labels: string[];
+        labels: { text: string, lang?: string }[];
         lang: string | null;
         viewpoint: any | undefined | null;
         accessibility: any[] | null;
