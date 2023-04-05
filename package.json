@@ -59,7 +59,7 @@
     "dependencies": {
         "bcp-47-match": "^1.0.3",
         "bcp-47-normalize": "^1.1.1",
-        "codem-isoboxer": "0.3.8",
+        "codem-isoboxer": "0.3.9",
         "es6-promise": "^4.2.8",
         "fast-deep-equal": "2.0.1",
         "html-entities": "^1.2.1",

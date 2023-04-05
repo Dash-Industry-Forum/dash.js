@@ -83,7 +83,10 @@ function SourceBufferSink(config) {
 
         promises.push(_abortBeforeAppend());
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
-        promises.push(changeType(codec));
+
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+            promises.push(changeType(codec));
+        }
 
         if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
             promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
