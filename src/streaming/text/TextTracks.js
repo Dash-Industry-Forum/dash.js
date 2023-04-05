@@ -38,8 +38,6 @@ import {renderHTML} from 'imsc';
 
 const CUE_PROPS_TO_COMPARE = [
     'text',
-    'images',
-    'embeddedImages',
     'align',
     'fontSize',
     'id',
@@ -390,27 +388,31 @@ function TextTracks(config) {
         }
     }
 
+    function _resolveImageSrc(cue, src) {
+        const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
+        const smpteImgUrnTester = /^#(.*)$/;
+        if (imsc1ImgUrnTester.test(src)) {
+            const match = imsc1ImgUrnTester.exec(src);
+            const imageId = parseInt(match[4], 10) - 1;
+            const imageData = btoa(cue.images[imageId]);
+            const imageSrc = 'data:image/png;base64,' + imageData;
+            return imageSrc;
+        } else if (smpteImgUrnTester.test(src)) {
+            const match = smpteImgUrnTester.exec(src);
+            const imageId = match[1];
+            const imageSrc = 'data:image/png;base64,' + cue.embeddedImages[imageId];
+            return imageSrc;
+        } else {
+            return src;
+        }
+    }
+
     function _renderCaption(cue) {
         if (captionContainer) {
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
-            previousISDState = renderHTML(cue.isd, finalCue, function (uri) {
-                const imsc1ImgUrnTester = /^(urn:)(mpeg:[a-z0-9][a-z0-9-]{0,31}:)(subs:)([0-9]+)$/;
-                const smpteImgUrnTester = /^#(.*)$/;
-                if (imsc1ImgUrnTester.test(uri)) {
-                    const match = imsc1ImgUrnTester.exec(uri);
-                    const imageId = parseInt(match[4], 10) - 1;
-                    const imageData = btoa(cue.images[imageId]);
-                    const dataUrl = 'data:image/png;base64,' + imageData;
-                    return dataUrl;
-                } else if (smpteImgUrnTester.test(uri)) {
-                    const match = smpteImgUrnTester.exec(uri);
-                    const imageId = match[1];
-                    const dataUrl = 'data:image/png;base64,' + cue.embeddedImages[imageId];
-                    return dataUrl;
-                } else {
-                    return null;
-                }
+            previousISDState = renderHTML(cue.isd, finalCue, function (src) {
+                return _resolveImageSrc(cue, src);
             }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
                 logger.info('renderCaption :', err);
                 //TODO add ErrorHandler management
@@ -430,14 +432,14 @@ function TextTracks(config) {
         const prevCue = track.cues[track.cues.length - 1];
         // Check previous cue endTime with current cue startTime
         // (should we consider an epsilon margin? for example to get around rounding issues)
-        if (prevCue.endTime !== cue.startTime) {
+        if (prevCue.endTime < cue.startTime) {
             return false;
         }
         // Compare cues content
         if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
             return false;
         }
-        prevCue.endTime = cue.endTime;
+        prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
         return true;
     }
 
@@ -449,6 +451,18 @@ function TextTracks(config) {
             }
         };
         return true;
+    }
+
+    function _resolveImagesInContents(cue, contents) {
+        if (!contents) {
+            return;
+        }
+        contents.forEach(c => {
+            if (c.kind && c.kind === 'image') {
+                c.src = _resolveImageSrc(cue, c.src);
+            }
+            _resolveImagesInContents(cue, c.contents);
+        });
     }
 
     /*
@@ -523,6 +537,11 @@ function TextTracks(config) {
         captionContainer.style.top = actualVideoTop + 'px';
         captionContainer.style.width = actualVideoWidth + 'px';
         captionContainer.style.height = actualVideoHeight + 'px';
+
+        // Resolve images sources
+        if (cue.isd) {
+            _resolveImagesInContents(cue, cue.isd.contents);
+        }
 
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
