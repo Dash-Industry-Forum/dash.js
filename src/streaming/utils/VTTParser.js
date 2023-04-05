@@ -128,14 +128,19 @@ function VTTParser() {
         arr.forEach(function (element) {
             if (element.split(/:/).length > 1) {
                 let val = element.split(/:/)[1];
+                let isPercentage = false;
                 if (val && val.search(/%/) != -1) {
+                    isPercentage = true;
                     val = parseInt(val.replace(/%/, ''), 10);
                 }
                 if (element.match(/align/) || element.match(/A/)) {
                     styleObject.align = val;
                 }
                 if (element.match(/line/) || element.match(/L/) ) {
-                    styleObject.line = val;
+                    styleObject.line = val === 'auto' ? val : parseInt(val, 10);
+                    if (isPercentage) {
+                        styleObject.snapToLines = false;
+                    }
                 }
                 if (element.match(/position/) || element.match(/P/) ) {
                     styleObject.position = val;

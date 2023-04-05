@@ -589,6 +589,9 @@ function TextTracks(config) {
                 if (currentItem.styles.line !== undefined && 'line' in cue) {
                     cue.line = currentItem.styles.line;
                 }
+                if (currentItem.styles.snapToLines !== undefined && 'snapToLines' in cue) {
+                    cue.snapToLines = currentItem.styles.snapToLines;
+                }
                 if (currentItem.styles.position !== undefined && 'position' in cue) {
                     cue.position = currentItem.styles.position;
                 }
