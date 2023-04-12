@@ -426,13 +426,13 @@ declare namespace dashjs {
         labels: { text: string, lang?: string }[];
         lang: string | null;
         viewpoint: any | undefined | null;
-        viewpoint_withSchemeIdUri: DescriptorType[] | null;
+        viewpointsWithSchemeIdUri: DescriptorType[] | null;
         accessibility: any[] | null;
-        accessibility_withSchemeIdUri: DescriptorType[] | null;
+        accessibilitiesWithSchemeIdUri: DescriptorType[] | null;
         audioChannelConfiguration: any[] | null;
-        audioChannelConfiguration_withSchemeIdUri: DescriptorType[] | null;
+        audioChannelConfigurationsWithSchemeIdUri: DescriptorType[] | null;
         roles: string[] | null;
-        role_withSchemeIdUri: DescriptorType[] | null;
+        rolesWithSchemeIdUri: DescriptorType[] | null;
         codec: string | null;
         mimeType: string | null;
         contentProtection: any | null;
