@@ -1099,10 +1099,6 @@ function BufferController(config) {
     }
 
     function setIsBufferingCompleted(value) {
-        if (isBufferingCompleted === value) {
-            return;
-        }
-
         isBufferingCompleted = value;
 
         if (isBufferingCompleted) {
