@@ -233,7 +233,7 @@ function DashManifestModel() {
     function getViewpointForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation.Viewpoint_asArray.length) return [];
         return adaptation.Viewpoint_asArray.map( viewpoint => {
-            const vp = new DescriptorType;
+            const vp = new DescriptorType();
             return vp.init(viewpoint);
         });
     }
@@ -241,7 +241,7 @@ function DashManifestModel() {
     function getRolesForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) || !adaptation.Role_asArray.length) return [];
         return adaptation.Role_asArray.map( role => {
-            const r = new DescriptorType;
+            const r = new DescriptorType();
             return r.init(role);
         });
     }
@@ -249,7 +249,7 @@ function DashManifestModel() {
     function getAccessibilityForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) || !adaptation.Accessibility_asArray.length) return [];
         return adaptation.Accessibility_asArray.map( accessibility => {
-            const a = new DescriptorType;
+            const a = new DescriptorType();
             return a.init(accessibility);
         });
     }
@@ -257,7 +257,7 @@ function DashManifestModel() {
     function getAudioChannelConfigurationForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !adaptation.AudioChannelConfiguration_asArray.length) return [];
         return adaptation.AudioChannelConfiguration_asArray.map( audioChanCfg => {
-            const acc = new DescriptorType;
+            const acc = new DescriptorType();
             return acc.init(audioChanCfg);
         });
     }
@@ -265,7 +265,7 @@ function DashManifestModel() {
     function getAudioChannelConfigurationForRepresentation(representation) {
         if (!representation || !representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !representation.AudioChannelConfiguration_asArray.length) return [];
         return representation.AudioChannelConfiguration_asArray.map( audioChanCfg => {
-            const acc = new DescriptorType;
+            const acc = new DescriptorType();
             return acc.init(audioChanCfg);
         });
     }
@@ -1300,7 +1300,7 @@ function DashManifestModel() {
     function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !adaptation.SupplementalProperty_asArray.length) return [];
         return adaptation.SupplementalProperty_asArray.map( supp => {
-            const s = new DescriptorType;
+            const s = new DescriptorType();
             return s.init(supp);
         });
     }
@@ -1321,7 +1321,7 @@ function DashManifestModel() {
     function getSupplementalPropertiesAsArrayForRepresentation(representation) {
         if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !representation.SupplementalProperty_asArray.length) return [];
         return representation.SupplementalProperty_asArray.map( supp => {
-            const s = new DescriptorType;
+            const s = new DescriptorType();
             return s.init(supp);
         });
     }
