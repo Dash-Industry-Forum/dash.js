@@ -2071,7 +2071,6 @@ function MediaPlayer() {
     function _resetPlaybackControllers() {
         playbackInitialized = false;
         streamingInitialized = false;
-        providedStartTime = NaN;
         adapter.reset();
         streamController.reset();
         gapController.reset();
