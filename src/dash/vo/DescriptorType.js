@@ -42,8 +42,8 @@ class DescriptorType {
     init(data) {
         if (data) {
             this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value       = data.value       ? data.value       : null;
-            this.id          = data.id          ? data.id          : null;
+            this.value = data.value ? data.value : null;
+            this.id = data.id ? data.id : null;
         }
         return this;
     }
