@@ -1429,7 +1429,7 @@ function MediaPlayer() {
             _detectMss();
 
             if (streamController) {
-                streamController.switchToVideoElement();
+                streamController.switchToVideoElement(providedStartTime);
             }
         }
 

@@ -440,6 +440,9 @@ function StreamController() {
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
             if (streamActivated) {
+                if (!isNaN(seekTime)) {
+                    playbackController.seek(seekTime, true, true);
+                }
                 // Set the media source for all StreamProcessors
                 activeStream.setMediaSource(mediaSource)
                     .then(() => {
