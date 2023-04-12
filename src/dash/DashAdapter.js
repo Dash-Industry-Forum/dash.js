@@ -202,14 +202,14 @@ function DashAdapter() {
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
         const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
-        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpoint_withSchemeIdUri) === JSON.stringify(mInfoTwo.viewpoint_withSchemeIdUri);
+        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpointsWithSchemeIdUri) === JSON.stringify(mInfoTwo.viewpointsWithSchemeIdUri);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
-        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.role_withSchemeIdUri) === JSON.stringify(mInfoTwo.role_withSchemeIdUri);
+        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.rolesWithSchemeIdUri) === JSON.stringify(mInfoTwo.rolesWithSchemeIdUri);
         const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
-        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibility_withSchemeIdUri) === JSON.stringify(mInfoTwo.accessibility_withSchemeIdUri);
+        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibilitiesWithSchemeIdUri) === JSON.stringify(mInfoTwo.accessibilitiesWithSchemeIdUri);
         const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
-        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfiguration_withSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfiguration_withSchemeIdUri);
+        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfigurationsWithSchemeIdUri);
 
         return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
     }
@@ -1053,7 +1053,7 @@ function DashAdapter() {
 
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
-        mediaInfo.viewpoint_withSchemeIdUri = viewpoint;
+        mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
         
         accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
         mediaInfo.accessibility = accessibility.map(function (accessibility) {
@@ -1069,27 +1069,27 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
-        mediaInfo.accessibility_withSchemeIdUri = accessibility;
+        mediaInfo.accessibilitiesWithSchemeIdUri = accessibility;
 
         acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
         mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
-        mediaInfo.audioChannelConfiguration_withSchemeIdUri = acc;
+        mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc;
 
         if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
             acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]);
             mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
-            mediaInfo.audioChannelConfiguration_withSchemeIdUri = acc_rep;
+            mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
         }
         
         roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.roles = roles.map(function (role) {
             return role.value;
         });
-        mediaInfo.role_withSchemeIdUri = roles;
+        mediaInfo.rolesWithSchemeIdUri = roles;
         
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
@@ -1145,7 +1145,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
         mediaInfo.roles = ['caption'];
-        mediaInfo.role_withSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
+        mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {

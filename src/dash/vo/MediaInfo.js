@@ -42,13 +42,13 @@ class MediaInfo {
         this.labels = null;
         this.lang = null;
         this.viewpoint = null;
-        this.viewpoint_withSchemeIdUri = null;
+        this.viewpointsWithSchemeIdUri = null;
         this.accessibility = null;
-        this.accessibility_withSchemeIdUri = null;
+        this.accessibilitiesWithSchemeIdUri = null;
         this.audioChannelConfiguration = null;
-        this.audioChannelConfiguration_withSchemeIdUri = null;
+        this.audioChannelConfigurationsWithSchemeIdUri = null;
         this.roles = null;
-        this.role_withSchemeIdUri = null;
+        this.rolesWithSchemeIdUri = null;
         this.codec = null;
         this.mimeType = null;
         this.contentProtection = null;

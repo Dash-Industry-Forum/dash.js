@@ -266,17 +266,17 @@ function MediaController() {
 
         const sameId = t1.id === t2.id;
         const sameViewpoint = t1.viewpoint === t2.viewpoint;
-        const sameViewpoint_descriptor = JSON.stringify(t1.viewpoint_withSchemeIdUri) === JSON.stringify(t2.viewpoint_withSchemeIdUri);
+        const sameViewpointDescriptors = JSON.stringify(t1.viewpointsWithSchemeIdUri) === JSON.stringify(t2.viewpointsWithSchemeIdUri);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
         const sameRoles = t1.roles.toString() === t2.roles.toString();
-        const sameRole_descriptor = JSON.stringify(t1.role_withSchemeIdUri) === JSON.stringify(t2.role_withSchemeIdUri);
+        const sameRoleDescriptors = JSON.stringify(t1.rolesWithSchemeIdUri) === JSON.stringify(t2.rolesWithSchemeIdUri);
         const sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
-        const sameAccessibility_descriptor = JSON.stringify(t1.accessibility_withSchemeIdUri) === JSON.stringify(t2.accessibility_withSchemeIdUri);
+        const sameAccessibilityDescriptors = JSON.stringify(t1.accessibilitiesWithSchemeIdUri) === JSON.stringify(t2.accessibilitiesWithSchemeIdUri);
         const sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
-        const sameAudioChannelConfiguration_descriptor = JSON.stringify(t1.audioChannelConfiguration_withSchemeIdUri) === JSON.stringify(t2.audioChannelConfiguration_withSchemeIdUri);
+        const sameAudioChannelConfigurationDescriptors = JSON.stringify(t1.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(t2.audioChannelConfigurationsWithSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameViewpoint_descriptor && sameLang && sameRoles && sameRole_descriptor && sameAccessibility && sameAccessibility_descriptor && sameAudioChannelConfiguration && sameAudioChannelConfiguration_descriptor);
+        return (sameId && sameCodec && sameViewpoint && sameViewpointDescriptors && sameLang && sameRoles && sameRoleDescriptors && sameAccessibility && sameAccessibilityDescriptors && sameAudioChannelConfiguration && sameAudioChannelConfigurationDescriptors);
     }
 
     function setConfig(config) {

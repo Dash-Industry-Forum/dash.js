@@ -104,7 +104,7 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibility_withSchemeIdUri: {schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'},
+                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'},
                 audioChannelConfiguration: 1
             };
 
@@ -114,7 +114,7 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibility_withSchemeIdUri: {schemeIdUri: 'urn:scheme:test:2:2023', value: 'description'},
+                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:2:2023', value: 'description'},
                 audioChannelConfiguration: 1
             };
             let equal = mediaController.isTracksEqual(track1, track2);
