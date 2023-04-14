@@ -408,11 +408,10 @@ function MediaController() {
                 return item === settings.audioChannelConfiguration;
             })[0];
 
-
             return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
         } catch (e) {
-            return false;
             logger.error(e);
+            return false;
         }
     }
 
