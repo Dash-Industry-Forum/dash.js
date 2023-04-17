@@ -66,18 +66,18 @@ function ContentSteeringSelector() {
         // Search in the response data of the steering server
         const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
         if (data.baseUrls && data.baseUrls.length && currentSteeringResponseData &&
-            currentSteeringResponseData.serviceLocationPriority && currentSteeringResponseData.serviceLocationPriority.length) {
-            steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.serviceLocationPriority, data.baseUrls);
+            currentSteeringResponseData.pathwayPriority && currentSteeringResponseData.pathwayPriority.length) {
+            steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.pathwayPriority, data.baseUrls);
         }
 
         return steeringIndex;
     }
 
-    function _findexIndexOfServiceLocation(serviceLocationPriorities = [], baseUrls = []) {
+    function _findexIndexOfServiceLocation(pathwayPriority = [], baseUrls = []) {
         let i = 0;
         let steeringIndex = NaN;
-        while (i < serviceLocationPriorities.length) {
-            const curr = serviceLocationPriorities[i];
+        while (i < pathwayPriority.length) {
+            const curr = pathwayPriority[i];
             const idx = baseUrls.findIndex((elem) => {
                 return elem.serviceLocation && elem.serviceLocation === curr;
             })

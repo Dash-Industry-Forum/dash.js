@@ -84,7 +84,8 @@
                         document.getElementById(`steering-version`).innerText = e.currentSteeringResponseData.version;
                         document.getElementById(`steering-ttl`).innerText = e.currentSteeringResponseData.ttl;
                         document.getElementById(`steering-reload-uri`).innerText = e.currentSteeringResponseData.reloadUri;
-                        document.getElementById(`steering-service-location-priority`).innerText = e.currentSteeringResponseData.serviceLocationPriority.toString();
+                        document.getElementById(`steering-pathway-priority`).innerText = e.currentSteeringResponseData.pathwayPriority.toString();
+                        document.getElementById(`steering-pathway-cloning`).innerText = e.currentSteeringResponseData.pathwayClones.toString();
                     }
                 }
             } catch (e) {
@@ -133,7 +134,7 @@
             <div class="col-md-12">
                 <div class="input-group mb-3">
                     <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
-                           value="http://localhost:3333/steering-content/bbb/dash.mpd">
+                           value="http://localhost:3333/steering-content/bbb/alpha/dash.mpd">
                     <button type="button" id="load-button" class="btn btn-success">Load MPD
                     </button>
                 </div>
@@ -200,7 +201,8 @@
                                 <ul>
                                     <li>Version: <span id="steering-version"></span></li>
                                     <li>Reload URI: <span id="steering-reload-uri"></span></li>
-                                    <li>Service Location Priority: <span id="steering-service-location-priority"></span>
+                                    <li>Pathway Priority: <span id="steering-pathway-priority"></span>
+                                    <li>Pathway Clones: <span id="steering-pathway-cloning"></span>
                                     </li>
                                     <li>TTL: <span id="steering-ttl"></span></li>
                                 </ul>

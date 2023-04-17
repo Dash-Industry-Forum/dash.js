@@ -103,7 +103,7 @@ function ManifestLoader(config) {
             }
             return parser;
         } else if (data.indexOf('MPD') > -1 || data.indexOf('Patch') > -1) {
-            return DashParser(context).create({debug: debug});
+            return DashParser(context).create({ debug: debug });
         } else {
             return parser;
         }
@@ -193,7 +193,9 @@ function ManifestLoader(config) {
                     // In the following, we only use the first Location entry even if many are available
                     // Compare with ManifestUpdater/DashManifestModel
                     if (manifest.hasOwnProperty(Constants.LOCATION)) {
-                        baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
+                        let entry = manifest.Location_asArray[0];
+                        let text = entry.__text || entry
+                        baseUri = urlUtils.parseBaseUrl(text);
                         logger.debug('BaseURI set by Location to: ' + baseUri);
                     }
 

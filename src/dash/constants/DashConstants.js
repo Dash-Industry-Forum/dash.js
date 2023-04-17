@@ -151,11 +151,13 @@ class DashConstants {
         this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
         this.QUERY_BEFORE_START = 'queryBeforeStart';
         this.PROXY_SERVER_URL = 'proxyServerURL';
+        this.CLIENT_REQUIREMENT = 'clientRequirement';
         this.CONTENT_STEERING_RESPONSE = {
             VERSION: 'VERSION',
             TTL: 'TTL',
             RELOAD_URI: 'RELOAD-URI',
-            SERVICE_LOCATION_PRIORITY : 'SERVICE-LOCATION-PRIORITY'
+            PATHWAY_PRIORITY : 'PATHWAY-PRIORITY',
+            PATHWAY_CLONES : 'PATHWAY-CLONES'
         };
         this.PRODUCER_REFERENCE_TIME_TYPE = {
             ENCODER: 'encoder',

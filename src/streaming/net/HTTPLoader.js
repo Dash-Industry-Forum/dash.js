@@ -188,7 +188,7 @@ function HTTPLoader(cfg) {
                     }));
 
                     if (config.error) {
-                        config.error(request, 'error', httpRequest.response.statusText);
+                        config.error(request, 'error', httpRequest.response.statusText, httpRequest.response);
                     }
 
                     if (config.complete) {

@@ -38,6 +38,7 @@ class ContentSteering {
         this.queryBeforeStart = false;
         this.proxyServerUrl = null;
         this.serverUrl = null;
+        this.clientRequirement = true;
     }
 }
 

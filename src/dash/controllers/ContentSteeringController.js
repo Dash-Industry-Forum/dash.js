@@ -156,8 +156,8 @@ function ContentSteeringController() {
                         });
                         resolve();
                     },
-                    error: (e) => {
-                        _handleSteeringResponseError(e);
+                    error: (e, error, statusText, response) => {
+                        _handleSteeringResponseError(e, response);
                         resolve(e);
                     }
                 });
@@ -190,7 +190,7 @@ function ContentSteeringController() {
             }
         }
 
-        // Ass pathway parameter/currently selected service location to list of query parameters
+        // Add pathway parameter/currently selected service location to list of query parameters
         if (currentSelectedServiceLocation) {
             additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.PATHWAY, value: currentSelectedServiceLocation });
         }
@@ -223,8 +223,11 @@ function ContentSteeringController() {
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]) {
             currentSteeringResponseData.reloadUri = data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]
         }
-        if (data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]) {
-            currentSteeringResponseData.serviceLocationPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_PRIORITY]) {
+            currentSteeringResponseData.pathwayPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_PRIORITY]
+        }
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]) {
+            currentSteeringResponseData.pathwayClones = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]
         }
 
         _startSteeringRequestTimer();
@@ -249,9 +252,33 @@ function ContentSteeringController() {
         nextRequestTimer = null;
     }
 
-    function _handleSteeringResponseError(e) {
-        logger.warn(`Error fetching data from content steering server`, e);
-        _startSteeringRequestTimer();
+    function _handleSteeringResponseError(e, response) {
+        try {
+            logger.warn(`Error fetching data from content steering server`, e);
+            const statusCode = response.status;
+
+            switch (statusCode) {
+                // 410 response code. Stop steering
+                case 410:
+                    break;
+                // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
+                case 429:
+                    const retryAfter = response && response.getResponseHeader ? response.getResponseHeader('retry-after') : null;
+                    if (retryAfter !== null) {
+                        if (!currentSteeringResponseData) {
+                            currentSteeringResponseData = {};
+                        }
+                        currentSteeringResponseData.ttl = parseInt(retryAfter);
+                    }
+                    _startSteeringRequestTimer();
+                    break;
+                default:
+                    _startSteeringRequestTimer();
+                    break;
+            }
+        } catch (e) {
+            logger.error(e);
+        }
     }
 
     function getCurrentSteeringResponseData() {
