@@ -36,7 +36,6 @@ import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import Events from '../../core/events/Events';
 import Constants from '../../streaming/constants/Constants';
 import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
