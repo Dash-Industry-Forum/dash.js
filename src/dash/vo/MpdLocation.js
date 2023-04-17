@@ -32,14 +32,11 @@
  * @class
  * @ignore
  */
-class ContentSteering {
-    constructor() {
-        this.defaultServiceLocation = null;
-        this.defaultServiceLocationArray = [];
-        this.queryBeforeStart = false;
-        this.serverUrl = null;
-        this.clientRequirement = true;
+class MpdLocation {
+    constructor(url, serviceLocation) {
+        this.url = url || '';
+        this.serviceLocation = serviceLocation || null;
     }
 }
 
-export default ContentSteering;
+export default MpdLocation;

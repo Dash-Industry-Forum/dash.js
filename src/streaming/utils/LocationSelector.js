@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,17 +29,27 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
-import ContentSteeringController from '../../../dash/controllers/ContentSteeringController';
 
-function ContentSteeringSelector() {
+import Events from '../../core/events/Events';
+import BlacklistController from '../controllers/BlacklistController';
+import FactoryMaker from '../../core/FactoryMaker';
+import Settings from '../../core/Settings';
+import ContentSteeringController from '../../dash/controllers/ContentSteeringController';
+
+function LocationSelector() {
 
     const context = this.context;
+    const settings = Settings(context).getInstance();
+
     let instance,
-        contentSteeringController,
-        blacklistController;
+        blacklistController,
+        contentSteeringController;
 
     function setup() {
+        blacklistController = BlacklistController(context).create({
+            updateEventName: Events.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED,
+            addBlacklistEventName: Events.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD
+        });
         contentSteeringController = ContentSteeringController(context).getInstance();
     }
 
@@ -52,47 +62,67 @@ function ContentSteeringSelector() {
         }
     }
 
-    function selectBaseUrlIndex(data) {
-        let steeringIndex = NaN;
-
-        // In case we dont have a selected idx yet we consider the defaultServiceLocation
-        if (isNaN(data.selectedIdx)) {
-            const steeringDataFromMpd = contentSteeringController.getSteeringDataFromManifest();
-            if (steeringDataFromMpd && steeringDataFromMpd.defaultServiceLocationArray.length > 0) {
-                steeringIndex = _findexIndexOfServiceLocation(steeringDataFromMpd.defaultServiceLocationArray, data.baseUrls);
-            }
+    /**
+     *
+     * @param {MpdLocation[]} mpdLocations
+     * @returns {*}
+     */
+    function select(mpdLocations) {
+        if (!mpdLocations || mpdLocations.length === 0) {
+            return null;
         }
 
-        // Search in the response data of the steering server
-        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-        if (data.baseUrls && data.baseUrls.length && currentSteeringResponseData &&
-            currentSteeringResponseData.pathwayPriority && currentSteeringResponseData.pathwayPriority.length) {
-            steeringIndex = _findexIndexOfServiceLocation(currentSteeringResponseData.pathwayPriority, data.baseUrls);
+        let mpdLocation = null;
+        if (settings.get().streaming.applyContentSteering) {
+            mpdLocation = _selectByContentSteering(mpdLocations)
         }
 
-        return steeringIndex;
+        if (!mpdLocation) {
+            mpdLocation = _selectByDefault(mpdLocations);
+        }
+
+        return mpdLocation;
     }
 
-    function _findexIndexOfServiceLocation(pathwayPriority = [], baseUrls = []) {
+    function _selectByContentSteering(mpdLocations) {
+        // Search in the response data of the steering server
+        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
+        if (currentSteeringResponseData && currentSteeringResponseData.pathwayPriority && currentSteeringResponseData.pathwayPriority.length > 0) {
+            return _findMpdLocation(currentSteeringResponseData.pathwayPriority, mpdLocations);
+        }
+
+        return null;
+    }
+
+    function _findMpdLocation(pathwayPriority = [], mpdLocations = []) {
         let i = 0;
-        let steeringIndex = NaN;
+        let target = null;
         while (i < pathwayPriority.length) {
             const curr = pathwayPriority[i];
-            const idx = baseUrls.findIndex((elem) => {
+            const idx = mpdLocations.findIndex((elem) => {
                 return elem.serviceLocation && elem.serviceLocation === curr;
             })
-            if (idx !== -1 && !blacklistController.contains(baseUrls[idx].serviceLocation)) {
-                steeringIndex = idx;
+            if (idx !== -1 && !blacklistController.contains(mpdLocations[idx].serviceLocation)) {
+                target = mpdLocations[idx]
                 break;
             }
             i += 1;
         }
-        return steeringIndex;
+        return target;
+    }
+
+    function _selectByDefault(mpdLocations) {
+        return mpdLocations[0];
+    }
+
+    function reset() {
+        blacklistController.reset();
     }
 
     instance = {
-        selectBaseUrlIndex,
-        setConfig
+        select,
+        setConfig,
+        reset
     };
 
     setup();
@@ -100,5 +130,5 @@ function ContentSteeringSelector() {
     return instance;
 }
 
-ContentSteeringSelector.__dashjs_factory_name = 'ContentSteeringSelector';
-export default FactoryMaker.getClassFactory(ContentSteeringSelector);
+LocationSelector.__dashjs_factory_name = 'LocationSelector';
+export default FactoryMaker.getClassFactory(LocationSelector);

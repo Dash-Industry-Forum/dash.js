@@ -39,7 +39,7 @@ describe('ManifestUpdater', function () {
         eventBus.on(Events.MANIFEST_UPDATED, spy);
 
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-            error: {code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
+            error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
         expect(spy).to.have.not.been.called(); // jshint ignore:line
@@ -54,7 +54,7 @@ describe('ManifestUpdater', function () {
         eventBus.on(Events.MANIFEST_UPDATED, spy);
 
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-            error: {code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
+            error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
         expect(spy).to.have.not.been.called(); // jshint ignore:line
@@ -104,7 +104,7 @@ describe('ManifestUpdater', function () {
         eventBus.on(Events.MANIFEST_UPDATED, spy);
 
         const patch = {};
-        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: patch });
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
         expect(inMemoryManifest.loadedTime).to.not.equal(originalTime);
@@ -138,7 +138,7 @@ describe('ManifestUpdater', function () {
         publishTimeStub.onCall(1).returns(new Date());
 
         const patch = {};
-        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: patch });
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
         expect(patchCheckStub.called).to.be.true; // jshint ignore:line
@@ -168,7 +168,7 @@ describe('ManifestUpdater', function () {
         const publishTimeStub = sinon.stub(adapterMock, 'getPublishTime').returns(originalTime);
 
         const patch = {};
-        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: patch });
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
         expect(patchCheckStub.called).to.be.true; // jshint ignore:line
@@ -186,7 +186,7 @@ describe('ManifestUpdater', function () {
 
     describe('refresh manifest location', function () {
         const patchLocation = 'http://example.com/bar';
-        const location = 'http://example.com/baz';
+        const location = [{ url: 'http://example.com/baz' }];
         const manifest = {
             url: 'http://example.com'
         };
@@ -226,7 +226,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(location)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(location[0].url)).to.be.true; // jshint ignore:line
         });
 
         it('should utilize original mpd location if no other signal provided', function () {
@@ -240,11 +240,11 @@ describe('ManifestUpdater', function () {
 
         it('should make relative locations absolute relative to the manifest', function () {
             patchLocationStub.returns(null);
-            locationStub.returns('baz'); // should convert to 'http://example.com/baz'
+            locationStub.returns([{ url: 'baz' }]); // should convert to 'http://example.com/baz'
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(location)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(location[0].url)).to.be.true; // jshint ignore:line
         });
     });
 });

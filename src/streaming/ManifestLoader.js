@@ -190,15 +190,6 @@ function ManifestLoader(config) {
                         manifest.originalUrl = manifest.url;
                     }
 
-                    // In the following, we only use the first Location entry even if many are available
-                    // Compare with ManifestUpdater/DashManifestModel
-                    if (manifest.hasOwnProperty(Constants.LOCATION)) {
-                        let entry = manifest.Location_asArray[0];
-                        let text = entry.__text || entry
-                        baseUri = urlUtils.parseBaseUrl(text);
-                        logger.debug('BaseURI set by Location to: ' + baseUri);
-                    }
-
                     // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
                     // and the specified duration is greater than the total duration of all periods,
                     // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.

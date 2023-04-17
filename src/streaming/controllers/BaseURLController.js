@@ -57,7 +57,7 @@ function BaseURLController() {
         baseURLTreeModel = BaseURLTreeModel(context).create();
         baseURLSelector = BaseURLSelector(context).create();
 
-        eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_CHANGED, onBlackListChanged, instance);
+        eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
     }
 
     function setConfig(config) {

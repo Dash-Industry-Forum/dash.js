@@ -10,7 +10,6 @@ describe('Constants', function () {
         expect(Constants.AUDIO).to.equal('audio');
         expect(Constants.TEXT).to.equal('text');
         expect(Constants.MUXED).to.equal('muxed');
-        expect(Constants.LOCATION).to.equal('Location');
         expect(Constants.INITIALIZE).to.equal('initialize');
         expect(Constants.TEXT_SHOWING).to.equal('showing');
         expect(Constants.TEXT_HIDDEN).to.equal('hidden');

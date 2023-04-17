@@ -509,7 +509,7 @@ describe('DashManifestModel', function () {
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
             const location = dashManifestModel.getLocation({ Location: '', Location_asArray: ['location_1'] });
 
-            expect(location).to.be.equal('location_1'); // jshint ignore:line
+            expect(location[0].url).to.be.equal('location_1'); // jshint ignore:line
         });
 
         it('should return undefined when getPatchLocation is called and manifest is undefined', () => {
@@ -1297,6 +1297,7 @@ describe('DashManifestModel', function () {
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',
+                            'clientRequirement': 'false',
                             'proxyServerURL': 'http://someUrl',
                             '__text': 'http://localhost:3333/content-steering'
                         }
@@ -1305,7 +1306,7 @@ describe('DashManifestModel', function () {
                 const data = dashManifestModel.getContentSteering(manifestData);
                 expect(data.defaultServiceLocation).to.be.equal('beta');
                 expect(data.queryBeforeStart).to.be.true;
-                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.clientRequirement).to.be.false;
                 expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
             })
 
@@ -1315,13 +1316,13 @@ describe('DashManifestModel', function () {
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',
-                            'proxyServerURL': 'http://someUrl',
+                            'clientRequirement': 'false',
                             '__text': 'http://localhost:3333/content-steering'
                         },
                         {
                             'defaultServiceLocation': 'alpha',
                             'queryBeforeStart': 'false',
-                            'proxyServerURL': 'http://someUrl2',
+                            'clientRequirement': 'true',
                             '__text': 'http://localhost:3333/content-steering/2'
                         }
                     ]
@@ -1329,7 +1330,7 @@ describe('DashManifestModel', function () {
                 const data = dashManifestModel.getContentSteering(manifestData);
                 expect(data.defaultServiceLocation).to.be.equal('beta');
                 expect(data.queryBeforeStart).to.be.true;
-                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.clientRequirement).to.be.false;
                 expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
             })
 

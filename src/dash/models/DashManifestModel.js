@@ -47,6 +47,7 @@ import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
+import MpdLocation from '../vo/MpdLocation';
 
 function DashManifestModel() {
     let instance,
@@ -1150,14 +1151,11 @@ function DashManifestModel() {
 
         if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
             entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
+            entry.defaultServiceLocationArray = entry.defaultServiceLocation.split(' ');
         }
 
         if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
             entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
-        }
-
-        if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
-            entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
         }
 
         if (element.hasOwnProperty(DashConstants.CLIENT_REQUIREMENT)) {
@@ -1168,12 +1166,12 @@ function DashManifestModel() {
     }
 
     function getLocation(manifest) {
-        if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
-            // for now, do not support multiple Locations -
-            // just set Location to the first Location.
-            manifest.Location = manifest.Location_asArray[0];
-
-            return manifest.Location;
+        if (manifest && manifest.hasOwnProperty(DashConstants.LOCATION_AS_ARRAY)) {
+            return manifest[DashConstants.LOCATION_AS_ARRAY].map((entry) => {
+                const text = entry.__text || entry;
+                const serviceLocation = entry[DashConstants.SERVICE_LOCATION] ? entry[DashConstants.SERVICE_LOCATION] : null;
+                return new MpdLocation(text, serviceLocation)
+            })
         }
 
         // may well be undefined

@@ -139,6 +139,8 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
         this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
         this.PATCH_LOCATION = 'PatchLocation';
+        this.LOCATION = 'Location';
+        this.LOCATION_AS_ARRAY = 'Location_asArray';
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
         this.ORIGINAL_MPD_ID = 'mpdId';
@@ -150,7 +152,6 @@ class DashConstants {
         this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
         this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
         this.QUERY_BEFORE_START = 'queryBeforeStart';
-        this.PROXY_SERVER_URL = 'proxyServerURL';
         this.CLIENT_REQUIREMENT = 'clientRequirement';
         this.CONTENT_STEERING_RESPONSE = {
             VERSION: 'VERSION',

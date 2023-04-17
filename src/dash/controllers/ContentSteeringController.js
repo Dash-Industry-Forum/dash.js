@@ -55,7 +55,7 @@ function ContentSteeringController() {
         logger,
         currentSteeringResponseData,
         activeStreamInfo,
-        currentSelectedServiceLocation,
+        selectedServiceLocationsSinceLastRequest,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -125,7 +125,9 @@ function ContentSteeringController() {
 
     function _onFragmentLoadingStarted(e) {
         if (e && e.request && e.request.serviceLocation) {
-            currentSelectedServiceLocation = e.request.serviceLocation;
+            if (!selectedServiceLocationsSinceLastRequest[e.request.serviceLocation]) {
+                selectedServiceLocationsSinceLastRequest[e.request.serviceLocation] = {};
+            }
         }
     }
 
@@ -169,6 +171,9 @@ function ContentSteeringController() {
                     error: (e, error, statusText, response) => {
                         _handleSteeringResponseError(e, response);
                         resolve(e);
+                    },
+                    complete: () => {
+                        selectedServiceLocationsSinceLastRequest = {};
                     }
                 });
             } catch (e) {
@@ -178,7 +183,7 @@ function ContentSteeringController() {
     }
 
     function _getSteeringServerUrl(steeringDataFromManifest) {
-        let url = steeringDataFromManifest.proxyServerUrl ? steeringDataFromManifest.proxyServerUrl : steeringDataFromManifest.serverUrl;
+        let url = steeringDataFromManifest.serverUrl;
         if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
             if (urlUtils.isRelative(currentSteeringResponseData.reloadUri)) {
                 url = urlUtils.resolve(currentSteeringResponseData.reloadUri, steeringDataFromManifest.serverUrl);
@@ -201,16 +206,13 @@ function ContentSteeringController() {
         }
 
         // Add pathway parameter/currently selected service location to list of query parameters
-        if (currentSelectedServiceLocation) {
-            additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.PATHWAY, value: currentSelectedServiceLocation });
-        }
-
-        // If we use the value in proxyServerUrl we add the original url as query parameter
-        if (steeringDataFromManifest.proxyServerUrl && steeringDataFromManifest.proxyServerUrl === url && steeringDataFromManifest.serverUrl) {
+        const serviceLocations = Object.keys(selectedServiceLocationsSinceLastRequest);
+        if (serviceLocations.length > 0) {
+            let pathwayString = serviceLocations.toString();
             additionalQueryParameter.push({
-                key: QUERY_PARAMETER_KEYS.URL,
-                value: encodeURI(steeringDataFromManifest.serverUrl)
-            })
+                key: QUERY_PARAMETER_KEYS.PATHWAY,
+                value: pathwayString
+            });
         }
 
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
@@ -304,7 +306,7 @@ function ContentSteeringController() {
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
         activeStreamInfo = null;
-        currentSelectedServiceLocation = null;
+        selectedServiceLocationsSinceLastRequest = {};
         stopSteeringRequestTimer()
     }
 
