@@ -736,19 +736,12 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-                // If the @start attribute is absent, but the previous Period
-                // element contains a @duration attribute then then this new
-                // Period is also a regular Period. The start time of the new
-                // Period PeriodStart is the sum of the start time of the previous
-                // Period PeriodStart and the value of the attribute @duration
-            // of the previous Period.
+            // If the @start attribute is absent, but the previous Period element contains a @duration attribute then this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of the start time of the previous Period PeriodStart and the value of the attribute @duration of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-                // If (i) @start attribute is absent, and (ii) the Period element
-                // is the first in the MPD, and (iii) the MPD@type is 'static',
-            // then the PeriodStart time shall be set to zero.
+            // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the MPD@type is 'static', then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
                 voPeriod.start = 0;
@@ -1144,30 +1137,34 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.CONTENT_STEERING_AS_ARRAY)) {
             // Only one ContentSteering element is supported on MPD level
             const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
-            const entry = new ContentSteering();
-
-            entry.serverUrl = element.__text;
-
-            if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
-                entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
-            }
-
-            if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
-                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
-            }
-
-            if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
-                entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
-            }
-
-            if (element.hasOwnProperty(DashConstants.CLIENT_REQUIREMENT)) {
-                entry.clientRequirement = element[DashConstants.CLIENT_REQUIREMENT].toLowerCase() !== 'false';
-            }
-
-            return entry;
+            return _createContentSteeringInstance(element);
         }
 
         return undefined;
+    }
+
+    function _createContentSteeringInstance(element) {
+        const entry = new ContentSteering();
+
+        entry.serverUrl = element.__text;
+
+        if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
+            entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
+        }
+
+        if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
+            entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
+        }
+
+        if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
+            entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
+        }
+
+        if (element.hasOwnProperty(DashConstants.CLIENT_REQUIREMENT)) {
+            entry.clientRequirement = element[DashConstants.CLIENT_REQUIREMENT].toLowerCase() !== 'false';
+        }
+
+        return entry;
     }
 
     function getLocation(manifest) {
@@ -1213,7 +1210,8 @@ function DashManifestModel() {
                     latency = null,
                     playbackRate = null,
                     operatingQuality = null,
-                    operatingBandwidth = null;
+                    operatingBandwidth = null,
+                    contentSteering = null;
 
                 for (const prop in sd) {
                     if (sd.hasOwnProperty(prop)) {
@@ -1249,6 +1247,8 @@ function DashManifestModel() {
                                 min: parseInt(sd[prop].min),
                                 target: parseInt(sd[prop].target)
                             }
+                        } else if (prop === DashConstants.CONTENT_STEERING) {
+                            contentSteering = _createContentSteeringInstance(sd[prop])
                         }
                     }
                 }
@@ -1259,7 +1259,8 @@ function DashManifestModel() {
                     latency,
                     playbackRate,
                     operatingQuality,
-                    operatingBandwidth
+                    operatingBandwidth,
+                    contentSteering
                 });
             }
         }

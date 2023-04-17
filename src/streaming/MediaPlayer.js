@@ -402,6 +402,7 @@ function MediaPlayer() {
                 mediaPlayerModel,
                 manifestModel,
                 abrController,
+                serviceDescriptionController,
                 eventBus,
                 requestModifier: RequestModifier(context).getInstance()
             })

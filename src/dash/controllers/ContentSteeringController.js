@@ -64,6 +64,7 @@ function ContentSteeringController() {
         manifestModel,
         requestModifier,
         abrController,
+        serviceDescriptionController,
         eventBus,
         adapter;
 
@@ -96,6 +97,9 @@ function ContentSteeringController() {
         if (config.abrController) {
             abrController = config.abrController;
         }
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
+        }
         if (config.eventBus) {
             eventBus = config.eventBus;
         }
@@ -127,7 +131,13 @@ function ContentSteeringController() {
 
     function getSteeringDataFromManifest() {
         const manifest = manifestModel.getValue()
-        return adapter.getContentSteering(manifest);
+        let contentSteeringData = adapter.getContentSteering(manifest);
+
+        if (!contentSteeringData) {
+            contentSteeringData = serviceDescriptionController.getServiceDescriptionSettings().contentSteering;
+        }
+
+        return contentSteeringData;
     }
 
     function shouldQueryBeforeStart() {

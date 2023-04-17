@@ -79,7 +79,8 @@ function ServiceDescriptionController() {
             },
             minBitrate: {},
             maxBitrate: {},
-            initialBitrate: {}
+            initialBitrate: {},
+            contentSteering: null
         };
         prftOffsets = [];
     }
@@ -122,6 +123,10 @@ function ServiceDescriptionController() {
 
         if (sd.operatingBandwidth) {
             _applyServiceDescriptionOperatingBandwidth(sd);
+        }
+
+        if (sd.contentSteering) {
+            _applyServiceDescriptionContentSteering(sd);
         }
     }
 
@@ -277,6 +282,15 @@ function ServiceDescriptionController() {
         } catch (e) {
             logger.error(e);
         }
+    }
+
+    /**
+     * Add information about content steering element in ContentSteeringController. Handling is up to the ContentSteeringController
+     *  @param {object} sd
+     *  @private
+     */
+    function _applyServiceDescriptionContentSteering(sd) {
+        serviceDescriptionSettings.contentSteering = sd.contentSteering;
     }
 
     /**
