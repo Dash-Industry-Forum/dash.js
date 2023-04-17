@@ -1809,9 +1809,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
-     * Allows application to retrieve a manifest.  Manifest loading is asynchro
-     * nous and
-     * requires the app-provided callback function
+     * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
      *
      * @param {string} url - url the manifest url
      * @param {function} callback - A Callback function provided when retrieving manifests

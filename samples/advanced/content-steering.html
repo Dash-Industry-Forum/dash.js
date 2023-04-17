@@ -77,8 +77,7 @@
                 if (e) {
                     document.getElementById(`steering-request-timestamp`).innerText = new Date().toISOString();
                     if (e.url) {
-                        const element = document.getElementById(`steering-request-url`);
-                        element.innerText = e.url;
+                        document.getElementById(`steering-request-url`).innerText = decodeURIComponent(e.url);
                     }
                     if (e.currentSteeringResponseData) {
                         document.getElementById(`steering-version`).innerText = e.currentSteeringResponseData.version;

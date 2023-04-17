@@ -109,9 +109,19 @@ function ManifestLoader(config) {
         }
     }
 
-    function load(url) {
+    function load(url, serviceLocation = null) {
 
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
+
+        if (serviceLocation) {
+            request.serviceLocation = serviceLocation;
+        }
+
+        eventBus.trigger(
+            Events.MANIFEST_LOADING_STARTED, {
+                request
+            }
+        );
 
         urlLoader.load({
             request: request,

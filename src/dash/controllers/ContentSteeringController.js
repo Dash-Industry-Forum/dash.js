@@ -55,7 +55,7 @@ function ContentSteeringController() {
         logger,
         currentSteeringResponseData,
         activeStreamInfo,
-        selectedServiceLocationsSinceLastRequest,
+        serviceLocationList,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -114,7 +114,9 @@ function ContentSteeringController() {
             errors: Errors
         });
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
-        eventBus.on(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+
     }
 
     function _onPeriodSwitchCompleted(e) {
@@ -124,10 +126,20 @@ function ContentSteeringController() {
     }
 
     function _onFragmentLoadingStarted(e) {
+        _addToServiceLocationList(e, 'baseUrl');
+    }
+
+    function _onManifestLoadingStarted(e) {
+        _addToServiceLocationList(e, 'location')
+    }
+
+    function _addToServiceLocationList(e, type) {
         if (e && e.request && e.request.serviceLocation) {
-            if (!selectedServiceLocationsSinceLastRequest[e.request.serviceLocation]) {
-                selectedServiceLocationsSinceLastRequest[e.request.serviceLocation] = {};
+            const serviceLocation = e.request.serviceLocation;
+            if (serviceLocationList[type].all.indexOf(serviceLocation) === -1) {
+                serviceLocationList[type].all.push(serviceLocation)
             }
+            serviceLocationList[type].current = serviceLocation;
         }
     }
 
@@ -173,12 +185,23 @@ function ContentSteeringController() {
                         resolve(e);
                     },
                     complete: () => {
-                        selectedServiceLocationsSinceLastRequest = {};
+                        // Clear everything except for the current entry
+                        serviceLocationList.baseUrl.all = _clearServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
+                        serviceLocationList.location.all = _clearServiceLocationListAfterSteeringRequest(serviceLocationList.location);
                     }
                 });
             } catch (e) {
                 resolve(e);
             }
+        })
+    }
+
+    function _clearServiceLocationListAfterSteeringRequest(data) {
+        if (!data.all || data.all.length === 0 || !data.current) {
+            return [];
+        }
+        return data.all.filter((entry) => {
+            return entry === data.current;
         })
     }
 
@@ -206,12 +229,12 @@ function ContentSteeringController() {
         }
 
         // Add pathway parameter/currently selected service location to list of query parameters
-        const serviceLocations = Object.keys(selectedServiceLocationsSinceLastRequest);
+        const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
         if (serviceLocations.length > 0) {
             let pathwayString = serviceLocations.toString();
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.PATHWAY,
-                value: pathwayString
+                value: `"${pathwayString}"`
             });
         }
 
@@ -300,13 +323,23 @@ function ContentSteeringController() {
     function reset() {
         _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
-        eventBus.off(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
         activeStreamInfo = null;
-        selectedServiceLocationsSinceLastRequest = {};
+        serviceLocationList = {
+            baseUrl: {
+                current: null,
+                all: []
+            },
+            location: {
+                current: null,
+                all: []
+            }
+        };
         stopSteeringRequestTimer()
     }
 

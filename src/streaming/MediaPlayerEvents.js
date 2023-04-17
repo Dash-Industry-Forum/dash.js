@@ -116,6 +116,12 @@ class MediaPlayerEvents extends EventsBase {
         this.LOG = 'log';
 
         /**
+         * Triggered when the manifest load is started
+         * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+         */
+        this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+
+        /**
          * Triggered when the manifest load is complete
          * @event MediaPlayerEvents#MANIFEST_LOADED
          */

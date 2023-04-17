@@ -150,12 +150,13 @@ function ManifestUpdater() {
 
         // Check for PatchLocation and Location alternatives
         const patchLocation = adapter.getPatchLocation(manifest);
-        const mpdLocations = adapter.getLocation(manifest);
-        const mpdLocation = locationSelector.select(mpdLocations);
+        const mpdLocation = locationSelector.select(adapter.getLocation(manifest));
+        let serviceLocation = null;
         if (patchLocation && !ignorePatch) {
             url = patchLocation;
         } else if (mpdLocation) {
             url = mpdLocation.url;
+            serviceLocation = mpdLocation.serviceLocation;
         }
 
         // if one of the alternatives was relative, convert to absolute
@@ -163,7 +164,7 @@ function ManifestUpdater() {
             url = urlUtils.resolve(url, manifest.url);
         }
 
-        manifestLoader.load(url);
+        manifestLoader.load(url, serviceLocation);
     }
 
     function update(manifest) {
