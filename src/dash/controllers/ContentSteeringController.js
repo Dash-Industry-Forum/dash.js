@@ -36,7 +36,6 @@ import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import Constants from '../../streaming/constants/Constants';
 import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
 
@@ -44,7 +43,9 @@ const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
     PATHWAY: '_DASH_pathway',
     URL: 'url'
-}
+};
+
+const THROUGHPUT_SAMPLES = 4;
 
 function ContentSteeringController() {
     const context = this.context;
@@ -53,8 +54,8 @@ function ContentSteeringController() {
     let instance,
         logger,
         currentSteeringResponseData,
-        activeStreamInfo,
         serviceLocationList,
+        throughputList,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -62,7 +63,6 @@ function ContentSteeringController() {
         mediaPlayerModel,
         manifestModel,
         requestModifier,
-        abrController,
         serviceDescriptionController,
         eventBus,
         adapter;
@@ -93,9 +93,6 @@ function ContentSteeringController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.abrController) {
-            abrController = config.abrController;
-        }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }
@@ -104,6 +101,9 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Initialize the steering controller by instantiating classes and registering observer callback
+     */
     function initialize() {
         urlLoader = URLLoader(context).create({
             errHandler,
@@ -112,26 +112,50 @@ function ContentSteeringController() {
             requestModifier,
             errors: Errors
         });
-        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
 
     }
 
-    function _onPeriodSwitchCompleted(e) {
-        if (e && e.toStreamInfo) {
-            activeStreamInfo = e.toStreamInfo;
-        }
-    }
-
+    /**
+     *
+     * @param {object} e
+     * @private
+     */
     function _onFragmentLoadingStarted(e) {
         _addToServiceLocationList(e, 'baseUrl');
     }
 
+    /**
+     *
+     * @param {object} e
+     * @private
+     */
     function _onManifestLoadingStarted(e) {
         _addToServiceLocationList(e, 'location')
     }
 
+    function _onThroughputMeasurementStored(e) {
+        if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
+            return;
+        }
+        const serviceLocation = e.httpRequest._serviceLocation;
+        if (!throughputList[serviceLocation]) {
+            throughputList[serviceLocation] = [];
+        }
+        throughputList[serviceLocation].push(e.throughput * 1000)
+        if (throughputList[serviceLocation].length > THROUGHPUT_SAMPLES) {
+            throughputList[serviceLocation].shift();
+        }
+    }
+
+    /**
+     * Adds a new service location entry to our list
+     * @param {object} e
+     * @param {string} type
+     * @private
+     */
     function _addToServiceLocationList(e, type) {
         if (e && e.request && e.request.serviceLocation) {
             const serviceLocation = e.request.serviceLocation;
@@ -216,29 +240,39 @@ function ContentSteeringController() {
 
         const additionalQueryParameter = [];
 
-        // Add throughput value to list of query parameters
-        if (activeStreamInfo) {
-            const isDynamic = adapter.getIsDynamic();
-            const mediaType = adapter.getAllMediaInfoForType(activeStreamInfo, Constants.VIDEO).length > 0 ? Constants.VIDEO : Constants.AUDIO;
-            const throughputHistory = abrController.getThroughputHistory();
-            const throughput = throughputHistory ? throughputHistory.getAverageThroughput(mediaType, isDynamic) : NaN;
-            if (!isNaN(throughput)) {
-                additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput * 1000 });
-            }
-        }
 
-        // Add pathway parameter/currently selected service location to list of query parameters
         const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
         if (serviceLocations.length > 0) {
+
+            // Add pathway parameter/currently selected service location to list of query parameters
             let pathwayString = serviceLocations.toString();
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.PATHWAY,
                 value: `"${pathwayString}"`
             });
+
+            // Add throughput for each service location in pathway parameter
+            let throughputString = serviceLocations.reduce((acc, curr) => {
+                const throughput = _calculateThroughputForServiceLocation(curr);
+                return `${acc}${throughput},`;
+            }, '')
+            // Remove last comma at the end
+            throughputString = throughputString.replace(/,\s*$/, '');
+            additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughputString });
         }
 
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
+    }
+
+    function _calculateThroughputForServiceLocation(serviceLocation) {
+        if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
+            return -1;
+        }
+
+        return throughputList[serviceLocation].reduce((acc, curr) => {
+            return acc + curr;
+        }) / throughputList[serviceLocation].length;
     }
 
 
@@ -321,14 +355,14 @@ function ContentSteeringController() {
 
     function reset() {
         _resetInitialSettings();
-        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
-        activeStreamInfo = null;
+        throughputList = {};
         serviceLocationList = {
             baseUrl: {
                 current: null,

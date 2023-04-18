@@ -230,6 +230,12 @@ class MediaPlayerEvents extends EventsBase {
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
 
         /**
+         * Triggered when a throughput measurement based on the last segment request has been stored
+         * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+         */
+        this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
+
+        /**
          * Triggered when a ttml chunk is parsed.
          * @event MediaPlayerEvents#TTML_PARSED
          */

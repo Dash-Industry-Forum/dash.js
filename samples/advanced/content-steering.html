@@ -39,6 +39,7 @@
             player.initialize(document.querySelector("video"), null, true);
 
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, null);
         }
 
@@ -66,6 +67,26 @@
                         const element = document.getElementById(`${e.mediaType}-request-url`);
                         element.innerText = e.request.url;
                     }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function _onManifestLoadingStarted(e) {
+            try {
+                if (e.request.serviceLocation) {
+
+                }
+                if (e.request.url) {
+                    const element = document.getElementById(`manifest-request-url`);
+                    element.innerText = e.request.url;
+                }
+                const slElement = document.getElementById(`manifest-service-location`);
+                if (e.request.serviceLocation) {
+                    slElement.innerText = e.request.serviceLocation;
+                } else {
+                    slElement.innerText = '';
                 }
             } catch (e) {
                 console.error(e);
@@ -154,61 +175,86 @@
             </div>
         </div>
         <div class="row mt-2">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="h-100 p-5 border rounded-3">
                     <h4> Fragment Requests</h4>
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th scope="col">Type</th>
-                            <th scope="col">Service MpdLocation</th>
-                            <th scope="col">Request URL</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Audio</td>
-                            <td id="audio-service-location"></td>
-                            <td id="audio-request-url"></td>
-                        </tr>
-                        <tr>
-                            <td>Video</td>
-                            <td id="video-service-location"></td>
-                            <td id="video-request-url"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th scope="col">Type</th>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Audio</td>
+                                <td id="audio-service-location"></td>
+                                <td id="audio-request-url"></td>
+                            </tr>
+                            <tr>
+                                <td>Video</td>
+                                <td id="video-service-location"></td>
+                                <td id="video-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4> Manifest Requests</h4>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td id="manifest-service-location"></td>
+                                <td id="manifest-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="col-md-12 mt-2">
                 <div class="h-100 p-5 border rounded-3">
                     <h4> Steering Data</h4>
-                    <table class="table table-condensed">
-                        <thead>
-                        <tr>
-                            <th scope="col">Timestamp</th>
-                            <th scope="col">Request URL</th>
-                            <th scope="col">Response</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                        <tr>
-                            <td id="steering-request-timestamp"></td>
-                            <td id="steering-request-url"></td>
-                            <td id="steering-response">
-                                <ul>
-                                    <li>Version: <span id="steering-version"></span></li>
-                                    <li>Reload URI: <span id="steering-reload-uri"></span></li>
-                                    <li>Pathway Priority: <span id="steering-pathway-priority"></span>
-                                    <li>Pathway Clones: <span id="steering-pathway-cloning"></span>
-                                    </li>
-                                    <li>TTL: <span id="steering-ttl"></span></li>
-                                </ul>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th scope="col">Timestamp</th>
+                                <th scope="col">Request URL</th>
+                                <th scope="col">Response</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                            <tr>
+                                <td id="steering-request-timestamp"></td>
+                                <td id="steering-request-url"></td>
+                                <td id="steering-response">
+                                    <ul>
+                                        <li>Version: <span id="steering-version"></span></li>
+                                        <li>Reload URI: <span id="steering-reload-uri"></span></li>
+                                        <li>Pathway Priority: <span id="steering-pathway-priority"></span>
+                                        <li>Pathway Clones: <span id="steering-pathway-cloning"></span>
+                                        </li>
+                                        <li>TTL: <span id="steering-ttl"></span></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
