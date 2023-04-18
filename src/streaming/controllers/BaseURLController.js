@@ -47,7 +47,8 @@ function BaseURLController() {
     const urlUtils = URLUtils(context).getInstance();
 
     let baseURLTreeModel,
-        baseURLSelector;
+        baseURLSelector,
+        contentSteeringController;
 
     function onBlackListChanged(e) {
         baseURLTreeModel.invalidateSelectedIndexes(e.entry);
@@ -71,6 +72,10 @@ function BaseURLController() {
 
         if (config.adapter) {
             adapter = config.adapter;
+        }
+
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController
         }
     }
 
@@ -115,7 +120,8 @@ function BaseURLController() {
 
         // report config to baseURLTreeModel and baseURLSelector
         baseURLTreeModel.setConfig({
-            adapter: adapter
+            adapter,
+            contentSteeringController
         });
 
         update(data);

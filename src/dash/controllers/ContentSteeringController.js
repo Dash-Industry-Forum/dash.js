@@ -38,6 +38,7 @@ import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
+import BaseURL from '../vo/BaseURL';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
@@ -296,9 +297,54 @@ function ContentSteeringController() {
         }
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]) {
             currentSteeringResponseData.pathwayClones = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]
+            currentSteeringResponseData.pathwayClones = currentSteeringResponseData.pathwayClones.filter((pathwayClone) => {
+                return _isValidPathwayClone(pathwayClone);
+            })
         }
 
         _startSteeringRequestTimer();
+    }
+
+    function _isValidPathwayClone(pathwayClone) {
+        return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]
+    }
+
+    function getSynthesizedBaseUrlElements(referenceElements) {
+        try {
+            const synthesizedElements = [];
+
+            if (!referenceElements || referenceElements.length === 0 || !currentSteeringResponseData || !currentSteeringResponseData.pathwayClones || currentSteeringResponseData.pathwayClones.length === 0) {
+                return synthesizedElements;
+            }
+
+            currentSteeringResponseData.pathwayClones.forEach((pathwayClone) => {
+                let baseElements = referenceElements.filter((source) => {
+                    return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID] === source.serviceLocation
+                })
+                let reference = null;
+                if (baseElements && baseElements.length > 0) {
+                    reference = baseElements[0];
+                }
+                if (reference) {
+                    const referenceUrl = new URL(reference.url);
+                    const synthesizedUrl = `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`;
+                    const synthesizedBaseUrl = new BaseURL(synthesizedUrl, pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID])
+                    synthesizedBaseUrl.dvb_priority = reference.dvb_priority;
+                    synthesizedBaseUrl.dvb_weight = reference.dvb_weight;
+                    synthesizedBaseUrl.availabilityTimeOffset = reference.availabilityTimeOffset;
+                    synthesizedBaseUrl.availabilityTimeComplete = reference.availabilityTimeOffset;
+                    synthesizedElements.push(synthesizedBaseUrl);
+                }
+            })
+
+            return synthesizedElements;
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
     }
 
     function _startSteeringRequestTimer() {
@@ -385,6 +431,7 @@ function ContentSteeringController() {
         shouldQueryBeforeStart,
         getSteeringDataFromManifest,
         stopSteeringRequestTimer,
+        getSynthesizedBaseUrlElements,
         initialize
     };
 

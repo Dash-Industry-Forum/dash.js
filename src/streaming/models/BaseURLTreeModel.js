@@ -47,7 +47,8 @@ class Node {
 function BaseURLTreeModel() {
     let instance,
         root,
-        adapter;
+        adapter,
+        contentSteeringController;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -60,6 +61,9 @@ function BaseURLTreeModel() {
         if (config.adapter) {
             adapter = config.adapter;
         }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController
+        }
     }
 
     function checkConfig() {
@@ -69,7 +73,7 @@ function BaseURLTreeModel() {
     }
 
     function updateChildData(node, index, element) {
-        const baseUrls = adapter.getBaseURLsFromElement(element);
+        const baseUrls = _getBaseUrls(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -83,7 +87,8 @@ function BaseURLTreeModel() {
 
     function getBaseURLCollectionsFromManifest(manifest) {
         checkConfig();
-        const baseUrls = adapter.getBaseURLsFromElement(manifest);
+
+        const baseUrls = _getBaseUrls(manifest)
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -113,6 +118,17 @@ function BaseURLTreeModel() {
                 }
             });
         }
+    }
+
+    function _getBaseUrls(root) {
+        let targetBaseUrls = adapter.getBaseURLsFromElement(root);
+        const synthesizedBaseUrls = contentSteeringController.getSynthesizedBaseUrlElements(targetBaseUrls);
+
+        if (synthesizedBaseUrls && synthesizedBaseUrls.length > 0) {
+            targetBaseUrls = targetBaseUrls.concat(synthesizedBaseUrls)
+        }
+
+        return targetBaseUrls;
     }
 
     function walk(callback, node) {

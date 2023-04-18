@@ -158,7 +158,12 @@ class DashConstants {
             TTL: 'TTL',
             RELOAD_URI: 'RELOAD-URI',
             PATHWAY_PRIORITY : 'PATHWAY-PRIORITY',
-            PATHWAY_CLONES : 'PATHWAY-CLONES'
+            PATHWAY_CLONES : 'PATHWAY-CLONES',
+            BASE_ID: 'BASE-ID',
+            ID: 'ID',
+            URI_REPLACEMENT: 'URI-REPLACEMENT',
+            HOST: 'HOST',
+            PARAMS: 'PARAMS'
         };
         this.PRODUCER_REFERENCE_TIME_TYPE = {
             ENCODER: 'encoder',

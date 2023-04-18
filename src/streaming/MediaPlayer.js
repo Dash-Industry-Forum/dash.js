@@ -361,7 +361,8 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter
+                adapter,
+                contentSteeringController
             });
 
             serviceDescriptionController.setConfig({
