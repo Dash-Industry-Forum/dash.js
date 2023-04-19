@@ -109,13 +109,17 @@ function ManifestLoader(config) {
         }
     }
 
-    function load(url, serviceLocation = null) {
+    function load(url, serviceLocation = null, queryParams = null) {
 
         const requestStartDate = new Date();
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
         if (serviceLocation) {
             request.serviceLocation = serviceLocation;
+        }
+
+        if (queryParams) {
+            request.queryParams = queryParams;
         }
 
         if (!request.requestStartDate) {

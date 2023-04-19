@@ -99,6 +99,7 @@ function BaseURLController() {
                 }
                 p.availabilityTimeOffset = b.availabilityTimeOffset;
                 p.availabilityTimeComplete = b.availabilityTimeComplete;
+                p.queryParams = b.queryParams;
             } else {
                 return new BaseURL();
             }

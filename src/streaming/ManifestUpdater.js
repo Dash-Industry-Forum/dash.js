@@ -37,7 +37,6 @@ import Errors from '../core/errors/Errors';
 import DashConstants from '../dash/constants/DashConstants';
 import URLUtils from './utils/URLUtils';
 import LocationSelector from './utils/LocationSelector';
-import Utils from '../core/Utils';
 
 function ManifestUpdater() {
 
@@ -177,18 +176,7 @@ function ManifestUpdater() {
             url = urlUtils.resolve(url, manifest.url);
         }
 
-        // Add query params to url
-        if (queryParams) {
-            queryParams = Object.keys(queryParams).map((key) => {
-                return {
-                    key,
-                    value: queryParams[key]
-                }
-            })
-            url = Utils.addAditionalQueryParameterToUrl(url, queryParams);
-        }
-
-        manifestLoader.load(url, serviceLocation);
+        manifestLoader.load(url, serviceLocation, queryParams);
     }
 
     function _getAvailableMpdLocations(manifest) {

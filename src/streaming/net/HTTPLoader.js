@@ -311,10 +311,22 @@ function HTTPLoader(cfg) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }
-        request.url = modifiedUrl;
+
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
+        // Add queryParams that came from pathway cloning
+        if (request.queryParams) {
+            const queryParams = Object.keys(request.queryParams).map((key) => {
+                return {
+                    key,
+                    value: request.queryParams[key]
+                }
+            })
+            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, queryParams);
+        }
+
+        request.url = modifiedUrl;
 
         httpRequest = {
             url: modifiedUrl,
