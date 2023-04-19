@@ -37,6 +37,7 @@ import Errors from '../core/errors/Errors';
 import DashConstants from '../dash/constants/DashConstants';
 import URLUtils from './utils/URLUtils';
 import LocationSelector from './utils/LocationSelector';
+import Utils from '../core/Utils';
 
 function ManifestUpdater() {
 
@@ -156,22 +157,35 @@ function ManifestUpdater() {
         let serviceLocation = null;
         const availablePatchLocations = adapter.getPatchLocation(manifest);
         const patchLocation = locationSelector.select(availablePatchLocations);
-
+        let queryParams = null;
         if (patchLocation && !ignorePatch) {
             url = patchLocation.url;
             serviceLocation = patchLocation.serviceLocation;
+            queryParams = patchLocation.queryParams;
         } else {
             const availableMpdLocations = _getAvailableMpdLocations(manifest);
             const mpdLocation = locationSelector.select(availableMpdLocations);
             if (mpdLocation) {
                 url = mpdLocation.url;
                 serviceLocation = mpdLocation.serviceLocation;
+                queryParams = mpdLocation.queryParams;
             }
         }
 
         // if one of the alternatives was relative, convert to absolute
         if (urlUtils.isRelative(url)) {
             url = urlUtils.resolve(url, manifest.url);
+        }
+
+        // Add query params to url
+        if (queryParams) {
+            queryParams = Object.keys(queryParams).map((key) => {
+                return {
+                    key,
+                    value: queryParams[key]
+                }
+            })
+            url = Utils.addAditionalQueryParameterToUrl(url, queryParams);
         }
 
         manifestLoader.load(url, serviceLocation);
