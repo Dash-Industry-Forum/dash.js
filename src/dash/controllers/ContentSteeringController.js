@@ -116,6 +116,7 @@ function ContentSteeringController() {
         });
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
         eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
 
     }
@@ -138,15 +139,38 @@ function ContentSteeringController() {
         _addToServiceLocationList(e, 'location')
     }
 
+    /**
+     * Basic throughput calculation for manifest requests
+     * @param {object} e
+     * @private
+     */
+    function _onManifestLoadingFinished(e) {
+        if (!e || !e.request || !e.request.serviceLocation || !e.request.requestStartDate || !e.request.requestEndDate || isNaN(e.request.bytesTotal)) {
+            return;
+        }
+
+        const serviceLocation = e.request.serviceLocation;
+        const elapsedTime = e.request.requestEndDate.getTime() - e.request.requestStartDate.getTime();
+        const throughput = parseInt((((e.request.bytesTotal * 8) / elapsedTime) * 1000)) // bit/s
+
+        _storeThroughputForServiceLocation(serviceLocation, throughput);
+    }
+
     function _onThroughputMeasurementStored(e) {
         if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
             return;
         }
         const serviceLocation = e.httpRequest._serviceLocation;
+        const throughput = e.throughput * 1000;
+
+        _storeThroughputForServiceLocation(serviceLocation, throughput);
+    }
+
+    function _storeThroughputForServiceLocation(serviceLocation, throughput) {
         if (!throughputList[serviceLocation]) {
             throughputList[serviceLocation] = [];
         }
-        throughputList[serviceLocation].push(e.throughput * 1000)
+        throughputList[serviceLocation].push(throughput)
         if (throughputList[serviceLocation].length > THROUGHPUT_SAMPLES) {
             throughputList[serviceLocation].shift();
         }
@@ -246,21 +270,44 @@ function ContentSteeringController() {
         const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
         if (serviceLocations.length > 0) {
 
-            // Add pathway parameter/currently selected service location to list of query parameters
-            let pathwayString = serviceLocations.toString();
+            // Derive throughput for each service Location
+            const data = serviceLocations.map((serviceLocation) => {
+                const throughput = _calculateThroughputForServiceLocation(serviceLocation);
+                return {
+                    serviceLocation,
+                    throughput
+                }
+            })
+
+            // Sort in descending order to put all elements without throughput (-1) in the end
+            data.sort((a, b) => {
+                return b.throughput - a.throughput
+            })
+
+            let pathwayString = '';
+            let throughputString = '';
+
+            data.forEach((entry, index) => {
+                if (index !== 0) {
+                    pathwayString = `${pathwayString},`;
+                    if (entry.throughput > -1) {
+                        throughputString = `${throughputString},`;
+                    }
+                }
+                pathwayString = `${pathwayString}${entry.serviceLocation}`;
+                if (entry.throughput > -1) {
+                    throughputString = `${throughputString}${entry.throughput}`;
+                }
+            })
+
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.PATHWAY,
                 value: `"${pathwayString}"`
             });
-
-            // Add throughput for each service location in pathway parameter
-            let throughputString = serviceLocations.reduce((acc, curr) => {
-                const throughput = _calculateThroughputForServiceLocation(curr);
-                return `${acc}${throughput},`;
-            }, '')
-            // Remove last comma at the end
-            throughputString = throughputString.replace(/,\s*$/, '');
-            additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughputString });
+            additionalQueryParameter.push({
+                key: QUERY_PARAMETER_KEYS.THROUGHPUT,
+                value: throughputString
+            });
         }
 
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
@@ -272,9 +319,11 @@ function ContentSteeringController() {
             return -1;
         }
 
-        return throughputList[serviceLocation].reduce((acc, curr) => {
+        const throughput = throughputList[serviceLocation].reduce((acc, curr) => {
             return acc + curr;
         }) / throughputList[serviceLocation].length;
+
+        return parseInt(throughput);
     }
 
 
@@ -444,6 +493,7 @@ function ContentSteeringController() {
         _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
         eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 

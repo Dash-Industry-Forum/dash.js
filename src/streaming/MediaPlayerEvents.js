@@ -122,7 +122,13 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
 
         /**
-         * Triggered when the manifest load is complete
+         * Triggered when the manifest loading is finished, providing the request object information
+         * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+         */
+        this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+
+        /**
+         * Triggered when the manifest load is complete, providing the payload
          * @event MediaPlayerEvents#MANIFEST_LOADED
          */
         this.MANIFEST_LOADED = 'manifestLoaded';

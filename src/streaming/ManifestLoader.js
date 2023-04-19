@@ -111,10 +111,15 @@ function ManifestLoader(config) {
 
     function load(url, serviceLocation = null) {
 
+        const requestStartDate = new Date();
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
         if (serviceLocation) {
             request.serviceLocation = serviceLocation;
+        }
+
+        if (!request.requestStartDate) {
+            request.requestStartDate = requestStartDate;
         }
 
         eventBus.trigger(
