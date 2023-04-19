@@ -39,7 +39,6 @@ import Utils from '../../core/Utils';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../MediaPlayerEvents';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
 import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
