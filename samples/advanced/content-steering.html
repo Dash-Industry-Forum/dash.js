@@ -22,14 +22,30 @@
             font-size: 10px;
         }
 
+        figure.cdn-selection {
+            margin: 0 0 0 30px;
+            display: inline-block;
+        }
+
+        img.cdn-selection {
+            width: 70px;
+        }
+
         .border {
             border: 2px solid #dee2e6 !important;
+        }
+
+        #cdn-selection-container, #location-selection-container {
+            margin: 30px 0 0 0;
         }
     </style>
 
     <script class="code">
         let player;
         let mpd = "";
+        let currentSelectedServiceLocation = {}
+        let cdnSelectionImgDomElements = {};
+        let locationSelectionImgDomElements = {};
 
         function init() {
             player = dashjs.MediaPlayer().create();
@@ -41,6 +57,8 @@
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, null);
+            player.on(dashjs.MediaPlayer.events.BASE_URLS_UPDATED, _onBaseUrlsUpdated, null);
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, _onManifestLoaded, null);
         }
 
         function _load() {
@@ -54,13 +72,9 @@
                     if (e.request.serviceLocation) {
                         const element = document.getElementById(`${e.mediaType}-service-location`);
                         element.innerText = e.request.serviceLocation;
-
-                        if (e.request.serviceLocation === 'alpha') {
-                            document.getElementById('img-alpha-cdn').classList.remove('d-none');
-                            document.getElementById('img-beta-cdn').classList.add('d-none');
-                        } else {
-                            document.getElementById('img-alpha-cdn').classList.add('d-none');
-                            document.getElementById('img-beta-cdn').classList.remove('d-none');
+                        if (!currentSelectedServiceLocation[e.mediaType] || currentSelectedServiceLocation[e.mediaType] !== e.request.serviceLocation) {
+                            currentSelectedServiceLocation[e.mediaType] = e.request.serviceLocation;
+                            _serviceLocationChanged(currentSelectedServiceLocation, cdnSelectionImgDomElements);
                         }
                     }
                     if (e.request.url) {
@@ -71,6 +85,87 @@
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        function _serviceLocationChanged(selectedServiceLocation, domElements) {
+            const activeServiceLocations = Object.keys(selectedServiceLocation).reduce((acc, key) => {
+                acc[selectedServiceLocation[key]] = true;
+                return acc;
+            }, {})
+
+            Object.keys(domElements).forEach((key) => {
+                const elem = domElements[key];
+
+                if (activeServiceLocations[key]) {
+                    elem.setAttribute('src', 'img/server-active.svg')
+                } else {
+                    elem.setAttribute('src', 'img/server.svg');
+                }
+
+            })
+        }
+
+        function _onBaseUrlsUpdated(e) {
+            if (!e || !e.baseUrls || e.baseUrls.length === 0) {
+                return;
+            }
+            const divContainer = document.getElementById('cdn-selection-container');
+            /* Only create the once we dont have yet */
+            e.baseUrls.forEach((baseUrl) => {
+                if (baseUrl.serviceLocation) {
+                    const existingElement = document.getElementById(`cdn-selection-${baseUrl.serviceLocation}`);
+                    if (!existingElement) {
+                        const spanContainer = document.createElement('span');
+                        spanContainer.setAttribute('id', `cdn-selection-${baseUrl.serviceLocation}`);
+                        const figure = document.createElement('figure');
+                        figure.setAttribute('class', 'cdn-selection');
+                        const img = document.createElement('img');
+                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('class', 'figure-img img-fluid cdn-selection');
+                        const figCaption = document.createElement('figcaption');
+                        figCaption.setAttribute('class', 'figure-caption');
+                        const label = document.createTextNode(`${baseUrl.serviceLocation}`);
+                        figCaption.appendChild(label);
+                        figure.appendChild(img)
+                        figure.appendChild(figCaption);
+                        spanContainer.appendChild(figure);
+                        divContainer.appendChild(spanContainer);
+                        cdnSelectionImgDomElements[baseUrl.serviceLocation] = img;
+                    }
+                }
+            })
+        }
+
+        function _onManifestLoaded() {
+            const locations = player.getAvailableLocations();
+            if (!locations || locations.length === 0) {
+                return;
+            }
+            const divContainer = document.getElementById('location-selection-container');
+            /* Only create the once we dont have yet */
+            locations.forEach((location) => {
+                if (location.serviceLocation) {
+                    const existingElement = document.getElementById(`cdn-selection-${location.serviceLocation}`);
+                    if (!existingElement) {
+                        const spanContainer = document.createElement('span');
+                        spanContainer.setAttribute('id', `cdn-selection-${location.serviceLocation}`);
+                        const figure = document.createElement('figure');
+                        figure.setAttribute('class', 'cdn-selection');
+                        const img = document.createElement('img');
+                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('class', 'figure-img img-fluid cdn-selection');
+                        const figCaption = document.createElement('figcaption');
+                        figCaption.setAttribute('class', 'figure-caption');
+                        const label = document.createTextNode(`${location.serviceLocation}`);
+                        figCaption.appendChild(label);
+                        figure.appendChild(img)
+                        figure.appendChild(figCaption);
+                        spanContainer.appendChild(figure);
+                        divContainer.appendChild(spanContainer);
+                        locationSelectionImgDomElements[location.serviceLocation] = img;
+                    }
+                }
+            })
         }
 
         function _onManifestLoadingStarted(e) {
@@ -85,6 +180,7 @@
                 const slElement = document.getElementById(`manifest-service-location`);
                 if (e.request.serviceLocation) {
                     slElement.innerText = e.request.serviceLocation;
+                    _serviceLocationChanged({ manifest: e.request.serviceLocation }, locationSelectionImgDomElements)
                 } else {
                     slElement.innerText = '';
                 }
@@ -165,18 +261,18 @@
             </div>
             <div class="col-md-6">
                 <div class="h-100 p-5 border rounded-3">
-                    <h4>CDN Selection</h4>
-                    <img src="img/content-steering-simulation-alpha-cdn.drawio.png" id="img-alpha-cdn"
-                         class="img-fluid d-none" alt="Steering alpha CDN">
-                    <img src="img/content-steering-simulation-beta-cdn.drawio.png" id="img-beta-cdn"
-                         class="img-fluid d-none" alt="Steering alpha beta">
+                    <h5>CDN Selection</h5>
+                    <div id="cdn-selection-container"></div>
+                    <h5 style="margin-top: 20px">Location Selection</h5>
+                    <div id="location-selection-container">
+                    </div>
                 </div>
             </div>
         </div>
         <div class="row mt-2">
             <div class="col-md-6">
                 <div class="h-100 p-5 border rounded-3">
-                    <h4> Fragment Requests</h4>
+                    <h5> Fragment Requests</h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -204,7 +300,7 @@
             </div>
             <div class="col-md-6">
                 <div class="h-100 p-5 border rounded-3">
-                    <h4> Manifest Requests</h4>
+                    <h5> Manifest Requests</h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -225,42 +321,48 @@
             </div>
             <div class="col-md-12 mt-2">
                 <div class="h-100 p-5 border rounded-3">
-                    <h4> Steering Data</h4>
+                    <h5> Steering Data</h5>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                             <tr>
-                                <th scope="col">Timestamp</th>
-                                <th scope="col">Request URL</th>
-                                <th scope="col">Response</th>
+                                <th scope="col">Attribute</th>
+                                <th scope="col">Value</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
                             <tr>
+                                <td>Timestamp</td>
                                 <td id="steering-request-timestamp"></td>
+                            </tr>
+                            <tr>
+                                <td>Request URL</td>
                                 <td>
                                     <span id="steering-request-url"></span>
                                 </td>
-                                <td id="steering-response">
-                                    <ul>
-                                        <li>Version:
-                                            <pre><span id="steering-version"></span></pre>
-                                        </li>
-                                        <li>Reload URI:
-                                            <pre><span id="steering-reload-uri"></span></pre>
-                                        </li>
-                                        <li>Pathway Priority:
-                                            <pre><span id="steering-pathway-priority"></span></pre>
-                                        </li>
-                                        <li>Pathway Clones:
-                                            <pre><span id="steering-pathway-cloning"></span></pre>
-                                        </li>
-                                        <li>TTL:
-                                            <pre><span id="steering-ttl"></span></pre>
-                                        </li>
-                                    </ul>
+                            </tr>
+                            <tr>
+                                <td>Response - Version</td>
+                                <td><span id="steering-version"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Reload URI</td>
+                                <td><span id="steering-reload-uri"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Priority</td>
+                                <td><span id="steering-pathway-priority"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Clones</td>
+                                <td>
+                                    <pre><span id="steering-pathway-cloning"></span></pre>
                                 </td>
+                            </tr>
+                            <tr>
+                                <td>Response - TTL</td>
+                                <td><span id="steering-ttl"></span></td>
                             </tr>
                             </tbody>
                         </table>

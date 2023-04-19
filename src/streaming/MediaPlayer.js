@@ -2063,6 +2063,39 @@ function MediaPlayer() {
         }
     }
 
+
+    /**
+     * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
+     * @returns {BaseURL[]}
+     */
+    function getAvailableBaseUrls() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        return baseURLController.getBaseUrls(manifest);
+    }
+
+
+    /**
+     * Returns the available location elements including synthesized elements (e.g by content steering)
+     * @returns {MpdLocation[]}
+     */
+    function getAvailableLocations() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        const manifestLocations = adapter.getLocation(manifest);
+        const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+
+        return manifestLocations.concat(synthesizedElements);
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2438,6 +2471,8 @@ function MediaPlayer() {
         getActiveStream,
         getDVRWindowSize,
         getDVRSeekOffset,
+        getAvailableBaseUrls,
+        getAvailableLocations,
         getTargetLiveDelay,
         convertToTimeCode,
         formatUTC,

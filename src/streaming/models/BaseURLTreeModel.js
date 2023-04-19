@@ -73,7 +73,7 @@ function BaseURLTreeModel() {
     }
 
     function updateChildData(node, index, element) {
-        const baseUrls = _getBaseUrls(element);
+        const baseUrls = _getAvailableBaseUrls(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -88,7 +88,7 @@ function BaseURLTreeModel() {
     function getBaseURLCollectionsFromManifest(manifest) {
         checkConfig();
 
-        const baseUrls = _getBaseUrls(manifest)
+        const baseUrls = _getAvailableBaseUrls(manifest)
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -120,7 +120,7 @@ function BaseURLTreeModel() {
         }
     }
 
-    function _getBaseUrls(root) {
+    function _getAvailableBaseUrls(root) {
         let targetBaseUrls = adapter.getBaseURLsFromElement(root);
         const synthesizedBaseUrls = contentSteeringController.getSynthesizedBaseUrlElements(targetBaseUrls);
 
@@ -129,6 +129,10 @@ function BaseURLTreeModel() {
         }
 
         return targetBaseUrls;
+    }
+
+    function getBaseUrls(manifest) {
+        return _getAvailableBaseUrls(manifest);
     }
 
     function walk(callback, node) {
@@ -177,11 +181,12 @@ function BaseURLTreeModel() {
     }
 
     instance = {
-        reset: reset,
-        update: update,
-        getForPath: getForPath,
-        invalidateSelectedIndexes: invalidateSelectedIndexes,
-        setConfig: setConfig
+        reset,
+        update,
+        getForPath,
+        invalidateSelectedIndexes,
+        setConfig,
+        getBaseUrls
     };
 
     setup();

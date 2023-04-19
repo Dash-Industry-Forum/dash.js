@@ -36,6 +36,7 @@ import BaseURL from '../../dash/vo/BaseURL';
 import FactoryMaker from '../../core/FactoryMaker';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 
 function BaseURLController() {
 
@@ -82,6 +83,9 @@ function BaseURLController() {
     function update(manifest) {
         baseURLTreeModel.update(manifest);
         baseURLSelector.chooseSelector(adapter.getIsDVB(manifest));
+        eventBus.trigger(MediaPlayerEvents.BASE_URLS_UPDATED, {
+            baseUrls: getBaseUrls(manifest)
+        });
     }
 
     function resolve(path) {
@@ -117,6 +121,10 @@ function BaseURLController() {
         baseURLSelector.reset();
     }
 
+    function getBaseUrls(manifest) {
+        return baseURLTreeModel.getBaseUrls(manifest);
+    }
+
     function initialize(data) {
 
         // report config to baseURLTreeModel and baseURLSelector
@@ -133,6 +141,7 @@ function BaseURLController() {
         initialize,
         resolve,
         setConfig,
+        getBaseUrls,
         update
     };
 

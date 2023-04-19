@@ -50,6 +50,12 @@ class MediaPlayerEvents extends EventsBase {
         this.AST_IN_FUTURE = 'astInFuture';
 
         /**
+         * Triggered when the BaseURLs have been updated.
+         * @event MediaPlayerEvents#BASE_URLS_UPDATED
+         */
+        this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+
+        /**
          * Triggered when the video element's buffer state changes to stalled.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
