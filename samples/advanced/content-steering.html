@@ -105,14 +105,13 @@
                         document.getElementById(`steering-ttl`).innerText = e.currentSteeringResponseData.ttl;
                         document.getElementById(`steering-reload-uri`).innerText = e.currentSteeringResponseData.reloadUri;
                         document.getElementById(`steering-pathway-priority`).innerText = e.currentSteeringResponseData.pathwayPriority.toString();
-                        document.getElementById(`steering-pathway-cloning`).innerText = e.currentSteeringResponseData.pathwayClones.toString();
+                        document.getElementById(`steering-pathway-cloning`).innerText = JSON.stringify(e.currentSteeringResponseData.pathwayClones, null, '\t');
                     }
                 }
             } catch (e) {
                 console.error(e);
             }
         }
-
 
     </script>
 </head>
@@ -228,7 +227,7 @@
                 <div class="h-100 p-5 border rounded-3">
                     <h4> Steering Data</h4>
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="table">
                             <thead>
                             <tr>
                                 <th scope="col">Timestamp</th>
@@ -240,15 +239,26 @@
                             <tr>
                             <tr>
                                 <td id="steering-request-timestamp"></td>
-                                <td id="steering-request-url"></td>
+                                <td>
+                                    <span id="steering-request-url"></span>
+                                </td>
                                 <td id="steering-response">
                                     <ul>
-                                        <li>Version: <span id="steering-version"></span></li>
-                                        <li>Reload URI: <span id="steering-reload-uri"></span></li>
-                                        <li>Pathway Priority: <span id="steering-pathway-priority"></span>
-                                        <li>Pathway Clones: <span id="steering-pathway-cloning"></span>
+                                        <li>Version:
+                                            <pre><span id="steering-version"></span></pre>
                                         </li>
-                                        <li>TTL: <span id="steering-ttl"></span></li>
+                                        <li>Reload URI:
+                                            <pre><span id="steering-reload-uri"></span></pre>
+                                        </li>
+                                        <li>Pathway Priority:
+                                            <pre><span id="steering-pathway-priority"></span></pre>
+                                        </li>
+                                        <li>Pathway Clones:
+                                            <pre><span id="steering-pathway-cloning"></span></pre>
+                                        </li>
+                                        <li>TTL:
+                                            <pre><span id="steering-ttl"></span></pre>
+                                        </li>
                                     </ul>
                                 </td>
                             </tr>

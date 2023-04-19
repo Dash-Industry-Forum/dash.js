@@ -84,11 +84,12 @@ function StreamController() {
 
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
-            manifestModel: manifestModel,
-            adapter: adapter,
-            manifestLoader: manifestLoader,
-            errHandler: errHandler,
-            settings: settings
+            manifestModel,
+            adapter,
+            manifestLoader,
+            errHandler,
+            settings,
+            contentSteeringController
         });
         manifestUpdater.initialize();
 

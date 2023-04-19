@@ -497,13 +497,13 @@ describe('DashManifestModel', function () {
         it('should return undefined when getLocation is called and manifest is undefined', () => {
             const location = dashManifestModel.getLocation();
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return undefined when getLocation is called and manifest is an empty object', () => {
             const location = dashManifestModel.getLocation({});
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
@@ -515,13 +515,13 @@ describe('DashManifestModel', function () {
         it('should return undefined when getPatchLocation is called and manifest is undefined', () => {
             const location = dashManifestModel.getPatchLocation();
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return undefined when getPatchLocation is called and one is not present', () => {
             const location = dashManifestModel.getPatchLocation({});
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return valid patch location when getLocation is called and manifest contains complex location', () => {
@@ -536,7 +536,8 @@ describe('DashManifestModel', function () {
 
             const location = dashManifestModel.getPatchLocation(manifest);
 
-            expect(location).to.equal(patchLocation);
+            expect(location[0].url).to.equal(patchLocation.__text);
+            expect(location[0].ttl).to.equal(patchLocation.ttl * 1000);
         });
 
         it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {

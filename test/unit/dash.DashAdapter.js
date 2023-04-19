@@ -529,7 +529,7 @@ describe('DashAdapter', function () {
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
-                expect(patchLocation).equals('foobar');
+                expect(patchLocation[0].url).equals('foobar');
             });
 
             it('should not provide patch location if present and expired', function () {
@@ -543,7 +543,7 @@ describe('DashAdapter', function () {
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
-                expect(patchLocation).to.be.null; // jshint ignore:line
+                expect(patchLocation).to.be.empty; // jshint ignore:line
             });
 
             it('should provide patch location if present and never expires', function () {
@@ -557,7 +557,7 @@ describe('DashAdapter', function () {
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
-                expect(patchLocation).equals('foobar');
+                expect(patchLocation[0].url).equals('foobar');
             });
 
             it('should not provide patch location if not present', function () {
@@ -566,7 +566,7 @@ describe('DashAdapter', function () {
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
-                expect(patchLocation).to.be.null; // jshint ignore:line
+                expect(patchLocation).to.be.empty; // jshint ignore:line
             });
 
             it('should not provide patch location if present in manifest without publish time', function () {
@@ -576,7 +576,7 @@ describe('DashAdapter', function () {
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
-                expect(patchLocation).to.be.null; // jshint ignore:line
+                expect(patchLocation).to.be.empty; // jshint ignore:line
             });
         });
 

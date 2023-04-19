@@ -39,6 +39,7 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import BaseURL from '../vo/BaseURL';
+import MpdLocation from '../vo/MpdLocation';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
@@ -314,6 +315,44 @@ function ContentSteeringController() {
 
     function getSynthesizedBaseUrlElements(referenceElements) {
         try {
+            const synthesizedElements = _getSynthesizedElements(referenceElements);
+
+            return synthesizedElements.map((element) => {
+                const synthesizedBaseUrl = new BaseURL(element.synthesizedUrl, element.serviceLocation)
+                synthesizedBaseUrl.queryParams = element.queryParams;
+                synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
+                synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
+                synthesizedBaseUrl.availabilityTimeOffset = element.reference.availabilityTimeOffset;
+                synthesizedBaseUrl.availabilityTimeComplete = element.reference.availabilityTimeComplete;
+
+                return synthesizedBaseUrl;
+            })
+
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
+    }
+
+    function getSynthesizedLocationElements(referenceElements) {
+        try {
+            const synthesizedElements = _getSynthesizedElements(referenceElements);
+
+            return synthesizedElements.map((element) => {
+                const synthesizedLocation = new MpdLocation(element.synthesizedUrl, element.serviceLocation)
+                synthesizedLocation.queryParams = element.queryParams;
+
+                return synthesizedLocation;
+            })
+
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
+    }
+
+    function _getSynthesizedElements(referenceElements) {
+        try {
             const synthesizedElements = [];
 
             if (!referenceElements || referenceElements.length === 0 || !currentSteeringResponseData || !currentSteeringResponseData.pathwayClones || currentSteeringResponseData.pathwayClones.length === 0) {
@@ -322,7 +361,7 @@ function ContentSteeringController() {
 
             currentSteeringResponseData.pathwayClones.forEach((pathwayClone) => {
                 let baseElements = referenceElements.filter((source) => {
-                    return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID] === source.serviceLocation
+                    return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID] === source.serviceLocation;
                 })
                 let reference = null;
                 if (baseElements && baseElements.length > 0) {
@@ -330,15 +369,17 @@ function ContentSteeringController() {
                 }
                 if (reference) {
                     const referenceUrl = new URL(reference.url);
-                    const synthesizedUrl = `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`;
-                    const synthesizedBaseUrl = new BaseURL(synthesizedUrl, pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID])
-                    synthesizedBaseUrl.dvb_priority = reference.dvb_priority;
-                    synthesizedBaseUrl.dvb_weight = reference.dvb_weight;
-                    synthesizedBaseUrl.availabilityTimeOffset = reference.availabilityTimeOffset;
-                    synthesizedBaseUrl.availabilityTimeComplete = reference.availabilityTimeOffset;
-                    synthesizedElements.push(synthesizedBaseUrl);
+                    const synthesizedElement =
+                        {
+                            synthesizedUrl: `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`,
+                            serviceLocation: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID],
+                            queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.PARAMS],
+                            reference
+                        };
+
+                    synthesizedElements.push(synthesizedElement);
                 }
-            })
+            });
 
             return synthesizedElements;
         } catch (e) {
@@ -432,6 +473,7 @@ function ContentSteeringController() {
         getSteeringDataFromManifest,
         stopSteeringRequestTimer,
         getSynthesizedBaseUrlElements,
+        getSynthesizedLocationElements,
         initialize
     };
 

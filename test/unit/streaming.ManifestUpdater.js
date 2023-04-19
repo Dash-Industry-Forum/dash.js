@@ -7,6 +7,7 @@ import AdapterMock from './mocks/AdapterMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
 
 const chai = require('chai');
 const sinon = require('sinon');
@@ -22,6 +23,7 @@ describe('ManifestUpdater', function () {
     const manifestModelMock = new ManifestModelMock();
     const manifestLoaderMock = new ManifestLoaderMock();
     const errHandlerMock = new ErrorHandlerMock();
+    const contentSteeringControllerMock = new ContentSteeringControllerMock();
 
     const manifestErrorMockText = `Mock Failed detecting manifest type or manifest type unsupported`;
 
@@ -29,7 +31,8 @@ describe('ManifestUpdater', function () {
         adapter: adapterMock,
         manifestModel: manifestModelMock,
         manifestLoader: manifestLoaderMock,
-        errHandler: errHandlerMock
+        errHandler: errHandlerMock,
+        contentSteeringController: contentSteeringControllerMock
     });
 
     manifestUpdater.initialize();
@@ -185,7 +188,7 @@ describe('ManifestUpdater', function () {
     });
 
     describe('refresh manifest location', function () {
-        const patchLocation = 'http://example.com/bar';
+        const patchLocation = [{ url: 'http://example.com/bar' }];
         const location = [{ url: 'http://example.com/baz' }];
         const manifest = {
             url: 'http://example.com'
@@ -217,7 +220,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(patchLocation)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(patchLocation[0].url)).to.be.true; // jshint ignore:line
         });
 
         it('should utilize location for update if provided one and no patch location', function () {
@@ -230,8 +233,8 @@ describe('ManifestUpdater', function () {
         });
 
         it('should utilize original mpd location if no other signal provided', function () {
-            patchLocationStub.returns(null);
-            locationStub.returns(null);
+            patchLocationStub.returns([]);
+            locationStub.returns([]);
 
             manifestUpdater.refreshManifest();
 

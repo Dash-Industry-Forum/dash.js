@@ -693,34 +693,25 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the patch location of the MPD if one exists and it is still valid
+     * Returns the patch locations of the MPD if existing and if they are still valid
      * @param {object} manifest
-     * @returns {(String|null)} patch location
+     * @returns {PatchLocation[]} patch location
      * @memberOf module:DashAdapter
      * @instance
      */
     function getPatchLocation(manifest) {
-        const patchLocation = dashManifestModel.getPatchLocation(manifest);
+        const patchLocations = dashManifestModel.getPatchLocation(manifest);
         const publishTime = dashManifestModel.getPublishTime(manifest);
 
         // short-circuit when no patch location or publish time exists
-        if (!patchLocation || !publishTime) {
-            return null;
+        if (!patchLocations || patchLocations.length === 0 || !publishTime) {
+            return [];
         }
 
-        // if a ttl is provided, ensure patch location has not expired
-        if (patchLocation.hasOwnProperty('ttl') && publishTime) {
-            // attribute describes number of seconds as a double
-            const ttl = parseFloat(patchLocation.ttl) * 1000;
-
+        return patchLocations.filter((patchLocation) => {
             // check if the patch location has expired, if so do not consider it
-            if (publishTime.getTime() + ttl <= new Date().getTime()) {
-                return null;
-            }
-        }
-
-        // the patch location exists and, if a ttl applies, has not expired
-        return patchLocation.__text;
+            return isNaN(patchLocation.ttl) || (publishTime.getTime() + patchLocation.ttl > new Date().getTime())
+        })
     }
 
     /**

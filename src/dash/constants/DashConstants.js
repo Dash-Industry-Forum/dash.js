@@ -139,6 +139,7 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
         this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
         this.PATCH_LOCATION = 'PatchLocation';
+        this.PATCH_LOCATION_AS_ARRAY = 'PatchLocation_asArray';
         this.LOCATION = 'Location';
         this.LOCATION_AS_ARRAY = 'Location_asArray';
         this.PUBLISH_TIME = 'publishTime';
@@ -153,6 +154,7 @@ class DashConstants {
         this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
         this.QUERY_BEFORE_START = 'queryBeforeStart';
         this.CLIENT_REQUIREMENT = 'clientRequirement';
+        this.TTL = 'ttl';
         this.CONTENT_STEERING_RESPONSE = {
             VERSION: 'VERSION',
             TTL: 'TTL',

@@ -15,6 +15,10 @@ class ContentSteeringControllerMock {
     getSynthesizedBaseUrlElements() {
         return [];
     }
+
+    getSynthesizedLocationElements() {
+        return [];
+    }
 }
 
 export default ContentSteeringControllerMock;

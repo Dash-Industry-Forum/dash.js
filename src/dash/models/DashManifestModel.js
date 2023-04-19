@@ -48,6 +48,7 @@ import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
 import MpdLocation from '../vo/MpdLocation';
+import PatchLocation from '../vo/PatchLocation';
 
 function DashManifestModel() {
     let instance,
@@ -1169,25 +1170,27 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.LOCATION_AS_ARRAY)) {
             return manifest[DashConstants.LOCATION_AS_ARRAY].map((entry) => {
                 const text = entry.__text || entry;
-                const serviceLocation = entry[DashConstants.SERVICE_LOCATION] ? entry[DashConstants.SERVICE_LOCATION] : null;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
+
                 return new MpdLocation(text, serviceLocation)
             })
         }
 
-        // may well be undefined
-        return undefined;
+        return [];
     }
 
     function getPatchLocation(manifest) {
-        if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
-            // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+        if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION_AS_ARRAY)) {
+            return manifest[DashConstants.PATCH_LOCATION_AS_ARRAY].map((entry) => {
+                const text = entry.__text || entry;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
+                let ttl = entry.hasOwnProperty(DashConstants.TTL) ? parseFloat(entry[DashConstants.TTL]) * 1000 : NaN;
 
-            return manifest.PatchLocation;
+                return new PatchLocation(text, serviceLocation, ttl)
+            })
         }
 
-        // no patch location provided
-        return undefined;
+        return [];
     }
 
     function getSuggestedPresentationDelay(mpd) {

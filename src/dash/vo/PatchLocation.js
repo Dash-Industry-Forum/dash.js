@@ -32,12 +32,13 @@
  * @class
  * @ignore
  */
-class MpdLocation {
-    constructor(url, serviceLocation) {
+class PatchLocation {
+    constructor(url, serviceLocation, ttl) {
         this.url = url || '';
         this.serviceLocation = serviceLocation || null;
+        this.ttl = ttl || NaN;
         this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
     }
 }
 
-export default MpdLocation;
+export default PatchLocation;

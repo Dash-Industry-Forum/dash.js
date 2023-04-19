@@ -2329,10 +2329,11 @@ function MediaPlayer() {
             const manifestUpdater = ManifestUpdater(context).create();
 
             manifestUpdater.setConfig({
-                manifestModel: manifestModel,
-                adapter: adapter,
-                manifestLoader: manifestLoader,
-                errHandler: errHandler
+                manifestModel,
+                adapter,
+                manifestLoader,
+                errHandler,
+                contentSteeringController
             });
 
             offlineController = OfflineController(context).create({

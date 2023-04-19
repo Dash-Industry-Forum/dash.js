@@ -56,11 +56,12 @@ function ManifestUpdater() {
         locationSelector,
         adapter,
         errHandler,
+        contentSteeringController,
         settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        locationSelector = LocationSelector(context).create()
+        locationSelector = LocationSelector(context).create();
     }
 
     function setConfig(config) {
@@ -83,6 +84,9 @@ function ManifestUpdater() {
         }
         if (config.settings) {
             settings = config.settings;
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
     }
 
@@ -149,14 +153,20 @@ function ManifestUpdater() {
         let url = manifest.url;
 
         // Check for PatchLocation and Location alternatives
-        const patchLocation = adapter.getPatchLocation(manifest);
-        const mpdLocation = locationSelector.select(adapter.getLocation(manifest));
         let serviceLocation = null;
+        const availablePatchLocations = adapter.getPatchLocation(manifest);
+        const patchLocation = locationSelector.select(availablePatchLocations);
+
         if (patchLocation && !ignorePatch) {
-            url = patchLocation;
-        } else if (mpdLocation) {
-            url = mpdLocation.url;
-            serviceLocation = mpdLocation.serviceLocation;
+            url = patchLocation.url;
+            serviceLocation = patchLocation.serviceLocation;
+        } else {
+            const availableMpdLocations = _getAvailableMpdLocations(manifest);
+            const mpdLocation = locationSelector.select(availableMpdLocations);
+            if (mpdLocation) {
+                url = mpdLocation.url;
+                serviceLocation = mpdLocation.serviceLocation;
+            }
         }
 
         // if one of the alternatives was relative, convert to absolute
@@ -165,6 +175,13 @@ function ManifestUpdater() {
         }
 
         manifestLoader.load(url, serviceLocation);
+    }
+
+    function _getAvailableMpdLocations(manifest) {
+        const manifestLocations = adapter.getLocation(manifest);
+        const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+
+        return manifestLocations.concat(synthesizedElements);
     }
 
     function update(manifest) {
