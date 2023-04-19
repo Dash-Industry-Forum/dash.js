@@ -128,10 +128,11 @@ function BaseURLController() {
     }
 
     instance = {
-        reset: reset,
-        initialize: initialize,
-        resolve: resolve,
-        setConfig: setConfig
+        reset,
+        initialize,
+        resolve,
+        setConfig,
+        update
     };
 
     setup();

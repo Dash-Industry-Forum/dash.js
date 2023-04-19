@@ -122,7 +122,7 @@ function ContentSteeringController() {
     }
 
     /**
-     *
+     * When loading of a fragment starts we store its serviceLocation in our list
      * @param {object} e
      * @private
      */
@@ -131,7 +131,7 @@ function ContentSteeringController() {
     }
 
     /**
-     *
+     * When loading of a manifest starts we store its serviceLocation in our list
      * @param {object} e
      * @private
      */
@@ -156,6 +156,11 @@ function ContentSteeringController() {
         _storeThroughputForServiceLocation(serviceLocation, throughput);
     }
 
+    /**
+     * When a throughput measurement for fragments was stored in ThroughputHistory we save it as well
+     * @param {object} e
+     * @private
+     */
     function _onThroughputMeasurementStored(e) {
         if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
             return;
@@ -166,6 +171,12 @@ function ContentSteeringController() {
         _storeThroughputForServiceLocation(serviceLocation, throughput);
     }
 
+    /**
+     * Helper function to store a throughput value from the corresponding serviceLocation
+     * @param {string} serviceLocation
+     * @param {number} throughput
+     * @private
+     */
     function _storeThroughputForServiceLocation(serviceLocation, throughput) {
         if (!throughputList[serviceLocation]) {
             throughputList[serviceLocation] = [];
@@ -192,6 +203,10 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Query DashAdapter and Service Description Controller to get the steering information defined in the manifest
+     * @returns {object}
+     */
     function getSteeringDataFromManifest() {
         const manifest = manifestModel.getValue()
         let contentSteeringData = adapter.getContentSteering(manifest);
@@ -203,11 +218,19 @@ function ContentSteeringController() {
         return contentSteeringData;
     }
 
+    /**
+     * Should query steering server prior to playback start
+     * @returns {boolean}
+     */
     function shouldQueryBeforeStart() {
         const steeringDataFromManifest = getSteeringDataFromManifest();
-        return steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
+        return !!steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
     }
 
+    /**
+     * Load the steering data from the steering server
+     * @returns {Promise}
+     */
     function loadSteeringData() {
         return new Promise((resolve) => {
             try {
@@ -235,8 +258,8 @@ function ContentSteeringController() {
                     },
                     complete: () => {
                         // Clear everything except for the current entry
-                        serviceLocationList.baseUrl.all = _clearServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
-                        serviceLocationList.location.all = _clearServiceLocationListAfterSteeringRequest(serviceLocationList.location);
+                        serviceLocationList.baseUrl.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
+                        serviceLocationList.location.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.location);
                     }
                 });
             } catch (e) {
@@ -245,7 +268,13 @@ function ContentSteeringController() {
         })
     }
 
-    function _clearServiceLocationListAfterSteeringRequest(data) {
+    /**
+     * Return the cleared data of our serviceLocationList after the steering request was completed
+     * @param {object} data
+     * @returns {Object[]}
+     * @private
+     */
+    function _getClearedServiceLocationListAfterSteeringRequest(data) {
         if (!data.all || data.all.length === 0 || !data.current) {
             return [];
         }
@@ -254,6 +283,12 @@ function ContentSteeringController() {
         })
     }
 
+    /**
+     * Returns the adjusted steering server url enhanced by pathway and throughput parameter
+     * @param {object} steeringDataFromManifest
+     * @returns {string}
+     * @private
+     */
     function _getSteeringServerUrl(steeringDataFromManifest) {
         let url = steeringDataFromManifest.serverUrl;
         if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
@@ -314,6 +349,12 @@ function ContentSteeringController() {
         return url;
     }
 
+    /**
+     * Calculate the arithmetic mean of the last throughput samples
+     * @param {string} serviceLocation
+     * @returns {number}
+     * @private
+     */
     function _calculateThroughputForServiceLocation(serviceLocation) {
         if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
             return -1;
@@ -327,6 +368,11 @@ function ContentSteeringController() {
     }
 
 
+    /**
+     * Parse the steering response and create instance of model ContentSteeringResponse
+     * @param {object} data
+     * @private
+     */
     function _handleSteeringResponse(data) {
         if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
             return;
@@ -355,6 +401,12 @@ function ContentSteeringController() {
         _startSteeringRequestTimer();
     }
 
+    /**
+     * Checks if object is a valid PathwayClone
+     * @param {object} pathwayClone
+     * @returns {boolean}
+     * @private
+     */
     function _isValidPathwayClone(pathwayClone) {
         return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]
             && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID]
@@ -362,6 +414,11 @@ function ContentSteeringController() {
             && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]
     }
 
+    /**
+     * Returns synthesized BaseURL elements based on Pathway Cloning
+     * @param {BaseURL[]}referenceElements
+     * @returns {BaseURL[]|*[]}
+     */
     function getSynthesizedBaseUrlElements(referenceElements) {
         try {
             const synthesizedElements = _getSynthesizedElements(referenceElements);
@@ -383,6 +440,11 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Returns synthesized Location elements based on Pathway Cloning
+     * @param {MpdLocation[]} referenceElements
+     * @returns {MpdLocation[]|*[]}
+     */
     function getSynthesizedLocationElements(referenceElements) {
         try {
             const synthesizedElements = _getSynthesizedElements(referenceElements);
@@ -400,6 +462,12 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Helper function to synthesize elements
+     * @param {array} referenceElements
+     * @returns {*[]}
+     * @private
+     */
     function _getSynthesizedElements(referenceElements) {
         try {
             const synthesizedElements = [];
@@ -437,6 +505,10 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Start timeout for next steering request
+     * @private
+     */
     function _startSteeringRequestTimer() {
         // Start timer for next request
         if (currentSteeringResponseData && currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
@@ -449,6 +521,9 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Stop timeout for next steering request
+     */
     function stopSteeringRequestTimer() {
         if (nextRequestTimer) {
             clearTimeout(nextRequestTimer);
@@ -456,6 +531,12 @@ function ContentSteeringController() {
         nextRequestTimer = null;
     }
 
+    /**
+     * Handle errors that occured when querying the steering server
+     * @param {object} e
+     * @param {object} response
+     * @private
+     */
     function _handleSteeringResponseError(e, response) {
         try {
             logger.warn(`Error fetching data from content steering server`, e);
@@ -485,6 +566,10 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Returns the currentSteeringResponseData
+     * @returns {ContentSteeringResponse}
+     */
     function getCurrentSteeringResponseData() {
         return currentSteeringResponseData;
     }

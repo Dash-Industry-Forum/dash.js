@@ -363,6 +363,10 @@ function StreamController() {
             // Apply content steering
             _applyContentSteeringBeforeStart()
                 .then(() => {
+                    const manifest = manifestModel.getValue();
+                    if (manifest) {
+                        baseURLController.update(manifest)
+                    }
                     _calculateStartTimeAndSwitchStream()
                     resolve();
                 })
