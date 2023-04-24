@@ -21,20 +21,20 @@ describe('MetricsModel', function () {
     it('should return null when getMetricsFor is called and type is undefined', function () {
         const metrics = metricsModel.getMetricsFor();
 
-        expect(metrics).to.be.null;                // jshint ignore:line
+        expect(metrics).to.be.null;
     });
 
     it('should return an empty MetricsList when getMetricsFor is called and type is defined', function () {
         const metrics = metricsModel.getMetricsFor(Constants.VIDEO);
 
-        expect(metrics.TcpList).to.be.instanceOf(Array); // jshint ignore:line
-        expect(metrics.TcpList).to.be.empty; // jshint ignore:line
+        expect(metrics.TcpList).to.be.instanceOf(Array);
+        expect(metrics.TcpList).to.be.empty;
     });
 
     it('should return null when getMetricsFor is called and type is defined and readOnly is true', function () {
         const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
 
-        expect(metrics).to.be.null;                // jshint ignore:line
+        expect(metrics).to.be.null;
     });
 
     it('should not trigger METRIC_ADDED event when addDroppedFrames is called and quality is undefined', function () {
@@ -42,7 +42,7 @@ describe('MetricsModel', function () {
         eventBus.on(Events.METRIC_ADDED, spy);
 
         metricsModel.addDroppedFrames(Constants.VIDEO);
-        expect(spy).to.have.not.been.called; // jshint ignore:line
+        expect(spy).to.have.not.been.called;
 
         eventBus.off(Events.METRIC_ADDED, spy);
     });
@@ -52,7 +52,7 @@ describe('MetricsModel', function () {
         eventBus.on(Events.METRIC_ADDED, spy);
 
         metricsModel.addDroppedFrames(Constants.VIDEO, {});
-        expect(spy).to.have.been.called.exactly(1); // jshint ignore:line
+        expect(spy).to.have.been.called.exactly(1);
 
         eventBus.off(Events.METRIC_ADDED, spy);
     });
@@ -62,7 +62,7 @@ describe('MetricsModel', function () {
         eventBus.on(Events.METRIC_CHANGED, spy);
 
         metricsModel.clearCurrentMetricsForType();
-        expect(spy).to.have.been.called.exactly(1); // jshint ignore:line
+        expect(spy).to.have.been.called.exactly(1);
 
         eventBus.off(Events.METRIC_CHANGED, spy);
     });
@@ -74,8 +74,8 @@ describe('MetricsModel', function () {
             let metric_type = e.metric;
             let vo = e.value;
 
-            expect(type).to.equal(Constants.VIDEO); // jshint ignore:line
-            expect(metric_type).to.equal(MetricsConstants.BUFFER_LEVEL); // jshint ignore:line
+            expect(type).to.equal(Constants.VIDEO);
+            expect(metric_type).to.equal(MetricsConstants.BUFFER_LEVEL);
             expect(vo.t).to.equal(50);
             expect(vo.level).to.equal(25);
 
@@ -92,8 +92,8 @@ describe('MetricsModel', function () {
             let type = e.mediaType;
             let metric_type = e.metric;
 
-            expect(type).to.equal(Constants.VIDEO); // jshint ignore:line
-            expect(metric_type).to.equal(MetricsConstants.MANIFEST_UPDATE_TRACK_INFO); // jshint ignore:line
+            expect(type).to.equal(Constants.VIDEO);
+            expect(metric_type).to.equal(MetricsConstants.MANIFEST_UPDATE_TRACK_INFO);
 
             eventBus.off(Events.METRIC_UPDATED, onMetricUpdated);
             done();
@@ -108,9 +108,9 @@ describe('MetricsModel', function () {
             let type = e.mediaType;
             let metric_type = e.metric;
 
-            expect(type).to.equal(Constants.VIDEO); // jshint ignore:line
-            expect(metric_type).to.equal(MetricsConstants.TRACK_SWITCH); // jshint ignore:line
-            expect(e.value.lto).to.be.undefined; // jshint ignore:line
+            expect(type).to.equal(Constants.VIDEO);
+            expect(metric_type).to.equal(MetricsConstants.TRACK_SWITCH);
+            expect(e.value.lto).to.be.undefined;
 
             eventBus.off(Events.METRIC_ADDED, onMetricAdded);
             done();

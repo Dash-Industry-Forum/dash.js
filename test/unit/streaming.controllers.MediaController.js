@@ -41,27 +41,27 @@ describe('MediaController', function () {
     describe('Initial Settings', function () {
         it('should not set initial settings - type undefined', function () {
             let settings = mediaController.getInitialSettings(undefined);
-            expect(settings).to.not.exist; // jshint ignore:line
+            expect(settings).to.not.exist;
 
             mediaController.setInitialSettings(undefined);
 
             settings = mediaController.getInitialSettings(undefined);
-            expect(settings).to.not.exist; // jshint ignore:line
+            expect(settings).to.not.exist;
         });
 
         it('should not set initial settings - value undefined', function () {
             let settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist; // jshint ignore:line
+            expect(settings).to.not.exist;
 
             mediaController.setInitialSettings('test');
 
             settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist; // jshint ignore:line
+            expect(settings).to.not.exist;
         });
 
         it('should set and get initial settings', function () {
             let settings = mediaController.getInitialSettings('test');
-            expect(settings).to.not.exist; // jshint ignore:line
+            expect(settings).to.not.exist;
 
             mediaController.setInitialSettings('test', 'testvalue');
 
@@ -92,7 +92,7 @@ describe('MediaController', function () {
 
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.false; // jshint ignore:line
+            expect(equal).to.be.false;
 
         });
 
@@ -104,7 +104,7 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'},
+                accessibilitiesWithSchemeIdUri: { schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' },
                 audioChannelConfiguration: 1
             };
 
@@ -114,11 +114,11 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:2:2023', value: 'description'},
+                accessibilitiesWithSchemeIdUri: { schemeIdUri: 'urn:scheme:test:2:2023', value: 'description' },
                 audioChannelConfiguration: 1
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.false; // jshint ignore:line
+            expect(equal).to.be.false;
 
         });
 
@@ -142,7 +142,7 @@ describe('MediaController', function () {
                 audioChannelConfiguration: 1
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.true; // jshint ignore:line
+            expect(equal).to.be.true;
         });
 
         it('should return false if track1 is undefined or null', function () {
@@ -158,7 +158,7 @@ describe('MediaController', function () {
                 audioChannelConfiguration: 1
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.false; // jshint ignore:line
+            expect(equal).to.be.false;
         });
 
         it('should return false if track2 is undefined or null', function () {
@@ -175,7 +175,7 @@ describe('MediaController', function () {
             let track2 = null;
 
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.false; // jshint ignore:line
+            expect(equal).to.be.false;
         });
 
         it('should return true if both tracks are undefined or null', function () {
@@ -184,7 +184,7 @@ describe('MediaController', function () {
 
             let track2 = null;
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.true; // jshint ignore:line
+            expect(equal).to.be.true;
         });
 
         it('should return true if track are equals (DescriptorType)', function () {
@@ -195,7 +195,7 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibility_withSchemeIdUri: [{schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'}],
+                accessibility_withSchemeIdUri: [{ schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' }],
                 audioChannelConfiguration: 1
             };
 
@@ -205,11 +205,11 @@ describe('MediaController', function () {
                 lang: 'lang',
                 roles: 1,
                 accessibility: 'description',
-                accessibility_withSchemeIdUri: [{schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'}],
+                accessibility_withSchemeIdUri: [{ schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' }],
                 audioChannelConfiguration: 1
             };
             let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.true; // jshint ignore:line
+            expect(equal).to.be.true;
 
         });
 
@@ -219,21 +219,21 @@ describe('MediaController', function () {
         it('getTracksFor should return an empty array if parameters are not defined', function () {
             const trackArray = mediaController.getTracksFor();
 
-            expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(trackArray).to.be.empty;                // jshint ignore:line
+            expect(trackArray).to.be.instanceOf(Array);
+            expect(trackArray).to.be.empty;
         });
 
         it('getTracksFor should return an empty array if parameters are defined, but internal tracks array is empty', function () {
             const trackArray = mediaController.getTracksFor(Constants.VIDEO, { id: 'id' });
 
-            expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(trackArray).to.be.empty;                // jshint ignore:line
+            expect(trackArray).to.be.instanceOf(Array);
+            expect(trackArray).to.be.empty;
         });
 
         it('getCurrentTrackFor should return null if parameters are not defined', function () {
             const currentTrack = mediaController.getCurrentTrackFor();
 
-            expect(currentTrack).to.be.null;    // jshint ignore:line
+            expect(currentTrack).to.be.null;
         });
 
         it('should add and retrieve track', function () {
@@ -251,7 +251,7 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(1);
-            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], track)).to.be.true;
         });
 
         it('should not set uncorrect track', function () {
@@ -262,7 +262,7 @@ describe('MediaController', function () {
 
             mediaController.setTrack(track);
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.false;
         });
 
         it('should add and set current track', function () {
@@ -279,7 +279,7 @@ describe('MediaController', function () {
 
             // check that track has been added
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.true;
         });
 
         it('should check current track', function () {
@@ -301,7 +301,7 @@ describe('MediaController', function () {
 
             // check that track has been added
             let currentTrack = mediaController.isCurrentTrack(track);
-            expect(currentTrack).to.be.true; // jshint ignore:line
+            expect(currentTrack).to.be.true;
         });
 
         it('should check current track', function () {
@@ -323,7 +323,7 @@ describe('MediaController', function () {
 
             // check that track has been added
             let currentTrack = mediaController.isCurrentTrack(null);
-            expect(currentTrack).to.be.false; // jshint ignore:line
+            expect(currentTrack).to.be.false;
         });
 
         it('should emit Events.CURRENT_TRACK_CHANGED when track has changed', function (done) {
@@ -362,7 +362,7 @@ describe('MediaController', function () {
 
             // check that track has been added
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, track1)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, track1)).to.be.true;
 
             let onTrackChanged = function (e) {
 
@@ -370,8 +370,8 @@ describe('MediaController', function () {
                 let current = e.newMediaInfo;
                 let switchMode = e.switchMode;
 
-                expect(objectUtils.areEqual(old, track1)).to.be.true; // jshint ignore:line
-                expect(objectUtils.areEqual(current, track2)).to.be.true; // jshint ignore:line
+                expect(objectUtils.areEqual(old, track1)).to.be.true;
+                expect(objectUtils.areEqual(current, track2)).to.be.true;
                 expect(switchMode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
                 eventBus.off(Events.CURRENT_TRACK_CHANGED, onTrackChanged);
@@ -423,7 +423,7 @@ describe('MediaController', function () {
             lang: 'en',
             viewpoint: null,
             roles: ['alternate'],
-            accessibility: ['1','description'],
+            accessibility: ['1', 'description'],
             audioChannelConfiguration: 6,
             selectionPriority: 3
         };
@@ -444,11 +444,11 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -458,7 +458,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
 
         });
 
@@ -468,11 +468,11 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], qtzTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], qtzTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], frTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -482,7 +482,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with a string/regex lang', function () {
@@ -491,11 +491,11 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -505,7 +505,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with a regex lang', function () {
@@ -514,12 +514,12 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -529,7 +529,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with a lang and absent accessibility setting', function () {
@@ -539,14 +539,14 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
-            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -555,7 +555,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with a lang and empty accessibility setting', function () {
@@ -565,14 +565,14 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
-            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -582,7 +582,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with a lang and accessibility', function () {
@@ -592,14 +592,14 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
-            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -609,7 +609,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial accessibility track where media has no accessibility for requested language', function () {
@@ -619,14 +619,14 @@ describe('MediaController', function () {
 
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
-            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true; // jshint ignore:line
-            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], enADTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[2], esTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false; // jshint ignore:line
-            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, enADTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.false;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
@@ -636,7 +636,7 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
 
     });
@@ -652,7 +652,7 @@ describe('MediaController', function () {
                 };
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
-            expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true;
         }
 
         describe('"highestSelectionPriority" mode', function () {

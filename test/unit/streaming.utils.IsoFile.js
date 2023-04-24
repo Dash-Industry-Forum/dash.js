@@ -12,26 +12,26 @@ describe('IsoFile', function () {
         it('should return null when getBoxes is called and no parsed file has been set', () => {
             const boxes = isoFile.getBoxes('test');
 
-            expect(boxes).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(boxes).to.be.empty;                // jshint ignore:line
+            expect(boxes).to.be.instanceOf(Array);
+            expect(boxes).to.be.empty;
         });
 
         it('should return null when getBox is called and no parsed file has been set', () => {
             const box = isoFile.getBox('test');
 
-            expect(box).to.be.null;  // jshint ignore:line
+            expect(box).to.be.null;
         });
 
         it('should return null when getLastBox is called and no parsed file has been set', () => {
             const lastBox = isoFile.getLastBox();
 
-            expect(lastBox).to.be.null;  // jshint ignore:line
+            expect(lastBox).to.be.null;
         });
 
         it('should return null when getBox is called and type is undefined', () => {
             const box = isoFile.getBox();
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
     });
     describe('when incorrect parsed file has been set', () => {
@@ -41,14 +41,14 @@ describe('IsoFile', function () {
             const boxes = isoFile.getBoxes();
 
             expect(boxes).to.be.instanceOf(Array);
-            expect(boxes).to.be.empty;                // jshint ignore:line
+            expect(boxes).to.be.empty;
         });
 
         it('should return null when getLastBox is called', () => {
             isoFile.setData({boxes: [{type: 'typeA'}, {type: 'typeB'}]});
             const box = isoFile.getLastBox();
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
 
         it('should return an empty array when getBoxes is called', () => {
@@ -57,28 +57,28 @@ describe('IsoFile', function () {
             const boxes = isoFile.getBoxes('typeA');
 
             expect(boxes).to.be.instanceOf(Array);
-            expect(boxes).to.be.empty;                // jshint ignore:line
+            expect(boxes).to.be.empty;
         });
 
         it('should return null when getBox is called and parsedFile has no boxes attribute', () => {
             isoFile.setData({});
             const box = isoFile.getBox('typeA');
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
 
         it('should return null when getBox is called and parsedFile has an empty boxes array attribute', () => {
             isoFile.setData({boxes: []});
             const box = isoFile.getBox('typeA');
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
 
         it('should return null when getBox is called and parsedFile is incorrect', () => {
             isoFile.setData({boxes: [{type: 'typeA'}, {type: 'typeB'}]});
             const box = isoFile.getBox('typeA');
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
     });
 
@@ -92,20 +92,20 @@ describe('IsoFile', function () {
         it('should return null when getBox is called and type is not present in boxes array', () => {
             const box = isoFile.getBox('emsg');
 
-            expect(box).to.be.null;                // jshint ignore:line
+            expect(box).to.be.null;
         });
 
         it('should return the good box when getBox is called and type is present in boxes array', () => {
             const box = isoFile.getBox('mfhd');
 
-            expect(box).not.to.be.null;                // jshint ignore:line
+            expect(box).not.to.be.null;
             expect(box.type).to.equal('mfhd');
         });
 
         it('should return the good box when getLastBox is called', () => {
             const box = isoFile.getLastBox();
 
-            expect(box).not.to.be.null;                // jshint ignore:line
+            expect(box).not.to.be.null;
             expect(box.type).to.equal('mdat');
         });
     });
