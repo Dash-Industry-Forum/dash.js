@@ -84,11 +84,12 @@ function StreamController() {
 
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
-            manifestModel: manifestModel,
-            adapter: adapter,
-            manifestLoader: manifestLoader,
-            errHandler: errHandler,
-            settings: settings
+            manifestModel,
+            adapter,
+            manifestLoader,
+            errHandler,
+            settings,
+            contentSteeringController
         });
         manifestUpdater.initialize();
 
@@ -250,15 +251,15 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
-                    if (settings.get().streaming.applyContentSteering && !activeStream && contentSteeringController.shouldQueryBeforeStart()) {
-                        return contentSteeringController.loadSteeringData();
-                    }
-                    return Promise.resolve();
+                    return new Promise((resolve, reject) => {
+                        if (!activeStream) {
+                            _initializeForFirstStream(streamsInfo, resolve, reject);
+                        } else {
+                            resolve();
+                        }
+                    });
                 })
                 .then(() => {
-                    if (!activeStream) {
-                        _initializeForFirstStream(streamsInfo);
-                    }
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
@@ -320,45 +321,73 @@ function StreamController() {
      * @param {array} streamsInfo
      * @private
      */
-    function _initializeForFirstStream(streamsInfo) {
+    function _initializeForFirstStream(streamsInfo, resolve, reject) {
+        try {
 
+            // Add the DVR window so we can calculate the right starting point
+            addDVRMetric();
 
-        // Add the DVR window so we can calculate the right starting point
-        addDVRMetric();
-
-        // If the start is in the future we need to wait
-        const dvrRange = dashMetrics.getCurrentDVRInfo().range;
-        if (dvrRange.end < dvrRange.start) {
-            if (waitForPlaybackStartTimeout) {
-                clearTimeout(waitForPlaybackStartTimeout);
+            // If the start is in the future we need to wait
+            const dvrRange = dashMetrics.getCurrentDVRInfo().range;
+            if (dvrRange.end < dvrRange.start) {
+                if (waitForPlaybackStartTimeout) {
+                    clearTimeout(waitForPlaybackStartTimeout);
+                }
+                const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
+                logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+                eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
+                waitForPlaybackStartTimeout = setTimeout(() => {
+                    _initializeForFirstStream(streamsInfo, resolve, reject);
+                }, waitingTime);
+                return;
             }
-            const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
-            logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
-            waitForPlaybackStartTimeout = setTimeout(() => {
-                _initializeForFirstStream(streamsInfo);
-            }, waitingTime);
-            return;
+
+
+            // Calculate the producer reference time offsets if given
+            if (settings.get().streaming.applyProducerReferenceTime) {
+                serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
+            }
+
+            // Apply Service description parameters.
+            const manifestInfo = streamsInfo[0].manifestInfo;
+            if (settings.get().streaming.applyServiceDescription) {
+                serviceDescriptionController.applyServiceDescription(manifestInfo);
+            }
+
+            // Compute and set the live delay
+            if (adapter.getIsDynamic()) {
+                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+            }
+
+            // Apply content steering
+            _applyContentSteeringBeforeStart()
+                .then(() => {
+                    const manifest = manifestModel.getValue();
+                    if (manifest) {
+                        baseURLController.update(manifest)
+                    }
+                    _calculateStartTimeAndSwitchStream()
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
+                    _calculateStartTimeAndSwitchStream();
+                    resolve();
+                })
+        } catch (e) {
+            reject(e);
         }
+    }
 
-
-        // Calculate the producer reference time offsets if given
-        if (settings.get().streaming.applyProducerReferenceTime) {
-            serviceDescriptionController.calculateProducerReferenceTimeOffsets(streamsInfo);
+    function _applyContentSteeringBeforeStart() {
+        if (settings.get().streaming.applyContentSteering && contentSteeringController.shouldQueryBeforeStart()) {
+            return contentSteeringController.loadSteeringData();
         }
+        return Promise.resolve();
+    }
 
-        // Apply Service description parameters.
-        const manifestInfo = streamsInfo[0].manifestInfo;
-        if (settings.get().streaming.applyServiceDescription) {
-            serviceDescriptionController.applyServiceDescription(manifestInfo);
-        }
-
-        // Compute and set the live delay
-        if (adapter.getIsDynamic()) {
-            const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
-        }
-
+    function _calculateStartTimeAndSwitchStream() {
         // Figure out the correct start time and the correct start period
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);

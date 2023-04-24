@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,14 +32,12 @@
  * @class
  * @ignore
  */
-class ContentSteeringResponse {
-    constructor() {
-        this.version = null;
-        this.ttl = 300;
-        this.reloadUri = null;
-        this.pathwayPriority = [];
-        this.pathwayClones = [];
+class MpdLocation {
+    constructor(url, serviceLocation) {
+        this.url = url || '';
+        this.serviceLocation = serviceLocation || null;
+        this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
     }
 }
 
-export default ContentSteeringResponse;
+export default MpdLocation;

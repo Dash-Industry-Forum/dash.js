@@ -35,9 +35,10 @@
 class ContentSteering {
     constructor() {
         this.defaultServiceLocation = null;
+        this.defaultServiceLocationArray = [];
         this.queryBeforeStart = false;
-        this.proxyServerUrl = null;
         this.serverUrl = null;
+        this.clientRequirement = true;
     }
 }
 

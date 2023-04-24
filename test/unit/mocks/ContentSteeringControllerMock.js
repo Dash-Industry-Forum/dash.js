@@ -11,6 +11,14 @@ class ContentSteeringControllerMock {
     getSteeringDataFromManifest() {
         return null;
     }
+
+    getSynthesizedBaseUrlElements() {
+        return [];
+    }
+
+    getSynthesizedLocationElements() {
+        return [];
+    }
 }
 
 export default ContentSteeringControllerMock;

@@ -551,31 +551,31 @@ describe('DashManifestModel', function () {
         it('should return undefined when getLocation is called and manifest is undefined', () => {
             const location = dashManifestModel.getLocation();
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return undefined when getLocation is called and manifest is an empty object', () => {
             const location = dashManifestModel.getLocation({});
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
             const location = dashManifestModel.getLocation({ Location: '', Location_asArray: ['location_1'] });
 
-            expect(location).to.be.equal('location_1'); // jshint ignore:line
+            expect(location[0].url).to.be.equal('location_1'); // jshint ignore:line
         });
 
         it('should return undefined when getPatchLocation is called and manifest is undefined', () => {
             const location = dashManifestModel.getPatchLocation();
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return undefined when getPatchLocation is called and one is not present', () => {
             const location = dashManifestModel.getPatchLocation({});
 
-            expect(location).to.be.undefined; // jshint ignore:line
+            expect(location).to.be.empty; // jshint ignore:line
         });
 
         it('should return valid patch location when getLocation is called and manifest contains complex location', () => {
@@ -590,7 +590,8 @@ describe('DashManifestModel', function () {
 
             const location = dashManifestModel.getPatchLocation(manifest);
 
-            expect(location).to.equal(patchLocation);
+            expect(location[0].url).to.equal(patchLocation.__text);
+            expect(location[0].ttl).to.equal(patchLocation.ttl * 1000);
         });
 
         it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {
@@ -1351,6 +1352,7 @@ describe('DashManifestModel', function () {
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',
+                            'clientRequirement': 'false',
                             'proxyServerURL': 'http://someUrl',
                             '__text': 'http://localhost:3333/content-steering'
                         }
@@ -1359,7 +1361,7 @@ describe('DashManifestModel', function () {
                 const data = dashManifestModel.getContentSteering(manifestData);
                 expect(data.defaultServiceLocation).to.be.equal('beta');
                 expect(data.queryBeforeStart).to.be.true;
-                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.clientRequirement).to.be.false;
                 expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
             })
 
@@ -1369,13 +1371,13 @@ describe('DashManifestModel', function () {
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',
-                            'proxyServerURL': 'http://someUrl',
+                            'clientRequirement': 'false',
                             '__text': 'http://localhost:3333/content-steering'
                         },
                         {
                             'defaultServiceLocation': 'alpha',
                             'queryBeforeStart': 'false',
-                            'proxyServerURL': 'http://someUrl2',
+                            'clientRequirement': 'true',
                             '__text': 'http://localhost:3333/content-steering/2'
                         }
                     ]
@@ -1383,7 +1385,7 @@ describe('DashManifestModel', function () {
                 const data = dashManifestModel.getContentSteering(manifestData);
                 expect(data.defaultServiceLocation).to.be.equal('beta');
                 expect(data.queryBeforeStart).to.be.true;
-                expect(data.proxyServerUrl).to.be.equal('http://someUrl');
+                expect(data.clientRequirement).to.be.false;
                 expect(data.serverUrl).to.be.equal('http://localhost:3333/content-steering');
             })
 

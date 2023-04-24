@@ -361,7 +361,8 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter
+                adapter,
+                contentSteeringController
             });
 
             serviceDescriptionController.setConfig({
@@ -401,7 +402,7 @@ function MediaPlayer() {
                 dashMetrics,
                 mediaPlayerModel,
                 manifestModel,
-                abrController,
+                serviceDescriptionController,
                 eventBus,
                 requestModifier: RequestModifier(context).getInstance()
             })
@@ -1808,9 +1809,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
-     * Allows application to retrieve a manifest.  Manifest loading is asynchro
-     * nous and
-     * requires the app-provided callback function
+     * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
      *
      * @param {string} url - url the manifest url
      * @param {function} callback - A Callback function provided when retrieving manifests
@@ -2062,6 +2061,39 @@ function MediaPlayer() {
         if (contentSteeringController) {
             return contentSteeringController.getCurrentSteeringResponseData();
         }
+    }
+
+
+    /**
+     * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
+     * @returns {BaseURL[]}
+     */
+    function getAvailableBaseUrls() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        return baseURLController.getBaseUrls(manifest);
+    }
+
+
+    /**
+     * Returns the available location elements including synthesized elements (e.g by content steering)
+     * @returns {MpdLocation[]}
+     */
+    function getAvailableLocations() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        const manifestLocations = adapter.getLocation(manifest);
+        const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+
+        return manifestLocations.concat(synthesizedElements);
     }
 
     //***********************************
@@ -2330,10 +2362,11 @@ function MediaPlayer() {
             const manifestUpdater = ManifestUpdater(context).create();
 
             manifestUpdater.setConfig({
-                manifestModel: manifestModel,
-                adapter: adapter,
-                manifestLoader: manifestLoader,
-                errHandler: errHandler
+                manifestModel,
+                adapter,
+                manifestLoader,
+                errHandler,
+                contentSteeringController
             });
 
             offlineController = OfflineController(context).create({
@@ -2438,6 +2471,8 @@ function MediaPlayer() {
         getActiveStream,
         getDVRWindowSize,
         getDVRSeekOffset,
+        getAvailableBaseUrls,
+        getAvailableLocations,
         getTargetLiveDelay,
         convertToTimeCode,
         formatUTC,
