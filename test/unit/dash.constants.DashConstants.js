@@ -57,6 +57,7 @@ describe('DashConstants', function () {
         expect(DashConstants.CONTENT_PROTECTION).to.equal('ContentProtection');
         expect(DashConstants.ESSENTIAL_PROPERTY).to.equal('EssentialProperty');
         expect(DashConstants.SUPPLEMENTAL_PROPERTY).to.equal('SupplementalProperty');
+        expect(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY).to.equal('SupplementalProperty_asArray');
         expect(DashConstants.INBAND_EVENT_STREAM).to.equal('InbandEventStream');
         expect(DashConstants.PRODUCER_REFERENCE_TIME).to.equal('ProducerReferenceTime');
         expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
@@ -66,6 +67,7 @@ describe('DashConstants', function () {
         expect(DashConstants.SUBSET).to.equal('Subset');
         expect(DashConstants.LANG).to.equal('lang');
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
+        expect(DashConstants.VIEWPOINT_ASARRAY).to.equal('Viewpoint_asArray');
         expect(DashConstants.ROLE_ASARRAY).to.equal('Role_asArray');
         expect(DashConstants.REPRESENTATION_ASARRAY).to.equal('Representation_asArray');
         expect(DashConstants.PRODUCERREFERENCETIME_ASARRAY).to.equal('ProducerReferenceTime_asArray');

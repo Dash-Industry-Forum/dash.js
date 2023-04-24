@@ -96,6 +96,32 @@ describe('MediaController', function () {
 
         });
 
+        it('should return false if track are not equals (DescriptorType)', function () {
+
+            let track1 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 'description',
+                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'},
+                audioChannelConfiguration: 1
+            };
+
+            let track2 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 'description',
+                accessibilitiesWithSchemeIdUri: {schemeIdUri: 'urn:scheme:test:2:2023', value: 'description'},
+                audioChannelConfiguration: 1
+            };
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.false; // jshint ignore:line
+
+        });
+
         it('should return true if track are equals', function () {
 
             let track1 = {
@@ -159,6 +185,32 @@ describe('MediaController', function () {
             let track2 = null;
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.true; // jshint ignore:line
+        });
+
+        it('should return true if track are equals (DescriptorType)', function () {
+
+            let track1 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 'description',
+                accessibility_withSchemeIdUri: [{schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'}],
+                audioChannelConfiguration: 1
+            };
+
+            let track2 = {
+                id: 'id',
+                viewpoint: 'viewpoint',
+                lang: 'lang',
+                roles: 1,
+                accessibility: 'description',
+                accessibility_withSchemeIdUri: [{schemeIdUri: 'urn:scheme:test:1:2023', value: 'description'}],
+                audioChannelConfiguration: 1
+            };
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.true; // jshint ignore:line
+
         });
 
     });

@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,38 +32,21 @@
  * @class
  * @ignore
  */
-class MediaInfo {
+class DescriptorType {
     constructor() {
+        this.schemeIdUri = null;
+        this.value = null;
         this.id = null;
-        this.index = null;
-        this.type = null;
-        this.streamInfo = null;
-        this.representationCount = 0;
-        this.labels = null;
-        this.lang = null;
-        this.viewpoint = null;
-        this.viewpointsWithSchemeIdUri = null;
-        this.accessibility = null;
-        this.accessibilitiesWithSchemeIdUri = null;
-        this.audioChannelConfiguration = null;
-        this.audioChannelConfigurationsWithSchemeIdUri = null;
-        this.roles = null;
-        this.rolesWithSchemeIdUri = null;
-        this.codec = null;
-        this.mimeType = null;
-        this.contentProtection = null;
-        this.isText = false;
-        this.KID = null;
-        this.bitrateList = null;
-        this.isFragmented = null;
-        this.isEmbedded = null;
-        this.selectionPriority = 1;
-        this.supplementalProperties = {};
-        this.supplementalPropertiesAsArray = [];
-        this.segmentAlignment = false;
-        this.subSegmentAlignment = false;
     }
 
+    init(data) {
+        if (data) {
+            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
+            this.value = data.value ? data.value : null;
+            this.id = data.id ? data.id : null;
+        }
+        return this;
+    }
 }
 
-export default MediaInfo;
+export default DescriptorType;

@@ -7,6 +7,7 @@ import cea608parser from '../../externals/cea608-parser';
 import VoHelper from './helpers/VOHelper';
 import PatchHelper from './helpers/PatchHelper.js';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import DescriptorType from '../../src/dash/vo/DescriptorType';
 
 const expect = require('chai').expect;
 
@@ -18,24 +19,29 @@ const manifest_with_audio = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
     Period_asArray: [{
-        AdaptationSet_asArray: [{
-            id: undefined,
-            mimeType: Constants.AUDIO,
-            lang: 'eng',
-            Role_asArray: [{ value: 'main' }]
-        }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }]
+        AdaptationSet_asArray: [
+            {
+                id: undefined, mimeType: Constants.AUDIO,
+                lang: 'eng', Role_asArray: [{ value: 'main' }]
+            }, {
+                id: undefined, mimeType: Constants.AUDIO,
+                lang: 'deu', Role_asArray: [{ value: 'main' }]
+            }
+        ]
     }]
 };
 const manifest_with_video_with_embedded_subtitles = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
     Period_asArray: [{
-        AdaptationSet_asArray: [{
-            id: 0,
-            mimeType: Constants.VIDEO,
-            Accessibility: { schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' },
-            Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
-        }, { id: 1, mimeType: Constants.VIDEO }]
+        AdaptationSet_asArray: [
+            {
+                id: 0, mimeType: Constants.VIDEO,
+                Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
+            }, {
+                id: 1, mimeType: Constants.VIDEO
+            }
+        ]
     }]
 };
 const manifest_with_ll_service_description = {
@@ -49,9 +55,7 @@ const manifest_with_ll_service_description = {
     }],
     Period_asArray: [{
         AdaptationSet_asArray: [{
-            id: 0,
-            mimeType: Constants.VIDEO,
-            SupplementalProperty: {},
+            id: 0, mimeType: Constants.VIDEO,
             SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }]
         }]
     }]
@@ -61,7 +65,112 @@ const manifest_without_supplemental_properties = {
     mediaPresentationDuration: 10,
     Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }]
 };
-
+const manifest_with_supplemental_properties = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.VIDEO,
+            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'}] 
+        }]
+    }]
+};
+const manifest_with_supplemental_properties_on_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.VIDEO,
+            // SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'},{schemeIdUri: 'test:scheme', value: 'value3'}],
+            [DashConstants.REPRESENTATION_ASARRAY]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'},
+                        {schemeIdUri: 'test:scheme', value: 'value3'}
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'},
+                        {schemeIdUri: 'test:scheme', value: 'value3'}
+                    ]
+                }
+            ]
+        }]
+    }]
+};
+const manifest_with_supplemental_properties_on_only_one_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION_ASARRAY]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                        {schemeIdUri: 'test:scheme', value: 'value1'},
+                        {schemeIdUri: 'test:scheme', value: 'value2'}
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000
+                },
+                {
+                    id: 12, bandwidth: 96000
+                }
+            ]
+        }]
+    }]
+};
+const manifest_with_audioChanCfg = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.AUDIO,
+            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'},
+                {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+            ]
+        }]
+    }]
+};
+const manifest_with_audioChanCfg_Repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, mimeType: Constants.AUDIO,
+            [DashConstants.REPRESENTATION_ASARRAY]:[
+                {
+                    id: 11, bandwidth: 128000,
+                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'},
+                        {schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '6'},
+                        {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+                    ]
+                },{
+                    id: 12, bandwidth: 96000,
+                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '21'},
+                        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'},
+                        {schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2'},
+                        {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xA000'}
+                    ]
+                }
+            ],
+            [DashConstants.VIEWPOINT_ASARRAY]: [
+                {schemeIdUri: 'urn:scheme:viewpoint', value: 'VP1'},
+                {schemeIdUri: 'urn:scheme:viewpoint', value: 'VP2'}
+            ]
+        }]
+    }]
+};
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
@@ -420,6 +529,7 @@ describe('DashAdapter', function () {
                 track.representationCount = 0;
                 track.lang = 'deu';
                 track.roles = ['main'];
+                track.rolesWithSchemeIdUri = [{schemeIdUri:'aScheme', value:'main'}];
                 track.codec = 'audio/mp4;codecs="mp4a.40.2"';
                 track.mimeType = 'audio/mp4';
 
@@ -489,18 +599,214 @@ describe('DashAdapter', function () {
                 expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);       // jshint ignore:line
             });
 
-            it('supplemental properties should be empty if not defined', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
-                    id: 'defaultId_0',
-                    index: 0
-                }, Constants.VIDEO, manifest_without_supplemental_properties);
+            describe('mediainfo populated from manifest', function () {
+                it('supplemental properties should be empty if not defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_without_supplemental_properties);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
 
-                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
-                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+                });
+
+                it('supplemental properties should be filled if correctly defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].codec).to.be.null;        // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);          // jshint ignore:line
+                });
+
+                it('supplemental properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].representationCount).equals(2); // jshint ignore:line
+                    expect(mediaInfoArray[0].codec).not.to.be.null;          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);    // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(3);          // jshint ignore:line
+                });
+
+                it('supplemental properties should not be filled if not set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_only_one_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].representationCount).equals(3); // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);          // jshint ignore:line
+                });
+
+                it('audio channel config should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(2);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('6');                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri.length).equals(2);          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[1].value).equals('0xF801'); // jshint ignore:line
+                });
+
+                it('audio channel config should be filled when present on Representation', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
+                    expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('21');                           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri.length).equals(4);          // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType); // jshint ignore:line
+                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[3].value).equals('0xA000');       // jshint ignore:line
+                });
+
+                it('role, accessibility and viewpoint should be empty if not defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(0);         // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility.length).equals(0); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpoint).to.be.undefined;      // jshint ignore:line
+
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);       // jshint ignore:line
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(0);              // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri.length).equals(0);     // jshint ignore:lineexpect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri).to.be.instanceOf(Array);  // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri.length).equals(0);         // jshint ignore:line
+                });
+
+                it('role should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audio);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(1);                          // jshint ignore:line
+                    expect(mediaInfoArray[0].roles[0]).equals('main');                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(1);          // jshint ignore:line
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri[0].value).equals('main'); // jshint ignore:line
+                });
+
+                it('accessibility should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_video_with_embedded_subtitles);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);                   // jshint ignore:line
+                    expect(mediaInfoArray[0].roles.length).equals(0);                          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);               // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility.length).equals(1);                      // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibility[0]).equals('cea-608:CC1=eng;CC3=swe');  // jshint ignore:line
+                    expect(mediaInfoArray[1].accessibility.length).equals(0);                      // jshint ignore:line
+
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(0);          // jshint ignore:line
+
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);   // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri.length).equals(1);          // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);  // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015'); // jshint ignore:line
+                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0].value).equals('CC1=eng;CC3=swe'); // jshint ignore:line
+                    expect(mediaInfoArray[1].accessibilitiesWithSchemeIdUri.length).equals(0);          // jshint ignore:line
+                });
+
+                it('viewpoint should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_audioChanCfg_Repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                    expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpoint).equals('VP1');                                                 // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri).to.be.instanceOf(Array);                       // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri.length).equals(2);                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);           // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].schemeIdUri).equals('urn:scheme:viewpoint'); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].value).equals('VP1');                        // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].id).to.be.null;                              // jshint ignore:line
+
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1]).to.be.instanceOf(DescriptorType);           // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].schemeIdUri).equals('urn:scheme:viewpoint'); // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].value).equals('VP2');                        // jshint ignore:line
+                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].id).to.be.null;                              // jshint ignore:line
+                });
+
             });
+
         });
 
         describe('getPatchLocation', function () {
@@ -1156,4 +1462,58 @@ describe('DashAdapter', function () {
             });
         });
     });
+
+    describe('areMediaInfosEqual', function () {
+        var mediaInfo1;
+
+        beforeEach(function () {
+            var manifest_1 = {
+                loadedTime: new Date(),
+                mediaPresentationDuration: 10,
+                Period_asArray: [{
+                    AdaptationSet_asArray: [
+                        {
+                            id: 0, mimeType: Constants.VIDEO,
+                            Role_asArray:[],
+                            Accessibility_asArray: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'}],
+                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                                {schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801'}
+                            ]
+                        }, {
+                            id: 1, mimeType: Constants.VIDEO,
+                            Role_asArray:[{schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main'}],
+                            Accessibility_asArray: [],
+                            SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value4'}],
+                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                                {schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}
+                            ]
+                        }
+                    ]
+                }]
+            };
+            mediaInfo1 = dashAdapter.getAllMediaInfoForType(
+                {id: 'defaultId_0', index: 0}, Constants.VIDEO,
+                manifest_1);
+        });
+
+        it('should return false if 1st MediaInfo is not set', function () {
+            var result = dashAdapter.areMediaInfosEqual(null, mediaInfo1[0]);
+            expect(result).to.be.false;
+        });
+        it('should return false if 2nd MediaInfo is not set', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], null);
+            expect(result).to.be.false;
+        });
+
+        it('should return true if MediaInfos are equal', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], mediaInfo1[0]);
+            expect(result).to.be.true;
+        });
+        it('should return false if MediaInfos are not equal', function () {
+            var result = dashAdapter.areMediaInfosEqual(mediaInfo1[0], mediaInfo1[1]);
+            expect(result).to.be.false;
+        });
+    });
+
 });
