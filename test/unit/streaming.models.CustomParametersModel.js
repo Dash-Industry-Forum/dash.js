@@ -14,7 +14,7 @@ describe('CustomParametersModel', function () {
         customParametersModel.reset();
     });
 
-    it('Method removeUTCTimingSource should throw an exception',  () => {
+    it('Method removeUTCTimingSource should throw an exception', () => {
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
@@ -23,7 +23,7 @@ describe('CustomParametersModel', function () {
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method addUTCTimingSource should throw an exception',  () => {
+    it('Method addUTCTimingSource should throw an exception', () => {
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);

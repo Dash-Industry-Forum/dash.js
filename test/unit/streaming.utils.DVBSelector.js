@@ -24,14 +24,14 @@ describe('BaseURLResolution/DVBSelector', function () {
         const dvbSelector = DVBSelector(context).create(defaultConfig);
         const selected = dvbSelector.select(undefined);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return undefined when the input is empty', () => {
         const dvbSelector = DVBSelector(context).create(defaultConfig);
         const selected = dvbSelector.select([]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return undefined when the blacklist contains the requested serviceLocation', () => {
@@ -46,7 +46,7 @@ describe('BaseURLResolution/DVBSelector', function () {
 
         const selected = dvbSelector.select([entryA]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return the first entry in the list when the blacklist does not contain the requested serviceLocation', () => {
@@ -65,7 +65,7 @@ describe('BaseURLResolution/DVBSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.equal(entryA); // jshint ignore:line
+        expect(selected).to.equal(entryA);
     });
 
     it('should return the next entry in the list when the blacklist contains the serviceLocation of the first', () => {
@@ -83,7 +83,7 @@ describe('BaseURLResolution/DVBSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.equal(entryB); // jshint ignore:line
+        expect(selected).to.equal(entryB);
     });
 
     it('should return undefined when the blacklist contains all the serviceLocations', () => {
@@ -101,18 +101,18 @@ describe('BaseURLResolution/DVBSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should select baseUrls as defined in the example in DVB A168 10.8.2.4', () => {
         const baseUrls = [
-            { dvb_priority: 1,  dvb_weight: 10, serviceLocation: 'A' },
-            { dvb_priority: 1,  dvb_weight: 30, serviceLocation: 'B' },
-            { dvb_priority: 1,  dvb_weight: 60, serviceLocation: 'C' },
-            { dvb_priority: 3,  dvb_weight: 1,  serviceLocation: 'C' },
-            { dvb_priority: 4,  dvb_weight: 1,  serviceLocation: 'B' },
-            { dvb_priority: 5,  dvb_weight: 1,  serviceLocation: 'D' },
-            { dvb_priority: 5,  dvb_weight: 1,  serviceLocation: 'E' }
+            { dvb_priority: 1, dvb_weight: 10, serviceLocation: 'A' },
+            { dvb_priority: 1, dvb_weight: 30, serviceLocation: 'B' },
+            { dvb_priority: 1, dvb_weight: 60, serviceLocation: 'C' },
+            { dvb_priority: 3, dvb_weight: 1, serviceLocation: 'C' },
+            { dvb_priority: 4, dvb_weight: 1, serviceLocation: 'B' },
+            { dvb_priority: 5, dvb_weight: 1, serviceLocation: 'D' },
+            { dvb_priority: 5, dvb_weight: 1, serviceLocation: 'E' }
         ];
 
         // we need Math.random to be completely unrandom
@@ -133,14 +133,14 @@ describe('BaseURLResolution/DVBSelector', function () {
         stub.returns(0.3);
 
         const firstSelection = dvbSelector.select(baseUrls);
-        expect(firstSelection.dvb_priority).to.equal(1);        // jshint ignore:line
-        expect(firstSelection.serviceLocation).to.equal('B');   // jshint ignore:line
+        expect(firstSelection.dvb_priority).to.equal(1);
+        expect(firstSelection.serviceLocation).to.equal('B');
 
         blacklist.push(firstSelection.serviceLocation);
 
         const secondSelection = dvbSelector.select(baseUrls);
-        expect(secondSelection.dvb_priority).to.equal(3);       // jshint ignore:line
-        expect(secondSelection.serviceLocation).to.equal('C');  // jshint ignore:line
+        expect(secondSelection.dvb_priority).to.equal(3);
+        expect(secondSelection.serviceLocation).to.equal('C');
 
         // Math.random (called in select()) will return 1
         stub.returns(1);
@@ -148,25 +148,25 @@ describe('BaseURLResolution/DVBSelector', function () {
         blacklist.push(secondSelection.serviceLocation);
 
         const thirdSelection = dvbSelector.select(baseUrls);
-        expect(thirdSelection.dvb_priority).to.equal(5);        // jshint ignore:line
-        expect(thirdSelection.serviceLocation).to.equal('E');   // jshint ignore:line
+        expect(thirdSelection.dvb_priority).to.equal(5);
+        expect(thirdSelection.serviceLocation).to.equal('E');
 
         blacklist.push(thirdSelection.serviceLocation);
 
         const fourthSelection = dvbSelector.select(baseUrls);
-        expect(fourthSelection).to.be.undefined;                // jshint ignore:line
+        expect(fourthSelection).to.be.undefined;
     });
 
     it('should not select baseUrls with invalid priority when there is another option', () => {
         const baseUrls = [
-            { serviceLocation: 'A', dvb_priority: 1,        dvb_weight: 1 },
+            { serviceLocation: 'A', dvb_priority: 1, dvb_weight: 1 },
             { serviceLocation: 'B', dvb_priority: 'STRING', dvb_weight: 100000000 }
         ];
 
         const dvbSelector = DVBSelector(context).create(defaultConfig);
         const firstSelection = dvbSelector.select(baseUrls);
 
-        expect(firstSelection.serviceLocation).to.equal('A');   // jshint ignore:line
+        expect(firstSelection.serviceLocation).to.equal('A');
     });
 
     it('should select baseUrls with invalid priority if there is no other option', () => {
@@ -177,6 +177,6 @@ describe('BaseURLResolution/DVBSelector', function () {
         const dvbSelector = DVBSelector(context).create(defaultConfig);
         const firstSelection = dvbSelector.select(baseUrls);
 
-        expect(firstSelection.serviceLocation).to.equal('B');   // jshint ignore:line
+        expect(firstSelection.serviceLocation).to.equal('B');
     });
 });

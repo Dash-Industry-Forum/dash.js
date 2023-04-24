@@ -179,10 +179,10 @@ function CatchupController() {
      */
     function _onPlaybackProgression() {
         if (
-            playbackController.getIsDynamic() && 
-            mediaPlayerModel.getCatchupModeEnabled() && 
-            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) && 
-            !playbackController.isPaused() && 
+            playbackController.getIsDynamic() &&
+            mediaPlayerModel.getCatchupModeEnabled() &&
+            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) &&
+            !playbackController.isPaused() &&
             !playbackController.isSeeking() && _shouldStartCatchUp()
         ) {
             _startPlaybackCatchUp();
@@ -234,7 +234,7 @@ function CatchupController() {
                 const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
                 // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
-                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {  // non-null
+                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) { // non-null
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
                 }
@@ -382,7 +382,7 @@ function CatchupController() {
         if (bufferLevel < playbackBufferMin) {
             // Buffer in danger, slow down
             const cpr = Math.abs(liveCatchUpPlaybackRates.min); // Absolute value as negative delta value will be used.
-            const deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
+            const deltaBuffer = bufferLevel - playbackBufferMin; // -ve value
             const d = deltaBuffer * 5;
 
             // Playback rate must be between (1 - cpr) - (1 + cpr)

@@ -26,7 +26,7 @@ describe('DashParser', function () {
 
     it('should return an Object when parse is called with correct data', async () => {
         let manifest = await FileLoader.loadTextFile('/data/dash/manifest.xml');
-        expect(dashParser.parse.bind(manifest)).to.be.instanceOf(Object);   // jshint ignore:line
+        expect(dashParser.parse.bind(manifest)).to.be.instanceOf(Object);
     });
 
     describe('DashParser matchers', async () => {
@@ -42,9 +42,9 @@ describe('DashParser', function () {
             let parsedMpd = dashParser.parse(manifest);
             let audioAdaptationsArray = dashManifestModel.getAdaptationsForType(parsedMpd, 0, 'audio');
 
-            expect(audioAdaptationsArray).to.be.instanceOf(Array);      // jshint ignore:line
-            expect(audioAdaptationsArray.length).to.equal(1);           // jshint ignore:line
-            expect(dashManifestModel.getLanguageForAdaptation(audioAdaptationsArray[0])).to.equal('es');  // jshint ignore:line
+            expect(audioAdaptationsArray).to.be.instanceOf(Array);
+            expect(audioAdaptationsArray.length).to.equal(1);
+            expect(dashManifestModel.getLanguageForAdaptation(audioAdaptationsArray[0])).to.equal('es');
         });
 
         it('should return normalized language tages for labels on AdaptationSets', async () => {
@@ -52,9 +52,9 @@ describe('DashParser', function () {
             let audioAdaptation = dashManifestModel.getAdaptationsForType(parsedMpd, 0, 'audio')[0];
             let labelArray = dashManifestModel.getLabelsForAdaptation(audioAdaptation);
 
-            expect(labelArray).to.be.instanceOf(Array);      // jshint ignore:line
-            expect(labelArray.length).to.equal(2);           // jshint ignore:line
-            expect(labelArray[1].lang).to.equal('fr');       // jshint ignore:line
+            expect(labelArray).to.be.instanceOf(Array);
+            expect(labelArray.length).to.equal(2);
+            expect(labelArray[1].lang).to.equal('fr');
         });
     });
 })

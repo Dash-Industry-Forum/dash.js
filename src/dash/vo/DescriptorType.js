@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -32,14 +32,21 @@
  * @class
  * @ignore
  */
-class ContentSteeringResponse {
+class DescriptorType {
     constructor() {
-        this.version = null;
-        this.ttl = 300;
-        this.reloadUri = null;
-        this.pathwayPriority = [];
-        this.pathwayClones = [];
+        this.schemeIdUri = null;
+        this.value = null;
+        this.id = null;
+    }
+
+    init(data) {
+        if (data) {
+            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
+            this.value = data.value ? data.value : null;
+            this.id = data.id ? data.id : null;
+        }
+        return this;
     }
 }
 
-export default ContentSteeringResponse;
+export default DescriptorType;
