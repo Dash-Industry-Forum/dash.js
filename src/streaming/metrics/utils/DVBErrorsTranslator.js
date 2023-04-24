@@ -136,7 +136,7 @@ function DVBErrorsTranslator(config) {
     function initialize() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
         eventBus.on(
-            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED,
             onServiceLocationChanged,
             instance
         );
@@ -153,7 +153,7 @@ function DVBErrorsTranslator(config) {
     function reset() {
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
         eventBus.off(
-            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED,
             onServiceLocationChanged,
             instance
         );
