@@ -57,7 +57,7 @@ describe('FragmentController', function () {
             sender: videoFragmentModel});
     });
 
-    it('should trigger SERVICE_LOCATION_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
+    it('should trigger SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
         let onInitFragmentLoadedWithError = function () {
             eventBus.off(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, onInitFragmentLoadedWithError);
             done();

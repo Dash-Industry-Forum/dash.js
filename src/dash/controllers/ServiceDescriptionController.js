@@ -285,7 +285,7 @@ function ServiceDescriptionController() {
     }
 
     /**
-     * Add information about content steering element in ContentSteeringController. Handling is up to the ContentSteeringController
+     * Add information about content steering element. Handling is up to the ContentSteeringController
      *  @param {object} sd
      *  @private
      */
