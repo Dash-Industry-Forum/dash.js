@@ -151,8 +151,7 @@ function MssFragmentMoofProcessor(config) {
                 }
             }
             return;
-        }
-        else {
+        } else {
             // In case of live streams, update segment timeline according to DVR window
             if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
                 // Get timestamp of the last segment
@@ -173,7 +172,7 @@ function MssFragmentMoofProcessor(config) {
                     // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                     segments.splice(0, 1);
                     segment = segments[0];
-                    endTime =  (segment.t + segment.d) / timescale;
+                    endTime = (segment.t + segment.d) / timescale;
                 }
             }
 
