@@ -229,8 +229,7 @@ function TimelineConverter() {
         const range = { start: NaN, end: NaN };
         const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const timeShiftBufferDepth = voPeriod.mpd.timeShiftBufferDepth;
-
+        
         if (!streams || streams.length === 0) {
             return { range, now };
         }
@@ -244,7 +243,7 @@ function TimelineConverter() {
 
             if (voRepresentation) {
                 if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
-                    periodRange = _calcRangeForTimeline(voRepresentation, timeShiftBufferDepth);
+                    periodRange = _calcRangeForTimeline(voRepresentation);
                 } else {
                     const currentVoPeriod = voRepresentation.adaptation.period;
                     periodRange.start = currentVoPeriod.start;
@@ -311,7 +310,7 @@ function TimelineConverter() {
         }
     }
 
-    function _calcRangeForTimeline(voRepresentation, timeShiftBufferDepth) {
+    function _calcRangeForTimeline(voRepresentation) {
         const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
         const timeline = representation.SegmentTemplate.SegmentTimeline;
@@ -319,14 +318,16 @@ function TimelineConverter() {
         const segments = timeline.S_asArray;
         const range = { start: 0, end: 0 };
         const segmentTime = segments[0].t;
+        const hasValidSegmentTime = !isNaN(segmentTime);
+        const enhancedSegmentTime = hasValidSegmentTime ? segmentTime : 0;
         let d = 0;
         let segment,
             repeat,
             i,
             len;
         
-        if(!isNaN(segmentTime)) {
-            range.start = calcPresentationTimeFromMediaTime(segmentTime / timescale, voRepresentation);
+        if(hasValidSegmentTime) {
+            range.start = calcPresentationTimeFromMediaTime(enhancedSegmentTime / timescale, voRepresentation);
         }
         
         for (i = 0, len = segments.length; i < len; i++) {
@@ -338,11 +339,7 @@ function TimelineConverter() {
             d += segment.d * (1 + repeat);
         }
 
-        if(!isNaN(segmentTime)) {
-            range.end = calcPresentationTimeFromMediaTime((segmentTime + d) / timescale, voRepresentation);
-        } else {
-            range.end = timeShiftBufferDepth;
-        }
+        range.end = calcPresentationTimeFromMediaTime((enhancedSegmentTime + d) / timescale, voRepresentation);
 
         return range;
     }
