@@ -7,6 +7,7 @@ import MpdHelper from './helpers/MPDHelper';
 import VoHelper from './helpers/VOHelper';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import DescriptorType from '../../src/dash/vo/DescriptorType';
 
 const expect = require('chai').expect;
 
@@ -112,10 +113,11 @@ describe('DashManifestModel', function () {
             expect(language).to.equal(EMPTY_STRING);  // jshint ignore:line
         });
 
-        it('should return null when getViewpointForAdaptation is called and adaptation is undefined', () => {
+        it('should return an empty array when getViewpointForAdaptation is called and adaptation is undefined', () => {
             const viewPoint = dashManifestModel.getViewpointForAdaptation();
 
-            expect(viewPoint).to.be.null;     // jshint ignore:line
+            expect(viewPoint).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(viewPoint).to.be.empty;     // jshint ignore:line
         });
 
         it('should return an empty array when getAudioChannelConfigurationForAdaptation is called and adaptation is undefined', () => {
@@ -137,6 +139,58 @@ describe('DashManifestModel', function () {
 
             expect(rolesArray).to.be.instanceOf(Array);    // jshint ignore:line
             expect(rolesArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Object);    // jshint ignore:line
+            expect(suppPropArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return an empty array when getSupplementalPropertiesAsArrayForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(suppPropArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForAdaptation is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation({
+                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'},{schemeIdUri: 'test.scheme', value: 'test2Val'}]
+            });
+
+            expect(suppPropArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);    // jshint ignore:line
+            expect(suppPropArray[0].schemeIdUri).equals('test.scheme');   // jshint ignore:line
+            expect(suppPropArray[0].value).equals('testVal');             // jshint ignore:line
+            expect(suppPropArray[1].schemeIdUri).equals('test.scheme');   // jshint ignore:line
+            expect(suppPropArray[1].value).equals('test2Val');             // jshint ignore:line
+        });
+
+        it('should return an empty array when getSupplementalPropertiesForRepresentation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation();
+
+            expect(suppPropArray).to.be.instanceOf(Object);    // jshint ignore:line
+            expect(suppPropArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return an empty array when getSupplementalPropertiesAsArrayForRepresentation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation();
+
+            expect(suppPropArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(suppPropArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForRepresentation is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation({
+                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'}]
+            });
+
+            expect(suppPropArray).to.be.instanceOf(Array);                // jshint ignore:line
+            expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);    // jshint ignore:line
+            expect(suppPropArray[0].schemeIdUri).equals('test.scheme');   // jshint ignore:line
+            expect(suppPropArray[0].value).equals('testVal');             // jshint ignore:line
         });
 
         it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {

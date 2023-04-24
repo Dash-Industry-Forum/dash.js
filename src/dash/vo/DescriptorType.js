@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -29,23 +29,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc a RepresentationBaseValuesMap type for input to objectiron
+ * @class
+ * @ignore
  */
-import MapNode from './MapNode';
-import DashConstants from '../../constants/DashConstants';
-
-class RepresentationBaseValuesMap extends MapNode {
+class DescriptorType {
     constructor() {
-        const commonProperties = [
-            DashConstants.PROFILES, DashConstants.WIDTH, DashConstants.HEIGHT, DashConstants.SAR, DashConstants.FRAMERATE, DashConstants.AUDIO_SAMPLING_RATE, DashConstants.MIME_TYPE, DashConstants.SEGMENT_PROFILES, DashConstants.CODECS, DashConstants.MAXIMUM_SAP_PERIOD, DashConstants.START_WITH_SAP, DashConstants.MAX_PLAYOUT_RATE, DashConstants.CODING_DEPENDENCY, DashConstants.SCAN_TYPE, DashConstants.FRAME_PACKING, DashConstants.AUDIO_CHANNEL_CONFIGURATION, DashConstants.CONTENT_PROTECTION, DashConstants.ESSENTIAL_PROPERTY, DashConstants.ESSENTIAL_PROPERTY+'_asArray', DashConstants.SUPPLEMENTAL_PROPERTY, DashConstants.INBAND_EVENT_STREAM
-        ];
+        this.schemeIdUri = null;
+        this.value = null;
+        this.id = null;
+    }
 
-        super(DashConstants.ADAPTATION_SET, commonProperties, [
-            new MapNode(DashConstants.REPRESENTATION, commonProperties, [
-                new MapNode(DashConstants.SUB_REPRESENTATION, commonProperties)
-            ])
-        ]);
+    init(data) {
+        if (data) {
+            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
+            this.value = data.value ? data.value : null;
+            this.id = data.id ? data.id : null;
+        }
+        return this;
     }
 }
 
-export default RepresentationBaseValuesMap;
+export default DescriptorType;

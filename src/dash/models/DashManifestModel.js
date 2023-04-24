@@ -40,6 +40,7 @@ import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime';
 import ContentSteering from '../vo/ContentSteering';
+import DescriptorType from '../vo/DescriptorType';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -232,23 +233,43 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.VIEWPOINT) ? adaptation.Viewpoint : null;
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation[DashConstants.VIEWPOINT_ASARRAY].length) return [];
+        return adaptation[DashConstants.VIEWPOINT_ASARRAY].map( viewpoint => {
+            const vp = new DescriptorType();
+            return vp.init(viewpoint);
+        });
     }
 
     function getRolesForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) ? adaptation.Role_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) || !adaptation[DashConstants.ROLE_ASARRAY].length) return [];
+        return adaptation[DashConstants.ROLE_ASARRAY].map( role => {
+            const r = new DescriptorType();
+            return r.init(role);
+        });
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) ? adaptation.Accessibility_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) || !adaptation[DashConstants.ACCESSIBILITY_ASARRAY].length) return [];
+        return adaptation[DashConstants.ACCESSIBILITY_ASARRAY].map( accessibility => {
+            const a = new DescriptorType();
+            return a.init(accessibility);
+        });
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !adaptation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+        return adaptation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].map( audioChanCfg => {
+            const acc = new DescriptorType();
+            return acc.init(audioChanCfg);
+        });
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !representation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+        return representation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].map( audioChanCfg => {
+            const acc = new DescriptorType();
+            return acc.init(audioChanCfg);
+        });
     }
 
     function getRepresentationSortFunction() {
@@ -1269,10 +1290,10 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    function getSupplementalProperties(adaptation) {
+    function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
 
-        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of adaptation.SupplementalProperty_asArray) {
                 if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
                     supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
@@ -1280,6 +1301,35 @@ function DashManifestModel() {
             }
         }
         return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !adaptation.SupplementalProperty_asArray.length) return [];
+        return adaptation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType();
+            return s.init(supp);
+        });
+    }
+
+    function getSupplementalPropertiesForRepresentation(representation) {
+        const supplementalProperties = {};
+
+        if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
+            for (const sp of representation.SupplementalProperty_asArray) {
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                }
+            }
+        }
+        return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesAsArrayForRepresentation(representation) {
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !representation.SupplementalProperty_asArray.length) return [];
+        return representation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType();
+            return s.init(supp);
+        });
     }
 
     function setConfig(config) {
@@ -1344,10 +1394,13 @@ function DashManifestModel() {
         getSuggestedPresentationDelay,
         getAvailabilityStartTime,
         getServiceDescriptions,
-        getSupplementalProperties,
-        setConfig,
         getSegmentAlignment,
-        getSubSegmentAlignment
+        getSubSegmentAlignment,
+        getSupplementalPropertiesForAdaptation,
+        getSupplementalPropertiesAsArrayForAdaptation,
+        getSupplementalPropertiesForRepresentation,
+        getSupplementalPropertiesAsArrayForRepresentation,
+        setConfig
     };
 
     setup();

@@ -202,12 +202,16 @@ function DashAdapter() {
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
         const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
+        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpointsWithSchemeIdUri) === JSON.stringify(mInfoTwo.viewpointsWithSchemeIdUri);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
+        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.rolesWithSchemeIdUri) === JSON.stringify(mInfoTwo.rolesWithSchemeIdUri);
         const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
+        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibilitiesWithSchemeIdUri) === JSON.stringify(mInfoTwo.accessibilitiesWithSchemeIdUri);
         const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
+        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfigurationsWithSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -1026,7 +1030,7 @@ function DashAdapter() {
 
         let mediaInfo = new MediaInfo();
         const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint;
+        let viewpoint, acc, acc_rep, roles, accessibility;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1035,11 +1039,15 @@ function DashAdapter() {
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
-        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
-        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
+
+        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
+        mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
+        mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
+        
+        accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        mediaInfo.accessibility = accessibility.map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessibilityData = accessibilityValue;
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
@@ -1052,19 +1060,28 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
+        mediaInfo.accessibilitiesWithSchemeIdUri = accessibility;
 
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+        acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
+        mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
+        mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc;
 
         if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+            acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]);
+            mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
+            mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
         }
-        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
+        
+        roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
+        mediaInfo.roles = roles.map(function (role) {
             return role.value;
         });
+        mediaInfo.rolesWithSchemeIdUri = roles;
+        
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
@@ -1083,8 +1100,27 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
-
+        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
+        if ( (!mediaInfo.supplementalProperties || Object.keys(mediaInfo.supplementalProperties).length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
+            });
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.supplementalProperties = arr[0];
+            }
+        }
+        mediaInfo.supplementalPropertiesAsArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation(realAdaptation);
+        if ( (!mediaInfo.supplementalPropertiesAsArray || mediaInfo.supplementalPropertiesAsArray.length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation(repr);
+            });
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.supplementalPropertiesAsArray = arr[0];
+            }
+        }
+        
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
@@ -1100,6 +1136,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
         mediaInfo.roles = ['caption'];
+        mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {
