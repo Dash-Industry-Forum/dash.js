@@ -36,10 +36,10 @@ describe('BaseURLTreeModel', function () {
         const manifest = parser.parse(xml);
         expect(baseURLTreeModel.update.bind(baseURLTreeModel, manifest)).to.not.throw();
         let nodes = baseURLTreeModel.getForPath();
-        expect(nodes).to.be.instanceOf(Array);    // jshint ignore:line
-        expect(nodes).to.be.empty;                // jshint ignore:line
+        expect(nodes).to.be.instanceOf(Array);
+        expect(nodes).to.be.empty;
         nodes = baseURLTreeModel.getForPath(['./']);
-        expect(nodes).to.be.instanceOf(Array);    // jshint ignore:line
-        expect(nodes).to.be.empty;                // jshint ignore:line
+        expect(nodes).to.be.instanceOf(Array);
+        expect(nodes).to.be.empty;
     });
 });

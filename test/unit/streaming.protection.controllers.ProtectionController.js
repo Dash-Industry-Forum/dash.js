@@ -62,8 +62,8 @@ describe('ProtectionController', function () {
         it('should return empty array when getKeySystems is called and config object has not been set properly', function () {
             const keySystemsArray = protectionController.getKeySystems();
 
-            expect(keySystemsArray).to.be.instanceOf(Array); // jshint ignore:line
-            expect(keySystemsArray).to.be.empty;            // jshint ignore:line
+            expect(keySystemsArray).to.be.instanceOf(Array);
+            expect(keySystemsArray).to.be.empty;
         });
     });
 
@@ -88,8 +88,8 @@ describe('ProtectionController', function () {
 
             let onDRMError = function (data) {
                 eventBus.off(ProtectionEvents.SERVER_CERTIFICATE_UPDATED, onDRMError);
-                expect(data.error.code).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE); // jshint ignore:line
-                expect(data.error.message).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE); // jshint ignore:line
+                expect(data.error.code).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE);
+                expect(data.error.message).to.be.equal(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE);
                 done();
             };
 
@@ -101,8 +101,8 @@ describe('ProtectionController', function () {
         it('onKeyMessage behavior', function (done) {
             let onDRMError = function (data) {
                 eventBus.off(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError);
-                expect(data.error.code).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE); // jshint ignore:line
-                expect(data.error.message).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE); // jshint ignore:line
+                expect(data.error.code).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE);
+                expect(data.error.message).to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE);
                 done();
             };
 
@@ -116,7 +116,7 @@ describe('ProtectionController', function () {
         it('should trigger KEY_SESSION_CREATED event with an error when createKeySession is called without parameter', function (done) {
             let onSessionCreated = function (data) {
                 eventBus.off(ProtectionEvents.KEY_SESSION_CREATED, onSessionCreated);
-                expect(data.error.code).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE); // jshint ignore:line
+                expect(data.error.code).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE);
                 done();
             };
 
@@ -127,8 +127,8 @@ describe('ProtectionController', function () {
         it('should return the mocked array of ProtectionKeyControllerMock when getSupportedKeySystemsFromContentProtection is called', function () {
             const keySystems = protectionController.getSupportedKeySystemsFromContentProtection();
 
-            expect(keySystems).to.be.instanceOf(Array); // jshint ignore:line
-            expect(keySystems).not.to.be.empty;         // jshint ignore:line
+            expect(keySystems).to.be.instanceOf(Array);
+            expect(keySystems).not.to.be.empty;
         });
 
     });

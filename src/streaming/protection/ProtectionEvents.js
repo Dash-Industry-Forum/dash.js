@@ -29,16 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../../core/events/EventsBase';
+
 /**
  * @class
-  */
+ */
 class ProtectionEvents extends EventsBase {
     /**
      * @description Public facing external events to be used when including protection package.
      * All public events will be aggregated into the MediaPlayerEvents Class and can be accessed
      * via MediaPlayer.events.  public_ is the prefix that we use to move event names to MediaPlayerEvents.
      */
-    constructor () {
+    constructor() {
         super();
 
         /**
@@ -164,7 +165,7 @@ class ProtectionEvents extends EventsBase {
          * a protection set has completed
          * @ignore
          */
-        this.TEARDOWN_COMPLETE =  'protectionTeardownComplete';
+        this.TEARDOWN_COMPLETE = 'protectionTeardownComplete';
 
         /**
          * Event ID for events delivered when a HTMLMediaElement has been

@@ -39,7 +39,7 @@ describe('ABRRulesCollection', function () {
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules).to.have.lengthOf(1);  // jshint ignore:line
+            expect(qualitySwitchRules).to.have.lengthOf(1);
 
         });
 
@@ -52,7 +52,7 @@ describe('ABRRulesCollection', function () {
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules.length).to.be.above(1);  // jshint ignore:line
+            expect(qualitySwitchRules.length).to.be.above(1);
 
         });
 
@@ -78,13 +78,13 @@ describe('ABRRulesCollection', function () {
         it('should return an empty SwitchRequest when getMaxQuality function is called and rulesContext is undefined', function () {
             const maxQuality = abrRulesCollection.getMaxQuality();
 
-            expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+            expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
         it('should return an empty SwitchRequest when shouldAbandonFragment function is called and rulesContext is undefined', function () {
             const shouldAbandonFragment = abrRulesCollection.shouldAbandonFragment();
 
-            expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+            expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
         it('should return correct switch request in getMinSwitchRequest for a single item', () => {
@@ -211,7 +211,7 @@ describe('ABRRulesCollection', function () {
             const sr = abrRulesCollection.getMinSwitchRequest(srArray);
 
             expect(sr.quality).to.be.equal(5);
-            expect(sr.reason).to.be.null; // jshint ignore:line
+            expect(sr.reason).to.be.null;
         });
 
     });
