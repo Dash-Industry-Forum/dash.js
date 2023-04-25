@@ -143,7 +143,7 @@ jobs:
                         cp "$file" adjusted/$file
                         done
             -   store_test_results:
-                    path: adjusted
+                    path: test/functional/reports/junit/adjusted
 
     functional-tests-VOD_LIVE:
         executor: dashjs-executor
