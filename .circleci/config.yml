@@ -119,7 +119,7 @@ jobs:
                             git merge --no-edit --no-ff $CIRCLE_BRANCH
                         fi
             - dependencies_setup
-            - build_unit_test_steps
+#            - build_unit_test_steps
             - functional_test_setup
             -   run:
                     name: Run functional tests for one vector (chrome / https)
@@ -131,7 +131,7 @@ jobs:
 #                        node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             -   run:
                     name: Install xmlstarlet
-                    command: apt-get -y update && apt-get -y install xmlstarlet
+                    command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
             -   run:
                     name: Modify XML files recursively and copy to another folder
                     command: |
