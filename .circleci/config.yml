@@ -135,18 +135,15 @@ jobs:
             -   run:
                     name: Modify XML files recursively and copy to another folder
                     command: |
-                        # Find all XML files in the folder and its subfolders
-                        find test/functional/reports -name "*.xml" -type f -print0 |
-                        x=1
-                        while IFS= read -r -d '' file; do
-                        # Modify the XML file
+                        mkdir test/functional/reports/junit/adjusted
+                        cd test/functional/reports/junit
+                        for file in *.xml; do
+                        [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
-                        # Copy the modified XML file to another folder
-                        cp "$file" test/functional/reports/adjusted/${x}
-                        $(( x++ ))
+                        cp "$file" adjusted/$file
                         done
             -   store_test_results:
-                    path: test/functional/reports/adjusted
+                    path: adjusted
 
     functional-tests-VOD_LIVE:
         executor: dashjs-executor
