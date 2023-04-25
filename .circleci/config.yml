@@ -137,11 +137,13 @@ jobs:
                     command: |
                         # Find all XML files in the folder and its subfolders
                         find test/functional/reports -name "*.xml" -type f -print0 |
+                        x=1
                         while IFS= read -r -d '' file; do
                         # Modify the XML file
-                        xmlstarlet ed -L -u '//testcase[@time="NaN"]/@status' -v '0' "$file"
+                        xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
                         # Copy the modified XML file to another folder
-                        cp "$file" test/functional/reports/adjusted
+                        cp "$file" test/functional/reports/adjusted/${x}
+                        $(( x++ ))
                         done
             -   store_test_results:
                     path: test/functional/reports/adjusted
