@@ -17,11 +17,6 @@
                     "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd",
                     "name": "Segment Timeline, time based",
                     "description": "Segment Timeline, time based"
-                },                
-                {
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
-                    "name": "Clear Segment List",
-                    "description": "Clear Segment List"
                 },
                 {
                     "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
