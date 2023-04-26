@@ -29,12 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ErrorsBase from './ErrorsBase';
+
 /**
  * Errors declaration
  * @class
  */
 class Errors extends ErrorsBase {
-    constructor () {
+    constructor() {
         super();
 
         /**
@@ -100,53 +101,53 @@ class Errors extends ErrorsBase {
         /**
          * Error code returned when Protected contents are not supported
          */
-        this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 24;
+        this.CAPABILITY_MEDIAKEYS_ERROR_CODE = 24;
 
         /**
          * Error code returned when loading the manifest failed
          */
-        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE   = 25;
+        this.DOWNLOAD_ERROR_ID_MANIFEST_CODE = 25;
 
         /**
          * Error code returned when loading the sidx failed
          */
-        this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 26;
+        this.DOWNLOAD_ERROR_ID_SIDX_CODE = 26;
 
         /**
          * Error code returned when loading the media content failed
          */
-        this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 27;
+        this.DOWNLOAD_ERROR_ID_CONTENT_CODE = 27;
 
         /**
          * Error code returned when loading the init segment failed
          */
-        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 28;
+        this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE = 28;
 
         /**
          * Error code returned when loading the XLink content failed
          */
-        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 29;
+        this.DOWNLOAD_ERROR_ID_XLINK_CODE = 29;
 
         /**
          * Error code returned when parsing the MPD resulted in a logical error
          */
-        this.MANIFEST_ERROR_ID_PARSE_CODE           = 31;
+        this.MANIFEST_ERROR_ID_PARSE_CODE = 31;
 
         /**
          * Error code returned when no stream (period) has been detected in the manifest
          */
-        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE       = 32;
+        this.MANIFEST_ERROR_ID_NOSTREAMS_CODE = 32;
 
         /**
          * Error code returned when something wrong has happened during parsing and appending subtitles (TTML or VTT)
          */
-        this.TIMED_TEXT_ERROR_ID_PARSE_CODE         = 33;
+        this.TIMED_TEXT_ERROR_ID_PARSE_CODE = 33;
 
         /**
          * Error code returned when a 'muxed' media type has been detected in the manifest. This type is not supported
          */
 
-        this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE     = 34;
+        this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE = 34;
 
         /**
          * Error code returned when a media source type is not supported

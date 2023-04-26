@@ -36,16 +36,18 @@ import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import Events from '../../core/events/Events';
-import Constants from '../../streaming/constants/Constants';
 import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
+import BaseURL from '../vo/BaseURL';
+import MpdLocation from '../vo/MpdLocation';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
     PATHWAY: '_DASH_pathway',
     URL: 'url'
-}
+};
+
+const THROUGHPUT_SAMPLES = 4;
 
 function ContentSteeringController() {
     const context = this.context;
@@ -54,8 +56,8 @@ function ContentSteeringController() {
     let instance,
         logger,
         currentSteeringResponseData,
-        activeStreamInfo,
-        currentSelectedServiceLocation,
+        serviceLocationList,
+        throughputList,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -63,7 +65,7 @@ function ContentSteeringController() {
         mediaPlayerModel,
         manifestModel,
         requestModifier,
-        abrController,
+        serviceDescriptionController,
         eventBus,
         adapter;
 
@@ -93,14 +95,17 @@ function ContentSteeringController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.abrController) {
-            abrController = config.abrController;
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
         if (config.eventBus) {
             eventBus = config.eventBus;
         }
     }
 
+    /**
+     * Initialize the steering controller by instantiating classes and registering observer callback
+     */
     function initialize() {
         urlLoader = URLLoader(context).create({
             errHandler,
@@ -109,32 +114,123 @@ function ContentSteeringController() {
             requestModifier,
             errors: Errors
         });
-        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
-        eventBus.on(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
+        eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
+
     }
 
-    function _onPeriodSwitchCompleted(e) {
-        if (e && e.toStreamInfo) {
-            activeStreamInfo = e.toStreamInfo;
-        }
-    }
-
+    /**
+     * When loading of a fragment starts we store its serviceLocation in our list
+     * @param {object} e
+     * @private
+     */
     function _onFragmentLoadingStarted(e) {
-        if (e && e.request && e.request.serviceLocation) {
-            currentSelectedServiceLocation = e.request.serviceLocation;
+        _addToServiceLocationList(e, 'baseUrl');
+    }
+
+    /**
+     * When loading of a manifest starts we store its serviceLocation in our list
+     * @param {object} e
+     * @private
+     */
+    function _onManifestLoadingStarted(e) {
+        _addToServiceLocationList(e, 'location')
+    }
+
+    /**
+     * Basic throughput calculation for manifest requests
+     * @param {object} e
+     * @private
+     */
+    function _onManifestLoadingFinished(e) {
+        if (!e || !e.request || !e.request.serviceLocation || !e.request.requestStartDate || !e.request.requestEndDate || isNaN(e.request.bytesTotal)) {
+            return;
+        }
+
+        const serviceLocation = e.request.serviceLocation;
+        const elapsedTime = e.request.requestEndDate.getTime() - e.request.requestStartDate.getTime();
+        const throughput = parseInt((((e.request.bytesTotal * 8) / elapsedTime) * 1000)) // bit/s
+
+        _storeThroughputForServiceLocation(serviceLocation, throughput);
+    }
+
+    /**
+     * When a throughput measurement for fragments was stored in ThroughputHistory we save it as well
+     * @param {object} e
+     * @private
+     */
+    function _onThroughputMeasurementStored(e) {
+        if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
+            return;
+        }
+        const serviceLocation = e.httpRequest._serviceLocation;
+        const throughput = e.throughput * 1000;
+
+        _storeThroughputForServiceLocation(serviceLocation, throughput);
+    }
+
+    /**
+     * Helper function to store a throughput value from the corresponding serviceLocation
+     * @param {string} serviceLocation
+     * @param {number} throughput
+     * @private
+     */
+    function _storeThroughputForServiceLocation(serviceLocation, throughput) {
+        if (!throughputList[serviceLocation]) {
+            throughputList[serviceLocation] = [];
+        }
+        throughputList[serviceLocation].push(throughput)
+        if (throughputList[serviceLocation].length > THROUGHPUT_SAMPLES) {
+            throughputList[serviceLocation].shift();
         }
     }
 
+    /**
+     * Adds a new service location entry to our list
+     * @param {object} e
+     * @param {string} type
+     * @private
+     */
+    function _addToServiceLocationList(e, type) {
+        if (e && e.request && e.request.serviceLocation) {
+            const serviceLocation = e.request.serviceLocation;
+            if (serviceLocationList[type].all.indexOf(serviceLocation) === -1) {
+                serviceLocationList[type].all.push(serviceLocation)
+            }
+            serviceLocationList[type].current = serviceLocation;
+        }
+    }
+
+    /**
+     * Query DashAdapter and Service Description Controller to get the steering information defined in the manifest
+     * @returns {object}
+     */
     function getSteeringDataFromManifest() {
         const manifest = manifestModel.getValue()
-        return adapter.getContentSteering(manifest);
+        let contentSteeringData = adapter.getContentSteering(manifest);
+
+        if (!contentSteeringData) {
+            contentSteeringData = serviceDescriptionController.getServiceDescriptionSettings().contentSteering;
+        }
+
+        return contentSteeringData;
     }
 
+    /**
+     * Should query steering server prior to playback start
+     * @returns {boolean}
+     */
     function shouldQueryBeforeStart() {
         const steeringDataFromManifest = getSteeringDataFromManifest();
-        return steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
+        return !!steeringDataFromManifest && steeringDataFromManifest.queryBeforeStart;
     }
 
+    /**
+     * Load the steering data from the steering server
+     * @returns {Promise}
+     */
     function loadSteeringData() {
         return new Promise((resolve) => {
             try {
@@ -156,9 +252,14 @@ function ContentSteeringController() {
                         });
                         resolve();
                     },
-                    error: (e) => {
-                        _handleSteeringResponseError(e);
+                    error: (e, error, statusText, response) => {
+                        _handleSteeringResponseError(e, response);
                         resolve(e);
+                    },
+                    complete: () => {
+                        // Clear everything except for the current entry
+                        serviceLocationList.baseUrl.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
+                        serviceLocationList.location.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.location);
                     }
                 });
             } catch (e) {
@@ -167,8 +268,29 @@ function ContentSteeringController() {
         })
     }
 
+    /**
+     * Return the cleared data of our serviceLocationList after the steering request was completed
+     * @param {object} data
+     * @returns {Object[]}
+     * @private
+     */
+    function _getClearedServiceLocationListAfterSteeringRequest(data) {
+        if (!data.all || data.all.length === 0 || !data.current) {
+            return [];
+        }
+        return data.all.filter((entry) => {
+            return entry === data.current;
+        })
+    }
+
+    /**
+     * Returns the adjusted steering server url enhanced by pathway and throughput parameter
+     * @param {object} steeringDataFromManifest
+     * @returns {string}
+     * @private
+     */
     function _getSteeringServerUrl(steeringDataFromManifest) {
-        let url = steeringDataFromManifest.proxyServerUrl ? steeringDataFromManifest.proxyServerUrl : steeringDataFromManifest.serverUrl;
+        let url = steeringDataFromManifest.serverUrl;
         if (currentSteeringResponseData && currentSteeringResponseData.reloadUri) {
             if (urlUtils.isRelative(currentSteeringResponseData.reloadUri)) {
                 url = urlUtils.resolve(currentSteeringResponseData.reloadUri, steeringDataFromManifest.serverUrl);
@@ -179,35 +301,78 @@ function ContentSteeringController() {
 
         const additionalQueryParameter = [];
 
-        // Add throughput value to list of query parameters
-        if (activeStreamInfo) {
-            const isDynamic = adapter.getIsDynamic();
-            const mediaType = adapter.getAllMediaInfoForType(activeStreamInfo, Constants.VIDEO).length > 0 ? Constants.VIDEO : Constants.AUDIO;
-            const throughputHistory = abrController.getThroughputHistory();
-            const throughput = throughputHistory ? throughputHistory.getAverageThroughput(mediaType, isDynamic) : NaN;
-            if (!isNaN(throughput)) {
-                additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.THROUGHPUT, value: throughput * 1000 });
-            }
-        }
 
-        // Ass pathway parameter/currently selected service location to list of query parameters
-        if (currentSelectedServiceLocation) {
-            additionalQueryParameter.push({ key: QUERY_PARAMETER_KEYS.PATHWAY, value: currentSelectedServiceLocation });
-        }
+        const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
+        if (serviceLocations.length > 0) {
 
-        // If we use the value in proxyServerUrl we add the original url as query parameter
-        if (steeringDataFromManifest.proxyServerUrl && steeringDataFromManifest.proxyServerUrl === url && steeringDataFromManifest.serverUrl) {
-            additionalQueryParameter.push({
-                key: QUERY_PARAMETER_KEYS.URL,
-                value: encodeURI(steeringDataFromManifest.serverUrl)
+            // Derive throughput for each service Location
+            const data = serviceLocations.map((serviceLocation) => {
+                const throughput = _calculateThroughputForServiceLocation(serviceLocation);
+                return {
+                    serviceLocation,
+                    throughput
+                }
             })
+
+            // Sort in descending order to put all elements without throughput (-1) in the end
+            data.sort((a, b) => {
+                return b.throughput - a.throughput
+            })
+
+            let pathwayString = '';
+            let throughputString = '';
+
+            data.forEach((entry, index) => {
+                if (index !== 0) {
+                    pathwayString = `${pathwayString},`;
+                    if (entry.throughput > -1) {
+                        throughputString = `${throughputString},`;
+                    }
+                }
+                pathwayString = `${pathwayString}${entry.serviceLocation}`;
+                if (entry.throughput > -1) {
+                    throughputString = `${throughputString}${entry.throughput}`;
+                }
+            })
+
+            additionalQueryParameter.push({
+                key: QUERY_PARAMETER_KEYS.PATHWAY,
+                value: `"${pathwayString}"`
+            });
+            additionalQueryParameter.push({
+                key: QUERY_PARAMETER_KEYS.THROUGHPUT,
+                value: throughputString
+            });
         }
 
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
     }
 
+    /**
+     * Calculate the arithmetic mean of the last throughput samples
+     * @param {string} serviceLocation
+     * @returns {number}
+     * @private
+     */
+    function _calculateThroughputForServiceLocation(serviceLocation) {
+        if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
+            return -1;
+        }
 
+        const throughput = throughputList[serviceLocation].reduce((acc, curr) => {
+            return acc + curr;
+        }) / throughputList[serviceLocation].length;
+
+        return parseInt(throughput);
+    }
+
+
+    /**
+     * Parse the steering response and create instance of model ContentSteeringResponse
+     * @param {object} data
+     * @private
+     */
     function _handleSteeringResponse(data) {
         if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
             return;
@@ -223,13 +388,127 @@ function ContentSteeringController() {
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]) {
             currentSteeringResponseData.reloadUri = data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]
         }
-        if (data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]) {
-            currentSteeringResponseData.serviceLocationPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.SERVICE_LOCATION_PRIORITY]
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_PRIORITY]) {
+            currentSteeringResponseData.pathwayPriority = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_PRIORITY]
+        }
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]) {
+            currentSteeringResponseData.pathwayClones = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]
+            currentSteeringResponseData.pathwayClones = currentSteeringResponseData.pathwayClones.filter((pathwayClone) => {
+                return _isValidPathwayClone(pathwayClone);
+            })
         }
 
         _startSteeringRequestTimer();
     }
 
+    /**
+     * Checks if object is a valid PathwayClone
+     * @param {object} pathwayClone
+     * @returns {boolean}
+     * @private
+     */
+    function _isValidPathwayClone(pathwayClone) {
+        return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]
+    }
+
+    /**
+     * Returns synthesized BaseURL elements based on Pathway Cloning
+     * @param {BaseURL[]}referenceElements
+     * @returns {BaseURL[]|*[]}
+     */
+    function getSynthesizedBaseUrlElements(referenceElements) {
+        try {
+            const synthesizedElements = _getSynthesizedElements(referenceElements);
+
+            return synthesizedElements.map((element) => {
+                const synthesizedBaseUrl = new BaseURL(element.synthesizedUrl, element.serviceLocation)
+                synthesizedBaseUrl.queryParams = element.queryParams;
+                synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
+                synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
+                synthesizedBaseUrl.availabilityTimeOffset = element.reference.availabilityTimeOffset;
+                synthesizedBaseUrl.availabilityTimeComplete = element.reference.availabilityTimeComplete;
+
+                return synthesizedBaseUrl;
+            })
+
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
+    }
+
+    /**
+     * Returns synthesized Location elements based on Pathway Cloning
+     * @param {MpdLocation[]} referenceElements
+     * @returns {MpdLocation[]|*[]}
+     */
+    function getSynthesizedLocationElements(referenceElements) {
+        try {
+            const synthesizedElements = _getSynthesizedElements(referenceElements);
+
+            return synthesizedElements.map((element) => {
+                const synthesizedLocation = new MpdLocation(element.synthesizedUrl, element.serviceLocation)
+                synthesizedLocation.queryParams = element.queryParams;
+
+                return synthesizedLocation;
+            })
+
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
+    }
+
+    /**
+     * Helper function to synthesize elements
+     * @param {array} referenceElements
+     * @returns {*[]}
+     * @private
+     */
+    function _getSynthesizedElements(referenceElements) {
+        try {
+            const synthesizedElements = [];
+
+            if (!referenceElements || referenceElements.length === 0 || !currentSteeringResponseData || !currentSteeringResponseData.pathwayClones || currentSteeringResponseData.pathwayClones.length === 0) {
+                return synthesizedElements;
+            }
+
+            currentSteeringResponseData.pathwayClones.forEach((pathwayClone) => {
+                let baseElements = referenceElements.filter((source) => {
+                    return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID] === source.serviceLocation;
+                })
+                let reference = null;
+                if (baseElements && baseElements.length > 0) {
+                    reference = baseElements[0];
+                }
+                if (reference) {
+                    const referenceUrl = new URL(reference.url);
+                    const synthesizedElement =
+                        {
+                            synthesizedUrl: `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`,
+                            serviceLocation: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID],
+                            queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.PARAMS],
+                            reference
+                        };
+
+                    synthesizedElements.push(synthesizedElement);
+                }
+            });
+
+            return synthesizedElements;
+        } catch (e) {
+            logger.error(e);
+            return [];
+        }
+    }
+
+    /**
+     * Start timeout for next steering request
+     * @private
+     */
     function _startSteeringRequestTimer() {
         // Start timer for next request
         if (currentSteeringResponseData && currentSteeringResponseData.ttl && !isNaN(currentSteeringResponseData.ttl)) {
@@ -242,6 +521,9 @@ function ContentSteeringController() {
         }
     }
 
+    /**
+     * Stop timeout for next steering request
+     */
     function stopSteeringRequestTimer() {
         if (nextRequestTimer) {
             clearTimeout(nextRequestTimer);
@@ -249,25 +531,70 @@ function ContentSteeringController() {
         nextRequestTimer = null;
     }
 
-    function _handleSteeringResponseError(e) {
-        logger.warn(`Error fetching data from content steering server`, e);
-        _startSteeringRequestTimer();
+    /**
+     * Handle errors that occured when querying the steering server
+     * @param {object} e
+     * @param {object} response
+     * @private
+     */
+    function _handleSteeringResponseError(e, response) {
+        try {
+            logger.warn(`Error fetching data from content steering server`, e);
+            const statusCode = response.status;
+
+            switch (statusCode) {
+                // 410 response code. Stop steering
+                case 410:
+                    break;
+                // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
+                case 429:
+                    const retryAfter = response && response.getResponseHeader ? response.getResponseHeader('retry-after') : null;
+                    if (retryAfter !== null) {
+                        if (!currentSteeringResponseData) {
+                            currentSteeringResponseData = {};
+                        }
+                        currentSteeringResponseData.ttl = parseInt(retryAfter);
+                    }
+                    _startSteeringRequestTimer();
+                    break;
+                default:
+                    _startSteeringRequestTimer();
+                    break;
+            }
+        } catch (e) {
+            logger.error(e);
+        }
     }
 
+    /**
+     * Returns the currentSteeringResponseData
+     * @returns {ContentSteeringResponse}
+     */
     function getCurrentSteeringResponseData() {
         return currentSteeringResponseData;
     }
 
     function reset() {
         _resetInitialSettings();
-        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted, instance);
-        eventBus.off(Events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
+        eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
-        activeStreamInfo = null;
-        currentSelectedServiceLocation = null;
+        throughputList = {};
+        serviceLocationList = {
+            baseUrl: {
+                current: null,
+                all: []
+            },
+            location: {
+                current: null,
+                all: []
+            }
+        };
         stopSteeringRequestTimer()
     }
 
@@ -280,6 +607,8 @@ function ContentSteeringController() {
         shouldQueryBeforeStart,
         getSteeringDataFromManifest,
         stopSteeringRequestTimer,
+        getSynthesizedBaseUrlElements,
+        getSynthesizedLocationElements,
         initialize
     };
 

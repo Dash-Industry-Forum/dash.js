@@ -42,18 +42,26 @@ class MediaInfo {
         this.labels = null;
         this.lang = null;
         this.viewpoint = null;
+        this.viewpointsWithSchemeIdUri = null;
         this.accessibility = null;
+        this.accessibilitiesWithSchemeIdUri = null;
         this.audioChannelConfiguration = null;
+        this.audioChannelConfigurationsWithSchemeIdUri = null;
         this.roles = null;
+        this.rolesWithSchemeIdUri = null;
         this.codec = null;
         this.mimeType = null;
         this.contentProtection = null;
+        this.isText = false;
         this.KID = null;
         this.bitrateList = null;
         this.isFragmented = null;
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
+        this.supplementalPropertiesAsArray = [];
+        this.segmentAlignment = false;
+        this.subSegmentAlignment = false;
     }
 
 }

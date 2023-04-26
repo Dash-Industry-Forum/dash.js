@@ -191,6 +191,8 @@ function DashAdapter() {
      * @param {MediaInfo} mInfoOne
      * @param {MediaInfo} mInfoTwo
      * @returns {boolean}
+     * @memberof module:DashAdapter
+     * @instance
      */
     function areMediaInfosEqual(mInfoOne, mInfoTwo) {
         if (!mInfoOne || !mInfoTwo) {
@@ -200,12 +202,16 @@ function DashAdapter() {
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
         const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
+        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpointsWithSchemeIdUri) === JSON.stringify(mInfoTwo.viewpointsWithSchemeIdUri);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
+        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.rolesWithSchemeIdUri) === JSON.stringify(mInfoTwo.rolesWithSchemeIdUri);
         const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
+        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibilitiesWithSchemeIdUri) === JSON.stringify(mInfoTwo.accessibilitiesWithSchemeIdUri);
         const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
+        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfigurationsWithSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -424,6 +430,8 @@ function DashAdapter() {
      * Returns the period as defined in the DashManifestModel for a given index
      * @param {number} index
      * @return {object}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getRealPeriodByIndex(index) {
         return dashManifestModel.getRealPeriodForIndex(index, voPeriods[0].mpd.manifest);
@@ -586,7 +594,7 @@ function DashAdapter() {
     /**
      * Returns the availabilityStartTime as specified in the manifest
      * @param {object} externalManifest Omit this value if no external manifest should be used
-     * @returns {string} availabilityStartTime
+     * @returns {number} availabilityStartTime
      * @memberOf module:DashAdapter
      * @instance
      */
@@ -689,34 +697,25 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the patch location of the MPD if one exists and it is still valid
+     * Returns the patch locations of the MPD if existing and if they are still valid
      * @param {object} manifest
-     * @returns {(String|null)} patch location
+     * @returns {PatchLocation[]} patch location
      * @memberOf module:DashAdapter
      * @instance
      */
     function getPatchLocation(manifest) {
-        const patchLocation = dashManifestModel.getPatchLocation(manifest);
+        const patchLocations = dashManifestModel.getPatchLocation(manifest);
         const publishTime = dashManifestModel.getPublishTime(manifest);
 
         // short-circuit when no patch location or publish time exists
-        if (!patchLocation || !publishTime) {
-            return null;
+        if (!patchLocations || patchLocations.length === 0 || !publishTime) {
+            return [];
         }
 
-        // if a ttl is provided, ensure patch location has not expired
-        if (patchLocation.hasOwnProperty('ttl') && publishTime) {
-            // attribute describes number of seconds as a double
-            const ttl = parseFloat(patchLocation.ttl) * 1000;
-
+        return patchLocations.filter((patchLocation) => {
             // check if the patch location has expired, if so do not consider it
-            if (publishTime.getTime() + ttl <= new Date().getTime()) {
-                return null;
-            }
-        }
-
-        // the patch location exists and, if a ttl applies, has not expired
-        return patchLocation.__text;
+            return isNaN(patchLocation.ttl) || (publishTime.getTime() + patchLocation.ttl > new Date().getTime())
+        })
     }
 
     /**
@@ -735,6 +734,8 @@ function DashAdapter() {
      * Checks if the manifest is actually just a patch manifest
      * @param  {object} manifest
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getIsPatch(manifest) {
         return patchManifestModel.getIsPatch(manifest);
@@ -743,7 +744,7 @@ function DashAdapter() {
     /**
      * Returns the base urls for a given element
      * @param {object} node
-     * @returns {Array}
+     * @returns {BaseURL[]}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
@@ -754,7 +755,7 @@ function DashAdapter() {
 
     /**
      * Returns the function to sort the Representations
-     * @returns {*}
+     * @returns {function}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
@@ -812,7 +813,7 @@ function DashAdapter() {
      * @param {string} bufferType - String 'audio' or 'video',
      * @param {number} periodIdx - Make sure this is the period index not id
      * @return {number}
-     * @memberof module:DashAdapter
+     * @memberOf module:DashAdapter
      * @instance
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
@@ -825,6 +826,8 @@ function DashAdapter() {
      * Returns the voPeriod object for a given id
      * @param {String} id
      * @returns {object|null}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getPeriodById(id) {
         if (!id || voPeriods.length === 0) {
@@ -846,6 +849,8 @@ function DashAdapter() {
      * @param {object} adaptation
      * @param {string} type
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function getIsTypeOf(adaptation, type) {
         return dashManifestModel.getIsTypeOf(adaptation, type);
@@ -861,6 +866,8 @@ function DashAdapter() {
      * @param  {object}  manifest
      * @param  {object}  patch
      * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function isPatchValid(manifest, patch) {
         let manifestId = dashManifestModel.getId(manifest);
@@ -883,6 +890,8 @@ function DashAdapter() {
      * Takes a given patch and applies it to the provided manifest, assumes patch is valid for manifest
      * @param  {object} manifest
      * @param  {object} patch
+     * @memberOf module:DashAdapter
+     * @instance
      */
     function applyPatchToManifest(manifest, patch) {
         // get all operations from the patch and apply them in document order
@@ -1021,7 +1030,7 @@ function DashAdapter() {
 
         let mediaInfo = new MediaInfo();
         const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint;
+        let viewpoint, acc, acc_rep, roles, accessibility;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1030,9 +1039,15 @@ function DashAdapter() {
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
+        mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
+        mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
+
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
+        mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
+        mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
+        
+        accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        mediaInfo.accessibility = accessibility.map(function (accessibility) {
             let accessibilityValue = accessibility.value;
             let accessibilityData = accessibilityValue;
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
@@ -1045,19 +1060,28 @@ function DashAdapter() {
             }
             return accessibilityData;
         });
+        mediaInfo.accessibilitiesWithSchemeIdUri = accessibility;
 
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+        acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
+        mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
+        mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc;
 
         if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+            acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]);
+            mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
+            mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
         }
-        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
+        
+        roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
+        mediaInfo.roles = roles.map(function (role) {
             return role.value;
         });
+        mediaInfo.rolesWithSchemeIdUri = roles;
+        
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
@@ -1076,8 +1100,27 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
-
+        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
+        if ( (!mediaInfo.supplementalProperties || Object.keys(mediaInfo.supplementalProperties).length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
+            });
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.supplementalProperties = arr[0];
+            }
+        }
+        mediaInfo.supplementalPropertiesAsArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation(realAdaptation);
+        if ( (!mediaInfo.supplementalPropertiesAsArray || mediaInfo.supplementalPropertiesAsArray.length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
+            let arr = realAdaptation.Representation_asArray.map( repr => {
+                return dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation(repr);
+            });
+            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
+                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.supplementalPropertiesAsArray = arr[0];
+            }
+        }
+        
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
@@ -1093,6 +1136,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
         mediaInfo.roles = ['caption'];
+        mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {

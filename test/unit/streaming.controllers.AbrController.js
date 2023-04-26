@@ -68,17 +68,17 @@ describe('AbrController', function () {
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
         const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
-        expect(state).to.be.null;    // jshint ignore:line
+        expect(state).to.be.null;
     });
 
     it('should return 0 when calling getQualityForBitrate with no mediaInfo', function () {
         const quality = abrCtrl.getQualityForBitrate(undefined, undefined, true);
-        expect(quality).to.be.equal(0);    // jshint ignore:line
+        expect(quality).to.be.equal(0);
     });
 
     it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
         let isPlayingTopQuality = abrCtrl.isPlayingAtTopQuality();
-        expect(isPlayingTopQuality).to.be.true; // jshint ignore:line
+        expect(isPlayingTopQuality).to.be.true;
     });
 
     it('should update top quality index', function () {
@@ -178,7 +178,7 @@ describe('AbrController', function () {
         abrCtrl.updateTopQualityIndex(mediaInfo);
 
         // Max allowed bitrate in kbps, bandwidth is in bps
-        const s = {streaming: {abr: {maxBitrate: {}}}};
+        const s = { streaming: { abr: { maxBitrate: {} } } };
         const streamId = streamProcessor.getStreamInfo().id;
         s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
@@ -225,7 +225,7 @@ describe('AbrController', function () {
 
     it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
         // Min allowed bitrate in kbps, bandwidth is in bps
-        const s = {streaming: {abr: {minBitrate: {}}}};
+        const s = { streaming: { abr: { minBitrate: {} } } };
         const streamId = streamProcessor.getStreamInfo().id;
         s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
@@ -279,7 +279,7 @@ describe('AbrController', function () {
 
     it('should configure initial bitrate for text type', function () {
         let initialBitrateFor = abrCtrl.getInitialBitrateFor(Constants.TEXT);
-        expect(initialBitrateFor).to.be.NaN; // jshint ignore:line
+        expect(initialBitrateFor).to.be.NaN;
     });
 
     it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
@@ -290,7 +290,7 @@ describe('AbrController', function () {
         expect(bitrateInfo.bitrate).to.be.equal(3000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(2);
 
-        const s = {streaming: {abr: {limitBitrateByPortal: true}}};
+        const s = { streaming: { abr: { limitBitrateByPortal: true } } };
         settings.update(s);
 
         bitrateInfo = abrCtrl.getTopBitrateInfoFor(Constants.VIDEO);
@@ -301,9 +301,9 @@ describe('AbrController', function () {
 
     it('should return the appropriate top quality index when calling getMaxAllowedIndexFor', function () {
         videoModelMock.setClientWidth(899);
-        const s = {streaming: {abr: {limitBitrateByPortal: true}}};
+        const s = { streaming: { abr: { limitBitrateByPortal: true } } };
         settings.update(s);
-        abrCtrl.updateTopQualityIndex({type: Constants.VIDEO, streamInfo: {id: 'test'}, representationCount: 5});
+        abrCtrl.updateTopQualityIndex({ type: Constants.VIDEO, streamInfo: { id: 'test' }, representationCount: 5 });
         let topQualityIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, 'test');
         expect(topQualityIndex).to.be.equal(4);
     });

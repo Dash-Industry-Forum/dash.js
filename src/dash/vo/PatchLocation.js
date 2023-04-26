@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2023, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,72 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
+ * @class
  * @ignore
  */
-function RNG() {
-
-    // check whether secure random numbers are available. if not, revert to
-    // using Math.random
-    let crypto = window.crypto || window.msCrypto;
-
-    // could just as easily use any other array type by changing line below
-    let ArrayType = Uint32Array;
-    let MAX_VALUE = Math.pow(2, ArrayType.BYTES_PER_ELEMENT * 8) - 1;
-
-    // currently there is only one client for this code, and that only uses
-    // a single random number per initialisation. may want to increase this
-    // number if more consumers in the future
-    let NUM_RANDOM_NUMBERS = 10;
-
-    let randomNumbers,
-        index,
-        instance;
-
-    function initialize() {
-        if (crypto) {
-            if (!randomNumbers) {
-                randomNumbers = new ArrayType(NUM_RANDOM_NUMBERS);
-            }
-            crypto.getRandomValues(randomNumbers);
-            index = 0;
-        }
+class PatchLocation {
+    constructor(url, serviceLocation, ttl) {
+        this.url = url || '';
+        this.serviceLocation = serviceLocation || null;
+        this.ttl = ttl || NaN;
+        this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
     }
-
-    function rand(min, max) {
-        let r;
-
-        if (!min) {
-            min = 0;
-        }
-
-        if (!max) {
-            max = 1;
-        }
-
-        if (crypto) {
-            if (index === randomNumbers.length) {
-                initialize();
-            }
-
-            r = randomNumbers[index] / MAX_VALUE;
-            index += 1;
-        } else {
-            r = Math.random();
-        }
-
-        return (r * (max - min)) + min;
-    }
-
-    instance = {
-        random: rand
-    };
-
-    initialize();
-
-    return instance;
 }
 
-RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+export default PatchLocation;

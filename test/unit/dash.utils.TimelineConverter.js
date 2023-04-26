@@ -52,7 +52,7 @@ describe('TimelineConverter', function () {
                         timeShiftBuffer: {
                             calcFromSegmentTimeline: false
                         }
-                    }
+                    } 
                 });
             });
 
@@ -114,7 +114,7 @@ describe('TimelineConverter', function () {
 
             beforeEach(function () {
                 representation.adaptation.period.mpd.manifest.type = 'dynamic';
-            });
+            }); 
 
 
             describe('SegmentTemplate and ', function () {
@@ -861,8 +861,8 @@ describe('TimelineConverter', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     const tsbd = 30;
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
-
-                    dummyRep.adaptation.period.start = 0;
+                  
+                    dummyRep.adaptation.period.start = 0;   
                     dummyRep.adaptation.period.duration = 300;
                     streamOneMock.setRepresentation(dummyRep);
 
@@ -989,6 +989,39 @@ describe('TimelineConverter', function () {
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(5);
                     expect(range.end).to.be.equal(10);
+                    clock.restore();
+                });
+
+                it('with single period with segements without t attribute', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    
+                    // Remove t attribute(s) from segments
+                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline_asArray.S_asArray[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline.S_asArray[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline_asArray.S_asArray[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline.S_asArray[0].t
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
                     clock.restore();
                 });
 

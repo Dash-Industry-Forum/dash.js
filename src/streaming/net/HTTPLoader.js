@@ -105,6 +105,7 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
+        let progressTimeout = null;
         let fileLoaderType = null;
         let httpRequest;
 
@@ -132,11 +133,16 @@ function HTTPLoader(cfg) {
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
+                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { request });
                 }
             }
         };
 
         const onloadend = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (requests.indexOf(httpRequest) === -1) {
                 return;
             } else {
@@ -183,7 +189,7 @@ function HTTPLoader(cfg) {
                     }));
 
                     if (config.error) {
-                        config.error(request, 'error', httpRequest.response.statusText);
+                        config.error(request, 'error', httpRequest.response.statusText, httpRequest.response);
                     }
 
                     if (config.complete) {
@@ -220,6 +226,21 @@ function HTTPLoader(cfg) {
                 lastTraceReceivedCount = event.loaded;
             }
 
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
+
+            if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
+                progressTimeout = setTimeout(function () {
+                    // No more progress => abort request and treat as an error
+                    logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
+                    httpRequest.response.onabort = null;
+                    httpRequest.loader.abort(httpRequest);
+                    onloadend();
+                }, settings.get().streaming.fragmentRequestProgressTimeout);
+            }
+
             if (config.progress && event) {
                 config.progress(event);
             }
@@ -240,6 +261,10 @@ function HTTPLoader(cfg) {
         };
 
         const onabort = function () {
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
             if (config.abort) {
                 config.abort(request);
             }
@@ -286,10 +311,22 @@ function HTTPLoader(cfg) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }
-        request.url = modifiedUrl;
+
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
+        // Add queryParams that came from pathway cloning
+        if (request.queryParams) {
+            const queryParams = Object.keys(request.queryParams).map((key) => {
+                return {
+                    key,
+                    value: request.queryParams[key]
+                }
+            })
+            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, queryParams);
+        }
+
+        request.url = modifiedUrl;
 
         httpRequest = {
             url: modifiedUrl,

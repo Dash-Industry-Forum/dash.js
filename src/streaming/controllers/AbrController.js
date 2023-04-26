@@ -358,7 +358,7 @@ function AbrController() {
      * Returns the highest possible index taking limitations like maxBitrate, representationRatio and portal size into account.
      * @param {string} type
      * @param {string} streamId
-     * @return {number}
+     * @return {undefined|number}
      */
     function getMaxAllowedIndexFor(type, streamId) {
         try {

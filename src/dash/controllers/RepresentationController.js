@@ -47,11 +47,13 @@ function RepresentationController(config) {
     const dashConstants = config.dashConstants;
     const segmentsController = config.segmentsController;
     const isDynamic = config.isDynamic;
+    const adapter = config.adapter;
 
     let instance,
         realAdaptation,
         updating,
         voAvailableRepresentations,
+        currentRepresentationInfo,
         currentVoRepresentation;
 
     function setup() {
@@ -86,10 +88,15 @@ function RepresentationController(config) {
         return currentVoRepresentation;
     }
 
+    function getCurrentRepresentationInfo() {
+        return currentRepresentationInfo
+    }
+
     function resetInitialSettings() {
         realAdaptation = null;
         updating = true;
         voAvailableRepresentations = [];
+        currentRepresentationInfo = null;
     }
 
     function reset() {
@@ -301,6 +308,7 @@ function RepresentationController(config) {
 
     function _setCurrentVoRepresentation(value) {
         currentVoRepresentation = value;
+        currentRepresentationInfo = adapter.convertRepresentationToRepresentationInfo(currentVoRepresentation);
     }
 
     function onManifestValidityChanged(e) {
@@ -320,6 +328,7 @@ function RepresentationController(config) {
         isUpdating,
         updateData,
         getCurrentRepresentation,
+        getCurrentRepresentationInfo,
         getRepresentationForQuality,
         prepareQualityChange,
         reset

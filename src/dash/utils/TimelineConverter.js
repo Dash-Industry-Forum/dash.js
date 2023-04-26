@@ -229,7 +229,7 @@ function TimelineConverter() {
         const range = { start: NaN, end: NaN };
         const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-
+        
         if (!streams || streams.length === 0) {
             return { range, now };
         }
@@ -317,14 +317,19 @@ function TimelineConverter() {
         const timescale = representation.SegmentTemplate.timescale;
         const segments = timeline.S_asArray;
         const range = { start: 0, end: 0 };
+        const segmentTime = segments[0].t;
+        const hasValidSegmentTime = !isNaN(segmentTime);
+        const enhancedSegmentTime = hasValidSegmentTime ? segmentTime : 0;
         let d = 0;
         let segment,
             repeat,
             i,
             len;
-
-        range.start = calcPresentationTimeFromMediaTime(segments[0].t / timescale, voRepresentation);
-
+        
+        if(hasValidSegmentTime) {
+            range.start = calcPresentationTimeFromMediaTime(enhancedSegmentTime / timescale, voRepresentation);
+        }
+        
         for (i = 0, len = segments.length; i < len; i++) {
             segment = segments[i];
             repeat = 0;
@@ -334,7 +339,7 @@ function TimelineConverter() {
             d += segment.d * (1 + repeat);
         }
 
-        range.end = calcPresentationTimeFromMediaTime((segments[0].t + d) / timescale, voRepresentation);
+        range.end = calcPresentationTimeFromMediaTime((enhancedSegmentTime + d) / timescale, voRepresentation);
 
         return range;
     }

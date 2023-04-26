@@ -30,7 +30,7 @@ exports.register = function (stream) {
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
             originalUrl = stream.url;
-            const isDynamic = await command.execute(player.isDynamic);
+            const isDynamic = stream.dynamic;
             if (!isDynamic) {
                 let period = stream.periods[stream.periods.length - 1];
                 startTime = period.start + Math.min(TIME_OFFSET, period.duration - 5);

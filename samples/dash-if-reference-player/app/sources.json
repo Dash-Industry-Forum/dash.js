@@ -115,9 +115,9 @@
                     "provider": "envivio"
                 },
                 {
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd",
                     "name": "SegmentTemplate/Number, live profile",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {
@@ -226,7 +226,12 @@
                 },
                 {
                     "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
-                    "name": "SegmentTimeline (livesim)",
+                    "name": "SegmentTimeline with $time (livesim)",
+                    "provider": "dashif"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/segtimelinenr_1/testpic_2s/Manifest.mpd",
+                    "name": "SegmentTimeline with $number (livesim)",
                     "provider": "dashif"
                 },
                 {
@@ -379,14 +384,14 @@
                 },
                 {
                     "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
                     "name": "BBC R&D EBU-TT-D Subtitling Test",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
@@ -1240,15 +1245,15 @@
                     "provider": "dashif"
                 },
                 {
-                    "name": "128k AAC-LC Stereo 1kHz Tone (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "name": "HE and LC AAC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "name": "AAC-LC Surround (4 active channels) in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-surround-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
                 {

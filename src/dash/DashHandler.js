@@ -99,13 +99,15 @@ function DashHandler(config) {
     function _setRequestUrl(request, destination, representation) {
         const baseURL = baseURLController.resolve(representation.path);
         let url,
-            serviceLocation;
+            serviceLocation,
+            queryParams = {};
 
         if (!baseURL || (destination === baseURL.url) || (!urlUtils.isRelative(destination))) {
             url = destination;
         } else {
             url = baseURL.url;
             serviceLocation = baseURL.serviceLocation;
+            queryParams = baseURL.queryParams;
 
             if (destination) {
                 url = urlUtils.resolve(destination, url);
@@ -118,6 +120,7 @@ function DashHandler(config) {
 
         request.url = url;
         request.serviceLocation = serviceLocation;
+        request.queryParams = queryParams;
 
         return true;
     }
@@ -307,6 +310,7 @@ function DashHandler(config) {
      * @param {object} mediaInfo
      * @param {object} representation
      * @param {number} targetThreshold
+     * @return {number}
      */
     function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
         try {

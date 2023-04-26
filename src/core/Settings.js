@@ -69,6 +69,7 @@ import Events from './events/Events';
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            enableManifestTimescaleMismatchFix: false,
+ *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -160,6 +161,7 @@ import Events from './events/Events';
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
+ *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -711,6 +713,8 @@ import Events from './events/Events';
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [parseInbandPrft=false]
+ * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
@@ -764,6 +768,9 @@ import Events from './events/Events';
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [fragmentRequestProgressTimeout=-1]
+ * Time in milliseconds before timing out on loading progress of a media fragment.
  *
  * @property {number} [manifestRequestTimeout=10000]
  * Time in milliseconds before timing out on loading a manifest.
@@ -822,6 +829,7 @@ function Settings() {
             applyContentSteering: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
+            parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -926,6 +934,7 @@ function Settings() {
             },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
             fragmentRequestTimeout: 20000,
+            fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,

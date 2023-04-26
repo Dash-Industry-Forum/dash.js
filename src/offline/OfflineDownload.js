@@ -333,7 +333,7 @@ function OfflineDownload(config) {
                 });
                 _streams.push(stream);
 
-                // initialise stream and get downloadable representations
+                // initialize stream and get downloadable representations
                 stream.initialize(streamInfo);
                 _progressionById[streamInfo.id] = null;
             }
@@ -428,7 +428,7 @@ function OfflineDownload(config) {
 
         // save original manifest (for resume)
 
-        // initialise offline streams
+        // initialize offline streams
         composeStreams(_manifest);
 
         // get MediaInfos

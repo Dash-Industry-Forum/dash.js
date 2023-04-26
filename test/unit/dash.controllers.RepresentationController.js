@@ -13,6 +13,7 @@ import SpecHelper from './helpers/SpecHelper';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import AdapterMock from './mocks/AdapterMock';
 import SegmentsControllerMock from './mocks/SegmentsControllerMock';
 
 const chai = require('chai');
@@ -43,6 +44,7 @@ describe('RepresentationController', function () {
     const abrControllerMock = new AbrControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const dashMetricsMock = new DashMetricsMock();
+    const adapterMock = new AdapterMock();
     const segmentsController = new SegmentsControllerMock();
 
     abrControllerMock.registerStreamType();
@@ -87,7 +89,8 @@ describe('RepresentationController', function () {
                 type: testType,
                 events: Events,
                 eventBus: eventBus,
-                dashConstants: DashConstants
+                dashConstants: DashConstants,
+                adapter: adapterMock
             });
         });
 

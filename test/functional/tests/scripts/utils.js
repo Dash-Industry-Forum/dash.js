@@ -20,12 +20,12 @@ module.exports = {
     executeAsync: function (command, script, args, timeout) {
         return new Promise(function (resolve, reject) {
             command.executeAsync(script, args)
-            .then(function (res) {
-                resolve(res);
-            })
-            .catch(function (err) {
-                reject(err);
-            })
+                .then(function (res) {
+                    resolve(res);
+                })
+                .catch(function (err) {
+                    reject(err);
+                })
         });
     },
 
@@ -36,7 +36,8 @@ module.exports = {
             xhr.addEventListener("load", transferComplete);
             xhr.addEventListener("error", transferFailed);
             xhr.addEventListener("abort", transferCanceled);
-
+            xhr.addEventListener("timeout", transferTimeout);
+            xhr.timeout = 5000;
             xhr.open("GET", url);
             xhr.send();
 
@@ -52,12 +53,16 @@ module.exports = {
             function transferCanceled() {
                 done(false);
             }
+
+            function transferTimeout() {
+                done(false);
+            }
         } catch (e) {
             done(false);
         }
     },
 
-    generateSeekPos: function(duration) {
+    generateSeekPos: function (duration) {
         return Number.parseFloat((Math.random() * (duration - constants.PROGRESS_DELAY - constants.DURATION_TOLERANCE)).toFixed(2));
     }
 };
