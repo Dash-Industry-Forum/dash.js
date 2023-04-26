@@ -55,6 +55,23 @@ commands:
                     command: |
                         npm run build
                         npm run test
+    process_test_results: # CircleCI can not handle NaN values so we replace them with 0
+        steps:
+            -   run:
+                    name: Install xmlstarlet
+                    command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
+            -   run:
+                    name: Modify XML files recursively and copy to another folder
+                    command: |
+                        mkdir test/functional/reports/junit/adjusted
+                        cd test/functional/reports/junit
+                        for file in *.xml; do
+                        [ -f "$file" ] || continue
+                        xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
+                        cp "$file" adjusted/$file
+                        done
+            -   store_test_results:
+                    path: test/functional/reports/junit/adjusted
 
     functional_steps:
         steps:
@@ -129,22 +146,8 @@ jobs:
                     name: Run functional tests for smoke vectors (chrome / https)
                     command:
                         node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
-            -   run:
-                    name: Install xmlstarlet
-                    command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
-            -   run:
-                    name: Modify XML files recursively and copy to another folder
-                    command: |
-                        mkdir test/functional/reports/junit/adjusted
-                        cd test/functional/reports/junit
-                        for file in *.xml; do
-                        [ -f "$file" ] || continue
-                        xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
-                        cp "$file" adjusted/$file
-                        done
-            -   store_test_results:
-                    path: test/functional/reports/junit/adjusted
-
+            - process_test_results
+    
     functional-tests-VOD_LIVE:
         executor: dashjs-executor
         steps:
@@ -155,8 +158,7 @@ jobs:
                     groupname: LIVE (Dynamic MPD)
             -   run_test_suite:
                     groupname: Live Low Latency
-            -   store_test_results:
-                    path: test/functional/reports
+            - process_test_results
 
     functional-tests-DRM:
         executor: dashjs-executor
@@ -166,8 +168,7 @@ jobs:
                     groupname: DRM (modern)
             -   run_test_suite:
                     groupname: DRM Content (conservative/legacy)
-            -   store_test_results:
-                    path: test/functional/reports
+            - process_test_results
 
     functional-tests-Subtitles_Thumbnails_Audio_Smooth:
         executor: dashjs-executor
@@ -181,9 +182,7 @@ jobs:
                     groupname: Audio-only
             -   run_test_suite:
                     groupname: Smooth Streaming
-
-            -   store_test_results:
-                    path: test/functional/reports
+            - process_test_results
 
     functional-tests-only-http:
         executor: dashjs-executor
@@ -191,8 +190,7 @@ jobs:
             - functional_steps
             -   run_test_suite:
                     protocol: http
-            -   store_test_results:
-                    path: test/functional/reports
+            - process_test_results
 
 workflows:
     version: 2
