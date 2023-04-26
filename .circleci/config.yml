@@ -3,66 +3,83 @@ orbs:
     browser-tools: circleci/browser-tools@1.4.1
 
 executors:
-  dashjs-executor:
-    working_directory: ~/repo
-    docker:
-      - image: cimg/node:16.18.1
+    dashjs-executor:
+        working_directory: ~/repo
+        docker:
+            -   image: cimg/node:16.18.1
 
 commands:
     dependencies_setup:
         steps:
-            - restore_cache:
-                keys:
-                    - v1-dependencies-{{ checksum "package.json" }}
-                    # fallback to using the latest cache if no exact match is found
-                    - v1-dependencies-
-            - run:
-                name: Install dependencies
-                command: npm install
-            - save_cache:
-                paths:
-                    - node_modules
-                key: v1-dependencies-{{ checksum "package.json" }}
+            -   restore_cache:
+                    keys:
+                        - v1-dependencies-{{ checksum "package.json" }}
+                        # fallback to using the latest cache if no exact match is found
+                        - v1-dependencies-
+            -   run:
+                    name: Install dependencies
+                    command: npm install
+            -   save_cache:
+                    paths:
+                        - node_modules
+                    key: v1-dependencies-{{ checksum "package.json" }}
 
     functional_precondition:
         steps:
-            - run:
-                name: Check if preconditions are met for functional tests
-                command: |
-                    if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
-                        echo "BrowserStack not configured, functional tests will not be executed."
-                        circleci-agent step halt
-                    fi
+            -   run:
+                    name: Check if preconditions are met for functional tests
+                    command: |
+                        if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
+                            echo "BrowserStack not configured, functional tests will not be executed."
+                            circleci-agent step halt
+                        fi
 
     functional_test_setup:
         steps:
-            - run:
-                name: Download the browserstack binary file to create a tunnel
-                command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
-            - run:
-                name: Unzip the browserstack binary file
-                command: unzip BrowserStackLocal-linux-x64.zip
-            - run:
-                name: Run browserstack with provided access key
-                command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
-                background: true
+            -   run:
+                    name: Download the browserstack binary file to create a tunnel
+                    command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
+            -   run:
+                    name: Unzip the browserstack binary file
+                    command: unzip BrowserStackLocal-linux-x64.zip
+            -   run:
+                    name: Run browserstack with provided access key
+                    command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
+                    background: true
 
     build_unit_test_steps:
         steps:
             - browser-tools/install-browser-tools
-            - run:
-                name: Build and run unit tests
-                command: |
-                    npm run build
-                    npm run test
+            -   run:
+                    name: Build and run unit tests
+                    command: |
+                        npm run build
+                        npm run test
+    process_test_results: # CircleCI can not handle NaN values so we replace them with 0
+        steps:
+            -   run:
+                    name: Install xmlstarlet
+                    command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
+            -   run:
+                    name: Modify XML files recursively and copy to another folder
+                    command: |
+                        mkdir test/functional/reports/junit/adjusted
+                        cd test/functional/reports/junit
+                        for file in *.xml; do
+                        [ -f "$file" ] || continue
+                        xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
+                        cp "$file" adjusted/$file
+                        done
+            -   store_test_results:
+                    path: test/functional/reports/junit/adjusted
 
     functional_steps:
-            steps:
-                - functional_precondition
-                - checkout
-                - dependencies_setup
-                - build_unit_test_steps
-                - functional_test_setup
+        steps:
+            - functional_precondition
+            - checkout
+            - dependencies_setup
+            - build_unit_test_steps
+            - functional_test_setup
 
     run_test_suite:
         parameters:
@@ -76,10 +93,10 @@ commands:
                 default: ""
                 type: string
         steps:
-            - run:
-                name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+            -   run:
+                    name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
+                    command:
+                        node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
 jobs:
     build-and-unit-test:
         executor: dashjs-executor
@@ -92,13 +109,13 @@ jobs:
         executor: dashjs-executor
         steps:
             - checkout
-            - run:
-                name: Merge into development virtually
-                command: |
-                    git config --global user.email "circleci@example.com"
-                    git config --global user.name "CircleCI"
-                    git checkout development
-                    git merge --no-edit --no-ff $CIRCLE_BRANCH
+            -   run:
+                    name: Merge into development virtually
+                    command: |
+                        git config --global user.email "circleci@example.com"
+                        git config --global user.name "CircleCI"
+                        git checkout development
+                        git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
             - build_unit_test_steps
 
@@ -107,104 +124,98 @@ jobs:
         steps:
             - functional_precondition
             - checkout
-            - run:
-                name: Virtual merge into development branch
-                command: |
-                    if [ "${CIRCLE_BRANCH}" = "development" ]; then
-                        echo "On development branch already, no merge needed"
-                    else
-                        git config --global user.email "circleci@example.com"
-                        git config --global user.name "CircleCI"
-                        git checkout development
-                        git merge --no-edit --no-ff $CIRCLE_BRANCH
-                    fi
+            -   run:
+                    name: Virtual merge into development branch
+                    command: |
+                        if [ "${CIRCLE_BRANCH}" = "development" ]; then
+                            echo "On development branch already, no merge needed"
+                        else
+                            git config --global user.email "circleci@example.com"
+                            git config --global user.name "CircleCI"
+                            git checkout development
+                            git merge --no-edit --no-ff $CIRCLE_BRANCH
+                        fi
             - dependencies_setup
             - build_unit_test_steps
             - functional_test_setup
-            - run:
-                name: Run functional tests for one vector (chrome / https)
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
-            - run:
-                name: Run functional tests for smoke vectors (chrome / https)
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
-            - store_test_results:
-                path: test/functional/reports
-
+            -   run:
+                    name: Run functional tests for one vector (chrome / https)
+                    command:
+                        node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+            -   run:
+                    name: Run functional tests for smoke vectors (chrome / https)
+                    command:
+                        node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+            - process_test_results
+    
     functional-tests-VOD_LIVE:
         executor: dashjs-executor
         steps:
             - functional_steps
-            - run_test_suite:
-                groupname: VOD (Static MPD)
-            - run_test_suite:
-                groupname: LIVE (Dynamic MPD)
-            - run_test_suite:
-                groupname: Live Low Latency
-            - store_test_results:
-                path: test/functional/reports
+            -   run_test_suite:
+                    groupname: VOD (Static MPD)
+            -   run_test_suite:
+                    groupname: LIVE (Dynamic MPD)
+            -   run_test_suite:
+                    groupname: Live Low Latency
+            - process_test_results
 
     functional-tests-DRM:
         executor: dashjs-executor
         steps:
             - functional_steps
-            - run_test_suite:
-                groupname: DRM (modern)
-            - run_test_suite:
-                groupname: DRM Content (conservative/legacy)
-            - store_test_results:
-                path: test/functional/reports
+            -   run_test_suite:
+                    groupname: DRM (modern)
+            -   run_test_suite:
+                    groupname: DRM Content (conservative/legacy)
+            - process_test_results
 
     functional-tests-Subtitles_Thumbnails_Audio_Smooth:
         executor: dashjs-executor
         steps:
             - functional_steps
-            - run_test_suite:
-                groupname: Subtitles and Captions
-            - run_test_suite:
-                groupname: Thumbnails
-            - run_test_suite:
-                groupname: Audio-only
-            - run_test_suite:
-                groupname: Smooth Streaming
-            
-            - store_test_results:
-                path: test/functional/reports
+            -   run_test_suite:
+                    groupname: Subtitles and Captions
+            -   run_test_suite:
+                    groupname: Thumbnails
+            -   run_test_suite:
+                    groupname: Audio-only
+            -   run_test_suite:
+                    groupname: Smooth Streaming
+            - process_test_results
 
     functional-tests-only-http:
         executor: dashjs-executor
         steps:
             - functional_steps
-            - run_test_suite:
-                protocol: http
-            - store_test_results:
-                path: test/functional/reports
+            -   run_test_suite:
+                    protocol: http
+            - process_test_results
 
 workflows:
     version: 2
     commit-workflow:
         jobs:
             - build-and-unit-test # run unit tests on feature branch
-            - merge-build-and-unit-test:  # run unit tests on virtually merged feature branch
-                filters:
-                    branches:
-                        ignore:
-                            - development # skiping redundant job if already on development
-            - functional-tests-smoke:
-                filters:
-                    branches:
-                        ignore: # as creds are available only for non-forked branches
-                            - /pull\/[0-9]+/
+            -   merge-build-and-unit-test: # run unit tests on virtually merged feature branch
+                    filters:
+                        branches:
+                            ignore:
+                                - development # skiping redundant job if already on development
+            -   functional-tests-smoke:
+                    filters:
+                        branches:
+                            ignore: # as creds are available only for non-forked branches
+                                - /pull\/[0-9]+/
 
     scheduled-workflow:
         triggers:
-            - schedule:
-                cron: "0 0 * * 0,3"
-                filters:
-                    branches:
-                        only:
-                            - development
+            -   schedule:
+                    cron: "0 0 * * 0,3"
+                    filters:
+                        branches:
+                            only:
+                                - development
         jobs:
             - functional-tests-VOD_LIVE
             - functional-tests-DRM
