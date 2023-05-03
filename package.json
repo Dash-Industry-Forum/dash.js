@@ -58,7 +58,7 @@
         "yargs": "16.0.3"
     },
     "dependencies": {
-        "@svta.org/common-media-library": "^0.2.2",
+        "@svta.org/common-media-library": "^0.2.3",
         "bcp-47-match": "^1.0.3",
         "bcp-47-normalize": "^1.1.1",
         "codem-isoboxer": "0.3.9",
