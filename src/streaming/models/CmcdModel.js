@@ -28,36 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import { CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders } from '@svta.org/common-media-library';
 import EventBus from '../../core/EventBus';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
-import Constants from '../../streaming/constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
+import DashManifestModel from '../../dash/models/DashManifestModel';
+import Constants from '../../streaming/constants/Constants';
+import MediaPlayerEvents from '../MediaPlayerEvents';
+import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 
-const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
-const OBJECT_TYPES = {
-    MANIFEST: 'm',
-    AUDIO: 'a',
-    VIDEO: 'v',
-    INIT: 'i',
-    CAPTION: 'c',
-    ISOBMFF_TEXT_TRACK: 'tt',
-    ENCRYPTION_KEY: 'k',
-    OTHER: 'o'
-};
-const STREAMING_FORMATS = {
-    DASH: 'd',
-    MSS: 's'
-};
-const STREAM_TYPES = {
-    VOD: 'v',
-    LIVE: 'l'
-};
 const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
@@ -141,7 +123,7 @@ function CmcdModel() {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
                 const cmcdData = _getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
-                const finalPayloadString = _buildFinalString(filteredCmcdData);
+                const finalPayloadString = encodeCmcd(filteredCmcdData);
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
@@ -150,7 +132,7 @@ function CmcdModel() {
                     cmcdString: finalPayloadString
                 });
                 return {
-                    key: CMCD_REQUEST_FIELD_NAME,
+                    key: CMCD_PARAM,
                     value: finalPayloadString
                 };
             }
@@ -177,30 +159,12 @@ function CmcdModel() {
         }
     }
 
-    function _copyParameters(data, parameterNames) {
-        const copiedData = {};
-        for (let name of parameterNames) {
-            if (data[name]) {
-                copiedData[name] = data[name];
-            }
-        }
-        return copiedData;
-    }
-
     function getHeaderParameters(request) {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
                 const cmcdData = _getCmcdData(request);
-                const cmcdObjectHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['br', 'd', 'ot', 'tb']));
-                const cmcdRequestHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']));
-                const cmcdStatusHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bs', 'rtp']));
-                const cmcdSessionHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['cid', 'pr', 'sf', 'sid', 'st', 'v']));
-                const headers = {
-                    'CMCD-Object': _buildFinalString(cmcdObjectHeader),
-                    'CMCD-Request': _buildFinalString(cmcdRequestHeader),
-                    'CMCD-Status': _buildFinalString(cmcdStatusHeader),
-                    'CMCD-Session': _buildFinalString(cmcdSessionHeader)
-                };
+                const filteredCmcdData = _applyWhitelist(cmcdData);
+                const headers = toCmcdHeaders(filteredCmcdData)
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
@@ -215,12 +179,6 @@ function CmcdModel() {
         } catch (e) {
             return null;
         }
-    }
-
-    function _applyWhitelistByKeys(keys) {
-        const enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
-
-        return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
     function _getCmcdData(request) {
@@ -249,7 +207,7 @@ function CmcdModel() {
     function _getCmcdDataForLicense(request) {
         const data = _getGenericCmcdData(request);
 
-        data.ot = OBJECT_TYPES.ENCRYPTION_KEY;
+        data.ot = CmcdObjectType.KEY;
 
         return data;
     }
@@ -257,7 +215,7 @@ function CmcdModel() {
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = OBJECT_TYPES.MANIFEST;
+        data.ot = CmcdObjectType.MANIFEST;
 
         return data;
     }
@@ -275,13 +233,13 @@ function CmcdModel() {
         const nextRequest = _probeNextRequest(request.mediaType);
 
         let ot;
-        if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
-        if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
+        if (request.mediaType === Constants.VIDEO) ot = CmcdObjectType.VIDEO;
+        if (request.mediaType === Constants.AUDIO) ot = CmcdObjectType.AUDIO;
         if (request.mediaType === Constants.TEXT) {
             if (request.mediaInfo.mimeType === 'application/mp4') {
-                ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
+                ot = CmcdObjectType.TIMED_TEXT;
             } else {
-                ot = OBJECT_TYPES.CAPTION;
+                ot = CmcdObjectType.CAPTION;
             }
         }
 
@@ -363,7 +321,7 @@ function CmcdModel() {
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = OBJECT_TYPES.INIT;
+        data.ot = CmcdObjectType.INIT;
         data.su = true;
 
         return data;
@@ -372,7 +330,7 @@ function CmcdModel() {
     function _getCmcdDataForOther() {
         const data = _getGenericCmcdData();
 
-        data.ot = OBJECT_TYPES.OTHER;
+        data.ot = CmcdObjectType.OTHER;
 
         return data;
     }
@@ -483,8 +441,8 @@ function CmcdModel() {
     function _onManifestLoaded(data) {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? STREAM_TYPES.LIVE : STREAM_TYPES.VOD;
-            const sf = data.protocol && data.protocol === 'MSS' ? STREAMING_FORMATS.MSS : STREAMING_FORMATS.DASH;
+            const st = isDynamic ? CmcdStreamType.LIVE : CmcdStreamType.VOD;
+            const sf = data.protocol && data.protocol === 'MSS' ? CmcdStreamingFormat.MSS : CmcdStreamingFormat.DASH;
 
             internalData.st = `${st}`;
             internalData.sf = `${sf}`;
@@ -521,39 +479,6 @@ function CmcdModel() {
             if (_isStartup.hasOwnProperty(key)) {
                 _isStartup[key] = true;
             }
-        }
-    }
-
-    function _buildFinalString(cmcdData) {
-        try {
-            if (!cmcdData) {
-                return null;
-            }
-            const keys = Object.keys(cmcdData).sort((a, b) => a.localeCompare(b));
-            const length = keys.length;
-
-            let cmcdString = keys.reduce((acc, key, index) => {
-                if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
-                if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
-                    acc += `${key}=${JSON.stringify(cmcdData[key])}`;
-                } else {
-                    acc += `${key}=${cmcdData[key]}`;
-                }
-                if (index < length - 1) {
-                    acc += ',';
-                }
-
-                return acc;
-            }, '');
-
-            cmcdString = cmcdString.replace(/=true/g, '');
-
-            // Remove last comma at the end
-            cmcdString = cmcdString.replace(/,\s*$/, '');
-
-            return cmcdString;
-        } catch (e) {
-            return null;
         }
     }
 
