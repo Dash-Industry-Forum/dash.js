@@ -8662,7 +8662,7 @@ function ContentSteeringController() {
   /**
    * Returns synthesized BaseURL elements based on Pathway Cloning
    * @param {BaseURL[]}referenceElements
-   * @returns {BaseURL[]|*[]}
+   * @returns {BaseURL[]}
    */
 
 
@@ -8687,7 +8687,7 @@ function ContentSteeringController() {
   /**
    * Returns synthesized Location elements based on Pathway Cloning
    * @param {MpdLocation[]} referenceElements
-   * @returns {MpdLocation[]|*[]}
+   * @returns {MpdLocation[]}
    */
 
 
@@ -8708,7 +8708,7 @@ function ContentSteeringController() {
   /**
    * Helper function to synthesize elements
    * @param {array} referenceElements
-   * @returns {*[]}
+   * @returns {array}
    * @private
    */
 
