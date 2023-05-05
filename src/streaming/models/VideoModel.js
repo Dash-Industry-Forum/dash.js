@@ -356,13 +356,19 @@ function VideoModel() {
     }
 
     function getVideoRelativeOffsetTop() {
-        const parentElement = element.parentNode.host || element.parentNode;
-        return parentElement ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top : NaN;
+        if (element) {
+            const parentElement = element.parentNode.host || element.parentNode;
+            return parentElement ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top : NaN;
+        }
+        return NaN;
     }
 
     function getVideoRelativeOffsetLeft() {
-        const parentElement = element.parentNode.host || element.parentNode;
-        return parentElement ? element.getBoundingClientRect().left - parentElement.getBoundingClientRect().left : NaN;
+        if (element) {
+            const parentElement = element.parentNode.host || element.parentNode;
+            return parentElement ? element.getBoundingClientRect().left - parentElement.getBoundingClientRect().left : NaN;
+        }
+        return NaN;
     }
 
     function getTextTracks() {

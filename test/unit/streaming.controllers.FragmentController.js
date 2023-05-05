@@ -57,13 +57,13 @@ describe('FragmentController', function () {
             sender: videoFragmentModel});
     });
 
-    it('should trigger SERVICE_LOCATION_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
+    it('should trigger SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
         let onInitFragmentLoadedWithError = function () {
-            eventBus.off(Events.SERVICE_LOCATION_BLACKLIST_ADD, onInitFragmentLoadedWithError);
+            eventBus.off(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, onInitFragmentLoadedWithError);
             done();
         };
 
-        eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_ADD, onInitFragmentLoadedWithError, this);
+        eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, onInitFragmentLoadedWithError, this);
         eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
     });
 });

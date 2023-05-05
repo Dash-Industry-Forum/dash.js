@@ -275,9 +275,6 @@ class Constants {
          *  @static
          */
         this.CMCD_MODE_HEADER = 'header';
-
-
-        this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';
         this.TEXT_HIDDEN = 'hidden';

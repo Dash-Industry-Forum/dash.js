@@ -50,6 +50,12 @@ class MediaPlayerEvents extends EventsBase {
         this.AST_IN_FUTURE = 'astInFuture';
 
         /**
+         * Triggered when the BaseURLs have been updated.
+         * @event MediaPlayerEvents#BASE_URLS_UPDATED
+         */
+        this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+
+        /**
          * Triggered when the video element's buffer state changes to stalled.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
@@ -116,7 +122,19 @@ class MediaPlayerEvents extends EventsBase {
         this.LOG = 'log';
 
         /**
-         * Triggered when the manifest load is complete
+         * Triggered when the manifest load is started
+         * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+         */
+        this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+
+        /**
+         * Triggered when the manifest loading is finished, providing the request object information
+         * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+         */
+        this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+
+        /**
+         * Triggered when the manifest load is complete, providing the payload
          * @event MediaPlayerEvents#MANIFEST_LOADED
          */
         this.MANIFEST_LOADED = 'manifestLoaded';
@@ -222,6 +240,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#TEXT_TRACK_ADDED
          */
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
+
+        /**
+         * Triggered when a throughput measurement based on the last segment request has been stored
+         * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+         */
+        this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
 
         /**
          * Triggered when a ttml chunk is parsed.
@@ -402,11 +426,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
          */
         this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';
+
         /**
          * Triggered when a content steering request has completed.
          * @event MediaPlayerEvents#CONTENT_STEERING_REQUEST_COMPLETED
          */
         this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
+
+        /**
+         * Triggered when an inband prft (ProducerReferenceTime) boxes has been received.
+         * @event MediaPlayerEvents#INBAND_PRFT
+         */
+        this.INBAND_PRFT = 'inbandPrft';
     }
 }
 

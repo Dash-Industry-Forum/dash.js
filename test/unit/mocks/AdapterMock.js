@@ -195,11 +195,11 @@ function AdapterMock() {
 
 
     this.getLocation = function () {
-        return null;
+        return [];
     };
 
     this.getPatchLocation = function () {
-        return null;
+        return [];
     };
 
     this.getRegularPeriods = function () {

@@ -121,7 +121,7 @@ function teardown() {
 	isSeeking = false;
 }
 
-/** Initialise the variables*/
+/** initialize the variables*/
 function initialisation(rowID) {
 	teardown();
 	$('#Video' + rowID).show();

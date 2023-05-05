@@ -354,7 +354,7 @@ function LearningAbrController() {
         }
         // Dynamic Weights Selector (step 2/2: find weights)
         let weightVector = dynamicWeightsSelector.findWeightVector(somElements, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate);
-        if (weightVector !== null && weightVector !== -1) {   // null: something went wrong, -1: constraints not met
+        if (weightVector !== null && weightVector !== -1) { // null: something went wrong, -1: constraints not met
             weights = weightVector;
         }
     }

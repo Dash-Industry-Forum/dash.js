@@ -205,7 +205,7 @@ function PlaybackController() {
      * @param {boolean} adjustLiveDelay
      */
     function seek(time, stickToBuffered = false, internal = false, adjustLiveDelay = false) {
-        if (!streamInfo || !videoModel) return;
+        if (!streamInfo || !videoModel || !videoModel.getElement()) return;
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
         if (time === currentTime) return;

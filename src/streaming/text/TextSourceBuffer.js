@@ -358,22 +358,33 @@ function TextSourceBuffer(config) {
                 }
                 if (box1.type === 'vttc') {
                     logger.debug('VTT vttc boxes.length = ' + box1.boxes.length);
+                    let entry = {
+                        styles: {}
+                    };
                     for (k = 0; k < box1.boxes.length; k++) {
                         const box2 = box1.boxes[k];
                         logger.debug('VTT box2: ' + box2.type);
+
+                        // Mandatory cue payload lines
                         if (box2.type === 'payl') {
-                            const cue_text = box2.cue_text;
-                            logger.debug('VTT cue_text = ' + cue_text);
-                            const start_time = sample.cts / timescale;
-                            const end_time = (sample.cts + sample.duration) / timescale;
-                            captionArray.push({
-                                start: start_time,
-                                end: end_time,
-                                data: cue_text,
-                                styles: {}
-                            });
-                            logger.debug('VTT ' + start_time + '-' + end_time + ' : ' + cue_text);
+                            entry.start = sample.cts / timescale;
+                            entry.end = (sample.cts + sample.duration) / timescale;
+                            entry.data = box2.cue_text;
                         }
+
+                        // The styling information
+                        else if (box2.type === 'sttg' && box2.settings && box2.settings !== '') {
+                            try {
+                                const stylings = box2.settings.split(' ');
+                                entry.styles = vttParser.getCaptionStyles(stylings);
+                            } catch (e) {
+
+                            }
+                        }
+                    }
+                    if (entry && entry.data) {
+                        captionArray.push(entry);
+                        logger.debug(`VTT  ${entry.start} - ${entry.end} :  ${entry.data}`);
                     }
                 }
             }

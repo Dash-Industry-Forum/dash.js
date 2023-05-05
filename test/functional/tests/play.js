@@ -1,10 +1,10 @@
 /**
-PLAY:
-- load test page
-- load stream
-- check playing state
-- check if playback progressing
-**/
+ PLAY:
+ - load test page
+ - load stream
+ - check playing state
+ - check if playback progressing
+ **/
 const intern = require('intern').default;
 const { suite, before, test, after } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
@@ -41,18 +41,24 @@ exports.register = function (stream) {
         });
 
         after(async () => {
-            stream.settings = await command.execute(player.getSettings);
-            stream.dynamic = await command.execute(player.isDynamic);
-            stream.duration = await command.execute(player.getDuration);
-            stream.audioTracks = await command.execute(player.getTracksFor, ['audio']);
-            stream.textTracks = await command.execute(player.getTracksFor, ['text']);
-            stream.periods = [];
-            let streams = await command.execute(player.getStreams);
-            for (let i = 0; i < streams.length; i++ ) {
-                stream.periods.push({
-                    start: streams[i].start,
-                    duration: streams[i].duration
-                });
+            try {
+                if (typeof command !== 'undefined') {
+                    stream.settings = await command.execute(player.getSettings);
+                    stream.dynamic = await command.execute(player.isDynamic);
+                    stream.duration = await command.execute(player.getDuration);
+                    stream.audioTracks = await command.execute(player.getTracksFor, ['audio']);
+                    stream.textTracks = await command.execute(player.getTracksFor, ['text']);
+                    stream.periods = [];
+                    let streams = await command.execute(player.getStreams);
+                    for (let i = 0; i < streams.length; i++) {
+                        stream.periods.push({
+                            start: streams[i].start,
+                            duration: streams[i].duration
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log(e);
             }
         });
     });

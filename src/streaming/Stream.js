@@ -278,15 +278,18 @@ function Stream(config) {
 
 
             let element = videoModel.getElement();
-
+            const promises = [];
             MEDIA_TYPES.forEach((mediaType) => {
                 // If we are preloading without a video element we can not start texttrack handling.
                 if (!(mediaType === Constants.TEXT && !mediaSource) && (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))) {
-                    _initializeMediaForType(mediaType, mediaSource);
+                    promises.push(_initializeMediaForType(mediaType, mediaSource));
                 }
             });
 
-            _createBufferSinks(previousBufferSinks)
+            Promise.all(promises)
+                .then(() => {
+                    return _createBufferSinks(previousBufferSinks)
+                })
                 .then((bufferSinks) => {
                     isUpdating = false;
 
@@ -318,8 +321,10 @@ function Stream(config) {
      */
     function initializeForTextWithMediaSource(mediaSource) {
         return new Promise((resolve, reject) => {
-            _initializeMediaForType(Constants.TEXT, mediaSource);
-            createBufferSinkForText()
+            _initializeMediaForType(Constants.TEXT, mediaSource)
+                .then(() => {
+                    return createBufferSinkForText()
+                })
                 .then(() => {
                     textController.createTracks(streamInfo);
                     resolve()
@@ -345,7 +350,7 @@ function Stream(config) {
 
         if (!allMediaForType || allMediaForType.length === 0) {
             logger.info('No ' + type + ' data.');
-            return;
+            return Promise.resolve();
         }
 
         if (type === Constants.VIDEO) {
@@ -378,7 +383,7 @@ function Stream(config) {
             return !mediaInfo.isEmbedded;
         });
         if (allMediaForType.length === 0) {
-            return;
+            return Promise.resolve();
         }
 
         if (type === Constants.IMAGE) {
@@ -395,7 +400,7 @@ function Stream(config) {
                 segmentBaseController: config.segmentBaseController
             });
             thumbnailController.initialize();
-            return;
+            return Promise.resolve();
         }
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
@@ -412,9 +417,10 @@ function Stream(config) {
         if (initialMediaInfo) {
             abrController.updateTopQualityIndex(initialMediaInfo);
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
-            streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
+            return streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
         }
 
+        return Promise.resolve();
     }
 
     function _isMediaSupported(mediaInfo) {
@@ -929,7 +935,7 @@ function Stream(config) {
                         let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) return;
                         promises.push(processor.prepareTrackSwitch());
-                        processor.selectMediaInfo(mediaInfo);
+                        promises.push(processor.selectMediaInfo(mediaInfo));
                     }
 
                     return Promise.all(promises)
@@ -983,7 +989,7 @@ function Stream(config) {
         }
 
         // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
+        return !!(adaptation.ContentProtection || (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 && adaptation.Representation_asArray[0].ContentProtection));
     }
 
     function compareCodecs(newStream, type, previousStream = null) {
