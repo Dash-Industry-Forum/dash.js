@@ -989,7 +989,7 @@ function Stream(config) {
         }
 
         // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !!(adaptation.ContentProtection || (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 && adaptation.Representation_asArray[0].ContentProtection));
+        return !!(adaptation.ContentProtection || (adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
     }
 
     function compareCodecs(newStream, type, previousStream = null) {
@@ -1012,11 +1012,11 @@ function Stream(config) {
         }
 
         const sameMimeType = newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
-        const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
+        const oldCodecs = currentAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 
-        const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
+        const newCodecs = newAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 

@@ -16,7 +16,7 @@ class MpdHelper {
         mpd.type = type;
         mpd.minimumUpdatePeriod = 10;
         mpd.loadedTime = this.specHelper.getUnixTime();
-        mpd.Period_asArray = [this.composePeriod(segInfoType)];
+        mpd.Period = [this.composePeriod(segInfoType)];
 
         return mpd;
     }
@@ -75,7 +75,7 @@ class MpdHelper {
         var period = {};
         let type = !isNaN(segInfoType) ? segInfoType : this.SEGMENT_TEMPLATE;
 
-        period.AdaptationSet_asArray = [this.getAdaptationForSegmentInfoType('video', type)];
+        period.AdaptationSet = [this.getAdaptationForSegmentInfoType('video', type)];
 
         return period;
     }
@@ -163,14 +163,14 @@ class MpdHelper {
         objRepresentation.push(objSubRepresentation);
 
         adaptation.Representation = objRepresentation;
-        adaptation.Representation_asArray = objRepresentation;
+        adaptation.Representation = objRepresentation;
 
         return adaptation;
     }
 
     addSegmentTemplateToAdaptation(adaptation) {
         let objSegmentTemplate = {};
-        let reps = adaptation.Representation_asArray;
+        let reps = adaptation.Representation;
         let ln = reps.length;
         let i = 0;
         let r;
@@ -184,7 +184,7 @@ class MpdHelper {
         objSegmentTemplate.timescale = 90000;
 
         adaptation.SegmentTemplate = objSegmentTemplate;
-        adaptation.SegmentTemplate_asArray = objSegmentTemplate;
+        adaptation.SegmentTemplate = objSegmentTemplate;
 
         for (i; i < ln; i++) {
             r = reps[i];
@@ -196,7 +196,7 @@ class MpdHelper {
 
     addSegmentTimelineToAdaptation(adaptation) {
         let objSegmentTemplate = {};
-        let reps = adaptation.Representation_asArray;
+        let reps = adaptation.Representation;
         let ln = reps.length;
         let i = 0;
         let r;
@@ -208,16 +208,16 @@ class MpdHelper {
         objSegmentTemplate.presentationTimeOffset = 0;
         objSegmentTemplate.startNumber = 0;
         objSegmentTemplate.timescale = 90000;
-        const S_asArray = [{
+        const S = [{
             t: 0,
             d: 180000,
             r: 29
         }];
-        objSegmentTemplate.SegmentTimeline_asArray= {S_asArray};
-        objSegmentTemplate.SegmentTimeline = {S_asArray};
+        objSegmentTemplate.SegmentTimeline= {S};
+        objSegmentTemplate.SegmentTimeline = {S};
 
         adaptation.SegmentTemplate = objSegmentTemplate;
-        adaptation.SegmentTemplate_asArray = objSegmentTemplate;
+        adaptation.SegmentTemplate = objSegmentTemplate;
 
         for (i; i < ln; i++) {
             r = reps[i];

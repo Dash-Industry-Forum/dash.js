@@ -29,15 +29,44 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import DashConstants from '../constants/DashConstants';
 import ObjectIron from './objectiron';
-import X2JS from '../../../externals/xml2json';
-import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
 import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
 import LangMatcher from './matchers/LangMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
+import * as tXml from '../../../externals/tXml';
+
+// List of node that shall be represented as arrays
+const arrayNodes = [
+    DashConstants.PERIOD,
+    DashConstants.BASE_URL,
+    DashConstants.ADAPTATION_SET,
+    DashConstants.REPRESENTATION,
+    DashConstants.CONTENT_PROTECTION,
+    DashConstants.ROLE,
+    DashConstants.ACCESSIBILITY,
+    DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+    DashConstants.CONTENT_COMPONENT,
+    DashConstants.ESSENTIAL_PROPERTY,
+    DashConstants.LABEL,
+    DashConstants.S,
+    DashConstants.SEGMENT_URL,
+    DashConstants.EVENT,
+    DashConstants.EVENT_STREAM,
+    DashConstants.LOCATION,
+    DashConstants.SERVICE_DESCRIPTION,
+    DashConstants.SUPPLEMENTAL_PROPERTY,
+    DashConstants.METRICS,
+    DashConstants.REPORTING,
+    DashConstants.PATCH_LOCATION,
+    DashConstants.REPLACE,
+    DashConstants.ADD,
+    DashConstants.REMOVE,
+    DashConstants.UTC_TIMING
+];
 
 function DashParser(config) {
 
@@ -48,7 +77,6 @@ function DashParser(config) {
     let instance,
         logger,
         matchers,
-        converter,
         objectIron;
 
     function setup() {
@@ -57,29 +85,13 @@ function DashParser(config) {
             new DurationMatcher(),
             new DateTimeMatcher(),
             new NumericMatcher(),
-            new LangMatcher(),
-            new StringMatcher()// last in list to take precedence over NumericMatcher
+            new LangMatcher()
         ];
-
-        converter = new X2JS({
-            escapeMode: false,
-            attributePrefix: '',
-            arrayAccessForm: 'property',
-            emptyNodeForm: 'object',
-            stripWhitespaces: false,
-            enableToStringFunc: true,
-            ignoreRoot: false,
-            matchers: matchers
-        });
 
         objectIron = ObjectIron(context).create({
             adaptationset: new RepresentationBaseValuesMap(),
             period: new SegmentValuesMap()
         });
-    }
-
-    function getMatchers() {
-        return matchers;
     }
 
     function getIron() {
@@ -90,23 +102,21 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        manifest = converter.xml_str2json(data);
+        manifest = parseXml(data);
 
         if (!manifest) {
-            throw new Error('parsing the manifest failed');
+            throw new Error('failed to parse the manifest');
         }
-
-        const jsonTime = window.performance.now();
 
         // handle full MPD and Patch ironing separately
         if (manifest.Patch) {
             manifest = manifest.Patch; // drop root reference
             // apply iron to patch operations individually
-            if (manifest.add_asArray) {
-                manifest.add_asArray.forEach((operand) => objectIron.run(operand));
+            if (manifest.add) {
+                manifest.add.forEach((operand) => objectIron.run(operand));
             }
-            if (manifest.replace_asArray) {
-                manifest.replace_asArray.forEach((operand) => objectIron.run(operand));
+            if (manifest.replace) {
+                manifest.replace.forEach((operand) => objectIron.run(operand));
             }
             // note that we don't need to iron remove as they contain no children
         } else {
@@ -114,18 +124,48 @@ function DashParser(config) {
             objectIron.run(manifest);
         }
 
-        const ironedTime = window.performance.now();
-        logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+        const parsedTime = window.performance.now();
+        logger.info('Parsing complete: ' + (parsedTime - startTime).toPrecision(3) + 'ms');
 
         manifest.protocol = 'DASH';
 
         return manifest;
     }
 
+
+    function parseXml(data) {
+        try {
+            let root = tXml.parse(data, {
+                parseNode: true,
+                attrMatchers: matchers,
+                nodesAsArray: arrayNodes
+            });
+            let ret = {};
+            // If root element is xml node, then get first child node as root
+            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
+                for (let key in root) {
+                    if (Array.isArray(root[key])) {
+                        ret[key] = root[key][0];
+                        break;
+                    } else if (typeof root[key] === 'object') {
+                        ret[key] = root[key];
+                        break;
+                    }
+                }
+            } else {
+                ret[root.tagName] = root;
+                delete root.tagName;
+            }
+            return ret;
+        } catch (e) {
+            return null;
+        }
+    }
+
     instance = {
-        parse: parse,
-        getMatchers: getMatchers,
-        getIron: getIron
+        getIron: getIron,
+        parseXml: parseXml,
+        parse: parse
     };
 
     setup();

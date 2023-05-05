@@ -42,7 +42,7 @@ const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?
 class DateTimeMatcher extends BaseMatcher {
     constructor() {
         super(
-            attr => datetimeRegex.test(attr.value),
+            (tagName, attrName, value) => datetimeRegex.test(value),
             str => {
                 const match = datetimeRegex.exec(str);
                 let utcDate;

@@ -86,9 +86,11 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
-                }, index: 0, type: 'audio'
+                },
+                index: 0,
+                type: 'audio'
             }
         };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
@@ -117,7 +119,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'audio'
             }
@@ -148,7 +150,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period_: [{ AdaptationSet_: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'video'
             }
@@ -179,7 +181,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'video'
             }

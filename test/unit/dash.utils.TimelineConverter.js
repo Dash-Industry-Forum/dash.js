@@ -998,10 +998,10 @@ describe('TimelineConverter', function () {
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
                     
                     // Remove t attribute(s) from segments
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline_asArray.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline_asArray.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline.S_asArray[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
 
                     dummyRep.adaptation.period.start = 0;
                     dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;;

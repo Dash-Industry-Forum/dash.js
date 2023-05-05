@@ -831,7 +831,7 @@ function PlaybackController() {
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&
-            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] === 'true') {
+            mediaInfo.supplementalProperties.find(item => item.schemeIdUri === Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME)) {
             logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
             lowLatencyModeEnabled = true;
         }

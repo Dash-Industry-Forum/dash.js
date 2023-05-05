@@ -18,60 +18,62 @@ const errorHandlerMock = new ErrorHandlerMock();
 const manifest_with_audio = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [
-            {
-                id: undefined, mimeType: Constants.AUDIO,
-                lang: 'eng', Role_asArray: [{ value: 'main' }]
-            }, {
-                id: undefined, mimeType: Constants.AUDIO,
-                lang: 'deu', Role_asArray: [{ value: 'main' }]
-            }
-        ]
+    Period: [{
+        AdaptationSet: [{
+            id: undefined,
+            mimeType: Constants.AUDIO,
+            lang: 'eng',
+            Role: [{ value: 'main' }]
+        }, {
+            id: undefined,
+            mimeType: Constants.AUDIO,
+            lang: 'deu',
+            Role: [{ value: 'main' }]
+        }]
     }]
 };
 const manifest_with_video_with_embedded_subtitles = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [
-            {
-                id: 0, mimeType: Constants.VIDEO,
-                Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
-            }, {
-                id: 1, mimeType: Constants.VIDEO
-            }
-        ]
+    Period: [{
+        AdaptationSet: [{
+            id: 0,
+            mimeType: Constants.VIDEO,
+            Accessibility: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
+        }, {
+            id: 1,
+            mimeType: Constants.VIDEO
+        }]
     }]
 };
 const manifest_with_ll_service_description = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    ServiceDescription: {},
-    ServiceDescription_asArray: [{
+    ServiceDescription: [{
         Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' },
         Latency: { target: 3000, max: 5000, min: 2000, referenceId: 7 },
         PlaybackRate: { max: 1.5, min: 0.5 }
     }],
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
-            id: 0, mimeType: Constants.VIDEO,
-            SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }]
+    Period: [{
+        AdaptationSet: [{
+            id: 0,
+            mimeType: Constants.VIDEO,
+            SupplementalProperty: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }]
         }]
     }]
 };
 const manifest_without_supplemental_properties = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }]
+    Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO }] }]
 };
 const manifest_with_supplemental_properties = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
+    Period: [{
+        AdaptationSet: [{
             id: 0, mimeType: Constants.VIDEO,
-            SupplementalProperty_asArray: [{
+            SupplementalProperty: [{
                 schemeIdUri: 'test:scheme',
                 value: 'value1'
             }, { schemeIdUri: 'test:scheme', value: 'value2' }]
@@ -81,14 +83,14 @@ const manifest_with_supplemental_properties = {
 const manifest_with_supplemental_properties_on_repr = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
+    Period: [{
+        AdaptationSet: [{
             id: 0, mimeType: Constants.VIDEO,
-            // SupplementalProperty_asArray: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'},{schemeIdUri: 'test:scheme', value: 'value3'}],
-            [DashConstants.REPRESENTATION_ASARRAY]: [
+            // SupplementalProperty: [{schemeIdUri: 'test:scheme', value: 'value1'},{schemeIdUri: 'test:scheme', value: 'value2'},{schemeIdUri: 'test:scheme', value: 'value3'}],
+            [DashConstants.REPRESENTATION]: [
                 {
                     id: 10, bandwidth: 128000,
-                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
                         { schemeIdUri: 'test:scheme', value: 'value1' },
                         { schemeIdUri: 'test:scheme', value: 'value2' },
                         { schemeIdUri: 'test:scheme', value: 'value3' }
@@ -96,7 +98,7 @@ const manifest_with_supplemental_properties_on_repr = {
                 },
                 {
                     id: 11, bandwidth: 160000,
-                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
                         { schemeIdUri: 'test:scheme', value: 'value1' },
                         { schemeIdUri: 'test:scheme', value: 'value2' },
                         { schemeIdUri: 'test:scheme', value: 'value3' }
@@ -109,13 +111,13 @@ const manifest_with_supplemental_properties_on_repr = {
 const manifest_with_supplemental_properties_on_only_one_repr = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
+    Period: [{
+        AdaptationSet: [{
             id: 0, mimeType: Constants.VIDEO,
-            [DashConstants.REPRESENTATION_ASARRAY]: [
+            [DashConstants.REPRESENTATION]: [
                 {
                     id: 10, bandwidth: 128000,
-                    [DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY]: [
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
                         { schemeIdUri: 'test:scheme', value: 'value1' },
                         { schemeIdUri: 'test:scheme', value: 'value2' }
                     ]
@@ -133,10 +135,10 @@ const manifest_with_supplemental_properties_on_only_one_repr = {
 const manifest_with_audioChanCfg = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
+    Period: [{
+        AdaptationSet: [{
             id: 0, mimeType: Constants.AUDIO,
-            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+            [DashConstants.AUDIO_CHANNEL_CONFIGURATION]: [
                 { schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' },
                 { schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801' }
             ]
@@ -146,20 +148,20 @@ const manifest_with_audioChanCfg = {
 const manifest_with_audioChanCfg_Repr = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period_asArray: [{
-        AdaptationSet_asArray: [{
+    Period: [{
+        AdaptationSet: [{
             id: 0, mimeType: Constants.AUDIO,
-            [DashConstants.REPRESENTATION_ASARRAY]: [
+            [DashConstants.REPRESENTATION]: [
                 {
                     id: 11, bandwidth: 128000,
-                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                    [DashConstants.AUDIO_CHANNEL_CONFIGURATION]: [
                         { schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' },
                         { schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '6' },
                         { schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: '0xF801' }
                     ]
                 }, {
                     id: 12, bandwidth: 96000,
-                    [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                    [DashConstants.AUDIO_CHANNEL_CONFIGURATION]: [
                         { schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '21' },
                         { schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' },
                         { schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2' },
@@ -167,7 +169,7 @@ const manifest_with_audioChanCfg_Repr = {
                     ]
                 }
             ],
-            [DashConstants.VIEWPOINT_ASARRAY]: [
+            [DashConstants.VIEWPOINT]: [
                 { schemeIdUri: 'urn:scheme:viewpoint', value: 'VP1' },
                 { schemeIdUri: 'urn:scheme:viewpoint', value: 'VP2' }
             ]
@@ -434,8 +436,8 @@ describe('DashAdapter', function () {
             const manifest_with_video = {
                 loadedTime: new Date(),
                 mediaPresentationDuration: 10,
-                Period_asArray: [{
-                    AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }, {
+                Period: [{
+                    AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO }, {
                         id: 1,
                         mimeType: Constants.VIDEO
                     }]
@@ -609,14 +611,12 @@ describe('DashAdapter', function () {
                         index: 0
                     }, Constants.VIDEO, manifest_without_supplemental_properties);
 
+                    console.log(JSON.stringify(mediaInfoArray));
                     expect(mediaInfoArray).to.be.instanceOf(Array);
                     expect(mediaInfoArray.length).equals(1);
 
-                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;
-                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);
-
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(0);
                 });
 
                 it('supplemental properties should be filled if correctly defined', function () {
@@ -630,11 +630,8 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].codec).to.be.null;
 
-                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;
-                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);
-
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(2);
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(2);
                 });
 
                 it('supplemental properties should be filled if set on all representations', function () {
@@ -649,11 +646,8 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].representationCount).equals(2);
                     expect(mediaInfoArray[0].codec).not.to.be.null;
 
-                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;
-                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(1);
-
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(3);
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(3);
                 });
 
                 it('supplemental properties should not be filled if not set on all representations', function () {
@@ -667,11 +661,8 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].representationCount).equals(3);
 
-                    expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;
-                    expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);
-
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(0);
                 });
 
                 it('audio channel config should be filled', function () {
@@ -834,8 +825,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 1);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -848,8 +838,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 10);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -862,8 +851,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 120);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementEvergreen,
-                    PatchLocation_asArray: [patchLocationElementEvergreen]
+                    PatchLocation: [patchLocationElementEvergreen]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -881,8 +869,7 @@ describe('DashAdapter', function () {
 
             it('should not provide patch location if present in manifest without publish time', function () {
                 const manifest = {
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -1108,16 +1095,15 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.equal(addedPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([addedPeriod]);
+                expect(manifest.Period).to.deep.equal([addedPeriod]);
             });
 
             it('applies add operation to structure with single sibling', function () {
                 let originalPeriod = { id: 'foo' };
                 let addedPeriod = { id: 'bar' };
-                // special case x2js object which omits the _asArray variant
+                // special case x2js object which omits the  variant
                 let manifest = {
-                    Period: originalPeriod
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1130,15 +1116,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriod, addedPeriod]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add implicit append operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
                 let addedPeriod = { id: 'baz' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1151,15 +1135,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add prepend operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
                 let addedPeriod = { id: 'baz' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1173,15 +1155,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([addedPeriod, originalPeriods[0], originalPeriods[1]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add before operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
                 let addedPeriod = { id: 'qux' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1195,15 +1175,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], addedPeriod, originalPeriods[1], originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add after operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
                 let addedPeriod = { id: 'qux' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1217,14 +1195,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod, originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add attribute operation', function () {
                 let originalPeriod = {};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1241,8 +1217,7 @@ describe('DashAdapter', function () {
             it('applies add attribute operation on existing attribute, should act as replace', function () {
                 let originalPeriod = { id: 'foo' };
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -1260,8 +1235,7 @@ describe('DashAdapter', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
                 let replacementPeriod = { id: 'qux' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
@@ -1271,18 +1245,17 @@ describe('DashAdapter', function () {
                     }]
                 }]);
 
+                console.log('applies replace operation with siblings');
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], replacementPeriod, originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies replace operation without siblings', function () {
                 let originalPeriod = { id: 'foo' };
                 let replacementPeriod = { id: 'bar' };
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
@@ -1294,15 +1267,13 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.deep.equal(replacementPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([replacementPeriod]);
+                expect(manifest.Period).to.deep.equal([replacementPeriod]);
             });
 
             it('applies replace operation to attribute', function () {
                 let originalPeriod = { id: 'foo' };
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
@@ -1318,8 +1289,7 @@ describe('DashAdapter', function () {
             it('applies remove operation leaving multiple siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1329,14 +1299,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies remove operation leaving one sibling', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1345,15 +1313,13 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.equal(originalPeriods[0]);
-                expect(manifest.Period_asArray).to.deep.equal([originalPeriods[0]]);
+                expect(manifest.Period).to.deep.equal([originalPeriods[0]]);
             });
 
             it('applies remove operation leaving no siblings', function () {
                 let originalPeriod = { id: 'foo' };
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1363,14 +1329,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest).to.not.have.property('Period');
-                expect(manifest).to.not.have.property('Period_asArray');
             });
 
             it('applies remove attribute operation', function () {
                 let originalPeriod = { id: 'foo', start: 'bar' };
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1380,16 +1344,14 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(originalPeriod).to.not.have.property('start');
-                expect(manifest.Period).to.deep.equal(originalPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([originalPeriod]);
+                expect(manifest.Period).to.deep.equal([originalPeriod]);
             });
 
             it('applies multiple operations respecting order', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
                 let newPeriod = { id: 'baz' };
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [
                     {
@@ -1425,14 +1387,12 @@ describe('DashAdapter', function () {
 
                 // check insertion and ordering based on application
                 expect(manifest.Period).to.deep.equal([newPeriod, originalPeriods[1]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('invalid operations are ignored', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [
                     {
@@ -1462,7 +1422,6 @@ describe('DashAdapter', function () {
 
                 // check ordering proper
                 expect(manifest.Period).to.deep.equal(originalPeriods);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
         });
     });
@@ -1474,17 +1433,17 @@ describe('DashAdapter', function () {
             var manifest_1 = {
                 loadedTime: new Date(),
                 mediaPresentationDuration: 10,
-                Period_asArray: [{
-                    AdaptationSet_asArray: [
+                Period: [{
+                    AdaptationSet: [
                         {
                             id: 0, mimeType: Constants.VIDEO,
-                            Role_asArray: [],
-                            Accessibility_asArray: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
-                            SupplementalProperty_asArray: [{
+                            Role: [],
+                            Accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                            SupplementalProperty: [{
                                 schemeIdUri: 'test:scheme',
                                 value: 'value1'
                             }, { schemeIdUri: 'test:scheme', value: 'value2' }],
-                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                            [DashConstants.AUDIO_CHANNEL_CONFIGURATION]: [
                                 {
                                     schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011',
                                     value: '0xF801'
@@ -1492,13 +1451,13 @@ describe('DashAdapter', function () {
                             ]
                         }, {
                             id: 1, mimeType: Constants.VIDEO,
-                            Role_asArray: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
-                            Accessibility_asArray: [],
-                            SupplementalProperty_asArray: [{
+                            Role: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                            Accessibility: [],
+                            SupplementalProperty: [{
                                 schemeIdUri: 'test:scheme',
                                 value: 'value1'
                             }, { schemeIdUri: 'test:scheme', value: 'value4' }],
-                            [DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY]: [
+                            [DashConstants.AUDIO_CHANNEL_CONFIGURATION]: [
                                 { schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' }
                             ]
                         }

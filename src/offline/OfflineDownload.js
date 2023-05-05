@@ -411,7 +411,7 @@ function OfflineDownload(config) {
             return;
         }
 
-        if (_manifest.Period_asArray.length > 1) {
+        if (_manifest.Period.length > 1) {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
