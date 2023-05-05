@@ -809,6 +809,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            enableManifestTimescaleMismatchFix: false,
+ *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -900,6 +901,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
+ *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -1451,6 +1453,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [parseInbandPrft=false]
+ * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
@@ -1504,6 +1508,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [fragmentRequestProgressTimeout=-1]
+ * Time in milliseconds before timing out on loading progress of a media fragment.
  *
  * @property {number} [manifestRequestTimeout=10000]
  * Time in milliseconds before timing out on loading a manifest.
@@ -1563,6 +1570,7 @@ function Settings() {
       applyContentSteering: true,
       eventControllerRefreshDelay: 100,
       enableManifestDurationMismatchFix: true,
+      parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
       capabilities: {
         filterUnsupportedEssentialProperties: true,
@@ -1667,6 +1675,7 @@ function Settings() {
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
       fragmentRequestTimeout: 20000,
+      fragmentRequestProgressTimeout: -1,
       manifestRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
@@ -2155,8 +2164,10 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.QUOTA_EXCEEDED = 'quotaExceeded';
     _this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     _this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
-    _this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
-    _this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
+    _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    _this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
+    _this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
     _this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     _this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     _this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -2501,6 +2512,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.AST_IN_FUTURE = 'astInFuture';
     /**
+     * Triggered when the BaseURLs have been updated.
+     * @event MediaPlayerEvents#BASE_URLS_UPDATED
+     */
+
+    _this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+    /**
      * Triggered when the video element's buffer state changes to stalled.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
@@ -2569,7 +2586,19 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.LOG = 'log';
     /**
-     * Triggered when the manifest load is complete
+     * Triggered when the manifest load is started
+     * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+     */
+
+    _this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+    /**
+     * Triggered when the manifest loading is finished, providing the request object information
+     * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+     */
+
+    _this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+    /**
+     * Triggered when the manifest load is complete, providing the payload
      * @event MediaPlayerEvents#MANIFEST_LOADED
      */
 
@@ -2676,6 +2705,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a throughput measurement based on the last segment request has been stored
+     * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+     */
+
+    _this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
     /**
      * Triggered when a ttml chunk is parsed.
      * @event MediaPlayerEvents#TTML_PARSED
@@ -2862,6 +2897,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
+    /**
+     * Triggered when an inband prft (ProducerReferenceTime) boxes has been received.
+     * @event MediaPlayerEvents#INBAND_PRFT
+     */
+
+    _this.INBAND_PRFT = 'inbandPrft';
     return _this;
   }
 
@@ -3174,7 +3215,6 @@ var Constants = /*#__PURE__*/function () {
        */
 
       this.CMCD_MODE_HEADER = 'header';
-      this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
@@ -4838,7 +4878,7 @@ function DVBErrorsTranslator(config) {
 
   function handleHttpMetric(vo) {
     if (vo.responsecode === 0 || // connection failure - unknown
-    vo.responsecode == null || // Generated on .catch() and when uninitialised
+    vo.responsecode == null || // Generated on .catch() and when uninitialized
     vo.responsecode >= 400 || // HTTP error status code
     vo.responsecode < 100 || // unknown status codes
     vo.responsecode >= 600) {
@@ -4885,9 +4925,9 @@ function DVBErrorsTranslator(config) {
     });
   }
 
-  function initialise() {
+  function initialize() {
     eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
-    eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
+    eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
     eventBus.on(Events.METRIC_ADDED, onMetricEvent, instance);
     eventBus.on(Events.METRIC_UPDATED, onMetricEvent, instance);
     eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
@@ -4896,7 +4936,7 @@ function DVBErrorsTranslator(config) {
 
   function reset() {
     eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
-    eventBus.off(Events.SERVICE_LOCATION_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
+    eventBus.off(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onServiceLocationChanged, instance);
     eventBus.off(Events.METRIC_ADDED, onMetricEvent, instance);
     eventBus.off(Events.METRIC_UPDATED, onMetricEvent, instance);
     eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
@@ -4904,7 +4944,7 @@ function DVBErrorsTranslator(config) {
   }
 
   instance = {
-    initialise: initialise,
+    initialize: initialize,
     reset: reset
   };
   return instance;
@@ -5308,7 +5348,7 @@ function RNG() {
   var NUM_RANDOM_NUMBERS = 10;
   var randomNumbers, index, instance;
 
-  function initialise() {
+  function initialize() {
     if (crypto) {
       if (!randomNumbers) {
         randomNumbers = new ArrayType(NUM_RANDOM_NUMBERS);
@@ -5332,7 +5372,7 @@ function RNG() {
 
     if (crypto) {
       if (index === randomNumbers.length) {
-        initialise();
+        initialize();
       }
 
       r = randomNumbers[index] / MAX_VALUE;
@@ -5347,7 +5387,7 @@ function RNG() {
   instance = {
     random: rand
   };
-  initialise();
+  initialize();
   return instance;
 }
 
@@ -6553,6 +6593,7 @@ function AbandonRequestsRule(config) {
             switchRequest.quality = newQuality;
             switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
             switchRequest.reason.fragmentID = fragmentInfo.id;
+            switchRequest.reason.rule = this.getClassName();
             abandonDict[fragmentInfo.id] = fragmentInfo;
             logger.debug('[' + mediaType + '] frag id', fragmentInfo.id, ' is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
             delete fragmentDict[mediaType][fragmentInfo.id];
@@ -9221,7 +9262,7 @@ function LoLpWeightSelector(config) {
    * @param {number} currentRebuffer
    * @param {number} currentThroughput
    * @param {number} playbackRate
-   * @return {null}
+   * @return {number|null}
    * @private
    */
 
@@ -9506,35 +9547,35 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
 /**
-* The copyright in this software is being made available under the BSD License,
-* included below. This software may be subject to other third party and contributor
-* rights, including patent rights, and no such rights are granted under this license.
-*
-* Copyright (c) 2013, Dash Industry Forum.
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without modification,
-* are permitted provided that the following conditions are met:
-*  * Redistributions of source code must retain the above copyright notice, this
-*  list of conditions and the following disclaimer.
-*  * Redistributions in binary form must reproduce the above copyright notice,
-*  this list of conditions and the following disclaimer in the documentation and/or
-*  other materials provided with the distribution.
-*  * Neither the name of Dash Industry Forum nor the names of its
-*  contributors may be used to endorse or promote products derived from this software
-*  without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
-*  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-*  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-*  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-*  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-*  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-*  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*/
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 
 
 
@@ -9543,7 +9584,7 @@ function CustomTimeRanges() {
   var length = 0;
 
   function add(start, end) {
-    var i = 0;
+    var i;
 
     for (i = 0; i < this.customTimeRangeArray.length && start > this.customTimeRangeArray[i].start; i++) {
       ;
@@ -11539,7 +11580,7 @@ function MetricsReporting() {
       metricsConstants: config.metricsConstants,
       events: config.events
     });
-    dvbErrorsTranslator.initialise();
+    dvbErrorsTranslator.initialize();
     return (0,_controllers_MetricsCollectionController__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create(config);
   }
   /**

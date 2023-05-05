@@ -1005,7 +1005,6 @@ var Constants = /*#__PURE__*/function () {
        */
 
       this.CMCD_MODE_HEADER = 'header';
-      this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
@@ -1509,7 +1508,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 /**
  * @class
-  */
+ */
 
 var ProtectionEvents = /*#__PURE__*/function (_EventsBase) {
   _inherits(ProtectionEvents, _EventsBase);
@@ -1597,7 +1596,7 @@ var ProtectionEvents = /*#__PURE__*/function (_EventsBase) {
     /**
      * Event ID for events delivered when a key system access procedure
      * has completed
-     * @ignore
+     * @event ProtectionEvents#KEY_SYSTEM_ACCESS_COMPLETE
      */
 
     _this.KEY_SYSTEM_ACCESS_COMPLETE = 'public_keySystemAccessComplete';
@@ -2774,6 +2773,7 @@ function ProtectionController(config) {
    * Event handler for "needkey" and "encrypted" events
    * @param {object} event
    * @param {number} retry
+   * @private
    */
 
 
@@ -6814,7 +6814,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  */
 var LicenseResponse =
 /**
- * Defines a license request
+ * Defines a license response
  *
  * @class
  * @ignore

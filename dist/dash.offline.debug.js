@@ -1373,6 +1373,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            enableManifestTimescaleMismatchFix: false,
+ *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               useMediaCapabilitiesApi: false
@@ -1464,6 +1465,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 20000,
+ *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -2015,6 +2017,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [parseInbandPrft=false]
+ * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
@@ -2068,6 +2072,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * @property {number} [fragmentRequestProgressTimeout=-1]
+ * Time in milliseconds before timing out on loading progress of a media fragment.
  *
  * @property {number} [manifestRequestTimeout=10000]
  * Time in milliseconds before timing out on loading a manifest.
@@ -2127,6 +2134,7 @@ function Settings() {
       applyContentSteering: true,
       eventControllerRefreshDelay: 100,
       enableManifestDurationMismatchFix: true,
+      parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
       capabilities: {
         filterUnsupportedEssentialProperties: true,
@@ -2231,6 +2239,7 @@ function Settings() {
       },
       selectionModeForInitialTrack: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
       fragmentRequestTimeout: 20000,
+      fragmentRequestProgressTimeout: -1,
       manifestRequestTimeout: 10000,
       retryIntervals: (_retryIntervals = {}, _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MPD_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.XLINK_EXPANSION_TYPE, 500), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MEDIA_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INIT_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE, 1000), _defineProperty(_retryIntervals, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE, 1000), _defineProperty(_retryIntervals, "lowLatencyReductionFactor", 10), _retryIntervals),
       retryAttempts: (_retryAttempts = {}, _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MPD_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.XLINK_EXPANSION_TYPE, 1), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MEDIA_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INIT_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE, 3), _defineProperty(_retryAttempts, _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE, 3), _defineProperty(_retryAttempts, "lowLatencyMultiplyFactor", 5), _retryAttempts),
@@ -3017,8 +3026,10 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.QUOTA_EXCEEDED = 'quotaExceeded';
     _this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     _this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
-    _this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
-    _this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
+    _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
+    _this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
+    _this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
     _this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     _this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     _this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -3317,13 +3328,16 @@ function DashHandler(config) {
 
   function _setRequestUrl(request, destination, representation) {
     var baseURL = baseURLController.resolve(representation.path);
-    var url, serviceLocation;
+    var url,
+        serviceLocation,
+        queryParams = {};
 
     if (!baseURL || destination === baseURL.url || !urlUtils.isRelative(destination)) {
       url = destination;
     } else {
       url = baseURL.url;
       serviceLocation = baseURL.serviceLocation;
+      queryParams = baseURL.queryParams;
 
       if (destination) {
         url = urlUtils.resolve(destination, url);
@@ -3336,6 +3350,7 @@ function DashHandler(config) {
 
     request.url = url;
     request.serviceLocation = serviceLocation;
+    request.queryParams = queryParams;
     return true;
   }
 
@@ -3514,6 +3529,7 @@ function DashHandler(config) {
    * @param {object} mediaInfo
    * @param {object} representation
    * @param {number} targetThreshold
+   * @return {number}
    */
 
 
@@ -3729,8 +3745,11 @@ var DashConstants = /*#__PURE__*/function () {
       this.CONTENT_PROTECTION = 'ContentProtection';
       this.ESSENTIAL_PROPERTY = 'EssentialProperty';
       this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
+      this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
       this.INBAND_EVENT_STREAM = 'InbandEventStream';
       this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
+      this.INBAND = 'inband';
+      this.TYPE = 'type';
       this.ACCESSIBILITY = 'Accessibility';
       this.ROLE = 'Role';
       this.RATING = 'Rating';
@@ -3738,6 +3757,7 @@ var DashConstants = /*#__PURE__*/function () {
       this.SUBSET = 'Subset';
       this.LANG = 'lang';
       this.VIEWPOINT = 'Viewpoint';
+      this.VIEWPOINT_ASARRAY = 'Viewpoint_asArray';
       this.ROLE_ASARRAY = 'Role_asArray';
       this.REPRESENTATION_ASARRAY = 'Representation_asArray';
       this.PRODUCERREFERENCETIME_ASARRAY = 'ProducerReferenceTime_asArray';
@@ -3777,6 +3797,9 @@ var DashConstants = /*#__PURE__*/function () {
       this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
       this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
       this.PATCH_LOCATION = 'PatchLocation';
+      this.PATCH_LOCATION_AS_ARRAY = 'PatchLocation_asArray';
+      this.LOCATION = 'Location';
+      this.LOCATION_AS_ARRAY = 'Location_asArray';
       this.PUBLISH_TIME = 'publishTime';
       this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
       this.ORIGINAL_MPD_ID = 'mpdId';
@@ -3788,13 +3811,27 @@ var DashConstants = /*#__PURE__*/function () {
       this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
       this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
       this.QUERY_BEFORE_START = 'queryBeforeStart';
-      this.PROXY_SERVER_URL = 'proxyServerURL';
+      this.CLIENT_REQUIREMENT = 'clientRequirement';
+      this.TTL = 'ttl';
       this.CONTENT_STEERING_RESPONSE = {
         VERSION: 'VERSION',
         TTL: 'TTL',
         RELOAD_URI: 'RELOAD-URI',
-        SERVICE_LOCATION_PRIORITY: 'SERVICE-LOCATION-PRIORITY'
+        PATHWAY_PRIORITY: 'PATHWAY-PRIORITY',
+        PATHWAY_CLONES: 'PATHWAY-CLONES',
+        BASE_ID: 'BASE-ID',
+        ID: 'ID',
+        URI_REPLACEMENT: 'URI-REPLACEMENT',
+        HOST: 'HOST',
+        PARAMS: 'PARAMS'
       };
+      this.PRODUCER_REFERENCE_TIME_TYPE = {
+        ENCODER: 'encoder',
+        CAPTURED: 'captured',
+        APPLICATION: 'application'
+      };
+      this.SEGMENT_ALIGNMENT = 'segmentAlignment';
+      this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment';
     }
   }]);
 
@@ -3869,7 +3906,8 @@ function RepresentationController(config) {
   var dashConstants = config.dashConstants;
   var segmentsController = config.segmentsController;
   var isDynamic = config.isDynamic;
-  var instance, realAdaptation, updating, voAvailableRepresentations, currentVoRepresentation;
+  var adapter = config.adapter;
+  var instance, realAdaptation, updating, voAvailableRepresentations, currentRepresentationInfo, currentVoRepresentation;
 
   function setup() {
     resetInitialSettings();
@@ -3902,10 +3940,15 @@ function RepresentationController(config) {
     return currentVoRepresentation;
   }
 
+  function getCurrentRepresentationInfo() {
+    return currentRepresentationInfo;
+  }
+
   function resetInitialSettings() {
     realAdaptation = null;
     updating = true;
     voAvailableRepresentations = [];
+    currentRepresentationInfo = null;
   }
 
   function reset() {
@@ -4108,6 +4151,7 @@ function RepresentationController(config) {
 
   function _setCurrentVoRepresentation(value) {
     currentVoRepresentation = value;
+    currentRepresentationInfo = adapter.convertRepresentationToRepresentationInfo(currentVoRepresentation);
   }
 
   function onManifestValidityChanged(e) {
@@ -4128,6 +4172,7 @@ function RepresentationController(config) {
     isUpdating: isUpdating,
     updateData: updateData,
     getCurrentRepresentation: getCurrentRepresentation,
+    getCurrentRepresentationInfo: getCurrentRepresentationInfo,
     getRepresentationForQuality: getRepresentationForQuality,
     prepareQualityChange: prepareQualityChange,
     reset: reset
@@ -4298,13 +4343,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_EventStream__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../vo/EventStream */ "./src/dash/vo/EventStream.js");
 /* harmony import */ var _vo_ProducerReferenceTime__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/ProducerReferenceTime */ "./src/dash/vo/ProducerReferenceTime.js");
 /* harmony import */ var _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/ContentSteering */ "./src/dash/vo/ContentSteering.js");
-/* harmony import */ var _streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../streaming/utils/ObjectUtils */ "./src/streaming/utils/ObjectUtils.js");
-/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
-/* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
-/* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
+/* harmony import */ var _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../vo/DescriptorType */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../../streaming/utils/ObjectUtils */ "./src/streaming/utils/ObjectUtils.js");
+/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _core_errors_Errors__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../core/errors/Errors */ "./src/core/errors/Errors.js");
+/* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
+/* harmony import */ var _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../vo/MpdLocation */ "./src/dash/vo/MpdLocation.js");
+/* harmony import */ var _vo_PatchLocation__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../vo/PatchLocation */ "./src/dash/vo/PatchLocation.js");
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -4369,17 +4417,20 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 
 
 
+
+
+
 function DashManifestModel() {
   var instance, logger, errHandler, BASE64;
   var context = this.context;
-  var urlUtils = (0,_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
+  var urlUtils = (0,_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
 
   var isInteger = Number.isInteger || function (value) {
     return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
   };
 
   function setup() {
-    logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance().getLogger(instance);
+    logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance().getLogger(instance);
   }
 
   function getIsTypeOf(adaptation, type) {
@@ -4395,7 +4446,7 @@ function DashManifestModel() {
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
       var essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
 
-      if (essentialProperties && essentialProperties.length > 0 && _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_18__.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+      if (essentialProperties && essentialProperties.length > 0 && _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_19__.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
         return type === _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE;
       }
     } // Check ContentComponent.contentType
@@ -4513,6 +4564,14 @@ function DashManifestModel() {
       } else {
         // Ignore. Missing mandatory attribute
         return;
+      }
+
+      if (prt.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND)) {
+        entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND] = prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND] !== 'false';
+      }
+
+      if (prt.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TYPE)) {
+        entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TYPE] = prt[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TYPE];
       } // Not interested in other attributes for now
       // UTC element contained must be same as that in the MPD
 
@@ -4533,23 +4592,43 @@ function DashManifestModel() {
   }
 
   function getViewpointForAdaptation(adaptation) {
-    return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT) ? adaptation.Viewpoint : null;
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT_ASARRAY) || !adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT_ASARRAY].length) return [];
+    return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT_ASARRAY].map(function (viewpoint) {
+      var vp = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return vp.init(viewpoint);
+    });
   }
 
   function getRolesForAdaptation(adaptation) {
-    return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE_ASARRAY) ? adaptation.Role_asArray : [];
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE_ASARRAY) || !adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE_ASARRAY].length) return [];
+    return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE_ASARRAY].map(function (role) {
+      var r = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return r.init(role);
+    });
   }
 
   function getAccessibilityForAdaptation(adaptation) {
-    return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY_ASARRAY) ? adaptation.Accessibility_asArray : [];
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY_ASARRAY) || !adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY_ASARRAY].length) return [];
+    return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY_ASARRAY].map(function (accessibility) {
+      var a = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return a.init(accessibility);
+    });
   }
 
   function getAudioChannelConfigurationForAdaptation(adaptation) {
-    return adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) || !adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+    return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY].map(function (audioChanCfg) {
+      var acc = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return acc.init(audioChanCfg);
+    });
   }
 
   function getAudioChannelConfigurationForRepresentation(representation) {
-    return representation && representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+    if (!representation || !representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY) || !representation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+    return representation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIOCHANNELCONFIGURATION_ASARRAY].map(function (audioChanCfg) {
+      var acc = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return acc.init(audioChanCfg);
+    });
   }
 
   function getRepresentationSortFunction() {
@@ -4615,7 +4694,7 @@ function DashManifestModel() {
     var realAdaptations = getRealAdaptations(manifest, periodIndex);
 
     for (var i = 0; i < realAdaptations.length; i++) {
-      var objectUtils = (0,_streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+      var objectUtils = (0,_streaming_utils_ObjectUtils__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
 
       if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
         return i;
@@ -4664,6 +4743,22 @@ function DashManifestModel() {
 
   function getMimeType(adaptation) {
     return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
+  }
+
+  function getSegmentAlignment(adaptation) {
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_ALIGNMENT)) {
+      return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_ALIGNMENT] === 'true';
+    }
+
+    return false;
+  }
+
+  function getSubSegmentAlignment(adaptation) {
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_SEGMENT_ALIGNMENT)) {
+      return adaptation[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_SEGMENT_ALIGNMENT] === 'true';
+    }
+
+    return false;
   }
 
   function getKID(adaptation) {
@@ -5041,18 +5136,11 @@ function DashManifestModel() {
       if (realPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START)) {
         voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
         voPeriod.start = realPeriod.start;
-      } // If the @start attribute is absent, but the previous Period
-      // element contains a @duration attribute then then this new
-      // Period is also a regular Period. The start time of the new
-      // Period PeriodStart is the sum of the start time of the previous
-      // Period PeriodStart and the value of the attribute @duration
-      // of the previous Period.
+      } // If the @start attribute is absent, but the previous Period element contains a @duration attribute then this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of the start time of the previous Period PeriodStart and the value of the attribute @duration of the previous Period.
       else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DURATION) && voPreviousPeriod !== null) {
         voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
         voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
-      } // If (i) @start attribute is absent, and (ii) the Period element
-      // is the first in the MPD, and (iii) the MPD@type is 'static',
-      // then the PeriodStart time shall be set to zero.
+      } // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the MPD@type is 'static', then the PeriodStart time shall be set to zero.
       else if (i === 0 && !isDynamic) {
         voPeriod = new _vo_Period__WEBPACK_IMPORTED_MODULE_4__["default"]();
         voPeriod.start = 0;
@@ -5183,7 +5271,7 @@ function DashManifestModel() {
     } else if (isDynamic) {
       periodEnd = Number.POSITIVE_INFINITY;
     } else {
-      errHandler.error(new _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_16__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_17__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+      errHandler.error(new _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_17__["default"](_core_errors_Errors__WEBPACK_IMPORTED_MODULE_18__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
     }
 
     return periodEnd;
@@ -5445,48 +5533,55 @@ function DashManifestModel() {
     if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY)) {
       // Only one ContentSteering element is supported on MPD level
       var element = manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING_AS_ARRAY][0];
-      var entry = new _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__["default"]();
-      entry.serverUrl = element.__text;
-
-      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION)) {
-        entry.defaultServiceLocation = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION];
-      }
-
-      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START)) {
-        entry.queryBeforeStart = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START].toLowerCase() === 'true';
-      }
-
-      if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL)) {
-        entry.proxyServerUrl = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROXY_SERVER_URL];
-      }
-
-      return entry;
+      return _createContentSteeringInstance(element);
     }
 
     return undefined;
   }
 
+  function _createContentSteeringInstance(element) {
+    var entry = new _vo_ContentSteering__WEBPACK_IMPORTED_MODULE_11__["default"]();
+    entry.serverUrl = element.__text;
+
+    if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION)) {
+      entry.defaultServiceLocation = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DEFAULT_SERVICE_LOCATION];
+      entry.defaultServiceLocationArray = entry.defaultServiceLocation.split(' ');
+    }
+
+    if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START)) {
+      entry.queryBeforeStart = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].QUERY_BEFORE_START].toLowerCase() === 'true';
+    }
+
+    if (element.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CLIENT_REQUIREMENT)) {
+      entry.clientRequirement = element[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CLIENT_REQUIREMENT].toLowerCase() !== 'false';
+    }
+
+    return entry;
+  }
+
   function getLocation(manifest) {
-    if (manifest && manifest.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].LOCATION)) {
-      // for now, do not support multiple Locations -
-      // just set Location to the first Location.
-      manifest.Location = manifest.Location_asArray[0];
-      return manifest.Location;
-    } // may well be undefined
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION_AS_ARRAY)) {
+      return manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION_AS_ARRAY].map(function (entry) {
+        var text = entry.__text || entry;
+        var serviceLocation = entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION) ? entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION] : null;
+        return new _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_20__["default"](text, serviceLocation);
+      });
+    }
 
-
-    return undefined;
+    return [];
   }
 
   function getPatchLocation(manifest) {
-    if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION)) {
-      // only include support for single patch location currently
-      manifest.PatchLocation = manifest.PatchLocation_asArray[0];
-      return manifest.PatchLocation;
-    } // no patch location provided
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION_AS_ARRAY)) {
+      return manifest[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION_AS_ARRAY].map(function (entry) {
+        var text = entry.__text || entry;
+        var serviceLocation = entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION) ? entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_LOCATION] : null;
+        var ttl = entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TTL) ? parseFloat(entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].TTL]) * 1000 : NaN;
+        return new _vo_PatchLocation__WEBPACK_IMPORTED_MODULE_21__["default"](text, serviceLocation, ttl);
+      });
+    }
 
-
-    return undefined;
+    return [];
   }
 
   function getSuggestedPresentationDelay(mpd) {
@@ -5513,7 +5608,8 @@ function DashManifestModel() {
               latency = null,
               playbackRate = null,
               operatingQuality = null,
-              operatingBandwidth = null;
+              operatingBandwidth = null,
+              contentSteering = null;
 
           for (var prop in sd) {
             if (sd.hasOwnProperty(prop)) {
@@ -5549,6 +5645,8 @@ function DashManifestModel() {
                   min: parseInt(sd[prop].min),
                   target: parseInt(sd[prop].target)
                 };
+              } else if (prop === _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING) {
+                contentSteering = _createContentSteeringInstance(sd[prop]);
               }
             }
           }
@@ -5559,7 +5657,8 @@ function DashManifestModel() {
             latency: latency,
             playbackRate: playbackRate,
             operatingQuality: operatingQuality,
-            operatingBandwidth: operatingBandwidth
+            operatingBandwidth: operatingBandwidth,
+            contentSteering: contentSteering
           });
         }
       } catch (err) {
@@ -5572,10 +5671,10 @@ function DashManifestModel() {
     return serviceDescriptions;
   }
 
-  function getSupplementalProperties(adaptation) {
+  function getSupplementalPropertiesForAdaptation(adaptation) {
     var supplementalProperties = {};
 
-    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY)) {
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY_ASARRAY)) {
       var _iterator2 = _createForOfIteratorHelper(adaptation.SupplementalProperty_asArray),
           _step2;
 
@@ -5595,6 +5694,47 @@ function DashManifestModel() {
     }
 
     return supplementalProperties;
+  }
+
+  function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY_ASARRAY) || !adaptation.SupplementalProperty_asArray.length) return [];
+    return adaptation.SupplementalProperty_asArray.map(function (supp) {
+      var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return s.init(supp);
+    });
+  }
+
+  function getSupplementalPropertiesForRepresentation(representation) {
+    var supplementalProperties = {};
+
+    if (representation && representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY_ASARRAY)) {
+      var _iterator3 = _createForOfIteratorHelper(representation.SupplementalProperty_asArray),
+          _step3;
+
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var sp = _step3.value;
+
+          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
+            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
+          }
+        }
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+    }
+
+    return supplementalProperties;
+  }
+
+  function getSupplementalPropertiesAsArrayForRepresentation(representation) {
+    if (!representation || !representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY_ASARRAY) || !representation.SupplementalProperty_asArray.length) return [];
+    return representation.SupplementalProperty_asArray.map(function (supp) {
+      var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return s.init(supp);
+    });
   }
 
   function setConfig(config) {
@@ -5659,7 +5799,12 @@ function DashManifestModel() {
     getSuggestedPresentationDelay: getSuggestedPresentationDelay,
     getAvailabilityStartTime: getAvailabilityStartTime,
     getServiceDescriptions: getServiceDescriptions,
-    getSupplementalProperties: getSupplementalProperties,
+    getSegmentAlignment: getSegmentAlignment,
+    getSubSegmentAlignment: getSubSegmentAlignment,
+    getSupplementalPropertiesForAdaptation: getSupplementalPropertiesForAdaptation,
+    getSupplementalPropertiesAsArrayForAdaptation: getSupplementalPropertiesAsArrayForAdaptation,
+    getSupplementalPropertiesForRepresentation: getSupplementalPropertiesForRepresentation,
+    getSupplementalPropertiesAsArrayForRepresentation: getSupplementalPropertiesAsArrayForRepresentation,
     setConfig: setConfig
   };
   setup();
@@ -5667,7 +5812,7 @@ function DashManifestModel() {
 }
 
 DashManifestModel.__dashjs_factory_name = 'DashManifestModel';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_14__["default"].getSingletonFactory(DashManifestModel));
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_15__["default"].getSingletonFactory(DashManifestModel));
 
 /***/ }),
 
@@ -6074,7 +6219,7 @@ var RepresentationBaseValuesMap = /*#__PURE__*/function (_MapNode) {
   function RepresentationBaseValuesMap() {
     _classCallCheck(this, RepresentationBaseValuesMap);
 
-    var commonProperties = [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SAR, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAMERATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_SAMPLING_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAXIMUM_SAP_PERIOD, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START_WITH_SAP, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODING_DEPENDENCY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM];
+    var commonProperties = [_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SAR, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAMERATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_SAMPLING_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAXIMUM_SAP_PERIOD, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].START_WITH_SAP, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CODING_DEPENDENCY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY + '_asArray', _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM];
     return _super.call(this, _constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties, [new _MapNode__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_REPRESENTATION, commonProperties)])]);
   }
 
@@ -7955,6 +8100,8 @@ var BaseURL = function BaseURL(url, serviceLocation, priority, weight) {
   this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
   this.availabilityTimeOffset = 0;
   this.availabilityTimeComplete = true;
+  this.queryParams = {}; // This is an attribute that might be set when synthesizing BaseURLs with content steering
+
   /* currently unused:
    * byteRange,
    */
@@ -8018,12 +8165,94 @@ var ContentSteering = function ContentSteering() {
   _classCallCheck(this, ContentSteering);
 
   this.defaultServiceLocation = null;
+  this.defaultServiceLocationArray = [];
   this.queryBeforeStart = false;
-  this.proxyServerUrl = null;
   this.serverUrl = null;
+  this.clientRequirement = true;
 };
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ContentSteering);
+
+/***/ }),
+
+/***/ "./src/dash/vo/DescriptorType.js":
+/*!***************************************!*\
+  !*** ./src/dash/vo/DescriptorType.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+var DescriptorType = /*#__PURE__*/function () {
+  function DescriptorType() {
+    _classCallCheck(this, DescriptorType);
+
+    this.schemeIdUri = null;
+    this.value = null;
+    this.id = null;
+  }
+
+  _createClass(DescriptorType, [{
+    key: "init",
+    value: function init(data) {
+      if (data) {
+        this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
+        this.value = data.value ? data.value : null;
+        this.id = data.id ? data.id : null;
+      }
+
+      return this;
+    }
+  }]);
+
+  return DescriptorType;
+}();
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DescriptorType);
 
 /***/ }),
 
@@ -8078,6 +8307,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Event = function Event() {
   _classCallCheck(this, Event);
 
+  this.type = '';
   this.duration = NaN;
   this.presentationTime = NaN;
   this.id = NaN;
@@ -8217,6 +8447,127 @@ var Mpd = function Mpd() {
 };
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Mpd);
+
+/***/ }),
+
+/***/ "./src/dash/vo/MpdLocation.js":
+/*!************************************!*\
+  !*** ./src/dash/vo/MpdLocation.js ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+var MpdLocation = function MpdLocation(url, serviceLocation) {
+  _classCallCheck(this, MpdLocation);
+
+  this.url = url || '';
+  this.serviceLocation = serviceLocation || null;
+  this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (MpdLocation);
+
+/***/ }),
+
+/***/ "./src/dash/vo/PatchLocation.js":
+/*!**************************************!*\
+  !*** ./src/dash/vo/PatchLocation.js ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+var PatchLocation = function PatchLocation(url, serviceLocation, ttl) {
+  _classCallCheck(this, PatchLocation);
+
+  this.url = url || '';
+  this.serviceLocation = serviceLocation || null;
+  this.ttl = ttl || NaN;
+  this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (PatchLocation);
 
 /***/ }),
 
@@ -8435,6 +8786,7 @@ var Representation = /*#__PURE__*/function () {
     this.maxPlayoutRate = NaN;
     this.availabilityTimeOffset = 0;
     this.availabilityTimeComplete = true;
+    this.frameRate = null;
   }
 
   _createClass(Representation, [{
@@ -8931,7 +9283,7 @@ function OfflineDownload(config) {
           offlineStoreController: offlineStoreController
         });
 
-        _streams.push(stream); // initialise stream and get downloadable representations
+        _streams.push(stream); // initialize stream and get downloadable representations
 
 
         stream.initialize(streamInfo);
@@ -9027,7 +9379,7 @@ function OfflineDownload(config) {
       logger.error('MultiPeriod manifest are not yet supported');
       return;
     } // save original manifest (for resume)
-    // initialise offline streams
+    // initialize offline streams
 
 
     composeStreams(_manifest); // get MediaInfos
@@ -12431,6 +12783,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.AST_IN_FUTURE = 'astInFuture';
     /**
+     * Triggered when the BaseURLs have been updated.
+     * @event MediaPlayerEvents#BASE_URLS_UPDATED
+     */
+
+    _this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+    /**
      * Triggered when the video element's buffer state changes to stalled.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
@@ -12499,7 +12857,19 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.LOG = 'log';
     /**
-     * Triggered when the manifest load is complete
+     * Triggered when the manifest load is started
+     * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+     */
+
+    _this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+    /**
+     * Triggered when the manifest loading is finished, providing the request object information
+     * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+     */
+
+    _this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+    /**
+     * Triggered when the manifest load is complete, providing the payload
      * @event MediaPlayerEvents#MANIFEST_LOADED
      */
 
@@ -12606,6 +12976,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a throughput measurement based on the last segment request has been stored
+     * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+     */
+
+    _this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
     /**
      * Triggered when a ttml chunk is parsed.
      * @event MediaPlayerEvents#TTML_PARSED
@@ -12792,6 +13168,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
+    /**
+     * Triggered when an inband prft (ProducerReferenceTime) boxes has been received.
+     * @event MediaPlayerEvents#INBAND_PRFT
+     */
+
+    _this.INBAND_PRFT = 'inbandPrft';
     return _this;
   }
 
@@ -13104,7 +13486,6 @@ var Constants = /*#__PURE__*/function () {
        */
 
       this.CMCD_MODE_HEADER = 'header';
-      this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
@@ -15916,16 +16297,18 @@ function FetchLoader(cfg) {
 
             if (chunkDownloadTime > 1) {
               chunkThroughputs.push(8 * datumE[i].bytes / chunkDownloadTime);
+              shortDurationStartTime = 0;
             } else {
               if (shortDurationStartTime === 0) {
                 shortDurationStartTime = datum[i].ts;
+                shortDurationBytesReceived = 0;
               }
 
               var cumulatedChunkDownloadTime = datumE[i].ts - shortDurationStartTime;
 
               if (cumulatedChunkDownloadTime > 1) {
+                shortDurationBytesReceived += datumE[i].bytes;
                 chunkThroughputs.push(8 * shortDurationBytesReceived / cumulatedChunkDownloadTime);
-                shortDurationBytesReceived = 0;
                 shortDurationStartTime = 0;
               } else {
                 // continue cumulating short duration data
@@ -16080,6 +16463,7 @@ function HTTPLoader(cfg) {
     var requestStartTime = new Date();
     var lastTraceTime = requestStartTime;
     var lastTraceReceivedCount = 0;
+    var progressTimeout = null;
     var fileLoaderType = null;
     var httpRequest;
 
@@ -16103,11 +16487,19 @@ function HTTPLoader(cfg) {
 
         if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
           dashMetrics.addManifestUpdate(request);
+          eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_10__["default"].MANIFEST_LOADING_FINISHED, {
+            request: request
+          });
         }
       }
     };
 
     var onloadend = function onloadend() {
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
+
       if (requests.indexOf(httpRequest) === -1) {
         return;
       } else {
@@ -16155,7 +16547,7 @@ function HTTPLoader(cfg) {
           }));
 
           if (config.error) {
-            config.error(request, 'error', httpRequest.response.statusText);
+            config.error(request, 'error', httpRequest.response.statusText, httpRequest.response);
           }
 
           if (config.complete) {
@@ -16191,6 +16583,21 @@ function HTTPLoader(cfg) {
         lastTraceReceivedCount = event.loaded;
       }
 
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
+
+      if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
+        progressTimeout = setTimeout(function () {
+          // No more progress => abort request and treat as an error
+          logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
+          httpRequest.response.onabort = null;
+          httpRequest.loader.abort(httpRequest);
+          onloadend();
+        }, settings.get().streaming.fragmentRequestProgressTimeout);
+      }
+
       if (config.progress && event) {
         config.progress(event);
       }
@@ -16211,6 +16618,11 @@ function HTTPLoader(cfg) {
     };
 
     var onabort = function onabort() {
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
+
       if (config.abort) {
         config.abort(request);
       }
@@ -16263,9 +16675,20 @@ function HTTPLoader(cfg) {
       }
     }
 
-    request.url = modifiedUrl;
     var verb = request.checkExistenceOnly ? _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.HEAD : _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET;
-    var withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
+    var withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type); // Add queryParams that came from pathway cloning
+
+    if (request.queryParams) {
+      var queryParams = Object.keys(request.queryParams).map(function (key) {
+        return {
+          key: key,
+          value: request.queryParams[key]
+        };
+      });
+      modifiedUrl = _core_Utils__WEBPACK_IMPORTED_MODULE_7__["default"].addAditionalQueryParameterToUrl(modifiedUrl, queryParams);
+    }
+
+    request.url = modifiedUrl;
     httpRequest = {
       url: modifiedUrl,
       method: verb,
@@ -17221,6 +17644,7 @@ function AbandonRequestsRule(config) {
             switchRequest.quality = newQuality;
             switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
             switchRequest.reason.fragmentID = fragmentInfo.id;
+            switchRequest.reason.rule = this.getClassName();
             abandonDict[fragmentInfo.id] = fragmentInfo;
             logger.debug('[' + mediaType + '] frag id', fragmentInfo.id, ' is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
             delete fragmentDict[mediaType][fragmentInfo.id];
@@ -19889,7 +20313,7 @@ function LoLpWeightSelector(config) {
    * @param {number} currentRebuffer
    * @param {number} currentThroughput
    * @param {number} playbackRate
-   * @return {null}
+   * @return {number|null}
    * @private
    */
 
@@ -22138,6 +22562,15 @@ var IsoBox = /*#__PURE__*/function () {
         }
 
         break;
+
+      case 'prft':
+        this.version = boxData.version;
+        this.reference_track_ID = boxData.reference_track_ID;
+        this.ntp_timestamp_sec = boxData.ntp_timestamp_sec;
+        this.ntp_timestamp_frac = boxData.ntp_timestamp_frac;
+        this.media_time = boxData.media_time;
+        this.flags = boxData.flags;
+        break;
     }
   }
 
@@ -23248,7 +23681,7 @@ function stringify(schema) {
   \*******************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
-/*! codem-isoboxer v0.3.6 https://github.com/madebyhiro/codem-isoboxer/blob/master/LICENSE.txt */
+/*! codem-isoboxer v0.3.9 https://github.com/madebyhiro/codem-isoboxer/blob/master/LICENSE.txt */
 var ISOBoxer = {};
 
 ISOBoxer.parseBuffer = function(arrayBuffer) {
@@ -23744,7 +24177,8 @@ ISOBox.prototype._parseBox = function() {
 
   switch(this.size) {
   case 0:
-    this._raw = new DataView(this._raw.buffer, this._offset, (this._raw.byteLength - this._cursor.offset + 8));
+    // Size zero indicates last box in the file. Consume remaining buffer.
+    this._raw = new DataView(this._raw.buffer, this._offset);
     break;
   case 1:
     if (this._offset + this.size > this._raw.buffer.byteLength) {
@@ -24018,8 +24452,14 @@ ISOBox.prototype._writeField = function(type, size, value) {
   }
 };
 
-// ISO/IEC 14496-15:2014 - avc1 box
-ISOBox.prototype._boxProcessors['avc1'] = ISOBox.prototype._boxProcessors['encv'] = function() {
+// ISO/IEC 14496-15:2014 - avc1/2/3/4, hev1, hvc1, encv
+ISOBox.prototype._boxProcessors['avc1'] =
+ISOBox.prototype._boxProcessors['avc2'] =
+ISOBox.prototype._boxProcessors['avc3'] =
+ISOBox.prototype._boxProcessors['avc4'] =
+ISOBox.prototype._boxProcessors['hvc1'] =
+ISOBox.prototype._boxProcessors['hev1'] =
+ISOBox.prototype._boxProcessors['encv'] = function() {
   // SampleEntry fields
   this._procFieldArray('reserved1', 6,    'uint', 8);
   this._procField('data_reference_index', 'uint', 16);
@@ -24036,8 +24476,18 @@ ISOBox.prototype._boxProcessors['avc1'] = ISOBox.prototype._boxProcessors['encv'
   this._procFieldArray('compressorname', 32,'uint',    8);
   this._procField('depth',                'uint',     16);
   this._procField('pre_defined3',         'int',      16);
-  // AVCSampleEntry fields
+  // Codec-specific fields
   this._procField('config', 'data', -1);
+};
+
+// ISO/IEC 14496-12:2012 - 8.6.1.3 Composition Time To Sample Box
+ISOBox.prototype._boxProcessors['ctts'] = function() {
+  this._procFullBox();
+  this._procField('entry_count', 'uint', 32);
+  this._procEntries('entries', this.entry_count, function(entry) {
+    this._procEntryField(entry, 'sample_count', 'uint', 32);
+    this._procEntryField(entry, 'sample_offset', (this.version === 1) ? 'int' : 'uint', 32);
+  });
 };
 
 // ISO/IEC 14496-12:2012 - 8.7.2 Data Reference Box
@@ -24192,6 +24642,15 @@ ISOBox.prototype._boxProcessors['payl'] = function() {
   this._procField('cue_text', 'utf8');
 };
 
+// ISO/IEC 14496-12:2012 - 8.16.5 Producer Reference Time
+ISOBox.prototype._boxProcessors['prft'] = function() {
+  this._procFullBox();
+  this._procField('reference_track_ID', 'uint', 32);
+  this._procField('ntp_timestamp_sec', 'uint', 32);
+  this._procField('ntp_timestamp_frac', 'uint', 32);
+  this._procField('media_time', 'uint', (this.version == 1) ? 64 : 32);
+};
+
 //ISO/IEC 23001-7:2011 - 8.1 Protection System Specific Header Box
 ISOBox.prototype._boxProcessors['pssh'] = function() {
   this._procFullBox();
@@ -24278,6 +24737,21 @@ ISOBox.prototype._boxProcessors['stsd'] = function() {
   this._procFullBox();
   this._procField('entry_count', 'uint', 32);
   this._procSubBoxes('entries', this.entry_count);
+};
+
+// ISO/IEC 14496-30:2014 - WebVTT Cue Settings Box.
+ISOBox.prototype._boxProcessors['sttg'] = function() {
+    this._procField('settings', 'utf8');
+};
+
+// ISO/IEC 14496-12:2012 - 8.6.1.2 Decoding Time To Sample Box
+ISOBox.prototype._boxProcessors['stts'] = function() {
+  this._procFullBox();
+  this._procField('entry_count', 'uint', 32);
+  this._procEntries('entries', this.entry_count, function(entry) {
+    this._procEntryField(entry, 'sample_count', 'uint', 32);
+    this._procEntryField(entry, 'sample_delta', 'uint', 32);
+  });
 };
 
 // ISO/IEC 14496-12:2015 - 8.7.7 Sub-Sample Information Box

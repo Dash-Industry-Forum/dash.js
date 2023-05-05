@@ -3496,25 +3496,16 @@ function MssHandler(config) {
   var events = config.events;
   var constants = config.constants;
   var initSegmentType = config.initSegmentType;
-  var dashMetrics = config.dashMetrics;
   var playbackController = config.playbackController;
   var streamController = config.streamController;
-  var protectionController = config.protectionController;
-  var mssFragmentProcessor = (0,_MssFragmentProcessor__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create({
-    dashMetrics: dashMetrics,
-    playbackController: playbackController,
-    protectionController: protectionController,
-    streamController: streamController,
-    eventBus: eventBus,
-    constants: constants,
-    ISOBoxer: config.ISOBoxer,
-    debug: config.debug,
-    errHandler: config.errHandler
-  });
-  var mssParser, fragmentInfoControllers, instance;
+  var mssParser, mssFragmentProcessor, fragmentInfoControllers, instance;
 
   function setup() {
     fragmentInfoControllers = [];
+  }
+
+  function createMssFragmentProcessor() {
+    mssFragmentProcessor = (0,_MssFragmentProcessor__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create(config);
   }
 
   function getStreamProcessor(type) {
@@ -3698,6 +3689,7 @@ function MssHandler(config) {
   instance = {
     reset: reset,
     createMssParser: createMssParser,
+    createMssFragmentProcessor: createMssFragmentProcessor,
     registerEvents: registerEvents
   };
   setup();
@@ -4741,6 +4733,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.AST_IN_FUTURE = 'astInFuture';
     /**
+     * Triggered when the BaseURLs have been updated.
+     * @event MediaPlayerEvents#BASE_URLS_UPDATED
+     */
+
+    _this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+    /**
      * Triggered when the video element's buffer state changes to stalled.
      * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
      * @event MediaPlayerEvents#BUFFER_EMPTY
@@ -4809,7 +4807,19 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.LOG = 'log';
     /**
-     * Triggered when the manifest load is complete
+     * Triggered when the manifest load is started
+     * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+     */
+
+    _this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+    /**
+     * Triggered when the manifest loading is finished, providing the request object information
+     * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+     */
+
+    _this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+    /**
+     * Triggered when the manifest load is complete, providing the payload
      * @event MediaPlayerEvents#MANIFEST_LOADED
      */
 
@@ -4916,6 +4926,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a throughput measurement based on the last segment request has been stored
+     * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+     */
+
+    _this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
     /**
      * Triggered when a ttml chunk is parsed.
      * @event MediaPlayerEvents#TTML_PARSED
@@ -5102,6 +5118,12 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.CONTENT_STEERING_REQUEST_COMPLETED = 'contentSteeringRequestCompleted';
+    /**
+     * Triggered when an inband prft (ProducerReferenceTime) boxes has been received.
+     * @event MediaPlayerEvents#INBAND_PRFT
+     */
+
+    _this.INBAND_PRFT = 'inbandPrft';
     return _this;
   }
 
