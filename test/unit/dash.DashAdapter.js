@@ -611,7 +611,6 @@ describe('DashAdapter', function () {
                         index: 0
                     }, Constants.VIDEO, manifest_without_supplemental_properties);
 
-                    console.log(JSON.stringify(mediaInfoArray));
                     expect(mediaInfoArray).to.be.instanceOf(Array);
                     expect(mediaInfoArray.length).equals(1);
 
@@ -1245,7 +1244,6 @@ describe('DashAdapter', function () {
                     }]
                 }]);
 
-                console.log('applies replace operation with siblings');
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], replacementPeriod, originalPeriods[2]]);

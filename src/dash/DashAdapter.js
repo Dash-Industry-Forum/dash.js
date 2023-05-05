@@ -931,7 +931,7 @@ function DashAdapter() {
                     // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
 
                     // purge the directly named entity
-                    if (typeof target[name] === 'object') {
+                    if (!Array.isArray(target[name])) {
                         delete target[name];
                     } else if (relativePosition != -1) {
                         // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
