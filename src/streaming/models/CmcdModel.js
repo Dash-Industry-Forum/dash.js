@@ -442,7 +442,7 @@ function CmcdModel() {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
             const st = isDynamic ? CmcdStreamType.LIVE : CmcdStreamType.VOD;
-            const sf = data.protocol && data.protocol === 'MSS' ? CmcdStreamingFormat.MSS : CmcdStreamingFormat.DASH;
+            const sf = data.protocol && data.protocol === 'MSS' ? CmcdStreamingFormat.SMOOTH : CmcdStreamingFormat.DASH;
 
             internalData.st = `${st}`;
             internalData.sf = `${sf}`;
