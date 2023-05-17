@@ -1,3 +1,5 @@
+import * as CommonMediaLibrary from '@svta.org/common-media-library';
+
 export = dashjs;
 export as namespace dashjs;
 
@@ -1497,6 +1499,14 @@ declare namespace dashjs {
         attachProtectionController(value: ProtectionController): void;
 
         setProtectionData(value: ProtectionDataSet): void;
+
+        registerRequestPlugin(plugin: CommonMediaLibrary.RequestPlugin): void;
+
+        unregisterRequestPlugin(plugin: CommonMediaLibrary.RequestPlugin): void;
+
+        registerResponsePlugin(plugin: CommonMediaLibrary.ResponsePlugin): void;
+
+        unregisterResponsePlugin(plugin: CommonMediaLibrary.ResponsePlugin): void;
 
         registerLicenseRequestFilter(filter: RequestFilter): void;
 

@@ -41,6 +41,8 @@ function CustomParametersModel() {
     let instance,
         utcTimingSources,
         xhrWithCredentials,
+        requestPlugins,
+        responsePlugins,
         licenseRequestFilters,
         licenseResponseFilters,
         customCapabilitiesFilters,
@@ -58,6 +60,8 @@ function CustomParametersModel() {
     }
 
     function _resetInitialSettings() {
+        requestPlugins = [];
+        responsePlugins = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
@@ -99,6 +103,22 @@ function CustomParametersModel() {
     }
 
     /**
+     * Returns all request plugins
+     * @return {array}
+     */
+    function getRequestPlugins() {
+        return requestPlugins;
+    }
+
+    /**
+     * Returns all response plugins
+     * @return {array}
+     */
+    function getResponsePlugins() {
+        return responsePlugins;
+    }
+
+    /**
      * Returns all license request filters
      * @return {array}
      */
@@ -112,6 +132,26 @@ function CustomParametersModel() {
      */
     function getLicenseResponseFilters() {
         return licenseResponseFilters;
+    }
+
+    /**
+     * Registers a request plugin. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} plugin - the request plugin callback
+     */
+    function registerRequestPlugin(plugin) {
+        requestPlugins.push(plugin);
+    }
+
+    /**
+     * Registers a response plugin. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
+     * The plugins are applied in the order they are registered.
+     * @param {function} plugin - the response plugin callback
+     */
+    function registerResponsePlugin(plugin) {
+        responsePlugins.push(plugin);
     }
 
     /**
@@ -132,6 +172,22 @@ function CustomParametersModel() {
      */
     function registerLicenseResponseFilter(filter) {
         licenseResponseFilters.push(filter);
+    }
+
+    /**
+     * Unregisters a request plugin.
+     * @param {function} plugin - the request plugin callback
+     */ 
+    function unregisterRequestPlugin(plugin) {
+        _unregisterFilter(requestPlugins, plugin);
+    }
+
+    /**
+     * Unregisters a response plugin.
+     * @param {function} plugin - the request plugin callback
+     */    
+    function unregisterResponsePlugin(plugin) {
+        _unregisterFilter(responsePlugins, plugin);
     }
 
     /**
@@ -344,13 +400,19 @@ function CustomParametersModel() {
         getCustomInitialTrackSelectionFunction,
         setCustomInitialTrackSelectionFunction,
         resetCustomInitialTrackSelectionFunction,
+        getRequestPlugins,
+        getResponsePlugins,
         getLicenseResponseFilters,
         getLicenseRequestFilters,
         getCustomCapabilitiesFilters,
         registerCustomCapabilitiesFilter,
+        registerRequestPlugin,
+        registerResponsePlugin,
         registerLicenseResponseFilter,
         registerLicenseRequestFilter,
         unregisterCustomCapabilitiesFilter,
+        unregisterRequestPlugin,
+        unregisterResponsePlugin,
         unregisterLicenseResponseFilter,
         unregisterLicenseRequestFilter,
         addAbrCustomRule,

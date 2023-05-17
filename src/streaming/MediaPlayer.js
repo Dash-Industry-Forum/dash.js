@@ -1682,6 +1682,50 @@ function MediaPlayer() {
     }
 
     /**
+     * Registers a request plugin. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} plugin - the request plugin callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerRequestPlugin(plugin) {
+        customParametersModel.registerRequestPlugin(plugin);
+    }
+
+    /**
+     * Unregisters a request plugin.
+     * @param {function} plugin - the request plugin callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */    
+    function unregisterRequestPlugin(plugin) {
+        customParametersModel.unregisterRequestPlugin(plugin);
+    }
+
+    /**
+     * Registers a response plugin. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
+     * The plugins are applied in the order they are registered.
+     * @param {function} plugin - the response plugin callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerResponsePlugin(plugin) {
+        customParametersModel.registerResponsePlugin(plugin);
+    }
+
+    /**
+     * Unregisters a response plugin.
+     * @param {function} plugin - the request plugin callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */    
+    function unregisterResponsePlugin(plugin) {
+        customParametersModel.unregisterResponsePlugin(plugin);
+    }
+
+    /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
@@ -2571,6 +2615,10 @@ function MediaPlayer() {
         getProtectionController,
         attachProtectionController,
         setProtectionData,
+        registerRequestPlugin,
+        unregisterRequestPlugin,
+        registerResponsePlugin,
+        unregisterResponsePlugin,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
         unregisterLicenseRequestFilter,
