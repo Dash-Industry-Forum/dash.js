@@ -395,8 +395,9 @@ function L2ARule(config) {
                     lastthroughput = 1;
                 }//To avoid division with 0 (avoid infinity) in case of an absolute network outage
 
-                if (currentHttpRequest.url == l2AState.lastSegmentUrl) {
-                    // No change to inputs so use previously calculated quality
+                if (currentHttpRequest.url == l2AState.lastSegmentUrl ||
+                    currentHttpRequest.type == 'InitializationSegment') {
+                    // No change to inputs or init segment so use previously calculated quality
                     quality = l2AState.lastQuality;
 
                 } else { // Recalculate Q
