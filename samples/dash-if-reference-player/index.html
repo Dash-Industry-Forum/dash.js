@@ -158,6 +158,12 @@
                     Auto-Play
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Sets the muted attribute on the video element">
+                    <input type="checkbox" ng-model="muted" ng-change="toggleMute()"
+                           ng-checked="muted">
+                    Muted
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables looping of the media once playback has completed">
                     <input type="checkbox" id="loop-cb" ng-model="loopSelected" ng-checked="loopSelected">
                     Loop

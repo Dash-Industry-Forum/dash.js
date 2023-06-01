@@ -241,6 +241,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
         loop: true,
         autoPlay: true,
+        autoLoad: false,
+        muted: false,
         drmToday: false,
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
@@ -291,6 +293,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     // Starting Options
     $scope.autoPlaySelected = true;
     $scope.autoLoadSelected = false;
+    $scope.muted = false;
     $scope.cmcdEnabled = false;
     $scope.cmsdEnabled = false;
     $scope.cmsdApplyMb = false;
@@ -497,6 +500,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.toggleAutoPlay = function () {
         $scope.player.setAutoPlay($scope.autoPlaySelected);
     };
+
+    $scope.toggleMuted = function () {
+        $scope.player.setMute($scope.muted)
+    }
 
     $scope.changeFetchThroughputCalculation = function (mode) {
         $scope.player.updateSettings({
@@ -1497,6 +1504,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             loop: $scope.loopSelected,
             autoPlay: $scope.autoPlaySelected,
             autoLoad: $scope.autoLoadSelected,
+            muted: $scope.muted,
             drmToday: $scope.drmToday,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
@@ -1765,6 +1773,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     break;
                 case 'autoLoad':
                     $scope.autoLoadSelected = this.parseBoolean(value);
+                    break;
+                case 'muted':
+                    $scope.muted = this.parseBoolean(value);
+                    $scope.toggleMuted();
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
