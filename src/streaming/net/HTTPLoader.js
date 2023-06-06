@@ -113,6 +113,17 @@ function HTTPLoader(cfg) {
             throw new Error('config object is not correct or missing');
         }
 
+        const addHttpRequestMetric = function(success) {
+            const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+            const responseStatus = httpRequest.response ? httpRequest.response.status : null;
+            const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                httpRequest.response ? httpRequest.response.responseHeaders : null;
+    
+            const cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+    
+            dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+        }
+    
         const handleLoaded = function (success) {
             needFailureReport = false;
 
@@ -122,14 +133,7 @@ function HTTPLoader(cfg) {
             request.fileLoaderType = fileLoaderType;
 
             if (!request.checkExistenceOnly) {
-                const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
-                const responseStatus = httpRequest.response ? httpRequest.response.status : null;
-                const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                    httpRequest.response ? httpRequest.response.responseHeaders : null;
-
-                const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
-
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+                addHttpRequestMetric(success);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
@@ -261,6 +265,8 @@ function HTTPLoader(cfg) {
         };
 
         const onabort = function () {
+            addHttpRequestMetric(true);
+
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;

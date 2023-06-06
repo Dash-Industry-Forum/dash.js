@@ -145,7 +145,7 @@ function LoLPRule(config) {
             scheduleController.setTimeToLoadDelay(0);
 
             if (switchRequest.quality !== currentQuality) {
-                console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
+                logger.debug('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
             }
 
             return switchRequest;
