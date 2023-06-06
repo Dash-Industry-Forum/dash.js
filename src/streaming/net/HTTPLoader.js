@@ -114,6 +114,11 @@ function HTTPLoader(cfg) {
         }
 
         const addHttpRequestMetric = function(success) {
+            request.requestStartDate = requestStartTime;
+            request.requestEndDate = new Date();
+            request.firstByteDate = request.firstByteDate || requestStartTime;
+            request.fileLoaderType = fileLoaderType;
+
             const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
             const responseStatus = httpRequest.response ? httpRequest.response.status : null;
             const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
@@ -127,18 +132,11 @@ function HTTPLoader(cfg) {
         const handleLoaded = function (success) {
             needFailureReport = false;
 
-            request.requestStartDate = requestStartTime;
-            request.requestEndDate = new Date();
-            request.firstByteDate = request.firstByteDate || requestStartTime;
-            request.fileLoaderType = fileLoaderType;
+            addHttpRequestMetric(success);
 
-            if (!request.checkExistenceOnly) {
-                addHttpRequestMetric(success);
-
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(request);
-                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { request });
-                }
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                dashMetrics.addManifestUpdate(request);
+                eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { request });
             }
         };
 
@@ -318,7 +316,6 @@ function HTTPLoader(cfg) {
             }
         }
 
-        const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
         // Add queryParams that came from pathway cloning
@@ -336,7 +333,7 @@ function HTTPLoader(cfg) {
 
         httpRequest = {
             url: modifiedUrl,
-            method: verb,
+            method: HTTPRequest.GET,
             withCredentials: withCredentials,
             request: request,
             onload: onload,
