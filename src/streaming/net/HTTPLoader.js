@@ -114,6 +114,11 @@ function HTTPLoader(cfg) {
         }
 
         const addHttpRequestMetric = function(success) {
+            request.requestStartDate = requestStartTime;
+            request.requestEndDate = new Date();
+            request.firstByteDate = request.firstByteDate || requestStartTime;
+            request.fileLoaderType = fileLoaderType;
+
             const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
             const responseStatus = httpRequest.response ? httpRequest.response.status : null;
             const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
@@ -126,11 +131,6 @@ function HTTPLoader(cfg) {
     
         const handleLoaded = function (success) {
             needFailureReport = false;
-
-            request.requestStartDate = requestStartTime;
-            request.requestEndDate = new Date();
-            request.firstByteDate = request.firstByteDate || requestStartTime;
-            request.fileLoaderType = fileLoaderType;
 
             if (!request.checkExistenceOnly) {
                 addHttpRequestMetric(success);
