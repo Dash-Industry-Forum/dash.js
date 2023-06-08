@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import { CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders } from '@svta/common-media-library';
+import {CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders} from '@svta/common-media-library';
 import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
@@ -37,7 +37,7 @@ import DashManifestModel from '../../dash/models/DashManifestModel';
 import Constants from '../../streaming/constants/Constants';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 const CMCD_VERSION = 1;
 const RTP_SAFETY_FACTOR = 5;
