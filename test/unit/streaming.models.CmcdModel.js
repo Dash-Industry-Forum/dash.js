@@ -1,10 +1,10 @@
-import { decodeCmcd } from '@svta/common-media-library';
+import {decodeCmcd} from '@svta/common-media-library';
 import EventBus from '../../src/core/EventBus';
 import Settings from '../../src/core/Settings';
 import DashConstants from '../../src/dash/constants/DashConstants';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import CmcdModel from '../../src/streaming/models/CmcdModel';
-import { HTTPRequest } from '../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
 
 import AbrControllerMock from './mocks/AbrControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
