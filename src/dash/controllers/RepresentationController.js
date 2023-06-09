@@ -106,28 +106,36 @@ function RepresentationController(config) {
     }
 
     function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
-        checkConfig();
+        return new Promise((resolve, reject) => {
+            updating = true;
+            voAvailableRepresentations = availableRepresentations;
+            realAdaptation = newRealAdaptation;
+            const rep = getRepresentationForQuality(quality)
+            _setCurrentVoRepresentation(rep);
 
-        updating = true;
+            if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+                endDataUpdate();
+                return Promise.resolve();
+            }
 
-        voAvailableRepresentations = availableRepresentations;
+            const promises = [];
+            for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
+                const currentRep = voAvailableRepresentations[i];
+                promises.push(_updateRepresentation(currentRep));
+            }
 
-        const rep = getRepresentationForQuality(quality)
-        _setCurrentVoRepresentation(rep);
-        realAdaptation = newRealAdaptation;
+            Promise.all(promises)
+                .then(() => {
+                    // Update the current representation again as we have now the reference to the segments
+                    const rep = getRepresentationForQuality(quality)
+                    _setCurrentVoRepresentation(rep);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                })
+        })
 
-        if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
-            endDataUpdate();
-            return Promise.resolve();
-        }
-
-        const promises = [];
-        for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            const currentRep = voAvailableRepresentations[i];
-            promises.push(_updateRepresentation(currentRep));
-        }
-
-        return Promise.all(promises);
     }
 
     function _updateRepresentation(currentRep) {

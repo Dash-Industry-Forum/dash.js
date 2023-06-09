@@ -5,7 +5,6 @@ import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
 
 import SpecHelper from './helpers/SpecHelper';
@@ -72,9 +71,6 @@ describe('RepresentationController', function () {
             expect(data).not.exist; // jshint ignore:line
         });
 
-        it('should throw an exception when attempting to call updateData while setConfig has not been called properly', function () {
-            expect(representationController.updateData.bind(representationController)).to.throw(Constants.MISSING_CONFIG_ERROR);
-        });
     });
 
     describe('Config correctly passed', function () {
