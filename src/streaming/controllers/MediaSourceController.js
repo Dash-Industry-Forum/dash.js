@@ -30,14 +30,18 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 
 function MediaSourceController() {
 
     let instance,
         mediaSource,
+        mediaSourceType,
         logger;
 
     const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -47,9 +51,17 @@ function MediaSourceController() {
 
         let hasWebKit = ('WebKitMediaSource' in window);
         let hasMediaSource = ('MediaSource' in window);
+        let hasManagedMediaSource = ('ManagedMediaSource' in window);
 
+
+        if (hasManagedMediaSource) {
+            // eslint-disable-next-line no-undef
+            mediaSource = new ManagedMediaSource();
+            mediaSourceType = 'managedMediaSource';
+        }
         if (hasMediaSource) {
             mediaSource = new MediaSource();
+            mediaSourceType = 'mediaSource';
         } else if (hasWebKit) {
             mediaSource = new WebKitMediaSource();
         }
@@ -57,11 +69,26 @@ function MediaSourceController() {
         return mediaSource;
     }
 
+    function registerEventListener() {
+        if (mediaSource) {
+            mediaSource.addEventListener('startstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
+            })
+            mediaSource.addEventListener('endstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
+            })
+        }
+    }
+
     function attachMediaSource(videoModel) {
 
         let objectURL = window.URL.createObjectURL(mediaSource);
 
         videoModel.setSource(objectURL);
+
+        if (mediaSourceType === 'managedMediaSource') {
+            videoModel.setDisableRemotePlayback(true);
+        }
 
         return objectURL;
     }
@@ -126,6 +153,7 @@ function MediaSourceController() {
         detachMediaSource,
         setDuration,
         setSeekable,
+        registerEventListener,
         signalEndOfStream
     };
 

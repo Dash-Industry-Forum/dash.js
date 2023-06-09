@@ -438,6 +438,9 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#INBAND_PRFT
          */
         this.INBAND_PRFT = 'inbandPrft';
+
+        this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+        this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     }
 }
 
