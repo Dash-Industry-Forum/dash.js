@@ -107,7 +107,6 @@ function RepresentationController(config) {
 
     function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
         return new Promise((resolve, reject) => {
-            checkConfig();
             updating = true;
             voAvailableRepresentations = availableRepresentations;
             realAdaptation = newRealAdaptation;
