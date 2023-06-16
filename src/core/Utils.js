@@ -145,8 +145,8 @@ class Utils {
 
     /**
      * Compares both urls and returns a relative url (target relative to original)
-     * @param {string} original
-     * @param {string} target
+     * @param {string} originalUrl
+     * @param {string} targetUrl
      * @return {string|*}
      */
     static getRelativeUrl(originalUrl, targetUrl) {
@@ -186,6 +186,10 @@ class Utils {
         catch(e) {
             return {};
         }
+    }
+
+    static stringHasProtocol(string) {
+        return (/(http(s?)):\/\//i.test(string))
     }
 }
 
