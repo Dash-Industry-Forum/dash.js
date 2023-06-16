@@ -188,6 +188,11 @@ class Utils {
         }
     }
 
+    /**
+     * Checks for existence of "http" or "https" in a string
+     * @param string
+     * @returns {boolean}
+     */
     static stringHasProtocol(string) {
         return (/(http(s?)):\/\//i.test(string))
     }
