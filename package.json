@@ -11,6 +11,7 @@
         "start": "webpack serve --config build/webpack.dev.js",
         "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
         "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
+        "postbuild": "cp index.d.ts dash.d.ts",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
         "test": "karma start karma.unit.conf.js",
         "test-browserunit": "karma start build/karma.conf.js",

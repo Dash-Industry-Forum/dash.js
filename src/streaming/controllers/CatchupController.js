@@ -100,7 +100,7 @@ function CatchupController() {
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackProgression, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.off(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
         eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);

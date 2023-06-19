@@ -313,8 +313,9 @@ function TimelineConverter() {
     function _calcRangeForTimeline(voRepresentation) {
         const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
-        const timeline = representation.SegmentTemplate.SegmentTimeline;
-        const timescale = representation.SegmentTemplate.timescale;
+        const base = representation.SegmentTemplate || representation.SegmentList;
+        const timeline = base.SegmentTimeline;
+        const timescale = base.timescale;
         const segments = timeline.S;
         const range = { start: 0, end: 0 };
         const segmentTime = segments[0].t;

@@ -241,6 +241,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
         loop: true,
         autoPlay: true,
+        autoLoad: false,
+        muted: false,
         drmToday: false,
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
@@ -290,6 +292,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     // Starting Options
     $scope.autoPlaySelected = true;
+    $scope.autoLoadSelected = false;
+    $scope.muted = false;
     $scope.cmcdEnabled = false;
     $scope.cmsdEnabled = false;
     $scope.cmsdApplyMb = false;
@@ -496,6 +500,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.toggleAutoPlay = function () {
         $scope.player.setAutoPlay($scope.autoPlaySelected);
     };
+
+    $scope.toggleMuted = function () {
+        $scope.player.setMute($scope.muted)
+    }
 
     $scope.changeFetchThroughputCalculation = function (mode) {
         $scope.player.updateSettings({
@@ -1495,6 +1503,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
             loop: $scope.loopSelected,
             autoPlay: $scope.autoPlaySelected,
+            autoLoad: $scope.autoLoadSelected,
+            muted: $scope.muted,
             drmToday: $scope.drmToday,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
@@ -1559,12 +1569,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         for (var setting in settings) {
             if (typeof defaultSettings[setting] === 'object' && defaultSettings[setting] !== null && !(defaultSettings[setting] instanceof Array)) {
                 settingDifferencesObject[setting] = this.makeSettingDifferencesObject(settings[setting], defaultSettings[setting], false);
-            }
-            else if(settings[setting] !== defaultSettings[setting]){
-                if(Array.isArray(settings[setting])){
+            } else if (settings[setting] !== defaultSettings[setting]) {
+                if (Array.isArray(settings[setting])) {
                     settingDifferencesObject[setting] = _arraysEqual(settings[setting], defaultSettings[setting]) ? {} : settings[setting];
-                }
-                else {
+                } else {
                     settingDifferencesObject[setting] = settings[setting];
                 }
 
@@ -1762,6 +1770,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'autoPlay':
                     $scope.autoPlaySelected = this.parseBoolean(value);
                     $scope.toggleAutoPlay();
+                    break;
+                case 'autoLoad':
+                    $scope.autoLoadSelected = this.parseBoolean(value);
+                    break;
+                case 'muted':
+                    $scope.muted = this.parseBoolean(value);
+                    $scope.toggleMuted();
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
@@ -2295,18 +2310,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var vars = getUrlVars();
             var item = {};
 
-            if (vars && vars.hasOwnProperty('url')) {
-                item.url = vars.url;
-            }
-
-            // if (vars && vars.hasOwnProperty('mpd')) {
-            //     item.url = vars.mpd;
-            // }
-
-            if (vars && vars.hasOwnProperty('source')) {
-                item.url = vars.source;
-            }
-
             if (vars && vars.hasOwnProperty('stream')) {
                 try {
                     item = JSON.parse(atob(vars.stream));
@@ -2326,18 +2329,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
 
-            if (item.url) {
-                var startPlayback = false;
-
-                $scope.selectedItem = item;
-
-                if (vars.hasOwnProperty('autoplay')) {
-                    startPlayback = (vars.autoplay === 'true');
-                }
-
-                if (startPlayback) {
-                    $scope.doLoad();
-                }
+            if ($scope.autoLoadSelected && $scope.selectedItem) {
+                $scope.doLoad();
             }
         }
 
