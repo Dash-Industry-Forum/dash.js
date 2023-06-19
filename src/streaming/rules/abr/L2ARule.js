@@ -126,6 +126,7 @@ function L2ARule(config) {
         l2AState.lastSegmentDurationS = NaN;
         l2AState.lastSegmentRequestTimeMs = NaN;
         l2AState.lastSegmentFinishTimeMs = NaN;
+        l2AState.lastSegmentUrl = '';
     }
 
 
@@ -388,56 +389,67 @@ function L2ARule(config) {
                 let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.d, 0);
                 const downloadBytes = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.b[0], 0);
                 let lastthroughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+                let currentHttpRequest = dashMetrics.getCurrentHttpRequest(mediaType);
 
                 if (lastthroughput < 1) {
                     lastthroughput = 1;
                 }//To avoid division with 0 (avoid infinity) in case of an absolute network outage
 
-                let V = l2AState.lastSegmentDurationS;
-                let sign = 1;
+                // Note that for SegmentBase addressing the request url does not change.
+                // As this is not relevant for low latency streaming at this point the check below is sufficient
+                if (currentHttpRequest.url === l2AState.lastSegmentUrl ||
+                    currentHttpRequest.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                    // No change to inputs or init segment so use previously calculated quality
+                    quality = l2AState.lastQuality;
 
-                //Main adaptation logic of L2A-LL
-                for (let i = 0; i < bitrateCount; ++i) {
-                    bitrates[i] = bitrates[i] / 1000; // Originally in bps, now in Kbps
-                    if (currentPlaybackRate * bitrates[i] > lastthroughput) {// In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
-                        sign = -1;
+                } else { // Recalculate Q
+
+                    let V = l2AState.lastSegmentDurationS;
+                    let sign = 1;
+
+                    //Main adaptation logic of L2A-LL
+                    for (let i = 0; i < bitrateCount; ++i) {
+                        bitrates[i] = bitrates[i] / 1000; // Originally in bps, now in Kbps
+                        if (currentPlaybackRate * bitrates[i] > lastthroughput) {// In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
+                            sign = -1;
+                        }
+                        // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
+                        l2AParameter.w[i] = l2AParameter.prev_w[i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[i] / lastthroughput));//Lagrangian descent
                     }
-                    // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
-                    l2AParameter.w[i] = l2AParameter.prev_w[i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[i] / lastthroughput));//Lagrangian descent
-                }
 
-                // Apply euclidean projection on w to ensure w expresses a probability distribution
-                l2AParameter.w = euclideanProjection(l2AParameter.w);
+                    // Apply euclidean projection on w to ensure w expresses a probability distribution
+                    l2AParameter.w = euclideanProjection(l2AParameter.w);
 
-                for (let i = 0; i < bitrateCount; ++i) {
-                    diff1[i] = l2AParameter.w[i] - l2AParameter.prev_w[i];
-                    l2AParameter.prev_w[i] = l2AParameter.w[i];
-                }
-
-                // Lagrangian multiplier Q calculation:
-                l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput));
-
-                // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
-                let temp = [];
-                for (let i = 0; i < bitrateCount; ++i) {
-                    temp[i] = Math.abs(bitrates[i] - _dotmultiplication(l2AParameter.w, bitrates));
-                }
-
-                // Quality is calculated based on the probability distribution w (the output of L2A)
-                quality = temp.indexOf(Math.min(...temp));
-
-                // We employ a cautious -stepwise- ascent
-                if (quality > l2AState.lastQuality) {
-                    if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
-                        quality = l2AState.lastQuality + 1;
+                    for (let i = 0; i < bitrateCount; ++i) {
+                        diff1[i] = l2AParameter.w[i] - l2AParameter.prev_w[i];
+                        l2AParameter.prev_w[i] = l2AParameter.w[i];
                     }
-                }
 
-                // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
-                if (bitrates[quality] >= lastthroughput) {
-                    l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
-                }
+                    // Lagrangian multiplier Q calculation:
+                    l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput));
 
+                    // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
+                    let temp = [];
+                    for (let i = 0; i < bitrateCount; ++i) {
+                        temp[i] = Math.abs(bitrates[i] - _dotmultiplication(l2AParameter.w, bitrates));
+                    }
+
+                    // Quality is calculated based on the probability distribution w (the output of L2A)
+                    quality = temp.indexOf(Math.min(...temp));
+
+                    // We employ a cautious -stepwise- ascent
+                    if (quality > l2AState.lastQuality) {
+                        if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
+                            quality = l2AState.lastQuality + 1;
+                        }
+                    }
+
+                    // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
+                    if (bitrates[quality] >= lastthroughput) {
+                        l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
+                    }
+                    l2AState.lastSegment.url = currentHttpRequest.url;
+                }
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = throughput;
                 switchRequest.reason.latency = latency;
