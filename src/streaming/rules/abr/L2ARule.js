@@ -395,8 +395,10 @@ function L2ARule(config) {
                     lastthroughput = 1;
                 }//To avoid division with 0 (avoid infinity) in case of an absolute network outage
 
-                if (currentHttpRequest.url == l2AState.lastSegmentUrl ||
-                    currentHttpRequest.type == 'InitializationSegment') {
+                // Note that for SegmentBase addressing the request url does not change.
+                // As this is not relevant for low latency streaming at this point the check below is sufficient
+                if (currentHttpRequest.url === l2AState.lastSegmentUrl ||
+                    currentHttpRequest.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                     // No change to inputs or init segment so use previously calculated quality
                     quality = l2AState.lastQuality;
 
