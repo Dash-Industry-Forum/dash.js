@@ -36,10 +36,10 @@ import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import BaseURL from '../vo/BaseURL';
 import MpdLocation from '../vo/MpdLocation';
+import Utils from '../../core/Utils.js';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
@@ -417,7 +417,7 @@ function ContentSteeringController() {
     /**
      * Returns synthesized BaseURL elements based on Pathway Cloning
      * @param {BaseURL[]}referenceElements
-     * @returns {BaseURL[]|*[]}
+     * @returns {BaseURL[]}
      */
     function getSynthesizedBaseUrlElements(referenceElements) {
         try {
@@ -443,7 +443,7 @@ function ContentSteeringController() {
     /**
      * Returns synthesized Location elements based on Pathway Cloning
      * @param {MpdLocation[]} referenceElements
-     * @returns {MpdLocation[]|*[]}
+     * @returns {MpdLocation[]}
      */
     function getSynthesizedLocationElements(referenceElements) {
         try {
@@ -465,7 +465,7 @@ function ContentSteeringController() {
     /**
      * Helper function to synthesize elements
      * @param {array} referenceElements
-     * @returns {*[]}
+     * @returns {array}
      * @private
      */
     function _getSynthesizedElements(referenceElements) {
@@ -486,9 +486,11 @@ function ContentSteeringController() {
                 }
                 if (reference) {
                     const referenceUrl = new URL(reference.url);
+                    let host = pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST];
+                    host = Utils.stringHasProtocol(host) ? host : `${referenceUrl.protocol}//${host}`;
                     const synthesizedElement =
                         {
-                            synthesizedUrl: `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`,
+                            synthesizedUrl: `${host}${referenceUrl.pathname}`,
                             serviceLocation: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID],
                             queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.PARAMS],
                             reference

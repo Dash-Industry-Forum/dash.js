@@ -146,10 +146,22 @@
             <div class="options-item-title">Playback</div>
             <div class="options-item-body">
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables automatic loading of the media once the reference page is opened.">
+                    <input type="checkbox" ng-model="autoLoadSelected"
+                           ng-checked="autoLoadSelected">
+                    Auto-Load
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables automatic startup of the media once the media is loaded">
                     <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()"
                            ng-checked="autoPlaySelected">
                     Auto-Play
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Sets the muted attribute on the video element">
+                    <input type="checkbox" ng-model="muted" ng-change="toggleMute()"
+                           ng-checked="muted">
+                    Muted
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables looping of the media once playback has completed">
