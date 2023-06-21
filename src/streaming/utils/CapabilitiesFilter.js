@@ -65,14 +65,13 @@ function CapabilitiesFilter() {
         });
     }
 
-
     function _filterUnsupportedCodecs(type, manifest) {
-        if (!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
             return Promise.resolve();
         }
 
         const promises = [];
-        manifest.Period_asArray.forEach((period) => {
+        manifest.Period.forEach((period) => {
             promises.push(_filterUnsupportedAdaptationSetsOfPeriod(period, type));
         });
 
@@ -82,13 +81,13 @@ function CapabilitiesFilter() {
     function _filterUnsupportedAdaptationSetsOfPeriod(period, type) {
         return new Promise((resolve) => {
 
-            if (!period || !period.AdaptationSet_asArray || period.AdaptationSet_asArray.length === 0) {
+            if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
                 resolve();
                 return;
             }
 
             const promises = [];
-            period.AdaptationSet_asArray.forEach((as) => {
+            period.AdaptationSet.forEach((as) => {
                 if (adapter.getIsTypeOf(as, type)) {
                     promises.push(_filterUnsupportedRepresentationsOfAdaptation(as, type));
                 }
@@ -96,9 +95,8 @@ function CapabilitiesFilter() {
 
             Promise.all(promises)
                 .then(() => {
-                    period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
-                        const supported = as.Representation_asArray && as.Representation_asArray.length > 0;
-
+                    period.AdaptationSet = period.AdaptationSet.filter((as) => {
+                        const supported = as.Representation && as.Representation.length > 0;
                         if (!supported) {
                             eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
                                 adaptationSet: as
@@ -108,7 +106,6 @@ function CapabilitiesFilter() {
 
                         return supported;
                     });
-
                     resolve();
                 })
                 .catch(() => {
@@ -121,7 +118,7 @@ function CapabilitiesFilter() {
     function _filterUnsupportedRepresentationsOfAdaptation(as, type) {
         return new Promise((resolve) => {
 
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+            if (!as.Representation || as.Representation.length === 0) {
                 resolve();
                 return;
             }
@@ -129,7 +126,7 @@ function CapabilitiesFilter() {
             const promises = [];
             const configurations = [];
 
-            as.Representation_asArray.forEach((rep, i) => {
+            as.Representation.forEach((rep, i) => {
                 const codec = adapter.getCodec(as, i, false);
                 const config = _createConfiguration(type, rep, codec);
 
@@ -139,7 +136,7 @@ function CapabilitiesFilter() {
 
             Promise.all(promises)
                 .then((supported) => {
-                    as.Representation_asArray = as.Representation_asArray.filter((_, i) => {
+                    as.Representation = as.Representation.filter((_, i) => {
                         if (!supported[i]) {
                             logger.debug(`[Stream] Codec ${configurations[i].codec} not supported `);
                         }
@@ -193,18 +190,18 @@ function CapabilitiesFilter() {
 
     function _filterUnsupportedEssentialProperties(manifest) {
 
-        if (!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
             return;
         }
 
-        manifest.Period_asArray.forEach((period) => {
-            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
+        manifest.Period.forEach((period) => {
+            period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
-                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                if (!as.Representation || as.Representation.length === 0) {
                     return true;
                 }
 
-                as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+                as.Representation = as.Representation.filter((rep) => {
                     const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
 
                     if (essentialProperties && essentialProperties.length > 0) {
@@ -221,7 +218,7 @@ function CapabilitiesFilter() {
                     return true;
                 });
 
-                return as.Representation_asArray && as.Representation_asArray.length > 0;
+                return as.Representation && as.Representation.length > 0;
             });
         });
 
@@ -229,22 +226,22 @@ function CapabilitiesFilter() {
 
     function _applyCustomFilters(manifest) {
         const customCapabilitiesFilters = customParametersModel.getCustomCapabilitiesFilters();
-        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period || manifest.Period.length === 0) {
             return;
         }
 
-        manifest.Period_asArray.forEach((period) => {
-            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
+        manifest.Period.forEach((period) => {
+            period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
-                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                if (!as.Representation || as.Representation.length === 0) {
                     return true;
                 }
 
-                as.Representation_asArray = as.Representation_asArray.filter((representation) => {
+                as.Representation = as.Representation.filter((representation) => {
                     return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
                 });
 
-                return as.Representation_asArray && as.Representation_asArray.length > 0;
+                return as.Representation && as.Representation.length > 0;
             });
         });
     }

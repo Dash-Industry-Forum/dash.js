@@ -16,12 +16,12 @@ const dashManifestModel = DashManifestModel(context).getInstance();
 describe('DashParser', function () {
 
     it('should throw an error when parse is called without data and config object has been set properly', function () {
-        expect(dashParser.parse.bind('')).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind('')).to.be.throw('failed to parse the manifest');
     });
 
     it('should throw an error when parse is called with invalid data', async () => {
         let manifest = await FileLoader.loadTextFile('/data/dash/manifest_error.xml');
-        expect(dashParser.parse.bind(manifest)).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind(manifest)).to.be.throw('failed to parse the manifest');
     });
 
     it('should return an Object when parse is called with correct data', async () => {

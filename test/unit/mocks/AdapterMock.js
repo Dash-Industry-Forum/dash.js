@@ -79,23 +79,6 @@ function AdapterMock() {
                 {
                     width: 900
                 }
-            ],
-            Representation_asArray: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                }
             ]
         };
     };
@@ -164,8 +147,8 @@ function AdapterMock() {
     this.getCodec = function (adaptation, representationId, addResolutionInfo) {
         let codec = null;
 
-        if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
-            const representation = adaptation.Representation_asArray[representationId];
+        if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
+            const representation = adaptation.Representation[representationId];
             if (representation) {
                 codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
                 if (addResolutionInfo && representation.width !== undefined && representation.height !== undefined) {
@@ -183,9 +166,9 @@ function AdapterMock() {
     };
 
     this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
 
-        return realRepresentation.EssentialProperty_asArray.map((prop) => {
+        return realRepresentation.EssentialProperty.map((prop) => {
             return {
                 schemeIdUri: prop.schemeIdUri,
                 value: prop.value

@@ -69,7 +69,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        const template = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
+            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
 
         // This is the index without @startNumber
         index = Math.max(index, 0);

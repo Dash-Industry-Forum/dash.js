@@ -38,7 +38,7 @@ import bcp47Normalize from 'bcp-47-normalize';
 class LangMatcher extends BaseMatcher {
     constructor() {
         super(
-            (attr, nodeName) => {
+            (tagName, attr/*, value*/) => {
                 const stringAttrsInElements = {
                     [DashConstants.ADAPTATION_SET]:                 [ DashConstants.LANG ],
                     [DashConstants.REPRESENTATION]:                 [ DashConstants.LANG ],
@@ -47,10 +47,10 @@ class LangMatcher extends BaseMatcher {
                     [DashConstants.GROUP_LABEL]:                    [ DashConstants.LANG ]
                     // still missing from 23009-1: Preselection@lang, ProgramInformation@lang
                 };
-                if (stringAttrsInElements.hasOwnProperty(nodeName)) {
-                    let attrNames = stringAttrsInElements[nodeName];
+                if (stringAttrsInElements.hasOwnProperty(tagName)) {
+                    let attrNames = stringAttrsInElements[tagName];
                     if (attrNames !== undefined) {
-                        return attrNames.indexOf(attr.name) >= 0;
+                        return attrNames.indexOf(attr) >= 0;
                     } else {
                         return false;
                     }

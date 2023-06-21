@@ -31,7 +31,7 @@ describe('RepresentationController', function () {
     const specHelper = new SpecHelper();
     const mpdHelper = new MpdHelper();
     const mpd = mpdHelper.getMpd('static');
-    const data = mpd.Period_asArray[0].AdaptationSet_asArray[0];
+    const data = mpd.Period[0].AdaptationSet[0];
     const voRepresentations = [];
     voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);

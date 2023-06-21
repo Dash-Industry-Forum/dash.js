@@ -53,8 +53,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
             return 0;
         }
 
-        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
 
         let time = 0;
@@ -70,7 +70,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             fTimescale;
 
         fTimescale = representation.timescale;
-        fragments = timeline.S_asArray;
+        fragments = timeline.S;
 
         len = fragments.length;
 
@@ -107,10 +107,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function iterateSegments(representation, iterFunc) {
-        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
+            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
+                AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
-        const list = base.SegmentURL_asArray;
+        const list = base.SegmentURL;
 
         let time = 0;
         let relativeIdx = -1;
@@ -124,7 +126,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             fTimescale;
 
         fTimescale = representation.timescale;
-        fragments = timeline.S_asArray;
+        fragments = timeline.S;
 
         let breakIterator = false;
 

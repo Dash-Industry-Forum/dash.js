@@ -59,7 +59,6 @@ class MediaInfo {
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
-        this.supplementalPropertiesAsArray = [];
         this.segmentAlignment = false;
         this.subSegmentAlignment = false;
     }

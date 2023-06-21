@@ -632,9 +632,9 @@ function MssFragmentMoovProcessor(config) {
 
         period = adaptationSet.period;
         trackId = adaptationSet.index + 1;
-        contentProtection = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].ContentProtection;
+        contentProtection = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].ContentProtection;
 
-        timescale = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].SegmentTemplate.timescale;
+        timescale = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].SegmentTemplate.timescale;
 
         isoFile = ISOBoxer.createFile();
         createFtypBox(isoFile);
