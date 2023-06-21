@@ -272,14 +272,6 @@ function DashManifestModel() {
         });
     }
 
-    function getAudioChannelConfigurationForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
-        return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map( audioChanCfg => {
-            const acc = new DescriptorType();
-            return acc.init(audioChanCfg);
-        });
-    }
-
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
