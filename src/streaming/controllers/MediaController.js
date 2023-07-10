@@ -601,25 +601,27 @@ function MediaController() {
 
 
     function createTrackInfo() {
+        const storeLastSettings = settings.get().streaming.lastMediaSettingsCachingInfo.enabled;
+
         return {
             audio: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             video: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             text: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             image: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             }
         };
