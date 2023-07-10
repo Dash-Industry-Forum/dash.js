@@ -89,7 +89,7 @@ function MediaController() {
             setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
+                setTrack(selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
