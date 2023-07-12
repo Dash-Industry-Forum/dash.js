@@ -115,7 +115,8 @@ function RepresentationController(config) {
 
             if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
                 endDataUpdate();
-                return Promise.resolve();
+                resolve();
+                return;
             }
 
             const promises = [];
