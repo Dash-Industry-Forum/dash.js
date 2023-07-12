@@ -758,8 +758,6 @@ declare namespace dashjs {
         addHttpRequest(request: HTTPRequest, responseURL: string, responseStatus: number, responseHeaders: object, traces: object): void;
 
         addManifestUpdateRepresentationInfo(representation: Representation, mediaType: MediaType): void;
-        
-        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -1305,6 +1303,8 @@ declare namespace dashjs {
         getVideoElement(): HTMLVideoElement;
 
         getSource(): string | object;
+
+        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -4067,7 +4067,7 @@ declare namespace dashjs {
         startTime: number;
         timescale: number;
         type: 'InitializationSegment' | 'MediaSegment' | null;
-        url: string;
+        url: string | null;
         wallStartTime: number | null;
     }
 
