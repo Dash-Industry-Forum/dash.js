@@ -766,9 +766,13 @@ function TextTracks(config) {
     }
 
     function deleteTrackCues(track, start, end, strict = true) {
-        if (track.cues || track.manualCueList) {
+        if (track && (track.cues || track.manualCueList)) {
             const mode = track.cues && track.cues.length > 0 ? 'native' : 'custom';
             const cues = mode === 'native' ? track.cues : track.manualCueList;
+
+            if (!cues || cues.length === 0) {
+                return;
+            }
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0; r--) {
