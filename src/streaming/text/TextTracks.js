@@ -449,7 +449,7 @@ function TextTracks(config) {
             if (JSON.stringify(cue1[key]) !== JSON.stringify(cue2[key])) {
                 return false;
             }
-        };
+        }
         return true;
     }
 
@@ -629,17 +629,21 @@ function TextTracks(config) {
                         WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
-                        if (vttCaptionContainer) {
-                            const divs = vttCaptionContainer.childNodes;
-                            for (let i = 0; i < divs.length; ++i) {
-                                if (divs[i].id === cue.cueID) {
-                                    vttCaptionContainer.removeChild(divs[i]);
-                                    --i;
-                                }
-                            }
-                        }
+                        _removeManualCue(cue);
                     }
                 })
+            }
+        }
+    }
+
+    function _removeManualCue(cue) {
+        if (vttCaptionContainer) {
+            const divs = vttCaptionContainer.childNodes;
+            for (let i = 0; i < divs.length; ++i) {
+                if (divs[i].id === cue.cueID) {
+                    vttCaptionContainer.removeChild(divs[i]);
+                    --i;
+                }
             }
         }
     }
@@ -755,20 +759,29 @@ function TextTracks(config) {
     }
 
     function cueInRange(cue, start, end, strict = true) {
+        if (!cue) {
+            return false
+        }
         return (isNaN(start) || (strict ? cue.startTime : cue.endTime) >= start) && (isNaN(end) || (strict ? cue.endTime : cue.startTime) <= end);
     }
 
     function deleteTrackCues(track, start, end, strict = true) {
-        if (track.cues) {
-            const cues = track.cues;
+        if (track.cues || track.manualCueList) {
+            const mode = track.cues && track.cues.length > 0 ? 'native' : 'custom';
+            const cues = mode === 'native' ? track.cues : track.manualCueList;
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0; r--) {
                 if (cueInRange(cues[r], start, end, strict)) {
-                    if (cues[r].onexit) {
-                        cues[r].onexit();
+                    if (mode === 'native') {
+                        if (cues[r].onexit) {
+                            cues[r].onexit();
+                        }
+                        track.removeCue(cues[r]);
+                    } else {
+                        _removeManualCue(cues[r]);
+                        delete track.manualCueList[r]
                     }
-                    track.removeCue(cues[r]);
                 }
             }
         }
