@@ -1042,6 +1042,7 @@ declare namespace dashjs {
                 enabled?: boolean;
                 ttl?: number;
             };
+            saveLastMediaSettingsForCurrentStreamingSession?: boolean;
             cacheLoadThresholds?: {
                 video?: number;
                 audio?: number;
@@ -1344,7 +1345,7 @@ declare namespace dashjs {
 
         getInitialMediaSettingsFor(type: MediaType): MediaSettings;
 
-        setCurrentTrack(track: MediaInfo): void;
+        setCurrentTrack(track: MediaInfo, noSettingsSave?: boolean): void;
 
         addABRCustomRule(type: string, rulename: string, rule: object): void;
 

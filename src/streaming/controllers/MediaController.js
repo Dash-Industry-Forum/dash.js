@@ -89,7 +89,7 @@ function MediaController() {
             setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
+                setTrack(selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
@@ -601,25 +601,27 @@ function MediaController() {
 
 
     function createTrackInfo() {
+        const storeLastSettings = settings.get().streaming.saveLastMediaSettingsForCurrentStreamingSession;
+
         return {
             audio: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             video: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             text: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             image: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             }
         };

@@ -302,6 +302,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
     $scope.reuseExistingSourceBuffersSelected = true;
+    $scope.saveLastMediaSettingsSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
@@ -665,6 +666,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 buffer: {
                     reuseExistingSourceBuffers: $scope.reuseExistingSourceBuffersSelected
                 }
+            }
+        });
+    };
+
+    $scope.toggleSaveLastMediaSettings = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'saveLastMediaSettingsForCurrentStreamingSession': $scope.saveLastMediaSettingsSelected
             }
         });
     };
@@ -2125,6 +2134,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.scheduleWhilePausedSelected = currentConfig.streaming.scheduling.scheduleWhilePaused;
         $scope.calcSegmentAvailabilityRangeFromTimelineSelected = currentConfig.streaming.timeShiftBuffer.calcFromSegmentTimeline;
         $scope.reuseExistingSourceBuffersSelected = currentConfig.streaming.buffer.reuseExistingSourceBuffers;
+        $scope.saveLastMediaSettingsSelected = currentConfig.streaming.saveLastMediaSettingsForCurrentStreamingSession;
         $scope.localStorageSelected = currentConfig.streaming.lastBitrateCachingInfo.enabled;
         $scope.jumpGapsSelected = currentConfig.streaming.gaps.jumpGaps;
     }
