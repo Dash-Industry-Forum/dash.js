@@ -601,7 +601,7 @@ function MediaController() {
 
 
     function createTrackInfo() {
-        const storeLastSettings = settings.get().streaming.lastMediaSettingsCachingInfo.enabled;
+        const storeLastSettings = settings.get().streaming.saveLastMediaSettingsForCurrentStreamingSession;
 
         return {
             audio: {

@@ -154,6 +154,7 @@ import Events from './events/Events';
  *            },
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+ *            saveLastMediaSettingsForCurrentStreamingSession: true,
  *            cacheLoadThresholds: { video: 50, audio: 5 },
  *            trackSwitchMode: {
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
@@ -924,6 +925,7 @@ function Settings() {
                 enabled: true,
                 ttl: 360000
             },
+            saveLastMediaSettingsForCurrentStreamingSession: true,
             cacheLoadThresholds: {
                 video: 50,
                 audio: 5

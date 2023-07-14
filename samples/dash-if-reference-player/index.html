@@ -189,6 +189,12 @@
                     Reuse SourceBuffers
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enable media settings from last selected track to be used for incoming track selection.">
+                    <input type="checkbox" ng-model="saveLastMediaSettingsSelected"
+                           ng-change="toggleSaveLastMediaSettings()" ng-checked="saveLastMediaSettingsSelected">
+                    Save last media settings
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables local storage of player state (last bitrate, a/v or text track etc). This is then used when the next time media is played.">
                     <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected"
                            ng-change="toggleLocalStorage()" ng-checked="localStorageSelected">
