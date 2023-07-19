@@ -68,6 +68,11 @@ function AbandonRequestsRule(config) {
     function shouldAbandon(rulesContext) {
         try {
             const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, { name: AbandonRequestsRule.__dashjs_factory_name });
+
+            if (!rulesContext) {
+                return switchRequest
+            }
+
             const mediaInfo = rulesContext.getMediaInfo();
             const mediaType = rulesContext.getMediaType();
             const streamInfo = rulesContext.getStreamInfo();
