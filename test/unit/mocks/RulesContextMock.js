@@ -1,6 +1,6 @@
 import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
 
-function switchRequestHistoryMock() {
+function SwitchRequestHistoryMock() {
     this.getSwitchRequests = function () {
         return [{
             drops: 7,
@@ -28,12 +28,10 @@ function RulesContextMock() {
     };
     this.getAbrController = function () {
         return {
-            getThroughputHistory: function () {
-            }
         };
     };
     this.getSwitchHistory = function () {
-        return new switchRequestHistoryMock();
+        return new SwitchRequestHistoryMock();
     };
     this.getRepresentationInfo = function () {
         return {

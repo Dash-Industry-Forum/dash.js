@@ -1,5 +1,3 @@
-import ThroughputHistoryMock from './ThroughputHistoryMock';
-
 const QUALITY_DEFAULT = 0;
 
 function AbrControllerMock () {
@@ -7,7 +5,6 @@ function AbrControllerMock () {
     this.elementWidth = undefined;
     this.elementHeight = undefined;
     this.windowResizeEventCalled = false;
-    this.throughputHistory = undefined;
     this.currentStreamId = undefined;
     this.topBitrateInfo = null;
     let self = this;
@@ -56,14 +53,6 @@ function AbrControllerMock () {
         return [];
     };
 
-    this.getThroughputHistory = function () {
-        return self.throughputHistory;
-    };
-
-    this.setThroughputHistory = function (history) {
-        self.throughputHistory = history;
-    };
-
     this.updateTopQualityIndex = function () {};
 
     this.isPlayingAtTopQuality = function () {};
@@ -108,10 +97,6 @@ function AbrControllerMock () {
 
     this.getElementHeight = function () {
         return this.elementHeight;
-    };
-
-    this.registerStreamType = function () {
-        this.throughputHistory = new ThroughputHistoryMock();
     };
 
     this.unRegisterStreamType = function (/*type*/) {

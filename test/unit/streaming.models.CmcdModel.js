@@ -8,6 +8,7 @@ import DashConstants from '../../src/dash/constants/DashConstants';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -25,6 +26,7 @@ describe('CmcdModel', function () {
     let abrControllerMock = new AbrControllerMock();
     let dashMetricsMock = new DashMetricsMock();
     let playbackControllerMock = new PlaybackControllerMock();
+    const throughputControllerMock = new ThroughputControllerMock();
 
     let settings = Settings(context).getInstance();
 
@@ -46,7 +48,8 @@ describe('CmcdModel', function () {
             cmcdModel.setConfig({
                 abrController: abrControllerMock,
                 dashMetrics: dashMetricsMock,
-                playbackController: playbackControllerMock
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock
             });
         });
 
@@ -127,11 +130,9 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_RANGE = '100-500';
 
                 abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
-                abrControllerMock.setThroughputHistory({
-                    getSafeAverageThroughput: function () {
-                        return MEASURED_THROUGHPUT;
-                    }
-                });
+                throughputControllerMock.getSafeAverageThroughput = function () {
+                    return MEASURED_THROUGHPUT;
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
@@ -498,11 +499,9 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_RANGE = '100-500';
 
                 abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
-                abrControllerMock.setThroughputHistory({
-                    getSafeAverageThroughput: function () {
-                        return MEASURED_THROUGHPUT;
-                    }
-                });
+                throughputControllerMock.getSafeAverageThroughput = function () {
+                    return MEASURED_THROUGHPUT;
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
