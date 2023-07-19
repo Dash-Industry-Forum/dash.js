@@ -639,6 +639,69 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
 
+        it('should not check initial media settings to choose initial track when it has already selected a track', function () {
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false;
+
+            mediaController.setInitialSettings(trackType, {
+                lang: 'fr'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
+
+            // pretend we're switching period, which will call setInitialMediaSettingsForType again
+            mediaController.setInitialSettings(trackType, {
+                lang: 'qtz'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
+        });
+
+        it('should always check initial media settings to choose initial track when saveLastMediaSettingsForCurrentStreamingSession is disabled', function () {
+            settings.update({ streaming: { saveLastMediaSettingsForCurrentStreamingSession: false } });
+
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false;
+
+            mediaController.setInitialSettings(trackType, {
+                lang: 'fr'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
+
+            // pretend we're switching period, which will call setInitialMediaSettingsForType again
+            mediaController.setInitialSettings(trackType, {
+                lang: 'qtz'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
+        });
     });
 
     describe('Initial Track Selection', function () {

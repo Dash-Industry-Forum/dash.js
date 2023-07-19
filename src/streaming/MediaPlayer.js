@@ -1616,15 +1616,16 @@ function MediaPlayer() {
 
     /**
      * @param {MediaInfo} track - instance of {@link MediaInfo}
+     * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track selection
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function setCurrentTrack(track) {
+    function setCurrentTrack(track, noSettingsSave = false) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setTrack(track);
+        mediaController.setTrack(track, noSettingsSave);
     }
 
     /*
