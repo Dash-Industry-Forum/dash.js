@@ -413,8 +413,8 @@ function HTTPLoader(cfg) {
     }
 
     function _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, success, traces) {
-        requestObject.requestStartDate = requestStartTime;
-        requestObject.requestEndDate = new Date();
+        requestObject.startDate = requestStartTime;
+        requestObject.endDate = new Date();
         requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
         requestObject.fileLoaderType = fileLoaderType;
 

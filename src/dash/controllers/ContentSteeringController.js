@@ -145,12 +145,12 @@ function ContentSteeringController() {
      * @private
      */
     function _onManifestLoadingFinished(e) {
-        if (!e || !e.request || !e.request.serviceLocation || !e.request.requestStartDate || !e.request.requestEndDate || isNaN(e.request.bytesTotal)) {
+        if (!e || !e.request || !e.request.serviceLocation || !e.request.startDate || !e.request.endDate || isNaN(e.request.bytesTotal)) {
             return;
         }
 
         const serviceLocation = e.request.serviceLocation;
-        const elapsedTime = e.request.requestEndDate.getTime() - e.request.requestStartDate.getTime();
+        const elapsedTime = e.request.endDate.getTime() - e.request.startDate.getTime();
         const throughput = parseInt((((e.request.bytesTotal * 8) / elapsedTime) * 1000)) // bit/s
 
         _storeThroughputForServiceLocation(serviceLocation, throughput);
