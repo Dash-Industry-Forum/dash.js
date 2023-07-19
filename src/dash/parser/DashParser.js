@@ -66,7 +66,8 @@ const arrayNodes = [
     DashConstants.ADD,
     DashConstants.REMOVE,
     DashConstants.UTC_TIMING,
-    DashConstants.INBAND_EVENT_STREAM
+    DashConstants.INBAND_EVENT_STREAM,
+    DashConstants.PRODUCER_REFERENCE_TIME
 ];
 
 function DashParser(config) {
