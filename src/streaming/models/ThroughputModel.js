@@ -96,6 +96,7 @@ function ThroughputModel(config) {
             return;
         }
 
+        logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.throughputInKbit} kbit/s`)
         throughputDict[mediaType].push(throughputValues.throughputInKbit);
         latencyDict[mediaType].push(latencyInMs);
         _cleanupDict(mediaType);

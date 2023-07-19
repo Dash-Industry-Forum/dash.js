@@ -87,6 +87,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         shouldUseExplicitTimeForRequest,
+        shouldRepeatRequest,
         qualityChangeInProgress,
         dashHandler,
         segmentsController,
@@ -195,6 +196,7 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        shouldRepeatRequest = false;
     }
 
     function getStreamId() {
@@ -214,6 +216,7 @@ function StreamProcessor(config) {
         mediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        shouldRepeatRequest = false;
         qualityChangeInProgress = false;
         pendingSwitchToRepresentationInfo = null;
     }
@@ -433,6 +436,7 @@ function StreamProcessor(config) {
         let request = _getFragmentRequest();
         if (request) {
             shouldUseExplicitTimeForRequest = false;
+            shouldRepeatRequest = false;
             _mediaRequestGenerated(request);
         } else {
             _noMediaRequestGenerated(rescheduleIfNoRequest);
@@ -547,6 +551,9 @@ function StreamProcessor(config) {
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
+            }
+            if (shouldRepeatRequest) {
+                request = dashHandler.repeatSegmentRequest(mediaInfo, representation);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
             }
@@ -660,12 +667,12 @@ function StreamProcessor(config) {
 
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
-            _prepareForFastQualitySwitch(representationInfo);
+            _prepareForFastQualitySwitch(representationInfo, e);
         }
 
         // Default quality switch. We append the new quality to the already buffered stuff
         else {
-            _prepareForDefaultQualitySwitch(representationInfo);
+            _prepareForDefaultQualitySwitch(representationInfo, e);
         }
 
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -698,7 +705,7 @@ function StreamProcessor(config) {
             });
     }
 
-    function _prepareForFastQualitySwitch(representationInfo) {
+    function _prepareForFastQualitySwitch(representationInfo, e) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
         let safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
@@ -712,11 +719,11 @@ function StreamProcessor(config) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
-            // The quality we originally requested was lower than the new quality
-            if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
+            // The new quality is higher than the one we originally requested
+            if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
                 bufferController.updateBufferTimestampOffset(representationInfo)
                     .then(() => {
-                        // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
+                        // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
                         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
                         // Everything that is already in the buffer queue is ok
                         fragmentModel.abortRequests();
@@ -731,9 +738,9 @@ function StreamProcessor(config) {
                     })
             }
 
-            // If we have buffered a higher quality do not replace anything
+            // If we have buffered a higher quality we do not replace anything. We might cancel the current request due to abandon request rule
             else {
-                _prepareForDefaultQualitySwitch(representationInfo);
+                _prepareForDefaultQualitySwitch(representationInfo, e);
             }
         } else {
             scheduleController.startScheduleTimer();
@@ -741,14 +748,22 @@ function StreamProcessor(config) {
         }
     }
 
-    function _prepareForDefaultQualitySwitch(representationInfo) {
-        // We are not canceling the current request. Check if there is still an ongoing request.
-        // If so we wait for the request to be finished and the media to be appended
-        const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
-        if (ongoingRequests && ongoingRequests.length > 0) {
-            logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
-            pendingSwitchToRepresentationInfo = representationInfo;
+    function _prepareForDefaultQualitySwitch(representationInfo, e) {
+
+        // Check if we need to abandon the request caused by the AbandonRequestRule
+        if (e && e.reason && e.reason.forceAbandon) {
+            _handleAbandonQualitySwitch()
             return;
+        }
+
+        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
+        else {
+            const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
+            if (ongoingRequests && ongoingRequests.length > 0) {
+                logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
+                pendingSwitchToRepresentationInfo = representationInfo;
+                return;
+            }
         }
 
         bufferController.updateBufferTimestampOffset(representationInfo)
@@ -763,6 +778,23 @@ function StreamProcessor(config) {
             })
             .catch(() => {
                 pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
+    }
+
+    function _handleAbandonQualitySwitch(representationInfo) {
+        bufferController.updateBufferTimestampOffset(representationInfo)
+            .then(() => {
+                // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
+                // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
+                // Everything that is already in the buffer queue is ok
+                fragmentModel.abortRequests();
+                shouldRepeatRequest = true;
+                scheduleController.setCheckPlaybackQuality(false);
+                scheduleController.startScheduleTimer();
+                qualityChangeInProgress = false;
+            })
+            .catch(() => {
                 qualityChangeInProgress = false;
             })
     }
@@ -1316,36 +1348,36 @@ function StreamProcessor(config) {
     }
 
     instance = {
-        initialize,
-        getStreamId,
-        getType,
-        isUpdating,
-        getBufferController,
-        dischargePreBuffer,
-        getFragmentModel,
-        getScheduleController,
-        getRepresentationController,
-        getRepresentationInfo,
-        getBufferLevel,
-        isBufferingCompleted,
-        createBufferSinks,
-        updateStreamInfo,
-        getStreamInfo,
-        selectMediaInfo,
-        clearMediaInfoArray,
         addMediaInfo,
-        prepareTrackSwitch,
-        prepareQualityChange,
+        clearMediaInfoArray,
+        createBufferSinks,
+        dischargePreBuffer,
+        finalisePlayList,
+        getBuffer,
+        getBufferController,
+        getBufferLevel,
+        getFragmentModel,
         getMediaInfo,
         getMediaSource,
-        setMediaSource,
-        getBuffer,
-        setExplicitBufferingTime,
-        finalisePlayList,
-        probeNextRequest,
+        getRepresentationController,
+        getRepresentationInfo,
+        getScheduleController,
+        getStreamId,
+        getStreamInfo,
+        getType,
+        initialize,
+        isBufferingCompleted,
+        isUpdating,
         prepareInnerPeriodPlaybackSeeking,
         prepareOuterPeriodPlaybackSeeking,
-        reset
+        prepareQualityChange,
+        prepareTrackSwitch,
+        probeNextRequest,
+        reset,
+        selectMediaInfo,
+        setExplicitBufferingTime,
+        setMediaSource,
+        updateStreamInfo,
     };
 
     setup();

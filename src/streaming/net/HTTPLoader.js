@@ -120,31 +120,6 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _internalLoad(config, remainingAttempts) {
-        const requestObject = config.request;
-
-        const traces = [];
-        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, fileLoaderType, httpRequest,
-            progressTimeout;
-
-        requestObject.bytesLoaded = NaN;
-        requestObject.bytesTotal = NaN;
-        requestObject.firstByteDate = null;
-        firstProgress = true;
-        requestStartTime = new Date();
-        lastTraceTime = requestStartTime;
-        lastTraceReceivedCount = 0;
-        fileLoaderType = '';
-        progressTimeout = null;
-
-
-        if (!requestModifier || !dashMetrics || !errHandler) {
-            throw new Error('config object is not correct or missing');
-        }
-
-        const loaderInformation = _getLoader(requestObject);
-        const loader = loaderInformation.loader;
-        fileLoaderType = loaderInformation.fileLoaderType;
-
         /**
          * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
          */
@@ -267,6 +242,7 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
+            _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, true, traces);
             _retriggerRequest();
         };
 
@@ -278,7 +254,7 @@ function HTTPLoader(cfg) {
 
             // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
             try {
-                if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                if (httpRequest.response.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                     // Only trigger a sync if the loading failed for the first time
                     const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
                     if (initialNumberOfAttempts === remainingAttempts) {
@@ -329,12 +305,33 @@ function HTTPLoader(cfg) {
             }
         }
 
-        const modifiedRequestParams = _getModifiedRequestHeaderAndUrl(requestObject);
+        // Main code after inline functions
+        const requestObject = config.request;
+        const traces = [];
+        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, fileLoaderType, httpRequest,
+            progressTimeout;
 
+        requestObject.bytesLoaded = NaN;
+        requestObject.bytesTotal = NaN;
+        requestObject.firstByteDate = null;
+        firstProgress = true;
+        requestStartTime = new Date();
+        lastTraceTime = requestStartTime;
+        lastTraceReceivedCount = 0;
+        fileLoaderType = '';
+        progressTimeout = null;
+
+        if (!requestModifier || !dashMetrics || !errHandler) {
+            throw new Error('config object is not correct or missing');
+        }
+
+        const loaderInformation = _getLoader(requestObject);
+        const loader = loaderInformation.loader;
+        fileLoaderType = loaderInformation.fileLoaderType;
+        const modifiedRequestParams = _getModifiedRequestHeaderAndUrl(requestObject);
         requestObject.url = modifiedRequestParams.url;
         const method = requestObject.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
-
 
         httpRequest = {
             url: modifiedRequestParams.url,
@@ -391,11 +388,6 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _handleLoaded(success, requestObject, httpRequest, traces, requestStartTime, fileLoaderType) {
-        requestObject.startDate = requestStartTime;
-        requestObject.endDate = new Date();
-        requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-        requestObject.fileLoaderType = fileLoaderType;
-
         // If enabled the ResourceTimingApi we add the corresponding information to the request object.
         // These values are more accurate and can be used by the ThroughputController later
         if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
