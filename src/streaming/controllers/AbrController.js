@@ -41,9 +41,7 @@ import RulesContext from '../rules/RulesContext';
 import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
-import ThroughputHistory from '../rules/ThroughputHistory';
 import Debug from '../../core/Debug';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import {checkInteger} from '../utils/SupervisorTools';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 
@@ -78,7 +76,7 @@ function AbrController() {
         playbackIndex,
         switchHistoryDict,
         droppedFramesHistory,
-        throughputHistory,
+        throughputController,
         isUsingBufferOccupancyAbrDict,
         isUsingL2AAbrDict,
         isUsingLoLPAbrDict,
@@ -95,10 +93,6 @@ function AbrController() {
      */
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
-        throughputHistory = ThroughputHistory(context).create({
-            settings
-        });
-
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics,
             customParametersModel,
@@ -211,7 +205,6 @@ function AbrController() {
 
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
-        throughputHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
     }
@@ -234,6 +227,9 @@ function AbrController() {
 
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
         if (config.domStorage) {
             domStorage = config.domStorage;
@@ -287,8 +283,9 @@ function AbrController() {
 
         const rulesContext = RulesContext(context).create({
             abrController: instance,
-            streamProcessor: streamProcessor,
+            streamProcessor,
             currentRequest: e.request,
+            throughputController,
             useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
             useL2AABR: isUsingL2AAbrDict[type],
             useLoLPABR: isUsingLoLPAbrDict[type],
@@ -345,10 +342,6 @@ function AbrController() {
      * @private
      */
     function _onMetricAdded(e) {
-        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            throughputHistory.push(e.mediaType, e.value, settings.get().streaming.abr.useDeadTimeLatency);
-        }
-
         if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             _updateAbrStrategy(e.mediaType, 0.001 * e.value.level);
         }
@@ -372,7 +365,7 @@ function AbrController() {
             idx = _checkMaxBitrate(type, streamId);
             idx = _checkMaxRepresentationRatio(idx, type, streamId);
             idx = _checkPortalSize(idx, type, streamId);
-            // Apply maximum suggested bitrate from CMSD headers if enabled 
+            // Apply maximum suggested bitrate from CMSD headers if enabled
             if (settings.get().streaming.cmsd.enabled && settings.get().streaming.cmsd.abr.applyMb) {
                 idx = _checkCmsdMaxBitrate(idx, type, streamId);
             }
@@ -633,8 +626,9 @@ function AbrController() {
             const oldQuality = getQualityFor(type, streamId);
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
+                throughputController,
                 switchHistory: switchHistoryDict[streamId][type],
-                droppedFramesHistory: droppedFramesHistory,
+                droppedFramesHistory,
                 streamProcessor: streamProcessorDict[streamId][type],
                 currentValue: oldQuality,
                 useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
@@ -747,7 +741,6 @@ function AbrController() {
     function _changeQuality(type, oldQuality, newQuality, maxIdx, reason, streamId) {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
 
@@ -766,7 +759,7 @@ function AbrController() {
                 },
                 { streamId: streamInfo.id, mediaType: type }
             );
-            const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
+            const bitrate = throughputController.getAverageThroughput(type);
             if (!isNaN(bitrate)) {
                 domStorage.setSavedBitrateSettings(type, bitrate);
             }
@@ -792,7 +785,7 @@ function AbrController() {
     function getQualityForBitrate(mediaInfo, bitrate, streamId, latency = null) {
         const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[streamId][mediaInfo.type].getRepresentationInfo() : null;
 
-        if (settings.get().streaming.abr.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
+        if (settings.get().streaming.abr.throughput.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
             latency = latency / 1000;
             const fragmentDuration = voRepresentation.fragmentDuration;
             if (latency > fragmentDuration) {
@@ -873,10 +866,6 @@ function AbrController() {
         }
     }
 
-    function getThroughputHistory() {
-        return throughputHistory;
-    }
-
     function updateTopQualityIndex(mediaInfo) {
         const type = mediaInfo.type;
         const streamId = mediaInfo.streamInfo.id;
@@ -893,10 +882,8 @@ function AbrController() {
         const audioQuality = getQualityFor(Constants.AUDIO, streamId);
         const videoQuality = getQualityFor(Constants.VIDEO, streamId);
 
-        const isAtTop = (audioQuality === getMaxAllowedIndexFor(Constants.AUDIO, streamId)) &&
+        return (audioQuality === getMaxAllowedIndexFor(Constants.AUDIO, streamId)) &&
             (videoQuality === getMaxAllowedIndexFor(Constants.VIDEO, streamId));
-
-        return isAtTop;
     }
 
     function setWindowResizeEventCalled(value) {
@@ -933,7 +920,6 @@ function AbrController() {
         isPlayingAtTopQuality,
         updateTopQualityIndex,
         clearDataForStream,
-        getThroughputHistory,
         getBitrateList,
         getQualityForBitrate,
         getTopBitrateInfoFor,

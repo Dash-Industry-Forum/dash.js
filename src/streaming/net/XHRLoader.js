@@ -70,8 +70,8 @@ function XHRLoader(cfg) {
             xhr.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
+        if (!request.startDate) {
+            request.startDate = requestStartTime;
         }
 
         if (requestModifier && requestModifier.modifyRequestHeader) {
@@ -92,7 +92,7 @@ function XHRLoader(cfg) {
         xhr.withCredentials = httpRequest.withCredentials;
 
         xhr.onload = httpRequest.onload;
-        xhr.onloadend = httpRequest.onend;
+        xhr.onloadend = httpRequest.onloadend;
         xhr.onerror = httpRequest.onerror;
         xhr.onprogress = httpRequest.progress;
         xhr.onabort = httpRequest.onabort;
@@ -111,8 +111,8 @@ function XHRLoader(cfg) {
     }
 
     instance = {
-        load: load,
-        abort: abort
+        load,
+        abort
     };
 
     return instance;

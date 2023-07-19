@@ -33,25 +33,24 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
 import { modifyRequest } from '../utils/RequestModifier';
+import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
 
 /**
  * @module FetchLoader
  * @ignore
  * @description Manages download of resources via HTTP using fetch.
- * @param {Object} cfg - dependencies from parent
  */
-function FetchLoader(cfg) {
+function FetchLoader() {
 
-    cfg = cfg || {};
     const context = this.context;
-    const requestModifier = cfg.requestModifier;
-    const lowLatencyThroughputModel = cfg.lowLatencyThroughputModel;
-    const boxParser = cfg.boxParser;
+    const lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
     const settings = Settings(context).getInstance();
-    let instance, dashMetrics;
+    let instance, dashMetrics, requestModifier, boxParser;
 
-    function setup(cfg) {
+    function setConfig(cfg) {
         dashMetrics = cfg.dashMetrics;
+        requestModifier = cfg.requestModifier;
+        boxParser = cfg.boxParser
     }
 
     function load(httpRequest) {
@@ -83,8 +82,8 @@ function FetchLoader(cfg) {
             }
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
+        if (!request.startDate) {
+            request.startDate = requestStartTime;
         }
 
         if (requestModifier && requestModifier.modifyRequestHeader) {
@@ -115,7 +114,7 @@ function FetchLoader(cfg) {
             signal: abortController ? abortController.signal : undefined
         };
 
-        const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
+        const calculationMode = settings.get().streaming.abr.throughput.fetchThroughputCalculationMode;
         const requestTime = Date.now();
         let throughputCapacityDelayMS = 0;
 
@@ -164,8 +163,7 @@ function FetchLoader(cfg) {
                             };
                             httpRequest.progress(event);
                             httpRequest.onload();
-                            httpRequest.onend();
-                            return;
+                            httpRequest.onloadend();
                         });
                     }
 
@@ -266,7 +264,7 @@ function FetchLoader(cfg) {
                                 httpRequest.response.response = remaining.buffer;
                             }
                             httpRequest.onload();
-                            httpRequest.onend();
+                            httpRequest.onloadend();
                             return;
                         }
 
@@ -458,10 +456,10 @@ function FetchLoader(cfg) {
     }
 
     instance = {
-        load: load,
-        abort: abort,
-        calculateDownloadedTime: calculateDownloadedTime,
-        setup
+        load,
+        abort,
+        calculateDownloadedTime,
+        setConfig
     };
 
     return instance;

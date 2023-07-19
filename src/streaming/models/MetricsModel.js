@@ -134,7 +134,7 @@ function MetricsModel(config) {
         return vo;
     }
 
-    function addHttpRequest(mediaType, tcpid, type, url, quality, actualurl, serviceLocation, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces, fileLoaderType, cmsd) {
+    function addHttpRequest(request, response, traces, cmsd) {
         let vo = new HTTPRequest();
 
         // ISO 23009-1 D.4.3 NOTE 2:
@@ -144,52 +144,54 @@ function MetricsModel(config) {
         // The redirect-to URL or alternative url (where multiple have been
         // provided in the MPD) will appear as the actualurl of the next
         // entry with the same url value.
-        if (actualurl && (actualurl !== url)) {
+        if (response.url && (response.url !== request.url)) {
+            const adjustedRequest = {
+                mediaType: request.mediaType,
+                type: request.type,
+                url: request.url,
+                quality: request.quality,
+                serviceLocation: null,
+                range: request.range,
+                startDate: request.startDate,
+                firstByteDate: null,
+                endDate: null,
+                duration: request.duration,
+                fileLoaderType: request.fileLoaderType,
+                resourceTimingValues: request.resourceTimingValues
+            }
+            const adjustedResponse = {
+                url: null,
+                status: null,
+                headers: null,
 
-            // given the above, add an entry for the original request
-            addHttpRequest(
-                mediaType,
-                null,
-                type,
-                url,
-                quality,
-                null,
-                null,
-                range,
-                trequest,
-                null, // unknown
-                null, // unknown
-                null, // unknown, probably a 302
-                mediaduration,
-                null,
-                null,
-                fileLoaderType,
-                cmsd
-            );
+            }
 
-            vo.actualurl = actualurl;
+            addHttpRequest(adjustedRequest, adjustedResponse, null, cmsd)
+            vo.actualurl = response.url;
         }
 
-        vo.tcpid = tcpid;
-        vo.type = type;
-        vo.url = url;
-        vo.range = range;
-        vo.trequest = trequest;
-        vo.tresponse = tresponse;
-        vo.responsecode = responsecode;
+
+        vo.tcpid = null;
+        vo.type = request.type;
+        vo.url = request.url;
+        vo.range = request.range || null;
+        vo.trequest = request.startDate;
+        vo.tresponse = request.firstByteDate;
+        vo.responsecode = response.status;
         vo.cmsd = cmsd;
 
-        vo._tfinish = tfinish;
-        vo._stream = mediaType;
-        vo._mediaduration = mediaduration;
-        vo._quality = quality;
-        vo._responseHeaders = responseHeaders;
-        vo._serviceLocation = serviceLocation;
-        vo._fileLoaderType = fileLoaderType;
+        vo._tfinish = request.endDate;
+        vo._stream = request.mediaType;
+        vo._mediaduration = request.duration;
+        vo._quality = request.quality;
+        vo._responseHeaders = response.headers;
+        vo._serviceLocation = request.serviceLocation || null;
+        vo._fileLoaderType = request.fileLoaderType;
+        vo._resourceTimingValues = request.resourceTimingValues;
 
         if (traces) {
             traces.forEach(trace => {
-                appendHttpTrace(vo, trace.s, trace.d, trace.b);
+                appendHttpTrace(vo, trace.s, trace.d, trace.b, trace.t);
             });
         } else {
             // The interval and trace shall be absent for redirect and failure records.
@@ -197,7 +199,7 @@ function MetricsModel(config) {
             delete vo.trace;
         }
 
-        pushAndNotify(mediaType, MetricsConstants.HTTP_REQUEST, vo);
+        pushAndNotify(request.mediaType, MetricsConstants.HTTP_REQUEST, vo);
     }
 
     function addRepresentationSwitch(mediaType, t, mt, to, lto) {
@@ -370,23 +372,23 @@ function MetricsModel(config) {
     }
 
     instance = {
-        clearCurrentMetricsForType: clearCurrentMetricsForType,
-        clearAllCurrentMetrics: clearAllCurrentMetrics,
-        getMetricsFor: getMetricsFor,
-        addHttpRequest: addHttpRequest,
-        addRepresentationSwitch: addRepresentationSwitch,
-        addBufferLevel: addBufferLevel,
-        addBufferState: addBufferState,
-        addDVRInfo: addDVRInfo,
-        addDroppedFrames: addDroppedFrames,
-        addSchedulingInfo: addSchedulingInfo,
-        addRequestsQueue: addRequestsQueue,
-        addManifestUpdate: addManifestUpdate,
-        updateManifestUpdateInfo: updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
-        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
-        addPlayList: addPlayList,
-        addDVBErrors: addDVBErrors
+        clearCurrentMetricsForType,
+        clearAllCurrentMetrics,
+        getMetricsFor,
+        addHttpRequest,
+        addRepresentationSwitch,
+        addBufferLevel,
+        addBufferState,
+        addDVRInfo,
+        addDroppedFrames,
+        addSchedulingInfo,
+        addRequestsQueue,
+        addManifestUpdate,
+        updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo,
+        addPlayList,
+        addDVBErrors
     };
 
     setup();

@@ -539,6 +539,13 @@ import Events from './events/Events';
  */
 
 /**
+ * @typedef {Object} ThroughputSettings
+ * @property {number} [MPD]
+ * Manifest type of requests.
+
+ */
+
+/**
  * @typedef {Object} Protection
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle.
@@ -961,19 +968,39 @@ function Settings() {
                 lowLatencyMultiplyFactor: 5
             },
             abr: {
-                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                useDefaultABRRules: true,
+                useDeadTimeLatency: true,
+                limitBitrateByPortal: false,
+                usePixelRatioInLimitBitrateByPortal: false,
                 additionalAbrRules: {
                     insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
                     abandonRequestsRule: true
                 },
-                bandwidthSafetyFactor: 0.9,
-                useDefaultABRRules: true,
-                useDeadTimeLatency: true,
-                limitBitrateByPortal: false,
-                usePixelRatioInLimitBitrateByPortal: false,
+                throughput: {
+                    calculationMode: Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN,
+                    fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
+                    useDeadTimeLatency: true,
+                    bandwidthSafetyFactor: 0.9,
+                    useResourceTimingApi: true,
+                    maxMeasurementsToKeep : 20,
+                    sampleSettings: {
+                        live: 3,
+                        vod: 4,
+                        enableSampleSizeAdjustment: false,
+                        decreaseScale: 1.3,
+                        increaseScale: 1.3,
+                    },
+                    averageLatencySampleAmount: 4,
+                    ewma: {
+                        throughputSlowHalfLifeSeconds: 8,
+                        throughputFastHalfLifeSeconds: 3,
+                        latencySlowHalfLifeCount: 2,
+                        latencyFastHalfLifeCount: 1
+                    }
+                },
                 maxBitrate: {
                     audio: -1,
                     video: -1

@@ -78,7 +78,6 @@ function BolaRule(config) {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
-
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
     }
 
@@ -384,133 +383,131 @@ function BolaRule(config) {
     }
 
     function getMaxIndex(rulesContext) {
-        const switchRequest = SwitchRequest(context).create();
+        try {
+            const switchRequest = SwitchRequest(context).create();
+            const mediaInfo = rulesContext.getMediaInfo();
+            const mediaType = rulesContext.getMediaType();
+            const scheduleController = rulesContext.getScheduleController();
+            const streamInfo = rulesContext.getStreamInfo();
+            const abrController = rulesContext.getAbrController();
+            const throughputController = rulesContext.getThroughputController();
+            const streamId = streamInfo ? streamInfo.id : null;
+            const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
+            switchRequest.reason = switchRequest.reason || {};
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
-            !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
-            !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('useBufferOccupancyABR')) {
-            return switchRequest;
-        }
-        const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = rulesContext.getMediaType();
-        const scheduleController = rulesContext.getScheduleController();
-        const streamInfo = rulesContext.getStreamInfo();
-        const abrController = rulesContext.getAbrController();
-        const throughputHistory = abrController.getThroughputHistory();
-        const streamId = streamInfo ? streamInfo.id : null;
-        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
-        const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
-        switchRequest.reason = switchRequest.reason || {};
+            if (!useBufferOccupancyABR) {
+                return switchRequest;
+            }
 
-        if (!useBufferOccupancyABR) {
-            return switchRequest;
-        }
+            scheduleController.setTimeToLoadDelay(0);
 
-        scheduleController.setTimeToLoadDelay(0);
+            const bolaState = getBolaState(rulesContext);
 
-        const bolaState = getBolaState(rulesContext);
+            if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
+                // shouldn't even have been called
+                return switchRequest;
+            }
 
-        if (bolaState.state === BOLA_STATE_ONE_BITRATE) {
-            // shouldn't even have been called
-            return switchRequest;
-        }
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+            const throughput = throughputController.getAverageThroughput(mediaType);
+            const safeThroughput = throughputController.getSafeAverageThroughput(mediaType);
+            const latency = throughputController.getAverageLatency(mediaType);
+            let quality;
 
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-        const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
-        const safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
-        const latency = throughputHistory.getAverageLatency(mediaType);
-        let quality;
+            switchRequest.reason.state = bolaState.state;
+            switchRequest.reason.throughput = throughput;
+            switchRequest.reason.latency = latency;
 
-        switchRequest.reason.state = bolaState.state;
-        switchRequest.reason.throughput = throughput;
-        switchRequest.reason.latency = latency;
+            if (isNaN(throughput)) { // isNaN(throughput) === isNaN(safeThroughput) === isNaN(latency)
+                // still starting up - not enough information
+                return switchRequest;
+            }
 
-        if (isNaN(throughput)) { // isNaN(throughput) === isNaN(safeThroughput) === isNaN(latency)
-            // still starting up - not enough information
-            return switchRequest;
-        }
+            switch (bolaState.state) {
+                case BOLA_STATE_STARTUP:
+                    quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
 
-        switch (bolaState.state) {
-            case BOLA_STATE_STARTUP:
-                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                    switchRequest.quality = quality;
+                    switchRequest.reason.throughput = safeThroughput;
 
-                switchRequest.quality = quality;
-                switchRequest.reason.throughput = safeThroughput;
+                    bolaState.placeholderBuffer = Math.max(0, minBufferLevelForQuality(bolaState, quality) - bufferLevel);
+                    bolaState.lastQuality = quality;
 
-                bolaState.placeholderBuffer = Math.max(0, minBufferLevelForQuality(bolaState, quality) - bufferLevel);
-                bolaState.lastQuality = quality;
-
-                if (!isNaN(bolaState.lastSegmentDurationS) && bufferLevel >= bolaState.lastSegmentDurationS) {
-                    bolaState.state = BOLA_STATE_STEADY;
-                }
-
-                break; // BOLA_STATE_STARTUP
-
-            case BOLA_STATE_STEADY:
-
-                // NB: The placeholder buffer is added to bufferLevel to come up with a bitrate.
-                //     This might lead BOLA to be too optimistic and to choose a bitrate that would lead to rebuffering -
-                //     if the real buffer bufferLevel runs out, the placeholder buffer cannot prevent rebuffering.
-                //     However, the InsufficientBufferRule takes care of this scenario.
-
-                updatePlaceholderBuffer(bolaState, mediaType);
-
-                quality = getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.placeholderBuffer);
-
-                // we want to avoid oscillations
-                // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-                const qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
-                if (quality > bolaState.lastQuality && quality > qualityForThroughput) {
-                    // only intervene if we are trying to *increase* quality to an *unsustainable* level
-                    // we are only avoid oscillations - do not drop below last quality
-
-                    quality = Math.max(qualityForThroughput, bolaState.lastQuality);
-                }
-
-                // We do not want to overfill buffer with low quality chunks.
-                // Note that there will be no delay if buffer level is below MINIMUM_BUFFER_S, probably even with some margin higher than MINIMUM_BUFFER_S.
-                let delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, quality));
-
-                // First reduce placeholder buffer, then tell schedule controller to pause.
-                if (delayS <= bolaState.placeholderBuffer) {
-                    bolaState.placeholderBuffer -= delayS;
-                    delayS = 0;
-                } else {
-                    delayS -= bolaState.placeholderBuffer;
-                    bolaState.placeholderBuffer = 0;
-
-                    if (quality < abrController.getMaxAllowedIndexFor(mediaType, streamId)) {
-                        // At top quality, allow schedule controller to decide how far to fill buffer.
-                        scheduleController.setTimeToLoadDelay(1000 * delayS);
-                    } else {
-                        delayS = 0;
+                    if (!isNaN(bolaState.lastSegmentDurationS) && bufferLevel >= bolaState.lastSegmentDurationS) {
+                        bolaState.state = BOLA_STATE_STEADY;
                     }
-                }
 
-                switchRequest.quality = quality;
-                switchRequest.reason.throughput = throughput;
-                switchRequest.reason.latency = latency;
-                switchRequest.reason.bufferLevel = bufferLevel;
-                switchRequest.reason.placeholderBuffer = bolaState.placeholderBuffer;
-                switchRequest.reason.delay = delayS;
+                    break; // BOLA_STATE_STARTUP
 
-                bolaState.lastQuality = quality;
-                // keep bolaState.state === BOLA_STATE_STEADY
+                case BOLA_STATE_STEADY:
 
-                break; // BOLA_STATE_STEADY
+                    // NB: The placeholder buffer is added to bufferLevel to come up with a bitrate.
+                    //     This might lead BOLA to be too optimistic and to choose a bitrate that would lead to rebuffering -
+                    //     if the real buffer bufferLevel runs out, the placeholder buffer cannot prevent rebuffering.
+                    //     However, the InsufficientBufferRule takes care of this scenario.
 
-            default:
-                logger.debug('BOLA ABR rule invoked in bad state.');
-                // should not arrive here, try to recover
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
-                switchRequest.reason.state = bolaState.state;
-                switchRequest.reason.throughput = safeThroughput;
-                switchRequest.reason.latency = latency;
-                bolaState.state = BOLA_STATE_STARTUP;
-                clearBolaStateOnSeek(bolaState);
+                    updatePlaceholderBuffer(bolaState, mediaType);
+
+                    quality = getQualityFromBufferLevel(bolaState, bufferLevel + bolaState.placeholderBuffer);
+
+                    // we want to avoid oscillations
+                    // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
+                    const qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                    if (quality > bolaState.lastQuality && quality > qualityForThroughput) {
+                        // only intervene if we are trying to *increase* quality to an *unsustainable* level
+                        // we are only avoid oscillations - do not drop below last quality
+
+                        quality = Math.max(qualityForThroughput, bolaState.lastQuality);
+                    }
+
+                    // We do not want to overfill buffer with low quality chunks.
+                    // Note that there will be no delay if buffer level is below MINIMUM_BUFFER_S, probably even with some margin higher than MINIMUM_BUFFER_S.
+                    let delayS = Math.max(0, bufferLevel + bolaState.placeholderBuffer - maxBufferLevelForQuality(bolaState, quality));
+
+                    // First reduce placeholder buffer, then tell schedule controller to pause.
+                    if (delayS <= bolaState.placeholderBuffer) {
+                        bolaState.placeholderBuffer -= delayS;
+                        delayS = 0;
+                    } else {
+                        delayS -= bolaState.placeholderBuffer;
+                        bolaState.placeholderBuffer = 0;
+
+                        if (quality < abrController.getMaxAllowedIndexFor(mediaType, streamId)) {
+                            // At top quality, allow schedule controller to decide how far to fill buffer.
+                            scheduleController.setTimeToLoadDelay(1000 * delayS);
+                        } else {
+                            delayS = 0;
+                        }
+                    }
+
+                    switchRequest.quality = quality;
+                    switchRequest.reason.throughput = throughput;
+                    switchRequest.reason.latency = latency;
+                    switchRequest.reason.bufferLevel = bufferLevel;
+                    switchRequest.reason.placeholderBuffer = bolaState.placeholderBuffer;
+                    switchRequest.reason.delay = delayS;
+
+                    bolaState.lastQuality = quality;
+                    // keep bolaState.state === BOLA_STATE_STEADY
+
+                    break; // BOLA_STATE_STEADY
+
+                default:
+                    logger.debug('BOLA ABR rule invoked in bad state.');
+                    // should not arrive here, try to recover
+                    switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
+                    switchRequest.reason.state = bolaState.state;
+                    switchRequest.reason.throughput = safeThroughput;
+                    switchRequest.reason.latency = latency;
+                    bolaState.state = BOLA_STATE_STARTUP;
+                    clearBolaStateOnSeek(bolaState);
+            }
+
+            return switchRequest;
+        } catch (e) {
+            logger.error(e);
+            return SwitchRequest(context).create();
         }
-
-        return switchRequest;
     }
 
     function resetInitialSettings() {
@@ -525,13 +522,12 @@ function BolaRule(config) {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
-
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
     }
 
     instance = {
-        getMaxIndex: getMaxIndex,
-        reset: reset
+        getMaxIndex,
+        reset
     };
 
     setup();

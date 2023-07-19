@@ -41,7 +41,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
-import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
 import CustomParametersModel from '../models/CustomParametersModel';
 
 /**
@@ -66,24 +65,24 @@ function HTTPLoader(cfg) {
     const settings = Settings(context).getInstance();
 
     let instance,
-        requests,
+        httpRequests,
         delayedRequests,
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
         cmsdModel,
+        xhrLoader,
+        fetchLoader,
         customParametersModel,
-        lowLatencyThroughputModel,
         logger;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        requests = [];
+        httpRequests = [];
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
         cmsdModel = CmsdModel(context).getInstance();
-        lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
@@ -97,131 +96,101 @@ function HTTPLoader(cfg) {
         };
     }
 
-    function internalLoad(config, remainingAttempts) {
-        const request = config.request;
+    /**
+     * Initiates a download of the resource described by config.request.
+     * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
+     * @memberof module:HTTPLoader
+     * @instance
+     */
+    function load(config) {
+        if (config.request) {
+            const retryAttempts = mediaPlayerModel.getRetryAttemptsForType(config.request.type);
+            _internalLoad(config, retryAttempts);
+        } else {
+            if (config.error) {
+                config.error(config.request, 'error');
+            }
+        }
+    }
+
+    /**
+     * Initiates or re-initiates a download of the resource
+     * @param {object} config
+     * @param {number} remainingAttempts
+     * @private
+     */
+    function _internalLoad(config, remainingAttempts) {
+        const requestObject = config.request;
+
         const traces = [];
-        let firstProgress = true;
-        let needFailureReport = true;
-        let requestStartTime = new Date();
-        let lastTraceTime = requestStartTime;
-        let lastTraceReceivedCount = 0;
-        let progressTimeout = null;
-        let fileLoaderType = null;
-        let httpRequest;
+        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, fileLoaderType, httpRequest,
+            progressTimeout;
+
+        requestObject.bytesLoaded = NaN;
+        requestObject.bytesTotal = NaN;
+        requestObject.firstByteDate = null;
+        firstProgress = true;
+        requestStartTime = new Date();
+        lastTraceTime = requestStartTime;
+        lastTraceReceivedCount = 0;
+        fileLoaderType = '';
+        progressTimeout = null;
+
 
         if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
 
-        const addHttpRequestMetric = function(success) {
-            request.requestStartDate = requestStartTime;
-            request.requestEndDate = new Date();
-            request.firstByteDate = request.firstByteDate || requestStartTime;
-            request.fileLoaderType = fileLoaderType;
+        const loaderInformation = _getLoader(requestObject);
+        const loader = loaderInformation.loader;
+        fileLoaderType = loaderInformation.fileLoaderType;
 
-            const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
-            const responseStatus = httpRequest.response ? httpRequest.response.status : null;
-            const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                httpRequest.response ? httpRequest.response.responseHeaders : null;
-    
-            const cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
-    
-            dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
-        }
-    
-        const handleLoaded = function (success) {
-            needFailureReport = false;
-
-            addHttpRequestMetric(success);
-
-            if (request.type === HTTPRequest.MPD_TYPE) {
-                dashMetrics.addManifestUpdate(request);
-                eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { request });
+        /**
+         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
+         */
+        const _onloadend = function () {
+            // Remove the request from our list of requests
+            if (httpRequests.indexOf(httpRequest) !== -1) {
+                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
             }
-        };
 
-        const onloadend = function () {
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
             }
-            if (requests.indexOf(httpRequest) === -1) {
-                return;
-            } else {
-                requests.splice(requests.indexOf(httpRequest), 1);
-            }
-
-            if (needFailureReport) {
-                handleLoaded(false);
-
-                if (remainingAttempts > 0) {
-
-                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
-                    try {
-                        if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                            // Only trigger a sync if the loading failed for the first time
-                            const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
-                            if (initialNumberOfAttempts === remainingAttempts) {
-                                eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
-                            }
-                        }
-                    } catch (e) {
-
-                    }
-
-                    remainingAttempts--;
-                    let retryRequest = { config: config };
-                    retryRequests.push(retryRequest);
-                    retryRequest.timeout = setTimeout(function () {
-                        if (retryRequests.indexOf(retryRequest) === -1) {
-                            return;
-                        } else {
-                            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
-                        }
-                        internalLoad(config, remainingAttempts);
-                    }, mediaPlayerModel.getRetryIntervalsForType(request.type));
-                } else {
-                    if (request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
-                        return;
-                    }
-
-                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
-                        request: request,
-                        response: httpRequest.response
-                    }));
-
-                    if (config.error) {
-                        config.error(request, 'error', httpRequest.response.statusText, httpRequest.response);
-                    }
-
-                    if (config.complete) {
-                        config.complete(request, httpRequest.response.statusText);
-                    }
-                }
-            }
         };
 
-        const progress = function (event) {
+        /**
+         * Fired when a request has started to load data.
+         * @param event
+         */
+        const _progress = function (event) {
             const currentTime = new Date();
 
+            // If we did not transfer all data yet and this is the first time we are getting a progress event we use this time as firstByteDate.
             if (firstProgress) {
                 firstProgress = false;
+                // event.loaded: the amount of data currently transferred
+                // event.total: the total amount of data to be transferred.
+                // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
                 if (!event.lengthComputable ||
                     (event.lengthComputable && event.total !== event.loaded)) {
-                    request.firstByteDate = currentTime;
+                    requestObject.firstByteDate = currentTime;
                 }
             }
 
+            // lengthComputable indicating if the resource concerned by the ProgressEvent has a length that can be calculated. If not, the ProgressEvent.total property has no significant value.
             if (event.lengthComputable) {
-                request.bytesLoaded = event.loaded;
-                request.bytesTotal = event.total;
+                requestObject.bytesLoaded = event.loaded;
+                requestObject.bytesTotal = event.total;
             }
 
             if (!event.noTrace) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0], // event.loaded: When downloading a resource using HTTP, this value is specified in bytes (not bits), and only represents the part of the content itself, not headers and other overhead
+                    t: event.throughput
                 });
 
                 lastTraceTime = currentTime;
@@ -239,7 +208,7 @@ function HTTPLoader(cfg) {
                     logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
                     httpRequest.response.onabort = null;
                     httpRequest.loader.abort(httpRequest);
-                    onloadend();
+                    _onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
             }
 
@@ -248,34 +217,49 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const onload = function () {
+        /**
+         * Fired when an XMLHttpRequest transaction completes.
+         * This includes status codes such as 404. We handle errors in the _onError function.
+         */
+        const _onload = function () {
             if (httpRequest.response.status >= 200 && httpRequest.response.status <= 299) {
-                handleLoaded(true);
+                _handleLoaded(true, requestObject, httpRequest, traces, requestStartTime, fileLoaderType);
 
                 if (config.success) {
                     config.success(httpRequest.response.response, httpRequest.response.statusText, httpRequest.response.responseURL);
                 }
 
                 if (config.complete) {
-                    config.complete(request, httpRequest.response.statusText);
+                    config.complete(requestObject, httpRequest.response.statusText);
                 }
+
+            } else {
+                _onerror();
             }
         };
 
-        const onabort = function () {
-            addHttpRequestMetric(true);
-
+        /**
+         * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
+         */
+        const _onabort = function () {
+            _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, true, traces);
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
             }
             if (config.abort) {
-                config.abort(request);
+                config.abort(requestObject);
             }
         };
 
-        const ontimeout = function (event) {
+        /**
+         * Fired when progress is terminated due to preset time expiring.
+         * @param event
+         */
+        const _ontimeout = function (event) {
             let timeoutMessage;
+
+            // We know how much we already downloaded by looking at the timeout event
             if (event.lengthComputable) {
                 let percentageComplete = (event.loaded / event.total) * 100;
                 timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
@@ -283,75 +267,96 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
+            _retriggerRequest();
         };
 
+        /**
+         * Fired when the request encountered an error.
+         */
+        const _onerror = function () {
+            _handleLoaded(false, requestObject, httpRequest, traces, requestStartTime, fileLoaderType);
 
-        let loader;
-        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-            loader = FetchLoader(context).create({
-                requestModifier: requestModifier,
-                lowLatencyThroughputModel,
-                boxParser: boxParser
-            });
-            loader.setup({
-                dashMetrics
-            });
-            fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
-        } else {
-            loader = XHRLoader(context).create({
-                requestModifier: requestModifier
-            });
-            fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
+            // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+            try {
+                if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    // Only trigger a sync if the loading failed for the first time
+                    const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                    if (initialNumberOfAttempts === remainingAttempts) {
+                        eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
+                    }
+                }
+            } catch (e) {
+
+            }
+
+            _retriggerRequest();
         }
 
-        let headers = null;
-        let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
-        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-            const cmcdMode = settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                const additionalQueryParameter = _getAdditionalQueryParameter(request);
-                modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
-            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                headers = cmcdModel.getHeaderParameters(request);
+        /**
+         * Retriggers the request in case we did not exceed the number of retry attempts
+         * @private
+         */
+        const _retriggerRequest = function () {
+            if (remainingAttempts > 0) {
+                remainingAttempts--;
+                let retryRequest = { config: config };
+                retryRequests.push(retryRequest);
+                retryRequest.timeout = setTimeout(function () {
+                    if (retryRequests.indexOf(retryRequest) === -1) {
+                        return;
+                    } else {
+                        retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+                    }
+                    _internalLoad(config, remainingAttempts);
+                }, mediaPlayerModel.getRetryIntervalsForType(requestObject.type));
+            } else {
+                if (requestObject.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                    return;
+                }
+
+                errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[requestObject.type], requestObject.url + ' is not available', {
+                    request: requestObject,
+                    response: httpRequest.response
+                }));
+
+                if (config.error) {
+                    config.error(requestObject, 'error', httpRequest.response.statusText, httpRequest.response);
+                }
+
+                if (config.complete) {
+                    config.complete(requestObject, httpRequest.response.statusText);
+                }
             }
         }
 
-        const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
+        const modifiedRequestParams = _getModifiedRequestHeaderAndUrl(requestObject);
 
-        // Add queryParams that came from pathway cloning
-        if (request.queryParams) {
-            const queryParams = Object.keys(request.queryParams).map((key) => {
-                return {
-                    key,
-                    value: request.queryParams[key]
-                }
-            })
-            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, queryParams);
-        }
+        requestObject.url = modifiedRequestParams.url;
+        const method = requestObject.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
+        const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
 
-        request.url = modifiedUrl;
 
         httpRequest = {
-            url: modifiedUrl,
-            method: HTTPRequest.GET,
-            withCredentials: withCredentials,
-            request: request,
-            onload: onload,
-            onend: onloadend,
-            onerror: onloadend,
-            progress: progress,
-            onabort: onabort,
-            ontimeout: ontimeout,
-            loader: loader,
+            url: modifiedRequestParams.url,
+            method,
+            withCredentials,
+            request: requestObject,
+            onload: _onload,
+            onloadend: _onloadend,
+            onerror: _onerror,
+            progress: _progress,
+            onabort: _onabort,
+            ontimeout: _ontimeout,
+            loader,
             timeout: requestTimeout,
-            headers: headers
+            headers: modifiedRequestParams.headers
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
         let now = new Date().getTime();
-        if (isNaN(request.delayLoadingTime) || now >= request.delayLoadingTime) {
+        if (isNaN(requestObject.delayLoadingTime) || now >= requestObject.delayLoadingTime) {
             // no delay - just send
-            requests.push(httpRequest);
+            httpRequests.push(httpRequest);
             loader.load(httpRequest);
         } else {
             // delay
@@ -366,15 +371,172 @@ function HTTPLoader(cfg) {
                 try {
                     requestStartTime = new Date();
                     lastTraceTime = requestStartTime;
-                    requests.push(delayedRequest.httpRequest);
+                    httpRequests.push(delayedRequest.httpRequest);
                     loader.load(delayedRequest.httpRequest);
                 } catch (e) {
                     delayedRequest.httpRequest.onerror();
                 }
-            }, (request.delayLoadingTime - now));
+            }, (requestObject.delayLoadingTime - now));
         }
     }
 
+    /**
+     * Function to be called after the request has been loaded. Either successfully or unsuccesfully
+     * @param {boolean} success
+     * @param {object} requestObject
+     * @param {object} httpRequest
+     * @param {array} traces
+     * @param {date} requestStartTime
+     * @param {string} fileLoaderType
+     * @private
+     */
+    function _handleLoaded(success, requestObject, httpRequest, traces, requestStartTime, fileLoaderType) {
+        requestObject.startDate = requestStartTime;
+        requestObject.endDate = new Date();
+        requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+        requestObject.fileLoaderType = fileLoaderType;
+
+        // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+        // These values are more accurate and can be used by the ThroughputController later
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
+            _addResourceTimingValues(requestObject);
+        }
+
+        if (!requestObject.checkExistenceOnly) {
+            _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, success, traces);
+
+            if (requestObject.type === HTTPRequest.MPD_TYPE) {
+                dashMetrics.addManifestUpdate(requestObject);
+                eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
+            }
+        }
+    }
+
+    function _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, success, traces) {
+        requestObject.requestStartDate = requestStartTime;
+        requestObject.requestEndDate = new Date();
+        requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+        requestObject.fileLoaderType = fileLoaderType;
+
+        const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+        const responseStatus = httpRequest.response ? httpRequest.response.status : null;
+        const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+            httpRequest.response ? httpRequest.response.responseHeaders : null;
+
+        const cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, requestObject.mediaType) : null;
+        dashMetrics.addHttpRequest(requestObject, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+    }
+
+    /**
+     * Adds the values from the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
+     * @param requestObject
+     * @private
+     */
+    function _addResourceTimingValues(requestObject) {
+        // Check performance support. We do not support range requests, needs to figure out how to find the right resource here.
+        if (typeof performance === 'undefined' || requestObject.range) {
+            return;
+        }
+
+        // Get a list of "resource" performance entries
+        const resources = performance.getEntriesByType('resource');
+        if (resources === undefined || resources.length <= 0) {
+            return;
+        }
+
+        // Find the right resource
+        let i = 0;
+        let resource = null;
+        while (i < resources.length) {
+            if (resources[i].name === requestObject.url) {
+                resource = resources[i];
+                break;
+            }
+            i += 1;
+        }
+
+        requestObject.resourceTimingValues = resource;
+    }
+
+    /**
+     * Returns either the FetchLoader or the XHRLoader depending on the request type and playback mode.
+     * @param {object} request
+     * @return {*}
+     * @private
+     */
+    function _getLoader(request) {
+        let loader;
+        let fileLoaderType;
+
+        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            if (!fetchLoader) {
+                fetchLoader = FetchLoader(context).create();
+                fetchLoader.setConfig({
+                    dashMetrics,
+                    requestModifier,
+                    boxParser
+                });
+            }
+            loader = fetchLoader;
+            fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH;
+        } else {
+            if (!xhrLoader) {
+                xhrLoader = XHRLoader(context).create({
+                    requestModifier
+                });
+            }
+            loader = xhrLoader;
+            fileLoaderType = Constants.FILE_LOADER_TYPES.XHR;
+        }
+
+        return { loader, fileLoaderType };
+    }
+
+    /**
+     * Modifies the request headers and the request url. Uses the requestModifier and the CMCDModel
+     * @param request
+     * @return {{headers: null, url}}
+     * @private
+     */
+    function _getModifiedRequestHeaderAndUrl(request) {
+        let url;
+        let headers = null;
+
+        url = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
+
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                headers = cmcdModel.getHeaderParameters(request);
+            }
+        }
+
+        // Add queryParams that came from pathway cloning
+        if (request.queryParams) {
+            const queryParams = Object.keys(request.queryParams).map((key) => {
+                return {
+                    key,
+                    value: request.queryParams[key]
+                }
+            })
+            url = Utils.addAditionalQueryParameterToUrl(url, queryParams);
+        }
+
+        return {
+            url,
+            headers
+        }
+    }
+
+    /**
+     * Generates the additional query parameters to be appended to the request url
+     * @param request
+     * @return {*[]}
+     * @private
+     */
     function _getAdditionalQueryParameter(request) {
         try {
             const additionalQueryParameter = [];
@@ -387,27 +549,6 @@ function HTTPLoader(cfg) {
             return additionalQueryParameter;
         } catch (e) {
             return [];
-        }
-    }
-
-    /**
-     * Initiates a download of the resource described by config.request
-     * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
-     * @memberof module:HTTPLoader
-     * @instance
-     */
-    function load(config) {
-        if (config.request) {
-            internalLoad(
-                config,
-                mediaPlayerModel.getRetryAttemptsForType(
-                    config.request.type
-                )
-            );
-        } else {
-            if (config.error) {
-                config.error(config.request, 'error');
-            }
         }
     }
 
@@ -429,7 +570,7 @@ function HTTPLoader(cfg) {
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];
 
-        requests.forEach(x => {
+        httpRequests.forEach(x => {
             // MSS patch: ignore FragmentInfo requests
             if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
                 return;
@@ -441,12 +582,12 @@ function HTTPLoader(cfg) {
             x.onloadend = x.onerror = x.onprogress = undefined;
             x.loader.abort(x);
         });
-        requests = [];
+        httpRequests = [];
     }
 
     instance = {
-        load: load,
-        abort: abort
+        load,
+        abort
     };
 
     setup();

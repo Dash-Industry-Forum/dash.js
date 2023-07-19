@@ -509,7 +509,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             streaming: {
                 abr: {
-                    fetchThroughputCalculationMode: mode
+                    throughput: {
+                        fetchThroughputCalculationMode: mode
+                    }
                 }
             }
         });
@@ -2115,7 +2117,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
         $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
         $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
-        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.fetchThroughputCalculationMode;
+        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.throughput.fetchThroughputCalculationMode;
     }
 
     function setAdditionalPlaybackOptions() {
@@ -2137,7 +2139,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     function setDrmOptions() {
-        var currentConfig = $scope.player.getSettings();
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();

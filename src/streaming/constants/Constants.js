@@ -165,10 +165,10 @@ class Constants {
         this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
 
         /**
-        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
-        *  @memberof Constants#
-        *  @static
-        */
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
+         *  @memberof Constants#
+         *  @static
+         */
         this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
 
         /**
@@ -299,6 +299,14 @@ class Constants {
         this.FILE_LOADER_TYPES = {
             FETCH: 'fetch_loader',
             XHR: 'xhr_loader'
+        };
+        this.THROUGHPUT_TYPES = {
+            LATENCY: 'throughput_type_latency', BANDWIDTH: 'throughput_type_bandwidth'
+        };
+        this.THROUGHPUT_CALCULATION_MODES = {
+            EWMA: 'throughput_calculcation_mode_ewma',
+            ARITHMETIC_MEAN: 'throughput_calculation_mode_am',
+            HARMONIC_MEAN: 'throughput_calculation_mode_hm'
         }
     }
 

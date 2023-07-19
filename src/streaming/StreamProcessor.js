@@ -70,6 +70,7 @@ function StreamProcessor(config) {
     let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
+    let throughputController = config.throughputController;
     let mediaController = config.mediaController;
     let textController = config.textController;
     let dashMetrics = config.dashMetrics;
@@ -933,7 +934,7 @@ function StreamProcessor(config) {
             let bitrate = null;
 
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
-                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type, isDynamic);
+                averageThroughput = throughputController.getAverageThroughput(type, isDynamic);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                 quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
             } else {
