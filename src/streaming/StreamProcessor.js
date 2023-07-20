@@ -551,8 +551,7 @@ function StreamProcessor(config) {
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
-            }
-            if (shouldRepeatRequest) {
+            } else if (shouldRepeatRequest) {
                 request = dashHandler.repeatSegmentRequest(mediaInfo, representation);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
