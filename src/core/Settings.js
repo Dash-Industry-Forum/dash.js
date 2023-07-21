@@ -862,7 +862,7 @@ function Settings() {
                 useSuggestedPresentationDelay: true
             },
             protection: {
-                keepProtectionMediaKeys: false,
+                keepProtectionMediaKeys: true,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
             },
@@ -976,15 +976,15 @@ function Settings() {
                 lowLatencyMultiplyFactor: 5
             },
             abr: {
-                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                ABRStrategy: Constants.ABR_STRATEGY_THROUGHPUT,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
                 additionalAbrRules: {
-                    insufficientBufferRule: true,
-                    switchHistoryRule: true,
-                    droppedFramesRule: true,
+                    insufficientBufferRule: false,
+                    switchHistoryRule: false,
+                    droppedFramesRule: false,
                     abandonRequestsRule: true
                 },
                 throughput: {
@@ -997,7 +997,7 @@ function Settings() {
                     sampleSettings: {
                         live: 3,
                         vod: 4,
-                        enableSampleSizeAdjustment: false,
+                        enableSampleSizeAdjustment: true,
                         decreaseScale: 1.3,
                         increaseScale: 1.3,
                     },

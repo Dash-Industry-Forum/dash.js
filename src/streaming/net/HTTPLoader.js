@@ -42,6 +42,7 @@ import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
 import CustomParametersModel from '../models/CustomParametersModel';
+import HttpLoaderRequest from '../vo/HttpLoaderRequest';
 
 /**
  * @module HTTPLoader
@@ -333,7 +334,7 @@ function HTTPLoader(cfg) {
         const method = requestObject.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
 
-        httpRequest = {
+        httpRequest = new HttpLoaderRequest({
             url: modifiedRequestParams.url,
             method,
             withCredentials,
@@ -347,7 +348,7 @@ function HTTPLoader(cfg) {
             loader,
             timeout: requestTimeout,
             headers: modifiedRequestParams.headers
-        };
+        });
 
         // Adds the ability to delay single fragment loading time to control buffer.
         let now = new Date().getTime();

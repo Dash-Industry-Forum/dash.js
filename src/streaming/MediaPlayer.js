@@ -1216,7 +1216,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Returns the average throughput computed in the ABR logic
+     * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
      * @return {number} value
