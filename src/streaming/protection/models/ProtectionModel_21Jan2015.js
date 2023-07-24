@@ -101,8 +101,6 @@ function ProtectionModel_21Jan2015(config) {
                 (function (s) {
                     _closeKeySessionInternal(session)
                     done(s);
-
-
                 })(session);
             }
         } else {
