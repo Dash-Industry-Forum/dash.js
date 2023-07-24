@@ -99,15 +99,9 @@ function ProtectionModel_21Jan2015(config) {
             for (let i = 0; i < numSessions; i++) {
                 session = sessions[i];
                 (function (s) {
-                    // Override closed promise resolver
-                    session.session.closed.then(function () {
-                        done(s);
-                    });
-                    // Close the session and handle errors, otherwise promise
-                    // resolver above will be called
-                    _closeKeySessionInternal(session).catch(function () {
-                        done(s);
-                    });
+                    _closeKeySessionInternal(session)
+                    done(s);
+
 
                 })(session);
             }
@@ -122,9 +116,8 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             session = sessions[i];
             if (!session.getUsable()) {
-                _closeKeySessionInternal(session).catch(function () {
-                    removeSession(session);
-                });
+                _closeKeySessionInternal(session)
+                removeSession(session);
             }
         }
     }
@@ -163,8 +156,8 @@ function ProtectionModel_21Jan2015(config) {
         if (navigator.requestMediaKeySystemAccess === undefined ||
             typeof navigator.requestMediaKeySystemAccess !== 'function') {
             const msg = 'Insecure origins are not allowed';
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: msg});
-            reject({error: msg});
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: msg });
+            reject({ error: msg });
             return;
         }
 
@@ -186,16 +179,16 @@ function ProtectionModel_21Jan2015(config) {
                 const keySystemAccess = new KeySystemAccess(currentKeySystem, configuration);
 
                 keySystemAccess.mksa = mediaKeySystemAccess;
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
-                resolve({data: keySystemAccess});
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
+                resolve({ data: keySystemAccess });
             })
             .catch((e) => {
                 if (idx + 1 < ksConfigurations.length) {
                     _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
                 } else {
                     const errorMessage = 'Key system access denied! ';
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: errorMessage + e.message});
-                    reject({error: errorMessage + e.message});
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + e.message });
+                    reject({ error: errorMessage + e.message });
                 }
             })
     }
@@ -262,7 +255,7 @@ function ProtectionModel_21Jan2015(config) {
                     resolve(keySystem);
                 })
                 .catch(function () {
-                    reject({error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
+                    reject({ error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
                 });
         })
     }
@@ -298,7 +291,7 @@ function ProtectionModel_21Jan2015(config) {
             logger.info('DRM: License server certificate successfully updated.');
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name)});
+            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
         });
     }
 
@@ -320,7 +313,7 @@ function ProtectionModel_21Jan2015(config) {
 
         session.generateRequest(dataType, ksInfo.initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+            eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
         }).catch(function (error) {
             removeSession(sessionToken);
             eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -342,7 +335,7 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_UPDATED);
             })
             .catch(function (error) {
-                eventBus.trigger(events.KEY_ERROR, {error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+                eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken) });
             });
     }
 
@@ -368,7 +361,7 @@ function ProtectionModel_21Jan2015(config) {
         session.load(sessionId).then(function (success) {
             if (success) {
                 logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionId());
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
             } else {
                 removeSession(sessionToken);
                 eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -390,7 +383,7 @@ function ProtectionModel_21Jan2015(config) {
 
         session.remove().then(function () {
             logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_REMOVED, {data: sessionToken.getSessionId()});
+            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionId() });
         }, function (error) {
             eventBus.trigger(events.KEY_SESSION_REMOVED, {
                 data: null,
@@ -432,7 +425,7 @@ function ProtectionModel_21Jan2015(config) {
                     case 'encrypted':
                         if (event.initData) {
                             let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, event.initDataType)});
+                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, event.initDataType) });
                         }
                         break;
                 }
@@ -492,12 +485,12 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
+                        eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
                         event.target.keyStatuses.forEach(function () {
                             let keyStatus = parseKeyStatus(arguments);
                             switch (keyStatus.status) {
                                 case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
                                     break;
                                 default:
                                     eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
@@ -508,7 +501,7 @@ function ProtectionModel_21Jan2015(config) {
 
                     case 'message':
                         let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(this, message, undefined, event.messageType)});
+                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
                         break;
                 }
             },
@@ -553,7 +546,7 @@ function ProtectionModel_21Jan2015(config) {
         session.closed.then(() => {
             removeSession(token);
             logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: token.getSessionId()});
+            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionId() });
         });
 
         // Add to our session list
