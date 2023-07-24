@@ -993,6 +993,7 @@ function Settings() {
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
                     useResourceTimingApi: true,
+                    useNetworkInformationApi: true,
                     maxMeasurementsToKeep : 20,
                     sampleSettings: {
                         live: 3,

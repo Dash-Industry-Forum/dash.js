@@ -148,12 +148,21 @@ function ThroughputModel(config) {
      * @private
      */
     function _calculateThroughputValuesForFetch(httpRequest) {
-        console.log(`Traces length ${httpRequest.trace.length}`);
-
         // Use the standard throughput calculation if we can not use the Resource Timing API. Use the total download duration and the total number of bytes
         const downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
         const downloadTimeInMs = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
-        const throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs); // bits/ms = kbits/s
+        let throughputInKbit = NaN;
+
+        if (settings.get().streaming.abr.throughput.useNetworkInformationApi) {
+            throughputInKbit = _deriveThroughputFromNetworkApi()
+        }
+
+        if (isNaN(throughputInKbit)) {
+            throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs); // bits/ms = kbits/s
+        }
+
+        //console.log(`Throughput Moof ${Math.round((8 * downloadedBytes) / downloadTimeInMs)}`);
+        //console.log(`Throughput Network API ${_deriveThroughputFromNetworkApi()}`)
 
         return {
             downloadedBytes,
@@ -223,6 +232,20 @@ function ThroughputModel(config) {
         }
 
         return { downloadedBytes, downloadTimeInMs }
+    }
+
+    /**
+     * Return the current estimated bandwidth based on NetworkInformation.downlink if the API is available
+     * @returns {*|number}
+     * @private
+     */
+    function _deriveThroughputFromNetworkApi() {
+        // NetworkInformation.downlink: Returns the effective bandwidth estimate in megabits per second, rounded to the nearest multiple of 25 kilobits per seconds.
+        if (navigator && navigator.connection && !isNaN(navigator.connection.downlink) && navigator.connection.downlink > 0) {
+            return navigator.connection.downlink * 1000
+        }
+
+        return NaN
     }
 
     /**
