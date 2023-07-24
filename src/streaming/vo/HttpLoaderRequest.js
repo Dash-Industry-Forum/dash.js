@@ -64,7 +64,12 @@ class HttpLoaderRequest {
          * Save the response here
          * @type {{}}
          */
-        this.response = {}
+        this.response = {};
+
+        /**
+         * An instance of reader to be used for the reading the Response object when using the FetchAPI. See : https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/getReader
+         */
+        this.reader = null;
     }
 }
 

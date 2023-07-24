@@ -74,35 +74,51 @@ function ThroughputModel(config) {
      * @param {object} httpRequest
      */
     function addEntry(mediaType, httpRequest) {
+        try {
 
-        if (!mediaType || !httpRequest || !httpRequest.trace || !httpRequest.trace.length) {
-            return;
+            if (!mediaType || !httpRequest || !httpRequest.trace || !httpRequest.trace.length) {
+                return;
+            }
+
+            _createSettingsForMediaType(mediaType);
+
+            const latencyInMs = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
+            let throughputValues = _calculateThroughputValues(httpRequest, latencyInMs);
+            throughputValues.latencyInMs = latencyInMs;
+
+            if (isNaN(throughputValues.throughputInKbit) || !isFinite(throughputValues.throughputInKbit)) {
+                return;
+            }
+
+            // Get estimated throughput (etp, in kbits/s) from CMSD response headers
+            if (httpRequest.cmsd) {
+                const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp ? httpRequest.cmsd.dynamic.etp : null;
+                if (etp) {
+                    // Apply weight ratio on etp
+                    const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
+                    if (etpWeightRatio > 0 && etpWeightRatio <= 1) {
+                        throughputValues.throughputInKbit = (throughputValues.throughputInKbit * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                    }
+                }
+            }
+
+            const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.trequest.getTime());
+
+            if (_isCachedResponse(mediaType, cacheReferenceTime)) {
+                logger.debug(`${mediaType} Assuming segment ${httpRequest.url} came from cache, ignoring it for throughput calculation`);
+                return;
+            }
+
+            logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.throughputInKbit} kbit/s`)
+            throughputDict[mediaType].push(throughputValues.throughputInKbit);
+            latencyDict[mediaType].push(latencyInMs);
+            _cleanupDict(mediaType);
+
+            _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.throughputInKbit, 0.001 * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
+            _updateEwmaValues(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
+        } catch (e) {
+            logger.error(e);
         }
-
-        _createSettingsForMediaType(mediaType);
-
-        const latencyInMs = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
-        let throughputValues = _calculateThroughputValues(httpRequest, latencyInMs);
-        throughputValues.latencyInMs = latencyInMs;
-
-        if (isNaN(throughputValues.throughputInKbit) || !isFinite(throughputValues.throughputInKbit)) {
-            return;
-        }
-
-        const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.trequest.getTime());
-
-        if (_isCachedResponse(mediaType, cacheReferenceTime)) {
-            logger.debug(`${mediaType} Assuming segment ${httpRequest.url} came from cache, ignoring it for throughput calculation`);
-            return;
-        }
-
-        logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.throughputInKbit} kbit/s`)
-        throughputDict[mediaType].push(throughputValues.throughputInKbit);
-        latencyDict[mediaType].push(latencyInMs);
-        _cleanupDict(mediaType);
-
-        _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.throughputInKbit, 0.001 * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
-        _updateEwmaValues(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
     }
 
     /**
@@ -112,9 +128,10 @@ function ThroughputModel(config) {
      * @private
      */
     function _calculateThroughputValues(httpRequest, latencyInMs) {
+
         // Low latency is enabled, we used the fetch API and received chunks
         if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
-            return _calculateThroughputValuesForFetch(httpRequest);
+            return _calculateThroughputValuesForFetch(httpRequest, latencyInMs);
         }
 
         // Standard case, we used standard XHR requests
@@ -126,21 +143,42 @@ function ThroughputModel(config) {
     /**
      * Calculates the throughput for requests using the Fetch API
      * @param {object} httpRequest
+     * @param {number} latencyInMs
      * @return {number}
      * @private
      */
-    function _calculateThroughputValuesForFetch(httpRequest) {
-        const calculationMode = settings.get().streaming.abr.throughput.fetchThroughputCalculationMode;
-        const downloadBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
+    function _calculateThroughputValuesForFetch(httpRequest, latencyInMs) {
+        let resourceTimingValues = null;
+        let downloadedBytes = NaN;
+        let downloadTimeInMs = NaN;
+        let throughputInKbit = NaN;
 
-        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-            const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b._t, 0);
-            return Math.round(sumOfThroughputValues / httpRequest.trace.length);
-        } else {
-            let throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
-            return Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
+            resourceTimingValues = _deriveDownloadValuesFromResourceTimingApi(httpRequest)
         }
 
+        // Calculate the throughput using the ResourceTimingAPI if we got useful values
+        if (resourceTimingValues && !isNaN(resourceTimingValues.downloadedBytes) && !isNaN(resourceTimingValues.downloadTimeInMs)) {
+            downloadTimeInMs = resourceTimingValues.downloadTimeInMs;
+            downloadedBytes = resourceTimingValues.downloadedBytes;
+            const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
+            throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs)
+        }
+
+        // Use the standard throughput calculation if we can not use the Resource Timing API. Use the total download duration and the total number of bytes
+        else {
+            const downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
+            let throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
+            throughputInKbit = Math.round((8 * downloadedBytes) / throughputMeasureTime); // bits/ms = kbits/s
+
+        }
+
+        return {
+            downloadedBytes,
+            throughputInKbit,
+            downloadTimeInMs
+        };
     }
 
     /**
@@ -151,14 +189,19 @@ function ThroughputModel(config) {
      * @private
      */
     function _calculateThroughputValuesForXhr(httpRequest, latencyInMs) {
-        let downloadedBytes;
+        let resourceTimingValues = null;
+        let downloadedBytes = NaN;
         let downloadTimeInMs = NaN;
 
+
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
+            resourceTimingValues = _deriveDownloadValuesFromResourceTimingApi(httpRequest)
+        }
+
         // Calculate the throughput using the ResourceTimingAPI if we got useful values
-        if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0) {
-            downloadedBytes = httpRequest._resourceTimingValues.encodedBodySize;
-            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
+        if (resourceTimingValues && !isNaN(resourceTimingValues.downloadedBytes) && !isNaN(resourceTimingValues.downloadTimeInMs)) {
+            downloadTimeInMs = resourceTimingValues.downloadTimeInMs;
+            downloadedBytes = resourceTimingValues.downloadedBytes;
         }
 
         // Use the standard throughput calculation if we can not use the Resource Timing API
@@ -171,6 +214,7 @@ function ThroughputModel(config) {
             downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0) - httpRequest.trace[0].b[0];
             downloadTimeInMs = Math.max(httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0) - httpRequest.trace[0].d, 1);
         }
+
         const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
         const throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs) // bits/ms = kbits/s
 
@@ -179,6 +223,25 @@ function ThroughputModel(config) {
             throughputInKbit,
             downloadTimeInMs
         };
+    }
+
+    /**
+     * Calculate the downloaded bytes and the download times using the resource timing API
+     * @param httpRequest
+     * @returns {{downloadTimeInMs: (*|number|NaN), downloadedBytes: (*|number|NaN)}}
+     * @private
+     */
+    function _deriveDownloadValuesFromResourceTimingApi(httpRequest) {
+        let downloadedBytes = NaN;
+        let downloadTimeInMs = NaN;
+
+        if (httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0) {
+            downloadedBytes = httpRequest._resourceTimingValues.encodedBodySize;
+            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
+        }
+
+        return { downloadedBytes, downloadTimeInMs }
     }
 
     /**
@@ -244,7 +307,11 @@ function ThroughputModel(config) {
     function _createSettingsForMediaType(mediaType) {
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
-        ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || { fastEstimate: 0, slowEstimate: 0, totalWeight: 0 };
+        ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {
+            fastEstimate: 0,
+            slowEstimate: 0,
+            totalWeight: 0
+        };
         ewmaLatencyDict[mediaType] = ewmaLatencyDict[mediaType] || { fastEstimate: 0, slowEstimate: 0, totalWeight: 0 };
     }
 
