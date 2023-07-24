@@ -238,6 +238,8 @@ function ThroughputController() {
     function getAverageThroughput(mediaType, calculationMode = null, sampleSize = NaN) {
         const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH, mediaType, calculationMode, sampleSize);
 
+        console.log(`Returning getAverageThroughput for ${mediaType}: ${value}`)
+
         return Math.round(value);
     }
 
@@ -254,6 +256,8 @@ function ThroughputController() {
         if (!isNaN(average)) {
             average *= settings.get().streaming.abr.throughput.bandwidthSafetyFactor;
         }
+
+        console.log(`Returning getSafeAverageThroughput for ${mediaType}: ${average}`)
 
         return average;
     }

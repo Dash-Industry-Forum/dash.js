@@ -109,12 +109,12 @@ function FetchLoader() {
             signal: abortController ? abortController.signal : undefined
         };
 
-        const calculationMode = settings.get().streaming.abr.throughput.fetchThroughputCalculationMode;
+        const calculationMode = settings.get().streaming.abr.throughput.lowLatencyDownloadTimeCalculationMode;
         const requestTime = performance.now();
         let throughputCapacityDelayMS = 0;
 
         new Promise((resolve) => {
-            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && aastLowLatencyThroughputModel) {
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
                 throughputCapacityDelayMS = aastLowLatencyThroughputModel.getThroughputCapacityDelayMS(request, dashMetrics.getCurrentBufferLevel(request.mediaType) * 1000);
                 if (throughputCapacityDelayMS) {
                     // safely delay the "fetch" call a bit to be able to measure the throughput capacity of the line.
@@ -152,7 +152,7 @@ function FetchLoader() {
                         let receivedData = new Uint8Array();
                         let offset = 0;
 
-                        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && aastLowLatencyThroughputModel) {
+                        if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
                             _aastProcessResponse(markBeforeFetch, request, requestTime, throughputCapacityDelayMS, responseHeaders, httpLoaderRequest, response)
                         } else {
                             httpLoaderRequest.reader = response.body.getReader();
@@ -188,18 +188,18 @@ function FetchLoader() {
                          */
                         function _handleRequestComplete() {
                             if (receivedData) {
-                                if (calculationMode !== Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST) {
+                                if (calculationMode !== Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST) {
                                     // If there is pending data, call progress so network metrics
                                     // are correctly generated
                                     // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
                                     let calculatedThroughput = null;
                                     let calculatedTime = null;
-                                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                                    if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
                                         calculatedThroughput = _calculateThroughputByChunkData(moofStartTimeData, mdatEndTimeData);
                                         if (calculatedThroughput) {
                                             calculatedTime = bytesReceived * 8 / calculatedThroughput;
                                         }
-                                    } else if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA) {
+                                    } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
                                         calculatedTime = _calculateDownloadedTime(downloadedData, bytesReceived);
                                     }
 
@@ -231,7 +231,7 @@ function FetchLoader() {
                                 bytes: value.length
                             });
 
-                            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && lastChunkWasFinished) {
+                            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && lastChunkWasFinished) {
                                 // Parse the payload and capture  the 'moof' box
                                 const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], receivedData, offset);
                                 if (boxesInfo.found) {
@@ -246,10 +246,10 @@ function FetchLoader() {
 
                             const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], receivedData, offset);
                             if (boxesInfo.found) {
-                                const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
+                                const endOfLastBox = boxesInfo.lastCompletedOffset + boxesInfo.size;
 
                                 // Store the end time of each chunk download  with its size in array EndTimeData
-                                if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && !lastChunkWasFinished) {
+                                if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
                                     lastChunkWasFinished = true;
                                     mdatEndTimeData.push({
                                         ts: performance.now(),
@@ -263,12 +263,12 @@ function FetchLoader() {
                                 // and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
                                 // keeps a reference to the original data
                                 let data;
-                                if (end === receivedData.length) {
+                                if (endOfLastBox === receivedData.length) {
                                     data = receivedData;
                                     receivedData = new Uint8Array();
                                 } else {
-                                    data = new Uint8Array(receivedData.subarray(0, end));
-                                    receivedData = receivedData.subarray(end);
+                                    data = new Uint8Array(receivedData.subarray(0, endOfLastBox));
+                                    receivedData = receivedData.subarray(endOfLastBox);
                                 }
 
                                 // Announce progress but don't track traces. Throughput measures are quite unstable

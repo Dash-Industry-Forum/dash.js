@@ -988,8 +988,8 @@ function Settings() {
                     abandonRequestsRule: true
                 },
                 throughput: {
-                    calculationMode: Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN,
-                    fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
+                    calculationMode: Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN,
+                    lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
                     useResourceTimingApi: true,
@@ -1033,8 +1033,7 @@ function Settings() {
                 autoSwitchBitrate: {
                     audio: true,
                     video: true
-                },
-                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING
+                }
             },
             cmcd: {
                 enabled: false,

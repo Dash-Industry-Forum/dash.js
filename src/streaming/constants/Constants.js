@@ -151,27 +151,6 @@ class Constants {
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
 
         /**
-         *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
-
-        /**
-         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
-
-        /**
-         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
-
-        /**
          *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
          *  @memberof Constants#
          *  @static
@@ -304,9 +283,14 @@ class Constants {
             LATENCY: 'throughput_type_latency', BANDWIDTH: 'throughput_type_bandwidth'
         };
         this.THROUGHPUT_CALCULATION_MODES = {
-            EWMA: 'throughput_calculcation_mode_ewma',
-            ARITHMETIC_MEAN: 'throughput_calculation_mode_am',
-            HARMONIC_MEAN: 'throughput_calculation_mode_hm'
+            EWMA: 'throughputCalculcationModeEwma',
+            ARITHMETIC_MEAN: 'throughputCalculationModeAm',
+            HARMONIC_MEAN: 'throughputCalculationModeHm'
+        }
+        this.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE = {
+            MOOF_PARSING  : 'lowLatencyDownloadTimeCalculationModeMoofParsing',
+            DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData',
+            AAST: 'lowLatencyDownloadTimeCalculationModeAast',
         }
     }
 
