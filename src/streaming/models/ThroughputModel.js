@@ -147,32 +147,13 @@ function ThroughputModel(config) {
      * @return {number}
      * @private
      */
-    function _calculateThroughputValuesForFetch(httpRequest, latencyInMs) {
-        let resourceTimingValues = null;
-        let downloadedBytes = NaN;
-        let downloadTimeInMs = NaN;
-        let throughputInKbit = NaN;
-
-
-        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
-            resourceTimingValues = _deriveDownloadValuesFromResourceTimingApi(httpRequest)
-        }
-
-        // Calculate the throughput using the ResourceTimingAPI if we got useful values
-        if (resourceTimingValues && !isNaN(resourceTimingValues.downloadedBytes) && !isNaN(resourceTimingValues.downloadTimeInMs)) {
-            downloadTimeInMs = resourceTimingValues.downloadTimeInMs;
-            downloadedBytes = resourceTimingValues.downloadedBytes;
-            const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
-            throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs)
-        }
+    function _calculateThroughputValuesForFetch(httpRequest) {
+        console.log(`Traces length ${httpRequest.trace.length}`);
 
         // Use the standard throughput calculation if we can not use the Resource Timing API. Use the total download duration and the total number of bytes
-        else {
-            const downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
-            let throughputMeasureTime = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
-            throughputInKbit = Math.round((8 * downloadedBytes) / throughputMeasureTime); // bits/ms = kbits/s
-
-        }
+        const downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
+        const downloadTimeInMs = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
+        const throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs); // bits/ms = kbits/s
 
         return {
             downloadedBytes,
