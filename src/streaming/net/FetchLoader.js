@@ -200,7 +200,7 @@ function FetchLoader() {
                                             calculatedTime = bytesReceived * 8 / calculatedThroughput;
                                         }
                                     } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
-                                        calculatedTime = _calculateDownloadedTime(downloadedData, bytesReceived);
+                                        calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                                     }
 
                                     httpLoaderRequest.progress({
@@ -422,7 +422,7 @@ function FetchLoader() {
      * @returns {number|null}
      * @private
      */
-    function _calculateDownloadedTime(downloadedData, bytesReceived) {
+    function calculateDownloadedTime(downloadedData, bytesReceived) {
         try {
             downloadedData = downloadedData.filter(data => data.bytes > ((bytesReceived / 4) / downloadedData.length));
             if (downloadedData.length > 1) {
@@ -501,7 +501,8 @@ function FetchLoader() {
     instance = {
         load,
         abort,
-        setConfig
+        setConfig,
+        calculateDownloadedTime
     };
 
     return instance;

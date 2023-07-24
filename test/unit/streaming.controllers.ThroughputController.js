@@ -160,7 +160,7 @@ describe('ThroughputController', () => {
 
         it('Should calculate the arithmetic mean based on values from Resource Timing API', () => {
             _addMetrics();
-            const result = throughputController.getAverageThroughput('video');
+            const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
             expect(result).to.be.equal(120000);
         })
@@ -175,7 +175,7 @@ describe('ThroughputController', () => {
         it('Should calculate the arithmetic mean based on values from XHR traces', () => {
             settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false } } } })
             _addMetrics();
-            const result = throughputController.getAverageThroughput('video');
+            const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
             // we ignore the first entry in the traces for the calculation
             expect(result).to.be.equal(122000);
