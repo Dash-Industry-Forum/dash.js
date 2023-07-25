@@ -166,7 +166,7 @@ function ThroughputController() {
         let useMin = true;
 
         if (!calculationMode) {
-            calculationMode = settings.get().streaming.abr.throughput.calculationMode;
+            calculationMode = settings.get().streaming.abr.throughput.averageCalculationMode;
         }
 
         switch (throughputType) {

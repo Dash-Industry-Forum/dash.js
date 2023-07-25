@@ -97,6 +97,7 @@ describe('ThroughputModel', () => {
         })
 
         it('Should calculate correct throughput values in case no resourceTimingValues are present', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
             // Note the first trace is supposed to be ignored because
             delete dummyHttpRequest._resourceTimingValues;
             throughputModel.addEntry('video', dummyHttpRequest);
@@ -106,13 +107,25 @@ describe('ThroughputModel', () => {
             expect(values[0]).to.be.equal(3600);
         })
 
-        it('Should not add throughput values if considered a cached response', () => {
+        it('Should not add throughput values if considered a cached response because of cache reference time', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
             dummyHttpRequest._tfinish = dummyHttpRequest.trequest;
             throughputModel.addEntry('video', dummyHttpRequest);
             const values = throughputModel.getThroughputDict('video');
 
             expect(values.length).to.be.equal(0);
         })
+
+        it('Should not add throughput values if considered a cached response because of Resource timing API values', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            dummyHttpRequest._resourceTimingValues.transferSize = 0;
+            dummyHttpRequest._resourceTimingValues.decodedBodySize = 1;
+            throughputModel.addEntry('video', dummyHttpRequest);
+            const values = throughputModel.getThroughputDict('video');
+
+            expect(values.length).to.be.equal(0);
+        })
+
 
         it('Should remove values from the dicts once threshold is reached', () => {
             settings.update({streaming: {abr: {throughput: {maxMeasurementsToKeep: 1, useResourceTimingApi: true}}}});

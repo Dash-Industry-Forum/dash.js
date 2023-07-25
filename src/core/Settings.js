@@ -988,12 +988,12 @@ function Settings() {
                     abandonRequestsRule: true
                 },
                 throughput: {
-                    calculationMode: Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN,
+                    averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN,
                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
                     useResourceTimingApi: true,
-                    useNetworkInformationApi: true,
+                    useNetworkInformationApi: false,
                     maxMeasurementsToKeep : 20,
                     sampleSettings: {
                         live: 3,

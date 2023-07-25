@@ -159,7 +159,7 @@ describe('ThroughputController', () => {
     describe('getAverageThroughput()', () => {
 
         it('Should calculate the arithmetic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } } } })
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
@@ -167,7 +167,7 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the harmonic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } } } })
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN);
 
@@ -175,7 +175,7 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the arithmetic mean based on values from XHR traces', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false } } } })
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
@@ -184,7 +184,7 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the harmonic mean based on values from XHR traces', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false } } } })
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN);
 

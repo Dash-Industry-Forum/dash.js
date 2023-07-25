@@ -179,6 +179,7 @@ function ThroughputModel(config) {
         let resourceTimingValues = null;
         let downloadedBytes = NaN;
         let downloadTimeInMs = NaN;
+        let deriveThroughputViaResourceTimingApi = false;
 
 
         if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
@@ -189,6 +190,7 @@ function ThroughputModel(config) {
         if (resourceTimingValues && !isNaN(resourceTimingValues.downloadedBytes) && !isNaN(resourceTimingValues.downloadTimeInMs)) {
             downloadTimeInMs = resourceTimingValues.downloadTimeInMs;
             downloadedBytes = resourceTimingValues.downloadedBytes;
+            deriveThroughputViaResourceTimingApi = true;
         }
 
         // Use the standard throughput calculation if we can not use the Resource Timing API
@@ -202,8 +204,16 @@ function ThroughputModel(config) {
             downloadTimeInMs = Math.max(httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0) - httpRequest.trace[0].d, 1);
         }
 
-        const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
-        const throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs) // bits/ms = kbits/s
+        // If available and enabled use the Network Information API
+        let throughputInKbit = NaN;
+        if (!deriveThroughputViaResourceTimingApi && settings.get().streaming.abr.throughput.useNetworkInformationApi) {
+            throughputInKbit = _deriveThroughputFromNetworkApi()
+        }
+
+        if (isNaN(throughputInKbit)) {
+            const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
+            throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs) // bits/ms = kbits/s
+        }
 
         return {
             downloadedBytes,
@@ -236,9 +246,9 @@ function ThroughputModel(config) {
      * @returns {null|*|boolean}
      * @private
      */
-    function _areResourceTimingValuesUsable(httpRequest) {
+    function _areResourceTimingValuesUsable(httpRequest, ignoreTransferSize = false) {
         return settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && ((!isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0) ||ignoreTransferSize)
     }
 
     /**
@@ -265,7 +275,7 @@ function ThroughputModel(config) {
      */
     function _isCachedResponse(mediaType, cacheReferenceTime, httpRequest) {
 
-        if (_areResourceTimingValuesUsable(httpRequest)) {
+        if (_areResourceTimingValuesUsable(httpRequest, true)) {
             return httpRequest._resourceTimingValues.transferSize === 0 && httpRequest._resourceTimingValues.decodedBodySize > 0
         }
 
