@@ -40,7 +40,7 @@ let httpRequests = [
             },
         ],
         '_resourceTimingValues': {
-            encodedBodySize: 6000000,
+            transferSize: 6000000,
             responseEnd: 300,
             responseStart: 100
         },
@@ -77,7 +77,7 @@ let httpRequests = [
             }
         ],
         '_resourceTimingValues': {
-            encodedBodySize: 1000000,
+            transferSize: 1000000,
             responseEnd: 200,
             responseStart: 100
         },
@@ -114,7 +114,7 @@ let httpRequests = [
             }
         ],
         '_resourceTimingValues': {
-            encodedBodySize: 2000000,
+            transferSize: 2000000,
             responseEnd: 600,
             responseStart: 200
         },
@@ -159,6 +159,7 @@ describe('ThroughputController', () => {
     describe('getAverageThroughput()', () => {
 
         it('Should calculate the arithmetic mean based on values from Resource Timing API', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
@@ -166,6 +167,7 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the harmonic mean based on values from Resource Timing API', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } } } })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN);
 

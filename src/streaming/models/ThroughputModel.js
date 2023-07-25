@@ -237,8 +237,8 @@ function ThroughputModel(config) {
      * @private
      */
     function _areResourceTimingValuesUsable(httpRequest) {
-        return httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0
+        return settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0
     }
 
     /**

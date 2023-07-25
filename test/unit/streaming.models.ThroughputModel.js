@@ -23,7 +23,7 @@ describe('ThroughputModel', () => {
             _resourceTimingValues: {
                 responseStart: 1000,
                 responseEnd: 3000,
-                encodedBodySize: 1200000
+                transferSize: 1200000
             },
             trace: [
                 {
@@ -44,6 +44,11 @@ describe('ThroughputModel', () => {
             ]
         }
     })
+
+    afterEach(() => {
+        throughputModel.reset();
+        settings.reset();
+    });
 
     describe('addEntry()', () => {
 
@@ -83,6 +88,7 @@ describe('ThroughputModel', () => {
         })
 
         it('Should calculate correct throughput values in case resourceTimingValues are present', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } } } })
             throughputModel.addEntry('video', dummyHttpRequest);
             const values = throughputModel.getThroughputDict('video');
 
@@ -109,7 +115,7 @@ describe('ThroughputModel', () => {
         })
 
         it('Should remove values from the dicts once threshold is reached', () => {
-            settings.update({streaming: {abr: {throughput: {maxMeasurementsToKeep: 1}}}});
+            settings.update({streaming: {abr: {throughput: {maxMeasurementsToKeep: 1, useResourceTimingApi: true}}}});
             throughputModel.addEntry('video', dummyHttpRequest);
             let values = throughputModel.getThroughputDict('video');
             expect(values.length).to.be.equal(1);
