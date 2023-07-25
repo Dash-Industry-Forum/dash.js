@@ -104,7 +104,7 @@ function ThroughputModel(config) {
 
             const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.trequest.getTime());
 
-            if (_isCachedResponse(mediaType, cacheReferenceTime)) {
+            if (_isCachedResponse(mediaType, cacheReferenceTime, httpRequest)) {
                 logger.debug(`${mediaType} Assuming segment ${httpRequest.url} came from cache, ignoring it for throughput calculation`);
                 return;
             }
@@ -131,7 +131,7 @@ function ThroughputModel(config) {
 
         // Low latency is enabled, we used the fetch API and received chunks
         if (httpRequest._fileLoaderType && httpRequest._fileLoaderType === Constants.FILE_LOADER_TYPES.FETCH) {
-            return _calculateThroughputValuesForFetch(httpRequest, latencyInMs);
+            return _calculateThroughputValuesForFetch(httpRequest);
         }
 
         // Standard case, we used standard XHR requests
@@ -160,9 +160,6 @@ function ThroughputModel(config) {
         if (isNaN(throughputInKbit)) {
             throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs); // bits/ms = kbits/s
         }
-
-        //console.log(`Throughput Moof ${Math.round((8 * downloadedBytes) / downloadTimeInMs)}`);
-        //console.log(`Throughput Network API ${_deriveThroughputFromNetworkApi()}`)
 
         return {
             downloadedBytes,
@@ -225,13 +222,23 @@ function ThroughputModel(config) {
         let downloadedBytes = NaN;
         let downloadTimeInMs = NaN;
 
-        if (httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0) {
-            downloadedBytes = httpRequest._resourceTimingValues.encodedBodySize;
+        if (_areResourceTimingValuesUsable(httpRequest)) {
+            downloadedBytes = httpRequest._resourceTimingValues.transferSize;
             downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
         }
 
         return { downloadedBytes, downloadTimeInMs }
+    }
+
+    /**
+     * Checks if we got useful ResourceTimingAPI values
+     * @param httpRequest
+     * @returns {null|*|boolean}
+     * @private
+     */
+    function _areResourceTimingValuesUsable(httpRequest) {
+        return httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && !isNaN(httpRequest._resourceTimingValues.encodedBodySize) && httpRequest._resourceTimingValues.encodedBodySize > 0
     }
 
     /**
@@ -252,10 +259,16 @@ function ThroughputModel(config) {
      * Check if the response was cached.
      * @param {MediaType} mediaType
      * @param {number} cacheReferenceTime
+     * @param {object} httpRequest
      * @return {boolean}
      * @private
      */
-    function _isCachedResponse(mediaType, cacheReferenceTime) {
+    function _isCachedResponse(mediaType, cacheReferenceTime, httpRequest) {
+
+        if (_areResourceTimingValuesUsable(httpRequest)) {
+            return httpRequest._resourceTimingValues.transferSize === 0 && httpRequest._resourceTimingValues.decodedBodySize > 0
+        }
+
         if (isNaN(cacheReferenceTime)) {
             return false;
         }
