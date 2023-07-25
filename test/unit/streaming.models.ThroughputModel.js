@@ -1,5 +1,6 @@
 import ThroughputModel from '../../src/streaming/models/ThroughputModel';
 import Settings from '../../src/core/Settings';
+import Constants from '../../src/streaming/constants/Constants';
 
 const expect = require('chai').expect;
 const context = {};
@@ -105,6 +106,16 @@ describe('ThroughputModel', () => {
 
             expect(values.length).to.be.equal(1);
             expect(values[0]).to.be.equal(3600);
+        })
+
+        it('Should calculate correct throughput values in case Fetch API was used', () => {
+            dummyHttpRequest._fileLoaderType = Constants.FILE_LOADER_TYPES.FETCH
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            throughputModel.addEntry('video', dummyHttpRequest);
+            const values = throughputModel.getThroughputDict('video');
+
+            expect(values.length).to.be.equal(1);
+            expect(values[0]).to.be.equal(3520);
         })
 
         it('Should not add throughput values if considered a cached response because of cache reference time', () => {
