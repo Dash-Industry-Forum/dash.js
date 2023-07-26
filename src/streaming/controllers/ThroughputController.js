@@ -275,6 +275,18 @@ function ThroughputController() {
         return Math.round(value);
     }
 
+    /**
+     * Returns the raw throughput measurements without calculating the average
+     * @param mediaType
+     * @returns {*}
+     */
+    function getRawThroughputData(mediaType) {
+        if (!mediaType) {
+            return []
+        }
+        return throughputModel.getThroughputDict(mediaType);
+    }
+
     function reset() {
         throughputModel.reset();
         _resetEvents();
@@ -286,6 +298,7 @@ function ThroughputController() {
         getAverageThroughput,
         getSafeAverageThroughput,
         getAverageLatency,
+        getRawThroughputData,
         reset
     };
 

@@ -191,5 +191,13 @@ describe('ThroughputController', () => {
             // we ignore the first entry in the traces for the calculation
             expect(result).to.be.equal(62609);
         })
+
+        it('Should return raw throughput data without calculating the average', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
+            _addMetrics();
+            const result = throughputController.getRawThroughputData('video');
+
+            expect(result).to.have.lengthOf(3)
+        })
     })
 })
