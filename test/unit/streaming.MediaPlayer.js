@@ -646,17 +646,6 @@ describe('MediaPlayer', function () {
             expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
         });
 
-        it('should configure useDefaultABRRules', function () {
-            let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.true; // jshint ignore:line
-
-            player.updateSettings({ 'streaming': { 'abr': { 'useDefaultABRRules': false } } });
-
-
-            useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.false; // jshint ignore:line
-        });
-
         it('Method addABRCustomRule should throw an exception', function () {
             expect(player.addABRCustomRule.bind(player, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(player.addABRCustomRule.bind(player, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);

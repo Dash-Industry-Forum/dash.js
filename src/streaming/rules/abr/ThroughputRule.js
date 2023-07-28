@@ -60,9 +60,8 @@ function ThroughputRule(config) {
             const throughputController = rulesContext.getThroughputController();
             const throughput = throughputController.getSafeAverageThroughput(mediaType);
             const latency = throughputController.getAverageLatency(mediaType);
-            const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
 
-            if (isNaN(throughput) || !currentBufferState || useBufferOccupancyABR) {
+            if (isNaN(throughput) || !currentBufferState) {
                 return switchRequest;
             }
 

@@ -631,7 +631,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             streaming: {
                 abr: {
-                    additionalAbrRules: {
+                    activeRules: {
                         insufficientBufferRule: $scope.additionalAbrRules.insufficientBufferRule,
                         switchHistoryRule: $scope.additionalAbrRules.switchHistoryRule,
                         droppedFramesRule: $scope.additionalAbrRules.droppedFramesRule,
@@ -2121,10 +2121,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAbrRules() {
         var currentConfig = $scope.player.getSettings();
-        $scope.additionalAbrRules.insufficientBufferRule = currentConfig.streaming.abr.additionalAbrRules.insufficientBufferRule;
-        $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.additionalAbrRules.switchHistoryRule;
-        $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
-        $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
+        $scope.additionalAbrRules.insufficientBufferRule = currentConfig.streaming.abr.activeRules.insufficientBufferRule;
+        $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.activeRules.switchHistoryRule;
+        $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.activeRules.droppedFramesRule;
+        $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.activeRules.abandonRequestsRule;
         $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
         $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.throughput.fetchThroughputCalculationMode;
     }

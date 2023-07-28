@@ -28,6 +28,5 @@ describe('RulesContext', function () {
 
         expect(rulesContext.getMediaType()).to.equal('video');
         expect(rulesContext.getStreamInfo().id).to.equal('id');
-        expect(rulesContext.useBufferOccupancyABR()).to.be.true; // jshint ignore:line
     });
 });

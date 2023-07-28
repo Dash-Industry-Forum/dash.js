@@ -198,7 +198,6 @@ import Events from './events/Events';
  *                   abandonRequestsRule: true
  *                },
  *                bandwidthSafetyFactor: 0.9,
- *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
  *                limitBitrateByPortal: false,
  *                usePixelRatioInLimitBitrateByPortal: false,
@@ -598,8 +597,6 @@ import Events from './events/Events';
  * Standard ABR throughput rules multiply the throughput by this value.
  *
  * It should be between 0 and 1, with lower values giving less rebuffering (but also lower quality).
- * @property {boolean} [useDefaultABRRules=true]
- * Should the default ABR rules be used, or the custom ones added.
  * @property {boolean} [useDeadTimeLatency=true]
  * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as static.
  *
@@ -820,9 +817,16 @@ function Settings() {
         'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
         'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED,
         'streaming.liveCatchup.playbackRate.min': Events.SETTING_UPDATED_PLAYBACK_RATE_MIN,
-        'streaming.liveCatchup.playbackRate.max': Events.SETTING_UPDATED_PLAYBACK_RATE_MAX
+        'streaming.liveCatchup.playbackRate.max': Events.SETTING_UPDATED_PLAYBACK_RATE_MAX,
+        'streaming.abr.activeRules.throughputRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.bolaRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.insufficientBufferRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.switchHistoryRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.droppedFramesRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.abandonRequestsRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.l2ARule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.activeRules.loLPRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
     };
-
 
     /**
      * @const {PlayerSettings} defaultSettings
@@ -976,25 +980,27 @@ function Settings() {
                 lowLatencyMultiplyFactor: 5
             },
             abr: {
-                ABRStrategy: Constants.ABR_STRATEGY_THROUGHPUT,
-                useDefaultABRRules: true,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
-                additionalAbrRules: {
-                    insufficientBufferRule: false,
-                    switchHistoryRule: false,
-                    droppedFramesRule: false,
-                    abandonRequestsRule: true
+                activeRules: {
+                    throughputRule: true,
+                    bolaRule: true,
+                    insufficientBufferRule: true,
+                    switchHistoryRule: true,
+                    droppedFramesRule: true,
+                    abandonRequestsRule: true,
+                    l2ARule: false,
+                    loLPRule: false
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN,
                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
-                    useDeadTimeLatency: true,
-                    bandwidthSafetyFactor: 0.9,
                     useResourceTimingApi: true,
                     useNetworkInformationApi: false,
-                    maxMeasurementsToKeep : 20,
+                    useDeadTimeLatency: true,
+                    bandwidthSafetyFactor: 0.9,
+                    maxMeasurementsToKeep: 20,
                     sampleSettings: {
                         live: 3,
                         vod: 4,

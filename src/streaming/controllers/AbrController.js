@@ -77,9 +77,6 @@ function AbrController() {
         switchHistoryDict,
         droppedFramesHistory,
         throughputController,
-        isUsingBufferOccupancyAbrDict,
-        isUsingL2AAbrDict,
-        isUsingLoLPAbrDict,
         dashMetrics,
         settings;
 
@@ -134,36 +131,14 @@ function AbrController() {
         abandonmentStateDict[streamId][type] = {};
         abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
 
-        _initializeAbrStrategy(type);
+        // Do not change current value if it has been set before
+        const currentState = abrRulesCollection.getBolaState(type)
+        if (currentState === undefined) {
+            abrRulesCollection.setBolaState(type, settings.get().streaming.abr.activeRules.bolaRule && !_shouldApplyDynamicAbrStrategy());
+        }
 
         if (type === Constants.VIDEO) {
             setElementSize();
-        }
-    }
-
-    function _initializeAbrStrategy(type) {
-        const strategy = settings.get().streaming.abr.ABRStrategy;
-
-        if (strategy === Constants.ABR_STRATEGY_L2A) {
-            isUsingBufferOccupancyAbrDict[type] = false;
-            isUsingLoLPAbrDict[type] = false;
-            isUsingL2AAbrDict[type] = true;
-        } else if (strategy === Constants.ABR_STRATEGY_LoLP) {
-            isUsingBufferOccupancyAbrDict[type] = false;
-            isUsingLoLPAbrDict[type] = true;
-            isUsingL2AAbrDict[type] = false;
-        } else if (strategy === Constants.ABR_STRATEGY_BOLA) {
-            isUsingBufferOccupancyAbrDict[type] = true;
-            isUsingLoLPAbrDict[type] = false;
-            isUsingL2AAbrDict[type] = false;
-        } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
-            isUsingBufferOccupancyAbrDict[type] = false;
-            isUsingLoLPAbrDict[type] = false;
-            isUsingL2AAbrDict[type] = false;
-        } else if (strategy === Constants.ABR_STRATEGY_DYNAMIC) {
-            isUsingBufferOccupancyAbrDict[type] = isUsingBufferOccupancyAbrDict && isUsingBufferOccupancyAbrDict[type] ? isUsingBufferOccupancyAbrDict[type] : false;
-            isUsingLoLPAbrDict[type] = false;
-            isUsingL2AAbrDict[type] = false;
         }
     }
 
@@ -192,9 +167,6 @@ function AbrController() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
         switchHistoryDict = {};
-        isUsingBufferOccupancyAbrDict = {};
-        isUsingL2AAbrDict = {};
-        isUsingLoLPAbrDict = {};
 
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
@@ -213,9 +185,9 @@ function AbrController() {
 
         resetInitialSettings();
 
-        eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();
@@ -286,9 +258,6 @@ function AbrController() {
             streamProcessor,
             currentRequest: e.request,
             throughputController,
-            useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
-            useL2AABR: isUsingL2AAbrDict[type],
-            useLoLPABR: isUsingLoLPAbrDict[type],
             videoModel
         });
         const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext, streamId);
@@ -342,8 +311,10 @@ function AbrController() {
      * @private
      */
     function _onMetricAdded(e) {
-        if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            _updateAbrStrategy(e.mediaType, 0.001 * e.value.level);
+        if (_shouldApplyDynamicAbrStrategy()
+            && e.metric === MetricsConstants.BUFFER_LEVEL
+            && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+            _updateDynamicAbrStrategy(e.mediaType, 0.001 * e.value.level);
         }
     }
 
@@ -631,9 +602,6 @@ function AbrController() {
                 droppedFramesHistory,
                 streamProcessor: streamProcessorDict[streamId][type],
                 currentValue: oldQuality,
-                useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
-                useL2AABR: isUsingL2AAbrDict[type],
-                useLoLPABR: isUsingLoLPAbrDict[type],
                 videoModel
             });
             const minIdx = getMinAllowedIndexFor(type, streamId);
@@ -835,13 +803,13 @@ function AbrController() {
         return infoList;
     }
 
-    function _updateAbrStrategy(mediaType, bufferLevel) {
-        // else ABR_STRATEGY_DYNAMIC
-        const strategy = settings.get().streaming.abr.ABRStrategy;
-
-        if (strategy === Constants.ABR_STRATEGY_DYNAMIC) {
-            _updateDynamicAbrStrategy(mediaType, bufferLevel);
-        }
+    /**
+     * If both BOLA and Throughput Rule are active we switch dynamically between both of them
+     * @returns {boolean}
+     * @private
+     */
+    function _shouldApplyDynamicAbrStrategy() {
+        return settings.get().streaming.abr.activeRules.bolaRule && settings.get().streaming.abr.activeRules.throughputRule
     }
 
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
@@ -850,9 +818,9 @@ function AbrController() {
             const switchOnThreshold = stableBufferTime;
             const switchOffThreshold = 0.5 * stableBufferTime;
 
-            const useBufferABR = isUsingBufferOccupancyAbrDict[mediaType];
+            const useBufferABR = abrRulesCollection.getBolaState(mediaType)
             const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
-            isUsingBufferOccupancyAbrDict[mediaType] = newUseBufferABR;
+            abrRulesCollection.setBolaState(mediaType, newUseBufferABR);
 
             if (newUseBufferABR !== useBufferABR) {
                 if (newUseBufferABR) {

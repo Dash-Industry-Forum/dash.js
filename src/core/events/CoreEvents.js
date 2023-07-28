@@ -89,6 +89,7 @@ class CoreEvents extends EventsBase {
         this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
         this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
         this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+        this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
     }
 }
 

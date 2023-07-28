@@ -392,12 +392,7 @@ function BolaRule(config) {
             const abrController = rulesContext.getAbrController();
             const throughputController = rulesContext.getThroughputController();
             const streamId = streamInfo ? streamInfo.id : null;
-            const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
             switchRequest.reason = switchRequest.reason || {};
-
-            if (!useBufferOccupancyABR) {
-                return switchRequest;
-            }
 
             scheduleController.setTimeToLoadDelay(0);
 

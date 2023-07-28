@@ -111,41 +111,6 @@ export default {
     CONTENT_STEERING: 'contentSteering',
 
     /**
-     *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
-     *  @memberof Constants#
-     *  @static
-     */
-    ABR_STRATEGY_DYNAMIC: 'abrDynamic',
-
-    /**
-     *  @constant {string} ABR_STRATEGY_BOLA Adaptive bitrate algorithm based on Bola (buffer level)
-     *  @memberof Constants#
-     *  @static
-     */
-    ABR_STRATEGY_BOLA: 'abrBola',
-
-    /**
-     *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
-     *  @memberof Constants#
-     *  @static
-     */
-    ABR_STRATEGY_L2A: 'abrL2A',
-
-    /**
-     *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
-     *  @memberof Constants#
-     *  @static
-     */
-    ABR_STRATEGY_LoLP: 'abrLoLP',
-
-    /**
-     *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
-     *  @memberof Constants#
-     *  @static
-     */
-    ABR_STRATEGY_THROUGHPUT: 'abrThroughput',
-
-    /**
      *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
      *  @memberof Constants#
      *  @static
@@ -287,6 +252,18 @@ export default {
         MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing',
         DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData',
         AAST: 'lowLatencyDownloadTimeCalculationModeAast',
+    },
+    QUALITY_SWITCH_RULES: {
+        BOLA_RULE: 'BolaRule',
+        THROUGHPUT_RULE: 'ThroughputRule',
+        INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule',
+        SWITCH_HISTORY_RULE: 'SwitchHistoryRule',
+        DROPPED_FRAMES_RULE: 'DroppedFramesRule',
+        LEARN_TO_ADAPT_RULE: 'L2ARule',
+        LOL_PLUS_RULE: 'LoLPRule'
+    },
+    ABANDON_FRAGMENT_RULES: {
+        ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
     }
 }
 

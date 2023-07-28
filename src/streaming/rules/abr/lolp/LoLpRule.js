@@ -80,7 +80,7 @@ function LoLPRule(config) {
             const playbackController = scheduleController.getPlaybackController();
             let latency = playbackController.getCurrentLiveLatency();
 
-            if (!rulesContext.useLoLPABR() || (mediaType === Constants.AUDIO)) {
+            if ((mediaType === Constants.AUDIO)) {
                 return switchRequest;
             }
 
