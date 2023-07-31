@@ -2005,7 +2005,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         if (dashMetrics && $scope.currentStreamInfo) {
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var currentBitrateInfo = $scope.player.getQualityFor(type);
+            var currentBitrateInfo = $scope.player.getBitrateInfoFor(type);
             var availableBitrateInfos = $scope.player.getBitrateInfoListFor(type);
             var maxIndex = availableBitrateInfos.length;
             var index = $scope.player.getAbsoluteIndexForRepresentationId(currentBitrateInfo.mediaInfo, currentBitrateInfo.representationId) + 1;
