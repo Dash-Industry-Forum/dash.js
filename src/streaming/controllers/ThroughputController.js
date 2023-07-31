@@ -94,7 +94,7 @@ function ThroughputController() {
      * @return {number}
      * @private
      */
-    function _getAverage(throughputType, mediaType, calculationMode = null, sampleSize = NaN) {
+    function _getAverage(throughputType, mediaType, calculationMode = null, sampleSize = NaN, serviceLocation = null) {
         let dict = null;
         let ewmaHalfLife = throughputModel.getEwmaHalfLife();
         let halfLife = null;
@@ -105,17 +105,38 @@ function ThroughputController() {
         }
 
         switch (throughputType) {
+
+            // Set the parameters for the standard bandwidth calculation based on throughput values for a media type
             case Constants.THROUGHPUT_TYPES.BANDWIDTH:
                 dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA ? throughputModel.getEwmaThroughputDict(mediaType) : throughputModel.getThroughputDict(mediaType);
                 halfLife = ewmaHalfLife.bandwidthHalfLife;
                 useMin = true;
                 sampleSize = !isNaN(sampleSize) ? sampleSize : playbackController.getIsDynamic() ? settings.get().streaming.abr.throughput.sampleSettings.live : settings.get().streaming.abr.throughput.sampleSettings.vod;
                 break;
+
+            // Set the parameters for the standard latency calculation based on throughput values for a media type
             case Constants.THROUGHPUT_TYPES.LATENCY:
                 dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA ? throughputModel.getEwmaLatencyDict(mediaType) : throughputModel.getLatencyDict(mediaType);
                 halfLife = ewmaHalfLife.latencyHalfLife;
                 useMin = false;
                 sampleSize = !isNaN(sampleSize) ? sampleSize : settings.get().streaming.abr.throughput.sampleSettings.averageLatencySampleAmount;
+                break;
+
+            // Set the parameters for the  bandwidth calculation based for a specific service location. Used for content steering
+            case Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION:
+                if (!serviceLocation) {
+                    dict = null;
+                } else {
+                    const throughputValues = throughputModel.getThroughputDict();
+                    dict = Object.keys(throughputValues).reduce((acc, mediaType) => {
+                        const curr = throughputValues[mediaType].filter((entry) => {
+                            return entry.serviceLocation === serviceLocation
+                        })
+
+                        return acc.concat(curr)
+                    }, [])
+                    sampleSize = !isNaN(sampleSize) ? sampleSize : playbackController.getIsDynamic() ? settings.get().streaming.abr.throughput.sampleSettings.live : settings.get().streaming.abr.throughput.sampleSettings.vod;
+                }
                 break;
         }
 
@@ -275,6 +296,12 @@ function ThroughputController() {
         return average;
     }
 
+    function getAverageThroughputForServiceLocation(serviceLocation) {
+        const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION, null, Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN, NaN, serviceLocation);
+
+        return Math.round(value);
+    }
+
     /**
      * Returns the average latency based on the provided calculation mode
      * @param {string} mediaType
@@ -310,6 +337,7 @@ function ThroughputController() {
         setConfig,
         getAverageThroughput,
         getSafeAverageThroughput,
+        getAverageThroughputForServiceLocation,
         getAverageLatency,
         getRawThroughputData,
         reset

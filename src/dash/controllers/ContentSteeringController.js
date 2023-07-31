@@ -47,7 +47,6 @@ const QUERY_PARAMETER_KEYS = {
     URL: 'url'
 };
 
-const THROUGHPUT_SAMPLES = 4;
 
 function ContentSteeringController() {
     const context = this.context;
@@ -57,7 +56,6 @@ function ContentSteeringController() {
         logger,
         currentSteeringResponseData,
         serviceLocationList,
-        throughputList,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -66,6 +64,7 @@ function ContentSteeringController() {
         manifestModel,
         requestModifier,
         serviceDescriptionController,
+        throughputController,
         eventBus,
         adapter;
 
@@ -101,6 +100,9 @@ function ContentSteeringController() {
         if (config.eventBus) {
             eventBus = config.eventBus;
         }
+        if (config.throughputController) {
+            throughputController = config.throughputController
+        }
     }
 
     /**
@@ -116,9 +118,6 @@ function ContentSteeringController() {
         });
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
-        eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
-
     }
 
     /**
@@ -139,53 +138,6 @@ function ContentSteeringController() {
         _addToServiceLocationList(e, 'location')
     }
 
-    /**
-     * Basic throughput calculation for manifest requests
-     * @param {object} e
-     * @private
-     */
-    function _onManifestLoadingFinished(e) {
-        if (!e || !e.request || !e.request.serviceLocation || !e.request.startDate || !e.request.endDate || isNaN(e.request.bytesTotal)) {
-            return;
-        }
-
-        const serviceLocation = e.request.serviceLocation;
-        const elapsedTime = e.request.endDate.getTime() - e.request.startDate.getTime();
-        const throughput = parseInt((((e.request.bytesTotal * 8) / elapsedTime) * 1000)) // bit/s
-
-        _storeThroughputForServiceLocation(serviceLocation, throughput);
-    }
-
-    /**
-     * When a throughput measurement for fragments was stored in ThroughputHistory we save it as well
-     * @param {object} e
-     * @private
-     */
-    function _onThroughputMeasurementStored(e) {
-        if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
-            return;
-        }
-        const serviceLocation = e.httpRequest._serviceLocation;
-        const throughput = e.throughput * 1000;
-
-        _storeThroughputForServiceLocation(serviceLocation, throughput);
-    }
-
-    /**
-     * Helper function to store a throughput value from the corresponding serviceLocation
-     * @param {string} serviceLocation
-     * @param {number} throughput
-     * @private
-     */
-    function _storeThroughputForServiceLocation(serviceLocation, throughput) {
-        if (!throughputList[serviceLocation]) {
-            throughputList[serviceLocation] = [];
-        }
-        throughputList[serviceLocation].push(throughput)
-        if (throughputList[serviceLocation].length > THROUGHPUT_SAMPLES) {
-            throughputList[serviceLocation].shift();
-        }
-    }
 
     /**
      * Adds a new service location entry to our list
@@ -307,7 +259,10 @@ function ContentSteeringController() {
 
             // Derive throughput for each service Location
             const data = serviceLocations.map((serviceLocation) => {
-                const throughput = _calculateThroughputForServiceLocation(serviceLocation);
+                let throughput = throughputController.getAverageThroughputForServiceLocation(serviceLocation);
+                if (!isNaN(throughput)) {
+                    throughput *= 1000;
+                }
                 return {
                     serviceLocation,
                     throughput
@@ -348,25 +303,6 @@ function ContentSteeringController() {
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
     }
-
-    /**
-     * Calculate the arithmetic mean of the last throughput samples
-     * @param {string} serviceLocation
-     * @returns {number}
-     * @private
-     */
-    function _calculateThroughputForServiceLocation(serviceLocation) {
-        if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
-            return -1;
-        }
-
-        const throughput = throughputList[serviceLocation].reduce((acc, curr) => {
-            return acc + curr;
-        }) / throughputList[serviceLocation].length;
-
-        return parseInt(throughput);
-    }
-
 
     /**
      * Parse the steering response and create instance of model ContentSteeringResponse
@@ -580,13 +516,10 @@ function ContentSteeringController() {
         _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
-        eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
-        throughputList = {};
         serviceLocationList = {
             baseUrl: {
                 current: null,

@@ -58,8 +58,8 @@ describe('ThroughputModel', () => {
             const latencies = throughputModel.getLatencyDict(null);
             const throughputs = throughputModel.getThroughputDict(null);
 
-            expect(latencies).to.be.undefined;
-            expect(throughputs).to.be.undefined;
+            expect(latencies).to.be.empty;
+            expect(throughputs).to.be.empty;
         })
 
         it('Should not add any values if httpRequest is not defined', () => {
@@ -67,8 +67,8 @@ describe('ThroughputModel', () => {
             const latencies = throughputModel.getLatencyDict(null);
             const throughputs = throughputModel.getThroughputDict(null);
 
-            expect(latencies).to.be.undefined;
-            expect(throughputs).to.be.undefined;
+            expect(latencies).to.be.empty;
+            expect(throughputs).to.be.empty;
         })
 
         it('Should set latency to 1 if diff between tresponse and trequest is 0', () => {

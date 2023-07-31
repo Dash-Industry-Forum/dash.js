@@ -110,6 +110,7 @@ function ThroughputModel(config) {
             }
 
             logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.value} kbit/s`)
+            throughputValues.serviceLocation = httpRequest._serviceLocation;
             throughputDict[mediaType].push(throughputValues);
             latencyDict[mediaType].push({ value: latencyInMs });
             _cleanupDict(mediaType);
@@ -344,18 +345,30 @@ function ThroughputModel(config) {
     }
 
     function getThroughputDict(mediaType) {
+        if (!mediaType) {
+            return throughputDict
+        }
         return throughputDict[mediaType];
     }
 
     function getEwmaThroughputDict(mediaType) {
+        if (!mediaType) {
+            return ewmaThroughputDict
+        }
         return ewmaThroughputDict[mediaType]
     }
 
     function getLatencyDict(mediaType) {
+        if (!mediaType) {
+            return latencyDict
+        }
         return latencyDict[mediaType];
     }
 
     function getEwmaLatencyDict(mediaType) {
+        if (!mediaType) {
+            return ewmaLatencyDict
+        }
         return ewmaLatencyDict[mediaType];
     }
 

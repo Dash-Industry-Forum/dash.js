@@ -408,6 +408,7 @@ function MediaPlayer() {
                 mediaPlayerModel,
                 manifestModel,
                 serviceDescriptionController,
+                throughputController,
                 eventBus,
                 requestModifier: RequestModifier(context).getInstance()
             })
