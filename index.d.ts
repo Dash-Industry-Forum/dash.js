@@ -6,7 +6,7 @@ declare namespace dashjs {
     /**
      * Core
      */
-    
+
     interface Debug {
         getLogger(): Logger;
 
@@ -29,25 +29,25 @@ declare namespace dashjs {
         extend(name: string, childInstance: object, override: boolean, context: object): void;
 
         getSingletonInstance(context: object, className: string): any,
-       
+
         setSingletonInstance(context: object, className: string, instance: object): void;
-       
+
         deleteSingletonInstances(context: object): void;
 
         getFactoryByName(name: string, factoriesArray: Factory[]): Factory;
 
         updateFactory(name: string, factoriesArray: Factory[]): void;
-       
+
         getSingletonFactory(classConstructor: ClassConstructor): SingletonFactory,
-       
+
         getSingletonFactoryByName(name: string): SingletonFactory;
-       
+
         updateSingletonFactory(name: string, factory: SingletonFactory): void;
-       
+
         getClassFactory(classConstructor: ClassConstructor): Factory;
-       
+
         getClassFactoryByName(name: string): Factory;
-       
+
         updateClassFactory(name: string, factory: Factory): void;
     }
 
@@ -80,14 +80,23 @@ declare namespace dashjs {
 
     export interface ContentSteeringController {
         reset(): void;
+
         setConfig(config: object): void;
+
         loadSteeringData(): Promise<any>;
-        getCurrentSteeringResponseData() : ContentSteeringResponse;
-        shouldQueryBeforeStart() : boolean;
+
+        getCurrentSteeringResponseData(): ContentSteeringResponse;
+
+        shouldQueryBeforeStart(): boolean;
+
         getSteeringDataFromManifest(): ContentSteering[];
+
         stopSteeringRequestTimer(): void;
+
         getSynthesizedBaseUrlElements(referenceElements: BaseURL[]): BaseURL[];
-        getSynthesizedLocationElements(referenceElements: MpdLocation[]) : MpdLocation;
+
+        getSynthesizedLocationElements(referenceElements: MpdLocation[]): MpdLocation;
+
         initialize(): void
     }
 
@@ -101,15 +110,17 @@ declare namespace dashjs {
         isUpdating(): boolean;
 
         updateData(newRealAdaptation: object, availableRepresentations: object[], type: string, isFragmented: boolean, quality: number): any;
+
         //Promise.all(iterable) can be solved promise, asynchronous promise, pending promise
 
         getCurrentRepresentation(): object;
+
         getCurrentRepresentationInfo(): RepresentationInfo;
 
         getRepresentationForQuality(quality: number): object | null;
 
         prepareQualityChange(newQuality: number): void;
-        
+
         reset(): void;
     }
 
@@ -125,15 +136,15 @@ declare namespace dashjs {
 
     export interface SegmentsController {
         initialize(isDynamic: boolean): void;
-       
+
         updateInitData(voRepresentation: Representation, hasInitialization: boolean): Promise<any>;
-        
+
         updateSegmentData(voRepresentation: Representation, hasSegments: boolean): Promise<any>;
-       
+
         getSegmentByIndex(representation: Representation, index: number, lastSegmentTime: number): any;
-        
+
         getSegmentByTime(representation: Representation, time: number): any;
-       
+
         getMediaFinishedInformation(representation: Representation): any;
     }
 
@@ -189,6 +200,7 @@ declare namespace dashjs {
         getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
 
         getMimeType(adaptation: object): object;
+
         // MimeType is deprecated as a type
         getKID(adaptation: object): any;
 
@@ -212,11 +224,11 @@ declare namespace dashjs {
 
         getRepresentationCount(adaptation: object): number;
 
-        getBitrateListForAdaptation(realAdaptation: object): {bandwidth: number, width: number, height: number, scanType: string | null, id: string | null};
+        getBitrateListForAdaptation(realAdaptation: object): { bandwidth: number, width: number, height: number, scanType: string | null, id: string | null };
 
         getSelectionPriority(realAdaptation: object): number;
 
-        getEssentialPropertiesForRepresentation(realRepresentation: object): {schemeIdUri: string, value: string}
+        getEssentialPropertiesForRepresentation(realRepresentation: object): { schemeIdUri: string, value: string }
 
         getRepresentationFor(index: number, adaptation: object): object;
 
@@ -244,7 +256,7 @@ declare namespace dashjs {
 
         getUTCTimingSources(manifest: object): any[];
 
-        getBaseURLsFromElement(node: object): BaseURL[]; 
+        getBaseURLsFromElement(node: object): BaseURL[];
 
         getLoction(manifest: object): string | undefined;
 
@@ -255,7 +267,9 @@ declare namespace dashjs {
         getServiceDescriptions(manifest: object): serviceDescriptions;
 
         getSupplementalProperties(adaptation: object): object;
+
         getSegmentAlignment(adaptation: object): boolean;
+
         getSubSegmentAlignment(adaptation: object): boolean;
     }
 
@@ -310,7 +324,7 @@ declare namespace dashjs {
     export class StringMatcher extends BaseMatcher {
 
     }
-    
+
     /**
      * Dash - Parser
      **/
@@ -417,7 +431,7 @@ declare namespace dashjs {
     export interface Event {
         type: string;
         duration: number;
-        presentationTime: number; 
+        presentationTime: number;
         id: string | number;
         messageData: string;
         eventStream: EventStream;
@@ -428,7 +442,7 @@ declare namespace dashjs {
         adaptationSet: AdaptationSet | null;
         representation: Representation | null;
         period: Period | null;
-        timescale : number;
+        timescale: number;
         value: string;
         schemeIdUri: string;
         presentationTimeOffset: number;
@@ -498,7 +512,7 @@ declare namespace dashjs {
     }
 
     export interface Period {
-        id : string | null;
+        id: string | null;
         index: number;
         duration: number;
         start: number;
@@ -587,24 +601,24 @@ declare namespace dashjs {
     export class ContentSteeringResponse {
         version: number;
         ttl: number;
-        reloadUri : string;
-        pathwayPriority : string[];
-        pathwayClones : object[];
+        reloadUri: string;
+        pathwayPriority: string[];
+        pathwayClones: object[];
     }
 
     export class ContentSteering {
         defaultServiceLocation: string;
         defaultServiceLocationArray: string[];
-        queryBeforeStart : boolean;
-        serverUrl : string;
-        clientRequirement : boolean;
+        queryBeforeStart: boolean;
+        serverUrl: string;
+        clientRequirement: boolean;
     }
 
     /**
      * Dash
      **/
 
-     export interface DashAdapter {
+    export interface DashAdapter {
         getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
 
         getIsMain(adaptation: object): boolean;
@@ -649,7 +663,7 @@ declare namespace dashjs {
 
         getIsPatch(manifest: object): boolean;
 
-        getBaseURLsFromElement(node: object): BaseURL[]; 
+        getBaseURLsFromElement(node: object): BaseURL[];
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
@@ -678,20 +692,21 @@ declare namespace dashjs {
         applyPatchToManifest(manifest: object, patch: object): void;
     }
 
-     export interface DashHandler {
+    export interface DashHandler {
         initialize(isDynamic: boolean): void;
 
         getStreamId(): string;
 
         getType(): string;
+
         on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
-        
+
         on(type: string, listener: (e: Event) => void, scope?: object): void;
 
-        
+
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
-        getStreamInfo():StreamInfo;
+        getStreamInfo(): StreamInfo;
 
         reset(): void;
 
@@ -806,9 +821,9 @@ declare namespace dashjs {
 
     /**
      * MSS - Parser
-    **/
+     **/
 
-     export interface MssParser {
+    export interface MssParser {
         setup(): void;
 
         getAttributeAsBoolean(node: object, attrName: string): boolean;
@@ -926,6 +941,16 @@ declare namespace dashjs {
     }
 
     export type MediaType = 'video' | 'audio' | 'text' | 'image';
+    export type ThroughputCalculationModes =
+        'throughputCalculationModeEwma'
+        | 'throughputCalculationModeArithmeticMean'
+        | 'throughputCalculationModeHarmonicMean'
+        | 'throughputCalculationModeByteSizeWeightedArithmeticMean'
+        | 'throughputCalculationModeByteSizeWeightedHarmonicMean';
+    export type LowLatencyDownloadTimeCalculationModes =
+        'lowLatencyDownloadTimeCalculationModeMoofParsing'
+        | 'lowLatencyDownloadTimeCalculationModeDownloadedData'
+        | 'lowLatencyDownloadTimeCalculationModeAast';
 
     export class ProtectionMediaInfo {
         codec: string | null;
@@ -941,14 +966,14 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
+            cacheInitSegments?: boolean,
             applyServiceDescription?: boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
-            cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
-            enableManifestTimescaleMismatchFix?: boolean,
             parseInbandPrft?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean
@@ -1026,7 +1051,7 @@ declare namespace dashjs {
             },
             liveCatchup?: {
                 maxDrift?: number;
-                playbackRate?:{
+                playbackRate?: {
                     min?: number,
                     max?: number
                 },
@@ -1080,19 +1105,41 @@ declare namespace dashjs {
                 'lowLatencyMultiplyFactor'?: number;
             };
             abr?: {
-                movingAverageMethod?: 'slidingWindow' | 'ewma';
-                ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
-                additionalAbrRules?: {
+                limitBitrateByPortal?: boolean;
+                usePixelRatioInLimitBitrateByPortal?: boolean;
+                activeRules?: {
+                    throughputRule?: boolean,
+                    bolaRule?: boolean,
                     insufficientBufferRule?: boolean,
                     switchHistoryRule?: boolean,
                     droppedFramesRule?: boolean,
                     abandonRequestsRule?: boolean
+                    l2ARule?: boolean
+                    loLPRule?: boolean
                 },
-                bandwidthSafetyFactor?: number;
-                useDefaultABRRules?: boolean;
-                useDeadTimeLatency?: boolean;
-                limitBitrateByPortal?: boolean;
-                usePixelRatioInLimitBitrateByPortal?: boolean;
+                throughput?: {
+                    averageCalculationMode?: ThroughputCalculationModes,
+                    lowLatencyDownloadTimeCalculationMode?: LowLatencyDownloadTimeCalculationModes,
+                    useResourceTimingApi?: boolean,
+                    useNetworkInformationApi?: boolean,
+                    useDeadTimeLatency?: boolean,
+                    bandwidthSafetyFactor?: number,
+                    sampleSettings: {
+                        live?: number,
+                        vod?: number,
+                        enableSampleSizeAdjustment?: boolean,
+                        decreaseScale?: number,
+                        increaseScale?: number,
+                        maxMeasurementsToKeep?: number,
+                        averageLatencySampleAmount?: number,
+                    },
+                    ewma: {
+                        throughputSlowHalfLifeSeconds?: number,
+                        throughputFastHalfLifeSeconds?: number,
+                        latencySlowHalfLifeCount?: number,
+                        latencyFastHalfLifeCount?: number
+                    }
+                }
                 maxBitrate?: {
                     audio?: number;
                     video?: number;
@@ -1232,8 +1279,8 @@ declare namespace dashjs {
         on(type: TtmlToParseEvent['type'], listener: (e: TtmlToParseEvent) => void, scope?: object): void;
 
         on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
-        
-        on(type: string, listener: (e: Event) => void, scope?: object, options?:object): void;
+
+        on(type: string, listener: (e: Event) => void, scope?: object, options?: object): void;
 
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
@@ -1406,7 +1453,7 @@ declare namespace dashjs {
         triggerSteeringRequest(): Promise<any>;
 
         getCurrentSteeringResponseData(): object;
-        
+
         getAvailableBaseUrls(): BaseURL[];
 
         getAvailableLocations(): MpdLocation[];
@@ -1484,7 +1531,7 @@ declare namespace dashjs {
 
     interface MediaPlayerEvents {
         AST_IN_FUTURE: 'astInFuture';
-        BASE_URLS_UPDATED : 'baseUrlsUpdated';
+        BASE_URLS_UPDATED: 'baseUrlsUpdated';
         BUFFER_EMPTY: 'bufferStalled';
         BUFFER_LOADED: 'bufferLoaded';
         BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
@@ -1517,8 +1564,8 @@ declare namespace dashjs {
         LICENSE_REQUEST_SENDING: 'public_licenseRequestSending';
         LOG: 'log';
         MANIFEST_LOADED: 'manifestLoaded';
-        MANIFEST_LOADING_STARTED : 'manifestLoadingStarted';
-        MANIFEST_LOADING_FINISHED : 'manifestLoadingFinished';
+        MANIFEST_LOADING_STARTED: 'manifestLoadingStarted';
+        MANIFEST_LOADING_FINISHED: 'manifestLoadingFinished';
         MANIFEST_VALIDITY_CHANGED: 'manifestValidityChanged';
         METRICS_CHANGED: 'metricsChanged';
         METRIC_ADDED: 'metricAdded';
@@ -2054,7 +2101,7 @@ declare namespace dashjs {
 
         pruneAllSafely(): Promise<any>;
 
-        getAllRangesWithSafetyFactor(seekTime: number): {start: number, end: number}[];
+        getAllRangesWithSafetyFactor(seekTime: number): { start: number, end: number }[];
 
         getRangeAt(time: number, tolerance: number): Range | null;
 
@@ -2071,7 +2118,7 @@ declare namespace dashjs {
         getBufferLevel(): number;
 
         getMediaSource(): MediaSource;
-        
+
         getIsBufferingCompleted(): boolean;
 
         setIsBufferingCopleted(value: object): void;
@@ -2104,7 +2151,7 @@ declare namespace dashjs {
     export interface FragmentController {
         getStreamId(): string;
 
-        getModel(): any; 
+        getModel(): any;
 
         reset(): void;
     }
@@ -2272,7 +2319,7 @@ declare namespace dashjs {
 
         switchToVideoElement(seekTime: number): void;
 
-        getActiveStreamInfo(): StreamInfo| null;
+        getActiveStreamInfo(): StreamInfo | null;
 
         getIsStreamSwitchInProgress(): boolean;
 
@@ -2299,7 +2346,7 @@ declare namespace dashjs {
         attemptSync(tSources: number[], isDynamic: boolean): void;
 
         setConfig(config: object): void;
-        
+
         reset(): void;
     }
 
@@ -2354,7 +2401,7 @@ declare namespace dashjs {
      **/
 
     export interface BufferLevelHandler {
-        initialize(basename: string,rc: RangeController,n_ms:string): void;
+        initialize(basename: string, rc: RangeController, n_ms: string): void;
 
         reset(): void;
 
@@ -2362,7 +2409,7 @@ declare namespace dashjs {
     }
 
     export interface DVBErrorsHandler {
-        initialize(unused: any,rc: RangeController): void; //unused does nothing
+        initialize(unused: any, rc: RangeController): void; //unused does nothing
 
         reset(): void;
 
@@ -2370,7 +2417,7 @@ declare namespace dashjs {
     }
 
     export interface GenericMetricHandler {
-        initialize(name: string,rc: RangeController): void;
+        initialize(name: string, rc: RangeController): void;
 
         reset(): void;
 
@@ -2378,7 +2425,7 @@ declare namespace dashjs {
     }
 
     export interface HttpListHandler {
-        initialize(basename: string,rc: RangeController,n_ms:string, requestType: string): void;
+        initialize(basename: string, rc: RangeController, n_ms: string, requestType: string): void;
 
         reset(): void;
 
@@ -2456,14 +2503,14 @@ declare namespace dashjs {
         servicelocation: string | null;
 
         SSL_CONNECTION_FAILED_PREFIX: 'SSL';
-        DNS_RESOLUTION_FAILED:        'C00';
-        HOST_UNREACHABLE:             'C01';
-        CONNECTION_REFUSED:           'C02';
-        CONNECTION_ERROR:             'C03';
-        CORRUPT_MEDIA_ISOBMFF:        'M00';
-        CORRUPT_MEDIA_OTHER:          'M01';
-        BASE_URL_CHANGED:             'F00';
-        BECAME_REPORTER:              'S00';
+        DNS_RESOLUTION_FAILED: 'C00';
+        HOST_UNREACHABLE: 'C01';
+        CONNECTION_REFUSED: 'C02';
+        CONNECTION_ERROR: 'C03';
+        CORRUPT_MEDIA_ISOBMFF: 'M00';
+        CORRUPT_MEDIA_OTHER: 'M01';
+        BASE_URL_CHANGED: 'F00';
+        BECAME_REPORTER: 'S00';
     }
 
     export interface Metrics {
@@ -2518,14 +2565,14 @@ declare namespace dashjs {
     }
 
     export interface CmcdModel {
-        getQueryParameter(request: HTTPRequest): {key: string, finalPayloadString: string} | null;
-       
+        getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
+
         getHeaderParameters(request: HTTPRequest): object | null;
-       
+
         setConfig(config: object): void;
-       
+
         reset(): void;
-       
+
         initialize(): void;
     }
 
@@ -2554,12 +2601,12 @@ declare namespace dashjs {
 
         resetInitialSettings(): void;
 
-        addExecutedRequest(request: HTTPRequest):void;
+        addExecutedRequest(request: HTTPRequest): void;
     }
 
     export interface LowLatencyThroughputModel {
         setup(): void;
-        
+
         addMeasurement(request: HTTPRequest, fetchDownloadDurationMS: number, chunkMeasurements: object[], requestTimeMS: number, throughputCapacityDelayMS: number): void;
 
         getThroughputCapacityDelayMS(request: HTTPRequest, currentBufferLevel: number): number;
@@ -2583,7 +2630,7 @@ declare namespace dashjs {
         getInitialBufferLevel(): number;
 
         getStableBufferTime(): number;
-        
+
         getRetryAttemptsForType(type: string): number;
 
         getRetryIntervalsForType(type: string): any;
@@ -2633,7 +2680,7 @@ declare namespace dashjs {
         addSchedulingInfo(mediaType: MediaType, t: number, startTime: number, availabilityStartTime: number, duration: number, quality: number, range: Range, state: string): void;
 
         addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
-        
+
         addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number, availabilityStartTime: number, presentationStartTime: number, clientTimeOffset: number, currentTime: number, buffered: RepresentationInfo, latency: number): void;
 
         updateManifestUpdateInfo(manifestUpdate: ManifestUpdate, updatedFields: any[]): void;
@@ -2678,7 +2725,7 @@ declare namespace dashjs {
 
         setTTMLRenderingDiv(div: HTMLDivElement): void;
 
-        setStallState(type : MediaType, state: boolean): void;
+        setStallState(type: MediaType, state: boolean): void;
 
         isStalled(): boolean;
 
@@ -2815,7 +2862,7 @@ declare namespace dashjs {
 
         setProtectionData(data: object): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[]): object[]; 
+        getSupportedKeySystemsFromContentProtection(cps: object[]): object[];
 
         getKeySystems(): any[];
 
@@ -2875,7 +2922,7 @@ declare namespace dashjs {
 
         getCDMData(cdmData: string | null): ArrayBuffer | null;
 
-        getSessionId() : string | null;
+        getSessionId(): string | null;
     }
 
     export interface KeySystemClearKey {
@@ -2884,9 +2931,9 @@ declare namespace dashjs {
         schemeIdURI: string;
 
         getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
-        
+
         getRequestHeadersFromMessage(): object;
-        
+
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(): null;
@@ -2920,9 +2967,9 @@ declare namespace dashjs {
         schemeIdURI: string;
 
         getInitData(cp: object): ArrayBuffer | null;
-        
+
         getRequestHeadersFromMessage(): null;
-        
+
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(): null;
@@ -3186,7 +3233,7 @@ declare namespace dashjs {
         ksConfiguration: KeySystemConfiguration;
     }
 
-    export class KeySystemConfiguration{
+    export class KeySystemConfiguration {
         constructor(audioCapabilities: MediaCapability[], videoCapabilities: MediaCapability[], distinctiveIdentifier: string, persistentState: string, sessionTypes: string[])
 
         audioCapabilities: MediaCapability[];
@@ -3197,12 +3244,12 @@ declare namespace dashjs {
     }
 
     export class LicenseRequest {
-        constructor(url: string, method: string, responseType: string, headers: {[key: string] : string}, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
+        constructor(url: string, method: string, responseType: string, headers: { [key: string]: string }, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
 
         url: string;
         method: string;
         responseType: string;
-        headers: {[key: string] : string};
+        headers: { [key: string]: string };
         withCredentials: boolean;
         messageType: string;
         sessionId: string;
@@ -3334,7 +3381,7 @@ declare namespace dashjs {
         getPerSegmentQoe(): QoeInfo;
 
         calculateSingleUseQoe(segmentBitrate: number, segmentRebufferTime: number, currentLatency: number, currentPlaybackSpeed: number): number;
-        
+
         reset(): void;
     }
 
@@ -3359,11 +3406,13 @@ declare namespace dashjs {
     export class QoeInfo {
         type: string | null;
         lastBitrate: number | null;
-        weights: {bitrateReward: number | null,
-                  bitrateSwitchPenalty: number | null,
-                  rebufferPenalty: number | null,
-                  latencyPenalty: number | null,
-                  playbackSpeedPenalty: number | null};
+        weights: {
+            bitrateReward: number | null,
+            bitrateSwitchPenalty: number | null,
+            rebufferPenalty: number | null,
+            latencyPenalty: number | null,
+            playbackSpeedPenalty: number | null
+        };
         bitrateWSum: number;
         bitrateSwitchSum: number;
         rebufferWSum: number;
@@ -3445,17 +3494,27 @@ declare namespace dashjs {
 
     export interface RulesContext {
         getMediaType(): string;
+
         getMediaInfo(): MediaInfo;
+
         getDroppedFramesHistory(): DroppedFramesHistory;
+
         getCurrentRequest(): SwitchRequest;
+
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
         getStreamInfo(): StreamInfo;
+
         getScheduleController(): ScheduleController;
+
         getAbrController(): AbrController;
+
         getRepresentationInfo(): RepresentationInfo
+
         useBufferOccupancyABR(): any; //. pot later vo's
         useL2AABR(): any;
+
         useLoLPABR(): any;
+
         getVideoModel(): VideoModel;
     }
 
@@ -3465,7 +3524,7 @@ declare namespace dashjs {
         priority: number | null;
     }
 
-    export interface SwitchRequestHistory{
+    export interface SwitchRequestHistory {
         push(switchRequest: SwitchRequest): void;
 
         getSwitchRequests(): SwitchRequest[];
@@ -3489,7 +3548,7 @@ declare namespace dashjs {
      * Streaming - Text
      **/
 
-     export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+    export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
 
     export interface EmbeddedTextHtmlRender {
         createHTMLCaptionsFromScreen(videoElement: HTMLVideoElement, startTime: number, endTime: number, captionScreen: any): any[];
@@ -3541,7 +3600,7 @@ declare namespace dashjs {
         updateAppendWindow(): Promise<any>;
 
         pruneAllSafely(): Promise<any>;
-        
+
         updateBufferTimestampOffset(): Promise<any>;
 
         segmentRequestingCompleted(): void // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
@@ -3600,7 +3659,7 @@ declare namespace dashjs {
 
         setCurrentFragmentedTrackIdx(idx: number): void;
 
-        remove(start?: number,end?: number): void;
+        remove(start?: number, end?: number): void;
 
         reset(): void;
     }
@@ -3702,7 +3761,7 @@ declare namespace dashjs {
     }
 
     export interface LocationSelector {
-        select(mpdLocations : MpdLocation[]): MpdLocation | null;
+        select(mpdLocations: MpdLocation[]): MpdLocation | null;
 
         reset(): void;
 
@@ -3776,7 +3835,7 @@ declare namespace dashjs {
         isRelative(url: string): boolean;
 
         isPathAbsolute(url: string): boolean;
-        
+
         isSchemeRelative(url: string): boolean;
 
         isHTTPURL(url: string): boolean;
@@ -3808,7 +3867,7 @@ declare namespace dashjs {
         consumeTagAndSize(tag: object, test: boolean): boolean;
 
         parseTag(tag: object): boolean;
-        
+
         skipOverElement(tag: object, test: boolean): boolean;
 
         getMatroskaCodedNum(retainMSB: boolean): number;
@@ -3863,7 +3922,7 @@ declare namespace dashjs {
     }
 
     export interface TTMLParser {
-        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): {start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[]}[];
+        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): { start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[] }[];
     }
 
     export interface URLUtils {
@@ -3878,7 +3937,7 @@ declare namespace dashjs {
         isRelative(url: string): boolean;
 
         isPathAbsolute(url: string): boolean;
-        
+
         isSchemeRelative(url: string): boolean;
 
         isHTTPURL(url: string): boolean;
@@ -3887,11 +3946,11 @@ declare namespace dashjs {
 
         removeHostname(url: string): string;
 
-        resolve(url: string, baseUrl: BaseURL): string; 
+        resolve(url: string, baseUrl: BaseURL): string;
     }
 
     export interface VTTParser {
-        parse(data: ArrayBuffer): {start: number, end: number, data: string, styles: any};
+        parse(data: ArrayBuffer): { start: number, end: number, data: string, styles: any };
     }
 
     /**
@@ -3901,13 +3960,13 @@ declare namespace dashjs {
     export interface IBufferLevel {
         level: number;
         t: Date;
-    } 
+    }
 
     export interface IBufferState {
         state: string;
         target: number;
     }
-    
+
     export interface IDroppedFrames {
         droppedFrames: number;
         time: Date;
@@ -3947,7 +4006,7 @@ declare namespace dashjs {
         presentationStartTime: number;
         clientTimeOffset: number;
         currentTime: number | null;
-        buffered:RepresentationInfo ;
+        buffered: RepresentationInfo;
         latency: number;
         streamInfo: StreamInfo[];
         representationInfo: RepresentationInfo;
@@ -3956,7 +4015,7 @@ declare namespace dashjs {
 
     export interface PlayList {
         start: number | null;
-        mstart: number | null;   
+        mstart: number | null;
         starttype: string | null;
         trace: any[];
     }
@@ -4015,7 +4074,7 @@ declare namespace dashjs {
      * Streaming - Vo
      */
 
-     export class BitrateInfo {
+    export class BitrateInfo {
         mediaType: MediaType;
         bitrate: number;
         width: number;
@@ -4303,7 +4362,7 @@ declare namespace dashjs {
         discharge(start?: number, end?: number): void;
 
         reset(): void;
-        
+
         updateTimestampOffset(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
 
         waitForUpdateEnd(callback: Function): void;
@@ -4335,12 +4394,13 @@ declare namespace dashjs {
         updateAppendWindow(sInfo: StreamInfo): void;
 
         changeType(codec: string): Promise<any>;
+
         getSessionType(): string;
 
         getUsable(): boolean;
     }
 
-    export interface Stream { 
+    export interface Stream {
         initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
 
         getStreamId(): string;

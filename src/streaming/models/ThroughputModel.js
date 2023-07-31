@@ -319,10 +319,10 @@ function ThroughputModel(config) {
      * @private
      */
     function _cleanupDict(mediaType) {
-        if (throughputDict[mediaType].length > settings.get().streaming.abr.throughput.maxMeasurementsToKeep) {
+        if (throughputDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             throughputDict[mediaType].shift();
         }
-        if (latencyDict[mediaType].length > settings.get().streaming.abr.throughput.maxMeasurementsToKeep) {
+        if (latencyDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             latencyDict[mediaType].shift();
         }
     }

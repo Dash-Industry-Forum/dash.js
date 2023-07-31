@@ -32,7 +32,6 @@ import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
 import {checkParameterType} from '../utils/SupervisorTools';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Constants from '../constants/Constants';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
@@ -220,7 +219,7 @@ function CustomParametersModel() {
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      */
     function addAbrCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+        if (typeof type !== 'string' || (type !== Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES && type !== Constants.RULES_TYPES.QUALITY_SWITCH_RULES) ||
             typeof rulename !== 'string') {
             throw Constants.BAD_ARGUMENT_ERROR;
         }

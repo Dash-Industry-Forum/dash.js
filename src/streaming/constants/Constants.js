@@ -244,7 +244,7 @@ export default {
         BANDWIDTH: 'throughput_type_bandwidth'
     },
     THROUGHPUT_CALCULATION_MODES: {
-        EWMA: 'throughputCalculcationModeEwma',
+        EWMA: 'throughputCalculationModeEwma',
         ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean',
         HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean',
         BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean',
@@ -254,6 +254,10 @@ export default {
         MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing',
         DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData',
         AAST: 'lowLatencyDownloadTimeCalculationModeAast',
+    },
+    RULES_TYPES: {
+        QUALITY_SWITCH_RULES: 'qualitySwitchRules',
+        ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
     },
     QUALITY_SWITCH_RULES: {
         BOLA_RULE: 'BolaRule',

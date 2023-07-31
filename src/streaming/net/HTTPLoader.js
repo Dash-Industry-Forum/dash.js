@@ -526,8 +526,8 @@ function HTTPLoader(cfg) {
 
     /**
      * Generates the additional query parameters to be appended to the request url
-     * @param request
-     * @return {*[]}
+     * @param {object} request
+     * @return {array}
      * @private
      */
     function _getAdditionalQueryParameter(request) {

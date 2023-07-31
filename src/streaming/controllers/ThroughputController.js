@@ -115,7 +115,7 @@ function ThroughputController() {
                 dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA ? throughputModel.getEwmaLatencyDict(mediaType) : throughputModel.getLatencyDict(mediaType);
                 halfLife = ewmaHalfLife.latencyHalfLife;
                 useMin = false;
-                sampleSize = !isNaN(sampleSize) ? sampleSize : settings.get().streaming.abr.throughput.averageLatencySampleAmount;
+                sampleSize = !isNaN(sampleSize) ? sampleSize : settings.get().streaming.abr.throughput.sampleSettings.averageLatencySampleAmount;
                 break;
         }
 
@@ -156,7 +156,7 @@ function ThroughputController() {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
                 const ratio = dict[dict.length - i].value / dict[dict.length - i - 1].value;
-                if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= 1 / settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
+                if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
                     sampleSize += 1;
                     if (sampleSize === dict.length) { // cannot increase sampleSize beyond arr.length
                         break;

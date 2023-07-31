@@ -42,9 +42,6 @@ import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Constants from '../../constants/Constants';
 
-const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
-const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
-
 
 function ABRRulesCollection(config) {
 
@@ -89,11 +86,11 @@ function ABRRulesCollection(config) {
         // add custom ABR rules if any
         const customRules = customParametersModel.getAbrCustomRules();
         customRules.forEach(function (rule) {
-            if (rule.type === QUALITY_SWITCH_RULES) {
+            if (rule.type === Constants.RULES_TYPES.QUALITY_SWITCH_RULES) {
                 qualitySwitchRules.push(rule.rule(context).create());
             }
 
-            if (rule.type === ABANDON_FRAGMENT_RULES) {
+            if (rule.type === Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES) {
                 abandonFragmentRulesList.push(rule.rule(context).create());
             }
         });
@@ -319,8 +316,6 @@ function ABRRulesCollection(config) {
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
 const factory = FactoryMaker.getClassFactory(ABRRulesCollection);
-factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
-factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
 
 export default factory;
