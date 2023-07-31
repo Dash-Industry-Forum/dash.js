@@ -86,71 +86,6 @@ function ThroughputController() {
     }
 
     /**
-     * Calculate the arithmetic mean of the values provided via the dict
-     * @param {array} dict
-     * @param {number} sampleSize
-     * @return {number|*}
-     * @private
-     */
-    function _getArithmeticMean(dict, sampleSize) {
-        let arr = dict;
-
-        if (sampleSize === 0 || !arr || arr.length === 0) {
-            return NaN;
-        }
-
-        // Extract the last n elements
-        arr = arr.slice(-sampleSize);
-
-        return arr.reduce((total, value) => {
-            return total + value
-        }, 0) / arr.length;
-    }
-
-    /**
-     * Calculate the harnonic mean of the values provided via the dict
-     * @param {array} dict
-     * @param {number} sampleSize
-     * @return {number|*}
-     * @private
-     */
-    function _getHarmonicMean(dict, sampleSize) {
-        let arr = dict;
-
-        if (sampleSize === 0 || !arr || arr.length === 0) {
-            return NaN;
-        }
-
-        // Extract the last n elements
-        arr = arr.slice(-sampleSize);
-
-        return arr.length / arr.reduce((total, value) => {
-            return total + 1 / value
-        }, 0);
-    }
-
-    /**
-     * Calculated the exponential weighted moving average for the values provided via the dict
-     * @param {object} dict
-     * @param {object} halfLife
-     * @param {boolean} useMin - Whether to apply Math.min of the fastEstimate and the slowEstimate
-     * @return {number}
-     * @private
-     */
-    function _getEwma(dict, halfLife, useMin = true) {
-
-        if (!dict || dict.totalWeight <= 0) {
-            return NaN;
-        }
-
-        // to correct for startup, divide by zero factor = 1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
-        const fastEstimate = dict.fastEstimate / (1 - Math.pow(0.5, dict.totalWeight / halfLife.fast));
-        const slowEstimate = dict.slowEstimate / (1 - Math.pow(0.5, dict.totalWeight / halfLife.slow));
-
-        return useMin ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
-    }
-
-    /**
      * Get average value
      * @param {string} throughputType
      * @param {string} mediaType
@@ -193,11 +128,16 @@ function ThroughputController() {
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
             return _getArithmeticMean(dict, adjustedSampleSize);
+        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN) {
+            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
+            return _getArithmeticMean(dict, adjustedSampleSize, true);
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
             return _getHarmonicMean(dict, adjustedSampleSize);
+        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN) {
+            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
+            return _getHarmonicMean(dict, adjustedSampleSize, true);
         }
-
     }
 
     /**
@@ -215,7 +155,7 @@ function ThroughputController() {
         } else if (type === Constants.THROUGHPUT_TYPES.BANDWIDTH && settings.get().streaming.abr.throughput.sampleSettings.enableSampleSizeAdjustment) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
-                const ratio = dict[dict.length - i] / dict[dict.length - i - 1];
+                const ratio = dict[dict.length - i].value / dict[dict.length - i - 1].value;
                 if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= 1 / settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
                     sampleSize += 1;
                     if (sampleSize === dict.length) { // cannot increase sampleSize beyond arr.length
@@ -226,6 +166,83 @@ function ThroughputController() {
         }
 
         return sampleSize;
+    }
+
+    /**
+     * Calculate the arithmetic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @param {boolean} applyByteSizeWeighting
+     * @return {number|*}
+     * @private
+     */
+    function _getArithmeticMean(dict, sampleSize, applyByteSizeWeighting = false) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+        let divideBy = 0;
+
+        return arr.reduce((total, entry) => {
+            let weight = applyByteSizeWeighting && !isNaN(entry.downloadedBytes) ? Math.sqrt(entry.downloadedBytes) : 1
+            divideBy += weight;
+
+            return total + entry.value * weight
+        }, 0) / divideBy;
+    }
+
+    /**
+     * Calculate the harmonic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @param {boolean} applyByteSizeWeighting
+     * @return {number|*}
+     * @private
+     */
+    function _getHarmonicMean(dict, sampleSize, applyByteSizeWeighting = false) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+        let dividend = 0;
+
+        const value = arr.reduce((total, entry) => {
+            let weight = applyByteSizeWeighting && !isNaN(entry.downloadedBytes) ? Math.sqrt(entry.downloadedBytes) : 1
+            dividend += weight;
+
+            return total + 1 / entry.value * weight
+        }, 0);
+
+        return dividend / value
+    }
+
+    /**
+     * Calculated the exponential weighted moving average for the values provided via the dict
+     * @param {object} dict
+     * @param {object} halfLife
+     * @param {boolean} useMin - Whether to apply Math.min of the fastEstimate and the slowEstimate
+     * @return {number}
+     * @private
+     */
+    function _getEwma(dict, halfLife, useMin = true) {
+
+        if (!dict || dict.totalWeight <= 0) {
+            return NaN;
+        }
+
+        // to correct for startup, divide by zero factor = 1 - Math.pow(0.5, ewmaObj.totalWeight / halfLife)
+        const fastEstimate = dict.fastEstimate / (1 - Math.pow(0.5, dict.totalWeight / halfLife.fast));
+        const slowEstimate = dict.slowEstimate / (1 - Math.pow(0.5, dict.totalWeight / halfLife.slow));
+
+        return useMin ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
     }
 
     /**

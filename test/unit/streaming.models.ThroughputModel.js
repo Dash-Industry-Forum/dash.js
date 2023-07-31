@@ -77,7 +77,7 @@ describe('ThroughputModel', () => {
             const latencies = throughputModel.getLatencyDict('video');
 
             expect(latencies.length).to.be.equal(1);
-            expect(latencies[0]).to.be.equal(1);
+            expect(latencies[0].value).to.be.equal(1);
         })
 
         it('Should calculate correct latency', () => {
@@ -85,7 +85,7 @@ describe('ThroughputModel', () => {
             const latencies = throughputModel.getLatencyDict('video');
 
             expect(latencies.length).to.be.equal(1);
-            expect(latencies[0]).to.be.equal(500);
+            expect(latencies[0].value).to.be.equal(500);
         })
 
         it('Should calculate correct throughput values in case resourceTimingValues are present', () => {
@@ -94,7 +94,7 @@ describe('ThroughputModel', () => {
             const values = throughputModel.getThroughputDict('video');
 
             expect(values.length).to.be.equal(1);
-            expect(values[0]).to.be.equal(4800);
+            expect(values[0].value).to.be.equal(4800);
         })
 
         it('Should calculate correct throughput values in case no resourceTimingValues are present', () => {
@@ -105,7 +105,7 @@ describe('ThroughputModel', () => {
             const values = throughputModel.getThroughputDict('video');
 
             expect(values.length).to.be.equal(1);
-            expect(values[0]).to.be.equal(3600);
+            expect(values[0].value).to.be.equal(3600);
         })
 
         it('Should calculate correct throughput values in case Fetch API was used', () => {
@@ -115,7 +115,7 @@ describe('ThroughputModel', () => {
             const values = throughputModel.getThroughputDict('video');
 
             expect(values.length).to.be.equal(1);
-            expect(values[0]).to.be.equal(3520);
+            expect(values[0].value).to.be.equal(3520);
         })
 
         it('Should not add throughput values if considered a cached response because of cache reference time', () => {
@@ -148,7 +148,7 @@ describe('ThroughputModel', () => {
             throughputModel.addEntry('video', dummyHttpRequest);
             values = throughputModel.getThroughputDict('video');
             expect(values.length).to.be.equal(1);
-            expect(values[0]).to.equal(9600)
+            expect(values[0].value).to.equal(9600)
         })
 
         it('should update EWMA values', () => {

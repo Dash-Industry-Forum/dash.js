@@ -174,6 +174,22 @@ describe('ThroughputController', () => {
             expect(result).to.be.equal(72000);
         })
 
+        it('Should calculate the byte weighted arithmetic mean based on values from Resource Timing API', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            _addMetrics();
+            const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN);
+
+            expect(result).to.be.equal(148949);
+        })
+
+        it('Should calculate the byte weighted harmonic mean based on values from Resource Timing API', () => {
+            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            _addMetrics();
+            const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN);
+
+            expect(result).to.be.equal(83768);
+        })
+
         it('Should calculate the arithmetic mean based on values from XHR traces', () => {
             settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
             _addMetrics();

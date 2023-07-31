@@ -69,7 +69,7 @@ function ThroughputModel(config) {
     }
 
     /**
-     * Use the provided request to add new entries for throughput and latency. Update the Ewma state as well.
+     * Use the provided request to add new entries for throughput and latency. Update the EWMA state as well.
      * @param {MediaType} mediaType
      * @param {object} httpRequest
      */
@@ -86,7 +86,7 @@ function ThroughputModel(config) {
             let throughputValues = _calculateThroughputValues(httpRequest, latencyInMs);
             throughputValues.latencyInMs = latencyInMs;
 
-            if (isNaN(throughputValues.throughputInKbit) || !isFinite(throughputValues.throughputInKbit)) {
+            if (isNaN(throughputValues.value) || !isFinite(throughputValues.value)) {
                 return;
             }
 
@@ -97,7 +97,7 @@ function ThroughputModel(config) {
                     // Apply weight ratio on etp
                     const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
                     if (etpWeightRatio > 0 && etpWeightRatio <= 1) {
-                        throughputValues.throughputInKbit = (throughputValues.throughputInKbit * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                        throughputValues.value = (throughputValues.value * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
                     }
                 }
             }
@@ -109,12 +109,12 @@ function ThroughputModel(config) {
                 return;
             }
 
-            logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.throughputInKbit} kbit/s`)
-            throughputDict[mediaType].push(throughputValues.throughputInKbit);
-            latencyDict[mediaType].push(latencyInMs);
+            logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.value} kbit/s`)
+            throughputDict[mediaType].push(throughputValues);
+            latencyDict[mediaType].push({ value: latencyInMs });
             _cleanupDict(mediaType);
 
-            _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.throughputInKbit, 0.001 * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
+            _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.value, 0.001 * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
             _updateEwmaValues(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
         } catch (e) {
             logger.error(e);
@@ -122,8 +122,9 @@ function ThroughputModel(config) {
     }
 
     /**
-     * Returns the throughput in kbit/s and the download time in ms for an HTTP request
+     * Returns the throughput in kbit/s , the download time in ms and the downloaded bytes for an HTTP request
      * @param {object} httpRequest
+     * @param {number} latencyInMs
      * @return {object}
      * @private
      */
@@ -148,7 +149,6 @@ function ThroughputModel(config) {
      * @private
      */
     function _calculateThroughputValuesForFetch(httpRequest) {
-        // Use the standard throughput calculation if we can not use the Resource Timing API. Use the total download duration and the total number of bytes
         const downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0);
         const downloadTimeInMs = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
         let throughputInKbit = NaN;
@@ -163,7 +163,7 @@ function ThroughputModel(config) {
 
         return {
             downloadedBytes,
-            throughputInKbit,
+            value: throughputInKbit,
             downloadTimeInMs
         };
     }
@@ -217,7 +217,7 @@ function ThroughputModel(config) {
 
         return {
             downloadedBytes,
-            throughputInKbit,
+            value: throughputInKbit,
             downloadTimeInMs
         };
     }
@@ -243,12 +243,13 @@ function ThroughputModel(config) {
     /**
      * Checks if we got useful ResourceTimingAPI values
      * @param httpRequest
+     * @param {boolean} ignoreTransferSize
      * @returns {null|*|boolean}
      * @private
      */
     function _areResourceTimingValuesUsable(httpRequest, ignoreTransferSize = false) {
         return settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && ((!isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0) ||ignoreTransferSize)
+            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && ((!isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0) || ignoreTransferSize)
     }
 
     /**

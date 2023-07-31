@@ -994,7 +994,7 @@ function Settings() {
                     loLPRule: false
                 },
                 throughput: {
-                    averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN,
+                    averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
                     useResourceTimingApi: true,
                     useNetworkInformationApi: false,

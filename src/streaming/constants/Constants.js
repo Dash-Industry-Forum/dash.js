@@ -245,8 +245,10 @@ export default {
     },
     THROUGHPUT_CALCULATION_MODES: {
         EWMA: 'throughputCalculcationModeEwma',
-        ARITHMETIC_MEAN: 'throughputCalculationModeAm',
-        HARMONIC_MEAN: 'throughputCalculationModeHm'
+        ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean',
+        HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean',
+        BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean',
+        BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean'
     },
     LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
         MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing',
