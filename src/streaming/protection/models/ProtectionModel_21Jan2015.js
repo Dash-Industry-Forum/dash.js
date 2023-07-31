@@ -403,6 +403,9 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function _closeKeySessionInternal(sessionToken) {
+        if (!sessionToken) {
+            return
+        }
         const session = sessionToken.session;
 
         // Remove event listeners
