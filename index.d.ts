@@ -1317,6 +1317,8 @@ declare namespace dashjs {
         getDashMetrics(): DashMetrics;
 
         getQualityFor(type: MediaType): number;
+        
+        getBitrateInfoFor(type: MediaType): QualityInfo;
 
         setQualityFor(type: MediaType, value: number, replace?: boolean): void;
 
@@ -4021,6 +4023,19 @@ declare namespace dashjs {
         height: number;
         scanType: string;
         qualityIndex: number;
+    }
+
+    export interface QualityInfo {
+        absoluteIndex: number;
+        bitrate: number;
+        height: number;
+        isTopBitrate: boolean;
+        mediaInfo: MediaInfo;
+        mediaInfoIndex: number;
+        qualityIndex: number;
+        representationId: string;
+        scanType: string;
+        width: number;
     }
 
     interface DashJSError {

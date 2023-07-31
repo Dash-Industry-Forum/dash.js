@@ -976,6 +976,25 @@ function MediaPlayer() {
             return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
         }
 
+        const bitrateInfo = abrController.getCurrentBitrateInfoFor(type);
+
+        return !bitrateInfo ? 0 : bitrateInfo.absoluteIndex;
+    }
+
+    function getBitrateInfoFor(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        if (type === Constants.IMAGE) {
+            const activeStream = getActiveStream();
+            if (!activeStream) {
+                return -1;
+            }
+            const thumbnailController = activeStream.getThumbnailController();
+
+            return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
+        }
+
         return abrController.getCurrentBitrateInfoFor(type);
     }
 
@@ -2504,6 +2523,7 @@ function MediaPlayer() {
         getDashMetrics,
         getQualityFor,
         setQualityFor,
+        getBitrateInfoFor,
         updatePortalSize,
         enableText,
         enableForcedTextStreaming,
