@@ -80,7 +80,7 @@ function ThroughputController() {
      * @private
      */
     function _onMetricAdded(e) {
-        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && (e.value.type === HTTPRequest.MPD_TYPE || (e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)))) {
             throughputModel.addEntry(e.mediaType, e.value);
         }
     }
@@ -127,20 +127,16 @@ function ThroughputController() {
                 if (!serviceLocation) {
                     dict = null;
                 } else {
-                    const throughputValues = throughputModel.getThroughputDict();
-                    dict = Object.keys(throughputValues).reduce((acc, mediaType) => {
-                        const curr = throughputValues[mediaType].filter((entry) => {
-                            return entry.serviceLocation === serviceLocation
-                        })
-
-                        return acc.concat(curr)
-                    }, [])
+                    dict = _getThroughputValuesByServiceLocation(throughputModel.getThroughputDict(), serviceLocation)
+                    if (!dict || dict.length === 0) {
+                        dict = _getThroughputValuesByServiceLocation(throughputModel.getMpdThroughputDict(), serviceLocation)
+                    }
                     sampleSize = !isNaN(sampleSize) ? sampleSize : playbackController.getIsDynamic() ? settings.get().streaming.abr.throughput.sampleSettings.live : settings.get().streaming.abr.throughput.sampleSettings.vod;
                 }
                 break;
         }
 
-        if (!dict) {
+        if (!dict || dict.length === 0) {
             return NaN;
         }
 
@@ -159,6 +155,16 @@ function ThroughputController() {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
             return _getHarmonicMean(dict, adjustedSampleSize, true);
         }
+    }
+
+    function _getThroughputValuesByServiceLocation(throughputDict, serviceLocation) {
+        return Object.keys(throughputDict).reduce((acc, mediaType) => {
+            const curr = throughputDict[mediaType].filter((entry) => {
+                return entry.serviceLocation === serviceLocation
+            })
+
+            return acc.concat(curr)
+        }, [])
     }
 
     /**
@@ -276,6 +282,7 @@ function ThroughputController() {
     function getAverageThroughput(mediaType, calculationMode = null, sampleSize = NaN) {
         const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH, mediaType, calculationMode, sampleSize);
 
+        console.log(`Average throughput for ${mediaType} is ${value}`);
         return Math.round(value);
     }
 
@@ -297,7 +304,7 @@ function ThroughputController() {
     }
 
     function getAverageThroughputForServiceLocation(serviceLocation) {
-        const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION, null, Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN, NaN, serviceLocation);
+        const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION, null, Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN, NaN, serviceLocation);
 
         return Math.round(value);
     }

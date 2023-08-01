@@ -32,6 +32,7 @@
 import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 /**
  * Throughput generally stored in kbit/s
@@ -48,6 +49,7 @@ function ThroughputModel(config) {
 
     let throughputDict,
         latencyDict,
+        mpdThroughputDict,
         ewmaThroughputDict,
         ewmaLatencyDict,
         ewmaHalfLife,
@@ -111,7 +113,8 @@ function ThroughputModel(config) {
 
             logger.debug(`Added throughput entry for ${mediaType}: ${throughputValues.value} kbit/s`)
             throughputValues.serviceLocation = httpRequest._serviceLocation;
-            throughputDict[mediaType].push(throughputValues);
+            const dict = httpRequest.type === HTTPRequest.MPD_TYPE ? mpdThroughputDict : throughputDict;
+            dict[mediaType].push(throughputValues);
             latencyDict[mediaType].push({ value: latencyInMs });
             _cleanupDict(mediaType);
 
@@ -323,6 +326,9 @@ function ThroughputModel(config) {
         if (throughputDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             throughputDict[mediaType].shift();
         }
+        if (mpdThroughputDict.length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
+            mpdThroughputDict.shift();
+        }
         if (latencyDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             latencyDict[mediaType].shift();
         }
@@ -336,6 +342,7 @@ function ThroughputModel(config) {
     function _createSettingsForMediaType(mediaType) {
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
+        mpdThroughputDict[mediaType] = mpdThroughputDict[mediaType] || [];
         ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {
             fastEstimate: 0,
             slowEstimate: 0,
@@ -349,6 +356,13 @@ function ThroughputModel(config) {
             return throughputDict
         }
         return throughputDict[mediaType];
+    }
+
+    function getMpdThroughputDict(mediaType) {
+        if (!mediaType) {
+            return mpdThroughputDict
+        }
+        return mpdThroughputDict[mediaType];
     }
 
     function getEwmaThroughputDict(mediaType) {
@@ -382,6 +396,7 @@ function ThroughputModel(config) {
     function reset() {
         throughputDict = {};
         latencyDict = {};
+        mpdThroughputDict = {};
         ewmaThroughputDict = {};
         ewmaLatencyDict = {};
     }
@@ -389,6 +404,7 @@ function ThroughputModel(config) {
     const instance = {
         addEntry,
         getThroughputDict,
+        getMpdThroughputDict,
         getEwmaThroughputDict,
         getEwmaLatencyDict,
         getEwmaHalfLife,
