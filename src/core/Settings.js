@@ -686,10 +686,10 @@ import Events from './events/Events';
  * - averageLatencySampleAmount: Number of latency samples to use (sample size)
  * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
- * - throughputSlowHalfLifeSeconds
- * - throughputFastHalfLifeSeconds
- * - latencySlowHalfLifeCount
- * - latencyFastHalfLifeCount
+ * - throughputSlowHalfLifeSeconds: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
+ * - throughputFastHalfLifeSeconds: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
+ * - latencySlowHalfLifeCount: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
+ * - latencyFastHalfLifeCount: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
  */
 
 /**
