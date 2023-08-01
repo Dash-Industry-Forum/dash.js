@@ -122,6 +122,43 @@ let httpRequests = [
         '_tfinish': new Date('2022-06-28T09:19:05.500Z')
     }
 ]
+let mpdRequest = {
+    'type': 'MPD',
+    'url': '1.m4v',
+    'trequest': new Date('2022-06-28T09:19:03.000Z'),
+    'tresponse': new Date('2022-06-28T09:19:03.000Z'),
+    'responsecode': 200,
+    'trace': [
+        {
+            's': '2022-06-28T09:19:03.000Z',
+            'd': 500,
+            'b': [
+                3000000
+            ]
+        },
+        {
+            's': '2022-06-28T09:19:03.500Z',
+            'd': 200,
+            'b': [
+                2000000
+            ]
+        },
+        {
+            's': '2022-06-28T09:19:03.700Z',
+            'd': 300,
+            'b': [
+                4000000
+            ]
+        },
+    ],
+    '_resourceTimingValues': {
+        transferSize: 6000000,
+        responseEnd: 300,
+        responseStart: 100
+    },
+    '_stream': 'video',
+    '_tfinish': new Date('2022-06-28T09:19:04.000Z')
+};
 
 function _addMetrics(numberOfEntries = NaN) {
 
@@ -136,6 +173,14 @@ function _addMetrics(numberOfEntries = NaN) {
             value: httpRequests[i]
         })
     }
+}
+
+function _addMpdMetric() {
+    eventBus.trigger(MediaPlayerEvents.METRIC_ADDED, {
+        mediaType: 'stream',
+        metric: 'HttpList',
+        value: mpdRequest
+    })
 }
 
 describe('ThroughputController', () => {
@@ -159,15 +204,53 @@ describe('ThroughputController', () => {
     describe('getAverageThroughput()', () => {
 
         it('Should calculate the arithmetic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: true,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
             expect(result).to.be.equal(120000);
         })
 
+        it('Should calculate the arithmetic mean for a media type and ignore MPD throughput based on values from Resource Timing API', () => {
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: true,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
+            _addMetrics();
+            _addMpdMetric();
+            const mpdThroughputs = throughputController.getRawThroughputData('stream');
+            expect(mpdThroughputs).to.have.lengthOf(1);
+            const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
+
+            expect(result).to.be.equal(120000);
+        })
+
         it('Should calculate the harmonic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: true,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN);
 
@@ -175,7 +258,16 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the byte weighted arithmetic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: true,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN);
 
@@ -183,7 +275,16 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the byte weighted harmonic mean based on values from Resource Timing API', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: true,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN);
 
@@ -191,7 +292,16 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the arithmetic mean based on values from XHR traces', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: false,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN);
 
@@ -200,7 +310,16 @@ describe('ThroughputController', () => {
         })
 
         it('Should calculate the harmonic mean based on values from XHR traces', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: false,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getAverageThroughput('video', Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN);
 
@@ -209,7 +328,16 @@ describe('ThroughputController', () => {
         })
 
         it('Should return raw throughput data without calculating the average', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: false, useNetworkInformationApi: false } } } })
+            settings.update({
+                streaming: {
+                    abr: {
+                        throughput: {
+                            useResourceTimingApi: false,
+                            useNetworkInformationApi: false
+                        }
+                    }
+                }
+            })
             _addMetrics();
             const result = throughputController.getRawThroughputData('video');
 

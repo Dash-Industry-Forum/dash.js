@@ -47,6 +47,7 @@ const QUERY_PARAMETER_KEYS = {
     URL: 'url'
 };
 
+const THROUGHPUT_SAMPLES = 4;
 
 function ContentSteeringController() {
     const context = this.context;
@@ -56,6 +57,7 @@ function ContentSteeringController() {
         logger,
         currentSteeringResponseData,
         serviceLocationList,
+        throughputList,
         nextRequestTimer,
         urlLoader,
         errHandler,
@@ -97,11 +99,11 @@ function ContentSteeringController() {
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
+        }
         if (config.eventBus) {
             eventBus = config.eventBus;
-        }
-        if (config.throughputController) {
-            throughputController = config.throughputController
         }
     }
 
@@ -118,6 +120,8 @@ function ContentSteeringController() {
         });
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
+
     }
 
     /**
@@ -138,6 +142,34 @@ function ContentSteeringController() {
         _addToServiceLocationList(e, 'location')
     }
 
+    /**
+     * When a throughput measurement  was stored in ThroughputModel we save it
+     * @param {object} e
+     * @private
+     */
+    function _onThroughputMeasurementStored(e) {
+        if (!e || !e.throughputValues || !e.throughputValues.serviceLocation) {
+            return;
+        }
+
+        _storeThroughputForServiceLocation(e.throughputValues.serviceLocation, e.throughputValues);
+    }
+
+    /**
+     * Helper function to store a throughput value from the corresponding serviceLocation
+     * @param {string} serviceLocation
+     * @param {number} throughput
+     * @private
+     */
+    function _storeThroughputForServiceLocation(serviceLocation, throughput) {
+        if (!throughputList[serviceLocation]) {
+            throughputList[serviceLocation] = [];
+        }
+        throughputList[serviceLocation].push(throughput)
+        if (throughputList[serviceLocation].length > THROUGHPUT_SAMPLES) {
+            throughputList[serviceLocation].shift();
+        }
+    }
 
     /**
      * Adds a new service location entry to our list
@@ -259,10 +291,7 @@ function ContentSteeringController() {
 
             // Derive throughput for each service Location
             const data = serviceLocations.map((serviceLocation) => {
-                let throughput = throughputController.getAverageThroughputForServiceLocation(serviceLocation);
-                if (!isNaN(throughput)) {
-                    throughput *= 1000;
-                }
+                const throughput = _calculateThroughputForServiceLocation(serviceLocation);
                 return {
                     serviceLocation,
                     throughput
@@ -303,6 +332,22 @@ function ContentSteeringController() {
         url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
     }
+
+    /**
+     * Calculate the arithmetic mean of the last throughput samples
+     * @param {string} serviceLocation
+     * @returns {number}
+     * @private
+     */
+    function _calculateThroughputForServiceLocation(serviceLocation) {
+        if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
+            return -1;
+        }
+        const throughput = throughputController.getArithmeticMean(throughputList[serviceLocation], throughputList[serviceLocation].length, true);
+
+        return parseInt(throughput * 1000);
+    }
+
 
     /**
      * Parse the steering response and create instance of model ContentSteeringResponse
@@ -516,10 +561,12 @@ function ContentSteeringController() {
         _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
+        eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
+        throughputList = {};
         serviceLocationList = {
             baseUrl: {
                 current: null,

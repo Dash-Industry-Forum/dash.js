@@ -94,7 +94,7 @@ function ThroughputController() {
      * @return {number}
      * @private
      */
-    function _getAverage(throughputType, mediaType, calculationMode = null, sampleSize = NaN, serviceLocation = null) {
+    function _getAverage(throughputType, mediaType, calculationMode = null, sampleSize = NaN) {
         let dict = null;
         let ewmaHalfLife = throughputModel.getEwmaHalfLife();
         let halfLife = null;
@@ -122,18 +122,6 @@ function ThroughputController() {
                 sampleSize = !isNaN(sampleSize) ? sampleSize : settings.get().streaming.abr.throughput.sampleSettings.averageLatencySampleAmount;
                 break;
 
-            // Set the parameters for the  bandwidth calculation based for a specific service location. Used for content steering
-            case Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION:
-                if (!serviceLocation) {
-                    dict = null;
-                } else {
-                    dict = _getThroughputValuesByServiceLocation(throughputModel.getThroughputDict(), serviceLocation)
-                    if (!dict || dict.length === 0) {
-                        dict = _getThroughputValuesByServiceLocation(throughputModel.getMpdThroughputDict(), serviceLocation)
-                    }
-                    sampleSize = !isNaN(sampleSize) ? sampleSize : playbackController.getIsDynamic() ? settings.get().streaming.abr.throughput.sampleSettings.live : settings.get().streaming.abr.throughput.sampleSettings.vod;
-                }
-                break;
         }
 
         if (!dict || dict.length === 0) {
@@ -144,27 +132,17 @@ function ThroughputController() {
             return _getEwma(dict, halfLife, useMin);
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return _getArithmeticMean(dict, adjustedSampleSize);
+            return getArithmeticMean(dict, adjustedSampleSize);
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return _getArithmeticMean(dict, adjustedSampleSize, true);
+            return getArithmeticMean(dict, adjustedSampleSize, true);
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return _getHarmonicMean(dict, adjustedSampleSize);
+            return getHarmonicMean(dict, adjustedSampleSize);
         } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN) {
             const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return _getHarmonicMean(dict, adjustedSampleSize, true);
+            return getHarmonicMean(dict, adjustedSampleSize, true);
         }
-    }
-
-    function _getThroughputValuesByServiceLocation(throughputDict, serviceLocation) {
-        return Object.keys(throughputDict).reduce((acc, mediaType) => {
-            const curr = throughputDict[mediaType].filter((entry) => {
-                return entry.serviceLocation === serviceLocation
-            })
-
-            return acc.concat(curr)
-        }, [])
     }
 
     /**
@@ -203,7 +181,7 @@ function ThroughputController() {
      * @return {number|*}
      * @private
      */
-    function _getArithmeticMean(dict, sampleSize, applyByteSizeWeighting = false) {
+    function getArithmeticMean(dict, sampleSize, applyByteSizeWeighting = false) {
         let arr = dict;
 
         if (sampleSize === 0 || !arr || arr.length === 0) {
@@ -230,7 +208,7 @@ function ThroughputController() {
      * @return {number|*}
      * @private
      */
-    function _getHarmonicMean(dict, sampleSize, applyByteSizeWeighting = false) {
+    function getHarmonicMean(dict, sampleSize, applyByteSizeWeighting = false) {
         let arr = dict;
 
         if (sampleSize === 0 || !arr || arr.length === 0) {
@@ -303,12 +281,6 @@ function ThroughputController() {
         return average;
     }
 
-    function getAverageThroughputForServiceLocation(serviceLocation) {
-        const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH_FOR_SERVICE_LOCATION, null, Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN, NaN, serviceLocation);
-
-        return Math.round(value);
-    }
-
     /**
      * Returns the average latency based on the provided calculation mode
      * @param {string} mediaType
@@ -344,7 +316,8 @@ function ThroughputController() {
         setConfig,
         getAverageThroughput,
         getSafeAverageThroughput,
-        getAverageThroughputForServiceLocation,
+        getArithmeticMean,
+        getHarmonicMean,
         getAverageLatency,
         getRawThroughputData,
         reset

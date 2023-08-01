@@ -241,8 +241,7 @@ export default {
     },
     THROUGHPUT_TYPES: {
         LATENCY: 'throughput_type_latency',
-        BANDWIDTH: 'throughput_type_bandwidth',
-        BANDWIDTH_FOR_SERVICE_LOCATION: 'throughput_type_bandwidth_for_service_location'
+        BANDWIDTH: 'throughput_type_bandwidth'
     },
     THROUGHPUT_CALCULATION_MODES: {
         EWMA: 'throughputCalculationModeEwma',
