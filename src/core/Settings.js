@@ -101,7 +101,7 @@ import Events from './events/Events';
  *                bufferTimeAtTopQuality: 30,
  *                bufferTimeAtTopQualityLongForm: 60,
  *                initialBufferLevel: NaN,
- *                stableBufferTime: 12,
+ *                bufferTimeDefault: 12,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.3,
  *                useAppendWindow: true,
@@ -205,7 +205,10 @@ import Events from './events/Events';
  *                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
  *                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
  *                     useResourceTimingApi: true,
- *                     useNetworkInformationApi: false,
+ *                     useNetworkInformationApi: {
+ *                         xhr: false,
+ *                         fetch: true
+ *                     },
  *                     useDeadTimeLatency: true,
  *                     bandwidthSafetyFactor: 0.9,
  *                     sampleSettings: {
@@ -339,6 +342,8 @@ import Events from './events/Events';
  *
  * Allows you to modify the buffer that is kept in source buffer in seconds.
  * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+ * @property {number} [bufferTimeDefault=12]
+ * The time that the internal buffer target will be set to when not playing at the top quality.
  * @property {number} [bufferTimeAtTopQuality=30]
  * The time that the internal buffer target will be set to once playing the top quality.
  *
@@ -351,10 +356,6 @@ import Events from './events/Events';
  * This will directly affect the buffer targets when playing back at the top quality.
  * @property {number} [initialBufferLevel=NaN]
  * Initial buffer level before playback starts
- * @property {number} [stableBufferTime=12]
- * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
- *
- * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
  * @property {number} [stallThreshold=0.3]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
@@ -663,9 +664,9 @@ import Events from './events/Events';
  * @property {boolean} [useResourceTimingApi=true]
  * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
  * This option has no effect for low latency streaming as the download time equals the segment duration in most of the cases and therefor does not provide reliable values
- * @property {boolean} [useNetworkInformationApi=false]
+ * @property {object} [useNetworkInformationApi = { xhr=false, fetch=true}]
  * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only available in Chrome and Edge.
- * Applies to standard (XHR requests) and low latency streaming (Fetch API requests).
+ * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
  * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as static.
  *
@@ -929,7 +930,7 @@ function Settings() {
                 bufferTimeAtTopQuality: 30,
                 bufferTimeAtTopQualityLongForm: 60,
                 initialBufferLevel: NaN,
-                stableBufferTime: 12,
+                bufferTimeDefault: 12,
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
                 useAppendWindow: true,
@@ -1045,7 +1046,10 @@ function Settings() {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
                     useResourceTimingApi: true,
-                    useNetworkInformationApi: false,
+                    useNetworkInformationApi: {
+                        xhr: false,
+                        fetch: true
+                    },
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
                     sampleSettings: {

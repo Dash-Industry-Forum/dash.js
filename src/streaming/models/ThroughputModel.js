@@ -157,7 +157,7 @@ function ThroughputModel(config) {
         const downloadTimeInMs = httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0);
         let throughputInKbit = NaN;
 
-        if (settings.get().streaming.abr.throughput.useNetworkInformationApi) {
+        if (settings.get().streaming.abr.throughput.useNetworkInformationApi.fetch) {
             throughputInKbit = _deriveThroughputFromNetworkApi()
         }
 
@@ -210,7 +210,7 @@ function ThroughputModel(config) {
 
         // If available and enabled use the Network Information API
         let throughputInKbit = NaN;
-        if (!deriveThroughputViaResourceTimingApi && settings.get().streaming.abr.throughput.useNetworkInformationApi) {
+        if (!deriveThroughputViaResourceTimingApi && settings.get().streaming.abr.throughput.useNetworkInformationApi.xhr) {
             throughputInKbit = _deriveThroughputFromNetworkApi()
         }
 

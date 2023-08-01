@@ -734,9 +734,9 @@ describe('MediaPlayer', function () {
             expect(BufferPruningInterval).to.equal(50);
         });
 
-        it('should configure StableBufferTime', function () {
-            let StableBufferTime = player.getSettings().streaming.buffer.stableBufferTime;
-            expect(StableBufferTime).to.equal(12);
+        it('should configure bufferTimeDefault', function () {
+            let bufferTimeDefault = player.getSettings().streaming.buffer.bufferTimeDefault;
+            expect(bufferTimeDefault).to.equal(12);
         });
 
         it('should configure BufferTimeAtTopQuality', function () {

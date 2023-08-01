@@ -312,10 +312,10 @@ function ScheduleController(config) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
-                return mediaPlayerModel.getStableBufferTime();
+                return mediaPlayerModel.getBufferTimeDefault();
             }
         } catch (e) {
-            return mediaPlayerModel.getStableBufferTime();
+            return mediaPlayerModel.getBufferTimeDefault();
         }
     }
 

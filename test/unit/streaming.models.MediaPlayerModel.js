@@ -294,12 +294,12 @@ describe('MediaPlayerModel', function () {
         expect(manifestLoaderRetryInterval).to.equal(100);
     });
 
-    it('should configure StableBufferTime', function () {
-        const s = { streaming: { buffer: { stableBufferTime: 10 } } };
+    it('should configure bufferTimeDefault', function () {
+        const s = { streaming: { buffer: { bufferTimeDefault: 10 } } };
         settings.update(s);
 
-        let stableBufferTime = mediaPlayerModel.getStableBufferTime();
-        expect(stableBufferTime).to.equal(10);
+        let bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
+        expect(bufferTimeDefault).to.equal(10);
     });
 
     it('should configure initial buffer level', function () {
@@ -311,12 +311,12 @@ describe('MediaPlayerModel', function () {
     });
 
     it('should configure initial buffer level with stable buffer time lower than initial buffer level', function () {
-        const stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
-        const s = { streaming: { buffer: { initialBufferLevel: stableBufferTime + 10 } } };
+        const bufferTimeDefault = settings.get().streaming.buffer.bufferTimeDefault;
+        const s = { streaming: { buffer: { initialBufferLevel: bufferTimeDefault + 10 } } };
         settings.update(s);
 
         let value = mediaPlayerModel.getInitialBufferLevel();
-        expect(value).to.equal(stableBufferTime);
+        expect(value).to.equal(bufferTimeDefault);
     });
 
 });

@@ -87,7 +87,7 @@ function BolaRule(config) {
     }
 
     // NOTE: in live streaming, the real buffer level can drop below minimumBufferS, but bola should not stick to lowest bitrate by using a placeholder buffer level
-    function calculateBolaParameters(stableBufferTime, bitrates, utilities) {
+    function calculateBolaParameters(bufferTimeDefault, bitrates, utilities) {
         const highestUtilityIndex = utilities.reduce((highestIndex, u, uIndex) => (u > utilities[highestIndex] ? uIndex : highestIndex), 0);
 
         if (highestUtilityIndex === 0) {
@@ -95,7 +95,7 @@ function BolaRule(config) {
             return null;
         }
 
-        const bufferTime = Math.max(stableBufferTime, MINIMUM_BUFFER_S + MINIMUM_BUFFER_PER_BITRATE_LEVEL_S * bitrates.length);
+        const bufferTime = Math.max(bufferTimeDefault, MINIMUM_BUFFER_S + MINIMUM_BUFFER_PER_BITRATE_LEVEL_S * bitrates.length);
 
         // TODO: Investigate if following can be better if utilities are not the default Math.log utilities.
         // If using Math.log utilities, we can choose Vp and gp to always prefer bitrates[0] at minimumBufferS and bitrates[max] at bufferTarget.
@@ -115,8 +115,8 @@ function BolaRule(config) {
         const bitrates = mediaInfo.bitrateList.map(b => b.bandwidth);
         let utilities = utilitiesFromBitrates(bitrates);
         utilities = utilities.map(u => u - utilities[0] + 1); // normalize
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-        const params = calculateBolaParameters(stableBufferTime, bitrates, utilities);
+        const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
+        const params = calculateBolaParameters(bufferTimeDefault, bitrates, utilities);
 
         if (!params) {
             // only happens when there is only one bitrate level
@@ -126,7 +126,7 @@ function BolaRule(config) {
 
             initialState.bitrates = bitrates;
             initialState.utilities = utilities;
-            initialState.stableBufferTime = stableBufferTime;
+            initialState.bufferTimeDefault = bufferTimeDefault;
             initialState.Vp = params.Vp;
             initialState.gp = params.gp;
 
@@ -148,10 +148,10 @@ function BolaRule(config) {
     }
 
     // If the buffer target is changed (can this happen mid-stream?), then adjust BOLA parameters accordingly.
-    function checkBolaStateStableBufferTime(bolaState, mediaType) {
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-        if (bolaState.stableBufferTime !== stableBufferTime) {
-            const params = calculateBolaParameters(stableBufferTime, bolaState.bitrates, bolaState.utilities);
+    function checkBolaStateBufferTimeDefault(bolaState, mediaType) {
+        const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
+        if (bolaState.bufferTimeDefault !== bufferTimeDefault) {
+            const params = calculateBolaParameters(bufferTimeDefault, bolaState.bitrates, bolaState.utilities);
             if (params.Vp !== bolaState.Vp || params.gp !== bolaState.gp) {
                 // correct placeholder buffer using two criteria:
                 // 1. do not change effective buffer level at effectiveBufferLevel === MINIMUM_BUFFER_S ( === Vp * gp )
@@ -164,7 +164,7 @@ function BolaRule(config) {
                 effectiveBufferLevel *= params.Vp / bolaState.Vp;
                 effectiveBufferLevel += MINIMUM_BUFFER_S;
 
-                bolaState.stableBufferTime = stableBufferTime;
+                bolaState.bufferTimeDefault = bufferTimeDefault;
                 bolaState.Vp = params.Vp;
                 bolaState.gp = params.gp;
                 bolaState.placeholderBuffer = Math.max(0, effectiveBufferLevel - bufferLevel);
@@ -179,7 +179,7 @@ function BolaRule(config) {
             bolaState = getInitialBolaState(rulesContext);
             bolaStateDict[mediaType] = bolaState;
         } else if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-            checkBolaStateStableBufferTime(bolaState, mediaType);
+            checkBolaStateBufferTimeDefault(bolaState, mediaType);
         }
         return bolaState;
     }
@@ -255,7 +255,7 @@ function BolaRule(config) {
         bolaState.lastSegmentRequestTimeMs = NaN;
         bolaState.lastSegmentFinishTimeMs = NaN;
 
-        checkBolaStateStableBufferTime(bolaState, mediaType);
+        checkBolaStateBufferTimeDefault(bolaState, mediaType);
     }
 
     function onBufferEmpty(e) {

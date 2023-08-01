@@ -725,7 +725,7 @@ function MssParser(config) {
             initialBufferSettings = {
                 'streaming': {
                     'buffer': {
-                        'stableBufferTime': settings.get().streaming.buffer.stableBufferTime,
+                        'bufferTimeDefault': settings.get().streaming.buffer.bufferTimeDefault,
                         'bufferTimeAtTopQuality': settings.get().streaming.buffer.bufferTimeAtTopQuality,
                         'bufferTimeAtTopQualityLongForm': settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm
                     },
@@ -741,7 +741,7 @@ function MssParser(config) {
             settings.update({
                 'streaming': {
                     'buffer': {
-                        'stableBufferTime': bufferTime,
+                        'bufferTimeDefault': bufferTime,
                         'bufferTimeAtTopQuality': bufferTime,
                         'bufferTimeAtTopQualityLongForm': bufferTime
                     },

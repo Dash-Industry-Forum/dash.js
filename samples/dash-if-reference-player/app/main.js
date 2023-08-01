@@ -984,7 +984,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var config = {
             streaming: {
                 buffer: {
-                    stableBufferTime: $scope.defaultStableBufferDelay,
+                    bufferTimeDefault: $scope.defaultStableBufferDelay,
                     bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
                     bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
                 },
@@ -1003,8 +1003,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 config.streaming.delay.liveDelay = selectedConfig.liveDelay;
             }
 
-            if (selectedConfig.stableBufferTime) {
-                config.streaming.buffer.stableBufferTime = selectedConfig.stableBufferTime;
+            if (selectedConfig.bufferTimeDefault) {
+                config.streaming.buffer.bufferTimeDefault = selectedConfig.bufferTimeDefault;
             }
 
             if (selectedConfig.bufferTimeAtTopQuality) {
@@ -2112,7 +2112,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         // get buffer default value
         var currentConfig = $scope.player.getSettings();
         $scope.defaultLiveDelay = currentConfig.streaming.delay.liveDelay;
-        $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.stableBufferTime;
+        $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.bufferTimeDefault;
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;

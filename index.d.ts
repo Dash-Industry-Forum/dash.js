@@ -1005,7 +1005,7 @@ declare namespace dashjs {
                 bufferTimeAtTopQuality?: number,
                 bufferTimeAtTopQualityLongForm?: number,
                 initialBufferLevel?: number,
-                stableBufferTime?: number,
+                bufferTimeDefault?: number,
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
@@ -1121,7 +1121,10 @@ declare namespace dashjs {
                     averageCalculationMode?: ThroughputCalculationModes,
                     lowLatencyDownloadTimeCalculationMode?: LowLatencyDownloadTimeCalculationModes,
                     useResourceTimingApi?: boolean,
-                    useNetworkInformationApi?: boolean,
+                    useNetworkInformationApi?: {
+                        xhr?: boolean,
+                        fetch?: boolean
+                    },
                     useDeadTimeLatency?: boolean,
                     bandwidthSafetyFactor?: number,
                     sampleSettings: {
@@ -2629,7 +2632,7 @@ declare namespace dashjs {
 
         getInitialBufferLevel(): number;
 
-        getStableBufferTime(): number;
+        getBufferTimeDefault(): number;
 
         getRetryAttemptsForType(type: string): number;
 

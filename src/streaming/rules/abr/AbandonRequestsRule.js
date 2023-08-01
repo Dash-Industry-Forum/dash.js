@@ -82,9 +82,9 @@ function AbandonRequestsRule(config) {
             if (!isNaN(req.index)) {
                 setFragmentRequestDict(mediaType, req.index);
 
-                const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+                const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-                if (bufferLevel > stableBufferTime) {
+                if (bufferLevel > bufferTimeDefault) {
                     return switchRequest;
                 }
 
