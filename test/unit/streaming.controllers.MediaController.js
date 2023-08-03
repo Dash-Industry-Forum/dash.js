@@ -448,7 +448,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'qtz',
-                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }]
+                viewpoint: { schemeIdUri: 'test:scheme:2023', value: 'vp1' }
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
