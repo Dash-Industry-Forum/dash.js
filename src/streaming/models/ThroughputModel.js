@@ -122,7 +122,7 @@ function ThroughputModel(config) {
             eventBus.trigger(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, { throughputValues })
 
             if (httpRequest.type !== HTTPRequest.MPD_TYPE) {
-                _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.value, 0.001 * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
+                _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.value, settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
                 _updateEwmaValues(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
             }
         } catch (e) {

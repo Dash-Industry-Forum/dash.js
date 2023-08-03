@@ -1065,7 +1065,8 @@ function Settings() {
                         throughputSlowHalfLifeSeconds: 8,
                         throughputFastHalfLifeSeconds: 3,
                         latencySlowHalfLifeCount: 2,
-                        latencyFastHalfLifeCount: 1
+                        latencyFastHalfLifeCount: 1,
+                        weightDownloadTimeMultiplicationFactor: 0.0015
                     }
                 },
                 maxBitrate: {

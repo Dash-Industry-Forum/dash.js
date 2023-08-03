@@ -201,7 +201,7 @@ describe('ThroughputModel', () => {
             let tValues = throughputModel.getEwmaThroughputDict('video');
             let lValues = throughputModel.getEwmaLatencyDict('video');
 
-            expect(tValues.totalWeight).to.be.equal(2);
+            expect(tValues.totalWeight).to.be.equal(2 * (settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor / 0.001));
             expect(lValues.totalWeight).to.be.equal(1);
         })
 
