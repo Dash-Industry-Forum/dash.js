@@ -1052,14 +1052,27 @@ describe('MediaPlayer', function () {
                 player.setInitialMediaSettingsFor('audio', 'settings');
 
                 initialSettings = player.getInitialMediaSettingsFor('audio');
-                expect(initialSettings).to.equal('settings');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.deep.equal({});
 
-                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption' });
+                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption', accessibility: {schemeIdUri:'urn:mpeg:dash:role:2011', value:''} });
                 initialSettings = player.getInitialMediaSettingsFor('text');
-                expect(initialSettings).to.exist; // jshint ignore:line
-                expect(initialSettings.lang).to.equal('en');
-                expect(initialSettings.role).to.equal('caption');
+                expect(initialSettings).to.be.instanceOf(Object);
 
+                expect(initialSettings).to.have.property('lang');
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).not.to.have.property('audioChannelConfiguration');
+                expect(initialSettings).not.to.have.property('viewpoint');
+
+                expect(initialSettings.lang).to.equal('en');
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role).to.have.property('value');
+                // dash.js asumes the MPEG role scheme as default, if not provided
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.role.value).to.equal('caption');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.accessibility.value).to.equal('');
             });
 
             it('should set current track', function () {

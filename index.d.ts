@@ -454,14 +454,10 @@ declare namespace dashjs {
         representationCount: number;
         labels: { text: string, lang?: string }[];
         lang: string | null;
-        viewpoint: any | undefined | null;
-        viewpointsWithSchemeIdUri: DescriptorType[] | null;
-        accessibility: any[] | null;
-        accessibilitiesWithSchemeIdUri: DescriptorType[] | null;
-        audioChannelConfiguration: any[] | null;
-        audioChannelConfigurationsWithSchemeIdUri: DescriptorType[] | null;
-        roles: string[] | null;
-        rolesWithSchemeIdUri: DescriptorType[] | null;
+        viewpoint: DescriptorType[] | null;
+        accessibility: DescriptorType[] | null;
+        audioChannelConfiguration: DescriptorType[] | null;
+        roles: DescriptorType[] | null;
         codec: string | null;
         mimeType: string | null;
         contentProtection: any | null;

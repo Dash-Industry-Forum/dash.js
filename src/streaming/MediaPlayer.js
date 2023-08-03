@@ -118,6 +118,11 @@ function MediaPlayer() {
      * @inner
      */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    /**
+     * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
+     * @inner
+     */
+    const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -1572,10 +1577,10 @@ function MediaPlayer() {
      * is following: <br />
      * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     *  viewpoint: viewpointValue (object:{schemeIdUri,value}),
+     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
+     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))}
      *
      * @param {MediaType} type
      * @param {Object} value
@@ -1587,7 +1592,8 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setInitialSettings(type, value);
+        let sanitizedValue = _sanitizeSettings(value);
+        mediaController.setInitialSettings(type, sanitizedValue);
     }
 
     /**
@@ -2411,6 +2417,64 @@ function MediaPlayer() {
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
         utcValue = valToConvert + (availableFrom + metric.range.start);
         return utcValue;
+    }
+
+    function _sanitizeSettings(value) {
+        let output = {};
+
+        if (value.lang) output.lang = value.lang;
+        if (value.index) output.index = value.index;
+        if (value.viewpoint) {
+            output.viewpoint = {};
+            if (value.viewpoint instanceof Array) {
+                throw ARRAY_NOT_SUPPORTED_ERROR;
+            } else if (value.viewpoint instanceof Object) {
+                output.viewpoint.schemeIdUri = value.viewpoint.schemeIdUri ? value.viewpoint.schemeIdUri : '';
+                output.viewpoint.value = value.viewpoint.value ? value.viewpoint.value : '';
+            } else {
+                output.viewpoint.schemeIdUri = '';
+                output.viewpoint.value = value.viewpoint;
+            }
+        }
+        if (value.audioChannelConfiguration) {
+            output.audioChannelConfiguration = {};
+            if (value.audioChannelConfiguration instanceof Array) {
+                throw ARRAY_NOT_SUPPORTED_ERROR;
+            } else if (value.audioChannelConfiguration instanceof Object) {
+                output.audioChannelConfiguration.schemeIdUri = value.audioChannelConfiguration.schemeIdUri ? value.audioChannelConfiguration.schemeIdUri : '';
+                output.audioChannelConfiguration.value = value.audioChannelConfiguration.value ? value.audioChannelConfiguration.value : '';
+            } else {
+                output.audioChannelConfiguration.schemeIdUri = 'urn:mpeg:mpegB:cicp:ChannelConfiguration';
+                output.audioChannelConfiguration.value = value.audioChannelConfiguration;
+            }
+        }
+        if (value.accessibility) {
+            output.accessibility = {};
+            if (value.accessibility instanceof Array) {
+            // if (typeof value.accessibility == 'Array') {
+                throw ARRAY_NOT_SUPPORTED_ERROR;
+            } else if (value.accessibility instanceof Object) {
+                output.accessibility.schemeIdUri = value.accessibility.schemeIdUri ? value.accessibility.schemeIdUri : '';
+                output.accessibility.value = value.accessibility.value ? value.accessibility.value : '';
+            } else {
+                output.accessibility.schemeIdUri = 'urn:mpeg:dash:role:2011';
+                output.accessibility.value = value.accessibility;
+            }
+        }
+        if (value.role) {
+            output.role = {};
+            if (value.role instanceof Array) {
+                throw ARRAY_NOT_SUPPORTED_ERROR;
+            } else if (value.role instanceof Object) {
+                output.role.schemeIdUri = value.role.schemeIdUri ? value.role.schemeIdUri : '';
+                output.role.value = value.role.value ? value.role.value : '';
+            } else {
+                output.role.schemeIdUri = 'urn:mpeg:dash:role:2011';
+                output.role.value = value.role;
+            }
+        }
+
+        return output;
     }
 
     /**
