@@ -340,7 +340,10 @@ function MediaController() {
     }
 
     function matchSettingsViewPoint(settings, track) {
-        return !settings.viewpoint || (_compareDescriptorType(track.viewpoint, settings.viewpoint));
+        const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
+            return _compareDescriptorType(item, settings.viewpoint);
+        })[0];
+        return matchViewPoint;
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
@@ -396,7 +399,9 @@ function MediaController() {
             }
 
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
-            const matchViewPoint = !settings.viewpoint || (_compareDescriptorType(track.viewpoint, settings.viewpoint));
+            const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
+                return _compareDescriptorType(item, settings.viewpoint);
+            })[0];
             const matchRole = !settings.role || !!track.roles.filter(function (item) {
                 return _compareDescriptorType(item, settings.role);
             })[0];
@@ -406,7 +411,6 @@ function MediaController() {
             let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
                 return _compareDescriptorType(item, settings.audioChannelConfiguration);
             })[0];
-
 
             return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
         } catch (e) {
