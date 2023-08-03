@@ -265,18 +265,14 @@ function MediaController() {
         }
 
         const sameId = t1.id === t2.id;
-        const sameViewpoint = t1.viewpoint === t2.viewpoint;
-        const sameViewpointDescriptors = JSON.stringify(t1.viewpointsWithSchemeIdUri) === JSON.stringify(t2.viewpointsWithSchemeIdUri);
+        const sameViewpoint = JSON.stringify(t1.viewpoint) === JSON.stringify(t2.viewpoint);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
-        const sameRoles = t1.roles.toString() === t2.roles.toString();
-        const sameRoleDescriptors = JSON.stringify(t1.rolesWithSchemeIdUri) === JSON.stringify(t2.rolesWithSchemeIdUri);
-        const sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
-        const sameAccessibilityDescriptors = JSON.stringify(t1.accessibilitiesWithSchemeIdUri) === JSON.stringify(t2.accessibilitiesWithSchemeIdUri);
-        const sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
-        const sameAudioChannelConfigurationDescriptors = JSON.stringify(t1.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(t2.audioChannelConfigurationsWithSchemeIdUri);
-
-        return (sameId && sameCodec && sameViewpoint && sameViewpointDescriptors && sameLang && sameRoles && sameRoleDescriptors && sameAccessibility && sameAccessibilityDescriptors && sameAudioChannelConfiguration && sameAudioChannelConfigurationDescriptors);
+        const sameRoles = JSON.stringify(t1.roles) === JSON.stringify(t2.roles);
+        const sameAccessibility = JSON.stringify(t1.accessibility) === JSON.stringify(t2.accessibility);
+        const sameAudioChannelConfiguration = JSON.stringify(t1.audioChannelConfiguration) === JSON.stringify(t2.audioChannelConfiguration);
+        
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     function setConfig(config) {
@@ -344,26 +340,25 @@ function MediaController() {
     }
 
     function matchSettingsViewPoint(settings, track) {
-        return !settings.viewpoint || (settings.viewpoint === track.viewpoint);
+        return !settings.viewpoint || (_compareDescriptorType(track.viewpoint, settings.viewpoint));
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
-            return item === settings.role;
+            return _compareDescriptorType(item, settings.role);
         })[0];
         return (matchRole || (track.type === Constants.AUDIO && isTrackActive));
     }
 
     function matchSettingsAccessibility(settings, track) {
         let matchAccessibility;
-
         if (!settings.accessibility) {
             // if no accessibility is requested (or request is empty string),
             // match only those tracks having no accessibility element present
             matchAccessibility = !track.accessibility.length;
         } else {
             matchAccessibility = !!track.accessibility.filter(function (item) {
-                return item === settings.accessibility;
+                return _compareDescriptorType(item, settings.accessibility);
             })[0];
         }
 
@@ -372,7 +367,7 @@ function MediaController() {
 
     function matchSettingsAudioChannelConfig(settings, track) {
         let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
-            return item === settings.audioChannelConfiguration;
+            return _compareDescriptorType(item, settings.audioChannelConfiguration);
         })[0];
 
         return matchAudioChannelConfiguration;
@@ -401,15 +396,15 @@ function MediaController() {
             }
 
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
-            const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
+            const matchViewPoint = !settings.viewpoint || (_compareDescriptorType(track.viewpoint, settings.viewpoint));
             const matchRole = !settings.role || !!track.roles.filter(function (item) {
-                return item === settings.role;
+                return _compareDescriptorType(item, settings.role);
             })[0];
             let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
-                return item === settings.accessibility;
+                return _compareDescriptorType(item, settings.accessibility);
             })[0];
             let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
-                return item === settings.audioChannelConfiguration;
+                return _compareDescriptorType(item, settings.audioChannelConfiguration);
             })[0];
 
 
@@ -599,6 +594,20 @@ function MediaController() {
         return tmpArr;
     }
 
+    function _compareDescriptorType(v1,v2) {
+        if (v1 && v2) {
+            let t1 = JSON.stringify({
+                schemeIdUri: v1.schemeIdUri,
+                value: v1.value
+            })
+            let t2 = JSON.stringify({
+                schemeIdUri: v2.schemeIdUri,
+                value: v2.value
+            })
+            return t1 === t2;
+        }
+        return false;
+    }
 
     function createTrackInfo() {
         const storeLastSettings = settings.get().streaming.saveLastMediaSettingsForCurrentStreamingSession;
