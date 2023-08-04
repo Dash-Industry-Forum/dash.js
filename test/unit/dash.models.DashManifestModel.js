@@ -832,7 +832,7 @@ describe('DashManifestModel', function () {
             expect(adaptationArray[0].index).to.equals(0);
         });
 
-        it('should use ID of the AdaptationSet if provided', () => {
+        it('should use the ID of the AdaptationSet if provided', () => {
             const period = voHelper.getDummyPeriod();
             const adaptationArray = dashManifestModel.getAdaptationsForPeriod(period);
 
@@ -842,7 +842,7 @@ describe('DashManifestModel', function () {
             expect(adaptationArray[0].id).to.equal('id');
         });
 
-        it('should generate ID for the AdaptationSet if no ID is provided', () => {
+        it('should generate an ID for the AdaptationSet if no ID is provided', () => {
             const period = voHelper.getDummyPeriod();
             period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray.forEach((as) => {
                 delete (as.id);
