@@ -2434,59 +2434,33 @@ function MediaPlayer() {
     }
 
     function _sanitizeSettings(value) {
+        const defaults = settings.get().streaming.defaultSchemeIdUri;
         let output = {};
+
+        function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
+            let out = {};
+            if (val) {
+                if (val instanceof Array) {
+                    throw ARRAY_NOT_SUPPORTED_ERROR;
+                } else if (val instanceof Object) {
+                    out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
+                    out.value = val.value ? val.value : '';
+                } else {
+                    out.schemeIdUri = defaultSchemeIdUri;
+                    out.value = val;
+                    logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
+                }
+                return out;
+            }
+            return null;
+        }
 
         if (value.lang) output.lang = value.lang;
         if (value.index) output.index = value.index;
-        if (value.viewpoint) {
-            output.viewpoint = {};
-            if (value.viewpoint instanceof Array) {
-                throw ARRAY_NOT_SUPPORTED_ERROR;
-            } else if (value.viewpoint instanceof Object) {
-                output.viewpoint.schemeIdUri = value.viewpoint.schemeIdUri ? value.viewpoint.schemeIdUri : '';
-                output.viewpoint.value = value.viewpoint.value ? value.viewpoint.value : '';
-            } else {
-                output.viewpoint.schemeIdUri = '';
-                output.viewpoint.value = value.viewpoint;
-            }
-        }
-        if (value.audioChannelConfiguration) {
-            output.audioChannelConfiguration = {};
-            if (value.audioChannelConfiguration instanceof Array) {
-                throw ARRAY_NOT_SUPPORTED_ERROR;
-            } else if (value.audioChannelConfiguration instanceof Object) {
-                output.audioChannelConfiguration.schemeIdUri = value.audioChannelConfiguration.schemeIdUri ? value.audioChannelConfiguration.schemeIdUri : '';
-                output.audioChannelConfiguration.value = value.audioChannelConfiguration.value ? value.audioChannelConfiguration.value : '';
-            } else {
-                output.audioChannelConfiguration.schemeIdUri = 'urn:mpeg:mpegB:cicp:ChannelConfiguration';
-                output.audioChannelConfiguration.value = value.audioChannelConfiguration;
-            }
-        }
-        if (value.accessibility) {
-            output.accessibility = {};
-            if (value.accessibility instanceof Array) {
-            // if (typeof value.accessibility == 'Array') {
-                throw ARRAY_NOT_SUPPORTED_ERROR;
-            } else if (value.accessibility instanceof Object) {
-                output.accessibility.schemeIdUri = value.accessibility.schemeIdUri ? value.accessibility.schemeIdUri : '';
-                output.accessibility.value = value.accessibility.value ? value.accessibility.value : '';
-            } else {
-                output.accessibility.schemeIdUri = 'urn:mpeg:dash:role:2011';
-                output.accessibility.value = value.accessibility;
-            }
-        }
-        if (value.role) {
-            output.role = {};
-            if (value.role instanceof Array) {
-                throw ARRAY_NOT_SUPPORTED_ERROR;
-            } else if (value.role instanceof Object) {
-                output.role.schemeIdUri = value.role.schemeIdUri ? value.role.schemeIdUri : '';
-                output.role.value = value.role.value ? value.role.value : '';
-            } else {
-                output.role.schemeIdUri = 'urn:mpeg:dash:role:2011';
-                output.role.value = value.role;
-            }
-        }
+        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
 
         return output;
     }

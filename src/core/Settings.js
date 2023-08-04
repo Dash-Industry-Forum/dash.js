@@ -267,7 +267,13 @@ import Events from './events/Events';
  *                    applyMb: false,
  *                    etpWeightRatio: 0
  *                }
- *           }
+ *            },
+ *            defaultSchemeIdUri: {
+ *                viewpoint: '',
+ *                audiochannelconfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+ *                role: 'urn:mpeg:dash:role:2011',
+ *                accessibility: 'urn:mpeg:dash:role:2011'
+ *            }
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -847,6 +853,9 @@ import Events from './events/Events';
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
+ * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
+ * Default schemeIdUri for descriptor type elements
+ * These strings are used when not provided with setInitialMediaSettingsFor()
  */
 
 
@@ -1105,7 +1114,13 @@ function Settings() {
                     applyMb: false,
                     etpWeightRatio: 0
                 }
-            }
+            },
+            defaultSchemeIdUri: {
+                viewpoint: '',
+                audiochannelconfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                role: 'urn:mpeg:dash:role:2011',
+                accessibility: 'urn:mpeg:dash:role:2011'
+            }           
         },
         errors: {
             recoverAttempts: {
