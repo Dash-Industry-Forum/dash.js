@@ -1580,10 +1580,11 @@ function MediaPlayer() {
      * is following: <br />
      * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
-     *  viewpoint: viewpointValue (object:{schemeIdUri,value}),
+     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
      *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
      *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))}
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
+     * }
      *
      * @param {MediaType} type
      * @param {Object} value
