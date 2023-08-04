@@ -74,6 +74,7 @@ function MediaController() {
 
         if (settings) {
             tracks = Array.from(tracksForType);
+            logger.info('Filtering '+tracks.length+' '+type+' tracks based on settings');
 
             tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
@@ -83,6 +84,7 @@ function MediaController() {
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
+            logger.info('Filtering '+type+' tracks ended, found '+tracks.length+' matching track(s).');
         }
 
         if (tracks.length === 0) {
@@ -324,6 +326,8 @@ function MediaController() {
         });
         if (tracksAfterMatcher.length !== 0) {
             return tracksAfterMatcher;
+        } else {
+            logger.info('Filter-Function ('+filterFn.name+') resulted in no tracks; setting ignored');
         }
         return tracks;
     }
@@ -364,7 +368,6 @@ function MediaController() {
                 return _compareDescriptorType(item, settings.accessibility);
             })[0];
         }
-
         return matchAccessibility;
     }
 
@@ -372,7 +375,6 @@ function MediaController() {
         let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
             return _compareDescriptorType(item, settings.audioChannelConfiguration);
         })[0];
-
         return matchAudioChannelConfiguration;
     }
 
