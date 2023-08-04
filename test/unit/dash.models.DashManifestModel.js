@@ -157,7 +157,10 @@ describe('DashManifestModel', function () {
 
         it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForAdaptation is called', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation({
-                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'},{schemeIdUri: 'test.scheme', value: 'test2Val'}]
+                SupplementalProperty_asArray: [{
+                    schemeIdUri: 'test.scheme',
+                    value: 'testVal'
+                }, { schemeIdUri: 'test.scheme', value: 'test2Val' }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -184,7 +187,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForRepresentation is called', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation({
-                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'}]
+                SupplementalProperty_asArray: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -827,6 +830,30 @@ describe('DashManifestModel', function () {
             expect(adaptationArray).to.be.instanceOf(Array);
             expect(adaptationArray).not.to.be.empty;
             expect(adaptationArray[0].index).to.equals(0);
+        });
+
+        it('should use ID of the AdaptationSet if provided', () => {
+            const period = voHelper.getDummyPeriod();
+            const adaptationArray = dashManifestModel.getAdaptationsForPeriod(period);
+
+            expect(adaptationArray).to.be.instanceOf(Array);
+            expect(adaptationArray).not.to.be.empty;
+            expect(adaptationArray[0].index).to.equals(0);
+            expect(adaptationArray[0].id).to.equal('id');
+        });
+
+        it('should generate ID for the AdaptationSet if no ID is provided', () => {
+            const period = voHelper.getDummyPeriod();
+            period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray.forEach((as) => {
+                delete (as.id);
+            })
+
+            const adaptationArray = dashManifestModel.getAdaptationsForPeriod(period);
+
+            expect(adaptationArray).to.be.instanceOf(Array);
+            expect(adaptationArray).not.to.be.empty;
+            expect(adaptationArray[0].index).to.equals(0);
+            expect(adaptationArray[0].id).to.equal('id1_0');
         });
 
         it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {

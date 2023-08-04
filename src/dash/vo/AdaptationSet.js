@@ -34,6 +34,7 @@
  */
 class AdaptationSet {
     constructor() {
+        this.id = null;
         this.period = null;
         this.index = -1;
         this.type = null;

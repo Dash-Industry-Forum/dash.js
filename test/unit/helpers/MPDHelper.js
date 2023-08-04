@@ -97,6 +97,7 @@ class MpdHelper {
         adaptation.par = '16:9';
         adaptation.segmentAlignment = 'true';
         adaptation.startWithSAP = 1;
+        adaptation.id = 'id';
 
         objSubRepresentation.__cnt = 8;
         objSubRepresentation.bandwidth = 349952;

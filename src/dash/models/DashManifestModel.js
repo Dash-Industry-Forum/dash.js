@@ -715,6 +715,9 @@ function DashManifestModel() {
                 voAdaptationSet = new AdaptationSet();
                 if (realAdaptationSet.hasOwnProperty(DashConstants.ID)) {
                     voAdaptationSet.id = realAdaptationSet.id;
+                } else {
+                    // we generate an ID for the Adaptation Set because @id is not mandatory according to 23009-1
+                    voAdaptationSet.id = `${voPeriod.id}_${i}`;
                 }
                 voAdaptationSet.index = i;
                 voAdaptationSet.period = voPeriod;
