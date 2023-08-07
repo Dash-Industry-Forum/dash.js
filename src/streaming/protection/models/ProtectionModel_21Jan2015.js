@@ -405,6 +405,10 @@ function ProtectionModel_21Jan2015(config) {
     function _closeKeySessionInternal(sessionToken) {
         const session = sessionToken.session;
 
+        if (!session) {
+            return
+        }
+
         // Remove event listeners
         session.removeEventListener('keystatuseschange', sessionToken);
         session.removeEventListener('message', sessionToken);
