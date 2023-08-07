@@ -720,6 +720,8 @@ declare namespace dashjs {
 
         getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
+        repeatSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
+
         getValidTimeCloseToTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation, targetThreshold: number): number;
 
         getValidTimeAheadOfTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation): number;
@@ -943,10 +945,14 @@ declare namespace dashjs {
     export type MediaType = 'video' | 'audio' | 'text' | 'image';
     export type ThroughputCalculationModes =
         'throughputCalculationModeEwma'
+        | 'throughputCalculationModeZlema'
         | 'throughputCalculationModeArithmeticMean'
-        | 'throughputCalculationModeHarmonicMean'
         | 'throughputCalculationModeByteSizeWeightedArithmeticMean'
-        | 'throughputCalculationModeByteSizeWeightedHarmonicMean';
+        | 'throughputCalculationModeDateWeightedArithmeticMean'
+        | 'throughputCalculationModeHarmonicMean'
+        | 'throughputCalculationModeByteSizeWeightedHarmonicMean'
+        | 'throughputCalculationModeDateWeightedHarmonicMean'
+        ;
     export type LowLatencyDownloadTimeCalculationModes =
         'lowLatencyDownloadTimeCalculationModeMoofParsing'
         | 'lowLatencyDownloadTimeCalculationModeDownloadedData'
@@ -4109,7 +4115,7 @@ declare namespace dashjs {
         mediaType: MediaType;
         quality: number;
         representationId: string;
-        requestStartDate: Date;
+        startDate: Date;
         requestEndDate: Date | null;
         responseType: string;
         serviceLocation: string;
