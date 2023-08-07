@@ -270,7 +270,7 @@ import Events from './events/Events';
  *            },
  *            defaultSchemeIdUri: {
  *                viewpoint: '',
- *                audiochannelconfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+ *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
  *            }
@@ -1117,7 +1117,7 @@ function Settings() {
             },
             defaultSchemeIdUri: {
                 viewpoint: '',
-                audiochannelconfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
             }           
