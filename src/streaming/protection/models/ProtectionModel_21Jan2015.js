@@ -403,11 +403,10 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function _closeKeySessionInternal(sessionToken) {
-        const session = sessionToken.session;
-
-        if (!session) {
-            return
+        if (!sessionToken || !sessionToken.session) {
+            return Promise.resolve;
         }
+        const session = sessionToken.session;
 
         // Remove event listeners
         session.removeEventListener('keystatuseschange', sessionToken);
