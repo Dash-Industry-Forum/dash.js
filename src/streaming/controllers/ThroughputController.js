@@ -128,23 +128,30 @@ function ThroughputController() {
             return NaN;
         }
 
-        const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
+        let adjustedSampleSize;
         switch (calculationMode) {
             case Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getArithmeticMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getByteSizeWeightedArithmeticMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.DATE_WEIGHTED_ARITHMETIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getDateWeightedArithmeticMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getHarmonicMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getByteSizeWeightedHarmonicMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.DATE_WEIGHTED_HARMONIC_MEAN:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getDateWeightedHarmonicMean(dict, adjustedSampleSize);
             case Constants.THROUGHPUT_CALCULATION_MODES.EWMA:
                 return getEwma(dict, halfLife, useMin);
             case Constants.THROUGHPUT_CALCULATION_MODES.ZLEMA:
+                adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
                 return getZlema(dict, adjustedSampleSize);
         }
     }
