@@ -1075,6 +1075,59 @@ describe('MediaPlayer', function () {
                 expect(initialSettings.accessibility.value).to.equal('');
             });
 
+            it('should assume default schemeIdUri strings for initial media settings, if not provided', function () {
+                player.setInitialMediaSettingsFor('audio', { role: 'val1', accessibility: 'val2', viewpoint: 'val3', audioChannelConfiguration: 'val4'});
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('urn:mpeg:mpegB:cicp:ChannelConfiguration');
+            });
+
+            it('should take schemeIdUri strings for initial media settings, if provided', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    role: {schemeIdUri: 'test.scheme.1', value: 'val1'},
+                    accessibility: {schemeIdUri: 'test.scheme.2', value: 'val2'},
+                    viewpoint:  {schemeIdUri: 'test.scheme.3', value: 'val3'},
+                    audioChannelConfiguration: {schemeIdUri: 'test.scheme.4', value: 'val4'}
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('test.scheme.1');
+                expect(initialSettings.role.value).to.equal('val1');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('test.scheme.2');
+                expect(initialSettings.accessibility.value).to.equal('val2');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('test.scheme.3');
+                expect(initialSettings.viewpoint.value).to.equal('val3');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('test.scheme.4');
+                expect(initialSettings.audioChannelConfiguration.value).to.equal('val4');
+            });
+
             it('should set current track', function () {
                 let currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.false; // jshint ignore:line
