@@ -397,7 +397,6 @@ function ThroughputController() {
     function getAverageThroughput(mediaType, calculationMode = null, sampleSize = NaN) {
         const value = _getAverage(Constants.THROUGHPUT_TYPES.BANDWIDTH, mediaType, calculationMode, sampleSize);
 
-        console.log(`Current throughput for ${mediaType}: ${value}`);
         return Math.round(value);
     }
 

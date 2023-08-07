@@ -315,7 +315,6 @@ function L2ARule(config) {
             const streamInfo = rulesContext.getStreamInfo();
             const abrController = rulesContext.getAbrController();
             const throughputController = rulesContext.getThroughputController();
-            const useL2AABR = rulesContext.useL2AABR();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
             const safeThroughput = throughputController.getSafeAverageThroughput(mediaType);
             const throughput = throughputController.getAverageThroughput(mediaType); // In kbits/s
@@ -327,13 +326,13 @@ function L2ARule(config) {
 
             if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
                 !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
-                !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('useL2AABR')) {
+                !rulesContext.hasOwnProperty('getAbrController') ) {
                 return switchRequest;
             }
 
             switchRequest.reason = switchRequest.reason || {};
 
-            if ((!useL2AABR) || (mediaType === Constants.AUDIO)) {// L2A decides bitrate only for video. Audio to be included in decision process in a later stage
+            if ((mediaType === Constants.AUDIO)) {// L2A decides bitrate only for video. Audio to be included in decision process in a later stage
                 return switchRequest;
             }
 
@@ -448,7 +447,7 @@ function L2ARule(config) {
                         if (bitrates[quality] >= lastthroughput) {
                             l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
                         }
-                        l2AState.lastSegment.url = currentHttpRequest.url;
+                        l2AState.lastSegmentUrl = currentHttpRequest.url;
                     }
                     switchRequest.quality = quality;
                     switchRequest.reason.throughput = throughput;

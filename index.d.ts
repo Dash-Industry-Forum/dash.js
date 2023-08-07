@@ -1166,8 +1166,7 @@ declare namespace dashjs {
                 autoSwitchBitrate?: {
                     audio?: boolean;
                     video?: boolean;
-                },
-                fetchThroughputCalculationMode?: string;
+                }
             },
             cmcd?: {
                 enabled?: boolean,
@@ -3497,27 +3496,14 @@ declare namespace dashjs {
 
     export interface RulesContext {
         getMediaType(): string;
-
         getMediaInfo(): MediaInfo;
-
         getDroppedFramesHistory(): DroppedFramesHistory;
-
         getCurrentRequest(): SwitchRequest;
-
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
         getStreamInfo(): StreamInfo;
-
         getScheduleController(): ScheduleController;
-
         getAbrController(): AbrController;
-
         getRepresentationInfo(): RepresentationInfo
-
-        useBufferOccupancyABR(): any; //. pot later vo's
-        useL2AABR(): any;
-
-        useLoLPABR(): any;
-
         getVideoModel(): VideoModel;
     }
 

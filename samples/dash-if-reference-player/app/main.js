@@ -180,7 +180,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         textEnabled: true,
         forceTextStreaming: false
     };
-    $scope.additionalAbrRules = {};
+    $scope.activeAbrRules = {};
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
     $scope.updateMetricsInterval = 1000;
@@ -312,7 +312,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoAutoSwitchSelected = true;
     $scope.forceQualitySwitchSelected = false;
     $scope.videoQualities = [];
-    $scope.ABRStrategy = 'abrDynamic';
 
     $scope.liveCatchupMode = 'liveCatchupModeDefault';
     $scope.abrThroughputCalculationMode = 'abrFetchThroughputCalculationMoofParsing';
@@ -506,18 +505,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.setMute($scope.muted)
     }
 
-    $scope.changeFetchThroughputCalculation = function (mode) {
-        $scope.player.updateSettings({
-            streaming: {
-                abr: {
-                    throughput: {
-                        fetchThroughputCalculationMode: mode
-                    }
-                }
-            }
-        });
-    };
-
     $scope.changeLiveCatchupMode = function (mode) {
         $scope.player.updateSettings({
             streaming: {
@@ -527,52 +514,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         });
 
-    };
-
-    $scope.changeABRStrategy = function (strategy) {
-        $scope.player.updateSettings({
-            streaming: {
-                buffer: {
-                    stallThreshold: 0.5
-                },
-                abr: {
-                    ABRStrategy: strategy
-                }
-            }
-        });
-
-        if (strategy === 'abrLoLP') {
-            $scope.player.updateSettings({
-                streaming: {
-                    buffer: {
-                        stallThreshold: 0.05
-                    }
-                }
-            });
-            $scope.changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing');
-            document.getElementById('abrFetchThroughputCalculationMoofParsing').checked = true;
-
-            $scope.changeLiveCatchupMode('liveCatchupModeLoLP');
-            document.getElementById('liveCatchupModeLoLP').checked = true;
-        }
-    };
-
-    $scope.toggleUseCustomABRRules = function () {
-        $scope.player.updateSettings({
-            'streaming': {
-                'abr': {
-                    'useDefaultABRRules': !$scope.customABRRulesSelected
-                }
-            }
-        });
-
-        if ($scope.customABRRulesSelected) {
-            $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule); /* jshint ignore:line */
-            $scope.player.addABRCustomRule('qualitySwitchRules', 'ThroughputRule', CustomThroughputRule); /* jshint ignore:line */
-        } else {
-            $scope.player.removeABRCustomRule('DownloadRatioRule');
-            $scope.player.removeABRCustomRule('ThroughputRule');
-        }
     };
 
     $scope.toggleFastSwitch = function () {
@@ -632,10 +573,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             streaming: {
                 abr: {
                     activeRules: {
-                        insufficientBufferRule: $scope.additionalAbrRules.insufficientBufferRule,
-                        switchHistoryRule: $scope.additionalAbrRules.switchHistoryRule,
-                        droppedFramesRule: $scope.additionalAbrRules.droppedFramesRule,
-                        abandonRequestsRule: $scope.additionalAbrRules.abandonRequestsRule,
+                        throughputRule: $scope.activeAbrRules.throughputRule,
+                        bolaRule: $scope.activeAbrRules.bolaRule,
+                        insufficientBufferRule: $scope.activeAbrRules.insufficientBufferRule,
+                        switchHistoryRule: $scope.activeAbrRules.switchHistoryRule,
+                        droppedFramesRule: $scope.activeAbrRules.droppedFramesRule,
+                        abandonRequestsRule: $scope.activeAbrRules.abandonRequestsRule,
+                        l2ARule: $scope.activeAbrRules.l2ARule,
+                        loLPRule: $scope.activeAbrRules.loLPRule,
                     }
                 }
             }
@@ -644,9 +589,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleScheduleWhilePaused = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'scheduling': {
-                    'scheduleWhilePaused': $scope.scheduleWhilePausedSelected
+            streaming: {
+                scheduling: {
+                    scheduleWhilePaused: $scope.scheduleWhilePausedSelected
                 }
             }
         });
@@ -2121,12 +2066,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAbrRules() {
         var currentConfig = $scope.player.getSettings();
-        $scope.additionalAbrRules.insufficientBufferRule = currentConfig.streaming.abr.activeRules.insufficientBufferRule;
-        $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.activeRules.switchHistoryRule;
-        $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.activeRules.droppedFramesRule;
-        $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.activeRules.abandonRequestsRule;
-        $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
-        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.throughput.fetchThroughputCalculationMode;
+        $scope.activeAbrRules.throughputRule = currentConfig.streaming.abr.activeRules.throughputRule;
+        $scope.activeAbrRules.bolaRule = currentConfig.streaming.abr.activeRules.bolaRule;
+        $scope.activeAbrRules.insufficientBufferRule = currentConfig.streaming.abr.activeRules.insufficientBufferRule;
+        $scope.activeAbrRules.switchHistoryRule = currentConfig.streaming.abr.activeRules.switchHistoryRule;
+        $scope.activeAbrRules.droppedFramesRule = currentConfig.streaming.abr.activeRules.droppedFramesRule;
+        $scope.activeAbrRules.abandonRequestsRule = currentConfig.streaming.abr.activeRules.abandonRequestsRule;
+        $scope.activeAbrRules.loLPRule = currentConfig.streaming.abr.activeRules.loLPRule;
+        $scope.activeAbrRules.l2ARule = currentConfig.streaming.abr.activeRules.l2ARule;
     }
 
     function setAdditionalPlaybackOptions() {
@@ -2145,7 +2092,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var currentConfig = $scope.player.getSettings();
         $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
         $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
-        $scope.customABRRulesSelected = !currentConfig.streaming.abr.useDefaultABRRules;
     }
 
     function setDrmOptions() {

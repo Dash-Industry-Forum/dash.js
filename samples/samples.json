@@ -254,6 +254,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Average throughput calculation modes ",
+                "description": "Example illustrating how to change the throughput calculation mode used in dash.js.",
+                "href": "abr/average-calculation-mode.html",
+                "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
