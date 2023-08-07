@@ -1864,7 +1864,7 @@ declare namespace dashjs {
     }
 
     export interface OfflineRecordEvent extends Event {
-        type: MediaPlayerEvents['OFFLINE_RECORD_FINISHED' | 'OFFLINE_RECORD_STARTED' | 'OFFLINE_RECORD_STOPPED' | 'OFFLINE_RECORD_STOPPED'];
+        type: MediaPlayerEvents['OFFLINE_RECORD_FINISHED' | 'OFFLINE_RECORD_STARTED' | 'OFFLINE_RECORD_STOPPED'];
         id: string;
     }
 
@@ -3502,14 +3502,22 @@ declare namespace dashjs {
 
     export interface RulesContext {
         getMediaType(): string;
+
         getMediaInfo(): MediaInfo;
+
         getDroppedFramesHistory(): DroppedFramesHistory;
+
         getCurrentRequest(): SwitchRequest;
+
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
         getStreamInfo(): StreamInfo;
+
         getScheduleController(): ScheduleController;
+
         getAbrController(): AbrController;
+
         getRepresentationInfo(): RepresentationInfo
+
         getVideoModel(): VideoModel;
     }
 
@@ -4513,6 +4521,96 @@ declare namespace dashjs {
         prepareOuterPeriodPlaybackSeeking(): Promise<unknown>;
 
         reset(errored: boolean, keepBuffers: boolean): void;
+    }
+
+    export interface Constants {
+        STREAM: 'stream';
+        VIDEO: 'video';
+        AUDIO: 'audio';
+        TEXT: 'text';
+        MUXED: 'muxed';
+        IMAGE: 'image';
+        STPP: 'stpp';
+        TTML: 'ttml';
+        VTT: 'vtt';
+        WVTT: 'wvtt';
+        CONTENT_STEERING: 'contentSteering';
+        LIVE_CATCHUP_MODE_DEFAULT: 'liveCatchupModeDefault';
+        LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP';
+        MOVING_AVERAGE_SLIDING_WINDOW: 'slidingWindow';
+        MOVING_AVERAGE_EWMA: 'ewma';
+        BAD_ARGUMENT_ERROR: 'Invalid Arguments';
+        MISSING_CONFIG_ERROR: 'Missing config parameter(s)';
+        TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace';
+        TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace';
+        TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack';
+        TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate';
+        TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency';
+        TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange';
+        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority';
+        CMCD_MODE_QUERY: 'query';
+        CMCD_MODE_HEADER: 'header';
+        INITIALIZE: 'initialize';
+        TEXT_SHOWING: 'showing';
+        TEXT_HIDDEN: 'hidden';
+        CC1: 'CC1';
+        CC3: 'CC3';
+        UTF8: 'utf-8';
+        SCHEME_ID_URI: 'schemeIdUri';
+        START_TIME: 'starttime';
+        SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019';
+        SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019';
+        XML: 'XML';
+        ARRAY_BUFFER: 'ArrayBuffer';
+        DVB_REPORTING_URL: 'dvb:reportingUrl';
+        DVB_PROBABILITY: 'dvb:probability';
+        VIDEO_ELEMENT_READY_STATES: {
+            HAVE_NOTHING: 0;
+            HAVE_METADATA: 1;
+            HAVE_CURRENT_DATA: 2;
+            HAVE_FUTURE_DATA: 3;
+            HAVE_ENOUGH_DATA: 4
+        };
+        FILE_LOADER_TYPES: {
+            FETCH: 'fetch_loader';
+            XHR: 'xhr_loader'
+        };
+        THROUGHPUT_TYPES: {
+            LATENCY: 'throughput_type_latency';
+            BANDWIDTH: 'throughput_type_bandwidth'
+        };
+        THROUGHPUT_CALCULATION_MODES: {
+            EWMA: 'throughputCalculationModeEwma';
+            ZLEMA: 'throughputCalculationModeZlema';
+            ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean';
+            BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean';
+            DATE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeDateWeightedArithmeticMean';
+            HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean';
+            BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean';
+            DATE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeDateWeightedHarmonicMean';
+        };
+        LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
+            MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing';
+            DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData';
+            AAST: 'lowLatencyDownloadTimeCalculationModeAast';
+        };
+        RULES_TYPES: {
+            QUALITY_SWITCH_RULES: 'qualitySwitchRules';
+            ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
+        };
+        QUALITY_SWITCH_RULES: {
+            BOLA_RULE: 'BolaRule';
+            THROUGHPUT_RULE: 'ThroughputRule';
+            INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule';
+            SWITCH_HISTORY_RULE: 'SwitchHistoryRule';
+            DROPPED_FRAMES_RULE: 'DroppedFramesRule';
+            LEARN_TO_ADAPT_RULE: 'L2ARule';
+            LOL_PLUS_RULE: 'LoLPRule'
+        };
+        ABANDON_FRAGMENT_RULES: {
+            ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
+        }
+
     }
 
     export interface XlinkLoader {
