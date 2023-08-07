@@ -201,6 +201,57 @@ describe('ThroughputController', () => {
         settings.reset();
     });
 
+    describe('simple mean calculation', () => {
+
+        it('should calculate the arithmetic mean', () => {
+            let values = [{ value: 6 }, { value: 2 }, { value: 3 }, { value: 1 }];
+            const mean = throughputController.getArithmeticMean(values, values.length);
+            expect(mean).to.equal(3);
+        })
+
+        it('should calculate the byte size weighted arithmetic mean', () => {
+            let values = [{ value: 10, downloadedBytes: 9 }, { value: 5, downloadedBytes: 16 }, {
+                value: 20,
+                downloadedBytes: 9
+            }];
+            const mean = throughputController.getByteSizeWeightedArithmeticMean(values, values.length);
+            expect(mean).to.equal(11);
+        })
+
+        it('should calculate the date weighted arithmetic mean', () => {
+            let values = [{ value: 6 }, { value: 2 }, { value: 3 }, { value: 5 }];
+            const mean = throughputController.getDateWeightedArithmeticMean(values, values.length);
+            expect(mean).to.equal(3.9);
+        })
+
+        it('should calculate the harmonic mean', () => {
+            let values = [{ value: 6 }, { value: 2 }, { value: 3 }]
+            const mean = throughputController.getHarmonicMean(values, values.length);
+            expect(mean).to.equal(3);
+        })
+
+        it('should calculate byte size weighted harmonic mean', () => {
+            let values = [{ value: 10, downloadedBytes: 9 }, { value: 5, downloadedBytes: 16 }, {
+                value: 20,
+                downloadedBytes: 9
+            }];
+            const mean = throughputController.getByteSizeWeightedHarmonicMean(values, values.length);
+            expect(mean).to.equal(8);
+        })
+
+        it('should calculate date weighted harmonic mean', () => {
+            let values = [{ value: 20 }, { value: 5 }, { value: 20 }];
+            const mean = throughputController.getDateWeightedHarmonicMean(values, values.length);
+            expect(Math.round(mean)).to.equal(10);
+        })
+
+        it('should calculate the ZLEMA', () => {
+            let values = [{ value: 100 }, { value: 100 }, { value: 80 }, { value: 2 }, { value: 2 }, { value: 2 }];
+            const mean = throughputController.getZlema(values, values.length);
+            expect(Math.round(mean)).to.equal(31);
+        })
+    })
+
     describe('getAverageThroughput()', () => {
 
         it('Should calculate the arithmetic mean based on values from Resource Timing API', () => {

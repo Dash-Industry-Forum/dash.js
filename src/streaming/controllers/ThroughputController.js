@@ -128,20 +128,24 @@ function ThroughputController() {
             return NaN;
         }
 
-        if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA) {
-            return _getEwma(dict, halfLife, useMin);
-        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN) {
-            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return getArithmeticMean(dict, adjustedSampleSize);
-        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN) {
-            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return getArithmeticMean(dict, adjustedSampleSize, true);
-        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN) {
-            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return getHarmonicMean(dict, adjustedSampleSize);
-        } else if (calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN) {
-            const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
-            return getHarmonicMean(dict, adjustedSampleSize, true);
+        const adjustedSampleSize = _getAdjustedSampleSize(dict, sampleSize, throughputType);
+        switch (calculationMode) {
+            case Constants.THROUGHPUT_CALCULATION_MODES.ARITHMETIC_MEAN:
+                return getArithmeticMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN:
+                return getByteSizeWeightedArithmeticMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.DATE_WEIGHTED_ARITHMETIC_MEAN:
+                return getDateWeightedArithmeticMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.HARMONIC_MEAN:
+                return getHarmonicMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN:
+                return getByteSizeWeightedHarmonicMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.DATE_WEIGHTED_HARMONIC_MEAN:
+                return getDateWeightedHarmonicMean(dict, adjustedSampleSize);
+            case Constants.THROUGHPUT_CALCULATION_MODES.EWMA:
+                return getEwma(dict, halfLife, useMin);
+            case Constants.THROUGHPUT_CALCULATION_MODES.ZLEMA:
+                return getZlema(dict, adjustedSampleSize);
         }
     }
 
@@ -177,11 +181,32 @@ function ThroughputController() {
      * Calculate the arithmetic mean of the values provided via the dict
      * @param {array} dict
      * @param {number} sampleSize
-     * @param {boolean} applyByteSizeWeighting
      * @return {number|*}
      * @private
      */
-    function getArithmeticMean(dict, sampleSize, applyByteSizeWeighting = false) {
+    function getArithmeticMean(dict, sampleSize) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+
+        return arr.reduce((total, entry) => {
+            return total + entry.value
+        }, 0) / arr.length;
+    }
+
+    /**
+     * Calculates the byte size weighted arithmetic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @return {number|*}
+     * @private
+     */
+    function getByteSizeWeightedArithmeticMean(dict, sampleSize) {
         let arr = dict;
 
         if (sampleSize === 0 || !arr || arr.length === 0) {
@@ -193,7 +218,33 @@ function ThroughputController() {
         let divideBy = 0;
 
         return arr.reduce((total, entry) => {
-            let weight = applyByteSizeWeighting && !isNaN(entry.downloadedBytes) ? Math.sqrt(entry.downloadedBytes) : 1
+            let weight = Math.sqrt(entry.downloadedBytes);
+            divideBy += weight;
+
+            return total + entry.value * weight
+        }, 0) / divideBy;
+    }
+
+    /**
+     * Calculates the time weighted arithmetic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @return {number|*}
+     * @private
+     */
+    function getDateWeightedArithmeticMean(dict, sampleSize) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+        let divideBy = 0;
+
+        return arr.reduce((total, entry, index) => {
+            let weight = index + 1;
             divideBy += weight;
 
             return total + entry.value * weight
@@ -204,11 +255,34 @@ function ThroughputController() {
      * Calculate the harmonic mean of the values provided via the dict
      * @param {array} dict
      * @param {number} sampleSize
-     * @param {boolean} applyByteSizeWeighting
      * @return {number|*}
      * @private
      */
-    function getHarmonicMean(dict, sampleSize, applyByteSizeWeighting = false) {
+    function getHarmonicMean(dict, sampleSize) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+
+        const value = arr.reduce((total, entry) => {
+            return total + 1 / entry.value
+        }, 0);
+
+        return arr.length / value
+    }
+
+    /**
+     * Calculate the harmonic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @return {number|*}
+     * @private
+     */
+    function getByteSizeWeightedHarmonicMean(dict, sampleSize) {
         let arr = dict;
 
         if (sampleSize === 0 || !arr || arr.length === 0) {
@@ -220,10 +294,39 @@ function ThroughputController() {
         let dividend = 0;
 
         const value = arr.reduce((total, entry) => {
-            let weight = applyByteSizeWeighting && !isNaN(entry.downloadedBytes) ? Math.sqrt(entry.downloadedBytes) : 1
+            let weight = Math.sqrt(entry.downloadedBytes);
             dividend += weight;
 
-            return total + 1 / entry.value * weight
+            return total + (1 / entry.value) * weight
+        }, 0);
+
+        return dividend / value
+    }
+
+
+    /**
+     * Calculates the time weighted harmonic mean of the values provided via the dict
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @return {number|*}
+     * @private
+     */
+    function getDateWeightedHarmonicMean(dict, sampleSize) {
+        let arr = dict;
+
+        if (sampleSize === 0 || !arr || arr.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        arr = arr.slice(-sampleSize);
+        let dividend = 0;
+
+        const value = arr.reduce((total, entry, index) => {
+            let weight = index + 1;
+            dividend += weight;
+
+            return total + (1 / entry.value) * weight
         }, 0);
 
         return dividend / value
@@ -237,7 +340,7 @@ function ThroughputController() {
      * @return {number}
      * @private
      */
-    function _getEwma(dict, halfLife, useMin = true) {
+    function getEwma(dict, halfLife, useMin = true) {
 
         if (!dict || dict.totalWeight <= 0) {
             return NaN;
@@ -248,6 +351,33 @@ function ThroughputController() {
         const slowEstimate = dict.slowEstimate / (1 - Math.pow(0.5, dict.totalWeight / halfLife.slow));
 
         return useMin ? Math.min(fastEstimate, slowEstimate) : Math.max(fastEstimate, slowEstimate);
+    }
+
+    /**
+     * Calculates the Zero-Lag Exponential Moving Average
+     * @param {array} dict
+     * @param {number} sampleSize
+     * @returns {number}
+     */
+    function getZlema(dict, sampleSize) {
+        if (sampleSize === 0 || !dict || dict.length === 0) {
+            return NaN;
+        }
+
+        // Extract the last n elements
+        let values = dict.slice(-sampleSize).map((entry) => {
+            return entry.value;
+        })
+        let alpha = 2 / (values.length + 1);
+        let ema = values[values.length - 1];
+        let zlema = values[values.length - 1];
+
+        for (let i = 0; i < values.length; i++) {
+            ema = alpha * values[i] + (1 - alpha) * ema;
+            zlema = alpha * ema + (1 - alpha) * zlema;
+        }
+
+        return zlema;
     }
 
     /**
@@ -317,7 +447,13 @@ function ThroughputController() {
         getAverageThroughput,
         getSafeAverageThroughput,
         getArithmeticMean,
+        getByteSizeWeightedArithmeticMean,
+        getDateWeightedArithmeticMean,
         getHarmonicMean,
+        getByteSizeWeightedHarmonicMean,
+        getDateWeightedHarmonicMean,
+        getEwma,
+        getZlema,
         getAverageLatency,
         getRawThroughputData,
         reset

@@ -245,10 +245,13 @@ export default {
     },
     THROUGHPUT_CALCULATION_MODES: {
         EWMA: 'throughputCalculationModeEwma',
+        ZLEMA: 'throughputCalculationModeZlema',
         ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean',
         HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean',
         BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean',
-        BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean'
+        DATE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeDateWeightedArithmeticMean',
+        BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean',
+        DATE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeDateWeightedHarmonicMean',
     },
     LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
         MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing',
