@@ -229,7 +229,7 @@ function TimelineConverter() {
         const range = { start: NaN, end: NaN };
         const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        
+
         if (!streams || streams.length === 0) {
             return { range, now };
         }
@@ -326,11 +326,11 @@ function TimelineConverter() {
             repeat,
             i,
             len;
-        
-        if(hasValidSegmentTime) {
+
+        if (hasValidSegmentTime) {
             range.start = calcPresentationTimeFromMediaTime(enhancedSegmentTime / timescale, voRepresentation);
         }
-        
+
         for (i = 0, len = segments.length; i < len; i++) {
             segment = segments[i];
             repeat = 0;

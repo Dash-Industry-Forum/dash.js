@@ -69,7 +69,7 @@ function ProtectionKeyController() {
             BASE64 = config.BASE64;
         }
 
-        if(config.settings) {
+        if (config.settings) {
             settings = config.settings
         }
     }
@@ -80,20 +80,20 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
+        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64, settings: settings });
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, debug: debug});
+        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -308,7 +308,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
+            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {

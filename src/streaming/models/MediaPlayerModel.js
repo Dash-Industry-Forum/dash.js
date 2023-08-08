@@ -77,7 +77,7 @@ function MediaPlayerModel() {
      * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected min playback rate
      */
-    function _checkMinPlaybackRate (rate, log) {
+    function _checkMinPlaybackRate(rate, log) {
         if (isNaN(rate)) return 0;
         if (rate > 0) {
             if (log) {
@@ -100,7 +100,7 @@ function MediaPlayerModel() {
      * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected max playback rate
      */
-    function _checkMaxPlaybackRate (rate, log) {
+    function _checkMaxPlaybackRate(rate, log) {
         if (isNaN(rate)) return 0;
         if (rate < 0) {
             if (log) {
@@ -142,7 +142,7 @@ function MediaPlayerModel() {
     function getCatchupPlaybackRates(log) {
         const settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
 
-        if(!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+        if (!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
             return {
                 min: _checkMinPlaybackRate(settingsPlaybackRate.min, log),
                 max: _checkMaxPlaybackRate(settingsPlaybackRate.max, log),
@@ -184,18 +184,17 @@ function MediaPlayerModel() {
     function getAbrBitrateParameter(field, mediaType) {
         try {
             const setting = settings.get().streaming.abr[field][mediaType];
-            if(!isNaN(setting) && setting !== -1) {
+            if (!isNaN(setting) && setting !== -1) {
                 return setting;
             }
 
             const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            if(serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
+            if (serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
                 return serviceDescriptionSettings[field][mediaType];
             }
 
             return -1;
-        }
-        catch(e) {
+        } catch (e) {
             return -1;
         }
     }

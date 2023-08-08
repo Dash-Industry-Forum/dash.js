@@ -326,7 +326,7 @@ function L2ARule(config) {
 
             if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
                 !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
-                !rulesContext.hasOwnProperty('getAbrController') ) {
+                !rulesContext.hasOwnProperty('getAbrController')) {
                 return switchRequest;
             }
 
@@ -466,8 +466,7 @@ function L2ARule(config) {
                     _clearL2AStateOnSeek(l2AState);
             }
             return switchRequest;
-        }
-        catch(e) {
+        } catch (e) {
             logger.error(e);
             return SwitchRequest(context).create();
         }
