@@ -23,7 +23,6 @@ describe('RulesContext', function () {
             currentValue: 0,
             switchHistory: null,
             droppedFramesHistory: null,
-            useBufferOccupancyABR: true
         });
 
         expect(rulesContext.getMediaType()).to.equal('video');

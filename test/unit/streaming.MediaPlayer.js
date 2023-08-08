@@ -530,7 +530,7 @@ describe('MediaPlayer', function () {
             expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
         });
 
-        it('Method getAverageThroughput should value computed from ThroughputHistory', function () {
+        it('Method getAverageThroughput should value computed from ThroughputController', function () {
             const AVERAGE_THROUGHPUT = 2000;
             const averageThroughput = player.getAverageThroughput(Constants.VIDEO);
             expect(averageThroughput).to.equal(AVERAGE_THROUGHPUT);

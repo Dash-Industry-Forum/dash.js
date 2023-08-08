@@ -46,10 +46,6 @@ function RulesContextMock() {
         };
     };
 
-    this.useBufferOccupancyABR = function () {
-
-    };
-
     this.getDroppedFramesHistory = function () {
 
     };

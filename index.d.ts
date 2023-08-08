@@ -2692,6 +2692,22 @@ declare namespace dashjs {
         getEstimaredDownloadDurationMS(request: HTTPRequest): number;
     }
 
+    export interface ThroughputModel {
+        addEntry(mediaType: MediaType, httpRequest: HTTPRequest): void;
+
+        getThroughputDict(mediaType: MediaType): ThroughputDictEntry;
+
+        getEwmaThroughputDict(mediaType: MediaType): ThroughputEwmaDictEntry;
+        
+        getEwmaLatencyDict(mediaType: MediaType): ThroughputEwmaDictEntry;
+
+        getEwmaHalfLife(mediaType: MediaType): object;
+
+        getLatencyDict(mediaType: MediaType): ThroughputDictEntry;
+
+        reset(): void;
+    }
+
     export interface ManifestModel {
         getValue(): object;
 
@@ -3580,9 +3596,12 @@ declare namespace dashjs {
         getCurrentRequest(): SwitchRequest;
 
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
+        
         getStreamInfo(): StreamInfo;
 
         getScheduleController(): ScheduleController;
+
+        getThroughputController(): ThroughputController;
 
         getAbrController(): AbrController;
 
@@ -4050,12 +4069,15 @@ declare namespace dashjs {
         responsecode: number | null;
         interval: number | null;
         trace: any[];
+        cmsd: object;
         _stream: MediaType;
         _tfinish: Date | null;
         _mediaduration: number | null;
         _quality: number | null;
         _responseHeaders: any[] | null;
         _serviceLocation: string | null;
+        _fileLoaderType: string;
+        _resourceTimingValues: object;
     }
 
     export interface ManifestUpdate {
