@@ -448,21 +448,21 @@ function ThroughputController() {
     }
 
     const instance = {
-        initialize,
-        setConfig,
-        getAverageThroughput,
-        getSafeAverageThroughput,
         getArithmeticMean,
+        getAverageLatency,
+        getAverageThroughput,
         getByteSizeWeightedArithmeticMean,
-        getDateWeightedArithmeticMean,
-        getHarmonicMean,
         getByteSizeWeightedHarmonicMean,
+        getDateWeightedArithmeticMean,
         getDateWeightedHarmonicMean,
         getEwma,
-        getZlema,
-        getAverageLatency,
+        getHarmonicMean,
         getRawThroughputData,
-        reset
+        getSafeAverageThroughput,
+        getZlema,
+        initialize,
+        reset,
+        setConfig
     };
 
     return instance;

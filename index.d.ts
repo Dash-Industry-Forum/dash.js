@@ -117,11 +117,11 @@ declare namespace dashjs {
         getByteSizeWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
 
         getDateWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
-        
+
         getEwma(dict: ThroughputEwmaDictEntry[], halfLife: object, useMin: boolean): number
 
         getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
-        
+
         getAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
 
         getSafeAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
@@ -667,6 +667,23 @@ declare namespace dashjs {
         queryBeforeStart: boolean;
         serverUrl: string;
         clientRequirement: boolean;
+    }
+
+    export class HttpLoaderRequest {
+        url: string;
+        method: string;
+        withCredentials: boolean;
+        request: FragmentRequest;
+        onload: Function;
+        onloadend: Function;
+        onerror: Function;
+        progress: Function;
+        ontimeout: Function;
+        loader: object;
+        timeout: number;
+        headers: object;
+        response: object;
+        reader: object;
     }
 
     /**
@@ -2665,7 +2682,7 @@ declare namespace dashjs {
         addExecutedRequest(request: HTTPRequest): void;
     }
 
-    export interface LowLatencyThroughputModel {
+    export interface AastLowLatencyThroughputModel {
         setup(): void;
 
         addMeasurement(request: HTTPRequest, fetchDownloadDurationMS: number, chunkMeasurements: object[], requestTimeMS: number, throughputCapacityDelayMS: number): void;
@@ -3584,18 +3601,6 @@ declare namespace dashjs {
         push(switchRequest: SwitchRequest): void;
 
         getSwitchRequests(): SwitchRequest[];
-
-        reset(): void;
-    }
-
-    export interface ThroughputHistory {
-        push(mediaType: MediaType, httpRequest: HTTPRequest, ueDeadTimeLatency: boolean): void;
-
-        getAverageThroughput(mediaType: MediaType, isDynamic: boolean): number;
-
-        getSafeAverageThroughput(mediaType: MediaType, isDynamic: boolean): number;
-
-        getAverageLatency(mediaType: MediaType): number;
 
         reset(): void;
     }

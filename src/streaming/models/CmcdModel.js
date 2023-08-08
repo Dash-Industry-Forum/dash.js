@@ -103,7 +103,7 @@ function CmcdModel() {
             dashMetrics = config.dashMetrics;
         }
 
-        if(config.throughputController) {
+        if (config.throughputController) {
             throughputController = config.throughputController;
         }
 
