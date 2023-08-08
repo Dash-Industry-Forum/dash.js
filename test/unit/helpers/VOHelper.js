@@ -73,7 +73,7 @@ class VoHelper {
         rep.presentationTimeOffset = 10;
         rep.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
         // Set the source buffer timeOffset to this
-        rep.MSETimeOffset = NaN;
+        rep.mseTimeOffset = NaN;
         rep.segmentAvailabilityWindow = null;
         rep.availableSegmentsNumber = 0;
 
@@ -96,7 +96,7 @@ class VoHelper {
         rep.presentationTimeOffset = 10;
         rep.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
         // Set the source buffer timeOffset to this
-        rep.MSETimeOffset = NaN;
+        rep.mseTimeOffset = NaN;
         rep.segmentAvailabilityWindow = null;
         rep.availableSegmentsNumber = 0;
 

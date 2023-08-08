@@ -102,7 +102,7 @@ function StreamProcessorMock (testType, streamInfo) {
         if (quality !== undefined) {
             let offset = quality ? 2 : 1;
             return {
-                MSETimeOffset: offset
+                mseTimeOffset: offset
             };
         } else {
             return {mediaInfo: {type: this.type, streamInfo: this.streamInfo}, fragmentDuration: 6};

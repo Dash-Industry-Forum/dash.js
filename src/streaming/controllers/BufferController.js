@@ -1050,13 +1050,13 @@ function BufferController(config) {
 
     function updateBufferTimestampOffset(representationInfo) {
         return new Promise((resolve) => {
-            if (!representationInfo || representationInfo.MSETimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
+            if (!representationInfo || representationInfo.mseTimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
                 resolve();
                 return;
             }
             // Each track can have its own @presentationTimeOffset, so we should set the offset
             // if it has changed after switching the quality or updating an mpd
-            sourceBufferSink.updateTimestampOffset(representationInfo.MSETimeOffset)
+            sourceBufferSink.updateTimestampOffset(representationInfo.mseTimeOffset)
                 .then(() => {
                     resolve();
                 })

@@ -677,7 +677,7 @@ function DashManifestModel() {
                     }
                 }
 
-                voRepresentation.MSETimeOffset = calcMSETimeOffset(voRepresentation);
+                voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
                 voRepresentations.push(voRepresentation);
             }
@@ -695,7 +695,7 @@ function DashManifestModel() {
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
     }
 
-    function calcMSETimeOffset(representation) {
+    function calcMseTimeOffset(representation) {
         // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
         const presentationOffset = representation.presentationTimeOffset;
         const periodStart = representation.adaptation.period.start;

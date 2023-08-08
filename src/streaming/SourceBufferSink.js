@@ -88,8 +88,8 @@ function SourceBufferSink(config) {
             promises.push(changeType(codec));
         }
 
-        if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-            promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+        if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
+            promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
         }
 
         return Promise.all(promises);
@@ -131,8 +131,8 @@ function SourceBufferSink(config) {
 
             promises.push(updateAppendWindow(mediaInfo.streamInfo));
 
-            if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-                promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+            if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
+                promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
             }
 
             return Promise.all(promises);
@@ -225,7 +225,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function updateTimestampOffset(MSETimeOffset) {
+    function updateTimestampOffset(mseTimeOffset) {
         return new Promise((resolve) => {
 
             if (!buffer) {
@@ -235,9 +235,9 @@ function SourceBufferSink(config) {
 
             _waitForUpdateEnd(() => {
                 try {
-                    if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-                        buffer.timestampOffset = MSETimeOffset;
-                        logger.debug(`Set MSE timestamp offset to ${MSETimeOffset}`);
+                    if (buffer.timestampOffset !== mseTimeOffset && !isNaN(mseTimeOffset)) {
+                        buffer.timestampOffset = mseTimeOffset;
+                        logger.debug(`Set MSE timestamp offset to ${mseTimeOffset}`);
                     }
                     resolve();
                 } catch (e) {

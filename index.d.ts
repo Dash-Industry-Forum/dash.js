@@ -591,7 +591,7 @@ declare namespace dashjs {
         indexRange: string | null;
         range: Range | null;
         presentationTimeOffset: number;
-        MSETimeOffset: number;
+        mseTimeOffset: number;
         mediaFinishedInformation: MediaFinishedInformation;
         availableSegmentsNumber: number;
         bandwidth: number;
@@ -610,7 +610,7 @@ declare namespace dashjs {
         quality: number | null;
         fragmentDuration: number | null;
         mediaInfo: MediaInfo | null;
-        MSETimeOffset: number | null;
+        mseTimeOffset: number | null;
     }
 
     export interface Segment {
@@ -4468,7 +4468,7 @@ declare namespace dashjs {
 
         reset(): void;
 
-        updateTimestampOffset(MSETimeOffset: number): void;
+        updateTimestampOffset(mseTimeOffset: number): void;
 
         initializeForStreamSwitch(mInfo: MediaInfo, selectedRepresentation: Representation, oldSourceBufferSink: SourceBufferSink): Promise<any>;
 

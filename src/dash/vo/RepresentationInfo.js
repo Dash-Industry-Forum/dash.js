@@ -38,7 +38,7 @@ class RepresentationInfo {
         this.quality = null;
         this.fragmentDuration = null;
         this.mediaInfo = null;
-        this.MSETimeOffset = null;
+        this.mseTimeOffset = null;
     }
 }
 

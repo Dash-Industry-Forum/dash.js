@@ -333,7 +333,7 @@ describe('BufferController', function () {
         it('should  update buffer timestamp offset if  representationInfo is provided', function (done) {
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
-            const representationInfo = { MSETimeOffset: 2 };
+            const representationInfo = { mseTimeOffset: 2 };
             // send event
             bufferController.updateBufferTimestampOffset(representationInfo)
                 .then(() => {
