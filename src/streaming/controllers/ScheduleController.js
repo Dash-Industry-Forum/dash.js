@@ -312,10 +312,10 @@ function ScheduleController(config) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
-                return mediaPlayerModel.getStableBufferTime();
+                return mediaPlayerModel.getBufferTimeDefault();
             }
         } catch (e) {
-            return mediaPlayerModel.getStableBufferTime();
+            return mediaPlayerModel.getBufferTimeDefault();
         }
     }
 
@@ -340,7 +340,7 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.id !== lastFragmentRequest.mediaInfo.id)) && trigger) {
+                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.index !== lastFragmentRequest.mediaInfo.index)) && trigger) {
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
                         mediaType: type,
                         oldMediaInfo: lastFragmentRequest.mediaInfo,

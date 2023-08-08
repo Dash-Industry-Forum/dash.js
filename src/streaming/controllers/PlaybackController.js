@@ -91,7 +91,6 @@ function PlaybackController() {
 
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
-            eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
             eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
             eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
             eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
@@ -133,7 +132,6 @@ function PlaybackController() {
         internalSeek = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
-        eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
@@ -766,19 +764,6 @@ function PlaybackController() {
      */
     function getLowLatencyModeEnabled() {
         return lowLatencyModeEnabled
-    }
-
-
-    function _onFragmentLoadProgress(e) {
-        // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
-        if (e.stream === false && lowLatencyModeEnabled && !isNaN(e.request.duration)) {
-            const minDelay = 1.2 * e.request.duration;
-            if (minDelay > liveDelay) {
-                logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                liveDelay = minDelay;
-                originalLiveDelay = minDelay;
-            }
-        }
     }
 
     function onPlaybackStalled(e) {

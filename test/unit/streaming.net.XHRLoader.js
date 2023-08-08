@@ -44,7 +44,7 @@ describe('XHRLoader', function () {
         const request = {
             request: {},
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -70,7 +70,7 @@ describe('XHRLoader', function () {
         const request = {
             request: {},
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -97,7 +97,7 @@ describe('XHRLoader', function () {
         const request = {
             request: {},
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };
@@ -111,7 +111,7 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackAbort);
     });
 
-    it('should call onerror and onend when load is called and there is a network error', () => {
+    it('should call onerror and onloadend when load is called and there is a network error', () => {
         const self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -123,7 +123,7 @@ describe('XHRLoader', function () {
         const request = {
             request: {},
             onload: callbackSucceeded,
-            onend: callbackCompleted,
+            onloadend: callbackCompleted,
             onerror: callbackError,
             onabort: callbackAbort
         };

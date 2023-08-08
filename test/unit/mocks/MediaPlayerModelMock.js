@@ -110,7 +110,7 @@ class MediaPlayerModelMock {
     setup() {
         this.fastSwitchEnabled = false;
         this.liveDelay = null; // Explicitly state that default is null
-        this.stableBufferTime = -1;
+        this.bufferTimeDefault = -1;
         this.xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -141,8 +141,8 @@ class MediaPlayerModelMock {
         return { min: -0.5, max: 0.5 };
     }
 
-    getStableBufferTime() {
-        return this.stableBufferTime > -1 ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    getBufferTimeDefault() {
+        return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     setRetryAttemptsForType(type, value) {

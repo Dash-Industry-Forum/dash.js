@@ -46,8 +46,6 @@ describe('RepresentationController', function () {
     const adapterMock = new AdapterMock();
     const segmentsController = new SegmentsControllerMock();
 
-    abrControllerMock.registerStreamType();
-
     let representationController;
 
     describe('Config not correctly passed', function () {

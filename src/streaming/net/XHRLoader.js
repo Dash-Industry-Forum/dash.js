@@ -44,23 +44,23 @@ function XHRLoader(cfg) {
 
     let instance;
 
-    function load(httpRequest) {
+    function load(httpLoaderRequest) {
         if (requestModifier && requestModifier.modifyRequest) {
-            modifyRequest(httpRequest, requestModifier)
-                .then(() => request(httpRequest));
+            modifyRequest(httpLoaderRequest, requestModifier)
+                .then(() => _request(httpLoaderRequest));
         }
         else {
-            request(httpRequest);
+            _request(httpLoaderRequest);
         }
     }
 
-    function request(httpRequest) {
+    function _request(httpLoaderRequest) {
         // Variables will be used in the callback functions
         const requestStartTime = new Date();
-        const request = httpRequest.request;
+        const request = httpLoaderRequest.request;
 
         let xhr = new XMLHttpRequest();
-        xhr.open(httpRequest.method, httpRequest.url, true);
+        xhr.open(httpLoaderRequest.method, httpLoaderRequest.url, true);
 
         if (request.responseType) {
             xhr.responseType = request.responseType;
@@ -70,38 +70,38 @@ function XHRLoader(cfg) {
             xhr.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
+        if (!request.startDate) {
+            request.startDate = requestStartTime;
         }
 
         if (requestModifier && requestModifier.modifyRequestHeader) {
             xhr = requestModifier.modifyRequestHeader(xhr, {
-                url: httpRequest.url
+                url: httpLoaderRequest.url
             });
         }
 
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
+        if (httpLoaderRequest.headers) {
+            for (let header in httpLoaderRequest.headers) {
+                let value = httpLoaderRequest.headers[header];
                 if (value) {
                     xhr.setRequestHeader(header, value);
                 }
             }
         }
 
-        xhr.withCredentials = httpRequest.withCredentials;
+        xhr.withCredentials = httpLoaderRequest.withCredentials;
 
-        xhr.onload = httpRequest.onload;
-        xhr.onloadend = httpRequest.onend;
-        xhr.onerror = httpRequest.onerror;
-        xhr.onprogress = httpRequest.progress;
-        xhr.onabort = httpRequest.onabort;
-        xhr.ontimeout = httpRequest.ontimeout;
-        xhr.timeout = httpRequest.timeout;
+        xhr.onload = httpLoaderRequest.onload;
+        xhr.onloadend = httpLoaderRequest.onloadend;
+        xhr.onerror = httpLoaderRequest.onerror;
+        xhr.onprogress = httpLoaderRequest.progress;
+        xhr.onabort = httpLoaderRequest.onabort;
+        xhr.ontimeout = httpLoaderRequest.ontimeout;
+        xhr.timeout = httpLoaderRequest.timeout;
 
         xhr.send();
 
-        httpRequest.response = xhr;
+        httpLoaderRequest.response = xhr;
     }
 
     function abort(request) {
@@ -111,8 +111,8 @@ function XHRLoader(cfg) {
     }
 
     instance = {
-        load: load,
-        abort: abort
+        load,
+        abort
     };
 
     return instance;

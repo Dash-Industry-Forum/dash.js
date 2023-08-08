@@ -79,76 +79,61 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <h6>ABR - General</h6>
+                            <h6>ABR - Rules</h6>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="abr-general"
-                                       value="abrDynamic"
-                                       id="abrDynamic"
+                                <input class="form-check-input" type="checkbox" id="abr-throughput"
                                        checked>
-                                <label class="form-check-label" for="abrDynamic">
-                                    Dynamic
+                                <label class="form-check-label" for="abr-throughput">
+                                    ThroughputRule
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="abr-general" value="abrBola"
-                                       id="abrBola">
-                                <label class="form-check-label" for="abrBola">
-                                    BOLA
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" value="abrThroughput"
-                                       name="abr-general"
-                                       id="abrThroughput">
-                                <label class="form-check-label" for="abrThroughput">
-                                    Throughput
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="abr-general" value="abrL2A"
-                                       id="abrL2A">
-                                <label class="form-check-label" for="abrL2A">
-                                    L2A-LL
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="abr-general" value="abrLoLP"
-                                       id="abrLoLP">
-                                <label class="form-check-label" for="abrLoLP">
-                                    LoL+
-                                </label>
-                            </div>
-                            <h6 class="mt-4">ABR - Additional</h6>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="abr-additional-insufficient"
+                                <input class="form-check-input" type="checkbox" id="abr-bola"
                                        checked>
-                                <label class="form-check-label" for="abr-additional-insufficient">
+                                <label class="form-check-label" for="abr-bola">
+                                    BolaRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-insufficient"
+                                       checked>
+                                <label class="form-check-label" for="abr-insufficient">
                                     InsufficientBufferRule
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="abr-additional-switch"
+                                <input class="form-check-input" type="checkbox" id="abr-switch"
                                        checked>
-                                <label class="form-check-label" for="abr-additional-switch">
+                                <label class="form-check-label" for="abr-switch">
                                     SwitchHistoryRule
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="abr-additional-dropped"
+                                <input class="form-check-input" type="checkbox" id="abr-dropped"
                                        checked>
-                                <label class="form-check-label" for="abr-additional-dropped">
+                                <label class="form-check-label" for="abr-dropped">
                                     DroppedFramesRule
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="abr-additional-abandon">
-                                <label class="form-check-label" for="abr-additional-abandon">
+                                <input class="form-check-input" type="checkbox" id="abr-abandon">
+                                <label class="form-check-label" for="abr-abandon">
                                     AbandonRequestRule
                                 </label>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <h6>Catchup mechanism</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-lolp">
+                                <label class="form-check-label" for="abr-lolp">
+                                    LoLPRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-l2a">
+                                <label class="form-check-label" for="abr-l2a">
+                                    L2aRule
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Catchup mechanism</h6>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="catchup"
                                        value="liveCatchupModeDefault" id="liveCatchupModeDefault"
@@ -172,10 +157,19 @@
                                     Enabled
                                 </label>
                             </div>
-                            <h6 class="mt-4">Throughput calculation</h6>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 >Additional APIs</h6>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="throughput-calc"
-                                       value="abrFetchThroughputCalculationDownloadedData"
+                                <input class="form-check-input" type="checkbox" id="network-api">
+                                <label class="form-check-label" for="network-api">
+                                    Network Information API
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Download Time Estimation</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation"
+                                       value="lowLatencyDownloadTimeCalculationModeDownloadedData"
                                        id="abrFetchThroughputCalculationDownloadedData">
                                 <label class="form-check-label"
                                        for="abrFetchThroughputCalculationDownloadedData">
@@ -183,8 +177,8 @@
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="throughput-calc"
-                                       value="abrFetchThroughputCalculationMoofParsing"
+                                <input class="form-check-input" type="radio" name="download-estimation"
+                                       value="lowLatencyDownloadTimeCalculationModeMoofParsing"
                                        id="abrFetchThroughputCalculationMoofParsing"
                                        checked>
                                 <label class="form-check-label" for="abrFetchThroughputCalculationMoofParsing">
@@ -192,11 +186,81 @@
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="throughput-calc"
+                                <input class="form-check-input" type="radio" name="download-estimation"
                                        value="abrFetchThroughputCalculationAAST"
                                        id="abrFetchThroughputCalculationAAST">
                                 <label class="form-check-label" for="abrFetchThroughputCalculationAAST">
                                     AAST decisioning
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Throughput Estimation Mode</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeEwma"
+                                       id="throughputCalculationModeEwma" checked>
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeEwma">
+                                    Exponential Weighted Moving Average (EWMA)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeZlema"
+                                       id="throughputCalculationModeZlema"
+                                >
+                                <label class="form-check-label" for="throughputCalculationModeZlema">
+                                    Zero-Latency Exponential Moving Average (ZLEMA)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeArithmeticMean"
+                                       id="throughputCalculationModeArithmeticMean">
+                                <label class="form-check-label" for="throughputCalculationModeArithmeticMean">
+                                    Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeByteSizeWeightedArithmeticMean"
+                                       id="throughputCalculationModeByteSizeWeightedArithmeticMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeByteSizeWeightedArithmeticMean">
+                                    Byte Size Weighted Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeDateWeightedArithmeticMean"
+                                       id="throughputCalculationModeDateWeightedArithmeticMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeDateWeightedArithmeticMean">
+                                    Date Weighted Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeHarmonicMean"
+                                       id="throughputCalculationModeHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeHarmonicMean">
+                                    Harmonic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeByteSizeWeightedHarmonicMean"
+                                       id="throughputCalculationModeByteSizeWeightedHarmonicMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeByteSizeWeightedHarmonicMean">
+                                    Byte Size Weighted Harmonic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeDateWeightedHarmonicMean"
+                                       id="throughputCalculationModeDateWeightedHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeDateWeightedHarmonicMean">
+                                    Date Weighted Harmonic Mean
                                 </label>
                             </div>
                         </div>
@@ -205,7 +269,8 @@
                         <div class="col-md-4">
                             <button type="button" id="apply-settings-button" class="btn btn-success">Apply
                             </button>
-                            <button type="button" id="export-settings-button" class="btn btn-warning">Copy Settings URL
+                            <button type="button" id="export-settings-button" class="btn btn-warning">Copy Settings
+                                URL
                             </button>
                         </div>
                     </div>

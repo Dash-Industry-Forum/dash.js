@@ -35,9 +35,7 @@ import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import {
-    PlayList, PlayListTrace
-} from '../vo/metrics/PlayList';
+import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import MediaPlayerEvents from '../MediaPlayerEvents';
@@ -58,7 +56,8 @@ function StreamController() {
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
-        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache,
+        segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
+        initCache,
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
@@ -301,6 +300,7 @@ function StreamController() {
                 textController,
                 abrController,
                 playbackController,
+                throughputController,
                 eventController,
                 mediaController,
                 protectionController,
@@ -587,7 +587,6 @@ function StreamController() {
     /**
      * Handle an inner period seek. Prepare all StreamProcessors for the seek.
      * @param {object} e
-     * @param {number} oldTime
      * @private
      */
     function _handleInnerPeriodSeek(e) {
@@ -1181,9 +1180,7 @@ function StreamController() {
         const period = adapter.getRegularPeriods()[0];
         const targetString = targetValue.toString();
         const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
-        let startTime = (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
-
-        return startTime;
+        return (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
     }
 
     /**
@@ -1354,7 +1351,7 @@ function StreamController() {
     function _onPlaybackError(e) {
         if (!e.error) return;
 
-        let msg = '';
+        let msg;
 
         switch (e.error.code) {
             case 1:
@@ -1485,6 +1482,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;

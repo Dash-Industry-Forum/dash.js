@@ -31,7 +31,7 @@
                     buffer: {
                         bufferTimeAtTopQuality: 30,
                         bufferTimeAtTopQualityLongForm: 60,
-                        stableBufferTime: 12,
+                        bufferTimeDefault: 12,
                         longFormContentDurationThreshold: 600,
                     }
                 }
@@ -57,7 +57,7 @@
                     <h3>Buffer target</h3>
                     <p>Example showing how to define the buffer targets in dash.js. The following settings are used:</p>
                     <ul>
-                        <li><b>stableBufferTime:</b>The time that the internal buffer target will be set to post
+                        <li><b>bufferTimeDefault:</b>The time that the internal buffer target will be set to post
                             startup/seeks (used when not playing at the top quality. See bufferTimeAtTopQuality).
                         </li>
                         <li><b>bufferTimeAtTopQuality:</b>The time that the internal buffer target will be set to once

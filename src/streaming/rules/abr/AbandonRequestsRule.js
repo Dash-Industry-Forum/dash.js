@@ -66,84 +66,89 @@ function AbandonRequestsRule(config) {
     }
 
     function shouldAbandon(rulesContext) {
-        const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, {name: AbandonRequestsRule.__dashjs_factory_name});
+        try {
+            const switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, { name: AbandonRequestsRule.__dashjs_factory_name });
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('getCurrentRequest') ||
-            !rulesContext.hasOwnProperty('getRepresentationInfo') || !rulesContext.hasOwnProperty('getAbrController')) {
-            return switchRequest;
-        }
-
-        const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = rulesContext.getMediaType();
-        const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
-        const req = rulesContext.getCurrentRequest();
-
-        if (!isNaN(req.index)) {
-            setFragmentRequestDict(mediaType, req.index);
-
-            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            if ( bufferLevel > stableBufferTime ) {
-                return switchRequest;
+            if (!rulesContext) {
+                return switchRequest
             }
 
-            const fragmentInfo = fragmentDict[mediaType][req.index];
-            if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                return switchRequest;
-            }
+            const mediaInfo = rulesContext.getMediaInfo();
+            const mediaType = rulesContext.getMediaType();
+            const streamInfo = rulesContext.getStreamInfo();
+            const streamId = streamInfo ? streamInfo.id : null;
+            const req = rulesContext.getCurrentRequest();
 
-            //setup some init info based on first progress event
-            if (fragmentInfo.firstByteTime === undefined) {
-                throughputArray[mediaType] = [];
-                fragmentInfo.firstByteTime = req.firstByteDate.getTime();
-                fragmentInfo.segmentDuration = req.duration;
-                fragmentInfo.bytesTotal = req.bytesTotal;
-                fragmentInfo.id = req.index;
-            }
-            fragmentInfo.bytesLoaded = req.bytesLoaded;
-            fragmentInfo.elapsedTime = new Date().getTime() - fragmentInfo.firstByteTime;
+            if (!isNaN(req.index)) {
+                setFragmentRequestDict(mediaType, req.index);
 
-            if (fragmentInfo.bytesLoaded > 0 && fragmentInfo.elapsedTime > 0) {
-                storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
-            }
-
-            if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE &&
-                fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD &&
-                fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
-
-                const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
-                fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
-                fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
-
-                if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0 ) {
+                const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+                if (bufferLevel > bufferTimeDefault) {
                     return switchRequest;
-                } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
-
-                    const abrController = rulesContext.getAbrController();
-                    const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
-                    const bitrateList = abrController.getBitrateList(mediaInfo);
-                    const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor, streamId);
-                    const minQuality = abrController.getMinAllowedIndexFor(mediaType, streamId);
-                    const newQuality = (minQuality !== undefined) ? Math.max(minQuality, quality) : quality;
-                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, streamId)].bitrate;
-
-                    if (bytesRemaining > estimateOtherBytesTotal) {
-                        switchRequest.quality = newQuality;
-                        switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
-                        switchRequest.reason.fragmentID = fragmentInfo.id;
-                        switchRequest.reason.rule = this.getClassName();
-                        abandonDict[fragmentInfo.id] = fragmentInfo;
-                        logger.debug('[' + mediaType + '] frag id',fragmentInfo.id,' is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
-                        delete fragmentDict[mediaType][fragmentInfo.id];
-                    }
                 }
-            } else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
-                delete fragmentDict[mediaType][fragmentInfo.id];
-            }
-        }
 
-        return switchRequest;
+                const fragmentInfo = fragmentDict[mediaType][req.index];
+                if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
+                    return switchRequest;
+                }
+
+                //setup some init info based on first progress event
+                if (fragmentInfo.firstByteTime === undefined) {
+                    throughputArray[mediaType] = [];
+                    fragmentInfo.firstByteTime = req.firstByteDate.getTime();
+                    fragmentInfo.segmentDuration = req.duration;
+                    fragmentInfo.bytesTotal = req.bytesTotal;
+                    fragmentInfo.id = req.index;
+                }
+                fragmentInfo.bytesLoaded = req.bytesLoaded;
+                fragmentInfo.elapsedTime = new Date().getTime() - fragmentInfo.firstByteTime;
+
+                if (fragmentInfo.bytesLoaded > 0 && fragmentInfo.elapsedTime > 0) {
+                    storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
+                }
+
+                if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE &&
+                    fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD &&
+                    fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
+
+                    const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
+                    fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
+                    fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
+
+                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0) {
+                        return switchRequest;
+                    } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
+
+                        const abrController = rulesContext.getAbrController();
+                        const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
+                        const bitrateList = abrController.getBitrateList(mediaInfo);
+                        const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.throughput.bandwidthSafetyFactor, streamId);
+                        const minQuality = abrController.getMinAllowedIndexFor(mediaType, streamId);
+                        const newQuality = (minQuality !== undefined) ? Math.max(minQuality, quality) : quality;
+                        const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, streamId)].bitrate;
+
+                        if (bytesRemaining > estimateOtherBytesTotal) {
+                            switchRequest.quality = newQuality;
+                            switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
+                            switchRequest.reason.fragmentID = fragmentInfo.id;
+                            switchRequest.reason.rule = this.getClassName();
+                            switchRequest.reason.forceAbandon = true
+                            abandonDict[fragmentInfo.id] = fragmentInfo;
+                            logger.debug('[' + mediaType + '] frag id', fragmentInfo.id, ' is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
+                            delete fragmentDict[mediaType][fragmentInfo.id];
+                        }
+                    }
+                } else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
+                    delete fragmentDict[mediaType][fragmentInfo.id];
+                }
+            }
+
+            return switchRequest;
+        } catch (e) {
+            logger.error(e);
+            SwitchRequest(context).create(SwitchRequest.NO_CHANGE, { name: AbandonRequestsRule.__dashjs_factory_name });
+        }
     }
 
     function reset() {
@@ -153,8 +158,8 @@ function AbandonRequestsRule(config) {
     }
 
     instance = {
-        shouldAbandon: shouldAbandon,
-        reset: reset
+        shouldAbandon,
+        reset
     };
 
     setup();

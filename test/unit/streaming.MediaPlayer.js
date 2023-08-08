@@ -8,6 +8,7 @@ import MediaPlayer from './../../src/streaming/MediaPlayer';
 import VideoModel from './../../src/streaming/models/VideoModel';
 import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
 import Settings from '../../src/core/Settings';
@@ -38,6 +39,7 @@ describe('MediaPlayer', function () {
     const capaMock = new CapabilitiesMock();
     const streamControllerMock = new StreamControllerMock();
     const abrControllerMock = new AbrControllerMock();
+    const throughputControllerMock = new ThroughputControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const mediaPlayerModel = new MediaPlayerModelMock();
     const mediaControllerMock = new MediaControllerMock();
@@ -57,6 +59,7 @@ describe('MediaPlayer', function () {
             streamController: streamControllerMock,
             capabilities: capaMock,
             playbackController: playbackControllerMock,
+            throughputController: throughputControllerMock,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrControllerMock,
             mediaController: mediaControllerMock,
@@ -527,18 +530,8 @@ describe('MediaPlayer', function () {
             expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
         });
 
-        it('Method getAverageThroughput should return 0 when throughputHistory is not set up', function () {
-            const averageThroughput = player.getAverageThroughput(Constants.VIDEO);
-            expect(averageThroughput).to.equal(0);
-        });
-
-        it('Method getAverageThroughput should value computed from ThroughputHistory', function () {
+        it('Method getAverageThroughput should value computed from ThroughputController', function () {
             const AVERAGE_THROUGHPUT = 2000;
-            abrControllerMock.throughputHistory = {
-                getAverageThroughput: function () {
-                    return AVERAGE_THROUGHPUT;
-                }
-            };
             const averageThroughput = player.getAverageThroughput(Constants.VIDEO);
             expect(averageThroughput).to.equal(AVERAGE_THROUGHPUT);
         });
@@ -653,17 +646,6 @@ describe('MediaPlayer', function () {
             expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
         });
 
-        it('should configure useDefaultABRRules', function () {
-            let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.true; // jshint ignore:line
-
-            player.updateSettings({ 'streaming': { 'abr': { 'useDefaultABRRules': false } } });
-
-
-            useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.false; // jshint ignore:line
-        });
-
         it('Method addABRCustomRule should throw an exception', function () {
             expect(player.addABRCustomRule.bind(player, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(player.addABRCustomRule.bind(player, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
@@ -752,9 +734,9 @@ describe('MediaPlayer', function () {
             expect(BufferPruningInterval).to.equal(50);
         });
 
-        it('should configure StableBufferTime', function () {
-            let StableBufferTime = player.getSettings().streaming.buffer.stableBufferTime;
-            expect(StableBufferTime).to.equal(12);
+        it('should configure bufferTimeDefault', function () {
+            let bufferTimeDefault = player.getSettings().streaming.buffer.bufferTimeDefault;
+            expect(bufferTimeDefault).to.equal(12);
         });
 
         it('should configure BufferTimeAtTopQuality', function () {
@@ -842,18 +824,18 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure BandwidthSafetyFactor', function () {
-            let bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            let bandwidthSafetyFactor = player.getSettings().streaming.abr.throughput.bandwidthSafetyFactor;
             expect(bandwidthSafetyFactor).to.equal(0.9);
 
             player.updateSettings({
                 'streaming': {
                     'abr': {
-                        'bandwidthSafetyFactor': 0.1
+                        'throughput': { 'bandwidthSafetyFactor': 0.1 }
                     }
                 }
             });
 
-            bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            bandwidthSafetyFactor = player.getSettings().streaming.abr.throughput.bandwidthSafetyFactor;
             expect(bandwidthSafetyFactor).to.equal(0.1);
         });
 

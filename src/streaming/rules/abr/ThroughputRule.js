@@ -30,8 +30,8 @@
  */
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
-import Constants from '../../constants/Constants';
 import MetricsConstants from '../../constants/MetricsConstants';
+import Debug from '../../../core/Debug';
 
 function ThroughputRule(config) {
 
@@ -39,53 +39,45 @@ function ThroughputRule(config) {
     const context = this.context;
     const dashMetrics = config.dashMetrics;
 
-    let instance;
+    let instance,
+        logger;
 
     function setup() {
-    }
-
-    function checkConfig() {
-        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
+        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function getMaxIndex(rulesContext) {
-        const switchRequest = SwitchRequest(context).create();
+        try {
+            const switchRequest = SwitchRequest(context).create();
+            const mediaInfo = rulesContext.getMediaInfo();
+            const mediaType = rulesContext.getMediaType();
+            const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
+            const scheduleController = rulesContext.getScheduleController();
+            const abrController = rulesContext.getAbrController();
+            const streamInfo = rulesContext.getStreamInfo();
+            const streamId = streamInfo ? streamInfo.id : null;
+            const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+            const throughputController = rulesContext.getThroughputController();
+            const throughput = throughputController.getSafeAverageThroughput(mediaType);
+            const latency = throughputController.getAverageLatency(mediaType);
 
-        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') || !rulesContext.hasOwnProperty('useBufferOccupancyABR') ||
-            !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('getScheduleController')) {
-            return switchRequest;
-        }
-
-        checkConfig();
-
-        const mediaInfo = rulesContext.getMediaInfo();
-        const mediaType = rulesContext.getMediaType();
-        const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
-        const scheduleController = rulesContext.getScheduleController();
-        const abrController = rulesContext.getAbrController();
-        const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
-        const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
-        const throughputHistory = abrController.getThroughputHistory();
-        const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
-        const latency = throughputHistory.getAverageLatency(mediaType);
-        const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
-
-        if (isNaN(throughput) || !currentBufferState || useBufferOccupancyABR) {
-            return switchRequest;
-        }
-
-        if (abrController.getAbandonmentStateFor(streamId, mediaType) !== MetricsConstants.ABANDON_LOAD) {
-            if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
-                scheduleController.setTimeToLoadDelay(0);
-                switchRequest.reason = {throughput: throughput, latency: latency};
+            if (isNaN(throughput) || !currentBufferState) {
+                return switchRequest;
             }
-        }
 
-        return switchRequest;
+            if (abrController.getAbandonmentStateFor(streamId, mediaType) === MetricsConstants.ALLOW_LOAD) {
+                if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
+                    switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
+                    scheduleController.setTimeToLoadDelay(0);
+                    switchRequest.reason = { throughput: throughput, latency: latency };
+                }
+            }
+
+            return switchRequest;
+        } catch (e) {
+            logger.error(e);
+            return SwitchRequest(context).create();
+        }
     }
 
     function reset() {

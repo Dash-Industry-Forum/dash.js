@@ -23,11 +23,9 @@ describe('RulesContext', function () {
             currentValue: 0,
             switchHistory: null,
             droppedFramesHistory: null,
-            useBufferOccupancyABR: true
         });
 
         expect(rulesContext.getMediaType()).to.equal('video');
         expect(rulesContext.getStreamInfo().id).to.equal('id');
-        expect(rulesContext.useBufferOccupancyABR()).to.be.true; // jshint ignore:line
     });
 });

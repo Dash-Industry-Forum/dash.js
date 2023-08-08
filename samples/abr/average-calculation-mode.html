@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Configuration of ABR Rules</title>
+    <title>Average Throughput Calculation Mode</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -29,14 +29,13 @@
             player.updateSettings({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: false,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: false
-                        }
+                        throughput: {
+                            averageCalculationMode: dashjs.Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN,
+                            sampleSettings: {
+                                vod: 5,
+                                enableSampleSizeAdjustment: false
+                            }
+                        },
                     }
                 }
             });
@@ -58,15 +57,16 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Configuration of ABR Rules</h3>
-                    <p>Example showing how to define the target ABR rules in dash.js. In this demo we enable the
-                        throughput based ABR decision logic. In addition, the InsufficientBufferRule is enabled.
+                    <h3>Configuration of the average throughput calculation modes</h3>
+                    <p>dash.js provides multiple options to configure the calculation of the current average throughput.
+                        This
+                        calculation is an important input for most of the ABR rules. In this example we change the
+                        default mode to byte size weighted harmonic mean. In addition, we change the number of samples
+                        to
+                        be used to five and disable the automatic adjustment of the sample size.
                     </p>
-                    <p><b>Note:</b> If both the BOLA and the ThroughputRule are enabled we automatically switch to a
-                        <i>dynamic mode</i>. In this case we start with the ThroughputRule at the beginning and switch to BOLA
-                        rule once we reached our buffer target. If we fall below a certain buffer level we switch back
-                        to the ThroughputRule. The reason for that is that buffer based rules do not perform well for
-                        low buffer levels.</p>
+                    <p>For a complete list of options and an explanation on the different calculation modes check our
+                        documentation.</p>
                 </div>
             </div>
             <div class="col-md-8">

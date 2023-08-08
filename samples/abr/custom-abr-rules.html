@@ -30,9 +30,14 @@
 
             /* don't use dash.js default rules */
             player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'useDefaultABRRules': false
+                abr: {
+                    activeRules: {
+                        throughputRule: false,
+                        bolaRule: false,
+                        insufficientBufferRule: false,
+                        switchHistoryRule: false,
+                        droppedFramesRule: false,
+                        abandonRequestsRule: false
                     }
                 }
             });

@@ -30,18 +30,19 @@
  */
 
 import { MediaPlayer } from './index_mediaplayerOnly';
-
-import { supportsMediaSource } from './src/streaming/utils/Capabilities';
 import MetricsReporting from './src/streaming/metrics/MetricsReporting';
 import Protection from './src/streaming/protection/Protection';
 import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
 import Debug from './src/core/Debug';
+import Constants from './src/streaming/constants/Constants';
+import { supportsMediaSource } from './src/streaming/utils/Capabilities';
 
 dashjs.Protection = Protection;
 dashjs.MetricsReporting = MetricsReporting;
 dashjs.MediaPlayerFactory = MediaPlayerFactory;
 dashjs.Debug = Debug;
 dashjs.supportsMediaSource = supportsMediaSource;
+dashjs.Constants = Constants;
 
 export default dashjs;
-export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug, supportsMediaSource };
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug, supportsMediaSource, Constants };

@@ -151,7 +151,7 @@ describe('ScheduleController', function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
-                expect(result).to.be.equal(mediaPlayerModel.getStableBufferTime());
+                expect(result).to.be.equal(mediaPlayerModel.getBufferTimeDefault());
             });
 
             it('should return bufferTimeAtTopQuality if current representation is video and playing on highest quality', () => {

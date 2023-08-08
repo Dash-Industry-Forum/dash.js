@@ -122,8 +122,8 @@ function ManifestLoader(config) {
             request.queryParams = queryParams;
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartDate;
+        if (!request.startDate) {
+            request.startDate = requestStartDate;
         }
 
         eventBus.trigger(

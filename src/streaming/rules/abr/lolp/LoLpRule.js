@@ -77,11 +77,10 @@ function LoLPRule(config) {
             const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
             const scheduleController = rulesContext.getScheduleController();
             const currentBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
-            const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
             const playbackController = scheduleController.getPlaybackController();
             let latency = playbackController.getCurrentLiveLatency();
 
-            if (!rulesContext.useLoLPABR() || (mediaType === Constants.AUDIO)) {
+            if ((mediaType === Constants.AUDIO)) {
                 return switchRequest;
             }
 
@@ -90,8 +89,8 @@ function LoLPRule(config) {
             }
 
             const playbackRate = playbackController.getPlaybackRate();
-            const throughputHistory = abrController.getThroughputHistory();
-            const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
+            const throughputController = rulesContext.getThroughputController();
+            const throughput = throughputController.getSafeAverageThroughput(mediaType);
             logger.debug(`Throughput ${Math.round(throughput)} kbps`);
 
             if (isNaN(throughput) || !bufferStateVO) {

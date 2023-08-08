@@ -68,6 +68,7 @@ function CmcdModel() {
         abrController,
         dashMetrics,
         playbackController,
+        throughputController,
         streamProcessors,
         _isStartup,
         _bufferLevelStarved,
@@ -100,6 +101,10 @@ function CmcdModel() {
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
+        }
+
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
 
         if (config.playbackController) {
@@ -439,7 +444,7 @@ function CmcdModel() {
 
     function _getMeasuredThroughputByType(mediaType) {
         try {
-            return parseInt(abrController.getThroughputHistory().getSafeAverageThroughput(mediaType) / 100) * 100;
+            return parseInt(throughputController.getSafeAverageThroughput(mediaType) / 100) * 100;
         } catch (e) {
             return null;
         }

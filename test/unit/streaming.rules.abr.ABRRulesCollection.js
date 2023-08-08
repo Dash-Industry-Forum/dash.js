@@ -14,19 +14,29 @@ let abrRulesCollection;
 
 describe('ABRRulesCollection', function () {
 
+    let settings = Settings(context).getInstance();
+    let customParametersModel = CustomParametersModel(context).getInstance();
+
+    beforeEach(() => {
+        settings.reset();
+    });
+
+
     describe('should initialize correctly', function () {
-        let settings = Settings(context).getInstance();
-        let customParametersModel = CustomParametersModel(context).getInstance();
-
-        beforeEach(() => {
-            settings.reset();
-        });
-
-        it('should only contain L2A rule if ABR strategy is set to ABR_STRATEGY_L2A', function () {
+        it('should contain all quality switch rules that are enabled', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        ABRStrategy: Constants.ABR_STRATEGY_L2A
+                        activeRules: {
+                            throughputRule: true,
+                            bolaRule: true,
+                            insufficientBufferRule: true,
+                            switchHistoryRule: true,
+                            droppedFramesRule: true,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
                     }
                 }
             });
@@ -38,12 +48,75 @@ describe('ABRRulesCollection', function () {
                 customParametersModel
             });
             abrRulesCollection.initialize();
+
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules).to.have.lengthOf(1);
+            expect(qualitySwitchRules).to.have.lengthOf(5);
+
+            const expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE,
+                Constants.QUALITY_SWITCH_RULES.INSUFFICIENT_BUFFER_RULE,
+                Constants.QUALITY_SWITCH_RULES.SWITCH_HISTORY_RULE,
+                Constants.QUALITY_SWITCH_RULES.DROPPED_FRAMES_RULE]
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+        });
+
+        it('should contain all abandon fragment rules that are enabled', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: true,
+                            bolaRule: true,
+                            insufficientBufferRule: true,
+                            switchHistoryRule: true,
+                            droppedFramesRule: true,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings: Settings(context).getInstance(),
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            const abandonFragmentRules = abrRulesCollection.getAbandonFragmentRules();
+            expect(abandonFragmentRules).to.have.lengthOf(1);
+
+            const expectedRules = [
+                Constants.ABANDON_FRAGMENT_RULES.ABANDON_REQUEST_RULE]
+            abandonFragmentRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
 
         });
 
-        it('should contain multiple rules if ABR strategy is set to ABR_STRATEGY_DYNAMIC', function () {
+        it('should contain BOLA and Throughput rule if no rules are selected', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: false,
+                            bolaRule: false,
+                            insufficientBufferRule: false,
+                            switchHistoryRule: false,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
             abrRulesCollection = ABRRulesCollection(context).create({
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
@@ -52,11 +125,143 @@ describe('ABRRulesCollection', function () {
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules.length).to.be.above(1);
+            const expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE]
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
 
         });
 
     });
+
+    describe('should update the rules ones settings object is changed', function () {
+
+        it('should update quality switch rules once settings object is changed', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: false,
+                            bolaRule: false,
+                            insufficientBufferRule: true,
+                            switchHistoryRule: true,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings,
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            let qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
+            let expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.INSUFFICIENT_BUFFER_RULE,
+                Constants.QUALITY_SWITCH_RULES.SWITCH_HISTORY_RULE]
+
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: true,
+                            bolaRule: true,
+                            insufficientBufferRule: false,
+                            switchHistoryRule: false,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
+
+            qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
+            expect(qualitySwitchRules).to.have.lengthOf(2);
+            expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE]
+
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+
+        });
+
+        it('should update abandon fragment rules once settings object is changed', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: false,
+                            bolaRule: false,
+                            insufficientBufferRule: true,
+                            switchHistoryRule: true,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: false,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings,
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            let rules = abrRulesCollection.getAbandonFragmentRules();
+            expect(rules).to.have.lengthOf(0);
+
+            settings.update({
+                streaming: {
+                    abr: {
+                        activeRules: {
+                            throughputRule: true,
+                            bolaRule: true,
+                            insufficientBufferRule: false,
+                            switchHistoryRule: false,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: true,
+                            l2ARule: false,
+                            loLPRule: false
+                        }
+                    }
+                }
+            });
+
+            rules = abrRulesCollection.getAbandonFragmentRules();
+            expect(rules).to.have.lengthOf(1);
+            const expectedRules = [
+                Constants.ABANDON_FRAGMENT_RULES.ABANDON_REQUEST_RULE]
+
+            rules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+
+        });
+    })
+
 
     describe('should return correct switch requests', function () {
         let customParametersModel = CustomParametersModel(context).getInstance();
@@ -215,4 +420,6 @@ describe('ABRRulesCollection', function () {
         });
 
     });
+
+
 });

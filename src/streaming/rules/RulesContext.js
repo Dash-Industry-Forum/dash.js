@@ -36,12 +36,10 @@ function RulesContext(config) {
     config = config || {};
     let instance;
     const abrController = config.abrController;
+    const throughputController = config.throughputController;
     const switchHistory = config.switchHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
-    const bufferOccupancyABR = config.useBufferOccupancyABR;
-    const l2AABR = config.useL2AABR;
-    const loLP = config.useLoLPABR;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
     const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
     const videoModel = config.videoModel ? config.videoModel : null;
@@ -72,6 +70,10 @@ function RulesContext(config) {
         return abrController;
     }
 
+    function getThroughputController() {
+        return throughputController;
+    }
+
     function getSwitchHistory() {
         return switchHistory;
     }
@@ -88,17 +90,6 @@ function RulesContext(config) {
         return currentRequest;
     }
 
-    function useBufferOccupancyABR() {
-        return bufferOccupancyABR;
-    }
-    function useL2AABR() {
-        return l2AABR;
-    }
-
-    function useLoLPABR() {
-        return loLP;
-    }
-
     instance = {
         getMediaType,
         getMediaInfo,
@@ -107,11 +98,9 @@ function RulesContext(config) {
         getSwitchHistory,
         getStreamInfo,
         getScheduleController,
+        getThroughputController,
         getAbrController,
         getRepresentationInfo,
-        useBufferOccupancyABR,
-        useL2AABR,
-        useLoLPABR,
         getVideoModel
     };
 

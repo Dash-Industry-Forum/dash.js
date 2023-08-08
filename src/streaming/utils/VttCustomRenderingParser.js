@@ -44,8 +44,7 @@ function VttCustomRenderingParser() {
                     window.WebVTT.StringDecoder()
                 );
             }
-        }
-        catch(e) {
+        } catch (e) {
 
         }
     }

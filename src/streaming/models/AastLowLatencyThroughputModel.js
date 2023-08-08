@@ -31,7 +31,7 @@
 import Debug from '../../core/Debug';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function LowLatencyThroughputModel() {
+function AastLowLatencyThroughputModel() {
 
     const LLTM_MAX_MEASUREMENTS = 10;
     // factor (<1) is used to reduce the real needed download time when at very bleeding live edge
@@ -252,10 +252,10 @@ function LowLatencyThroughputModel() {
     }
 
     instance = {
-        setup,
         addMeasurement,
+        getEstimatedDownloadDurationMS,
         getThroughputCapacityDelayMS,
-        getEstimatedDownloadDurationMS
+        setup,
     };
 
     setup()
@@ -263,5 +263,5 @@ function LowLatencyThroughputModel() {
     return instance;
 }
 
-LowLatencyThroughputModel.__dashjs_factory_name = 'LowLatencyThroughputModel';
-export default FactoryMaker.getSingletonFactory(LowLatencyThroughputModel);
+AastLowLatencyThroughputModel.__dashjs_factory_name = 'AastLowLatencyThroughputModel';
+export default FactoryMaker.getSingletonFactory(AastLowLatencyThroughputModel);

@@ -619,7 +619,6 @@ function TextTracks(config) {
             const targetTrack = activeTracks[0];
             const cues = targetTrack.manualCueList;
 
-
             if (cues && cues.length > 0) {
                 cues.forEach((cue) => {
                     // Render cue if target time is reached and not in active state
