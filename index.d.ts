@@ -100,6 +100,39 @@ declare namespace dashjs {
         initialize(): void
     }
 
+    export interface ThroughputController {
+
+        initialize(): void;
+
+        setConfig(config: object): void;
+
+        getArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getByteSizeWeightedArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getDateWeightedArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getByteSizeWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getDateWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
+        
+        getEwma(dict: ThroughputEwmaDictEntry[], halfLife: object, useMin: boolean): number
+
+        getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
+        
+        getAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+
+        getSafeAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+
+        getAverageLatency(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+
+        getRawThroughputData(mediaType: MediaType): number
+
+        reset(): void;
+    }
+
     export interface RepresentationController {
         getStreamId(): string;
 
@@ -403,6 +436,28 @@ declare namespace dashjs {
         period: Period | null;
         index: number;
         type: string | null;
+    }
+
+    export interface ThroughputDictEntry {
+
+        downloadTimeInMs: number;
+
+        downloadedBytes: number;
+
+        latencyInMs: number;
+
+        serviceLocation: string;
+
+        value: number;
+    }
+
+    export interface ThroughputEwmaDictEntry {
+
+        fastEstimate: number;
+
+        slowEstimate: number;
+
+        totalWeight: number;
     }
 
     export interface BaseURL {
@@ -2050,8 +2105,6 @@ declare namespace dashjs {
         getQualityForBitrate(mediaInfo: MediaInfo, bitrate: number, streamId: string, latency?: number | null): number;
 
         getBitrateList(mediaInfo: MediaInfo): BitrateInfo[] | null;
-
-        getThroughputHistory(): any;
 
         updateTopQualityIndex(mediaInfo: MediaInfo): number;
 
