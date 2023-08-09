@@ -85,8 +85,8 @@ function InsufficientBufferRule(config) {
 
         const mediaType = rulesContext.getMediaType();
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
-        const representationInfo = rulesContext.getRepresentationInfo();
-        const fragmentDuration = representationInfo.fragmentDuration;
+        const voRepresentation = rulesContext.getVoRepresentation();
+        const fragmentDuration = voRepresentation.fragmentDuration;
         const streamInfo = rulesContext.getStreamInfo();
         const streamId = streamInfo ? streamInfo.id : null;
         const scheduleController = rulesContext.getScheduleController();

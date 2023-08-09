@@ -174,6 +174,7 @@ function ThumbnailTracks(config) {
         let cache = [];
         const segments = _normalizeSegments(data, representation);
         representation.segments = segments;
+        representation.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
 
         track.readThumbnail = function (time, callback) {

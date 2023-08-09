@@ -294,19 +294,13 @@ function MetricsModel(config) {
         metricAdded(mediaType, MetricsConstants.REQUESTS_QUEUE, vo);
     }
 
-    function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
+    function addManifestUpdate(mediaType, type, requestTime, fetchTime) {
         let vo = new ManifestUpdate();
 
         vo.mediaType = mediaType;
         vo.type = type;
         vo.requestTime = requestTime; // when this manifest update was requested
         vo.fetchTime = fetchTime; // when this manifest update was received
-        vo.availabilityStartTime = availabilityStartTime;
-        vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
-        vo.clientTimeOffset = clientTimeOffset; // the calculated difference between the server and client wall clock time
-        vo.currentTime = currentTime; // actual element.currentTime
-        vo.buffered = buffered; // actual element.ranges
-        vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
         pushMetrics(Constants.STREAM, MetricsConstants.MANIFEST_UPDATE, vo);
         metricAdded(mediaType, MetricsConstants.MANIFEST_UPDATE, vo);
@@ -336,17 +330,15 @@ function MetricsModel(config) {
         }
     }
 
-    function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
+    function addManifestUpdateRepresentationInfo(manifestUpdate, representation, mediaType) {
         if (manifestUpdate && manifestUpdate.representationInfo) {
 
             const vo = new ManifestUpdateRepresentationInfo();
-            vo.id = id;
-            vo.index = index;
-            vo.streamIndex = streamIndex;
+            vo.id = representation ? representation.id : null;
+            vo.index = representation ? representation.index : null;
             vo.mediaType = mediaType;
-            vo.startNumber = startNumber;
-            vo.fragmentInfoType = fragmentInfoType;
-            vo.presentationTimeOffset = presentationTimeOffset;
+            vo.startNumber = representation ? representation.startNumber : null;
+            vo.presentationTimeOffset = representation ? representation.presentationTimeOffset : null;
 
             manifestUpdate.representationInfo.push(vo);
             metricUpdated(manifestUpdate.mediaType, MetricsConstants.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);

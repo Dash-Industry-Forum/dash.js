@@ -36,6 +36,7 @@
 import DashConstants from '../constants/DashConstants';
 
 class Representation {
+
     constructor() {
         this.adaptation = null;
         this.availabilityTimeComplete = true;
@@ -43,6 +44,7 @@ class Representation {
         this.bandwidth = NaN;
         this.codecPrivateData = null;
         this.codecs = null;
+        this.fragmentDuration = null;
         this.frameRate = null;
         this.height = NaN;
         this.id = null;
@@ -51,11 +53,13 @@ class Representation {
         this.initialization = null;
         this.maxPlayoutRate = NaN;
         this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
+        this.mediaInfo = null;
         this.mimeType = null;
         this.mseTimeOffset = NaN;
         this.presentationTimeOffset = 0;
         this.range = null;
         this.scanType = null;
+        this.segments = null;
         this.segmentDuration = NaN;
         this.segmentInfoType = null;
         this.startNumber = 1;

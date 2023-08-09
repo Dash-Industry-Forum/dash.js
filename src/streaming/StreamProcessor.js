@@ -92,7 +92,7 @@ function StreamProcessor(config) {
         dashHandler,
         segmentsController,
         bufferingTime,
-        pendingSwitchToRepresentationInfo;
+        pendingSwitchToVoRepresentation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -218,7 +218,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
-        pendingSwitchToRepresentationInfo = null;
+        pendingSwitchToVoRepresentation = null;
     }
 
     function reset(errored, keepBuffers) {
@@ -324,12 +324,12 @@ function StreamProcessor(config) {
 
                         const promises = [];
 
-                        // append window has been reset by abort() operation. Set the correct values again
+                        // Append window has been reset by abort() operation. Set the correct values again
                         promises.push(bufferController.updateAppendWindow());
 
-                        // Timestamp offset couldve been changed by preloading period
-                        const representationInfo = getRepresentationInfo();
-                        promises.push(bufferController.updateBufferTimestampOffset(representationInfo));
+                        // Timestamp offset could've been changed by preloading period
+                        const voRepresentation = getVoRepresentation();
+                        promises.push(bufferController.updateBufferTimestampOffset(voRepresentation));
 
                         Promise.all(promises)
                             .then(() => {
@@ -539,7 +539,6 @@ function StreamProcessor(config) {
      * @private
      */
     function _getFragmentRequest() {
-        const representationInfo = getRepresentationInfo();
         let request;
 
         if (isNaN(bufferingTime) || (getType() === Constants.TEXT && !textController.isTextEnabled())) {
@@ -547,7 +546,7 @@ function StreamProcessor(config) {
         }
 
         if (dashHandler) {
-            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+            const representation = getVoRepresentation();
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
@@ -632,8 +631,8 @@ function StreamProcessor(config) {
             logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
         }
 
-        if (pendingSwitchToRepresentationInfo) {
-            _prepareForDefaultQualitySwitch(pendingSwitchToRepresentationInfo)
+        if (pendingSwitchToVoRepresentation) {
+            _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation)
         } else {
             scheduleController.startScheduleTimer(0);
         }
@@ -645,8 +644,8 @@ function StreamProcessor(config) {
      * @param {object} e
      */
     function prepareQualityChange(e) {
-        if (pendingSwitchToRepresentationInfo) {
-            logger.warning(`Canceling queued representation switch to ${pendingSwitchToRepresentationInfo.quality} for ${type}`);
+        if (pendingSwitchToVoRepresentation) {
+            logger.warning(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.index} for ${type}`);
         }
         logger.debug(`Preparing quality switch for type ${type}`);
         const newQuality = e.newQuality;
@@ -658,28 +657,28 @@ function StreamProcessor(config) {
 
         representationController.prepareQualityChange(newQuality);
 
-        const representationInfo = getRepresentationInfo(newQuality);
+        const voRepresentation = getVoRepresentation(newQuality);
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
-            _prepareForForceReplacementQualitySwitch(representationInfo);
+            _prepareForForceReplacementQualitySwitch(voRepresentation);
         }
 
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
-            _prepareForFastQualitySwitch(representationInfo, e);
+            _prepareForFastQualitySwitch(voRepresentation, e);
         }
 
         // Default quality switch. We append the new quality to the already buffered stuff
         else {
-            _prepareForDefaultQualitySwitch(representationInfo, e);
+            _prepareForDefaultQualitySwitch(voRepresentation, e);
         }
 
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
-        dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
+        dashMetrics.createPlaylistTraceMetrics(voRepresentation.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
 
     }
 
-    function _prepareForForceReplacementQualitySwitch(representationInfo) {
+    function _prepareForForceReplacementQualitySwitch(voRepresentation) {
 
         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -693,7 +692,7 @@ function StreamProcessor(config) {
         }, { mediaType: type, streamId: streamInfo.id });
 
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-        bufferController.prepareForForceReplacementQualitySwitch(representationInfo)
+        bufferController.prepareForForceReplacementQualitySwitch(voRepresentation)
             .then(() => {
                 _bufferClearedForReplacement();
                 qualityChangeInProgress = false;
@@ -704,10 +703,10 @@ function StreamProcessor(config) {
             });
     }
 
-    function _prepareForFastQualitySwitch(representationInfo, e) {
+    function _prepareForFastQualitySwitch(voRepresentation, e) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
+        let safeBufferLevel = 1.5 * (!isNaN(voRepresentation.fragmentDuration) ? voRepresentation.fragmentDuration : 1);
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
@@ -719,8 +718,8 @@ function StreamProcessor(config) {
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
             // The new quality is higher than the one we originally requested
-            if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
-                bufferController.updateBufferTimestampOffset(representationInfo)
+            if (request.quality < voRepresentation.index && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
+                bufferController.updateBufferTimestampOffset(voRepresentation)
                     .then(() => {
                         // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
                         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -739,7 +738,7 @@ function StreamProcessor(config) {
 
             // If we have buffered a higher quality we do not replace anything. We might cancel the current request due to abandon request rule
             else {
-                _prepareForDefaultQualitySwitch(representationInfo, e);
+                _prepareForDefaultQualitySwitch(voRepresentation, e);
             }
         } else {
             scheduleController.startScheduleTimer();
@@ -747,11 +746,11 @@ function StreamProcessor(config) {
         }
     }
 
-    function _prepareForDefaultQualitySwitch(representationInfo, e) {
+    function _prepareForDefaultQualitySwitch(voRepresentation, e) {
 
         // Check if we need to abandon the request caused by the AbandonRequestRule
         if (e && e.reason && e.reason.forceAbandon) {
-            _handleAbandonQualitySwitch()
+            _handleAbandonQualitySwitch(voRepresentation)
             return;
         }
 
@@ -760,29 +759,29 @@ function StreamProcessor(config) {
             const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
             if (ongoingRequests && ongoingRequests.length > 0) {
                 logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
-                pendingSwitchToRepresentationInfo = representationInfo;
+                pendingSwitchToVoRepresentation = voRepresentation;
                 return;
             }
         }
 
-        bufferController.updateBufferTimestampOffset(representationInfo)
+        bufferController.updateBufferTimestampOffset(voRepresentation)
             .then(() => {
                 if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
                     scheduleController.startScheduleTimer();
                 } else {
                     _bufferClearedForNonReplacement()
                 }
-                pendingSwitchToRepresentationInfo = null;
+                pendingSwitchToVoRepresentation = null;
                 qualityChangeInProgress = false;
             })
             .catch(() => {
-                pendingSwitchToRepresentationInfo = null;
+                pendingSwitchToVoRepresentation = null;
                 qualityChangeInProgress = false;
             })
     }
 
-    function _handleAbandonQualitySwitch(representationInfo) {
-        bufferController.updateBufferTimestampOffset(representationInfo)
+    function _handleAbandonQualitySwitch(voRepresentation) {
+        bufferController.updateBufferTimestampOffset(voRepresentation)
             .then(() => {
                 // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
                 // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -1013,19 +1012,20 @@ function StreamProcessor(config) {
     /**
      * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
      * Otherwise, this function will return the current voRepresentation used by the representationController.
-     * @param {number} quality - quality index of the voRepresentaion expected.
+     * @param {number} quality - quality index of the voRepresentation expected.
+     * @return {object} voRepresentation
      */
-    function getRepresentationInfo(quality) {
+    function getVoRepresentation(quality = NaN) {
         let voRepresentation;
 
-        if (quality !== undefined) {
+        if (!isNaN(quality)) {
             checkInteger(quality);
             voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
         } else {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
 
-        return adapter.convertRepresentationToRepresentationInfo(voRepresentation);
+        return voRepresentation
     }
 
     function isBufferingCompleted() {
@@ -1041,10 +1041,10 @@ function StreamProcessor(config) {
      * @return {FragmentRequest|null}
      */
     function probeNextRequest() {
-        const representationInfo = getRepresentationInfo();
+        const voRepresentation = getVoRepresentation();
 
-        const representation = representationController && representationInfo ?
-            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+        const representation = representationController && voRepresentation ?
+            representationController.getRepresentationForQuality(voRepresentation.index) : null;
 
         return dashHandler.getNextSegmentRequestIdempotent(
             mediaInfo,
@@ -1059,10 +1059,9 @@ function StreamProcessor(config) {
         const chunk = e.chunk;
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
-        if (currentRepresentation && voRepresentation) {
-            voRepresentation.timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+        const currentRepresentation = getVoRepresentation(quality);
+        if (currentRepresentation) {
+            currentRepresentation.timescale = boxParser.getMediaTimescaleFromMoov(bytes);
         }
     }
 
@@ -1071,19 +1070,17 @@ function StreamProcessor(config) {
 
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = getRepresentationInfo(quality);
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
-
+        const currentRepresentation = getVoRepresentation(quality);
         // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
         // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
-        if (currentRepresentation && voRepresentation) {
+        if (currentRepresentation) {
 
             let isoFile;
 
             // Check for inband prft on media segment (if enabled)
             if (settings.get().streaming.parseInbandPrft && e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                 isoFile = isoFile ? isoFile : boxParser.parse(bytes);
-                const timescale = voRepresentation.timescale;
+                const timescale = currentRepresentation.timescale;
                 const prfts = _handleInbandPrfts(isoFile, timescale);
                 if (prfts && prfts.length) {
                     eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
@@ -1094,7 +1091,7 @@ function StreamProcessor(config) {
             }
 
             const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, null, streamInfo);
-            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation, streamInfo);
+            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, currentRepresentation, streamInfo);
 
             if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
                 const request = fragmentModel.getRequests({
@@ -1238,8 +1235,8 @@ function StreamProcessor(config) {
                 bufferController.prepareForReplacementTrackSwitch(mediaInfo.codec)
                     .then(() => {
                         // Timestamp offset couldve been changed by preloading period
-                        const representationInfo = getRepresentationInfo();
-                        return bufferController.updateBufferTimestampOffset(representationInfo);
+                        const voRepresentation = getVoRepresentation();
+                        return bufferController.updateBufferTimestampOffset(voRepresentation);
                     })
                     .then(() => {
                         _bufferClearedForReplacement();
@@ -1319,7 +1316,6 @@ function StreamProcessor(config) {
                 errHandler,
                 mediaController,
                 representationController,
-                adapter,
                 textController,
                 abrController,
                 playbackController,
@@ -1359,7 +1355,7 @@ function StreamProcessor(config) {
         getMediaInfo,
         getMediaSource,
         getRepresentationController,
-        getRepresentationInfo,
+        getVoRepresentation,
         getScheduleController,
         getStreamId,
         getStreamInfo,

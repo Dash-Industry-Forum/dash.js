@@ -52,7 +52,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getVoRepresentation: function () {
                 return { fragmentDuration: 4 };
             },
             getScheduleController: function () {
@@ -94,7 +94,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getVoRepresentation: function () {
                 return { fragmentDuration: 4 };
             },
             getScheduleController: function () {
@@ -136,7 +136,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getVoRepresentation: function () {
                 return { fragmentDuration: NaN };
             },
             getScheduleController: function () {
@@ -164,7 +164,7 @@ describe('InsufficientBufferRule', function () {
         let bufferState = {
             state: 'bufferLoaded'
         };
-        let representationInfo = { fragmentDuration: NaN };
+        let voRepresentation = { fragmentDuration: NaN };
         const dashMetricsMock = new DashMetricsMock();
         const rulesContextMock = {
             getMediaInfo: function () {
@@ -179,8 +179,8 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
-                return representationInfo;
+            getVoRepresentation: function () {
+                return voRepresentation;
             },
             getScheduleController: function () {
                 return {
@@ -210,7 +210,7 @@ describe('InsufficientBufferRule', function () {
 
         bufferState.state = 'bufferStalled';
         dashMetricsMock.addBufferState('video', bufferState);
-        representationInfo.fragmentDuration = 4;
+        voRepresentation.fragmentDuration = 4;
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(0);
     });
@@ -219,7 +219,7 @@ describe('InsufficientBufferRule', function () {
         const bufferState = {
             state: 'bufferStalled'
         };
-        const representationInfo = { fragmentDuration: 4 };
+        const voRepresentation = { fragmentDuration: 4 };
         const dashMetricsMock = new DashMetricsMock();
         dashMetricsMock.addBufferState('video', bufferState);
 
@@ -231,8 +231,8 @@ describe('InsufficientBufferRule', function () {
             },
             getAbrController: function () {
             },
-            getRepresentationInfo: function () {
-                return representationInfo;
+            getVoRepresentation: function () {
+                return voRepresentation;
             },
             getStreamInfo: function () {
                 return {

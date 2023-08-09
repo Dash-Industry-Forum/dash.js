@@ -7,9 +7,6 @@ function RepresentationControllerMock () {
 
     this.updateRepresentation = function () {};
 
-    this.getCurrentRepresentationInfo = function () {
-        return {}
-    }
 }
 
 export default RepresentationControllerMock;

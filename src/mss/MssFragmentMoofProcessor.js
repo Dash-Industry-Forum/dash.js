@@ -342,9 +342,9 @@ function MssFragmentMoofProcessor(config) {
     }
 
     instance = {
-        convertFragment: convertFragment,
-        updateSegmentList: updateSegmentList,
-        getType: getType
+        convertFragment,
+        updateSegmentList,
+        getType
     };
 
     setup();

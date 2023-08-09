@@ -536,7 +536,7 @@ function DashManifestModel() {
         }
     }
 
-    function getRepresentationsForAdaptation(voAdaptation) {
+    function getRepresentationsForAdaptation(voAdaptation, mediaInfo) {
         const voRepresentations = [];
         const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
         let segmentInfo,
@@ -558,6 +558,7 @@ function DashManifestModel() {
                 const voRepresentation = new Representation();
                 voRepresentation.index = i;
                 voRepresentation.adaptation = voAdaptation;
+                voRepresentation.mediaInfo = mediaInfo;
 
                 if (realRepresentation.hasOwnProperty(DashConstants.ID)) {
                     voRepresentation.id = realRepresentation.id;

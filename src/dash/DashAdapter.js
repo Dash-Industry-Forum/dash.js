@@ -30,7 +30,6 @@
  */
 
 import DashConstants from './constants/DashConstants';
-import RepresentationInfo from './vo/RepresentationInfo';
 import MediaInfo from './vo/MediaInfo';
 import StreamInfo from './vo/StreamInfo';
 import ManifestInfo from './vo/ManifestInfo';
@@ -39,6 +38,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashManifestModel from './models/DashManifestModel';
 import PatchManifestModel from './models/PatchManifestModel';
 import bcp47Normalize from 'bcp-47-normalize';
+import Representation from './vo/Representation';
 
 /**
  * @module DashAdapter
@@ -83,33 +83,6 @@ function DashAdapter() {
 
         if (config.BASE64) {
             dashManifestModel.setConfig({ BASE64: config.BASE64 });
-        }
-    }
-
-    /**
-     * Creates an instance of RepresentationInfo based on a representation value object
-     * @param {object} voRepresentation
-     * @returns {RepresentationInfo|null} representationInfo
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function convertRepresentationToRepresentationInfo(voRepresentation) {
-        if (voRepresentation) {
-            let representationInfo = new RepresentationInfo();
-            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
-            const realRepresentation = dashManifestModel.getRepresentationFor(voRepresentation.index, realAdaptation);
-
-            representationInfo.id = voRepresentation.id;
-            representationInfo.quality = voRepresentation.index;
-            representationInfo.bandwidth = dashManifestModel.getBandwidth(realRepresentation);
-            representationInfo.fragmentDuration = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length > 0 ? voRepresentation.segments[0].duration : NaN);
-            representationInfo.mseTimeOffset = voRepresentation.mseTimeOffset;
-            representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
-
-            return representationInfo;
-        } else {
-            return null;
         }
     }
 
@@ -448,7 +421,7 @@ function DashAdapter() {
         let voReps;
 
         const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation, mediaInfo);
 
         return voReps;
     }
@@ -513,7 +486,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or RepresentationInfo
+     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or Representation
      * @param {object} info
      * @param {object} voRepresentation
      * @returns {Array}
@@ -533,7 +506,7 @@ function DashAdapter() {
             } else if (info instanceof MediaInfo) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
-            } else if (info instanceof RepresentationInfo) {
+            } else if (info instanceof Representation) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
             }
@@ -1227,48 +1200,47 @@ function DashAdapter() {
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
-        getBandwidthForRepresentation,
-        getIndexForRepresentation,
-        getMaxIndexForBufferType,
-        convertRepresentationToRepresentationInfo,
-        getStreamsInfo,
-        getMediaInfoForType,
-        getAllMediaInfoForType,
-        getAdaptationForType,
-        getRealAdaptation,
-        getProducerReferenceTimes,
-        getRealPeriodByIndex,
-        getEssentialPropertiesForRepresentation,
-        getVoRepresentations,
-        getEventsFor,
-        getEvent,
-        getMpd,
-        setConfig,
-        updatePeriods,
-        getIsTextTrack,
-        getUTCTimingSources,
-        getSuggestedPresentationDelay,
-        getAvailabilityStartTime,
-        getIsTypeOf,
-        getIsDynamic,
-        getDuration,
-        getRegularPeriods,
-        getContentSteering,
-        getLocation,
-        getPatchLocation,
-        getManifestUpdatePeriod,
-        getPublishTime,
-        getIsDVB,
-        getIsPatch,
-        getBaseURLsFromElement,
-        getRepresentationSortFunction,
-        getCodec,
-        getPeriodById,
-        setCurrentMediaInfo,
-        isPatchValid,
         applyPatchToManifest,
         areMediaInfosEqual,
-        reset
+        getAdaptationForType,
+        getAllMediaInfoForType,
+        getAvailabilityStartTime,
+        getBandwidthForRepresentation,
+        getBaseURLsFromElement,
+        getCodec,
+        getContentSteering,
+        getDuration,
+        getEssentialPropertiesForRepresentation,
+        getEvent,
+        getEventsFor,
+        getIndexForRepresentation,
+        getIsDVB,
+        getIsDynamic,
+        getIsPatch,
+        getIsTextTrack,
+        getIsTypeOf,
+        getLocation,
+        getManifestUpdatePeriod,
+        getMaxIndexForBufferType,
+        getMediaInfoForType,
+        getMpd,
+        getPatchLocation,
+        getPeriodById,
+        getProducerReferenceTimes,
+        getPublishTime,
+        getRealAdaptation,
+        getRealPeriodByIndex,
+        getRegularPeriods,
+        getRepresentationSortFunction,
+        getStreamsInfo,
+        getSuggestedPresentationDelay,
+        getUTCTimingSources,
+        getVoRepresentations,
+        isPatchValid,
+        reset,
+        setConfig,
+        setCurrentMediaInfo,
+        updatePeriods,
     };
 
     setup();

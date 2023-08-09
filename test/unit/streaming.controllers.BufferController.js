@@ -17,7 +17,6 @@ import TextControllerMock from './mocks/TextControllerMock';
 import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 
 const chai = require('chai');
-const sinon = require('sinon');
 const expect = chai.expect;
 
 const context = {};
@@ -295,7 +294,6 @@ describe('BufferController', function () {
     });
 
     describe('Method updateBufferTimestampOffset', function () {
-        let adapterStub;
 
         beforeEach(function (done) {
             bufferController.initialize(mediaSourceMock);
@@ -307,15 +305,9 @@ describe('BufferController', function () {
                     done(e);
                 });
 
-            adapterStub = sinon.stub(adapterMock, 'convertRepresentationToRepresentationInfo');
         });
 
-        afterEach(function () {
-            adapterStub.restore();
-            adapterStub = null;
-        });
-
-        it('should not update buffer timestamp offset if no representationInfo is provided', function (done) {
+        it('should not update buffer timestamp offset if no voRepresentation is provided', function (done) {
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
             // send event
@@ -330,12 +322,12 @@ describe('BufferController', function () {
 
         });
 
-        it('should  update buffer timestamp offset if  representationInfo is provided', function (done) {
+        it('should  update buffer timestamp offset if  voRepresentation is provided', function (done) {
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
-            const representationInfo = { mseTimeOffset: 2 };
+            const representation = { mseTimeOffset: 2 };
             // send event
-            bufferController.updateBufferTimestampOffset(representationInfo)
+            bufferController.updateBufferTimestampOffset(representation)
                 .then(() => {
                     expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(2);
                     done();

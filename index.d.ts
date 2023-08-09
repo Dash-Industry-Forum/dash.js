@@ -148,7 +148,7 @@ declare namespace dashjs {
 
         getCurrentRepresentation(): object;
 
-        getCurrentRepresentationInfo(): RepresentationInfo;
+        getCurrentRepresentation(): Representation;
 
         getRepresentationForQuality(quality: number): object | null;
 
@@ -576,41 +576,34 @@ declare namespace dashjs {
     }
 
     export interface Representation {
-        id: string;
-        index: number;
-        //adaptation needs checking
         adaptation: AdaptationSet | null;
-        segmentInfoType: string | null;
-        initialization: object | null;
-        codecs: string | null;
-        mimeType: string | null;
-        codecPrivateData: string | null;
-        segmentDuration: number;
-        timescale: number;
-        startNumber: number;
-        indexRange: string | null;
-        range: Range | null;
-        presentationTimeOffset: number;
-        mseTimeOffset: number;
-        mediaFinishedInformation: MediaFinishedInformation;
+        availabilityTimeComplete: boolean;
+        availabilityTimeOffset: number;
         availableSegmentsNumber: number;
         bandwidth: number;
-        width: number;
-        height: number;
-        scanType: string;
-        maxPlayoutRate: number;
-        availabilityTimeOffset: number;
-        availabilityTimeComplete: boolean;
-        segments: any[];
-        frameRate: number;
-    }
-
-    export interface RepresentationInfo {
-        id: string | null;
-        quality: number | null;
+        codecPrivateData: string | null;
+        codecs: string | null;
         fragmentDuration: number | null;
+        frameRate: number;
+        height: number;
+        id: string;
+        index: number;
+        indexRange: string | null;
+        initialization: object | null;
+        maxPlayoutRate: number;
+        mediaFinishedInformation: MediaFinishedInformation;
         mediaInfo: MediaInfo | null;
-        mseTimeOffset: number | null;
+        mimeType: string | null;
+        mseTimeOffset: number;
+        presentationTimeOffset: number;
+        range: Range | null;
+        scanType: string;
+        segmentDuration: number;
+        segmentInfoType: string | null;
+        segments: any[];
+        startNumber: number;
+        timescale: number;
+        width: number;
     }
 
     export interface Segment {
@@ -2173,7 +2166,7 @@ declare namespace dashjs {
 
         prepareForReplacementTrackSwitch(codec: string): Promise<any>;
 
-        prepareForForceReplacementQualitySwitch(representationInfo: RepresentationInfo): Promise<any>;
+        prepareForForceReplacementQualitySwitch(voRepresentation: Representation): Promise<any>;
 
         prepareForNonReplacementTrackSwitch(codec: string): Promise<any>;
 
@@ -2185,7 +2178,7 @@ declare namespace dashjs {
 
         clearBuffers(ranges: Range[]): Promise<any>;
 
-        updateBufferTimestampOffset(representationInfo: RepresentationInfo): Promise<any>;
+        updateBufferTimestampOffset(voRepresentation: Representation): Promise<any>;
 
         updateAppendWindow(): Promise<any>;
 
@@ -2348,8 +2341,6 @@ declare namespace dashjs {
         getType(): string;
 
         getStreamId(): string;
-
-        setCurrentRepresentation(representationInfo: RepresentationInfo): void;
 
         startScheduleTimer(value: object): void;
 
@@ -2698,7 +2689,7 @@ declare namespace dashjs {
         getThroughputDict(mediaType: MediaType): ThroughputDictEntry;
 
         getEwmaThroughputDict(mediaType: MediaType): ThroughputEwmaDictEntry;
-        
+
         getEwmaLatencyDict(mediaType: MediaType): ThroughputEwmaDictEntry;
 
         getEwmaHalfLife(mediaType: MediaType): object;
@@ -2775,13 +2766,13 @@ declare namespace dashjs {
 
         addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
 
-        addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number, availabilityStartTime: number, presentationStartTime: number, clientTimeOffset: number, currentTime: number, buffered: RepresentationInfo, latency: number): void;
+        addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number): void;
 
         updateManifestUpdateInfo(manifestUpdate: ManifestUpdate, updatedFields: any[]): void;
 
         addManifestUpdateStreamInfo(manifestUpdate: ManifestUpdate, id: string, index: number, start: number, duration: number): void;
 
-        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, id: string, index: number, streamIndex: number, mediaType: MediaType, presentationTimeOffset: number, startNumber: number, fragmentInfoType: string): void;
+        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, representation: Representation, mediaType: MediaType): void;
 
         addPlayList(vo: any): void;
 
@@ -3596,7 +3587,7 @@ declare namespace dashjs {
         getCurrentRequest(): SwitchRequest;
 
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
-        
+
         getStreamInfo(): StreamInfo;
 
         getScheduleController(): ScheduleController;
@@ -3605,7 +3596,7 @@ declare namespace dashjs {
 
         getAbrController(): AbrController;
 
-        getRepresentationInfo(): RepresentationInfo
+        getVoRepresentation(): Representation;
 
         getVideoModel(): VideoModel;
     }
@@ -4089,11 +4080,19 @@ declare namespace dashjs {
         presentationStartTime: number;
         clientTimeOffset: number;
         currentTime: number | null;
-        buffered: RepresentationInfo;
+        buffered: object | null;
         latency: number;
         streamInfo: StreamInfo[];
-        representationInfo: RepresentationInfo;
+        representationInfo: ManifestUpdateRepresentationInfo[];
 
+    }
+
+    export interface ManifestUpdateRepresentationInfo {
+        id: string | null;
+        index: number | null;
+        mediaType: MediaType | null;
+        presentationTimeOffset: number | null;
+        startNumber: number | null;
     }
 
     export interface PlayList {
@@ -4560,7 +4559,7 @@ declare namespace dashjs {
 
         getRepresentationController(): RepresentationController;
 
-        getRepresentationInfo(quality: number): RepresentationInfo;
+        getVoRepresentation(quality: number): Representation;
 
         getBufferLevel(): number;
 

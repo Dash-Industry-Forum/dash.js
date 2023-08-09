@@ -98,7 +98,7 @@ function StreamProcessorMock (testType, streamInfo) {
         return this.streamInfo;
     };
 
-    this.getRepresentationInfo = function (quality) {
+    this.getVoRepresentation = function (quality) {
         if (quality !== undefined) {
             let offset = quality ? 2 : 1;
             return {

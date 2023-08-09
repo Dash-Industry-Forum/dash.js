@@ -411,20 +411,6 @@ describe('DashAdapter', function () {
             });
         });
 
-        it('should return null when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is null or undefined', function () {
-            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo();
-
-            expect(representationInfo).to.be.null;
-        });
-
-        it('should return correct representationInfo when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
-            const voRepresentation = voHelper.getDummyRepresentation(Constants.VIDEO, 0);
-            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo(voRepresentation);
-
-            expect(representationInfo).not.to.be.null;
-            expect(representationInfo.quality).to.equal(0);
-        });
-
         it('should return undefined when getVoRepresentations is called and mediaInfo parameter is null or undefined', function () {
             const voRepresentations = dashAdapter.getVoRepresentations();
 
