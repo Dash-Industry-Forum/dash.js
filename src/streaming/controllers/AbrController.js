@@ -86,7 +86,7 @@ function AbrController() {
     }
 
     /**
-     * Initialize everything that is not Stream specific. We only have one instance of the ABR Controller for all periods.
+     * Initialize everything that is not period specific. We only have one instance of the ABR Controller for all periods.
      */
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
@@ -142,6 +142,11 @@ function AbrController() {
         }
     }
 
+    /**
+     * Remove all parameters that belong to a specific period
+     * @param {string} streamId
+     * @param {string} type
+     */
     function unRegisterStreamType(streamId, type) {
         try {
             if (streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
@@ -884,26 +889,26 @@ function AbrController() {
     }
 
     instance = {
-        initialize,
-        isPlayingAtTopQuality,
-        updateTopQualityIndex,
+        checkPlaybackQuality,
         clearDataForStream,
+        getAbandonmentStateFor,
         getBitrateList,
+        getInitialBitrateFor,
+        getMaxAllowedIndexFor,
+        getMinAllowedIndexFor,
+        getQualityFor,
         getQualityForBitrate,
         getTopBitrateInfoFor,
-        getMinAllowedIndexFor,
-        getMaxAllowedIndexFor,
-        getInitialBitrateFor,
-        getQualityFor,
-        getAbandonmentStateFor,
-        setPlaybackQuality,
-        checkPlaybackQuality,
-        setElementSize,
-        setWindowResizeEventCalled,
+        initialize,
+        isPlayingAtTopQuality,
         registerStreamType,
-        unRegisterStreamType,
+        reset,
         setConfig,
-        reset
+        setElementSize,
+        setPlaybackQuality,
+        setWindowResizeEventCalled,
+        unRegisterStreamType,
+        updateTopQualityIndex,
     };
 
     setup();
