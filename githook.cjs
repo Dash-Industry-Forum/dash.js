@@ -22,11 +22,15 @@ exec('npm run lint', {
 });
 `;
 
+const callerTemplate = `#!/bin/sh
+
+node .git/hooks/pre-commit.cjs;`
+
 const pathToHooksFolder = path.join(`${__dirname}`, '.git', 'hooks');
 
-function writeHook() {
-    const precommitFile = path.join(pathToHooksFolder, 'pre-commit');
-    fs.writeFile(precommitFile, precommitTemplate, { mode: 0o755 }, (err) => {
+function writeHook(name, content) {
+    const precommitFile = path.join(pathToHooksFolder, name);
+    fs.writeFile(precommitFile, content, { mode: 0o755 }, (err) => {
         if (err) throw err;
         console.log(`${precommitFile} created.`);
     });
@@ -36,9 +40,11 @@ fs.access(pathToHooksFolder, (err) => {
     if (err) {
         fs.mkdir(pathToHooksFolder, { recursive: true }, (err) => {
             if (err) throw err;
-            writeHook();
+            writeHook('pre-commit.cjs', precommitTemplate);
+            writeHook('pre-commit', callerTemplate);
         });
     } else {
-        writeHook();
+        writeHook('pre-commit.cjs', precommitTemplate);
+        writeHook('pre-commit', callerTemplate);
     }
 });
