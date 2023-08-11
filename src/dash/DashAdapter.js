@@ -232,7 +232,7 @@ function DashAdapter() {
                         continue;
                     }
                     let accessibility = media.accessibility[j];
-                    if (accessibility.schemeIdUri ==='urn:scte:dash:cc:cea-608:2015') {
+                    if (accessibility.schemeIdUri === constants.ACCESSIBILITY_CEA608_SCHEME) {
                         if (accessibility.value === '') {
                             convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
                             mediaArr.push(media);

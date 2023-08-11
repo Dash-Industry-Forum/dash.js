@@ -217,6 +217,7 @@ export default {
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
+    ACCESSIBILITY_CEA608_SCHEME: 'urn:scte:dash:cc:cea-608:2015',
     CC1: 'CC1',
     CC3: 'CC3',
     UTF8: 'utf-8',
