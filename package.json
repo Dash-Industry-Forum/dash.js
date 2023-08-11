@@ -1,7 +1,7 @@
 {
     "name": "dashjs",
     "version": "5.0.0",
-    "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
+    "description": "A referece client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
     "author": "Dash Industry Forum",
     "license": "BSD-3-Clause",
     "exports": "./dist/dash.all.min.js",
