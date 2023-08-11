@@ -752,6 +752,8 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].accessibility[0]).to.be.instanceOf(DescriptorType);
                     expect(mediaInfoArray[0].accessibility[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015');
                     expect(mediaInfoArray[0].accessibility[0].value).equals('CC1=eng;CC3=swe');
+                    expect(mediaInfoArray[0].embeddedCaptions).equals(true);
+
                     expect(mediaInfoArray[1].accessibility.length).equals(0);
                 });
 

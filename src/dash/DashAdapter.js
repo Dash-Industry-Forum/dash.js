@@ -51,7 +51,8 @@ function DashAdapter() {
         patchManifestModel,
         voPeriods,
         currentMediaInfo,
-        constants;
+        constants,
+        cea608parser;
 
     const context = this.context;
 
@@ -72,6 +73,9 @@ function DashAdapter() {
             constants = config.constants;
         }
 
+        if (config.cea608parser) {
+            cea608parser = config.cea608parser;
+        }
         if (config.errHandler) {
             dashManifestModel.setConfig({ errHandler: config.errHandler });
         }
@@ -1031,6 +1035,9 @@ function DashAdapter() {
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
         mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        if (mediaInfo.accessibility.filter(function (accessibility) {
+            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') return true;
+        })[0]) mediaInfo.embeddedCaptions = true;
         mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
         if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
