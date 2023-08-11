@@ -4,19 +4,23 @@
     "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
     "author": "Dash Industry Forum",
     "license": "BSD-3-Clause",
-    "main": "dist/dash.all.min.js",
+    "exports": "./dist/dash.all.min.js",
+    "type": "module",
     "types": "index.d.ts",
+    "bin": {
+        "pre-commit": "./.git/hooks/pre-commit.cjs"
+    },
     "scripts": {
-        "dev": "tsc && webpack --config build/webpack.dev.js --mode development --watch --progress",
-        "start": "webpack serve --config build/webpack.dev.js",
+        "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
+        "start": "webpack serve --config build/webpack.dev.cjs",
         "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
-        "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
+        "build": "tsc && rimraf dist && webpack --config build/webpack.prod.cjs",
         "postbuild": "cp index.d.ts dash.d.ts",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
-        "test": "karma start karma.unit.conf.js",
+        "test": "karma start karma.unit.conf.cjs",
         "test-browserunit": "karma start build/karma.conf.js",
         "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
-        "prepare": "node githook.js",
+        "prepare": "node githook.cjs",
         "prepack": "npm run build"
     },
     "devDependencies": {
@@ -74,7 +78,7 @@
         "url": "https://github.com/Dash-Industry-Forum/dash.js.git"
     },
     "files": [
-        "githook.js",
+        "githook.cjs",
         "index.d.ts",
         "dist",
         "docs/jsdoc",

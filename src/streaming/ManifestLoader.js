@@ -28,19 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import XlinkController from './controllers/XlinkController';
-import URLLoader from './net/URLLoader';
-import URLUtils from './utils/URLUtils';
-import TextRequest from './vo/TextRequest';
-import DashJSError from './vo/DashJSError';
-import {HTTPRequest} from './vo/metrics/HTTPRequest';
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import Errors from '../core/errors/Errors';
-import FactoryMaker from '../core/FactoryMaker';
-import DashParser from '../dash/parser/DashParser';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import XlinkController from './controllers/XlinkController.js';
+import URLLoader from './net/URLLoader.js';
+import URLUtils from './utils/URLUtils.js';
+import TextRequest from './vo/TextRequest.js';
+import DashJSError from './vo/DashJSError.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import Errors from '../core/errors/Errors.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashParser from '../dash/parser/DashParser.js';
 
 function ManifestLoader(config) {
 

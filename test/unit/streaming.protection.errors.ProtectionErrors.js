@@ -1,6 +1,6 @@
-import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
+import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('ProtectionErrors', function () {
     it('ProtectionErrors code should exist', () => {

@@ -36,14 +36,14 @@
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
 
-import Debug from '../../../../core/Debug';
-import FactoryMaker from '../../../../core/FactoryMaker';
-import LearningAbrController from './LearningAbrController';
-import LoLpQoeEvaluator from './LoLpQoEEvaluator';
-import SwitchRequest from '../../SwitchRequest';
-import MetricsConstants from '../../../constants/MetricsConstants';
-import LoLpWeightSelector from './LoLpWeightSelector';
-import Constants from '../../../constants/Constants';
+import Debug from '../../../../core/Debug.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+import LearningAbrController from './LearningAbrController.js';
+import LoLpQoeEvaluator from './LoLpQoEEvaluator.js';
+import SwitchRequest from '../../SwitchRequest.js';
+import MetricsConstants from '../../../constants/MetricsConstants.js';
+import LoLpWeightSelector from './LoLpWeightSelector.js';
+import Constants from '../../../constants/Constants.js';
 
 const DWS_TARGET_LATENCY = 1.5;
 const DWS_BUFFER_MIN = 0.3;

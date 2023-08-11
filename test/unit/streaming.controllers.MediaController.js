@@ -1,14 +1,13 @@
-import MediaController from '../../src/streaming/controllers/MediaController';
-import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
-import EventBus from '../../src/core/EventBus';
-import Constants from '../../src/streaming/constants/Constants';
-import Events from '../../src/core/events/Events';
-import Settings from '../../src/core/Settings';
+import MediaController from '../../src/streaming/controllers/MediaController.js';
+import ObjectUtils from '../../src/streaming/utils/ObjectUtils.js';
+import EventBus from '../../src/core/EventBus.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Events from '../../src/core/events/Events.js';
+import Settings from '../../src/core/Settings.js';
+import DomStorageMock from './mocks/DomStorageMock.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-import DomStorageMock from './mocks/DomStorageMock';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();

@@ -1,9 +1,7 @@
-import BolaRule from '../../src/streaming/rules/abr/BolaRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-
-import RulesContextMock from './mocks/RulesContextMock';
-
-const expect = require('chai').expect;
+import BolaRule from '../../src/streaming/rules/abr/BolaRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import RulesContextMock from './mocks/RulesContextMock.js';
+import {expect} from 'chai';
 
 const context = {};
 const bolaRule = BolaRule(context).create({});

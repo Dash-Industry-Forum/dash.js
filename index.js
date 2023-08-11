@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { MediaPlayer } from './index_mediaplayerOnly';
-import MetricsReporting from './src/streaming/metrics/MetricsReporting';
-import Protection from './src/streaming/protection/Protection';
-import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
-import Debug from './src/core/Debug';
-import Constants from './src/streaming/constants/Constants';
-import { supportsMediaSource } from './src/streaming/utils/Capabilities';
+import { MediaPlayer } from './index_mediaplayerOnly.js';
+import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
+import Protection from './src/streaming/protection/Protection.js';
+import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
+import Debug from './src/core/Debug.js';
+import Constants from './src/streaming/constants/Constants.js';
+import { supportsMediaSource } from './src/streaming/utils/Capabilities.js';
 
 dashjs.Protection = Protection;
 dashjs.MetricsReporting = MetricsReporting;

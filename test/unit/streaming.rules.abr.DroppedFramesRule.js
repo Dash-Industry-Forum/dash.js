@@ -1,9 +1,7 @@
-import DroppedFramesRule from '../../src/streaming/rules/abr/DroppedFramesRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-
-import RulesContextMock from './mocks/RulesContextMock';
-
-const expect = require('chai').expect;
+import DroppedFramesRule from '../../src/streaming/rules/abr/DroppedFramesRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import RulesContextMock from './mocks/RulesContextMock.js';
+import {expect} from 'chai';
 
 const context = {};
 const droppedFramesRule = DroppedFramesRule(context).create({});

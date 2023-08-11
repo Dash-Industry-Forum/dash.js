@@ -29,12 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Debug from '../../core/Debug';
-import IsoFile from './IsoFile';
-import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug.js';
+import IsoFile from './IsoFile.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 import ISOBoxer from 'codem-isoboxer';
 
-import IsoBoxSearchInfo from '../vo/IsoBoxSearchInfo';
+import IsoBoxSearchInfo from '../vo/IsoBoxSearchInfo.js';
 
 function BoxParser(/*config*/) {
 

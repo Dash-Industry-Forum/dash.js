@@ -28,28 +28,28 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants';
-import DashConstants from '../constants/DashConstants';
-import Representation from '../vo/Representation';
-import AdaptationSet from '../vo/AdaptationSet';
-import Period from '../vo/Period';
-import Mpd from '../vo/Mpd';
-import UTCTiming from '../vo/UTCTiming';
-import Event from '../vo/Event';
-import BaseURL from '../vo/BaseURL';
-import EventStream from '../vo/EventStream';
-import ProducerReferenceTime from '../vo/ProducerReferenceTime';
-import ContentSteering from '../vo/ContentSteering';
-import DescriptorType from '../vo/DescriptorType';
-import ObjectUtils from '../../streaming/utils/ObjectUtils';
-import URLUtils from '../../streaming/utils/URLUtils';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import DashJSError from '../../streaming/vo/DashJSError';
-import Errors from '../../core/errors/Errors';
-import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
-import MpdLocation from '../vo/MpdLocation';
-import PatchLocation from '../vo/PatchLocation';
+import Constants from '../../streaming/constants/Constants.js';
+import DashConstants from '../constants/DashConstants.js';
+import Representation from '../vo/Representation.js';
+import AdaptationSet from '../vo/AdaptationSet.js';
+import Period from '../vo/Period.js';
+import Mpd from '../vo/Mpd.js';
+import UTCTiming from '../vo/UTCTiming.js';
+import Event from '../vo/Event.js';
+import BaseURL from '../vo/BaseURL.js';
+import EventStream from '../vo/EventStream.js';
+import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
+import ContentSteering from '../vo/ContentSteering.js';
+import DescriptorType from '../vo/DescriptorType.js';
+import ObjectUtils from '../../streaming/utils/ObjectUtils.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import DashJSError from '../../streaming/vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
+import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks.js';
+import MpdLocation from '../vo/MpdLocation.js';
+import PatchLocation from '../vo/PatchLocation.js';
 
 function DashManifestModel() {
     let instance,

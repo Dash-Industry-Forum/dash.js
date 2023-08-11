@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../../core/FactoryMaker';
-import SwitchRequest from '../SwitchRequest';
-import MetricsConstants from '../../constants/MetricsConstants';
-import Debug from '../../../core/Debug';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
+import MetricsConstants from '../../constants/MetricsConstants.js';
+import Debug from '../../../core/Debug.js';
 
 function ThroughputRule(config) {
 

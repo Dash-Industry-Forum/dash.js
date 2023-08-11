@@ -1,8 +1,8 @@
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../constants/Constants.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 
 function CapabilitiesFilter() {
 

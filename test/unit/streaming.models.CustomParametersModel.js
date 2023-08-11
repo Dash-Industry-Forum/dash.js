@@ -1,8 +1,8 @@
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
-import Constants from '../../src/streaming/constants/Constants';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 
 
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('CustomParametersModel', function () {

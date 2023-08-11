@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DVBErrors from '../vo/DVBErrors';
-import MetricsReportingEvents from '../MetricsReportingEvents';
+import DVBErrors from '../vo/DVBErrors.js';
+import MetricsReportingEvents from '../MetricsReportingEvents.js';
 
 function DVBErrorsTranslator(config) {
 

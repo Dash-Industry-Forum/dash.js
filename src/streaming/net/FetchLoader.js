@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import Constants from '../constants/Constants';
-import {modifyRequest} from '../utils/RequestModifier';
-import AastLowLatencyThroughputModel from '../models/AastLowLatencyThroughputModel';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../constants/Constants.js';
+import {modifyRequest} from '../utils/RequestModifier.js';
+import AastLowLatencyThroughputModel from '../models/AastLowLatencyThroughputModel.js';
 
 /**
  * @module FetchLoader

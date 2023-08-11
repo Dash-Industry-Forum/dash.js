@@ -29,21 +29,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import Constants from '../constants/Constants';
-import MetricsConstants from '../constants/MetricsConstants';
-import BitrateInfo from '../vo/BitrateInfo';
-import FragmentModel from '../models/FragmentModel';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import RulesContext from '../rules/RulesContext';
-import SwitchRequest from '../rules/SwitchRequest';
-import SwitchRequestHistory from '../rules/SwitchRequestHistory';
-import DroppedFramesHistory from '../rules/DroppedFramesHistory';
-import Debug from '../../core/Debug';
-import {checkInteger} from '../utils/SupervisorTools';
-import MediaPlayerEvents from '../MediaPlayerEvents';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection.js';
+import Constants from '../constants/Constants.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import BitrateInfo from '../vo/BitrateInfo.js';
+import FragmentModel from '../models/FragmentModel.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import RulesContext from '../rules/RulesContext.js';
+import SwitchRequest from '../rules/SwitchRequest.js';
+import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
+import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
+import Debug from '../../core/Debug.js';
+import {checkInteger} from '../utils/SupervisorTools.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;

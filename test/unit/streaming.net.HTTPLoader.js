@@ -1,14 +1,14 @@
-import HTTPLoader from '../../src/streaming/net/HTTPLoader';
-import RequestModifier from '../../src/streaming/utils/RequestModifier';
-import Errors from '../../src/core/errors/Errors';
-import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
-import DashMetrics from '../../src/dash/DashMetrics';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
-import Settings from '../../src/core/Settings';
+import HTTPLoader from '../../src/streaming/net/HTTPLoader.js';
+import RequestModifier from '../../src/streaming/utils/RequestModifier.js';
+import Errors from '../../src/core/errors/Errors.js';
+import ErrorHandler from '../../src/streaming/utils/ErrorHandler.js';
+import DashMetrics from '../../src/dash/DashMetrics.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest.js';
+import Settings from '../../src/core/Settings.js';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
+import {expect} from 'chai';
+import sinon from 'sinon';
 
 const context = {};
 
@@ -31,16 +31,16 @@ describe('HTTPLoader', function () {
     });
 
     beforeEach(function () {
-        global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
 
         this.requests = [];
-        global.XMLHttpRequest.onCreate = function (xhr) {
+        window.XMLHttpRequest.onCreate = function (xhr) {
             this.requests.push(xhr);
         }.bind(this);
     });
 
     afterEach(function () {
-        global.XMLHttpRequest.restore();
+        window.XMLHttpRequest.restore();
     });
 
     afterEach(function () {

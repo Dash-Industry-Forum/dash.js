@@ -1,14 +1,13 @@
-import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
-import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Debug from '../../src/core/Debug';
+import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController.js';
+import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Debug from '../../src/core/Debug.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import AdapterMock from './mocks/AdapterMock.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-import AdapterMock from './mocks/AdapterMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 const streamInfo = {

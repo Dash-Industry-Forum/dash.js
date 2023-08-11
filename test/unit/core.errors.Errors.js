@@ -1,6 +1,6 @@
-import Errors from '../../src/core/errors/Errors';
+import Errors from '../../src/core/errors/Errors.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('Errors', function () {
     it('Errors code should exist', () => {

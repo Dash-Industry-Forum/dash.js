@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Segment from './vo/Segment';
-import DashJSError from '../streaming/vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import URLLoader from '../streaming/net/URLLoader';
+import Segment from './vo/Segment.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import URLLoader from '../streaming/net/URLLoader.js';
 
 function SegmentBaseLoader() {
 

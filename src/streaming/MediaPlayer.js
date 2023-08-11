@@ -28,59 +28,59 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import cea608parser from '../../externals/cea608-parser';
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import MetricsConstants from './constants/MetricsConstants';
-import PlaybackController from './controllers/PlaybackController';
-import StreamController from './controllers/StreamController';
-import GapController from './controllers/GapController';
-import CatchupController from './controllers/CatchupController';
-import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
-import ContentSteeringController from '../dash/controllers/ContentSteeringController';
-import MediaController from './controllers/MediaController';
-import BaseURLController from './controllers/BaseURLController';
-import ManifestLoader from './ManifestLoader';
-import ErrorHandler from './utils/ErrorHandler';
-import Capabilities from './utils/Capabilities';
-import CapabilitiesFilter from './utils/CapabilitiesFilter';
-import RequestModifier from './utils/RequestModifier';
-import URIFragmentModel from './models/URIFragmentModel';
-import ManifestModel from './models/ManifestModel';
-import MediaPlayerModel from './models/MediaPlayerModel';
-import AbrController from './controllers/AbrController';
-import SchemeLoaderFactory from './net/SchemeLoaderFactory';
-import VideoModel from './models/VideoModel';
-import CmcdModel from './models/CmcdModel';
-import CmsdModel from './models/CmsdModel';
-import DOMStorage from './utils/DOMStorage';
-import Debug from './../core/Debug';
-import Errors from './../core/errors/Errors';
-import EventBus from './../core/EventBus';
-import Events from './../core/events/Events';
-import MediaPlayerEvents from './MediaPlayerEvents';
-import FactoryMaker from '../core/FactoryMaker';
-import Settings from '../core/Settings';
-import {getVersionString} from '../core/Version';
+import cea608parser from '../../externals/cea608-parser.js';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import StreamController from './controllers/StreamController.js';
+import GapController from './controllers/GapController.js';
+import CatchupController from './controllers/CatchupController.js';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
+import MediaController from './controllers/MediaController.js';
+import BaseURLController from './controllers/BaseURLController.js';
+import ManifestLoader from './ManifestLoader.js';
+import ErrorHandler from './utils/ErrorHandler.js';
+import Capabilities from './utils/Capabilities.js';
+import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
+import RequestModifier from './utils/RequestModifier.js';
+import URIFragmentModel from './models/URIFragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import AbrController from './controllers/AbrController.js';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
+import VideoModel from './models/VideoModel.js';
+import CmcdModel from './models/CmcdModel.js';
+import CmsdModel from './models/CmsdModel.js';
+import DOMStorage from './utils/DOMStorage.js';
+import Debug from './../core/Debug.js';
+import Errors from './../core/errors/Errors.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Settings from '../core/Settings.js';
+import {getVersionString} from '../core/Version.js';
 
 //Dash
-import SegmentBaseController from '../dash/controllers/SegmentBaseController';
-import DashAdapter from '../dash/DashAdapter';
-import DashMetrics from '../dash/DashMetrics';
-import TimelineConverter from '../dash/utils/TimelineConverter';
+import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
+import DashAdapter from '../dash/DashAdapter.js';
+import DashMetrics from '../dash/DashMetrics.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import {
     HTTPRequest
-} from './vo/metrics/HTTPRequest';
-import BASE64 from '../../externals/base64';
+} from './vo/metrics/HTTPRequest.js';
+import BASE64 from '../../externals/base64.js';
 import ISOBoxer from 'codem-isoboxer';
-import DashJSError from './vo/DashJSError';
-import {checkParameterType} from './utils/SupervisorTools';
-import ManifestUpdater from './ManifestUpdater';
-import URLUtils from '../streaming/utils/URLUtils';
-import BoxParser from './utils/BoxParser';
-import TextController from './text/TextController';
-import CustomParametersModel from './models/CustomParametersModel';
-import ThroughputController from './controllers/ThroughputController';
+import DashJSError from './vo/DashJSError.js';
+import {checkParameterType} from './utils/SupervisorTools.js';
+import ManifestUpdater from './ManifestUpdater.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import BoxParser from './utils/BoxParser.js';
+import TextController from './text/TextController.js';
+import CustomParametersModel from './models/CustomParametersModel.js';
+import ThroughputController from './controllers/ThroughputController.js';
 
 /**
  * The media types

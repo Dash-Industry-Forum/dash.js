@@ -1,6 +1,6 @@
 const { merge } = require('webpack-merge');
 const ESLintPlugin = require('eslint-webpack-plugin');
-const common = require('./webpack.base.js').config;
+const common = require('./webpack.base.cjs').config;
 
 const entries = {
     'dash.all': './index.js',

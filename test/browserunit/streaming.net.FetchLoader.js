@@ -1,6 +1,6 @@
 import Constants from '../../src/streaming/constants/Constants';
 import Settings from '../../src/core/Settings';
-const expect = require('chai').expect;
+import {expect} from 'chai';
 import FetchLoader from '../../src/streaming/net/FetchLoader';
 import BoxParser from '../../src/streaming/utils/BoxParser';
 

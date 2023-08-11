@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import Events from '../../core/events/Events';
-import EventBus from '../../core/EventBus';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
+import Constants from '../constants/Constants.js';
+import Events from '../../core/events/Events.js';
+import EventBus from '../../core/EventBus.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 import bcp47Normalize from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 

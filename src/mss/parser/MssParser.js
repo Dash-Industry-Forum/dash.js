@@ -35,7 +35,7 @@
  * @param {Object} config object
  */
 
-import BigInt from '../../../externals/BigInteger';
+import BigInt from '../../../externals/BigInteger.js';
 
 function MssParser(config) {
     config = config || {};

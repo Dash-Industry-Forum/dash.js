@@ -1,6 +1,6 @@
-import PreBufferSink from '../../src/streaming/PreBufferSink';
+import PreBufferSink from '../../src/streaming/PreBufferSink.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 describe('PreBufferSink', function () {

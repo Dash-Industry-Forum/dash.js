@@ -1,8 +1,8 @@
-import ThroughputModel from '../../src/streaming/models/ThroughputModel';
-import Settings from '../../src/core/Settings';
-import Constants from '../../src/streaming/constants/Constants';
+import ThroughputModel from '../../src/streaming/models/ThroughputModel.js';
+import Settings from '../../src/core/Settings.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 

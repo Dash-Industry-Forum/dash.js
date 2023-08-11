@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import CustomTimeRanges from '../../utils/CustomTimeRanges';
+import CustomTimeRanges from '../../utils/CustomTimeRanges.js';
 
 function RangeController(config) {
 

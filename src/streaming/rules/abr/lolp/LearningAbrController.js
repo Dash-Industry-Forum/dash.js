@@ -36,8 +36,8 @@
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
-import Debug from '../../../../core/Debug';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+import Debug from '../../../../core/Debug.js';
 
 const WEIGHT_SELECTION_MODES = {
     MANUAL: 'manual_weight_selection',

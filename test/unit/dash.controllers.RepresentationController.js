@@ -1,22 +1,20 @@
-import ObjectsHelper from './helpers/ObjectsHelper';
-import VoHelper from './helpers/VOHelper';
-import MpdHelper from './helpers/MPDHelper';
-import EventBus from '../../src/core/EventBus';
-import RepresentationController from '../../src/dash/controllers/RepresentationController';
-import Events from '../../src/core/events/Events';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import DashConstants from '../../src/dash/constants/DashConstants';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import MpdHelper from './helpers/MPDHelper.js';
+import EventBus from '../../src/core/EventBus.js';
+import RepresentationController from '../../src/dash/controllers/RepresentationController.js';
+import Events from '../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import SpecHelper from './helpers/SpecHelper.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import SegmentsControllerMock from './mocks/SegmentsControllerMock.js';
 
-import SpecHelper from './helpers/SpecHelper';
-
-import AbrControllerMock from './mocks/AbrControllerMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import AdapterMock from './mocks/AdapterMock';
-import SegmentsControllerMock from './mocks/SegmentsControllerMock';
-
-const chai = require('chai');
-const spies = require('chai-spies');
+import chai from 'chai';
+import spies from 'chai-spies';
 
 chai.use(spies);
 

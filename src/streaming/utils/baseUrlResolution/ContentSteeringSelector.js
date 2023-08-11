@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker';
-import ContentSteeringController from '../../../dash/controllers/ContentSteeringController';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import ContentSteeringController from '../../../dash/controllers/ContentSteeringController.js';
 
 function ContentSteeringSelector() {
 

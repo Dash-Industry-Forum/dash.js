@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MssHandler from './MssHandler';
+import MssHandler from './MssHandler.js';
 
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;

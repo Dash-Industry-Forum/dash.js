@@ -1,8 +1,8 @@
-import EventBus from '../../src/core/EventBus';
-import mediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import EventBus from '../../src/core/EventBus.js';
+import mediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import chai from 'chai';
+import sinon from 'sinon';
 
-const chai = require('chai');
-const sinon = require('sinon');
 const expect = chai.expect;
 const assert = chai.assert;
 

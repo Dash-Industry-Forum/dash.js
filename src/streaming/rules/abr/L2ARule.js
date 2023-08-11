@@ -31,14 +31,14 @@
 
 // For a description of the Learn2Adapt-LowLatency (L2A-LL) bitrate adaptation algorithm, see https://github.com/unifiedstreaming/Learn2Adapt-LowLatency/blob/master/Online_learning_for_bitrate_adaptation_in_low_latency_live_streaming_CR.pdf
 
-import MetricsConstants from '../../constants/MetricsConstants';
-import SwitchRequest from '../SwitchRequest';
-import FactoryMaker from '../../../core/FactoryMaker';
-import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
-import EventBus from '../../../core/EventBus';
-import Events from '../../../core/events/Events';
-import Debug from '../../../core/Debug';
-import Constants from '../../constants/Constants';
+import MetricsConstants from '../../constants/MetricsConstants.js';
+import SwitchRequest from '../SwitchRequest.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
+import Debug from '../../../core/Debug.js';
+import Constants from '../../constants/Constants.js';
 
 const L2A_STATE_ONE_BITRATE = 0; // If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 const L2A_STATE_STARTUP = 1; // Set placeholder buffer such that we download fragments at most recently measured throughput.

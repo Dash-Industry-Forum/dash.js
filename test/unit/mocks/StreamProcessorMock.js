@@ -1,4 +1,4 @@
-import RepresentationControllerMock from './RepresentationControllerMock';
+import RepresentationControllerMock from './RepresentationControllerMock.js';
 
 class FragmentModelMock {
     constructor() {

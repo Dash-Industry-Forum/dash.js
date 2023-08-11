@@ -1,7 +1,7 @@
-import PatchOperation from '../../src/dash/vo/PatchOperation';
+import PatchOperation from '../../src/dash/vo/PatchOperation.js';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
+import {expect} from 'chai';
+import sinon from 'sinon';
 
 describe('PatchOperation', function () {
     describe('getMpdTarget', function () {

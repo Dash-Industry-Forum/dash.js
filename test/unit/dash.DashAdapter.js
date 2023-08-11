@@ -1,15 +1,13 @@
-import DashAdapter from '../../src/dash/DashAdapter';
-import MediaInfo from '../../src/dash/vo/MediaInfo';
-import Constants from '../../src/streaming/constants/Constants';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import cea608parser from '../../externals/cea608-parser';
-
-import VoHelper from './helpers/VOHelper';
+import DashAdapter from '../../src/dash/DashAdapter.js';
+import MediaInfo from '../../src/dash/vo/MediaInfo.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import cea608parser from '../../externals/cea608-parser.js';
+import VoHelper from './helpers/VOHelper.js';
 import PatchHelper from './helpers/PatchHelper.js';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DescriptorType from '../../src/dash/vo/DescriptorType';
-
-const expect = require('chai').expect;
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
+import {expect} from 'chai';
 
 const context = {};
 const voHelper = new VoHelper();

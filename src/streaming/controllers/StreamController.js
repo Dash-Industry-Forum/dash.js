@@ -28,23 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import MetricsConstants from '../constants/MetricsConstants';
-import Stream from '../Stream';
-import ManifestUpdater from '../ManifestUpdater';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import {PlayList, PlayListTrace} from '../vo/metrics/PlayList';
-import Debug from '../../core/Debug';
-import InitCache from '../utils/InitCache';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import TimeSyncController from './TimeSyncController';
-import MediaSourceController from './MediaSourceController';
-import DashJSError from '../vo/DashJSError';
-import Errors from '../../core/errors/Errors';
-import EventController from './EventController';
-import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import Constants from '../constants/Constants.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import Stream from '../Stream.js';
+import ManifestUpdater from '../ManifestUpdater.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import {PlayList, PlayListTrace} from '../vo/metrics/PlayList.js';
+import Debug from '../../core/Debug.js';
+import InitCache from '../utils/InitCache.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import TimeSyncController from './TimeSyncController.js';
+import MediaSourceController from './MediaSourceController.js';
+import DashJSError from '../vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
+import EventController from './EventController.js';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;

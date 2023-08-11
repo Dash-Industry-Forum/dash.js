@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import BaseURLTreeModel from '../models/BaseURLTreeModel';
-import BaseURLSelector from '../utils/BaseURLSelector';
-import URLUtils from '../utils/URLUtils';
-import BaseURL from '../../dash/vo/BaseURL';
-import FactoryMaker from '../../core/FactoryMaker';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../MediaPlayerEvents';
+import BaseURLTreeModel from '../models/BaseURLTreeModel.js';
+import BaseURLSelector from '../utils/BaseURLSelector.js';
+import URLUtils from '../utils/URLUtils.js';
+import BaseURL from '../../dash/vo/BaseURL.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function BaseURLController() {
 

@@ -1,4 +1,4 @@
-import StreamMock from './StreamMock';
+import StreamMock from './StreamMock.js';
 
 class StreamControllerMock {
 

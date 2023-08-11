@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MssFragmentMoofProcessor from './MssFragmentMoofProcessor';
-import MssFragmentMoovProcessor from './MssFragmentMoovProcessor';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import MssFragmentMoofProcessor from './MssFragmentMoofProcessor.js';
+import MssFragmentMoovProcessor from './MssFragmentMoovProcessor.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 
 
 // Add specific box processors not provided by codem-isoboxer library

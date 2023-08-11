@@ -37,13 +37,13 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionKeyController from '../controllers/ProtectionKeyController';
-import NeedKey from '../vo/NeedKey';
-import ProtectionErrors from '../errors/ProtectionErrors';
-import DashJSError from '../../vo/DashJSError';
-import KeyMessage from '../vo/KeyMessage';
-import KeySystemAccess from '../vo/KeySystemAccess';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
+import NeedKey from '../vo/NeedKey.js';
+import ProtectionErrors from '../errors/ProtectionErrors.js';
+import DashJSError from '../../vo/DashJSError.js';
+import KeyMessage from '../vo/KeyMessage.js';
+import KeySystemAccess from '../vo/KeySystemAccess.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const SYSTEM_STRING_PRIORITY = {};
 SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];

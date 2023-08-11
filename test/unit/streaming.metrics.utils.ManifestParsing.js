@@ -1,7 +1,7 @@
-import ManifestParsing from '../../src/streaming/metrics/utils/ManifestParsing';
-import AdapterMock from './mocks/AdapterMock';
+import ManifestParsing from '../../src/streaming/metrics/utils/ManifestParsing.js';
+import AdapterMock from './mocks/AdapterMock.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const manifestParsing = ManifestParsing(context).getInstance({

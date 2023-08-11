@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 
 function MssFragmentInfoController(config) {
 

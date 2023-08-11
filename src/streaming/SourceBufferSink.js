@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../core/Debug';
-import DashJSError from './vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
-import Errors from '../core/errors/Errors';
-import Settings from '../core/Settings';
-import constants from './constants/Constants';
-import {HTTPRequest} from './vo/metrics/HTTPRequest';
-import Events from '../core/events/Events';
+import Debug from '../core/Debug.js';
+import DashJSError from './vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Errors from '../core/errors/Errors.js';
+import Settings from '../core/Settings.js';
+import constants from './constants/Constants.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import Events from '../core/events/Events.js';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;

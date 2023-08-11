@@ -1,21 +1,21 @@
-import SpecHelper from './helpers/SpecHelper';
-import VideoElementMock from './mocks/VideoElementMock';
-import StreamControllerMock from './mocks/StreamControllerMock';
-import CapabilitiesMock from './mocks/CapabilitiesMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-import MediaPlayer from './../../src/streaming/MediaPlayer';
-import VideoModel from './../../src/streaming/models/VideoModel';
-import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
-import MediaControllerMock from './mocks/MediaControllerMock';
-import ThroughputControllerMock from './mocks/ThroughputControllerMock';
-import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
-import Constants from '../../src/streaming/constants/Constants';
-import Settings from '../../src/core/Settings';
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import SpecHelper from './helpers/SpecHelper.js';
+import VideoElementMock from './mocks/VideoElementMock.js';
+import StreamControllerMock from './mocks/StreamControllerMock.js';
+import CapabilitiesMock from './mocks/CapabilitiesMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import MediaPlayer from './../../src/streaming/MediaPlayer.js';
+import VideoModel from './../../src/streaming/models/VideoModel.js';
+import MediaPlayerModelMock from './mocks//MediaPlayerModelMock.js';
+import MediaControllerMock from './mocks/MediaControllerMock.js';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
+import ObjectUtils from './../../src/streaming/utils/ObjectUtils.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Settings from '../../src/core/Settings.js';
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
@@ -24,10 +24,10 @@ const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 describe('MediaPlayer', function () {
 
     before(function () {
-        global.dashjs = {};
+        window.dashjs = {};
     });
     after(function () {
-        delete global.dashjs;
+        delete window.dashjs;
     });
 
     const context = {};

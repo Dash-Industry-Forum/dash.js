@@ -1,5 +1,5 @@
-import AdapterMock from './AdapterMock';
-import StreamProcessorMock from './StreamProcessorMock';
+import AdapterMock from './AdapterMock.js';
+import StreamProcessorMock from './StreamProcessorMock.js';
 
 const TYPE_AUDIO = 'audio';
 const TYPE_VIDEO = 'video';

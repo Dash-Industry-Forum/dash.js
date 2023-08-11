@@ -1,13 +1,11 @@
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
-import Settings from '../../src/core/Settings';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-import Constants from '../../src/streaming/constants/Constants';
-
-import DashMetricsMock from './mocks/DashMetricsMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
-
-const expect = require('chai').expect;
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
+import Settings from '../../src/core/Settings.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
+import {expect} from 'chai';
 
 const context = {};
 let abrRulesCollection;

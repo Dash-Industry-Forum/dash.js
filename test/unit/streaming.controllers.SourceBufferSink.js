@@ -1,13 +1,13 @@
-import SourceBufferSink from '../../src/streaming/SourceBufferSink';
+import SourceBufferSink from '../../src/streaming/SourceBufferSink.js';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
-import Errors from '../../src/core/errors/Errors';
+import Errors from '../../src/core/errors/Errors.js';
 
-import TextSourceBufferMock from './mocks/TextSourceBufferMock';
-import TextControllerMock from './mocks/TextControllerMock';
-import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
-import MediaSourceMock from './mocks/MediaSourceMock';
+import TextSourceBufferMock from './mocks/TextSourceBufferMock.js';
+import TextControllerMock from './mocks/TextControllerMock.js';
+import MediaSourceBufferMock from './mocks/MediaSourceBufferMock.js';
+import MediaSourceMock from './mocks/MediaSourceMock.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 

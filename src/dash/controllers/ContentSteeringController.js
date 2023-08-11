@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import URLLoader from '../../streaming/net/URLLoader';
-import Errors from '../../core/errors/Errors';
-import ContentSteeringRequest from '../vo/ContentSteeringRequest';
-import ContentSteeringResponse from '../vo/ContentSteeringResponse';
-import DashConstants from '../constants/DashConstants';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import URLUtils from '../../streaming/utils/URLUtils';
-import BaseURL from '../vo/BaseURL';
-import MpdLocation from '../vo/MpdLocation';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import URLLoader from '../../streaming/net/URLLoader.js';
+import Errors from '../../core/errors/Errors.js';
+import ContentSteeringRequest from '../vo/ContentSteeringRequest.js';
+import ContentSteeringResponse from '../vo/ContentSteeringResponse.js';
+import DashConstants from '../constants/DashConstants.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import BaseURL from '../vo/BaseURL.js';
+import MpdLocation from '../vo/MpdLocation.js';
 import Utils from '../../core/Utils.js';
 
 const QUERY_PARAMETER_KEYS = {

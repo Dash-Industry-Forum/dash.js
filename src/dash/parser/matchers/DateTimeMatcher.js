@@ -31,7 +31,7 @@
 /**
  * @classdesc matches and converts xs:datetime to Date
  */
-import BaseMatcher from './BaseMatcher';
+import BaseMatcher from './BaseMatcher.js';
 
 const SECONDS_IN_MIN = 60;
 const MINUTES_IN_HOUR = 60;

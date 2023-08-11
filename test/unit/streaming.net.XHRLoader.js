@@ -1,8 +1,8 @@
-import XHRLoader from '../../src/streaming/net/XHRLoader';
-import RequestModifier from '../../src/streaming/utils/RequestModifier';
+import XHRLoader from '../../src/streaming/net/XHRLoader.js';
+import RequestModifier from '../../src/streaming/utils/RequestModifier.js';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
+import {expect} from 'chai';
+import sinon from 'sinon';
 
 const context = {};
 
@@ -16,16 +16,16 @@ describe('XHRLoader', function () {
     });
 
     beforeEach(function () {
-        global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
 
         this.requests = [];
-        global.XMLHttpRequest.onCreate = function (xhr) {
+        window.XMLHttpRequest.onCreate = function (xhr) {
             this.requests.push(xhr);
         }.bind(this);
     });
 
     afterEach(function () {
-        global.XMLHttpRequest.restore();
+        window.XMLHttpRequest.restore();
     });
 
     afterEach(function () {
