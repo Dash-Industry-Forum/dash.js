@@ -7,9 +7,6 @@
     "exports": "./dist/dash.all.min.js",
     "type": "module",
     "types": "index.d.ts",
-    "bin": {
-        "pre-commit": "./.git/hooks/pre-commit.cjs"
-    },
     "scripts": {
         "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
         "start": "webpack serve --config build/webpack.dev.cjs",
