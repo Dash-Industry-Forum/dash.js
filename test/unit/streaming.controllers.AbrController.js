@@ -270,7 +270,7 @@ describe('AbrController', function () {
         expect(minAllowedIndex).to.be.equal(0);
     });
 
-    it('should return the appropriate max allowed index for the portal size', function () {
+    it('should return the appropriate max allowed index for the portal scale', function () {
         const mediaInfo = streamProcessor.getMediaInfo();
 
         mediaInfo.streamInfo = streamProcessor.getStreamInfo();
@@ -290,12 +290,12 @@ describe('AbrController', function () {
 
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(1)
 
-        s.streaming.abr.portalSize = 2
+        s.streaming.abr.portalScale = 2
         settings.update(s)
 
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(4)
 
-        s.streaming.abr.portalSize = 0.2
+        s.streaming.abr.portalScale = 0.2
         settings.update(s)
 
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(0)

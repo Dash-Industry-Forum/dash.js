@@ -527,16 +527,22 @@ function AbrController() {
         if (!windowResizeEventCalled) {
             setElementSize();
         }
+
+        const portalScale = settings.get().streaming.abr.portalScale || 1;
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
         const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
         let newIdx = idx;
+        const scaledWidth = elementWidth * Math.sqrt(portalScale);
+        const scaledHeight = elementHeight * Math.sqrt(portalScale);
 
-        if (elementWidth > 0 && elementHeight > 0) {
+        debugger;
+
+        if (scaledWidth > 0 && scaledHeight > 0) {
             while (
                 newIdx > 0 &&
                 representation[newIdx] &&
-                elementWidth < representation[newIdx].width &&
-                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth) {
+                scaledWidth < representation[newIdx].width &&
+                scaledWidth - representation[newIdx - 1].width < representation[newIdx].width - scaledWidth) {
                 newIdx = newIdx - 1;
             }
 
