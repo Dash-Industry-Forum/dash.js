@@ -568,6 +568,18 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Multi Audio - Initial Track with language and accessibility",
+                "description": "This example illustrates how to select a default audio language and accessibility for playback.",
+                "href": "multi-audio/multi-audio-default-lang-acc.html",
+                "image": "http://webapi.streaming.dolby.com/v0_9/sources/media/v01/img/dolbyaudio_black2.png",
+                "labels": [
+                    "VoD",
+                    "Multi Audio",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
