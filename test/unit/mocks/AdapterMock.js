@@ -63,11 +63,11 @@ function AdapterMock() {
 
     this.getAdaptationForType = function () {
         const representation = [
-            { width: 500, bitrate: 1000000 },
-            { width: 750, bitrate: 2000000 },
-            { width: 900, bitrate: 3000000 },
-            { width: 900, bitrate: 4000000 },
-            { width: 900, bitrate: 5000000 }
+            { width: 500, bandwidth: 1000000 },
+            { width: 750, bandwidth: 2000000 },
+            { width: 900, bandwidth: 3000000 },
+            { width: 900, bandwidth: 4000000 },
+            { width: 900, bandwidth: 5000000 }
         ]
 
         return {

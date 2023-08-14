@@ -536,8 +536,6 @@ function AbrController() {
         const scaledWidth = elementWidth * Math.sqrt(portalScale);
         const scaledHeight = elementHeight * Math.sqrt(portalScale);
 
-        debugger;
-
         if (scaledWidth > 0 && scaledHeight > 0) {
             while (
                 newIdx > 0 &&

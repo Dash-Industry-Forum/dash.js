@@ -319,6 +319,7 @@ describe('AbrController', function () {
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(0)
 
         s.streaming.abr.portalMinimum = 2000
+        settings.update(s)
 
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(1)
     })
