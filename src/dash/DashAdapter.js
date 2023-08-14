@@ -38,7 +38,7 @@ import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import DashManifestModel from './models/DashManifestModel';
 import PatchManifestModel from './models/PatchManifestModel';
-import bcp47Normalize from 'bcp-47-normalize';
+import {bcp47Normalize} from 'bcp-47-normalize';
 
 /**
  * @module DashAdapter
