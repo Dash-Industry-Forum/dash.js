@@ -28,19 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ThroughputRule from './ThroughputRule';
-import InsufficientBufferRule from './InsufficientBufferRule';
-import AbandonRequestsRule from './AbandonRequestsRule';
-import DroppedFramesRule from './DroppedFramesRule';
-import SwitchHistoryRule from './SwitchHistoryRule';
-import BolaRule from './BolaRule';
+import ThroughputRule from './ThroughputRule.js';
+import InsufficientBufferRule from './InsufficientBufferRule.js';
+import AbandonRequestsRule from './AbandonRequestsRule.js';
+import DroppedFramesRule from './DroppedFramesRule.js';
+import SwitchHistoryRule from './SwitchHistoryRule.js';
+import BolaRule from './BolaRule.js';
 import L2ARule from './L2ARule.js';
 import LoLPRule from './lolp/LoLpRule.js';
-import FactoryMaker from '../../../core/FactoryMaker';
-import SwitchRequest from '../SwitchRequest';
-import EventBus from '../../../core/EventBus';
-import Events from '../../../core/events/Events';
-import Constants from '../../constants/Constants';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
+import Constants from '../../constants/Constants.js';
 
 
 function ABRRulesCollection(config) {

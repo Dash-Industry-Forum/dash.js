@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
-import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
-import Errors from '../core/errors/Errors';
-import DashConstants from '../dash/constants/DashConstants';
-import URLUtils from './utils/URLUtils';
-import LocationSelector from './utils/LocationSelector';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
+import Errors from '../core/errors/Errors.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import URLUtils from './utils/URLUtils.js';
+import LocationSelector from './utils/LocationSelector.js';
 
 function ManifestUpdater() {
 

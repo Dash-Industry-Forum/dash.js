@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import FragmentModel from '../models/FragmentModel';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import MetricsConstants from '../constants/MetricsConstants';
-import MediaPlayerEvents from '../MediaPlayerEvents';
+import Constants from '../constants/Constants.js';
+import FragmentModel from '../models/FragmentModel.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function ScheduleController(config) {
 

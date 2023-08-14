@@ -1,7 +1,7 @@
-import CommonEncryption from '../../src/streaming/protection/CommonEncryption';
-import Base64 from '../../externals/base64';
+import CommonEncryption from '../../src/streaming/protection/CommonEncryption.js';
+import Base64 from '../../externals/base64.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 let cpData;
 
 describe('CommonEncryption', () => {

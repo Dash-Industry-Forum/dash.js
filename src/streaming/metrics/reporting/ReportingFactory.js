@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DVBReporting from './reporters/DVBReporting';
+import DVBReporting from './reporters/DVBReporting.js';
 
 function ReportingFactory(config) {
     config = config || {};

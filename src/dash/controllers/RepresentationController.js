@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import {getTimeBasedSegment} from '../utils/SegmentsUtils';
+import Constants from '../../streaming/constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
 
 function RepresentationController(config) {
 

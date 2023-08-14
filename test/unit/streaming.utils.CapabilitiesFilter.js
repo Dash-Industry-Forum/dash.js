@@ -1,10 +1,10 @@
-import CapabilitiesFilter from '../../src/streaming/utils/CapabilitiesFilter';
-import AdapterMock from './mocks/AdapterMock';
-import CapabilitiesMock from './mocks/CapabilitiesMock';
-import Settings from '../../src/core/Settings';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import CapabilitiesFilter from '../../src/streaming/utils/CapabilitiesFilter.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import CapabilitiesMock from './mocks/CapabilitiesMock.js';
+import Settings from '../../src/core/Settings.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 let adapterMock;
 let capabilitiesFilter;

@@ -31,9 +31,9 @@
 /**
  * @classdesc Matches and converts any ISO 639 language tag to BCP-47 language tags
  */
-import BaseMatcher from './BaseMatcher';
-import DashConstants from '../../constants/DashConstants';
-import bcp47Normalize from 'bcp-47-normalize';
+import BaseMatcher from './BaseMatcher.js';
+import DashConstants from '../../constants/DashConstants.js';
+import {bcp47Normalize} from 'bcp-47-normalize';
 
 class LangMatcher extends BaseMatcher {
     constructor() {

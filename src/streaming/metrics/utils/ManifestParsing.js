@@ -1,6 +1,6 @@
-import Metrics from '../vo/Metrics';
-import Range from '../vo/Range';
-import Reporting from '../vo/Reporting';
+import Metrics from '../vo/Metrics.js';
+import Range from '../vo/Range.js';
+import Reporting from '../vo/Reporting.js';
 
 function ManifestParsing (config) {
     config = config || {};

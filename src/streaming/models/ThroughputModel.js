@@ -29,12 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import EventBus from '../../core/EventBus';
+import Constants from '../constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import EventBus from '../../core/EventBus.js';
 
 /**
  * Throughput generally stored in kbit/s

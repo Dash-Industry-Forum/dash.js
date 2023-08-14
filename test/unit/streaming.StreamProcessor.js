@@ -1,5 +1,6 @@
-import StreamProcessor from '../../src/streaming/StreamProcessor';
-const expect = require('chai').expect;
+import StreamProcessor from '../../src/streaming/StreamProcessor.js';
+import {expect} from 'chai';
+
 const context = {};
 
 const streamInfo = {

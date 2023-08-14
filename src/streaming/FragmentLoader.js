@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import URLLoader from './net/URLLoader';
-import HeadRequest from './vo/HeadRequest';
-import DashJSError from './vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
+import Constants from './constants/Constants.js';
+import URLLoader from './net/URLLoader.js';
+import HeadRequest from './vo/HeadRequest.js';
+import DashJSError from './vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function FragmentLoader(config) {
 

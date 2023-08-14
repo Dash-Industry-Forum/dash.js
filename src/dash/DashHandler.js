@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import FactoryMaker from '../core/FactoryMaker';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
 import {
     replaceIDForTemplate,
     replaceTokenForTemplate,
     unescapeDollarsInTemplate
-} from './utils/SegmentsUtils';
-import DashConstants from './constants/DashConstants';
+} from './utils/SegmentsUtils.js';
+import DashConstants from './constants/DashConstants.js';
 
 
 const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;

@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import DashConstants from '../constants/DashConstants';
-import ObjectIron from './objectiron';
-import DurationMatcher from './matchers/DurationMatcher';
-import DateTimeMatcher from './matchers/DateTimeMatcher';
-import NumericMatcher from './matchers/NumericMatcher';
-import LangMatcher from './matchers/LangMatcher';
-import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
-import SegmentValuesMap from './maps/SegmentValuesMap';
-import * as tXml from '../../../externals/tXml';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashConstants from '../constants/DashConstants.js';
+import ObjectIron from './objectiron.js';
+import DurationMatcher from './matchers/DurationMatcher.js';
+import DateTimeMatcher from './matchers/DateTimeMatcher.js';
+import NumericMatcher from './matchers/NumericMatcher.js';
+import LangMatcher from './matchers/LangMatcher.js';
+import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
+import SegmentValuesMap from './maps/SegmentValuesMap.js';
+import * as tXml from '../../../externals/tXml.js';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [

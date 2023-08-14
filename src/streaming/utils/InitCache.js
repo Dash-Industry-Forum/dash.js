@@ -33,7 +33,7 @@
  * Represents data structure to keep and drive {DataChunk}
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function InitCache() {
 

@@ -28,29 +28,29 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import MetricsConstants from './constants/MetricsConstants';
-import FragmentModel from './models/FragmentModel';
-import BufferController from './controllers/BufferController';
-import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferController';
-import ScheduleController from './controllers/ScheduleController';
-import RepresentationController from '../dash/controllers/RepresentationController';
-import FactoryMaker from '../core/FactoryMaker';
-import {checkInteger} from './utils/SupervisorTools';
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import MediaPlayerEvents from './MediaPlayerEvents';
-import DashHandler from '../dash/DashHandler';
-import Errors from '../core/errors/Errors';
-import DashJSError from './vo/DashJSError';
-import Debug from '../core/Debug';
-import RequestModifier from './utils/RequestModifier';
-import URLUtils from '../streaming/utils/URLUtils';
-import {PlayListTrace} from './vo/metrics/PlayList';
-import SegmentsController from '../dash/controllers/SegmentsController';
-import {HTTPRequest} from './vo/metrics/HTTPRequest';
-import TimeUtils from './utils/TimeUtils';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import FragmentModel from './models/FragmentModel.js';
+import BufferController from './controllers/BufferController.js';
+import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferController.js';
+import ScheduleController from './controllers/ScheduleController.js';
+import RepresentationController from '../dash/controllers/RepresentationController.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import {checkInteger} from './utils/SupervisorTools.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import DashHandler from '../dash/DashHandler.js';
+import Errors from '../core/errors/Errors.js';
+import DashJSError from './vo/DashJSError.js';
+import Debug from '../core/Debug.js';
+import RequestModifier from './utils/RequestModifier.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import {PlayListTrace} from './vo/metrics/PlayList.js';
+import SegmentsController from '../dash/controllers/SegmentsController.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import TimeUtils from './utils/TimeUtils.js';
 
 
 function StreamProcessor(config) {

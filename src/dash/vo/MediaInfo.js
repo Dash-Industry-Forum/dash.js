@@ -35,10 +35,8 @@
 class MediaInfo {
     constructor() {
         this.KID = null;
-        this.accessibilitiesWithSchemeIdUri = null;
         this.accessibility = null;
         this.audioChannelConfiguration = null;
-        this.audioChannelConfigurationsWithSchemeIdUri = null;
         this.bitrateList = null;
         this.codec = null;
         this.contentProtection = null;
@@ -52,7 +50,6 @@ class MediaInfo {
         this.mimeType = null;
         this.representationCount = 0;
         this.roles = null;
-        this.rolesWithSchemeIdUri = null;
         this.segmentAlignment = false;
         this.selectionPriority = 1;
         this.streamInfo = null;
@@ -60,7 +57,6 @@ class MediaInfo {
         this.supplementalProperties = {};
         this.type = null;
         this.viewpoint = null;
-        this.viewpointsWithSchemeIdUri = null;
     }
 
 }

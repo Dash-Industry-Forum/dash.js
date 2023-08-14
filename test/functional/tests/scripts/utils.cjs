@@ -1,5 +1,5 @@
 const intern = require('intern').default;
-const constants = require('./constants.js');
+const constants = require('./constants.cjs');
 
 module.exports = {
 

@@ -31,7 +31,7 @@
 
 /* global escape: true */
 
-import FactoryMaker from '../../../core/FactoryMaker';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 /**
  * Microsoft PlayReady Test License Server

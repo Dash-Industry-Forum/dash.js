@@ -12,9 +12,9 @@ const intern = require('intern').default;
 const { suite, before, test, after } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
-const constants = require('./scripts/constants.js');
-const utils = require('./scripts/utils.js');
-const player = require('./scripts/player.js');
+const constants = require('./scripts/constants.cjs');
+const utils = require('./scripts/utils.cjs');
+const player = require('./scripts/player.cjs');
 const { beforeEach } = require('intern/lib/interfaces/tdd');
 const { default: Test, SKIP } = require('intern/lib/Test');
 

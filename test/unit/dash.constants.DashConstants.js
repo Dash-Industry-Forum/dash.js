@@ -1,6 +1,5 @@
-import DashConstants from '../../src/dash/constants/DashConstants';
-
-const expect = require('chai').expect;
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import {expect} from 'chai';
 
 describe('DashConstants', function () {
     it('DashConstants should exist', () => {

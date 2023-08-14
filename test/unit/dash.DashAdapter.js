@@ -1,15 +1,13 @@
-import DashAdapter from '../../src/dash/DashAdapter';
-import MediaInfo from '../../src/dash/vo/MediaInfo';
-import Constants from '../../src/streaming/constants/Constants';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import cea608parser from '../../externals/cea608-parser';
-
-import VoHelper from './helpers/VOHelper';
+import DashAdapter from '../../src/dash/DashAdapter.js';
+import MediaInfo from '../../src/dash/vo/MediaInfo.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import cea608parser from '../../externals/cea608-parser.js';
+import VoHelper from './helpers/VOHelper.js';
 import PatchHelper from './helpers/PatchHelper.js';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DescriptorType from '../../src/dash/vo/DescriptorType';
-
-const expect = require('chai').expect;
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
+import {expect} from 'chai';
 
 const context = {};
 const voHelper = new VoHelper();
@@ -23,12 +21,12 @@ const manifest_with_audio = {
             id: undefined,
             mimeType: Constants.AUDIO,
             lang: 'eng',
-            Role: [{ value: 'main' }]
+            Role: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }]
         }, {
             id: undefined,
             mimeType: Constants.AUDIO,
             lang: 'deu',
-            Role: [{ value: 'main' }]
+            Role: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }]
         }]
     }]
 };
@@ -519,7 +517,7 @@ describe('DashAdapter', function () {
                 track.streamInfo = streamInfo;
                 track.representationCount = 0;
                 track.lang = 'deu';
-                track.roles = ['main'];
+                track.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main'}];
                 track.rolesWithSchemeIdUri = [{ schemeIdUri: 'aScheme', value: 'main' }];
                 track.codec = 'audio/mp4;codecs="mp4a.40.2"';
                 track.mimeType = 'audio/mp4';
@@ -633,6 +631,9 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].supplementalProperties.length).equals(3);
+
+                    expect(mediaInfoArray[0].supplementalProperties[1].schemeIdUri).equals('test:scheme');
+                    expect(mediaInfoArray[0].supplementalProperties[1].value).equals('value2');
                 });
 
                 it('supplemental properties should not be filled if not set on all representations', function () {
@@ -661,12 +662,11 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(2);
-                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('6');
-
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri.length).equals(2);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[1].value).equals('0xF801');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0].schemeIdUri).equals('urn:mpeg:mpegB:cicp:ChannelConfiguration');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0].value).equals('6');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[1].schemeIdUri).equals('tag:dolby.com,2014:dash:audio_channel_configuration:2011');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[1].value).equals('0xF801');
                 });
 
                 it('audio channel config should be filled when present on Representation', function () {
@@ -681,12 +681,9 @@ describe('DashAdapter', function () {
                     // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
                     expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);
-                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).equals('21');
-
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri.length).equals(4);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].audioChannelConfigurationsWithSchemeIdUri[3].value).equals('0xA000');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[0]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].audioChannelConfiguration[3].schemeIdUri).equals('tag:dolby.com,2014:dash:audio_channel_configuration:2011');
+                    expect(mediaInfoArray[0].audioChannelConfiguration[3].value).equals('0xA000');
                 });
 
                 it('role, accessibility and viewpoint should be empty if not defined', function () {
@@ -702,15 +699,8 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].roles.length).equals(0);
                     expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].accessibility.length).equals(0);
-                    expect(mediaInfoArray[0].viewpoint).to.be.undefined;
-
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(0);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri.length).equals(0);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri.length).equals(0);
+                    expect(mediaInfoArray[0].viewpoint).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].viewpoint.length).equals(0);
                 });
 
                 it('role should be filled', function () {
@@ -724,12 +714,9 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].roles).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].roles.length).equals(1);
-                    expect(mediaInfoArray[0].roles[0]).equals('main');
-
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(1);
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri[0].value).equals('main');
+                    expect(mediaInfoArray[0].roles[0]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].roles[0].schemeIdUri).equals('urn:mpeg:dash:role:2011');
+                    expect(mediaInfoArray[0].roles[0].value).equals('main');
                 });
 
                 it('accessibility should be filled', function () {
@@ -746,18 +733,12 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].accessibility).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].accessibility.length).equals(1);
-                    expect(mediaInfoArray[0].accessibility[0]).equals('cea-608:CC1=eng;CC3=swe');
+                    expect(mediaInfoArray[0].accessibility[0]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].accessibility[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015');
+                    expect(mediaInfoArray[0].accessibility[0].value).equals('CC1=eng;CC3=swe');
+                    expect(mediaInfoArray[0].embeddedCaptions).equals(true);
+
                     expect(mediaInfoArray[1].accessibility.length).equals(0);
-
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].rolesWithSchemeIdUri.length).equals(0);
-
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri.length).equals(1);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0].schemeIdUri).equals('urn:scte:dash:cc:cea-608:2015');
-                    expect(mediaInfoArray[0].accessibilitiesWithSchemeIdUri[0].value).equals('CC1=eng;CC3=swe');
-                    expect(mediaInfoArray[1].accessibilitiesWithSchemeIdUri.length).equals(0);
                 });
 
                 it('viewpoint should be filled', function () {
@@ -769,20 +750,18 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray).to.be.instanceOf(Array);
                     expect(mediaInfoArray.length).equals(1);
 
-                    expect(mediaInfoArray[0].viewpoint).equals('VP1');
+                    expect(mediaInfoArray[0].viewpoint).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].viewpoint.length).equals(2);
 
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri).to.be.instanceOf(Array);
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri.length).equals(2);
+                    expect(mediaInfoArray[0].viewpoint[0]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].viewpoint[0].schemeIdUri).equals('urn:scheme:viewpoint');
+                    expect(mediaInfoArray[0].viewpoint[0].value).equals('VP1');
+                    expect(mediaInfoArray[0].viewpoint[0].id).to.be.null;
 
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].schemeIdUri).equals('urn:scheme:viewpoint');
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].value).equals('VP1');
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[0].id).to.be.null;
-
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1]).to.be.instanceOf(DescriptorType);
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].schemeIdUri).equals('urn:scheme:viewpoint');
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].value).equals('VP2');
-                    expect(mediaInfoArray[0].viewpointsWithSchemeIdUri[1].id).to.be.null;
+                    expect(mediaInfoArray[0].viewpoint[1]).to.be.instanceOf(DescriptorType);
+                    expect(mediaInfoArray[0].viewpoint[1].schemeIdUri).equals('urn:scheme:viewpoint');
+                    expect(mediaInfoArray[0].viewpoint[1].value).equals('VP2');
+                    expect(mediaInfoArray[0].viewpoint[1].id).to.be.null;
                 });
 
             });

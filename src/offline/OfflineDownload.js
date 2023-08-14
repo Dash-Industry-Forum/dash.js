@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import OfflineConstants from './constants/OfflineConstants';
-import OfflineStream from './OfflineStream';
-import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
-import OfflineErrors from './errors/OfflineErrors';
-import DashParser from '../dash/parser/DashParser';
+import OfflineConstants from './constants/OfflineConstants.js';
+import OfflineStream from './OfflineStream.js';
+import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser.js';
+import OfflineErrors from './errors/OfflineErrors.js';
+import DashParser from '../dash/parser/DashParser.js';
 
 function OfflineDownload(config) {
     config = config || {};

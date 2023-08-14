@@ -29,16 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DashConstants from './constants/DashConstants';
-import MediaInfo from './vo/MediaInfo';
-import StreamInfo from './vo/StreamInfo';
-import ManifestInfo from './vo/ManifestInfo';
-import Event from './vo/Event';
-import FactoryMaker from '../core/FactoryMaker';
-import DashManifestModel from './models/DashManifestModel';
-import PatchManifestModel from './models/PatchManifestModel';
-import bcp47Normalize from 'bcp-47-normalize';
-import Representation from './vo/Representation';
+import DashConstants from './constants/DashConstants.js';
+import MediaInfo from './vo/MediaInfo.js';
+import StreamInfo from './vo/StreamInfo.js';
+import ManifestInfo from './vo/ManifestInfo.js';
+import Event from './vo/Event.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashManifestModel from './models/DashManifestModel.js';
+import PatchManifestModel from './models/PatchManifestModel.js';
+import Representation from './vo/Representation.js';
+import {bcp47Normalize} from 'bcp-47-normalize';
 
 /**
  * @module DashAdapter
@@ -76,7 +76,6 @@ function DashAdapter() {
         if (config.cea608parser) {
             cea608parser = config.cea608parser;
         }
-
         if (config.errHandler) {
             dashManifestModel.setConfig({ errHandler: config.errHandler });
         }
@@ -174,17 +173,13 @@ function DashAdapter() {
 
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
-        const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
-        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpointsWithSchemeIdUri) === JSON.stringify(mInfoTwo.viewpointsWithSchemeIdUri);
+        const sameViewpoint = JSON.stringify(mInfoOne.viewpoint) === JSON.stringify(mInfoTwo.viewpoint);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
-        const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
-        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.rolesWithSchemeIdUri) === JSON.stringify(mInfoTwo.rolesWithSchemeIdUri);
-        const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
-        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibilitiesWithSchemeIdUri) === JSON.stringify(mInfoTwo.accessibilitiesWithSchemeIdUri);
-        const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
-        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfigurationsWithSchemeIdUri);
+        const sameRoles = JSON.stringify(mInfoOne.roles) === JSON.stringify(mInfoTwo.roles);
+        const sameAccessibility = JSON.stringify(mInfoOne.accessibility) === JSON.stringify(mInfoTwo.accessibility);
+        const sameAudioChannelConfiguration = JSON.stringify(mInfoOne.audioChannelConfiguration) === JSON.stringify(mInfoTwo.audioChannelConfiguration);
 
-        return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -214,32 +209,34 @@ function DashAdapter() {
                         continue;
                     }
                     let accessibility = media.accessibility[j];
-                    if (accessibility.indexOf('cea-608:') === 0) {
-                        let value = accessibility.substring(8);
-                        let parts = value.split(';');
-                        if (parts[0].substring(0, 2) === 'CC') {
-                            for (j = 0; j < parts.length; j++) {
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
-                                }
-                                convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
-                                mediaArr.push(media);
-                                media = null;
-                            }
+                    if (accessibility.schemeIdUri === constants.ACCESSIBILITY_CEA608_SCHEME) {
+                        if (accessibility.value === '') {
+                            convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
+                            mediaArr.push(media);
+                            media = null;
                         } else {
-                            for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                            let value = accessibility.value;
+                            let parts = value.split(';');
+                            if (parts[0].substring(0, 2) === 'CC') {
+                                for (j = 0; j < parts.length; j++) {
+                                    if (!media) {
+                                        media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                                    }
+                                    convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
+                                    mediaArr.push(media);
+                                    media = null;
                                 }
-                                convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
-                                mediaArr.push(media);
-                                media = null;
+                            } else {
+                                for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
+                                    if (!media) {
+                                        media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                                    }
+                                    convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
+                                    mediaArr.push(media);
+                                    media = null;
+                                }
                             }
                         }
-                    } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
-                        convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
-                        mediaArr.push(media);
-                        media = null;
                     }
                 }
             } else if (type === constants.IMAGE) {
@@ -999,7 +996,6 @@ function DashAdapter() {
 
         let mediaInfo = new MediaInfo();
         const realAdaptation = adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
-        let viewpoint, acc, acc_rep, roles, accessibility;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1010,47 +1006,16 @@ function DashAdapter() {
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
-
-        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
-        mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
-
-        accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
-        mediaInfo.accessibility = accessibility.map(function (accessibility) {
-            let accessibilityValue = accessibility.value;
-            let accessibilityData = accessibilityValue;
-            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
-                if (accessibilityValue) {
-                    accessibilityData = 'cea-608:' + accessibilityValue;
-                } else {
-                    accessibilityData = 'cea-608';
-                }
-                mediaInfo.embeddedCaptions = true;
-            }
-            return accessibilityData;
-        });
-        mediaInfo.accessibilitiesWithSchemeIdUri = accessibility;
-
-        acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
-        mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
-            return audioChannelConfiguration.value;
-        });
-        mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc;
-
+        mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
+        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        if (mediaInfo.accessibility.filter(function (accessibility) {
+            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') return true;
+        })[0]) mediaInfo.embeddedCaptions = true;
+        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
         if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
-            mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
-                return audioChannelConfiguration.value;
-            });
-            mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
         }
-
-        roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
-        mediaInfo.roles = roles.map(function (role) {
-            return role.value;
-        });
-        mediaInfo.rolesWithSchemeIdUri = roles;
-
+        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
@@ -1094,8 +1059,7 @@ function DashAdapter() {
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
-        mediaInfo.roles = ['caption'];
-        mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
+        mediaInfo.roles = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {

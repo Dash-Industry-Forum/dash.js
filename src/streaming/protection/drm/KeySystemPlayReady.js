@@ -35,8 +35,8 @@
  * @class
  * @implements KeySystem
  */
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;

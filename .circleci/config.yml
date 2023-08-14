@@ -96,7 +96,7 @@ commands:
             -   run:
                     name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
                     command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
 jobs:
     build-and-unit-test:
         executor: dashjs-executor
@@ -110,11 +110,11 @@ jobs:
         steps:
             - checkout
             -   run:
-                    name: Merge into development virtually
+                    name: Merge into v5.0.0 virtually
                     command: |
                         git config --global user.email "circleci@example.com"
                         git config --global user.name "CircleCI"
-                        git checkout development
+                        git checkout v5.0.0
                         git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
             - build_unit_test_steps
@@ -125,14 +125,14 @@ jobs:
             - functional_precondition
             - checkout
             -   run:
-                    name: Virtual merge into development branch
+                    name: Virtual merge into v5.0.0 branch
                     command: |
-                        if [ "${CIRCLE_BRANCH}" = "development" ]; then
-                            echo "On development branch already, no merge needed"
+                        if [ "${CIRCLE_BRANCH}" = "v5.0.0" ]; then
+                            echo "On v5.0.0 branch already, no merge needed"
                         else
                             git config --global user.email "circleci@example.com"
                             git config --global user.name "CircleCI"
-                            git checkout development
+                            git checkout v5.0.0
                             git merge --no-edit --no-ff $CIRCLE_BRANCH
                         fi
             - dependencies_setup
@@ -141,11 +141,11 @@ jobs:
             -   run:
                     name: Run functional tests for one vector (chrome / https)
                     command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
             -   run:
                     name: Run functional tests for smoke vectors (chrome / https)
                     command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             - process_test_results
     
     functional-tests-VOD_LIVE:
@@ -201,7 +201,7 @@ workflows:
                     filters:
                         branches:
                             ignore:
-                                - development # skiping redundant job if already on development
+                                - v5.0.0 # skiping redundant job if already on development
             -   functional-tests-smoke:
                     filters:
                         branches:

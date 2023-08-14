@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../constants/Constants.js';
 
 
 const READY_STATES_TO_EVENT_NAMES = new Map([

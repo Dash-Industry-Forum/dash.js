@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
+import Constants from '../constants/Constants.js';
 
 export function checkParameterType(parameter, type) {
     if (typeof parameter !== type) {

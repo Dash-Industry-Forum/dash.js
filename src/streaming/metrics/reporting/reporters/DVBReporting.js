@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricSerialiser from '../../utils/MetricSerialiser';
-import RNG from '../../utils/RNG';
-import CustomParametersModel from '../../../models/CustomParametersModel';
+import MetricSerialiser from '../../utils/MetricSerialiser.js';
+import RNG from '../../utils/RNG.js';
+import CustomParametersModel from '../../../models/CustomParametersModel.js';
 
 function DVBReporting(config) {
     config = config || {};

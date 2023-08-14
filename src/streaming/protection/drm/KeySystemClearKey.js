@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import KeyPair from '../vo/KeyPair';
-import ClearKeyKeySet from '../vo/ClearKeyKeySet';
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import KeyPair from '../vo/KeyPair.js';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
 const systemString = ProtectionConstants.CLEARKEY_KEYSTEM_STRING;

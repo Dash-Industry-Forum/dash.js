@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './FactoryMaker';
+import FactoryMaker from './FactoryMaker.js';
 import Utils from './Utils.js';
-import Debug from '../core/Debug';
-import Constants from '../streaming/constants/Constants';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import EventBus from './EventBus';
-import Events from './events/Events';
+import Debug from '../core/Debug.js';
+import Constants from '../streaming/constants/Constants.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import EventBus from './EventBus.js';
+import Events from './events/Events.js';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -267,7 +267,13 @@ import Events from './events/Events';
  *                    applyMb: false,
  *                    etpWeightRatio: 0
  *                }
- *           }
+ *            },
+ *            defaultSchemeIdUri: {
+ *                viewpoint: '',
+ *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+ *                role: 'urn:mpeg:dash:role:2011',
+ *                accessibility: 'urn:mpeg:dash:role:2011'
+ *            }
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -847,6 +853,9 @@ import Events from './events/Events';
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
+ * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
+ * Default schemeIdUri for descriptor type elements
+ * These strings are used when not provided with setInitialMediaSettingsFor()
  */
 
 
@@ -1105,7 +1114,13 @@ function Settings() {
                     applyMb: false,
                     etpWeightRatio: 0
                 }
-            }
+            },
+            defaultSchemeIdUri: {
+                viewpoint: '',
+                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                role: 'urn:mpeg:dash:role:2011',
+                accessibility: 'urn:mpeg:dash:role:2011'
+            }           
         },
         errors: {
             recoverAttempts: {

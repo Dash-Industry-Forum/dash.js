@@ -1,6 +1,6 @@
-import BoxParser from '../../src/streaming/utils/BoxParser';
+import BoxParser from '../../src/streaming/utils/BoxParser.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const boxParser = BoxParser(context).getInstance();

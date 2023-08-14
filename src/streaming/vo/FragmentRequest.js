@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { HTTPRequest } from './metrics/HTTPRequest';
+import { HTTPRequest } from './metrics/HTTPRequest.js';
 
 /**
  * @class

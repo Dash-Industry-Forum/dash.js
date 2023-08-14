@@ -1,12 +1,11 @@
-import InsufficientBufferRule from '../../src/streaming/rules/abr/InsufficientBufferRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-import Constants from '../../src/streaming/constants/Constants';
+import InsufficientBufferRule from '../../src/streaming/rules/abr/InsufficientBufferRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 import EventBus from '../../src/core/EventBus.js';
-import Events from '../../src/core/events/Events';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import Settings from '../../src/core/Settings';
-
-const expect = require('chai').expect;
+import Events from '../../src/core/events/Events.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import Settings from '../../src/core/Settings.js';
+import {expect} from 'chai';
 
 const context = {};
 let insufficientBufferRule;

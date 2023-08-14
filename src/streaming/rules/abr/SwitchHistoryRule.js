@@ -1,7 +1,7 @@
 
-import FactoryMaker from '../../../core/FactoryMaker';
-import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest.js';
 
 function SwitchHistoryRule() {
 

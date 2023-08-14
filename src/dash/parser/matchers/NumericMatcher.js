@@ -31,8 +31,8 @@
 /**
  * @classdesc Matches and converts xs:numeric to float
  */
-import BaseMatcher from './BaseMatcher';
-import DashConstants from '../../constants/DashConstants';
+import BaseMatcher from './BaseMatcher.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
 

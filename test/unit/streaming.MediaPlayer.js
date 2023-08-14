@@ -1,21 +1,21 @@
-import SpecHelper from './helpers/SpecHelper';
-import VideoElementMock from './mocks/VideoElementMock';
-import StreamControllerMock from './mocks/StreamControllerMock';
-import CapabilitiesMock from './mocks/CapabilitiesMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-import MediaPlayer from './../../src/streaming/MediaPlayer';
-import VideoModel from './../../src/streaming/models/VideoModel';
-import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
-import MediaControllerMock from './mocks/MediaControllerMock';
-import ThroughputControllerMock from './mocks/ThroughputControllerMock';
-import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
-import Constants from '../../src/streaming/constants/Constants';
-import Settings from '../../src/core/Settings';
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import SpecHelper from './helpers/SpecHelper.js';
+import VideoElementMock from './mocks/VideoElementMock.js';
+import StreamControllerMock from './mocks/StreamControllerMock.js';
+import CapabilitiesMock from './mocks/CapabilitiesMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import MediaPlayer from './../../src/streaming/MediaPlayer.js';
+import VideoModel from './../../src/streaming/models/VideoModel.js';
+import MediaPlayerModelMock from './mocks//MediaPlayerModelMock.js';
+import MediaControllerMock from './mocks/MediaControllerMock.js';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
+import ObjectUtils from './../../src/streaming/utils/ObjectUtils.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Settings from '../../src/core/Settings.js';
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
@@ -24,10 +24,10 @@ const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 describe('MediaPlayer', function () {
 
     before(function () {
-        global.dashjs = {};
+        window.dashjs = {};
     });
     after(function () {
-        delete global.dashjs;
+        delete window.dashjs;
     });
 
     const context = {};
@@ -1034,14 +1034,80 @@ describe('MediaPlayer', function () {
                 player.setInitialMediaSettingsFor('audio', 'settings');
 
                 initialSettings = player.getInitialMediaSettingsFor('audio');
-                expect(initialSettings).to.equal('settings');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.deep.equal({});
 
-                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption' });
+                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption', accessibility: {schemeIdUri:'urn:mpeg:dash:role:2011', value:''} });
                 initialSettings = player.getInitialMediaSettingsFor('text');
-                expect(initialSettings).to.exist; // jshint ignore:line
-                expect(initialSettings.lang).to.equal('en');
-                expect(initialSettings.role).to.equal('caption');
+                expect(initialSettings).to.be.instanceOf(Object);
 
+                expect(initialSettings).to.have.property('lang');
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).not.to.have.property('audioChannelConfiguration');
+                expect(initialSettings).not.to.have.property('viewpoint');
+
+                expect(initialSettings.lang).to.equal('en');
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role).to.have.property('value');
+                // dash.js asumes the MPEG role scheme as default, if not provided
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.role.value).to.equal('caption');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.accessibility.value).to.equal('');
+            });
+
+            it('should assume default schemeIdUri strings for initial media settings, if not provided', function () {
+                player.setInitialMediaSettingsFor('audio', { role: 'val1', accessibility: 'val2', viewpoint: 'val3', audioChannelConfiguration: 'val4'});
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('urn:mpeg:mpegB:cicp:ChannelConfiguration');
+            });
+
+            it('should take schemeIdUri strings for initial media settings, if provided', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    role: {schemeIdUri: 'test.scheme.1', value: 'val1'},
+                    accessibility: {schemeIdUri: 'test.scheme.2', value: 'val2'},
+                    viewpoint:  {schemeIdUri: 'test.scheme.3', value: 'val3'},
+                    audioChannelConfiguration: {schemeIdUri: 'test.scheme.4', value: 'val4'}
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('test.scheme.1');
+                expect(initialSettings.role.value).to.equal('val1');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('test.scheme.2');
+                expect(initialSettings.accessibility.value).to.equal('val2');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('test.scheme.3');
+                expect(initialSettings.viewpoint.value).to.equal('val3');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('test.scheme.4');
+                expect(initialSettings.audioChannelConfiguration.value).to.equal('val4');
             });
 
             it('should set current track', function () {

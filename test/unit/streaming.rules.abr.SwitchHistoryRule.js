@@ -1,9 +1,8 @@
-import SwitchHistoryRule from '../../src/streaming/rules/abr/SwitchHistoryRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
+import SwitchHistoryRule from '../../src/streaming/rules/abr/SwitchHistoryRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import RulesContextMock from './mocks/RulesContextMock.js';
+import {expect} from 'chai';
 
-import RulesContextMock from './mocks/RulesContextMock';
-
-const expect = require('chai').expect;
 const context = {};
 const switchHistoryRule = SwitchHistoryRule(context).create();
 

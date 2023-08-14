@@ -1,17 +1,17 @@
-import SegmentsController from '../../src/dash/controllers/SegmentsController';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Debug from '../../src/core/Debug';
-import Settings from '../../src/core/Settings';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import Errors from '../../src/core/errors/Errors';
+import SegmentsController from '../../src/dash/controllers/SegmentsController.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Debug from '../../src/core/Debug.js';
+import Settings from '../../src/core/Settings.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import Errors from '../../src/core/errors/Errors.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 

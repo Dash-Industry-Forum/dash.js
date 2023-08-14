@@ -1,17 +1,15 @@
-import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor';
-import PlaybackController from '../../src/streaming/controllers/PlaybackController';
-import EventBus from '../../src/core/EventBus';
-import MssErrors from '../../src/mss/errors/MssErrors';
-import Constants from '../../src/streaming/constants/Constants';
-
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import StreamProcessorMock from './mocks/StreamProcessorMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import DebugMock from './mocks/DebugMock';
+import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor.js';
+import PlaybackController from '../../src/streaming/controllers/PlaybackController.js';
+import EventBus from '../../src/core/EventBus.js';
+import MssErrors from '../../src/mss/errors/MssErrors.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import StreamProcessorMock from './mocks/StreamProcessorMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import DebugMock from './mocks/DebugMock.js';
 import ISOBoxer from 'codem-isoboxer';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 const context = {};
 const playbackController = PlaybackController(context).getInstance();

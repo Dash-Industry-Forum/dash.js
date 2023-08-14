@@ -1,6 +1,6 @@
-import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
+import ObjectUtils from '../../src/streaming/utils/ObjectUtils.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const objectUtils = ObjectUtils(context).getInstance();

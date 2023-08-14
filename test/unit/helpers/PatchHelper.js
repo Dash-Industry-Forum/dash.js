@@ -1,4 +1,4 @@
-import DashConstants from '../../../src/dash/constants/DashConstants';
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
 
 function staticSElements() {
     return [[0,10], [10,5], [15,10]].map(([t, d]) => {

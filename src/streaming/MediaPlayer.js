@@ -28,59 +28,59 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import cea608parser from '../../externals/cea608-parser';
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import MetricsConstants from './constants/MetricsConstants';
-import PlaybackController from './controllers/PlaybackController';
-import StreamController from './controllers/StreamController';
-import GapController from './controllers/GapController';
-import CatchupController from './controllers/CatchupController';
-import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
-import ContentSteeringController from '../dash/controllers/ContentSteeringController';
-import MediaController from './controllers/MediaController';
-import BaseURLController from './controllers/BaseURLController';
-import ManifestLoader from './ManifestLoader';
-import ErrorHandler from './utils/ErrorHandler';
-import Capabilities from './utils/Capabilities';
-import CapabilitiesFilter from './utils/CapabilitiesFilter';
-import RequestModifier from './utils/RequestModifier';
-import URIFragmentModel from './models/URIFragmentModel';
-import ManifestModel from './models/ManifestModel';
-import MediaPlayerModel from './models/MediaPlayerModel';
-import AbrController from './controllers/AbrController';
-import SchemeLoaderFactory from './net/SchemeLoaderFactory';
-import VideoModel from './models/VideoModel';
-import CmcdModel from './models/CmcdModel';
-import CmsdModel from './models/CmsdModel';
-import DOMStorage from './utils/DOMStorage';
-import Debug from './../core/Debug';
-import Errors from './../core/errors/Errors';
-import EventBus from './../core/EventBus';
-import Events from './../core/events/Events';
-import MediaPlayerEvents from './MediaPlayerEvents';
-import FactoryMaker from '../core/FactoryMaker';
-import Settings from '../core/Settings';
-import {getVersionString} from '../core/Version';
+import cea608parser from '../../externals/cea608-parser.js';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import StreamController from './controllers/StreamController.js';
+import GapController from './controllers/GapController.js';
+import CatchupController from './controllers/CatchupController.js';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
+import MediaController from './controllers/MediaController.js';
+import BaseURLController from './controllers/BaseURLController.js';
+import ManifestLoader from './ManifestLoader.js';
+import ErrorHandler from './utils/ErrorHandler.js';
+import Capabilities from './utils/Capabilities.js';
+import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
+import RequestModifier from './utils/RequestModifier.js';
+import URIFragmentModel from './models/URIFragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import AbrController from './controllers/AbrController.js';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
+import VideoModel from './models/VideoModel.js';
+import CmcdModel from './models/CmcdModel.js';
+import CmsdModel from './models/CmsdModel.js';
+import DOMStorage from './utils/DOMStorage.js';
+import Debug from './../core/Debug.js';
+import Errors from './../core/errors/Errors.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Settings from '../core/Settings.js';
+import {getVersionString} from '../core/Version.js';
 
 //Dash
-import SegmentBaseController from '../dash/controllers/SegmentBaseController';
-import DashAdapter from '../dash/DashAdapter';
-import DashMetrics from '../dash/DashMetrics';
-import TimelineConverter from '../dash/utils/TimelineConverter';
+import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
+import DashAdapter from '../dash/DashAdapter.js';
+import DashMetrics from '../dash/DashMetrics.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import {
     HTTPRequest
-} from './vo/metrics/HTTPRequest';
-import BASE64 from '../../externals/base64';
+} from './vo/metrics/HTTPRequest.js';
+import BASE64 from '../../externals/base64.js';
 import ISOBoxer from 'codem-isoboxer';
-import DashJSError from './vo/DashJSError';
-import {checkParameterType} from './utils/SupervisorTools';
-import ManifestUpdater from './ManifestUpdater';
-import URLUtils from '../streaming/utils/URLUtils';
-import BoxParser from './utils/BoxParser';
-import TextController from './text/TextController';
-import CustomParametersModel from './models/CustomParametersModel';
-import ThroughputController from './controllers/ThroughputController';
+import DashJSError from './vo/DashJSError.js';
+import {checkParameterType} from './utils/SupervisorTools.js';
+import ManifestUpdater from './ManifestUpdater.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import BoxParser from './utils/BoxParser.js';
+import TextController from './text/TextController.js';
+import CustomParametersModel from './models/CustomParametersModel.js';
+import ThroughputController from './controllers/ThroughputController.js';
 
 /**
  * The media types
@@ -119,6 +119,11 @@ function MediaPlayer() {
      * @inner
      */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    /**
+     * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
+     * @inner
+     */
+    const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -1575,10 +1580,11 @@ function MediaPlayer() {
      * is following: <br />
      * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
+     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
+     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
+     * }
      *
      * @param {MediaType} type
      * @param {Object} value
@@ -1590,7 +1596,8 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setInitialSettings(type, value);
+        let sanitizedValue = _sanitizeSettings(value);
+        mediaController.setInitialSettings(type, sanitizedValue);
     }
 
     /**
@@ -2424,6 +2431,38 @@ function MediaPlayer() {
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
         utcValue = valToConvert + (availableFrom + metric.range.start);
         return utcValue;
+    }
+
+    function _sanitizeSettings(value) {
+        const defaults = settings.get().streaming.defaultSchemeIdUri;
+        let output = {};
+
+        function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
+            let out = {};
+            if (val) {
+                if (val instanceof Array) {
+                    throw ARRAY_NOT_SUPPORTED_ERROR;
+                } else if (val instanceof Object) {
+                    out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
+                    out.value = val.value ? val.value : '';
+                } else {
+                    out.schemeIdUri = defaultSchemeIdUri;
+                    out.value = val;
+                    logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
+                }
+                return out;
+            }
+            return null;
+        }
+
+        if (value.lang) output.lang = value.lang;
+        if (value.index) output.index = value.index;
+        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+
+        return output;
     }
 
     /**

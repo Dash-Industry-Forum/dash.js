@@ -1,9 +1,8 @@
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import SegmentBaseGetter from '../../src/dash/utils/SegmentBaseGetter';
-import Constants from '../../src/streaming/constants/Constants';
-import VoHelper from './helpers/VOHelper';
-
-const expect = require('chai').expect;
+import TimelineConverter from '../../src/dash/utils/TimelineConverter.js';
+import SegmentBaseGetter from '../../src/dash/utils/SegmentBaseGetter.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import VoHelper from './helpers/VOHelper.js';
+import {expect} from 'chai';
 
 function createRepresentationMock() {
     const voHelper = new VoHelper();

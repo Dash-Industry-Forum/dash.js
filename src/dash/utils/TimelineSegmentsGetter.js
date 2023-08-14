@@ -29,10 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../../streaming/constants/Constants';
-
-import {getTimeBasedSegment} from './SegmentsUtils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../../streaming/constants/Constants.js';
+import {getTimeBasedSegment} from './SegmentsUtils.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 

@@ -7,7 +7,7 @@ const intern = require('intern').default;
 const { suite, test } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
-const utils = require('./scripts/utils.js');
+const utils = require('./scripts/utils.cjs');
 
 // Suite name
 var NAME = 'SETUP';

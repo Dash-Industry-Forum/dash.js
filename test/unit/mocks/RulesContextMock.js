@@ -1,4 +1,4 @@
-import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
+import FragmentRequest from '../../../src/streaming/vo/FragmentRequest.js';
 
 function SwitchRequestHistoryMock() {
     this.getSwitchRequests = function () {

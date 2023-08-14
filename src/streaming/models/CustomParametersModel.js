@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import UTCTiming from '../../dash/vo/UTCTiming';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import {checkParameterType} from '../utils/SupervisorTools';
-import Constants from '../constants/Constants';
+import UTCTiming from '../../dash/vo/UTCTiming.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import {checkParameterType} from '../utils/SupervisorTools.js';
+import Constants from '../constants/Constants.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 

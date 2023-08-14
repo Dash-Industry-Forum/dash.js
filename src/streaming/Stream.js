@@ -28,20 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import StreamProcessor from './StreamProcessor';
-import FragmentController from './controllers/FragmentController';
-import ThumbnailController from './thumbnail/ThumbnailController';
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import Debug from '../core/Debug';
-import Errors from '../core/errors/Errors';
-import FactoryMaker from '../core/FactoryMaker';
-import DashJSError from './vo/DashJSError';
-import BoxParser from './utils/BoxParser';
-import URLUtils from './utils/URLUtils';
-import BlacklistController from './controllers/BlacklistController';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import StreamProcessor from './StreamProcessor.js';
+import FragmentController from './controllers/FragmentController.js';
+import ThumbnailController from './thumbnail/ThumbnailController.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import Debug from '../core/Debug.js';
+import Errors from '../core/errors/Errors.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashJSError from './vo/DashJSError.js';
+import BoxParser from './utils/BoxParser.js';
+import URLUtils from './utils/URLUtils.js';
+import BlacklistController from './controllers/BlacklistController.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];

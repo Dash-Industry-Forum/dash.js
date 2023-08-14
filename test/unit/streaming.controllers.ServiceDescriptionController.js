@@ -1,7 +1,6 @@
-import AdapterMock from './mocks/AdapterMock';
-
-import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
-const expect = require('chai').expect;
+import AdapterMock from './mocks/AdapterMock.js';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
+import {expect} from 'chai';
 
 describe('ServiceDescriptionController', () => {
 

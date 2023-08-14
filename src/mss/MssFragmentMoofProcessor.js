@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashJSError from '../streaming/vo/DashJSError';
-import MssErrors from './errors/MssErrors';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import MssErrors from './errors/MssErrors.js';
 
-import Events from '../streaming/MediaPlayerEvents';
+import Events from '../streaming/MediaPlayerEvents.js';
 
 /**
  * @module MssFragmentMoofProcessor

@@ -1,16 +1,16 @@
-import Settings from '../../src/core/Settings';
-import ScheduleController from '../../src/streaming/controllers/ScheduleController';
-import VoHelper from './helpers/VOHelper';
-import Constants from '../../src/streaming/constants/Constants';
-import AdapterMock from './mocks/AdapterMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import TextControllerMock from './mocks/TextControllerMock';
-import RepresentationControllerMock from './mocks/RepresentationControllerMock';
+import Settings from '../../src/core/Settings.js';
+import ScheduleController from '../../src/streaming/controllers/ScheduleController.js';
+import VoHelper from './helpers/VOHelper.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import TextControllerMock from './mocks/TextControllerMock.js';
+import RepresentationControllerMock from './mocks/RepresentationControllerMock.js';
 
 const voHelper = new VoHelper();
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const settings = Settings(context).getInstance();
 

@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import TimelineSegmentsGetter from '../utils/TimelineSegmentsGetter';
-import TemplateSegmentsGetter from '../utils/TemplateSegmentsGetter';
-import ListSegmentsGetter from '../utils/ListSegmentsGetter';
-import SegmentBaseGetter from '../utils/SegmentBaseGetter';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import TimelineSegmentsGetter from '../utils/TimelineSegmentsGetter.js';
+import TemplateSegmentsGetter from '../utils/TemplateSegmentsGetter.js';
+import ListSegmentsGetter from '../utils/ListSegmentsGetter.js';
+import SegmentBaseGetter from '../utils/SegmentBaseGetter.js';
 
 function SegmentsController(config) {
     config = config || {};

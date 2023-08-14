@@ -29,12 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../constants/Constants';
-import Thumbnail from '../vo/Thumbnail';
-import ThumbnailTracks from './ThumbnailTracks';
-import BitrateInfo from '../vo/BitrateInfo';
-import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
+import Thumbnail from '../vo/Thumbnail.js';
+import ThumbnailTracks from './ThumbnailTracks.js';
+import BitrateInfo from '../vo/BitrateInfo.js';
+import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailController(config) {
 

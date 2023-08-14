@@ -1,8 +1,8 @@
-import DOMStorage from '../../src/streaming/utils/DOMStorage';
-import Constants from '../../src/streaming/constants/Constants';
-import Settings from '../../src/core/Settings';
+import DOMStorage from '../../src/streaming/utils/DOMStorage.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Settings from '../../src/core/Settings.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 let context = {};
 let domStorage;

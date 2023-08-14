@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
+import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory.js';
 
 function MetricsHandlersController(config) {
 

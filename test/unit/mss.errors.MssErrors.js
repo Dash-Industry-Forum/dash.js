@@ -1,6 +1,6 @@
-import MssErrors from '../../src/mss/errors/MssErrors';
+import MssErrors from '../../src/mss/errors/MssErrors.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('Errors', function () {
     it('MssErrors code should exist', () => {

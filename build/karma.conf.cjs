@@ -1,5 +1,5 @@
 
-const llSegmentMiddleware = require('./helpers/LLsegment.js');
+const llSegmentMiddleware = require('./helpers/LLsegment.cjs');
 
 function CustomMiddlewareFactory(/*config*/) {
   return function (request, response, next ) {

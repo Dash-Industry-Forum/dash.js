@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import FactoryMaker from '../core/FactoryMaker';
-import MetricsConstants from '../streaming/constants/MetricsConstants';
-import Round10 from './utils/Round10';
-import MetricsModel from '../streaming/models/MetricsModel';
-import Utils from '../core/Utils';
-import {PlayList, PlayListTrace} from '../streaming/vo/metrics/PlayList';
+import Constants from '../streaming/constants/Constants.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import MetricsConstants from '../streaming/constants/MetricsConstants.js';
+import Round10 from './utils/Round10.js';
+import MetricsModel from '../streaming/models/MetricsModel.js';
+import Utils from '../core/Utils.js';
+import {PlayList, PlayListTrace} from '../streaming/vo/metrics/PlayList.js';
 
 /**
  * @module DashMetrics

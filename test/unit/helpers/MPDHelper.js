@@ -1,5 +1,4 @@
 import SpecHelper from './SpecHelper.js';
-import DashConstants from "../../../src/dash/constants/DashConstants";
 
 class MpdHelper {
     constructor() {

@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
-import FactoryMaker from '../../core/FactoryMaker';
-import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
-import URLUtils from '../../streaming/utils/URLUtils';
-import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils';
-import BoxParser from '../../streaming/utils/BoxParser';
-import XHRLoader from '../../streaming/net/XHRLoader';
-import DashHandler from '../../dash/DashHandler';
-import SegmentsController from '../../dash/controllers/SegmentsController';
+import Constants from '../constants/Constants.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils.js';
+import BoxParser from '../../streaming/utils/BoxParser.js';
+import XHRLoader from '../../streaming/net/XHRLoader.js';
+import DashHandler from '../../dash/DashHandler.js';
+import SegmentsController from '../../dash/controllers/SegmentsController.js';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
     'http://dashif.org/guidelines/thumbnail_tile'];
