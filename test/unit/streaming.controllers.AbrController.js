@@ -301,6 +301,28 @@ describe('AbrController', function () {
         expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(0)
     })
 
+    it('should limit the min allowed bitrate for the portal scale', function () {
+        const mediaInfo = streamProcessor.getMediaInfo();
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.representationCount = 5;
+        mediaInfo.type = Constants.VIDEO;
+        abrCtrl.updateTopQualityIndex(mediaInfo);
+
+        const s = { streaming: { abr: { limitBitrateByPortal: true } } };
+        const streamId = streamProcessor.getStreamInfo().id;
+        settings.update(s);
+
+        s.streaming.abr.portalScale = 0.2
+        settings.update(s)
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(0)
+
+        s.streaming.abr.portalMinimum = 2000
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(1)
+    })
+
     it('should configure initial bitrate for video type', function () {
         domStorageMock.setSavedBitrateSettings(Constants.VIDEO, 50);
 
