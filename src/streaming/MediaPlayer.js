@@ -119,6 +119,11 @@ function MediaPlayer() {
      * @inner
      */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    /**
+     * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
+     * @inner
+     */
+    const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -1575,10 +1580,11 @@ function MediaPlayer() {
      * is following: <br />
      * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
+     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
+     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
+     * }
      *
      * @param {MediaType} type
      * @param {Object} value
@@ -1590,7 +1596,8 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setInitialSettings(type, value);
+        let sanitizedValue = _sanitizeSettings(value);
+        mediaController.setInitialSettings(type, sanitizedValue);
     }
 
     /**
@@ -2424,6 +2431,38 @@ function MediaPlayer() {
         availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
         utcValue = valToConvert + (availableFrom + metric.range.start);
         return utcValue;
+    }
+
+    function _sanitizeSettings(value) {
+        const defaults = settings.get().streaming.defaultSchemeIdUri;
+        let output = {};
+
+        function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
+            let out = {};
+            if (val) {
+                if (val instanceof Array) {
+                    throw ARRAY_NOT_SUPPORTED_ERROR;
+                } else if (val instanceof Object) {
+                    out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
+                    out.value = val.value ? val.value : '';
+                } else {
+                    out.schemeIdUri = defaultSchemeIdUri;
+                    out.value = val;
+                    logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
+                }
+                return out;
+            }
+            return null;
+        }
+
+        if (value.lang) output.lang = value.lang;
+        if (value.index) output.index = value.index;
+        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+
+        return output;
     }
 
     /**

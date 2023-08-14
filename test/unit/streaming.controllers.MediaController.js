@@ -75,20 +75,20 @@ describe('MediaController', function () {
 
             let track1 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             let track2 = {
                 id: 'id2',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
 
             };
             let equal = mediaController.isTracksEqual(track1, track2);
@@ -100,22 +100,44 @@ describe('MediaController', function () {
 
             let track1 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 'description',
-                accessibilitiesWithSchemeIdUri: { schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' },
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: { schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' },
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             let track2 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 'description',
-                accessibilitiesWithSchemeIdUri: { schemeIdUri: 'urn:scheme:test:2:2023', value: 'description' },
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: { schemeIdUri: 'urn:scheme:test:2:2023', value: 'description' },
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+            };
+            let equal = mediaController.isTracksEqual(track1, track2);
+            expect(equal).to.be.false;
+
+        });
+
+        it('should return false if track are not equals (DescriptorType), case 2', function () {
+
+            let track1 = {
+                id: 'id',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
+                lang: 'lang',
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: { schemeIdUri: 'urn:scheme:test:2023', value: 'description' },
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+            };
+
+            let track2 = {
+                id: 'id',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp2' }],
+                lang: 'lang',
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: { schemeIdUri: 'urn:scheme:test:2023', value: 'description' },
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.false;
@@ -126,20 +148,20 @@ describe('MediaController', function () {
 
             let track1 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             let track2 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.true;
@@ -151,11 +173,11 @@ describe('MediaController', function () {
 
             let track2 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.false;
@@ -165,11 +187,11 @@ describe('MediaController', function () {
 
             let track1 = {
                 id: 'id',
-                viewpoint: 'viewpoint',
+                viewpoint: null,
                 lang: 'lang',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             let track2 = null;
@@ -186,33 +208,6 @@ describe('MediaController', function () {
             let equal = mediaController.isTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
-
-        it('should return true if track are equals (DescriptorType)', function () {
-
-            let track1 = {
-                id: 'id',
-                viewpoint: 'viewpoint',
-                lang: 'lang',
-                roles: 1,
-                accessibility: 'description',
-                accessibility_withSchemeIdUri: [{ schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' }],
-                audioChannelConfiguration: 1
-            };
-
-            let track2 = {
-                id: 'id',
-                viewpoint: 'viewpoint',
-                lang: 'lang',
-                roles: 1,
-                accessibility: 'description',
-                accessibility_withSchemeIdUri: [{ schemeIdUri: 'urn:scheme:test:1:2023', value: 'description' }],
-                audioChannelConfiguration: 1
-            };
-            let equal = mediaController.isTracksEqual(track1, track2);
-            expect(equal).to.be.true;
-
-        });
-
     });
 
     describe('Track Management', function () {
@@ -290,10 +285,10 @@ describe('MediaController', function () {
                 type: trackType,
                 streamInfo: streamInfo,
                 lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             mediaController.addTrack(track);
@@ -312,10 +307,10 @@ describe('MediaController', function () {
                 type: trackType,
                 streamInfo: streamInfo,
                 lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
 
             mediaController.addTrack(track);
@@ -335,10 +330,10 @@ describe('MediaController', function () {
                 type: trackType,
                 streamInfo: streamInfo,
                 lang: 'fr',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1,
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }],
                 isFragmented: true
             };
 
@@ -346,10 +341,10 @@ describe('MediaController', function () {
                 type: trackType,
                 streamInfo: streamInfo,
                 lang: 'en',
-                viewpoint: 'viewpoint',
-                roles: 1,
-                accessibility: 1,
-                audioChannelConfiguration: 1,
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }],
                 isFragmented: true
             };
 
@@ -393,28 +388,28 @@ describe('MediaController', function () {
             type: trackType,
             streamInfo: streamInfo,
             lang: 'fr',
-            viewpoint: 'viewpoint',
-            roles: 1,
+            viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
+            roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
             accessibility: 1,
-            audioChannelConfiguration: 1
+            audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const qtzTrack = {
             type: trackType,
             streamInfo: streamInfo,
             lang: 'qtz',
-            viewpoint: 'viewpoint',
-            roles: 1,
+            viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp2' }],
+            roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
             accessibility: 1,
-            audioChannelConfiguration: 1
+            audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const enTrack = {
             type: trackType,
             streamInfo: streamInfo,
             lang: 'en',
             viewpoint: null,
-            roles: ['Main'],
+            roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
             accessibility: [],
-            audioChannelConfiguration: 6,
+            audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' }],
             selectionPriority: 5
         };
         const enADTrack = {
@@ -422,9 +417,9 @@ describe('MediaController', function () {
             streamInfo: streamInfo,
             lang: 'en',
             viewpoint: null,
-            roles: ['alternate'],
-            accessibility: ['1', 'description'],
-            audioChannelConfiguration: 6,
+            roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'alternate' }],
+            accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description'}],
+            audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' }],
             selectionPriority: 3
         };
         const esTrack = {
@@ -432,9 +427,9 @@ describe('MediaController', function () {
             streamInfo: streamInfo,
             lang: 'es',
             viewpoint: null,
-            roles: ['dub'],
+            roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }],
             accessibility: [],
-            audioChannelConfiguration: 2,
+            audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }],
             selectionPriority: 4
         };
 
@@ -453,7 +448,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'qtz',
-                viewpoint: 'viewpoint'
+                viewpoint: { schemeIdUri: 'test:scheme:2023', value: 'vp1' }
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -477,7 +472,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'fre',
-                viewpoint: 'viewpoint'
+                viewpoint: null
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -500,7 +495,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: /fr|en|qtz/,
-                viewpoint: 'viewpoint'
+                viewpoint: null
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -524,7 +519,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: /qtz|mis/,
-                viewpoint: 'viewpoint'
+                viewpoint: null
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -536,7 +531,7 @@ describe('MediaController', function () {
             mediaController.addTrack(enTrack);
             mediaController.addTrack(enADTrack);
             mediaController.addTrack(esTrack);
-
+            
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
             expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
@@ -577,7 +572,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'en',
-                accessibility: ''
+                accessibility: []
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -604,7 +599,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'en',
-                accessibility: 'description'
+                accessibility: {schemeIdUri:'urn:mpeg:dash:role:2011', value:'description'}
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -631,7 +626,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'es',
-                accessibility: 'description'
+                accessibility: [{schemeIdUri:'urn:mpeg:dash:role:2011',value:'description'}]
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -639,6 +634,28 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
 
+        it('should check initial media settings to choose initial track based on viewpoint', function () {
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
+
+            // call to setInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }]
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
+        });
+        
         it('should not check initial media settings to choose initial track when it has already selected a track', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);
