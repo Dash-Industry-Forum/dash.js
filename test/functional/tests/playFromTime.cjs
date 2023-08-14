@@ -8,9 +8,9 @@ const intern = require('intern').default;
 const { suite, before, test, after } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
-const utils = require('./scripts/utils.js');
-const player = require('./scripts/player.js');
-const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.cjs');
+const player = require('./scripts/player.cjs');
+const constants = require('./scripts/constants.cjs');
 
 // Suite name
 const NAME = 'PLAY_FROM_TIME';

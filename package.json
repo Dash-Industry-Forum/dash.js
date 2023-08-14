@@ -16,7 +16,7 @@
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
         "test": "karma start karma.unit.conf.cjs",
         "test-browserunit": "karma start build/karma.conf.js",
-        "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
+        "test-functional": "node test/functional/runTests.cjs --selenium=remote --app=remote",
         "prepare": "node githook.cjs",
         "prepack": "npm run build"
     },
