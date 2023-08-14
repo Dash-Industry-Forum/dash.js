@@ -1,12 +1,12 @@
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
+import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel.js';
 import {
     HTTPRequest
-} from '../../src/streaming/vo/metrics/HTTPRequest';
-import Settings from '../../src/core/Settings';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
+} from '../../src/streaming/vo/metrics/HTTPRequest.js';
+import Settings from '../../src/core/Settings.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('MediaPlayerModel', function () {

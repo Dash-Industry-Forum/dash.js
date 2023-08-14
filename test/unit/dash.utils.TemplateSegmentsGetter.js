@@ -1,9 +1,8 @@
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import TemplateSegmentsGetter from '../../src/dash/utils/TemplateSegmentsGetter';
-import Constants from '../../src/streaming/constants/Constants';
-import VoHelper from './helpers/VOHelper';
-
-const expect = require('chai').expect;
+import TimelineConverter from '../../src/dash/utils/TimelineConverter.js';
+import TemplateSegmentsGetter from '../../src/dash/utils/TemplateSegmentsGetter.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import VoHelper from './helpers/VOHelper.js';
+import {expect} from 'chai';
 
 describe('TemplateSegmentsGetter', () => {
     const context = {};

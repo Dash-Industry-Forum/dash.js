@@ -1,6 +1,6 @@
-import InitCache from '../../src/streaming/utils/InitCache';
+import InitCache from '../../src/streaming/utils/InitCache.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const initCache = InitCache(context).getInstance();

@@ -1,11 +1,11 @@
-import MetricsModel from '../../src/streaming/models/MetricsModel';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Settings from '../../src/core/Settings';
-import Constants from '../../src/streaming/constants/Constants';
-import MetricsConstants from '../../src/streaming/constants/MetricsConstants';
+import MetricsModel from '../../src/streaming/models/MetricsModel.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Settings from '../../src/core/Settings.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import MetricsConstants from '../../src/streaming/constants/MetricsConstants.js';
 
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('MetricsModel', function () {

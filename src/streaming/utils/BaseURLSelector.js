@@ -29,17 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Errors from '../../core/errors/Errors';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import BlacklistController from '../controllers/BlacklistController';
-import DVBSelector from './baseUrlResolution/DVBSelector';
-import BasicSelector from './baseUrlResolution/BasicSelector';
-import FactoryMaker from '../../core/FactoryMaker';
-import DashJSError from '../vo/DashJSError';
-import {checkParameterType} from '../utils/SupervisorTools';
-import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
-import Settings from '../../core/Settings';
+import Errors from '../../core/errors/Errors.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import BlacklistController from '../controllers/BlacklistController.js';
+import DVBSelector from './baseUrlResolution/DVBSelector.js';
+import BasicSelector from './baseUrlResolution/BasicSelector.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashJSError from '../vo/DashJSError.js';
+import {checkParameterType} from './SupervisorTools.js';
+import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector.js';
+import Settings from '../../core/Settings.js';
 
 function BaseURLSelector() {
 

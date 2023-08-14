@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashHandler from '../dash/DashHandler';
-import RepresentationController from '../dash/controllers/RepresentationController';
-import FragmentModel from '../streaming/models/FragmentModel';
-import FragmentLoader from '../streaming/FragmentLoader';
-import URLUtils from '../streaming/utils/URLUtils';
-import RequestModifier from '../streaming/utils/RequestModifier';
-import SegmentsController from '../dash/controllers/SegmentsController';
+import DashHandler from '../dash/DashHandler.js';
+import RepresentationController from '../dash/controllers/RepresentationController.js';
+import FragmentModel from '../streaming/models/FragmentModel.js';
+import FragmentLoader from '../streaming/FragmentLoader.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import RequestModifier from '../streaming/utils/RequestModifier.js';
+import SegmentsController from '../dash/controllers/SegmentsController.js';
 
 function OfflineStreamProcessor(config) {
 

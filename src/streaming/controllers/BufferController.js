@@ -28,20 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import MetricsConstants from '../constants/MetricsConstants';
-import FragmentModel from '../models/FragmentModel';
-import SourceBufferSink from '../SourceBufferSink';
-import PreBufferSink from '../PreBufferSink';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import InitCache from '../utils/InitCache';
-import DashJSError from '../vo/DashJSError';
-import Errors from '../../core/errors/Errors';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
+import Constants from '../constants/Constants.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import FragmentModel from '../models/FragmentModel.js';
+import SourceBufferSink from '../SourceBufferSink.js';
+import PreBufferSink from '../PreBufferSink.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import InitCache from '../utils/InitCache.js';
+import DashJSError from '../vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;

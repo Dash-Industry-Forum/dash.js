@@ -1,6 +1,5 @@
-import MetricsConstants from '../../src/streaming/constants/MetricsConstants';
-
-const expect = require('chai').expect;
+import MetricsConstants from '../../src/streaming/constants/MetricsConstants.js';
+import {expect} from 'chai';
 
 describe('MetricsConstants', function () {
     it('MetricsConstants should exist', () => {

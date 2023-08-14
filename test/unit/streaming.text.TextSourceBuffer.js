@@ -1,11 +1,10 @@
-import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
-import TTMLParser from '../../src/streaming/utils/TTMLParser';
-import Errors from '../../src/core/errors/Errors';
+import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer.js';
+import TTMLParser from '../../src/streaming/utils/TTMLParser.js';
+import Errors from '../../src/core/errors/Errors.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import AdapterMock from './mocks/AdapterMock.js';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import AdapterMock from './mocks/AdapterMock';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 const context = {};

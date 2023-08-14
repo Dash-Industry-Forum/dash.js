@@ -1,16 +1,15 @@
-import ManifestUpdater from './../../src/streaming/ManifestUpdater';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Errors from '../../src/core/errors/Errors';
+import ManifestUpdater from './../../src/streaming/ManifestUpdater.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Errors from '../../src/core/errors/Errors.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import ManifestModelMock from './mocks/ManifestModelMock.js';
+import ManifestLoaderMock from './mocks/ManifestLoaderMock.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock.js';
 
-import AdapterMock from './mocks/AdapterMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
-import ManifestLoaderMock from './mocks/ManifestLoaderMock';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
-
-const chai = require('chai');
-const sinon = require('sinon');
+import chai from 'chai';
+import sinon from 'sinon';
 const expect = chai.expect;
 
 describe('ManifestUpdater', function () {

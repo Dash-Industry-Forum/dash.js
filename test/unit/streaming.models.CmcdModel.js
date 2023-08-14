@@ -1,16 +1,15 @@
-import CmcdModel from '../../src/streaming/models/CmcdModel';
-import Settings from '../../src/core/Settings';
-import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
-import EventBus from '../../src/core/EventBus';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import DashConstants from '../../src/dash/constants/DashConstants';
+import CmcdModel from '../../src/streaming/models/CmcdModel.js';
+import Settings from '../../src/core/Settings.js';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest.js';
+import EventBus from '../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
 
-import AbrControllerMock from './mocks/AbrControllerMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import ThroughputControllerMock from './mocks/ThroughputControllerMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 const eventBus = EventBus(context).getInstance();

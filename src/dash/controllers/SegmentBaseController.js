@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-import SegmentBaseLoader from '../SegmentBaseLoader';
-import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader';
+import SegmentBaseLoader from '../SegmentBaseLoader.js';
+import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader.js';
 
 function SegmentBaseController(config) {
     config = config || {};

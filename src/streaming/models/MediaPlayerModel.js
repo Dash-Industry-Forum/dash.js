@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../../core/Debug';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
+import Debug from '../../core/Debug.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;

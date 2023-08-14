@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 
 const DEFAULT_UTC_TIMING_SOURCE = {

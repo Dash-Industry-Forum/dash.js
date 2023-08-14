@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import FragmentRequest from '../vo/FragmentRequest';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import FragmentRequest from '../vo/FragmentRequest.js';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';

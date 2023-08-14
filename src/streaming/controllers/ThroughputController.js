@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import ThroughputModel from '../models/ThroughputModel';
-import MetricsConstants from '../constants/MetricsConstants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import EventBus from '../../core/EventBus';
+import Constants from '../constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import ThroughputModel from '../models/ThroughputModel.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import EventBus from '../../core/EventBus.js';
 
 /**
  * @constructor

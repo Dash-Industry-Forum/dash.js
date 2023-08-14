@@ -1,19 +1,19 @@
 
 const intern = require('intern').default;
-const streams = require('./streams');
+const streams = require('./streams.cjs');
 
-const setup = require('./tests/setup');
-const play = require('./tests/play');
-const playFromTime = require('./tests/playFromTime');
-const pause = require('./tests/pause');
-const seek = require('./tests/seek');
-const seekPeriods = require('./tests/seekPeriods');
-const audioSwitch = require('./tests/audioSwitch');
-const textSwitch = require('./tests/textSwitch');
-const initialAudio = require('./tests/initialAudio');
-const initialText = require('./tests/initialText');
-const liveDelay = require('./tests/liveDelay');
-const ended = require('./tests/ended');
+const setup = require('./tests/setup.cjs');
+const play = require('./tests/play.cjs');
+const playFromTime = require('./tests/playFromTime.cjs');
+const pause = require('./tests/pause.cjs');
+const seek = require('./tests/seek.cjs');
+const seekPeriods = require('./tests/seekPeriods.cjs');
+const audioSwitch = require('./tests/audioSwitch.cjs');
+const textSwitch = require('./tests/textSwitch.cjs');
+const initialAudio = require('./tests/initialAudio.cjs');
+const initialText = require('./tests/initialText.cjs');
+const liveDelay = require('./tests/liveDelay.cjs');
+const ended = require('./tests/ended.cjs');
 
 var registerSuites = function (stream) {
     var suites = intern.config.testSuites || ['playFromTime', 'pause', 'seek', 'seekPeriods', 'audioSwitch', 'textSwitch','initialAudio' , 'initialText', 'liveDelay','ended'];

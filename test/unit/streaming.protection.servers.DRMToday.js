@@ -1,6 +1,5 @@
-import DRMToday from '../../src/streaming/protection/servers/DRMToday';
-
-const expect = require('chai').expect;
+import DRMToday from '../../src/streaming/protection/servers/DRMToday.js';
+import {expect} from 'chai';
 
 const context = {};
 let drmToday;

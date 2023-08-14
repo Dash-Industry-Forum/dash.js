@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import OfflineConstants from '../constants/OfflineConstants';
+import OfflineConstants from '../constants/OfflineConstants.js';
 
 function OfflineUrlUtils() {
 

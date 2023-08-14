@@ -31,9 +31,9 @@
 /**
  * @classdesc matches and converts xs:duration to seconds
  */
-import BaseMatcher from './BaseMatcher';
-import Constants from '../../../streaming/constants/Constants';
-import DashConstants from '../../constants/DashConstants';
+import BaseMatcher from './BaseMatcher.js';
+import Constants from '../../../streaming/constants/Constants.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 const durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
 

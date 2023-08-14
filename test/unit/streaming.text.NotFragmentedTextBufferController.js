@@ -1,14 +1,13 @@
-import NotFragmentedTextBufferController from '../../src/streaming/text/NotFragmentedTextBufferController';
-import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import Settings from '../../src/core/Settings';
+import NotFragmentedTextBufferController from '../../src/streaming/text/NotFragmentedTextBufferController.js';
+import ObjectUtils from '../../src/streaming/utils/ObjectUtils.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import Settings from '../../src/core/Settings.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import StreamProcessorMock from './mocks/StreamProcessorMock.js';
+import MediaSourceMock from './mocks/MediaSourceMock.js';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import StreamProcessorMock from './mocks/StreamProcessorMock';
-import MediaSourceMock from './mocks/MediaSourceMock';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 const context = {};

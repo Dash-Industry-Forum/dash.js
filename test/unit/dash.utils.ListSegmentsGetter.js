@@ -1,9 +1,8 @@
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import ListSegmentsGetter from '../../src/dash/utils/ListSegmentsGetter';
-import Constants from '../../src/streaming/constants/Constants';
-import VoHelper from './helpers/VOHelper';
-
-const expect = require('chai').expect;
+import TimelineConverter from '../../src/dash/utils/TimelineConverter.js';
+import ListSegmentsGetter from '../../src/dash/utils/ListSegmentsGetter.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import VoHelper from './helpers/VOHelper.js';
+import {expect} from 'chai';
 
 const segmentsList = {
     'Initialization': {

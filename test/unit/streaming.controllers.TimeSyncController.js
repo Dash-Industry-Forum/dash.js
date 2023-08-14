@@ -1,25 +1,25 @@
-import TimeSyncController from '../../src/streaming/controllers/TimeSyncController';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Settings from '../../src/core/Settings';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import TimeSyncController from '../../src/streaming/controllers/TimeSyncController.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Settings from '../../src/core/Settings.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 const errHandlerMock = new ErrorHandlerMock();
 
-const sinon = require('sinon');
+import sinon from 'sinon';
 
 describe('TimeSyncController', function () {
     let timeSyncController;
     let settings = Settings(context).getInstance();
 
     beforeEach(function () {
-        global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
 
         this.requests = [];
-        global.XMLHttpRequest.onCreate = function (xhr) {
+        window.XMLHttpRequest.onCreate = function (xhr) {
             this.requests.push(xhr);
         }.bind(this);
 
@@ -32,6 +32,7 @@ describe('TimeSyncController', function () {
 
 
     afterEach(function () {
+        window.XMLHttpRequest.restore();
         timeSyncController.reset();
         timeSyncController = null;
         settings.reset();

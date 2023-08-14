@@ -28,20 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import TextTrackInfo from '../vo/TextTrackInfo';
-import BoxParser from '../utils/BoxParser';
-import CustomTimeRanges from '../utils/CustomTimeRanges';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
+import Constants from '../constants/Constants.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import TextTrackInfo from '../vo/TextTrackInfo.js';
+import BoxParser from '../utils/BoxParser.js';
+import CustomTimeRanges from '../utils/CustomTimeRanges.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender.js';
 import ISOBoxer from 'codem-isoboxer';
-import cea608parser from '../../../externals/cea608-parser';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import DashJSError from '../vo/DashJSError';
-import Errors from '../../core/errors/Errors';
+import cea608parser from '../../../externals/cea608-parser.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import DashJSError from '../vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;

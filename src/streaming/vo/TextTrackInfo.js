@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaInfo from './../../dash/vo/MediaInfo';
+import MediaInfo from './../../dash/vo/MediaInfo.js';
 
 /**
  * @class

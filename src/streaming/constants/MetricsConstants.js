@@ -22,8 +22,8 @@
  *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR
+ *  PROFITS, OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
@@ -31,37 +31,31 @@
 
 /**
  * Metrics Constants declaration
- * @class
  * @ignore
  */
-class MetricsConstants {
-
-    init () {
-        this.TCP_CONNECTION = 'TcpList';
-        this.HTTP_REQUEST = 'HttpList';
-        this.TRACK_SWITCH = 'RepSwitchList';
-        this.BUFFER_LEVEL = 'BufferLevel';
-        this.BUFFER_LOADED = 'bufferLoaded';
-        this.ABANDON_LOAD = 'abandonload';
-        this.ALLOW_LOAD = 'allowload';
-        this.BUFFER_EMPTY = 'bufferStalled';
-        this.BUFFER_STATE = 'BufferState';
-        this.DVR_INFO = 'DVRInfo';
-        this.DROPPED_FRAMES = 'DroppedFrames';
-        this.SCHEDULING_INFO = 'SchedulingInfo';
-        this.REQUESTS_QUEUE = 'RequestsQueue';
-        this.MANIFEST_UPDATE = 'ManifestUpdate';
-        this.MANIFEST_UPDATE_STREAM_INFO = 'ManifestUpdatePeriodInfo';
-        this.MANIFEST_UPDATE_TRACK_INFO = 'ManifestUpdateRepresentationInfo';
-        this.PLAY_LIST = 'PlayList';
-        this.DVB_ERRORS = 'DVBErrors';
-        this.HTTP_REQUEST_DVB_REPORTING_TYPE = 'DVBReporting';
-    }
-
-    constructor() {
-        this.init();
-    }
+export default {
+    TCP_CONNECTION : 'TcpList',
+    HTTP_REQUEST : 'HttpList',
+    TRACK_SWITCH : 'RepSwitchList',
+    BUFFER_LEVEL : 'BufferLevel',
+    BUFFER_LOADED : 'bufferLoaded',
+    ABANDON_LOAD : 'abandonload',
+    ALLOW_LOAD : 'allowload',
+    BUFFER_EMPTY : 'bufferStalled',
+    BUFFER_STATE : 'BufferState',
+    DVR_INFO : 'DVRInfo',
+    DROPPED_FRAMES : 'DroppedFrames',
+    SCHEDULING_INFO : 'SchedulingInfo',
+    REQUESTS_QUEUE : 'RequestsQueue',
+    MANIFEST_UPDATE : 'ManifestUpdate',
+    MANIFEST_UPDATE_STREAM_INFO : 'ManifestUpdatePeriodInfo',
+    MANIFEST_UPDATE_TRACK_INFO : 'ManifestUpdateRepresentationInfo',
+    PLAY_LIST : 'PlayList',
+    DVB_ERRORS : 'DVBErrors',
+    HTTP_REQUEST_DVB_REPORTING_TYPE : 'DVBReporting',
 }
 
-let constants = new MetricsConstants();
-export default constants;
+
+
+
+

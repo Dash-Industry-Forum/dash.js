@@ -1,8 +1,8 @@
-import BlacklistController from '../../src/streaming/controllers/BlacklistController';
-import EventBus from '../../src/core/EventBus';
+import BlacklistController from '../../src/streaming/controllers/BlacklistController.js';
+import EventBus from '../../src/core/EventBus.js';
+import chai from 'chai';
+import spies from 'chai-spies';
 
-const chai = require('chai');
-const spies = require('chai-spies');
 const expect = chai.expect;
 
 chai.use(spies);

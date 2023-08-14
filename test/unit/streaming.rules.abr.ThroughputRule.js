@@ -1,7 +1,7 @@
-import ThroughputRule from '../../src/streaming/rules/abr/ThroughputRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
+import ThroughputRule from '../../src/streaming/rules/abr/ThroughputRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import {expect} from 'chai';
 
-const expect = require('chai').expect;
 const context = {};
 const throughputRule = ThroughputRule(context).create({});
 

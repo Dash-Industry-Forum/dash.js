@@ -75,7 +75,7 @@ var config = {
     maxConcurrency: 1,
 
     // Functional test suite(s) to run in each browser
-    functionalSuites: ['test/functional/testSuites.js'],
+    functionalSuites: ['test/functional/testSuites.cjs'],
 
     // The amount of time, in milliseconds, an asynchronous test can run before it is considered timed out. By default this value is 30 seconds.
     defaultTimeout: 30000,

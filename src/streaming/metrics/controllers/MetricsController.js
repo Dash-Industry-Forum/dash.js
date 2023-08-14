@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import RangeController from './RangeController';
-import ReportingController from './ReportingController';
-import MetricsHandlersController from './MetricsHandlersController';
+import RangeController from './RangeController.js';
+import ReportingController from './ReportingController.js';
+import MetricsHandlersController from './MetricsHandlersController.js';
 
 function MetricsController(config) {
 

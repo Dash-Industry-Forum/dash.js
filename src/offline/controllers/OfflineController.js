@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import OfflineConstants from '../constants/OfflineConstants';
-import OfflineStoreController from './OfflineStoreController';
-import OfflineDownload from '../OfflineDownload';
-import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
-import OfflineUrlUtils from '../utils/OfflineUrlUtils';
-import OfflineEvents from '../events/OfflineEvents';
-import OfflineErrors from '../errors/OfflineErrors';
-import OfflineRecord from '../vo/OfflineDownloadVo';
+import OfflineConstants from '../constants/OfflineConstants.js';
+import OfflineStoreController from './OfflineStoreController.js';
+import OfflineDownload from '../OfflineDownload.js';
+import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader.js';
+import OfflineUrlUtils from '../utils/OfflineUrlUtils.js';
+import OfflineEvents from '../events/OfflineEvents.js';
+import OfflineErrors from '../errors/OfflineErrors.js';
+import OfflineRecord from '../vo/OfflineDownloadVo.js';
 
 /**
  * @module OfflineController

@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import Debug from '../../core/Debug';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import Debug from '../../core/Debug.js';
 
 // Note: in modern browsers, the header names are returned in all lower case
 const CMSD_STATIC = 'static';
@@ -135,7 +135,7 @@ function CmsdModel() {
             return parseInt(value, 10);
         }
         // Value is a string, remove double quotes from string value
-        return value.replace(/["]+/g, '');   
+        return value.replace(/["]+/g, '');
     }
 
     function _parseCMSDStatic(value) {
@@ -225,11 +225,11 @@ function CmsdModel() {
             ot = _mediaTypetoObjectType(mediaType)
         }
 
-        // Clear previously received params except persistent ones 
+        // Clear previously received params except persistent ones
         _clearParams(_staticParamsDict[ot]);
         _clearParams(_dynamicParamsDict[ot]);
 
-        // Merge params with previously received params 
+        // Merge params with previously received params
         if (staticParams) {
             _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
         }

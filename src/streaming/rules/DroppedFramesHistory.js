@@ -1,4 +1,4 @@
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DroppedFramesHistory() {
 

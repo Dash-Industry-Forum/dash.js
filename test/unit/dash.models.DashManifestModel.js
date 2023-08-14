@@ -1,15 +1,12 @@
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Constants from '../../src/streaming/constants/Constants';
-import BaseURL from '../../src/dash/vo/BaseURL';
-
-import MpdHelper from './helpers/MPDHelper';
-import VoHelper from './helpers/VOHelper';
-
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DescriptorType from '../../src/dash/vo/DescriptorType';
-
-const expect = require('chai').expect;
+import DashManifestModel from '../../src/dash/models/DashManifestModel.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import BaseURL from '../../src/dash/vo/BaseURL.js';
+import MpdHelper from './helpers/MPDHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
+import {expect} from 'chai';
 
 const context = {};
 const errorHandlerMock = new ErrorHandlerMock();
@@ -149,7 +146,10 @@ describe('DashManifestModel', function () {
 
         it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptation is called', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation({
-                SupplementalProperty: [{schemeIdUri: 'test.scheme', value: 'testVal'},{schemeIdUri: 'test.scheme', value: 'test2Val'}]
+                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
+                    schemeIdUri: 'test.scheme',
+                    value: 'test2Val'
+                }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -176,7 +176,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct array of DescriptorType when getSupplementalPropertiesForRepresentation is called', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation({
-                SupplementalProperty: [{schemeIdUri: 'test.scheme', value: 'testVal'}]
+                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -553,7 +553,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
-            const location = dashManifestModel.getLocation({ Location: '', Location: ['location_1'] });
+            const location = dashManifestModel.getLocation({ Location: ['location_1'] });
 
             expect(location[0].url).to.be.equal('location_1');
         });

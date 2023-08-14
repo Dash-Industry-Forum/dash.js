@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DataChunk from '../streaming/vo/DataChunk';
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import MssFragmentInfoController from './MssFragmentInfoController';
-import MssFragmentProcessor from './MssFragmentProcessor';
-import MssParser from './parser/MssParser';
-import MssErrors from './errors/MssErrors';
-import DashJSError from '../streaming/vo/DashJSError';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import DataChunk from '../streaming/vo/DataChunk.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import MssFragmentInfoController from './MssFragmentInfoController.js';
+import MssFragmentProcessor from './MssFragmentProcessor.js';
+import MssParser from './parser/MssParser.js';
+import MssErrors from './errors/MssErrors.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 
 function MssHandler(config) {
 

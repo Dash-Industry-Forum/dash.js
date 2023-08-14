@@ -28,21 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import XHRLoader from './XHRLoader';
-import FetchLoader from './FetchLoader';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import FactoryMaker from '../../core/FactoryMaker';
-import DashJSError from '../vo/DashJSError';
-import CmcdModel from '../models/CmcdModel';
-import CmsdModel from '../models/CmsdModel';
-import Utils from '../../core/Utils';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import Settings from '../../core/Settings';
-import Constants from '../constants/Constants';
-import CustomParametersModel from '../models/CustomParametersModel';
-import HttpLoaderRequest from '../vo/HttpLoaderRequest';
+import XHRLoader from './XHRLoader.js';
+import FetchLoader from './FetchLoader.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashJSError from '../vo/DashJSError.js';
+import CmcdModel from '../models/CmcdModel.js';
+import CmsdModel from '../models/CmsdModel.js';
+import Utils from '../../core/Utils.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../constants/Constants.js';
+import CustomParametersModel from '../models/CustomParametersModel.js';
+import HttpLoaderRequest from '../vo/HttpLoaderRequest.js';
 
 /**
  * @module HTTPLoader

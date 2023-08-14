@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ObjectUtils from '../utils/ObjectUtils';
-import FactoryMaker from '../../core/FactoryMaker';
+import ObjectUtils from '../utils/ObjectUtils.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_INDEX = NaN;
 

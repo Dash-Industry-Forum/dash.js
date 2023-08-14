@@ -36,7 +36,7 @@
  * @class
  */
 
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 function DRMToday(config) {
 

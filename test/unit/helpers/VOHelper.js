@@ -1,11 +1,11 @@
-import StreamInfo from '../../../src/dash/vo/StreamInfo';
-import MediaInfo from '../../../src/dash/vo/MediaInfo';
-import MpdHelper from './MPDHelper';
-import SpecHelper from './SpecHelper';
-import Representation from '../../../src/dash/vo/Representation';
-import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
-import DashConstants from '../../../src/dash/constants/DashConstants';
+import StreamInfo from '../../../src/dash/vo/StreamInfo.js';
+import MediaInfo from '../../../src/dash/vo/MediaInfo.js';
+import MpdHelper from './MPDHelper.js';
+import SpecHelper from './SpecHelper.js';
+import Representation from '../../../src/dash/vo/Representation.js';
+import FragmentRequest from '../../../src/streaming/vo/FragmentRequest.js';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest.js';
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
 
 class VoHelper {
     constructor() {

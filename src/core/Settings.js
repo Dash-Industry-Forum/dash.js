@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './FactoryMaker';
+import FactoryMaker from './FactoryMaker.js';
 import Utils from './Utils.js';
-import Debug from '../core/Debug';
-import Constants from '../streaming/constants/Constants';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
-import EventBus from './EventBus';
-import Events from './events/Events';
+import Debug from '../core/Debug.js';
+import Constants from '../streaming/constants/Constants.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import EventBus from './EventBus.js';
+import Events from './events/Events.js';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.

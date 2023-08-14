@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from './EventsBase';
+import EventsBase from './EventsBase.js';
 
 /**
  * These are internal events that should not be needed at the player level.

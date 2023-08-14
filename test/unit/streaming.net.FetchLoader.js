@@ -1,6 +1,6 @@
-import FetchLoader from '../../src/streaming/net/FetchLoader';
+import FetchLoader from '../../src/streaming/net/FetchLoader.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 

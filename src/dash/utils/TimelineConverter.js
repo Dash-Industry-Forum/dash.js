@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import DashConstants from '../constants/DashConstants';
-import DashManifestModel from '../models/DashManifestModel';
-import Settings from '../../core/Settings';
-import Constants from '../../streaming/constants/Constants';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import ConformanceViolationConstants from '../../streaming/constants/ConformanceViolationConstants';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashConstants from '../constants/DashConstants.js';
+import DashManifestModel from '../models/DashManifestModel.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../../streaming/constants/Constants.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import ConformanceViolationConstants from '../../streaming/constants/ConformanceViolationConstants.js';
 
 function TimelineConverter() {
 

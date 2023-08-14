@@ -1,6 +1,6 @@
-import TTMLParser from '../../src/streaming/utils/TTMLParser';
+import TTMLParser from '../../src/streaming/utils/TTMLParser.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const ttmlParser = TTMLParser(context).getInstance();

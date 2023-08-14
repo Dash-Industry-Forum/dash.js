@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import OfflineStreamProcessor from './OfflineStreamProcessor';
+import OfflineStreamProcessor from './OfflineStreamProcessor.js';
 
 /**
  * Initialize and Manage Offline Stream for each type

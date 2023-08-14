@@ -1,9 +1,7 @@
-import DashMetrics from '../../src/dash/DashMetrics';
-
-import ManifestModelMock from './mocks/ManifestModelMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
-
-const expect = require('chai').expect;
+import DashMetrics from '../../src/dash/DashMetrics.js';
+import ManifestModelMock from './mocks/ManifestModelMock.js';
+import MetricsModelMock from './mocks/MetricsModelMock.js';
+import {expect} from 'chai';
 
 const context = {};
 

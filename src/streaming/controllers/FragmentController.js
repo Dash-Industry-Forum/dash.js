@@ -28,18 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import DataChunk from '../vo/DataChunk';
-import FragmentModel from '../models/FragmentModel';
-import FragmentLoader from '../FragmentLoader';
-import RequestModifier from '../utils/RequestModifier';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import Errors from '../../core/errors/Errors';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import SegmentResponseModifier from '../utils/SegmentResponseModifier';
+import Constants from '../constants/Constants.js';
+import DataChunk from '../vo/DataChunk.js';
+import FragmentModel from '../models/FragmentModel.js';
+import FragmentLoader from '../FragmentLoader.js';
+import RequestModifier from '../utils/RequestModifier.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import Errors from '../../core/errors/Errors.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import SegmentResponseModifier from '../utils/SegmentResponseModifier.js';
 
 function FragmentController(config) {
 

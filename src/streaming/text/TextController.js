@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import TextSourceBuffer from './TextSourceBuffer';
-import TextTracks from './TextTracks';
-import VTTParser from '../utils/VTTParser';
-import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
-import TTMLParser from '../utils/TTMLParser';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import {checkParameterType} from '../utils/SupervisorTools';
+import Constants from '../constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
+import TextTracks from './TextTracks.js';
+import VTTParser from '../utils/VTTParser.js';
+import VttCustomRenderingParser from '../utils/VttCustomRenderingParser.js';
+import TTMLParser from '../utils/TTMLParser.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import {checkParameterType} from '../utils/SupervisorTools.js';
 
 function TextController(config) {
 

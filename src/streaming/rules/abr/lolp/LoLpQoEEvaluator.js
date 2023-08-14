@@ -35,8 +35,8 @@
  * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
-import FactoryMaker from '../../../../core/FactoryMaker';
-import QoeInfo from './QoeInfo';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+import QoeInfo from './QoeInfo.js';
 
 function LoLpQoeEvaluator() {
 

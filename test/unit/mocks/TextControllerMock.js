@@ -1,4 +1,4 @@
-import TextSourceBufferMock from './TextSourceBufferMock';
+import TextSourceBufferMock from './TextSourceBufferMock.js';
 
 class TextControllerMock {
     constructor() {

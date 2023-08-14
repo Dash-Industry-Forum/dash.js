@@ -36,7 +36,7 @@
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
 
-import FactoryMaker from '../../../../core/FactoryMaker';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
 
 function LoLpWeightSelector(config) {
     let targetLatency = config.targetLatency;

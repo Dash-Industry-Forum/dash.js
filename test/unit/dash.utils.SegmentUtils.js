@@ -2,12 +2,12 @@ import {
     unescapeDollarsInTemplate,
     replaceIDForTemplate,
     replaceTokenForTemplate
-} from '../../src/dash/utils/SegmentsUtils';
+} from '../../src/dash/utils/SegmentsUtils.js';
 
 // import VoHelper from './helpers/VOHelper';
 // import ObjectsHelper from './helpers/ObjectsHelper';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('SegmentUtils', function () {
     // const testType = 'text';

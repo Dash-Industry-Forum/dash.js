@@ -31,7 +31,7 @@
 /**
  * @classdesc a node at some level in a ValueMap
  */
-import CommonProperty from './CommonProperty';
+import CommonProperty from './CommonProperty.js';
 
 class MapNode {
     constructor(name, properties, children) {

@@ -29,15 +29,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DashConstants from './constants/DashConstants';
-import RepresentationInfo from './vo/RepresentationInfo';
-import MediaInfo from './vo/MediaInfo';
-import StreamInfo from './vo/StreamInfo';
-import ManifestInfo from './vo/ManifestInfo';
-import Event from './vo/Event';
-import FactoryMaker from '../core/FactoryMaker';
-import DashManifestModel from './models/DashManifestModel';
-import PatchManifestModel from './models/PatchManifestModel';
+import DashConstants from './constants/DashConstants.js';
+import RepresentationInfo from './vo/RepresentationInfo.js';
+import MediaInfo from './vo/MediaInfo.js';
+import StreamInfo from './vo/StreamInfo.js';
+import ManifestInfo from './vo/ManifestInfo.js';
+import Event from './vo/Event.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashManifestModel from './models/DashManifestModel.js';
+import PatchManifestModel from './models/PatchManifestModel.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 
 /**
@@ -1071,7 +1071,7 @@ function DashAdapter() {
                 mediaInfo.supplementalProperties = arr[0];
             }
         }
-        
+
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 

@@ -1,16 +1,15 @@
-import SpecHelper from './helpers/SpecHelper';
-import VoHelper from './helpers/VOHelper';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import FragmentModel from '../../src/streaming/models/FragmentModel';
-import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
-import Debug from '../../src/core/Debug';
+import SpecHelper from './helpers/SpecHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import FragmentModel from '../../src/streaming/models/FragmentModel.js';
+import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest.js';
+import Debug from '../../src/core/Debug.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
 
-import DashMetricsMock from './mocks/DashMetricsMock';
-
-const chai = require('chai');
-const spies = require('chai-spies');
-const sinon = require('sinon');
+import chai from 'chai';
+import spies from 'chai-spies';
+import sinon from 'sinon';
 const expect = chai.expect;
 
 chai.use(spies);

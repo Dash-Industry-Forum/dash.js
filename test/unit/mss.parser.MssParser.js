@@ -1,13 +1,11 @@
-import MssParser from '../../src/mss/parser/MssParser';
-import BASE64 from '../../externals/base64';
-import Constants from '../../src/streaming/constants/Constants';
-
-import DebugMock from './mocks/DebugMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import MssParser from '../../src/mss/parser/MssParser.js';
+import BASE64 from '../../externals/base64.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DebugMock from './mocks/DebugMock.js';
+import ManifestModelMock from './mocks/ManifestModelMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 describe('MssParser', function () {
 

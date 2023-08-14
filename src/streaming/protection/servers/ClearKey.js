@@ -38,8 +38,8 @@
  * @implements LicenseServer
  * @class
  */
-import KeyPair from '../vo/KeyPair';
-import ClearKeyKeySet from '../vo/ClearKeyKeySet';
+import KeyPair from '../vo/KeyPair.js';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 
 function ClearKey() {
 

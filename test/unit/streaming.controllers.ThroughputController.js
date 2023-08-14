@@ -1,11 +1,11 @@
-import ThroughputController from '../../src/streaming/controllers/ThroughputController';
-import Settings from '../../src/core/Settings';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import EventBus from '../../src/core/EventBus';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import Constants from '../../src/streaming/constants/Constants';
+import ThroughputController from '../../src/streaming/controllers/ThroughputController.js';
+import Settings from '../../src/core/Settings.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import EventBus from '../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
