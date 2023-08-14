@@ -983,6 +983,7 @@ function Settings() {
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
                 portalScale: 1,
+                portalMinimum: null,
                 maxBitrate: {
                     audio: -1,
                     video: -1

@@ -529,6 +529,7 @@ function AbrController() {
         }
 
         const portalScale = settings.get().streaming.abr.portalScale || 1;
+        const portalLimitMinimum = settings.get().streaming.abr.portalMinimum || 0;
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
         const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
         let newIdx = idx;
@@ -542,7 +543,8 @@ function AbrController() {
                 newIdx > 0 &&
                 representation[newIdx] &&
                 scaledWidth < representation[newIdx].width &&
-                scaledWidth - representation[newIdx - 1].width < representation[newIdx].width - scaledWidth) {
+                scaledWidth - representation[newIdx - 1].width < representation[newIdx].width - scaledWidth &&
+                representation[newIdx - 1].bandwidth >= portalLimitMinimum * 1000) {
                 newIdx = newIdx - 1;
             }
 
