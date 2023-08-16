@@ -36,7 +36,7 @@
 export default {
     ACCESSIBILITY: 'Accessibility',
     ADAPTATION_SET: 'AdaptationSet',
-    ADAPTATION_SET_SWITCHING: 'urn:mpeg:dash:adaptation-set-switching:2016',
+    ADAPTATION_SET_SWITCHING_SCHEME_ID_URI: 'urn:mpeg:dash:adaptation-set-switching:2016',
     ADD: 'add',
     ASSET_IDENTIFIER: 'AssetIdentifier',
     AUDIO_CHANNEL_CONFIGURATION: 'AudioChannelConfiguration',

@@ -56,7 +56,6 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
-        topQualities,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
@@ -235,12 +234,12 @@ function AbrController() {
             return rep.bitrateInKbit <= bitrate
         });
 
-        if (!targetRepresentations) {
+        if (!targetRepresentations || targetRepresentations.length === 0) {
             return possibleVoRepresentations[0];
         }
 
         return targetRepresentations.reduce((prev, curr) => {
-            return prev.calculatedQualityRank < curr.calculatedQualityRank ? prev : curr
+            return prev.calculatedQualityRank > curr.calculatedQualityRank ? prev : curr
         })
     }
 
@@ -255,23 +254,16 @@ function AbrController() {
         mediaInfos.forEach((mediaInfo) => {
             let currentVoRepresentations = adapter.getVoRepresentations(mediaInfo);
 
-            // If set to true we filter the list of options based on the provided settings
-            if (applySettingsFilter) {
-                currentVoRepresentations = _filterByAllowedSettings(currentVoRepresentations)
-            }
-
             if (currentVoRepresentations && currentVoRepresentations.length > 0) {
                 voRepresentations = voRepresentations.concat(currentVoRepresentations)
             }
-
         })
 
-        voRepresentations = _assignCalculatedQualityRank(voRepresentations);
-
-        //Sort by bitrate in ascending order. Lowest bitrate first
-        voRepresentations.sort((a, b) => {
-            return a.bitrateInKbit - b.bitrateInKbit;
-        })
+        // If set to true we filter the list of options based on the provided settings
+        if (applySettingsFilter) {
+            voRepresentations = _filterByAllowedSettings(voRepresentations)
+        }
+        voRepresentations = _assignAndSortByCalculatedQualityRank(voRepresentations);
 
         //Set index values
         voRepresentations.forEach((rep, index) => {
@@ -297,7 +289,7 @@ function AbrController() {
             }
 
             // Otherwise add everything that is compatible
-            const mediaInfoArr = streamProcessorDict[mediaInfo.streamInfo.id][mediaInfo.type].getMediaInfoArr()
+            const mediaInfoArr = streamProcessorDict[mediaInfo.streamInfo.id][mediaInfo.type].getAllMediaInfos()
             const compatibleMediaInfos = mediaInfoArr.filter((entry) => {
                 return mediaInfo.adaptationSetSwitchingCompatibleIds.includes(entry.id)
             })
@@ -427,7 +419,7 @@ function AbrController() {
      * @param voRepresentations
      * @private
      */
-    function _assignCalculatedQualityRank(voRepresentations) {
+    function _assignAndSortByCalculatedQualityRank(voRepresentations) {
 
         // All Representations must have a qualityRanking otherwise we ignore it
         // QualityRanking only applies to Representations within one AS. If we merged multiple AS based on the adaptation-set-switching-2016 supplemental property we can not apply this logic
@@ -441,11 +433,11 @@ function AbrController() {
 
         if (filteredRepresentations.length === voRepresentations.length) {
             voRepresentations.sort((a, b) => {
-                return a.qualityRanking - b.qualityRanking;
+                return b.qualityRanking - a.qualityRanking;
             })
         } else {
             voRepresentations.sort((a, b) => {
-                return b.bandwidth - a.bandwidth;
+                return a.bandwidth - b.bandwidth;
             })
         }
 
@@ -724,11 +716,9 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(representation) {
-        const streamId = streamInfo ? streamInfo.id : null;
-        const audioQuality = getCurrentBitrateInfoFor(Constants.AUDIO, streamId);
-        const videoQuality = getCurrentBitrateInfoFor(Constants.VIDEO, streamId);
+        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true, true);
 
-        return audioQuality.isTopBitrate && videoQuality.isTopBitrate
+        return voRepresentations[voRepresentations.length - 1].id === representation.id;
     }
 
     function setWindowResizeEventCalled(value) {

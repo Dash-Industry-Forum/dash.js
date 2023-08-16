@@ -952,7 +952,6 @@ function StreamProcessor(config) {
             }
 
             const newRealAdaptation = adapter.getRealAdaptation(streamInfo, currentMediaInfo);
-            const voRepresentations = adapter.getVoRepresentations(currentMediaInfo);
 
             if (representationController) {
                 const realAdaptation = representationController.getData();
@@ -972,6 +971,7 @@ function StreamProcessor(config) {
                     targetRepresentation = representationController.getCurrentRepresentation()
                 }
 
+                const voRepresentations = adapter.getVoRepresentations(currentMediaInfo);
                 const representationId = targetRepresentation.id;
                 return representationController.updateData(newRealAdaptation, voRepresentations, type, currentMediaInfo.isFragmented, representationId)
                     .then(() => {
@@ -1000,6 +1000,10 @@ function StreamProcessor(config) {
 
     function getMediaInfo() {
         return currentMediaInfo;
+    }
+
+    function getAllMediaInfos() {
+        return mediaInfoArr;
     }
 
     function getMediaSource() {
@@ -1348,6 +1352,7 @@ function StreamProcessor(config) {
         createBufferSinks,
         dischargePreBuffer,
         finalisePlayList,
+        getAllMediaInfos,
         getBuffer,
         getBufferController,
         getBufferLevel,

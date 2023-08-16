@@ -1050,11 +1050,13 @@ function DashAdapter() {
 
         // Save IDs of AS that we can switch to
         try {
-            const adaptationSetSwitching = mediaInfo.supplementalProperties[DashConstants.ADAPTATION_SET_SWITCHING];
+            const adaptationSetSwitching = mediaInfo.supplementalProperties.filter((sp) => {
+                return sp.schemeIdUri === DashConstants.ADAPTATION_SET_SWITCHING_SCHEME_ID_URI
+            });
             if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
-                mediaInfo.adaptationSetSwitchingCompatibleIds = adaptationSetSwitching.split(',')
-                mediaInfo.adaptationSetSwitchingCompatibleIds = mediaInfo.adaptationSetSwitchingCompatibleIds.map((id) => {
-                    return parseInt(id)
+                const ids = adaptationSetSwitching[0].value.split(',')
+                mediaInfo.adaptationSetSwitchingCompatibleIds = ids.map((id) => {
+                    return id
                 })
             }
         } catch (e) {

@@ -194,7 +194,7 @@ function ABRRulesCollection(config) {
         let newSwitchReq = null;
         let i,
             len,
-            req;
+            currentSwitchRequest;
 
         if (srArray.length === 0) {
             return;
@@ -205,24 +205,25 @@ function ABRRulesCollection(config) {
         values[SwitchRequest.PRIORITY.DEFAULT] = null;
 
         for (i = 0, len = srArray.length; i < len; i += 1) {
-            req = srArray[i];
-            if (req.representation !== SwitchRequest.NO_CHANGE) {
+            currentSwitchRequest = srArray[i];
+            if (currentSwitchRequest.representation !== SwitchRequest.NO_CHANGE) {
                 // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
-                if (values[req.priority].representation === SwitchRequest.NO_CHANGE || req.representation.bitrateInKbit < values[req.priority].representation.bitrateInKbit) {
-                    values[req.priority].quality = req;
+                if (values[currentSwitchRequest.priority] === null ||
+                    (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE && currentSwitchRequest.representation.bitrateInKbit < values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
+                    values[currentSwitchRequest.priority] = currentSwitchRequest;
                 }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.WEAK] && values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.DEFAULT] && values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.STRONG] && values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
