@@ -135,19 +135,9 @@ function ThumbnailController(config) {
         return thumbnailTracks.getCurrentTrackIndex();
     }
 
-    function getBitrateList() {
-        const tracks = thumbnailTracks.getTracks();
-        let i = 0;
+    function getPossibleVoRepresentations() {
+        return thumbnailTracks.getTracks();
 
-        return tracks.map((t) => {
-            const bitrateInfo = new BitrateInfo();
-            bitrateInfo.mediaType = Constants.IMAGE;
-            bitrateInfo.qualityIndex = i++;
-            bitrateInfo.bitrate = t.bitrate;
-            bitrateInfo.width = t.width;
-            bitrateInfo.height = t.height;
-            return bitrateInfo;
-        });
     }
 
     function reset() {
@@ -162,7 +152,7 @@ function ThumbnailController(config) {
         provide,
         setTrackByIndex,
         getCurrentTrackIndex,
-        getBitrateList,
+        getPossibleVoRepresentations,
         reset
     };
 

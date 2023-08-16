@@ -1218,15 +1218,7 @@ declare namespace dashjs {
                     audio?: number;
                     video?: number;
                 };
-                maxRepresentationRatio?: {
-                    audio?: number;
-                    video?: number;
-                };
                 initialBitrate?: {
-                    audio?: number;
-                    video?: number;
-                };
-                initialRepresentationRatio?: {
                     audio?: number;
                     video?: number;
                 };
@@ -1447,7 +1439,7 @@ declare namespace dashjs {
 
         setTextTrack(idx: number): void;
 
-        getBitrateInfoListFor(type: MediaType): BitrateInfo[];
+        getRepresentationsFor(type: MediaType): Representation[];
 
         getStreamsFromManifest(manifest: object): StreamInfo[];
 
@@ -2098,7 +2090,7 @@ declare namespace dashjs {
 
         getTopBitrateInfoFor(type: string, streamId?: string): BitrateInfo | null;
 
-        getInitialBitrateFor(type: string, streamId: string): number;
+        getInitialBitrateFor(type: string): number;
 
         checkPlaybackQuality(type: string, streamId: string): boolean;
 
@@ -2248,7 +2240,7 @@ declare namespace dashjs {
 
         saveTextSettingsDisabled(): void;
 
-        isTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
+        areTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
 
         setConfig(config: object): void;
 
@@ -4504,8 +4496,6 @@ declare namespace dashjs {
         startPreloading(mediaSource: MediaSource, previousBuffers: any[]): void;
 
         getThumbnailController(): object;
-
-        getBitrateListFor(type: MediaType): BitrateInfo[];
 
         updateData(updatedStreamInfo: StreamInfo): void;
 

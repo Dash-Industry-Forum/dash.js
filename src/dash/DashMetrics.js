@@ -282,7 +282,7 @@ function DashMetrics(config) {
             request.startTime,
             request.availabilityStartTime,
             request.duration,
-            request.quality,
+            request.bandwidth,
             request.range,
             state);
     }

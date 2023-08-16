@@ -235,15 +235,7 @@ import Events from './events/Events.js';
  *                     audio: -1,
  *                     video: -1
  *                 },
- *                 maxRepresentationRatio: {
- *                     audio: 1,
- *                     video: 1
- *                 },
  *                 initialBitrate: {
- *                     audio: -1,
- *                     video: -1
- *                 },
- *                 initialRepresentationRatio: {
  *                     audio: -1,
  *                     video: -1
  *                 },
@@ -630,24 +622,10 @@ import Events from './events/Events.js';
  * The minimum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
  * Use -1 for no limit.
- * @property {module:Settings~AudioVideoSettings} [maxRepresentationRatio={audio: 1, video: 1}]
- * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed, as a proportion of the size of the representation set.
- *
- * You can set or remove this cap at anytime before or during playback.
- *
- * To clear this setting you set the value to 1.
- *
- * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation, i.e. the lowest value from executing these rules is used.
- *
- * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}]
  * Explicitly set the starting bitrate for audio or video. This value is specified in kbps.
  *
  * Use -1 to let the player decide.
- * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}]
- * Explicitly set the initial representation ratio.
- *
- * If initalBitrate is specified, this is ignored.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}]
  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
 
@@ -1037,13 +1015,14 @@ function Settings() {
             abr: {
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
+                enableSupplementalPropertyAdaptationSetSwitching: true,
                 activeRules: {
                     throughputRule: true,
-                    bolaRule: true,
-                    insufficientBufferRule: true,
-                    switchHistoryRule: true,
-                    droppedFramesRule: true,
-                    abandonRequestsRule: true,
+                    bolaRule: false,
+                    insufficientBufferRule: false,
+                    switchHistoryRule: false,
+                    droppedFramesRule: false,
+                    abandonRequestsRule: false,
                     l2ARule: false,
                     loLPRule: false
                 },
@@ -1082,15 +1061,7 @@ function Settings() {
                     audio: -1,
                     video: -1
                 },
-                maxRepresentationRatio: {
-                    audio: 1,
-                    video: 1
-                },
                 initialBitrate: {
-                    audio: -1,
-                    video: -1
-                },
-                initialRepresentationRatio: {
                     audio: -1,
                     video: -1
                 },
@@ -1120,7 +1091,7 @@ function Settings() {
                 audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
-            }           
+            }
         },
         errors: {
             recoverAttempts: {

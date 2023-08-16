@@ -423,24 +423,6 @@ describe('MediaPlayer', function () {
             expect(minAllowedBitrateFor).to.equal(5);
         });
 
-        it('should configure MaxAllowedRepresentationRatioFor', function () {
-            let maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
-            expect(maxAllowedRepresentationRatioFor).to.equal(1);
-
-            player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'maxRepresentationRatio': {
-                            'audio': 5
-                        }
-                    }
-                }
-            });
-
-            maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
-            expect(maxAllowedRepresentationRatioFor).to.equal(5);
-        });
-
         it('should update portal size', function () {
             let elementHeight = abrControllerMock.getElementHeight();
             let elementWidth = abrControllerMock.getElementWidth();
@@ -493,23 +475,6 @@ describe('MediaPlayer', function () {
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
         });
 
-        it('should configure initialRepresentationRatioFor', function () {
-            let initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
-            expect(initialRepresentationRatioFor).to.equal(-1); // jshint ignore:line
-
-            player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'initialRepresentationRatio': {
-                            'video': 10
-                        }
-                    }
-                }
-            });
-
-            initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
-            expect(initialRepresentationRatioFor).to.equal(10);
-        });
 
         it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
             let autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
@@ -962,7 +927,7 @@ describe('MediaPlayer', function () {
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
             it('Method getBitrateInfoListFor should throw an exception', function () {
-                expect(player.getBitrateInfoListFor).to.throw('You must first call initialize() and set a source before calling this method');
+                expect(player.getRepresentationsFor).to.throw('You must first call initialize() and set a source before calling this method');
             });
 
             it('Method getStreamsFromManifest should throw an exception', function () {
@@ -1013,7 +978,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method getBitrateInfoListFor should return bitrate info list', function () {
-                const bitrateList = player.getBitrateInfoListFor();
+                const bitrateList = player.getRepresentationsFor();
                 expect(bitrateList.length).to.equal(2);
             });
 

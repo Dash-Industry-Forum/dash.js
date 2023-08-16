@@ -89,7 +89,7 @@ class MediaControllerMock {
         return (type === 'audio' || type === 'video' || type === 'text');
     }
 
-    isTracksEqual(currentTrack, mediaInfoForType) {
+    areTracksEqual(currentTrack, mediaInfoForType) {
         return (mediaInfoForType.lang === 'deu');
     }
 

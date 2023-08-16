@@ -41,7 +41,7 @@ function RulesContext(config) {
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
-    const voRepresentation = config.streamProcessor ? config.streamProcessor.getVoRepresentation() : null;
+    const voRepresentation = config.streamProcessor ? config.streamProcessor.getRepresentation() : null;
     const videoModel = config.videoModel ? config.videoModel : null;
 
     function getMediaType() {
@@ -58,7 +58,7 @@ function RulesContext(config) {
         return voRepresentation ? voRepresentation.mediaInfo : null;
     }
 
-    function getVoRepresentation() {
+    function getRepresentation() {
         return voRepresentation;
     }
 
@@ -100,7 +100,7 @@ function RulesContext(config) {
         getScheduleController,
         getThroughputController,
         getAbrController,
-        getVoRepresentation,
+        getRepresentation,
         getVideoModel
     };
 

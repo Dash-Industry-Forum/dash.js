@@ -38,17 +38,19 @@ import DashConstants from '../constants/DashConstants.js';
 class Representation {
 
     constructor() {
+        this.absoluteIndex = NaN;
         this.adaptation = null;
         this.availabilityTimeComplete = true;
         this.availabilityTimeOffset = 0;
         this.bandwidth = NaN;
+        this.bitrateInKbit = NaN;
+        this.calculatedQualityRank = NaN;
         this.codecPrivateData = null;
         this.codecs = null;
         this.fragmentDuration = null;
         this.frameRate = null;
         this.height = NaN;
         this.id = null;
-        this.index = -1;
         this.indexRange = null;
         this.initialization = null;
         this.maxPlayoutRate = NaN;
@@ -57,6 +59,7 @@ class Representation {
         this.mimeType = null;
         this.mseTimeOffset = NaN;
         this.presentationTimeOffset = 0;
+        this.qualityRanking = NaN;
         this.range = null;
         this.scanType = null;
         this.segments = null;

@@ -46,9 +46,10 @@ function ThroughputRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         try {
             const switchRequest = SwitchRequest(context).create();
+            switchRequest.rule = this.getClassName();
             const mediaInfo = rulesContext.getMediaInfo();
             const mediaType = rulesContext.getMediaType();
             const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
@@ -67,9 +68,9 @@ function ThroughputRule(config) {
 
             if (abrController.getAbandonmentStateFor(streamId, mediaType) === MetricsConstants.ALLOW_LOAD) {
                 if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                    switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
-                    scheduleController.setTimeToLoadDelay(0);
+                    switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughput, true, true);
                     switchRequest.reason = { throughput: throughput, latency: latency };
+                    scheduleController.setTimeToLoadDelay(0);
                 }
             }
 
@@ -85,7 +86,7 @@ function ThroughputRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

@@ -60,8 +60,7 @@ function ScheduleController(config) {
         scheduleTimeout,
         hasVideoTrack,
         lastFragmentRequest,
-        topQualityIndex,
-        lastInitializedQuality,
+        lastInitializedRepresentationId,
         switchTrack,
         initSegmentRequired,
         checkPlaybackQuality;
@@ -108,19 +107,6 @@ function ScheduleController(config) {
         }
     }
 
-    function hasTopQualityChanged() {
-        const streamId = streamInfo.id;
-        const newTopQualityIndex = abrController.getMaxAllowedIndexFor(type, streamId);
-
-        if (isNaN(topQualityIndex) || topQualityIndex != newTopQualityIndex) {
-            logger.info('Top quality ' + type + ' index has changed from ' + topQualityIndex + ' to ' + newTopQualityIndex);
-            topQualityIndex = newTopQualityIndex;
-            return true;
-        }
-        return false;
-
-    }
-
     /**
      * Schedule the request for an init or a media segment
      */
@@ -159,7 +145,7 @@ function ScheduleController(config) {
         const currentRepresentation = representationController.getCurrentRepresentation();
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || currentRepresentation.index !== lastInitializedQuality || switchTrack) {
+        if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
             if (switchTrack) {
                 logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
                 switchTrack = false;
@@ -208,7 +194,7 @@ function ScheduleController(config) {
     function _shouldScheduleNextRequest() {
         try {
             const currentRepresentation = representationController.getCurrentRepresentation();
-            return currentRepresentation && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || _shouldBuffer());
+            return currentRepresentation && (lastInitializedRepresentationId == null || switchTrack || _shouldBuffer());
         } catch (e) {
             return false;
         }
@@ -300,7 +286,7 @@ function ScheduleController(config) {
     }
 
     /**
-     * Determines the generic buffer target, for instance for video tracks
+     * Determines the generic buffer target, for instance for video tracks or when we got an audio only stream
      * @return {number}
      * @private
      */
@@ -308,7 +294,7 @@ function ScheduleController(config) {
         try {
             const currentRepresentation = representationController.getCurrentRepresentation();
             const streamInfo = currentRepresentation.mediaInfo.streamInfo;
-            if (abrController.isPlayingAtTopQuality(streamInfo)) {
+            if (abrController.isPlayingAtTopQuality(currentRepresentation)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
@@ -340,32 +326,30 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.index !== lastFragmentRequest.mediaInfo.index)) && trigger) {
+                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && trigger) {
+                    logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldMediaInfo: lastFragmentRequest.mediaInfo,
-                        newMediaInfo: item.mediaInfo,
+                        oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
+                        newMediaInfo: item.representation.mediaInfo,
                         streamId: streamInfo.id
                     });
                 }
-                if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
+                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && trigger) {
                     logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
-                        oldQuality: lastFragmentRequest.quality,
-                        newQuality: item.quality,
+                        oldRepresentation: lastFragmentRequest.representation ? lastFragmentRequest.representation : null,
+                        newRepresentation: item.representation,
                         streamId: streamInfo.id
                     });
                 }
                 lastFragmentRequest = {
-                    mediaInfo: item.mediaInfo,
-                    quality: item.quality,
-                    adaptationIndex: item.adaptationIndex
+                    representation: item.representation
                 };
             }
         }
     }
-
 
 
     function _onURLResolutionFailed() {
@@ -399,20 +383,17 @@ function ScheduleController(config) {
         initSegmentRequired = value;
     }
 
-    function setLastInitializedQuality(value) {
-        lastInitializedQuality = value;
+    function setLastInitializedRepresentationId(value) {
+        lastInitializedRepresentationId = value;
     }
 
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
-        lastInitializedQuality = NaN;
+        lastInitializedRepresentationId = null;
         lastFragmentRequest = {
-            mediaInfo: undefined,
-            quality: NaN,
-            adaptationIndex: NaN
+            representation: null,
         };
-        topQualityIndex = NaN;
         switchTrack = false;
         initSegmentRequired = false;
     }
@@ -448,7 +429,7 @@ function ScheduleController(config) {
         getPlaybackController,
         setCheckPlaybackQuality,
         setInitSegmentRequired,
-        setLastInitializedQuality,
+        setLastInitializedRepresentationId,
     };
 
     setup();

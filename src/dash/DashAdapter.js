@@ -1035,11 +1035,11 @@ function DashAdapter() {
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        if ( (!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            let arr = realAdaptation.Representation.map( repr => {
+        if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
+            let arr = realAdaptation.Representation.map(repr => {
                 return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
             });
-            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
+            if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
                 // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
                 mediaInfo.supplementalProperties = arr[0];
             }
@@ -1047,6 +1047,19 @@ function DashAdapter() {
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
+
+        // Save IDs of AS that we can switch to
+        try {
+            const adaptationSetSwitching = mediaInfo.supplementalProperties[DashConstants.ADAPTATION_SET_SWITCHING];
+            if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
+                mediaInfo.adaptationSetSwitchingCompatibleIds = adaptationSetSwitching.split(',')
+                mediaInfo.adaptationSetSwitchingCompatibleIds = mediaInfo.adaptationSetSwitchingCompatibleIds.map((id) => {
+                    return parseInt(id)
+                })
+            }
+        } catch (e) {
+            return mediaInfo;
+        }
 
         return mediaInfo;
     }
@@ -1059,7 +1072,7 @@ function DashAdapter() {
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
         mediaInfo.lang = bcp47Normalize(lang);
-        mediaInfo.roles = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
+        mediaInfo.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {

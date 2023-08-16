@@ -285,8 +285,8 @@ function BolaRule(config) {
     }
 
     function onMediaFragmentLoaded(e) {
-        if (e && e.chunk && e.chunk.mediaInfo) {
-            const bolaState = bolaStateDict[e.chunk.mediaInfo.type];
+        if (e && e.chunk && e.chunk.representation.mediaInfo) {
+            const bolaState = bolaStateDict[e.chunk.representation.mediaInfo.type];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 const start = e.chunk.start;
                 if (isNaN(bolaState.mostAdvancedSegmentStart) || start > bolaState.mostAdvancedSegmentStart) {
@@ -300,7 +300,7 @@ function BolaRule(config) {
                 bolaState.lastSegmentDurationS = e.chunk.duration;
                 bolaState.lastQuality = e.chunk.quality;
 
-                checkNewSegment(bolaState, e.chunk.mediaInfo.type);
+                checkNewSegment(bolaState, e.chunk.representation.mediaInfo.type);
             }
         }
     }

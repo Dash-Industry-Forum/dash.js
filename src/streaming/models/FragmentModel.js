@@ -79,7 +79,7 @@ function FragmentModel(config) {
         };
 
         const isEqualInit = function (req1, req2) {
-            return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+            return req1.representation.id === req2.representation.id;
         };
 
         const check = function (requests) {

@@ -266,7 +266,7 @@ function MetricsModel(config) {
         pushAndNotify(mediaType, MetricsConstants.DROPPED_FRAMES, vo);
     }
 
-    function addSchedulingInfo(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
+    function addSchedulingInfo(mediaType, t, type, startTime, availabilityStartTime, duration, bandwidth, range, state) {
         let vo = new SchedulingInfo();
 
         vo.mediaType = mediaType;
@@ -276,7 +276,7 @@ function MetricsModel(config) {
         vo.startTime = startTime;
         vo.availabilityStartTime = availabilityStartTime;
         vo.duration = duration;
-        vo.quality = quality;
+        vo.bandwidth = bandwidth;
         vo.range = range;
 
         vo.state = state;

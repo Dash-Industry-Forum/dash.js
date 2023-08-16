@@ -175,7 +175,7 @@ function TextSourceBuffer(config) {
     function _onVideoChunkReceived(e) {
         const chunk = e.chunk;
 
-        if (chunk.mediaInfo.embeddedCaptions) {
+        if (chunk.representation.mediaInfo.embeddedCaptions) {
             append(chunk.bytes, chunk);
         }
     }
@@ -252,7 +252,7 @@ function TextSourceBuffer(config) {
     }
 
     function append(bytes, chunk) {
-        const mediaInfo = chunk.mediaInfo;
+        const mediaInfo = chunk.representation.mediaInfo;
         const mediaType = mediaInfo.type;
         const mimeType = mediaInfo.mimeType;
         const codecType = mediaInfo.codec || mimeType;

@@ -6,9 +6,9 @@ function DroppedFramesHistory() {
     let lastDroppedFrames = {};
     let lastTotalFrames = {};
 
-    function push(streamId, index, playbackQuality) {
+    function push(streamId, representationId, playbackQuality) {
 
-        if (!index) {
+        if (!representationId) {
             return;
         }
 
@@ -28,12 +28,12 @@ function DroppedFramesHistory() {
         lastTotalFrames[streamId] = totalVideoFrames;
 
         const current = values[streamId];
-        if (!isNaN(index)) {
-            if (!current[index]) {
-                current[index] = { droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames };
+        if (!isNaN(representationId)) {
+            if (!current[representationId]) {
+                current[representationId] = { droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames };
             } else {
-                current[index].droppedVideoFrames += intervalDroppedFrames;
-                current[index].totalVideoFrames += intervalTotalFrames;
+                current[representationId].droppedVideoFrames += intervalDroppedFrames;
+                current[representationId].totalVideoFrames += intervalTotalFrames;
             }
         }
     }

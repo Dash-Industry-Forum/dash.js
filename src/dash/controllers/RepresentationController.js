@@ -98,13 +98,14 @@ function RepresentationController(config) {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
+    function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, selectedRepresentationId) {
         return new Promise((resolve, reject) => {
             updating = true;
             voAvailableRepresentations = availableRepresentations;
             realAdaptation = newRealAdaptation;
-            const rep = getRepresentationForQuality(quality)
-            _setCurrentVoRepresentation(rep);
+            const selectedRepresentation = getRepresentationById(selectedRepresentationId);
+            _setCurrentVoRepresentation(selectedRepresentation);
+
 
             if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
                 endDataUpdate();
@@ -121,8 +122,8 @@ function RepresentationController(config) {
             Promise.all(promises)
                 .then(() => {
                     // Update the current representation again as we have now the reference to the segments
-                    const rep = getRepresentationForQuality(quality)
-                    _setCurrentVoRepresentation(rep);
+                    const selectedRepresentation = getRepresentationById(selectedRepresentationId);
+                    _setCurrentVoRepresentation(selectedRepresentation);
                     resolve();
                 })
                 .catch((e) => {
@@ -231,8 +232,20 @@ function RepresentationController(config) {
         }, { streamId: streamInfo.id, mediaType: type })
     }
 
-    function getRepresentationForQuality(quality) {
-        return quality === null || quality === undefined || quality >= voAvailableRepresentations.length ? null : voAvailableRepresentations[quality];
+    function getRepresentationById(id) {
+        if (!voAvailableRepresentations || voAvailableRepresentations.length === 0) {
+            return null;
+        }
+
+        const reps = voAvailableRepresentations.filter((rep) => {
+            return rep.id === id;
+        })
+
+        if (reps.length > 0) {
+            return reps[0]
+        }
+
+        return null;
     }
 
     function getQualityForRepresentation(voRepresentation) {
@@ -288,7 +301,7 @@ function RepresentationController(config) {
         }
 
         if (isAllRepresentationsUpdated()) {
-            abrController.setPlaybackQuality(type, streamInfo, getQualityForRepresentation(currentVoRepresentation));
+            abrController.setPlaybackQuality(type, streamInfo, currentVoRepresentation);
             const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
             if (dvrInfo) {
                 dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
@@ -303,8 +316,7 @@ function RepresentationController(config) {
         }
     }
 
-    function prepareQualityChange(newQuality) {
-        const newRep = getRepresentationForQuality(newQuality)
+    function prepareQualityChange(newRep) {
         _setCurrentVoRepresentation(newRep);
         _addRepresentationSwitch();
     }
@@ -330,7 +342,7 @@ function RepresentationController(config) {
         isUpdating,
         updateData,
         getCurrentRepresentation,
-        getRepresentationForQuality,
+        getRepresentationById,
         prepareQualityChange,
         reset
     };

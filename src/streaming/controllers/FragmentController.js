@@ -118,7 +118,6 @@ function FragmentController(config) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
-        chunk.mediaInfo = request.mediaInfo;
         chunk.segmentType = request.type;
         chunk.start = request.startTime;
         chunk.duration = request.duration;
@@ -126,7 +125,7 @@ function FragmentController(config) {
         chunk.bytes = bytes;
         chunk.index = request.index;
         chunk.quality = request.quality;
-        chunk.representationId = request.representationId;
+        chunk.representation = request.representation;
         chunk.endFragment = endFragment;
 
         return chunk;
@@ -139,10 +138,10 @@ function FragmentController(config) {
         const request = e.request;
         const bytes = e.response;
         const isInit = request.isInitializationRequest();
-        const strInfo = request.mediaInfo.streamInfo;
+        const strInfo = request.representation.mediaInfo.streamInfo;
 
         if (e.error) {
-            if (request.mediaType === Constants.AUDIO || request.mediaType === Constants.VIDEO || (request.mediaType === Constants.TEXT && request.mediaInfo.isFragmented)) {
+            if (request.mediaType === Constants.AUDIO || request.mediaType === Constants.VIDEO || (request.mediaType === Constants.TEXT && request.representation.mediaInfo.isFragmented)) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
                 eventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, { entry: e.request.serviceLocation });
             }

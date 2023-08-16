@@ -398,7 +398,9 @@ function MediaPlayer() {
             mediaController.setConfig({
                 domStorage,
                 settings,
-                customParametersModel
+                mediaPlayerModel,
+                customParametersModel,
+                videoModel
             });
 
             mediaPlayerModel.setConfig({
@@ -1003,7 +1005,7 @@ function MediaPlayer() {
 
             return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
         }
-        return abrController.getQualityFor(type);
+        return abrController.getCurrentRepresentationFor(type);
     }
 
     /**
@@ -1035,19 +1037,6 @@ function MediaPlayer() {
         abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { forceReplace });
     }
 
-    /**
-     * Update the video element size variables
-     * Should be called on window resize (or any other time player is resized). Fullscreen does trigger a window resize event.
-     *
-     * Once windowResizeEventCalled = true, abrController.checkPortalSize() will use element size variables rather than querying clientWidth every time.
-     *
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function updatePortalSize() {
-        abrController.setElementSize();
-        abrController.setWindowResizeEventCalled(true);
-    }
 
     /*
     ---------------------------------------------------------------------------
@@ -1495,12 +1484,12 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function getBitrateInfoListFor(type) {
+    function getRepresentationsFor(type) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = getActiveStream();
-        return stream ? stream.getBitrateListFor(type) : [];
+        return stream ? stream.getRepresentationsFor(type) : [];
     }
 
     /**
@@ -2543,12 +2532,11 @@ function MediaPlayer() {
         getDashMetrics,
         getQualityFor,
         setQualityFor,
-        updatePortalSize,
         enableText,
         enableForcedTextStreaming,
         isTextEnabled,
         setTextTrack,
-        getBitrateInfoListFor,
+        getRepresentationsFor,
         getStreamsFromManifest,
         getTracksFor,
         getTracksForTypeFromManifest,

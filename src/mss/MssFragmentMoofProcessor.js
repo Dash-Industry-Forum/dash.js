@@ -219,7 +219,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
@@ -317,7 +317,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');

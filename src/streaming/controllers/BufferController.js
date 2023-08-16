@@ -197,9 +197,8 @@ function BufferController(config) {
 
     function _initializeSinkForPrebuffering() {
         return new Promise((resolve, reject) => {
-            const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
-            updateBufferTimestampOffset(representationController.getRepresentationForQuality(requiredQuality))
+            updateBufferTimestampOffset(representationController.getCurrentRepresentation())
                 .then(() => {
                     resolve(sourceBufferSink);
                 })
@@ -211,15 +210,14 @@ function BufferController(config) {
 
     function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks) {
         return new Promise((resolve, reject) => {
-            const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
                 eventBus
             });
-            _initializeSink(mediaInfo, oldBufferSinks, requiredQuality)
+            _initializeSink(mediaInfo, oldBufferSinks)
                 .then(() => {
-                    return updateBufferTimestampOffset(representationController.getRepresentationForQuality(requiredQuality));
+                    return updateBufferTimestampOffset(representationController.getCurrentRepresentation());
                 })
                 .then(() => {
                     resolve(sourceBufferSink);
@@ -232,8 +230,8 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSink(mediaInfo, oldBufferSinks, requiredQuality) {
-        const selectedVoRepresentation = representationController.getRepresentationForQuality(requiredQuality);
+    function _initializeSink(mediaInfo, oldBufferSinks) {
+        const selectedVoRepresentation = representationController.getCurrentRepresentation();
 
         if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
             return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedVoRepresentation, oldBufferSinks[type]);
@@ -263,7 +261,7 @@ function BufferController(config) {
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
                 if (chunk.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
-                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
+                    const initChunk = initCache.extract(chunk.streamId, chunk.representation.id);
                     if (initChunk) {
                         if (lastInit !== initChunk) {
                             dischargeFragments.push(initChunk);
@@ -292,7 +290,7 @@ function BufferController(config) {
             logger.info('Init fragment finished loading saving to', type + '\'s init cache');
             initCache.save(e.chunk);
         }
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
+        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representation.id, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         _appendToBuffer(e.chunk);
     }
 
@@ -311,7 +309,7 @@ function BufferController(config) {
         }
 
         // Append init segment into buffer
-        logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
+        logger.info('Append Init fragment', type, ' with representationId:', chunk.representation.id, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
         _appendToBuffer(chunk);
 
         return true;
@@ -340,7 +338,7 @@ function BufferController(config) {
                 _onAppended(e);
             });
 
-        if (chunk.mediaInfo.type === Constants.VIDEO) {
+        if (chunk.representation.mediaInfo.type === Constants.VIDEO) {
             _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
@@ -405,12 +403,12 @@ function BufferController(config) {
 
         if (appendedBytesInfo && !suppressAppendedEvent) {
             _triggerEvent(Events.BYTES_APPENDED_END_FRAGMENT, {
-                quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
                 bufferedRanges: ranges,
                 segmentType: appendedBytesInfo.segmentType,
-                mediaType: type
+                mediaType: type,
+                representationId: appendedBytesInfo.representation.id
             });
         }
     }

@@ -170,9 +170,9 @@ function L2ARule(config) {
      * @private
      */
     function _onMediaFragmentLoaded(e) {
-        if (e && e.chunk && e.chunk.mediaInfo) {
-            const l2AState = l2AStateDict[e.chunk.mediaInfo.type];
-            const l2AParameters = l2AParameterDict[e.chunk.mediaInfo.type];
+        if (e && e.chunk && e.chunk.representation && e.chunk.representation.mediaInfo) {
+            const l2AState = l2AStateDict[e.chunk.representation.mediaInfo.type];
+            const l2AParameters = l2AParameterDict[e.chunk.representation.mediaInfo.type];
 
             if (l2AState && l2AState.state !== L2A_STATE_ONE_BITRATE) {
                 const start = e.chunk.start;

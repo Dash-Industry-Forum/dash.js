@@ -443,7 +443,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-        $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
+        $scope.videoQualities = $scope.player.getRepresentationsFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');

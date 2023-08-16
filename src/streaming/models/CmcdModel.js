@@ -283,7 +283,7 @@ function CmcdModel() {
         if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
         if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
         if (request.mediaType === Constants.TEXT) {
-            if (request.mediaInfo.mimeType === 'application/mp4') {
+            if (request.representation.mediaInfo.mimeType === 'application/mp4') {
                 ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
             } else {
                 ot = OBJECT_TYPES.CAPTION;
@@ -417,7 +417,7 @@ function CmcdModel() {
     function _getBitrateByRequest(request) {
         try {
             const quality = request.quality;
-            const bitrateList = request.mediaInfo.bitrateList;
+            const bitrateList = request.representation.mediaInfo.bitrateList;
 
             return parseInt(bitrateList[quality].bandwidth / 1000);
         } catch (e) {

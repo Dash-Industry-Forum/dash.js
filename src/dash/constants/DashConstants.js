@@ -123,6 +123,7 @@ export default {
     },
     PROFILES: 'profiles',
     PUBLISH_TIME: 'publishTime',
+    QUALITY_RANKING : 'qualityRanking',
     QUERY_BEFORE_START: 'queryBeforeStart',
     RANGE: 'range',
     RATING: 'Rating',
