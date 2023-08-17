@@ -1219,7 +1219,7 @@ function StreamController() {
      */
     function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
         try {
-            let fragmentDuration = NaN;
+            let segmentDuration = NaN;
 
             //  We use the maxFragmentDuration attribute if present
             if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
@@ -1232,7 +1232,7 @@ function StreamController() {
                 const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
 
 
-                const fragmentDurations = mediaTypes
+                const segmentDurations = mediaTypes
                     .reduce((acc, mediaType) => {
                         const mediaInfo = adapter.getMediaInfoForType(streamInfo, mediaType);
 
@@ -1256,17 +1256,17 @@ function StreamController() {
                         return acc;
                     }, [])
                     .reduce((acc, voRepresentation) => {
-                        if (voRepresentation && voRepresentation.fragmentDuration && !isNaN(voRepresentation.fragmentDuration)) {
-                            acc.push(voRepresentation.fragmentDuration);
+                        if (voRepresentation && voRepresentation.segmentDuration && !isNaN(voRepresentation.segmentDuration)) {
+                            acc.push(voRepresentation.segmentDuration);
                         }
 
                         return acc;
                     }, []);
 
-                fragmentDuration = Math.max(...fragmentDurations);
+                segmentDuration = Math.max(...segmentDurations);
             }
 
-            return isFinite(fragmentDuration) ? fragmentDuration : NaN;
+            return isFinite(segmentDuration) ? segmentDuration : NaN;
         } catch (e) {
             return NaN;
         }
@@ -1601,27 +1601,27 @@ function StreamController() {
     }
 
     instance = {
-        initialize,
-        getActiveStreamInfo,
         addDVRMetric,
-        hasVideoTrack,
-        hasAudioTrack,
+        getActiveStream,
+        getActiveStreamInfo,
+        getActiveStreamProcessors,
+        getAutoPlay,
+        getHasMediaOrInitialisationError,
+        getInitialPlayback,
+        getIsStreamSwitchInProgress,
         getStreamById,
         getStreamForTime,
+        getStreams,
         getTimeRelativeToStreamId,
+        hasAudioTrack,
+        hasVideoTrack,
+        initialize,
         load,
         loadWithManifest,
-        getActiveStreamProcessors,
+        reset,
         setConfig,
         setProtectionData,
-        getIsStreamSwitchInProgress,
         switchToVideoElement,
-        getHasMediaOrInitialisationError,
-        getStreams,
-        getActiveStream,
-        getInitialPlayback,
-        getAutoPlay,
-        reset
     };
 
     setup();

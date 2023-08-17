@@ -331,24 +331,19 @@ function FragmentModel(config) {
         resetInitialSettings();
     }
 
-    function addExecutedRequest(request) {
-        executedRequests.push(request);
-    }
-
     instance = {
-        getStreamId,
-        getType,
-        getRequests,
-        isFragmentLoaded,
-        isFragmentLoadedOrPending,
-        removeExecutedRequestsBeforeTime,
-        removeExecutedRequestsAfterTime,
-        syncExecutedRequestsWithBufferedRange,
         abortRequests,
         executeRequest,
+        getRequests,
+        getStreamId,
+        getType,
+        isFragmentLoaded,
+        isFragmentLoadedOrPending,
+        removeExecutedRequestsAfterTime,
+        removeExecutedRequestsBeforeTime,
         reset,
         resetInitialSettings,
-        addExecutedRequest
+        syncExecutedRequestsWithBufferedRange,
     };
 
     setup();

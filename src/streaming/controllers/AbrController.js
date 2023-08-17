@@ -229,6 +229,13 @@ function AbrController() {
             return null;
         }
 
+        // If bitrate should be as small as possible return the Representation with the lowest bitrate
+        if (bitrate <= 0) {
+            return possibleVoRepresentations.sort((a, b) => {
+                return a.bandwidth - b.bandwidth;
+            })[0]
+        }
+
         // Get all Representations that have lower or equal bitrate than our target bitrate
         const targetRepresentations = possibleVoRepresentations.filter((rep) => {
             return rep.bitrateInKbit <= bitrate
@@ -238,6 +245,7 @@ function AbrController() {
             return possibleVoRepresentations[0];
         }
 
+        // Return the one that has the highest quality rank. This is not necessarily the one with the highest bitrate
         return targetRepresentations.reduce((prev, curr) => {
             return prev.calculatedQualityRank > curr.calculatedQualityRank ? prev : curr
         })
@@ -250,7 +258,7 @@ function AbrController() {
             return voRepresentations;
         }
 
-        const mediaInfos = _getPossibleMediaInfos(mediaInfo, includeCompatibleMediaInfos)
+        const mediaInfos = _getPossibleMediaInfos(mediaInfo)
         mediaInfos.forEach((mediaInfo) => {
             let currentVoRepresentations = adapter.getVoRepresentations(mediaInfo);
 
@@ -265,15 +273,23 @@ function AbrController() {
         }
         voRepresentations = _assignAndSortByCalculatedQualityRank(voRepresentations);
 
-        //Set index values
+        // Add an absolute index
         voRepresentations.forEach((rep, index) => {
             rep.absoluteIndex = index
         })
 
+        // Filter the Representations in case we do not want to include compatible Media Infos
+        // We can not apply the filter before otherwise the absolute index would be wrong
+        if (!includeCompatibleMediaInfos) {
+            voRepresentations = voRepresentations.filter((rep) => {
+                return adapter.areMediaInfosEqual(rep.mediaInfo, mediaInfo);
+            })
+        }
+
         return voRepresentations;
     }
 
-    function _getPossibleMediaInfos(mediaInfo, includeCompatibleMediaInfos = false) {
+    function _getPossibleMediaInfos(mediaInfo) {
         try {
             const possibleMediaInfos = [];
 
@@ -282,7 +298,7 @@ function AbrController() {
             }
 
             // If AS switching is disabled return only the current MediaInfo
-            if (!includeCompatibleMediaInfos || !settings.get().streaming.abr.enableSupplementalPropertyAdaptationSetSwitching
+            if (!settings.get().streaming.abr.enableSupplementalPropertyAdaptationSetSwitching
                 || !mediaInfo.adaptationSetSwitchingCompatibleIds
                 || mediaInfo.adaptationSetSwitchingCompatibleIds.length === 0) {
                 return possibleMediaInfos
@@ -542,22 +558,25 @@ function AbrController() {
             return NaN;
         }
 
+        let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
+        if (configBitrate > 0) {
+            return configBitrate;
+        }
+
         let savedBitrate = NaN;
         if (domStorage && domStorage.hasOwnProperty('getSavedBitrateSettings')) {
             savedBitrate = domStorage.getSavedBitrateSettings(type);
         }
-
-        let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
-
-        if (configBitrate === -1) {
-            if (!isNaN(savedBitrate)) {
-                configBitrate = savedBitrate;
-            } else {
-                configBitrate = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
-            }
+        if (!isNaN(savedBitrate)) {
+            return savedBitrate
         }
 
-        return configBitrate;
+        const averageThroughput = throughputController.getAverageThroughput(type);
+        if (!isNaN(averageThroughput) && averageThroughput > 0) {
+            return averageThroughput
+        }
+        
+        return (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
     }
 
     /**
@@ -594,7 +613,7 @@ function AbrController() {
                 streamProcessor,
                 videoModel
             });
-            const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
+            const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
 
             if (!switchRequest || !switchRequest.representation) {
                 return false;
@@ -665,14 +684,16 @@ function AbrController() {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldRepresentation.id + ' to ' + newRepresentation.id + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+            const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
+            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from bitrate' + oldRepresentation.bitrateInKbit + ' to bitrate' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
                     oldRepresentation: oldRepresentation,
                     newRepresentation: newRepresentation,
                     reason,
                     streamInfo,
-                    mediaType: type
+                    mediaType: type,
+                    isAdaptationSetSwitch
                 },
                 { streamId: streamInfo.id, mediaType: type }
             );

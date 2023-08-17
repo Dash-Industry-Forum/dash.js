@@ -2657,8 +2657,6 @@ declare namespace dashjs {
         reset(): void;
 
         resetInitialSettings(): void;
-
-        addExecutedRequest(request: HTTPRequest): void;
     }
 
     export interface AastLowLatencyThroughputModel {
@@ -2668,7 +2666,7 @@ declare namespace dashjs {
 
         getThroughputCapacityDelayMS(request: HTTPRequest, currentBufferLevel: number): number;
 
-        getEstimaredDownloadDurationMS(request: HTTPRequest): number;
+        getEstimatedDownloadDurationMS(request: HTTPRequest): number;
     }
 
     export interface ThroughputModel {

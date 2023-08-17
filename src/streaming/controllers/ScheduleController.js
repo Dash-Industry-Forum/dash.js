@@ -344,9 +344,7 @@ function ScheduleController(config) {
                         streamId: streamInfo.id
                     });
                 }
-                lastFragmentRequest = {
-                    representation: item.representation
-                };
+                lastFragmentRequest.representation = item.representation
             }
         }
     }

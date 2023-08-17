@@ -288,6 +288,20 @@ function ThumbnailTracks(config) {
         currentTrackIndex = index;
     }
 
+    function setTrackById(id) {
+        if (!tracks || tracks.length === 0) {
+            return;
+        }
+
+        const index = tracks.findIndex((elem) => {
+            return elem.id === id
+        })
+
+        if (index !== -1) {
+            currentTrackIndex = index;
+        }
+    }
+
     function getThumbnailRequestForTime(time) {
         let currentVoRep;
         const voReps = adapter.getVoRepresentations(mediaInfo);
@@ -308,13 +322,14 @@ function ThumbnailTracks(config) {
     }
 
     instance = {
-        getTracks,
         addTracks,
-        reset,
-        setTrackByIndex,
         getCurrentTrack,
         getCurrentTrackIndex,
-        getThumbnailRequestForTime
+        getThumbnailRequestForTime,
+        getTracks,
+        reset,
+        setTrackById,
+        setTrackByIndex,
     };
 
     setup();

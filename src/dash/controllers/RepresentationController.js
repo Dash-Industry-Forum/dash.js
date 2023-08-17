@@ -49,7 +49,6 @@ function RepresentationController(config) {
     const isDynamic = config.isDynamic;
 
     let instance,
-        realAdaptation,
         updating,
         voAvailableRepresentations,
         currentVoRepresentation;
@@ -74,10 +73,6 @@ function RepresentationController(config) {
         }
     }
 
-    function getData() {
-        return realAdaptation;
-    }
-
     function isUpdating() {
         return updating;
     }
@@ -87,7 +82,6 @@ function RepresentationController(config) {
     }
 
     function resetInitialSettings() {
-        realAdaptation = null;
         updating = true;
         voAvailableRepresentations = [];
     }
@@ -98,11 +92,10 @@ function RepresentationController(config) {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, selectedRepresentationId) {
+    function updateData(availableRepresentations, type, isFragmented, selectedRepresentationId) {
         return new Promise((resolve, reject) => {
             updating = true;
             voAvailableRepresentations = availableRepresentations;
-            realAdaptation = newRealAdaptation;
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
@@ -130,7 +123,6 @@ function RepresentationController(config) {
                     reject(e);
                 })
         })
-
     }
 
     function _updateRepresentation(currentRep) {
@@ -153,6 +145,7 @@ function RepresentationController(config) {
                     if (data[1] && !data[1].error) {
                         currentRep = _onSegmentsLoaded(currentRep, data[1]);
                     }
+                    currentRep.fragmentDuration = currentRep.segmentDuration ? currentRep.segmentDuration : currentRep.segments && currentRep.segments.length > 0 ? currentRep.segments[0].duration : NaN;
                     _setMediaFinishedInformation(currentRep);
                     _onRepresentationUpdated(currentRep);
                     resolve();
@@ -209,13 +202,12 @@ function RepresentationController(config) {
 
         if (segments.length > 0) {
             representation.segments = segments;
-            representation.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         }
 
         return representation;
     }
 
-    function _addRepresentationSwitch() {
+    function addRepresentationSwitch() {
         checkConfig();
         const now = new Date();
         const currentRepresentation = getCurrentRepresentation();
@@ -228,7 +220,6 @@ function RepresentationController(config) {
             mediaType: type,
             streamId: streamInfo.id,
             currentRepresentation,
-            numberOfRepresentations: voAvailableRepresentations.length
         }, { streamId: streamInfo.id, mediaType: type })
     }
 
@@ -265,7 +256,6 @@ function RepresentationController(config) {
         updating = false;
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
             {
-                data: realAdaptation,
                 currentRepresentation: currentVoRepresentation,
                 error: error
             },
@@ -306,7 +296,7 @@ function RepresentationController(config) {
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
             if (!repSwitch) {
-                _addRepresentationSwitch();
+                addRepresentationSwitch();
             }
             endDataUpdate();
         }
@@ -314,10 +304,13 @@ function RepresentationController(config) {
 
     function prepareQualityChange(newRep) {
         _setCurrentVoRepresentation(newRep);
-        _addRepresentationSwitch();
+        addRepresentationSwitch();
     }
 
     function _setCurrentVoRepresentation(value) {
+        if (value.mediaInfo.type === 'video') {
+            console.log(`Setting current VoRepresentation in RepresentationController for stream id ${value.mediaInfo.streamInfo.id} to ${value.bitrateInKbit}`);
+        }
         currentVoRepresentation = value;
     }
 
@@ -332,15 +325,15 @@ function RepresentationController(config) {
     }
 
     instance = {
-        getStreamId,
-        getType,
-        getData,
-        isUpdating,
-        updateData,
+        addRepresentationSwitch,
         getCurrentRepresentation,
         getRepresentationById,
+        getStreamId,
+        getType,
+        isUpdating,
         prepareQualityChange,
-        reset
+        reset,
+        updateData,
     };
 
     setup();

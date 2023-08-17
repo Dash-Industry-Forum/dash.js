@@ -1019,7 +1019,7 @@ function Settings() {
                 activeRules: {
                     throughputRule: true,
                     bolaRule: false,
-                    insufficientBufferRule: false,
+                    insufficientBufferRule: true,
                     switchHistoryRule: false,
                     droppedFramesRule: false,
                     abandonRequestsRule: false,

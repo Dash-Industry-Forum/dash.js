@@ -422,9 +422,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
         var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+        var availableRepresentations = $scope.player.getRepresentationsByType(e.mediaType)
+        var maxIndex = availableRepresentations ? availableRepresentations.length : 0;
 
-        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.index + 1;
-        $scope[e.mediaType + 'PendingMaxIndex'] = e.numberOfRepresentations;
+        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.absoluteIndex + 1;
+        $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
@@ -436,14 +438,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + 'Index'] = e.newQuality + 1;
+        $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndex + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-        $scope.videoQualities = $scope.player.getRepresentationsFor('video');
+        $scope.videoQualities = $scope.player.getRepresentationsByType('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');
@@ -1977,10 +1979,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var period = dashAdapter.getPeriodById($scope.currentStreamInfo.id);
             var periodIdx = period ? period.index : $scope.currentStreamInfo.index;
 
-            var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
+            var representations = $scope.player.getRepresentationsByType(type);
+            var maxIndex = representations ? representations.length : 1;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var index = $scope.player.getQualityFor(type);
+            var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndex + 1;
 
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();

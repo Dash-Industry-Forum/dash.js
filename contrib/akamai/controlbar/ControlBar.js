@@ -528,9 +528,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             destroyMenu(bitrateListMenu, bitrateListBtn, menuHandlersList.bitrate);
             bitrateListMenu = null;
             var availableBitrates = { menuType: 'bitrate' };
-            availableBitrates.audio = self.player.getRepresentationsFor && self.player.getRepresentationsFor('audio') || [];
-            availableBitrates.video = self.player.getRepresentationsFor && self.player.getRepresentationsFor('video') || [];
-            availableBitrates.images = self.player.getRepresentationsFor && self.player.getRepresentationsFor('image') || [];
+            availableBitrates.audio = self.player.getRepresentationsByType && self.player.getRepresentationsByType('audio') || [];
+            availableBitrates.video = self.player.getRepresentationsByType && self.player.getRepresentationsByType('video') || [];
+            availableBitrates.images = self.player.getRepresentationsByType && self.player.getRepresentationsByType('image') || [];
 
             if (availableBitrates.audio.length >= 1 || availableBitrates.video.length >= 1 || availableBitrates.images.length >= 1) {
                 contentFunc = function (element, index) {
@@ -852,14 +852,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             if (item.index > 0) {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
                                 self.player.updateSettings(cfg);
-                                self.player.setQualityFor(item.mediaType, item.index - 1, forceQuality);
+                                self.player.setRepresentationForTypeByIndex(item.mediaType, item.index - 1, forceQuality);
                             } else {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
                                 self.player.updateSettings(cfg);
                             }
                             break;
                         case 'image-bitrate-list':
-                            player.setQualityFor(item.mediaType, item.index);
+                            player.setRepresentationForTypeByIndex(item.mediaType, item.index);
                             break;
                         case 'caption-list':
                             self.player.setTextTrack(item.index - 1);

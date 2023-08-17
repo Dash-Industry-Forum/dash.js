@@ -682,7 +682,7 @@ function Stream(config) {
      * @returns {Array}
      * @memberof Stream#
      */
-    function getRepresentationsFor(type) {
+    function getRepresentationsByType(type) {
         checkConfig();
         if (type === Constants.IMAGE) {
             if (!thumbnailController) {
@@ -691,7 +691,60 @@ function Stream(config) {
             return thumbnailController.getPossibleVoRepresentations();
         }
         const mediaInfo = getMediaInfo(type);
-        return abrController.getPossibleVoRepresentations(mediaInfo, true, false);
+        return abrController.getPossibleVoRepresentations(mediaInfo, true, true);
+    }
+
+    /**
+     * @param {string} type
+     * @param {string} id
+     * @returns {Array}
+     * @memberof Stream#
+     */
+    function getRepresentationForTypeById(type, id) {
+        let possibleVoRepresentations;
+
+        if (type === Constants.IMAGE) {
+            if (!thumbnailController) {
+                return null;
+            }
+            possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
+        } else {
+            const mediaInfo = getMediaInfo(type);
+            possibleVoRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true, true);
+        }
+
+        if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
+            return null
+        }
+        const targetReps = possibleVoRepresentations.filter((rep) => {
+            return rep.id === id
+        })
+
+        return targetReps && targetReps.length > 0 ? targetReps[0] : null;
+    }
+
+    /**
+     * @param {string} type
+     * @param {number} index
+     * @returns {Array}
+     * @memberof Stream#
+     */
+    function getRepresentationForTypeByIndex(type, index) {
+        let possibleVoRepresentations;
+
+        if (type === Constants.IMAGE) {
+            if (!thumbnailController) {
+                return null;
+            }
+            possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
+        } else {
+            const mediaInfo = getMediaInfo(type);
+            possibleVoRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true, true);
+        }
+
+        index = Math.max(Math.min(index, possibleVoRepresentations.length - 1), 0)
+
+        return possibleVoRepresentations[index];
     }
 
     function onProtectionError(event) {
@@ -711,7 +764,7 @@ function Stream(config) {
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
-        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+        adapter.setCurrentMediaInfo(mediaInfo);
 
         let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
@@ -1041,7 +1094,7 @@ function Stream(config) {
         return adapter;
     }
 
-    function getCurrentRepresentationFor(type) {
+    function getCurrentRepresentationForType(type) {
         const sp = _getProcessorByType(type);
 
         return sp.getRepresentation();
@@ -1051,7 +1104,7 @@ function Stream(config) {
         activate,
         deactivate,
         getAdapter,
-        getCurrentRepresentationFor,
+        getCurrentRepresentationForType,
         getDuration,
         getHasAudioTrack,
         getHasFinishedBuffering,
@@ -1061,7 +1114,9 @@ function Stream(config) {
         getIsEndedEventSignaled,
         getPreloaded,
         getProcessors,
-        getRepresentationsFor,
+        getRepresentationForTypeById,
+        getRepresentationForTypeByIndex,
+        getRepresentationsByType,
         getStartTime,
         getStreamId,
         getStreamInfo,

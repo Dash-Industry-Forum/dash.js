@@ -230,7 +230,7 @@ function ABRRulesCollection(config) {
         return newSwitchReq
     }
 
-    function getMaxQuality(rulesContext) {
+    function getBestPossibleSwitchRequest(rulesContext) {
         if (!rulesContext) {
             return SwitchRequest(context).create()
         }
@@ -295,7 +295,7 @@ function ABRRulesCollection(config) {
     instance = {
         initialize,
         reset,
-        getMaxQuality,
+        getBestPossibleSwitchRequest,
         shouldAbandonFragment,
         getQualitySwitchRules,
         getAbandonFragmentRules,

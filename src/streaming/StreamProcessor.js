@@ -206,10 +206,6 @@ function StreamProcessor(config) {
         return type;
     }
 
-    function getIsTextTrack() {
-        return adapter.getIsTextTrack(representationController.getData());
-    }
-
     function resetInitialSettings() {
         mediaInfoArr = [];
         currentMediaInfo = null;
@@ -396,7 +392,7 @@ function StreamProcessor(config) {
             return;
         }
 
-        if (getIsTextTrack() && !textController.isTextEnabled()) return;
+        if (currentMediaInfo.isText && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
@@ -636,6 +632,49 @@ function StreamProcessor(config) {
     }
 
     /**
+     * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
+     * @param {object} newMediaInfo
+     */
+    function selectMediaInfo(newMediaInfo, targetRepresentation = null) {
+        return new Promise((resolve) => {
+            if (representationController) {
+
+                // Switching to a new AdaptationSet as part of a quality switch
+                if (targetRepresentation) {
+                    currentMediaInfo = newMediaInfo;
+                }
+
+                // Switching to a new AS
+                else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, newMediaInfo))) && type !== Constants.TEXT) {
+                    currentMediaInfo = newMediaInfo;
+                    const bitrate = abrController.getInitialBitrateFor(type);
+                    targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false, true);
+                }
+
+                // MPD update quality remains the same
+                else {
+                    currentMediaInfo = newMediaInfo;
+                    targetRepresentation = representationController.getCurrentRepresentation()
+                }
+
+                const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false, true);
+                const representationId = targetRepresentation.id;
+                return representationController.updateData(voRepresentations, type, currentMediaInfo.isFragmented, representationId)
+                    .then(() => {
+                        _onDataUpdateCompleted()
+                        resolve();
+                    })
+                    .catch((e) => {
+                        logger.error(e);
+                        resolve()
+                    })
+            } else {
+                return Promise.resolve();
+            }
+        })
+    }
+
+    /**
      * The quality has changed which means we have switched to a different representation.
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is higher than the already buffered one.
      * @param {object} e
@@ -644,10 +683,21 @@ function StreamProcessor(config) {
         if (!e.newRepresentation) {
             return;
         }
+
         if (pendingSwitchToVoRepresentation) {
-            logger.warning(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.index} for ${type}`);
+            logger.warning(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.id} for ${type}`);
         }
-        logger.debug(`Preparing quality switch for type ${type}`);
+
+        if (e.isAdaptationSetSwitch) {
+            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type}`);
+            _prepareAdaptationSwitchQualityChange(e)
+        } else {
+            logger.debug(`Preparing quality within the same AdaptationSet for type ${type}`);
+            _prepareNonAdaptationSwitchQualityChange(e)
+        }
+    }
+
+    function _prepareNonAdaptationSwitchQualityChange(e) {
         const newRepresentation = e.newRepresentation;
 
         qualityChangeInProgress = true;
@@ -658,6 +708,35 @@ function StreamProcessor(config) {
         // Update selected Representation in RepresentationController
         representationController.prepareQualityChange(newRepresentation);
 
+        _handleDifferentSwitchTypes(e, newRepresentation);
+    }
+
+    function _prepareAdaptationSwitchQualityChange(e) {
+        const newRepresentation = e.newRepresentation;
+
+        console.log(`Switching to new Representation for period ${e.newRepresentation.mediaInfo.streamInfo.id} using bandwidth ${e.newRepresentation.bitrateInKbit}`);
+
+        qualityChangeInProgress = true;
+
+        // Stop scheduling until we are done with preparing the quality switch
+        scheduleController.clearScheduleTimer();
+
+        // Informing ScheduleController about AS switch
+        scheduleController.setSwitchTrack(true);
+
+        // Updating the mediaInfo in the Adapter is usually handled by Stream.js when switching a track. For an AS quality switch we need to do it here.
+        const newMediaInfo = newRepresentation.mediaInfo;
+        currentMediaInfo = newMediaInfo;
+        adapter.setCurrentMediaInfo(currentMediaInfo);
+
+        selectMediaInfo(newMediaInfo, newRepresentation)
+            .then(() => {
+                representationController.addRepresentationSwitch();
+                _handleDifferentSwitchTypes(e, newRepresentation);
+            })
+    }
+
+    function _handleDifferentSwitchTypes(e, newRepresentation) {
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
             _prepareForForceReplacementQualitySwitch(newRepresentation);
@@ -712,7 +791,7 @@ function StreamProcessor(config) {
             threshold: 0
         })[0];
 
-        if (request && !getIsTextTrack()) {
+        if (request && !currentMediaInfo.isText) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
@@ -829,7 +908,7 @@ function StreamProcessor(config) {
     function _onFragmentLoadingCompleted(e) {
         logger.info('OnFragmentLoadingCompleted for stream id ' + streamInfo.id + ' and media type ' + type + ' - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
-        if (getIsTextTrack()) {
+        if (currentMediaInfo.isText) {
             scheduleController.startScheduleTimer(0);
         }
 
@@ -941,53 +1020,6 @@ function StreamProcessor(config) {
         return streamInfo;
     }
 
-    /**
-     * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
-     * @param {object} newMediaInfo
-     */
-    function selectMediaInfo(newMediaInfo) {
-        return new Promise((resolve) => {
-            if (newMediaInfo !== currentMediaInfo && (!newMediaInfo || !currentMediaInfo || (newMediaInfo.type === currentMediaInfo.type))) {
-                currentMediaInfo = newMediaInfo;
-            }
-
-            const newRealAdaptation = adapter.getRealAdaptation(streamInfo, currentMediaInfo);
-
-            if (representationController) {
-                const realAdaptation = representationController.getData();
-                let targetRepresentation,
-                    averageThroughput;
-                let bitrate = null;
-
-                // Switching to a new AS
-                if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
-                    averageThroughput = throughputController.getAverageThroughput(type);
-                    bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
-                    targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false, true);
-                }
-
-                // MPD update quality remains the same
-                else {
-                    targetRepresentation = representationController.getCurrentRepresentation()
-                }
-
-                const voRepresentations = adapter.getVoRepresentations(currentMediaInfo);
-                const representationId = targetRepresentation.id;
-                return representationController.updateData(newRealAdaptation, voRepresentations, type, currentMediaInfo.isFragmented, representationId)
-                    .then(() => {
-                        _onDataUpdateCompleted()
-                        resolve();
-                    })
-                    .catch((e) => {
-                        logger.error(e);
-                        resolve()
-                    })
-            } else {
-                return Promise.resolve();
-            }
-        })
-    }
-
     function addMediaInfo(newMediaInfo) {
         if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
@@ -1052,12 +1084,9 @@ function StreamProcessor(config) {
     function probeNextRequest() {
         const voRepresentation = getRepresentation();
 
-        const representation = representationController && voRepresentation ?
-            representationController.getRepresentationForQuality(voRepresentation.index) : null;
-
         return dashHandler.getNextSegmentRequestIdempotent(
             currentMediaInfo,
-            representation
+            voRepresentation
         );
     }
 

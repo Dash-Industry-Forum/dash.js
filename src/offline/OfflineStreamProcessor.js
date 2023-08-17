@@ -318,7 +318,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        representationController.updateData(null, voRepresentations, type, mediaInfo.isFragmented, quality);
+        representationController.updateData(voRepresentations, type, mediaInfo.isFragmented, quality);
     }
 
     function isUpdating() {

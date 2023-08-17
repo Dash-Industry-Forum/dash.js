@@ -521,7 +521,9 @@ function DashAdapter() {
      * @instance
      * @ignore
      */
-    function setCurrentMediaInfo(streamId, type, mediaInfo) {
+    function setCurrentMediaInfo(mediaInfo) {
+        const streamId = mediaInfo.streamInfo.id;
+        const type = mediaInfo.type;
         currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
         currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
         currentMediaInfo[streamId][type] = mediaInfo;
@@ -776,20 +778,6 @@ function DashAdapter() {
         let period = getPeriod(periodIdx);
 
         return findRepresentationIndex(period, representationId);
-    }
-
-    /**
-     * This method returns the current max index based on what is defined in the MPD.
-     * @param {string} bufferType - String 'audio' or 'video',
-     * @param {number} periodIdx - Make sure this is the period index not id
-     * @return {number}
-     * @memberOf module:DashAdapter
-     * @instance
-     */
-    function getMaxIndexForBufferType(bufferType, periodIdx) {
-        let period = getPeriod(periodIdx);
-
-        return findMaxBufferIndex(period, bufferType);
     }
 
     /**
@@ -1156,26 +1144,6 @@ function DashAdapter() {
         return null;
     }
 
-    function findMaxBufferIndex(period, bufferType) {
-        let adaptationSet,
-            adaptationSetArray,
-            representationArray,
-            adaptationSetArrayIndex;
-
-        if (!period || !bufferType) return -1;
-
-        adaptationSetArray = period.AdaptationSet;
-        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation;
-            if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
-                return representationArray.length;
-            }
-        }
-
-        return -1;
-    }
-
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
@@ -1200,7 +1168,6 @@ function DashAdapter() {
         getIsTypeOf,
         getLocation,
         getManifestUpdatePeriod,
-        getMaxIndexForBufferType,
         getMediaInfoForType,
         getMpd,
         getPatchLocation,
