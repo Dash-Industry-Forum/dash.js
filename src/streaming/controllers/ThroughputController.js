@@ -68,10 +68,28 @@ function ThroughputController() {
 
     function _registerEvents() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+
+        if (performance) {
+            performance.addEventListener(
+                'resourcetimingbufferfull',
+                _onResourceTimingBufferFull,
+            );
+        }
     }
 
     function _resetEvents() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+
+        if (performance) {
+            performance.removeEventListener(
+                'resourcetimingbufferfull',
+                _onResourceTimingBufferFull,
+            );
+        }
+    }
+
+    function _onResourceTimingBufferFull() {
+        performance.clearResourceTimings();
     }
 
     /**
