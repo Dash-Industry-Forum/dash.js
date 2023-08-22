@@ -1598,6 +1598,10 @@ function StreamController() {
         }
     }
 
+    function refreshManifest() {
+        manifestUpdater.refreshManifest();
+    }
+
     function getStreams() {
         return streams;
     }
@@ -1623,6 +1627,7 @@ function StreamController() {
         getActiveStream,
         getInitialPlayback,
         getAutoPlay,
+        refreshManifest,
         reset
     };
 

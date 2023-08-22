@@ -2608,6 +2608,8 @@ declare namespace dashjs {
 
         getDefaultUtcTimingSource(): UTCTiming;
 
+        refreshManifest(callback: (manifest: object | null, error: any) => void): void;
+
         reset(): void;
     }
 

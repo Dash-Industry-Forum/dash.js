@@ -1908,6 +1908,44 @@ function MediaPlayer() {
     }
 
     /**
+     *  Reload the manifest that the player is currently using.
+     *
+     *  @memberof module:MediaPlayer
+     *  @param {function} callback - A Callback function provided when retrieving manifests
+     *  @instance
+     */
+    function refreshManifest(callback) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if(!isReady()) {
+            callback(null, {
+                error: SOURCE_NOT_ATTACHED_ERROR
+            });
+
+            return;
+        }
+
+        let self = this;
+
+        if (typeof callback === 'function') {
+            const handler = function (e) {
+                if (!e.error) {
+                    callback(e.manifest);
+                } else {
+                    callback(null, e.error);
+                }
+                eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+            };
+
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        }
+
+        streamController.refreshManifest();
+    }
+
+    /**
      * Get the current settings object being used on the player.
      * @returns {PlayerSettings} The settings object being used.
      *
@@ -2449,6 +2487,7 @@ function MediaPlayer() {
         extend,
         attachView,
         attachSource,
+        refreshManifest,
         isReady,
         preload,
         play,
