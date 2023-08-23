@@ -10,12 +10,16 @@ import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
+import EventBus from '../../src/core/EventBus'
 import Settings from '../../src/core/Settings';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import sinon from 'sinon';
+import Events from '../../src/core/events/Events';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
@@ -42,6 +46,7 @@ describe('MediaPlayer', function () {
     const mediaPlayerModel = new MediaPlayerModelMock();
     const mediaControllerMock = new MediaControllerMock();
     const objectUtils = ObjectUtils(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
     const settings = Settings(context).getInstance();
     const customParametersModel = CustomParametersModel(context).getInstance();
     let player;
@@ -1014,11 +1019,33 @@ describe('MediaPlayer', function () {
             it('Method getCurrentLiveLatency should throw an exception', function () {
                 expect(player.getCurrentLiveLatency).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
+
+            it('Method refreshManifest should throw an exception', () => {
+                expect(player.refreshManifest).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+
+            it('')
         });
     });
 
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
+        });
+
+        describe('When it is not ready', () => {
+            beforeEach(() => {
+                mediaControllerMock.reset();
+            })
+
+            it('triggers refreshManifest callback with an error', () => {
+                player.initialize(videoElementMock, null, false);
+
+                const stub = sinon.spy()
+
+                player.refreshManifest(stub)
+
+                expect(stub.calledWith(null, SOURCE_NOT_ATTACHED_ERROR)).to.be.true;
+            })
         });
 
         describe('When it is initialized', function () {
@@ -1070,6 +1097,40 @@ describe('MediaPlayer', function () {
 
                 currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.true; // jshint ignore:line
+            });
+
+            it('should refresh manifest on the current stream', () => {
+                sinon.spy(streamControllerMock, 'refreshManifest');
+                
+                const stub = sinon.spy();
+
+                player.refreshManifest(stub);
+
+                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
+
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: { __mocked: true } });
+
+                expect(stub.calledOnce).to.be.true;
+                expect(stub.calledWith({ __mocked: true })).to.be.true;
+
+                streamControllerMock.refreshManifest.restore();
+            });
+
+            it('should trigger callback if refresh failed', () => {
+                sinon.spy(streamControllerMock, 'refreshManifest');
+                
+                const stub = sinon.spy();
+
+                player.refreshManifest(stub);
+
+                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
+
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { error: 'Mocked!' });
+
+                expect(stub.calledOnce).to.be.true;
+                expect(stub.calledWith(null, 'Mocked!')).to.be.true;
+
+                streamControllerMock.refreshManifest.restore();
             });
         });
     });
