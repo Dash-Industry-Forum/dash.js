@@ -10,12 +10,11 @@ import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
+import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus'
 import Settings from '../../src/core/Settings';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
-import sinon from 'sinon';
-import Events from '../../src/core/events/Events';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -46,7 +45,6 @@ describe('MediaPlayer', function () {
     const mediaPlayerModel = new MediaPlayerModelMock();
     const mediaControllerMock = new MediaControllerMock();
     const objectUtils = ObjectUtils(context).getInstance();
-    const eventBus = EventBus(context).getInstance();
     const settings = Settings(context).getInstance();
     const customParametersModel = CustomParametersModel(context).getInstance();
     let player;
@@ -1023,8 +1021,6 @@ describe('MediaPlayer', function () {
             it('Method refreshManifest should throw an exception', () => {
                 expect(player.refreshManifest).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
-
-            it('')
         });
     });
 
@@ -1098,40 +1094,6 @@ describe('MediaPlayer', function () {
                 currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.true; // jshint ignore:line
             });
-
-            it('should refresh manifest on the current stream', () => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-                
-                const stub = sinon.spy();
-
-                player.refreshManifest(stub);
-
-                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
-
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: { __mocked: true } });
-
-                expect(stub.calledOnce).to.be.true;
-                expect(stub.calledWith({ __mocked: true })).to.be.true;
-
-                streamControllerMock.refreshManifest.restore();
-            });
-
-            it('should trigger callback if refresh failed', () => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-                
-                const stub = sinon.spy();
-
-                player.refreshManifest(stub);
-
-                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
-
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { error: 'Mocked!' });
-
-                expect(stub.calledOnce).to.be.true;
-                expect(stub.calledWith(null, 'Mocked!')).to.be.true;
-
-                streamControllerMock.refreshManifest.restore();
-            });
         });
     });
 
@@ -1174,3 +1136,100 @@ describe('MediaPlayer', function () {
         });
     });
 });
+
+describe('MediaPlayer with context injected', () => {
+    const specHelper = new SpecHelper();
+    const videoElementMock = new VideoElementMock();
+    const capaMock = new CapabilitiesMock();
+    const streamControllerMock = new StreamControllerMock();
+    const abrControllerMock = new AbrControllerMock();
+    const playbackControllerMock = new PlaybackControllerMock();
+    const mediaPlayerModel = new MediaPlayerModelMock();
+    const mediaControllerMock = new MediaControllerMock();
+
+    let player;
+    let eventBus;
+    let settings;
+
+    beforeEach(function () {
+        // tear down
+        player = null;
+        settings?.reset();
+        settings = null;
+        global.dashjs = {};
+
+        // init
+        const context = {};
+
+        const customParametersModel = CustomParametersModel(context).getInstance();
+        eventBus = EventBus(context).getInstance();
+        settings = Settings(context).getInstance();
+        
+        player = MediaPlayer(context).create();
+
+        // to avoid unwanted log
+        const debug = player.getDebug();
+        expect(debug).to.exist; // jshint ignore:line
+
+        player.setConfig({
+            streamController: streamControllerMock,
+            capabilities: capaMock,
+            playbackController: playbackControllerMock,
+            mediaPlayerModel: mediaPlayerModel,
+            abrController: abrControllerMock,
+            mediaController: mediaControllerMock,
+            settings: settings,
+            customParametersModel
+        });
+    });
+
+    describe('Stream and Track Management', () => {
+        describe('When the player is initialised', () => {
+            beforeEach(() => {
+                mediaControllerMock.reset();
+                player.initialize(videoElementMock, specHelper.getDummyUrl(), false);
+                mediaControllerMock.addTrack('track1');
+                mediaControllerMock.addTrack('track2');
+                mediaControllerMock.setTrack('track1');
+            });
+
+            it('should refresh manifest on the current stream', () => {
+                sinon.spy(streamControllerMock, 'refreshManifest');
+                
+                const stub = sinon.spy();
+
+                player.refreshManifest(stub);
+
+                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
+
+                eventBus.on(Events.INTERNAL_MANIFEST_LOADED, () => {
+                    debugger;
+                    console.log('Fired!')
+                })
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: { __mocked: true } });
+
+                expect(stub.calledOnce).to.be.true;
+                expect(stub.calledWith(sinon.match({ __mocked: true }))).to.be.true;
+
+                streamControllerMock.refreshManifest.restore();
+            });
+
+            it('should trigger refreshManifest callback with an error if refresh failed', () => {
+                sinon.spy(streamControllerMock, 'refreshManifest');
+                
+                const stub = sinon.spy();
+
+                player.refreshManifest(stub);
+
+                expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
+
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { error: 'Mocked!' });
+
+                expect(stub.calledOnce).to.be.true;
+                expect(stub.calledWith(null, 'Mocked!')).to.be.true;
+
+                streamControllerMock.refreshManifest.restore();
+            });
+        })
+    })
+})
