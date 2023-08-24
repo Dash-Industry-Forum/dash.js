@@ -1017,31 +1017,11 @@ describe('MediaPlayer', function () {
             it('Method getCurrentLiveLatency should throw an exception', function () {
                 expect(player.getCurrentLiveLatency).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
-
-            it('Method refreshManifest should throw an exception', () => {
-                expect(player.refreshManifest).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
-            });
         });
     });
 
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
-        });
-
-        describe('When it is not ready', () => {
-            beforeEach(() => {
-                mediaControllerMock.reset();
-            })
-
-            it('triggers refreshManifest callback with an error', () => {
-                player.initialize(videoElementMock, null, false);
-
-                const stub = sinon.spy()
-
-                player.refreshManifest(stub)
-
-                expect(stub.calledWith(null, SOURCE_NOT_ATTACHED_ERROR)).to.be.true;
-            })
         });
 
         describe('When it is initialized', function () {
@@ -1105,6 +1085,22 @@ describe('MediaPlayer', function () {
             it('Method attachSource should throw an exception', function () {
                 expect(player.attachSource).to.throw(MediaPlayer.NOT_INITIALIZED_ERROR_MSG);
             });
+
+            it('Method refreshManifest should throw an exception', () => {
+                expect(player.refreshManifest).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
+            });
+        });
+
+        describe('When it is not ready', () => {
+            it('triggers refreshManifest callback with an error', () => {
+                player.initialize(videoElementMock, null, false);
+
+                const stub = sinon.spy()
+
+                player.refreshManifest(stub)
+
+                expect(stub.calledWith(null, SOURCE_NOT_ATTACHED_ERROR)).to.be.true;
+            })
         });
     });
 
@@ -1183,40 +1179,36 @@ describe('MediaPlayer with context injected', () => {
         });
     });
 
-    describe('Stream and Track Management', () => {
+    describe('Tools Functions', () => {
         describe('When the player is initialised', () => {
+            before(() => {
+                sinon.spy(streamControllerMock, 'refreshManifest');
+            })
+
             beforeEach(() => {
+                streamControllerMock.refreshManifest.resetHistory();
+
                 mediaControllerMock.reset();
-                player.initialize(videoElementMock, specHelper.getDummyUrl(), false);
-                mediaControllerMock.addTrack('track1');
-                mediaControllerMock.addTrack('track2');
-                mediaControllerMock.setTrack('track1');
             });
 
             it('should refresh manifest on the current stream', () => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-                
+                player.initialize(videoElementMock, specHelper.getDummyUrl(), false);
+
                 const stub = sinon.spy();
 
                 player.refreshManifest(stub);
 
                 expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
-
-                eventBus.on(Events.INTERNAL_MANIFEST_LOADED, () => {
-                    debugger;
-                    console.log('Fired!')
-                })
+                
                 eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: { __mocked: true } });
 
                 expect(stub.calledOnce).to.be.true;
                 expect(stub.calledWith(sinon.match({ __mocked: true }))).to.be.true;
-
-                streamControllerMock.refreshManifest.restore();
             });
 
             it('should trigger refreshManifest callback with an error if refresh failed', () => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-                
+                player.initialize(videoElementMock, specHelper.getDummyUrl(), false);
+
                 const stub = sinon.spy();
 
                 player.refreshManifest(stub);
@@ -1227,8 +1219,6 @@ describe('MediaPlayer with context injected', () => {
 
                 expect(stub.calledOnce).to.be.true;
                 expect(stub.calledWith(null, 'Mocked!')).to.be.true;
-
-                streamControllerMock.refreshManifest.restore();
             });
         })
     })
