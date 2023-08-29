@@ -50,7 +50,6 @@ function DashAdapter() {
         dashManifestModel,
         patchManifestModel,
         voPeriods,
-        currentMediaInfo,
         constants,
         cea608parser;
 
@@ -103,7 +102,7 @@ function DashAdapter() {
 
         const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-        let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
+        let realAdaptation = getMainAdaptationForType(type, streamInfo);
         if (!realAdaptation) return null;
         let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, voPeriods[0].mpd.manifest, streamInfo.index);
 
@@ -132,22 +131,12 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getAdaptationForType(periodIndex, type, streamInfo) {
-        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[0].mpd.manifest, periodIndex, type);
+    function getMainAdaptationForType(type, streamInfo) {
+        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[streamInfo.index].mpd.manifest, streamInfo.index, type);
 
         if (!adaptations || adaptations.length === 0) return null;
 
         if (adaptations.length > 1 && streamInfo) {
-            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
-
-            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (areMediaInfosEqual(currentMediaInfo[streamInfo.id][type], allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (getIsMain(adaptations[i])) {
                     return adaptations[i];
@@ -512,22 +501,6 @@ function DashAdapter() {
         return events;
     }
 
-    /**
-     * Sets the current active mediaInfo for a given streamId and a given mediaType
-     * @param {number} streamId
-     * @param {MediaType} type
-     * @param {object} mediaInfo
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function setCurrentMediaInfo(mediaInfo) {
-        const streamId = mediaInfo.streamInfo.id;
-        const type = mediaInfo.type;
-        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
-        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
-        currentMediaInfo[streamId][type] = mediaInfo;
-    }
 
     /**
      * Check if the given type is a text track
@@ -816,7 +789,6 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
-        currentMediaInfo = {};
     }
 
     /**
@@ -1035,6 +1007,7 @@ function DashAdapter() {
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
+        mediaInfo.hasProtectedRepresentations = dashManifestModel.getAdaptationHasProtectedRepresentations(realAdaptation);
 
         // Save IDs of AS that we can switch to
         try {
@@ -1148,8 +1121,8 @@ function DashAdapter() {
 
     instance = {
         applyPatchToManifest,
+        getMainAdaptationForType,
         areMediaInfosEqual,
-        getAdaptationForType,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,
@@ -1185,7 +1158,6 @@ function DashAdapter() {
         isPatchValid,
         reset,
         setConfig,
-        setCurrentMediaInfo,
         updatePeriods,
     };
 

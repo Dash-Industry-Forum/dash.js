@@ -70,7 +70,6 @@ function StreamProcessor(config) {
     let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
-    let throughputController = config.throughputController;
     let mediaController = config.mediaController;
     let textController = config.textController;
     let dashMetrics = config.dashMetrics;
@@ -449,7 +448,7 @@ function StreamProcessor(config) {
         request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         scheduleController.setTimeToLoadDelay(0);
         if (!_shouldIgnoreRequest(request)) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url} with request range ${request.range}`);
             fragmentModel.executeRequest(request);
         } else {
             logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
@@ -645,7 +644,7 @@ function StreamProcessor(config) {
                 }
 
                 // Switching to a new AS
-                else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, newMediaInfo))) && type !== Constants.TEXT) {
+                else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, newMediaInfo)))) {
                     currentMediaInfo = newMediaInfo;
                     const bitrate = abrController.getInitialBitrateFor(type);
                     targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false, true);
@@ -657,9 +656,10 @@ function StreamProcessor(config) {
                     targetRepresentation = representationController.getCurrentRepresentation()
                 }
 
+                // Update Representation Controller with the new data
                 const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false, true);
                 const representationId = targetRepresentation.id;
-                return representationController.updateData(voRepresentations, type, currentMediaInfo.isFragmented, representationId)
+                return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, representationId)
                     .then(() => {
                         _onDataUpdateCompleted()
                         resolve();
@@ -714,8 +714,6 @@ function StreamProcessor(config) {
     function _prepareAdaptationSwitchQualityChange(e) {
         const newRepresentation = e.newRepresentation;
 
-        console.log(`Switching to new Representation for period ${e.newRepresentation.mediaInfo.streamInfo.id} using bandwidth ${e.newRepresentation.bitrateInKbit}`);
-
         qualityChangeInProgress = true;
 
         // Stop scheduling until we are done with preparing the quality switch
@@ -724,10 +722,8 @@ function StreamProcessor(config) {
         // Informing ScheduleController about AS switch
         scheduleController.setSwitchTrack(true);
 
-        // Updating the mediaInfo in the Adapter is usually handled by Stream.js when switching a track. For an AS quality switch we need to do it here.
         const newMediaInfo = newRepresentation.mediaInfo;
         currentMediaInfo = newMediaInfo;
-        adapter.setCurrentMediaInfo(currentMediaInfo);
 
         selectMediaInfo(newMediaInfo, newRepresentation)
             .then(() => {
@@ -1238,7 +1234,8 @@ function StreamProcessor(config) {
             // when buffering is completed and we are not supposed to replace anything do nothing.
             // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
             if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
-                bufferController.prepareForNonReplacementTrackSwitch(currentMediaInfo.codec)
+                const representation = representationController.getCurrentRepresentation()
+                bufferController.prepareForNonReplacementTrackSwitch(representation)
                     .then(() => {
                         eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
                     })
@@ -1265,11 +1262,11 @@ function StreamProcessor(config) {
                 fragmentModel.abortRequests();
 
                 // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-                bufferController.prepareForReplacementTrackSwitch(currentMediaInfo.codec)
+                const representation = getRepresentation()
+                bufferController.prepareForReplacementTrackSwitch(representation)
                     .then(() => {
                         // Timestamp offset couldve been changed by preloading period
-                        const voRepresentation = getRepresentation();
-                        return bufferController.updateBufferTimestampOffset(voRepresentation);
+                        return bufferController.updateBufferTimestampOffset(representation);
                     })
                     .then(() => {
                         _bufferClearedForReplacement();
@@ -1281,7 +1278,8 @@ function StreamProcessor(config) {
                     });
             } else {
                 // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
-                bufferController.prepareForNonReplacementTrackSwitch(currentMediaInfo.codec)
+                const representation = getRepresentation()
+                bufferController.prepareForNonReplacementTrackSwitch(representation)
                     .then(() => {
                         _bufferClearedForNonReplacement();
                         resolve();

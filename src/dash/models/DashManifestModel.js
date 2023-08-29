@@ -370,7 +370,7 @@ function DashManifestModel() {
             }
         }
 
-        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        // If the codec contains a profiles parameter we remove it. Otherwise, it will cause problems when checking for codec capabilities of the platform
         if (codec) {
             codec = codec.replace(/\sprofiles=[^;]*/g, '');
         }
@@ -427,6 +427,21 @@ function DashManifestModel() {
             return null;
         }
         return adaptation.ContentProtection;
+    }
+
+    function getAdaptationHasProtectedRepresentations(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && adaptation.ContentProtection.length > 0) {
+            return true;
+        }
+
+        let encryptedRepresentations = [];
+        if (adaptation.Representation && adaptation.Representation.length > 0) {
+            encryptedRepresentations = adaptation.Representation.some((rep) => {
+                return rep.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && rep.ContentProtection.length > 0
+            })
+        }
+
+        return encryptedRepresentations.length > 0;
     }
 
     function getIsDynamic(manifest) {
@@ -1335,6 +1350,7 @@ function DashManifestModel() {
         getAudioChannelConfigurationForAdaptation,
         getAudioChannelConfigurationForRepresentation,
         getAdaptationForIndex,
+        getAdaptationHasProtectedRepresentations,
         getIndexForAdaptation,
         getAdaptationForId,
         getAdaptationsForType,

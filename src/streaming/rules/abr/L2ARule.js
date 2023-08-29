@@ -67,7 +67,6 @@ function L2ARule(config) {
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.METRIC_ADDED, _onMetricAdded, instance);
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
     }
 
     /**
@@ -225,20 +224,6 @@ function L2ARule(config) {
         }
     }
 
-    /**
-     * Event handler for the qualityChangeRequested event
-     * @param {object} e
-     * @private
-     */
-    function _onQualityChangeRequested(e) {
-        // Useful to store change requests when abandoning a download.
-        if (e && e.mediaType) {
-            const L2AState = l2AStateDict[e.mediaType];
-            if (L2AState && L2AState.state !== L2A_STATE_ONE_BITRATE) {
-                L2AState.abrQuality = e.newQuality;
-            }
-        }
-    }
 
     /**
      * Dot multiplication of two arrays
@@ -489,7 +474,6 @@ function L2ARule(config) {
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.METRIC_ADDED, _onMetricAdded, instance);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
     }
 
     instance = {

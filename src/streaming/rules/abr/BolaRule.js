@@ -358,7 +358,7 @@ function BolaRule(config) {
         if (e) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-                bolaState.abrQuality = e.newQuality;
+                bolaState.abrQuality = e.newRepresentation.calculatedQualityRank;
             }
         }
     }

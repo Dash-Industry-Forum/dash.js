@@ -44,7 +44,7 @@ import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
-const DEFAULT_AUDIO_BITRATE = 100;
+const DEFAULT_BITRATE = 100;
 
 function AbrController() {
 
@@ -554,10 +554,6 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
-        if (type === Constants.TEXT) {
-            return NaN;
-        }
-
         let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
         if (configBitrate > 0) {
             return configBitrate;
@@ -575,8 +571,8 @@ function AbrController() {
         if (!isNaN(averageThroughput) && averageThroughput > 0) {
             return averageThroughput
         }
-        
-        return (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+
+        return (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_BITRATE;
     }
 
     /**

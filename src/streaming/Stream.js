@@ -764,8 +764,6 @@ function Stream(config) {
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
-        adapter.setCurrentMediaInfo(mediaInfo);
-
         let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 
@@ -1000,84 +998,6 @@ function Stream(config) {
         })
     }
 
-    function isMediaCodecCompatible(newStream, previousStream = null) {
-        return compareCodecs(newStream, Constants.VIDEO, previousStream) && compareCodecs(newStream, Constants.AUDIO, previousStream);
-    }
-
-    function isProtectionCompatible(newStream) {
-        if (!newStream) {
-            return true;
-        }
-        return _compareProtectionConfig(Constants.VIDEO, newStream) && _compareProtectionConfig(Constants.AUDIO, newStream);
-    }
-
-    function _compareProtectionConfig(type, newStream) {
-        const currentStreamInfo = getStreamInfo();
-        const newStreamInfo = newStream.getStreamInfo();
-
-        if (!newStreamInfo || !currentStreamInfo) {
-            return true;
-        }
-
-        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
-
-        if (!newAdaptation || !currentAdaptation) {
-            // If there is no adaptation for neither the old or the new stream they're compatible
-            return !newAdaptation && !currentAdaptation;
-        }
-
-        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !(!_isAdaptationDrmProtected(currentAdaptation) && _isAdaptationDrmProtected(newAdaptation));
-    }
-
-    function _isAdaptationDrmProtected(adaptation) {
-
-        if (!adaptation) {
-            // If there is no adaptation for neither the old or the new stream they're compatible
-            return false;
-        }
-
-        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !!(adaptation.ContentProtection || (adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
-    }
-
-    function compareCodecs(newStream, type, previousStream = null) {
-        if (!newStream || !newStream.hasOwnProperty('getStreamInfo')) {
-            return false;
-        }
-        const newStreamInfo = newStream.getStreamInfo();
-        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
-
-        if (!newStreamInfo || !currentStreamInfo) {
-            return false;
-        }
-
-        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
-
-        if (!newAdaptation || !currentAdaptation) {
-            // If there is no adaptation for neither the old or the new stream they're compatible
-            return !newAdaptation && !currentAdaptation;
-        }
-
-        const sameMimeType = newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
-        const oldCodecs = currentAdaptation.Representation.map((representation) => {
-            return representation.codecs;
-        });
-
-        const newCodecs = newAdaptation.Representation.map((representation) => {
-            return representation.codecs;
-        });
-
-        const codecMatch = newCodecs.some((newCodec) => {
-            return oldCodecs.indexOf(newCodec) > -1;
-        });
-
-        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => capabilities.codecRootCompatibleWithCodec(oldCodec, newCodec)));
-        return codecMatch || (partialCodecMatch && sameMimeType);
-    }
-
     function setPreloaded(value) {
         preloaded = value;
     }
@@ -1097,13 +1017,28 @@ function Stream(config) {
     function getCurrentRepresentationForType(type) {
         const sp = _getProcessorByType(type);
 
+        if (!sp) {
+            return null;
+        }
+
         return sp.getRepresentation();
+    }
+
+    function getCurrentMediaInfoForType(type) {
+        const sp = _getProcessorByType(type);
+
+        if (!sp) {
+            return null;
+        }
+
+        return sp.getMediaInfo();
     }
 
     instance = {
         activate,
         deactivate,
         getAdapter,
+        getCurrentMediaInfoForType,
         getCurrentRepresentationForType,
         getDuration,
         getHasAudioTrack,
@@ -1123,8 +1058,6 @@ function Stream(config) {
         getThumbnailController,
         initialize,
         initializeForTextWithMediaSource,
-        isMediaCodecCompatible,
-        isProtectionCompatible,
         prepareQualityChange,
         prepareTrackChange,
         reset,

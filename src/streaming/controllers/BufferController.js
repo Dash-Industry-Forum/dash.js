@@ -58,7 +58,6 @@ function BufferController(config) {
     const fragmentModel = config.fragmentModel;
     const representationController = config.representationController;
     const textController = config.textController;
-    const abrController = config.abrController;
     const playbackController = config.playbackController;
     const streamInfo = config.streamInfo;
     const type = config.type;
@@ -479,9 +478,6 @@ function BufferController(config) {
         }
     }
 
-    //**********************************************************************
-    // START Buffer Level, State & Sufficiency Handling.
-    //**********************************************************************
     function prepareForPlaybackSeek() {
         if (isBufferingCompleted) {
             setIsBufferingCompleted(false);
@@ -489,32 +485,6 @@ function BufferController(config) {
 
         // Abort the current request and empty all possible segments to be appended
         return sourceBufferSink.abort();
-    }
-
-    function prepareForReplacementTrackSwitch(codec) {
-        return new Promise((resolve, reject) => {
-            sourceBufferSink.abort()
-                .then(() => {
-                    return updateAppendWindow();
-                })
-                .then(() => {
-                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(codec);
-                    }
-
-                    return Promise.resolve();
-                })
-                .then(() => {
-                    return pruneAllSafely();
-                })
-                .then(() => {
-                    setIsBufferingCompleted(false);
-                    resolve();
-                })
-                .catch((e) => {
-                    reject(e);
-                });
-        });
     }
 
     function prepareForForceReplacementQualitySwitch(voRepresentation) {
@@ -540,12 +510,38 @@ function BufferController(config) {
         });
     }
 
-    function prepareForNonReplacementTrackSwitch(codec) {
+    function prepareForReplacementTrackSwitch(representation) {
+        return new Promise((resolve, reject) => {
+            sourceBufferSink.abort()
+                .then(() => {
+                    return updateAppendWindow();
+                })
+                .then(() => {
+                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+                        return sourceBufferSink.changeType(representation);
+                    }
+
+                    return Promise.resolve();
+                })
+                .then(() => {
+                    return pruneAllSafely();
+                })
+                .then(() => {
+                    setIsBufferingCompleted(false);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForNonReplacementTrackSwitch(selectedRepresentation) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
                 .then(() => {
                     if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(codec);
+                        return sourceBufferSink.changeType(selectedRepresentation);
                     }
 
                     return Promise.resolve();
@@ -1042,7 +1038,7 @@ function BufferController(config) {
                 return;
             }
             // Each track can have its own @presentationTimeOffset, so we should set the offset
-            // if it has changed after switching the quality or updating an mpd
+            // if it has changed after switching the quality or updating an MPD
             sourceBufferSink.updateTimestampOffset(voRepresentation.mseTimeOffset)
                 .then(() => {
                     resolve();

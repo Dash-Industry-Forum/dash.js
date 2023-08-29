@@ -71,10 +71,13 @@ function SourceBufferSink(config) {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
+    function _getCodecStringForRepresentation(representation) {
+        return representation.mimeType + ';codecs="' + representation.codecs + '"';
+    }
+
     function initializeForStreamSwitch(mInfo, selectedRepresentation, oldSourceBufferSink) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
-        const codec = mediaInfo.codec;
 
         _copyPreviousSinkData(oldSourceBufferSink);
         _addEventListeners();
@@ -85,7 +88,7 @@ function SourceBufferSink(config) {
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
 
         if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            promises.push(changeType(codec));
+            promises.push(changeType(selectedRepresentation));
         }
 
         if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
@@ -95,10 +98,12 @@ function SourceBufferSink(config) {
         return Promise.all(promises);
     }
 
-    function changeType(codec) {
+    function changeType(representation) {
+        const codec = _getCodecStringForRepresentation(representation);
         return new Promise((resolve) => {
             _waitForUpdateEnd(() => {
                 if (buffer.changeType) {
+                    logger.debug(`Changing SourceBuffer codec to ${codec}`);
                     buffer.changeType(codec);
                 }
                 resolve();
@@ -113,7 +118,7 @@ function SourceBufferSink(config) {
     function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
-        const codec = mediaInfo.codec;
+        const codec = selectedRepresentation.mimeType + ';codecs="' + selectedRepresentation.codecs + '"';
         try {
             // Safari claims to support anything starting 'application/mp4'.
             // it definitely doesn't understand 'application/mp4;codecs="stpp"'
@@ -467,18 +472,18 @@ function SourceBufferSink(config) {
     }
 
     instance = {
-        getType,
+        abort,
+        append,
+        changeType,
         getAllBufferRanges,
         getBuffer,
-        append,
-        remove,
-        abort,
-        reset,
-        updateTimestampOffset,
-        initializeForStreamSwitch,
+        getType,
         initializeForFirstUse,
+        initializeForStreamSwitch,
+        remove,
+        reset,
         updateAppendWindow,
-        changeType
+        updateTimestampOffset,
     };
 
     setup();
