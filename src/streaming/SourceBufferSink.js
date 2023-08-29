@@ -118,7 +118,7 @@ function SourceBufferSink(config) {
     function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
-        const codec = selectedRepresentation.mimeType + ';codecs="' + selectedRepresentation.codecs + '"';
+        const codec = selectedRepresentation ? _getCodecStringForRepresentation(selectedRepresentation) : mInfo.codec;
         try {
             // Safari claims to support anything starting 'application/mp4'.
             // it definitely doesn't understand 'application/mp4;codecs="stpp"'
