@@ -2263,7 +2263,8 @@ function MediaPlayer() {
         cmsdModel.setConfig({});
 
         // initializes controller
-        throughputController.initialize()
+        mediaController.initialize();
+        throughputController.initialize();
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();

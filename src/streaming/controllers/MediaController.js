@@ -35,6 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function MediaController() {
 
@@ -47,6 +48,7 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
+        lastSelectedRepresentations,
         customParametersModel,
         mediaPlayerModel,
         videoModel,
@@ -81,6 +83,32 @@ function MediaController() {
         }
     }
 
+    function initialize() {
+        _registerEvents();
+    }
+
+    function _registerEvents() {
+        eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    }
+
+    function _unRegisterEvents() {
+        eventBus.off(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    }
+
+    /**
+     * Save the last selected bitrate for each media type. In case we transition to a new period and have multiple AdaptationSets that we can choose
+     * from we choose the one with a bitrate closest to the current one.
+     * @param e
+     * @private
+     */
+    function _onRepresentationSwitched(e) {
+        if (!e || !e.currentRepresentation || !e.currentRepresentation.mediaInfo || !e.currentRepresentation.mediaInfo.type) {
+            return
+        }
+        const type = e.currentRepresentation.mediaInfo.type;
+        lastSelectedRepresentations[type] = e.currentRepresentation;
+    }
+
     /**
      * @param {string} type
      * @param {StreamInfo} streamInfo
@@ -88,38 +116,45 @@ function MediaController() {
      */
     function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
-        const tracksForType = getTracksFor(type, streamInfo.id);
-        let tracks = [];
+        const possibleTracks = getTracksFor(type, streamInfo.id);
+        let filteredTracks = [];
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
             setInitialSettings(type, settings);
         }
 
-        if (!tracksForType || (tracksForType.length === 0)) return;
+        if (!possibleTracks || (possibleTracks.length === 0)) return;
 
         if (settings) {
-            tracks = Array.from(tracksForType);
-            logger.info('Filtering ' + tracks.length + ' ' + type + ' tracks based on settings');
+            filteredTracks = Array.from(possibleTracks);
+            logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
-            tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
-                tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
+                filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, settings);
             }
-            tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
-            logger.info('Filtering ' + type + ' tracks ended, found ' + tracks.length + ' matching track(s).');
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, settings);
+            logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
-        if (tracks.length === 0) {
-            setTrack(selectInitialTrack(type, tracksForType));
-        } else {
-            if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks));
-            } else {
-                setTrack(tracks[0]);
+        // We did not apply any filter. We can select from all possible tracks
+        if (filteredTracks.length === 0) {
+            setTrack(selectInitialTrack(type, possibleTracks));
+        }
+
+        // We have some tracks based on the filtering we did.
+        else {
+            // More than one possibility
+            if (filteredTracks.length > 1) {
+                setTrack(selectInitialTrack(type, filteredTracks));
+            }
+            // Only one possibility use this one
+            else {
+                setTrack(filteredTracks[0]);
             }
         }
     }
@@ -310,7 +345,9 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
+        lastSelectedRepresentations = {};
         resetInitialSettings();
+        _unRegisterEvents();
     }
 
     function extractSettings(mediaInfo) {
@@ -528,15 +565,24 @@ function MediaController() {
     function selectInitialTrack(type, mediaInfos) {
         if (type === Constants.TEXT) return mediaInfos[0];
 
-        let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr;
         const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();
 
         tmpArr = _initialFilterMediaInfosByAllowedSettings(mediaInfos);
 
+        // If we have a custom function that selects the track we use this one
         if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
             tmpArr = customInitialTrackSelectionFunction(tmpArr);
-        } else {
+        }
+
+        // If we know the current selected bitrate for the media type we select the AdaptationSet that comes closest to this. This should only be relevant for multiperiod when we transition to the next period.
+        else if (lastSelectedRepresentations[type]) {
+            tmpArr = _trackSelectionModeClosestBitrate(tmpArr, type)
+        }
+
+        // Use the track selection function that is defined in the settings
+        else {
+            let mode = settings.get().streaming.selectionModeForInitialTrack;
             switch (mode) {
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
                     tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
@@ -646,6 +692,37 @@ function MediaController() {
         }
     }
 
+    /**
+     * Find the track that has a bitrate that matches the currenly selected one
+     * @param tracks
+     * @param type
+     * @returns {*}
+     * @private
+     */
+    function _trackSelectionModeClosestBitrate(tracks, type) {
+        if (!tracks || tracks.length === 0 || !type || !lastSelectedRepresentations[type]) {
+            return tracks
+        }
+
+        const targetBitrate = lastSelectedRepresentations[type].bandwidth;
+        if (!targetBitrate || isNaN(targetBitrate)) {
+            return tracks;
+        }
+
+        let current = { min: NaN, track: null };
+        tracks.forEach((track) => {
+            track.bitrateList.forEach((entry) => {
+                const diff = Math.abs(entry.bandwidth - targetBitrate);
+                if (isNaN(current.min) || diff < current.min) {
+                    current.min = diff;
+                    current.track = track;
+                }
+            })
+        })
+
+        return current.track ? [current.track] : tracks
+    }
+
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
 
@@ -745,6 +822,7 @@ function MediaController() {
         getTracksWithHighestBitrate,
         getTracksWithHighestEfficiency,
         getTracksWithWidestRange,
+        initialize,
         isCurrentTrack,
         matchSettings,
         matchSettingsAccessibility,

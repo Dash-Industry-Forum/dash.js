@@ -681,7 +681,7 @@ function AbrController() {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
-            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from bitrate' + oldRepresentation.bitrateInKbit + ' to bitrate' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from bitrate ' + oldRepresentation.bitrateInKbit + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
                     oldRepresentation: oldRepresentation,
