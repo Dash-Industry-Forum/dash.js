@@ -82,8 +82,6 @@ function Stream(config) {
         hasFinishedBuffering,
         hasVideoTrack,
         hasAudioTrack,
-        updateError,
-        isUpdating,
         fragmentController,
         thumbnailController,
         segmentBlacklistController,
@@ -140,7 +138,6 @@ function Stream(config) {
      */
     function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
@@ -148,7 +145,6 @@ function Stream(config) {
      * Unregister the streaming events
      */
     function unRegisterEvents() {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
@@ -274,7 +270,6 @@ function Stream(config) {
         return new Promise((resolve, reject) => {
             checkConfig();
 
-            isUpdating = true;
             _addInlineEvents();
 
 
@@ -292,14 +287,12 @@ function Stream(config) {
                     return _createBufferSinks(previousBufferSinks)
                 })
                 .then((bufferSinks) => {
-                    isUpdating = false;
-
                     if (streamProcessors.length === 0) {
                         const msg = 'No streams to play.';
                         errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
                         logger.fatal(msg);
                     } else {
-                        _checkIfInitializationCompleted();
+                        _initializationCompleted();
                     }
 
                     if (mediaSource) {
@@ -485,10 +478,7 @@ function Stream(config) {
 
         streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
         streamProcessors.push(streamProcessor);
-
-        for (let i = 0; i < allMediaForType.length; i++) {
-            streamProcessor.addMediaInfo(allMediaForType[i]);
-        }
+        streamProcessor.setMediaInfoArray(allMediaForType);
 
         if (type === Constants.TEXT) {
             textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType, fragmentModel);
@@ -603,8 +593,6 @@ function Stream(config) {
         isInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
-        updateError = {};
-        isUpdating = false;
         isEndedEventSignaled = false;
         trackChangedEvents = [];
     }
@@ -802,49 +790,6 @@ function Stream(config) {
         }
     }
 
-    function _checkIfInitializationCompleted() {
-        const ln = streamProcessors.length;
-        const hasError = !!updateError.audio || !!updateError.video;
-        let error = hasError ? new DashJSError(Errors.DATA_UPDATE_FAILED_ERROR_CODE, Errors.DATA_UPDATE_FAILED_ERROR_MESSAGE) : null;
-
-        for (let i = 0; i < ln; i++) {
-            if (streamProcessors[i].isUpdating() || isUpdating) {
-                return;
-            }
-        }
-
-        if (protectionController) {
-            // Need to check if streamProcessors exists because streamProcessors
-            // could be cleared in case an error is detected while initializing DRM keysystem
-            protectionController.clearMediaInfoArray();
-            for (let i = 0; i < ln && streamProcessors[i]; i++) {
-                const type = streamProcessors[i].getType();
-                const mediaInfo = streamProcessors[i].getMediaInfo();
-                if (type === Constants.AUDIO ||
-                    type === Constants.VIDEO ||
-                    (type === Constants.TEXT && mediaInfo.isFragmented)) {
-                    let mediaInfo = streamProcessors[i].getMediaInfo();
-                    if (mediaInfo) {
-                        protectionController.initializeForMedia(mediaInfo);
-                    }
-                }
-            }
-            protectionController.handleKeySystemFromManifest();
-        }
-
-        if (error) {
-            errHandler.error(error);
-        } else if (!isInitialized) {
-            isInitialized = true;
-            videoModel.waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
-                eventBus.trigger(Events.STREAM_INITIALIZED, {
-                    streamInfo: streamInfo
-                });
-            })
-        }
-
-    }
-
     function getMediaInfo(type) {
         let streamProcessor = null;
 
@@ -880,11 +825,6 @@ function Stream(config) {
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
         hasFinishedBuffering = true;
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
-    }
-
-    function onDataUpdateCompleted(e) {
-        updateError[e.mediaType] = e.error;
-        _checkIfInitializationCompleted();
     }
 
     function onInbandEvents(e) {
@@ -940,7 +880,6 @@ function Stream(config) {
 
     function updateData(updatedStreamInfo) {
         return new Promise((resolve) => {
-            isUpdating = true;
             streamInfo = updatedStreamInfo;
 
             if (eventController) {
@@ -960,14 +899,11 @@ function Stream(config) {
                 });
 
                 // Check if AdaptationSet has not been removed in MPD update
+                streamProcessor.setMediaInfoArray(allMediaForType);
                 if (allMediaForType) {
-                    // Remove the current mediaInfo objects before adding the updated ones
-                    streamProcessor.clearMediaInfoArray();
                     for (let j = 0; j < allMediaForType.length; j++) {
-                        const mInfo = allMediaForType[j];
-                        streamProcessor.addMediaInfo(allMediaForType[j]);
-                        if (adapter.areMediaInfosEqual(currentMediaInfo, mInfo)) {
-                            promises.push(streamProcessor.selectMediaInfo(mInfo))
+                        if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
+                            promises.push(streamProcessor.selectMediaInfo(allMediaForType[j]))
                         }
                     }
                 }
@@ -975,8 +911,9 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
-                    promises = [];
+                    let promises = [];
 
+                    // Only relevant for MSS
                     while (trackChangedEvents.length > 0) {
                         let trackChangedEvent = trackChangedEvents.pop();
                         let mediaInfo = trackChangedEvent.newMediaInfo;
@@ -989,13 +926,47 @@ function Stream(config) {
                     return Promise.all(promises)
                 })
                 .then(() => {
-                    isUpdating = false;
-                    _checkIfInitializationCompleted();
+                    _initializationCompleted();
                     eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
                     resolve();
                 })
+                .catch((e) => {
+                    errHandler.error(e);
+                })
 
         })
+    }
+
+    function _initializationCompleted() {
+        const ln = streamProcessors.length;
+
+        if (protectionController) {
+            // Need to check if streamProcessors exists because streamProcessors
+            // could be cleared in case an error is detected while initializing DRM keysystem
+            protectionController.clearMediaInfoArray();
+            for (let i = 0; i < ln && streamProcessors[i]; i++) {
+                const type = streamProcessors[i].getType();
+                const mediaInfo = streamProcessors[i].getMediaInfo();
+                if (type === Constants.AUDIO ||
+                    type === Constants.VIDEO ||
+                    (type === Constants.TEXT && mediaInfo.isFragmented)) {
+                    let mediaInfo = streamProcessors[i].getMediaInfo();
+                    if (mediaInfo) {
+                        protectionController.initializeForMedia(mediaInfo);
+                    }
+                }
+            }
+            protectionController.handleKeySystemFromManifest();
+        }
+
+        if (!isInitialized) {
+            isInitialized = true;
+            videoModel.waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                eventBus.trigger(Events.STREAM_INITIALIZED, {
+                    streamInfo: streamInfo
+                });
+            })
+        }
     }
 
     function setPreloaded(value) {

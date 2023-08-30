@@ -264,8 +264,8 @@ function StreamProcessor(config) {
         streamInfo = null;
     }
 
-    function isUpdating() {
-        return representationController ? representationController.isUpdating() : false;
+    function setMediaInfoArray(value) {
+        mediaInfoArr = value;
     }
 
     /**
@@ -1015,16 +1015,6 @@ function StreamProcessor(config) {
         return streamInfo;
     }
 
-    function addMediaInfo(newMediaInfo) {
-        if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
-            mediaInfoArr.push(newMediaInfo);
-        }
-    }
-
-    function clearMediaInfoArray() {
-        mediaInfoArr = [];
-    }
-
     function getMediaInfo() {
         return currentMediaInfo;
     }
@@ -1373,8 +1363,6 @@ function StreamProcessor(config) {
     }
 
     instance = {
-        addMediaInfo,
-        clearMediaInfoArray,
         createBufferSinks,
         dischargePreBuffer,
         finalisePlayList,
@@ -1393,13 +1381,13 @@ function StreamProcessor(config) {
         getType,
         initialize,
         isBufferingCompleted,
-        isUpdating,
         prepareInnerPeriodPlaybackSeeking,
         prepareOuterPeriodPlaybackSeeking,
         prepareQualityChange,
         prepareTrackSwitch,
         probeNextRequest,
         reset,
+        setMediaInfoArray,
         selectMediaInfo,
         setExplicitBufferingTime,
         setMediaSource,

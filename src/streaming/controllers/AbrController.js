@@ -275,6 +275,9 @@ function AbrController() {
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
+            if (rep.bandwidth === 3000000 && index === 0) {
+                console.log('why');
+            }
             rep.absoluteIndex = index
         })
 

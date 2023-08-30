@@ -72,16 +72,11 @@ function RepresentationController(config) {
         }
     }
 
-    function isUpdating() {
-        return updating;
-    }
-
     function getCurrentRepresentation() {
         return currentVoRepresentation;
     }
 
     function resetInitialSettings() {
-        updating = true;
         voAvailableRepresentations = [];
     }
 
@@ -93,7 +88,6 @@ function RepresentationController(config) {
 
     function updateData(availableRepresentations, isFragmented, selectedRepresentationId) {
         return new Promise((resolve, reject) => {
-            updating = true;
             voAvailableRepresentations = availableRepresentations;
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
@@ -246,7 +240,6 @@ function RepresentationController(config) {
     }
 
     function endDataUpdate(error) {
-        updating = false;
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
             {
                 currentRepresentation: currentVoRepresentation,
@@ -257,8 +250,6 @@ function RepresentationController(config) {
     }
 
     function _onRepresentationUpdated(r) {
-        if (!isUpdating()) return;
-
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
         let repInfo;
@@ -316,7 +307,6 @@ function RepresentationController(config) {
         getRepresentationById,
         getStreamId,
         getType,
-        isUpdating,
         prepareQualityChange,
         reset,
         updateData,
