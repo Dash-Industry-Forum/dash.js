@@ -107,7 +107,8 @@ import Events from './events/Events';
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true
+ *                useChangeTypeForTrackSwitch: true,
+ *                resetSourceBuffersForTrackSwitch: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -875,7 +876,8 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: true
+                useChangeTypeForTrackSwitch: true,
+                resetSourceBuffersForTrackSwitch: false,
             },
             gaps: {
                 jumpGaps: true,
