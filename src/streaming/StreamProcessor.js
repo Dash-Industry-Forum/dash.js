@@ -727,7 +727,6 @@ function StreamProcessor(config) {
 
         selectMediaInfo(newMediaInfo, newRepresentation)
             .then(() => {
-                representationController.addRepresentationSwitch();
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
     }

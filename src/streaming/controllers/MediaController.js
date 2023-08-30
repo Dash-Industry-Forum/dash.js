@@ -114,7 +114,7 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(selectInitialTrack(type, tracksForType), true);
+            setTrack(selectInitialTrack(type, tracksForType));
         } else {
             if (tracks.length > 1) {
                 setTrack(selectInitialTrack(type, tracks));

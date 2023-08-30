@@ -129,11 +129,6 @@ function RepresentationController(config) {
             dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
         }
 
-        const repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
-
-        if (!repSwitch) {
-            addRepresentationSwitch();
-        }
         endDataUpdate();
     }
 
@@ -219,10 +214,9 @@ function RepresentationController(config) {
         return representation;
     }
 
-    function addRepresentationSwitch() {
+    function _addRepresentationSwitch(currentRepresentation) {
         checkConfig();
         const now = new Date();
-        const currentRepresentation = getCurrentRepresentation();
         const currentVideoTimeMs = playbackController.getTime() * 1000;
         if (currentRepresentation) {
             dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
@@ -292,16 +286,18 @@ function RepresentationController(config) {
      */
     function prepareQualityChange(newRep) {
         const voRepresentations = voAvailableRepresentations.filter((rep) => {
-            return rep.id = newRep.id;
+            return rep.id === newRep.id;
         })
 
         if (voRepresentations.length > 0) {
             _setCurrentVoRepresentation(voRepresentations[0]);
-            addRepresentationSwitch();
         }
     }
 
     function _setCurrentVoRepresentation(value) {
+        if (!currentVoRepresentation || currentVoRepresentation.id !== value.id) {
+            _addRepresentationSwitch(value);
+        }
         currentVoRepresentation = value;
     }
 
@@ -316,7 +312,6 @@ function RepresentationController(config) {
     }
 
     instance = {
-        addRepresentationSwitch,
         getCurrentRepresentation,
         getRepresentationById,
         getStreamId,
