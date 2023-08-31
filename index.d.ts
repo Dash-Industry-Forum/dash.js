@@ -1288,6 +1288,8 @@ declare namespace dashjs {
 
         getDVRSeekOffset(value: number): number;
 
+        getTargetLiveDelay(): number;
+
         convertToTimeCode(value: number): string;
 
         formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
