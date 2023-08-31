@@ -31,7 +31,7 @@
         "highlightTutorialCode": true
     },
     "opts": {
-        "template": "../../node_modules/ink-docstrap/template",
+        "template": "../../node_modules/foodoc/template",
         "encoding": "utf8",
         "recurse": true,
         "query": "value",
