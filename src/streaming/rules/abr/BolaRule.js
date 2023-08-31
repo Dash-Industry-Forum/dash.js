@@ -73,12 +73,12 @@ function BolaRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, onBufferEmpty, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
-        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, _onBufferEmpty, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     }
 
     function utilitiesFromBitrates(bitrates) {
@@ -258,7 +258,7 @@ function BolaRule(config) {
         checkBolaStateBufferTimeDefault(bolaState, mediaType);
     }
 
-    function onBufferEmpty(e) {
+    function _onBufferEmpty(e) {
         // if we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
         const mediaType = e.mediaType;
         // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
@@ -270,7 +270,7 @@ function BolaRule(config) {
         }
     }
 
-    function onPlaybackSeeking() {
+    function _onPlaybackSeeking() {
         // TODO: 1. Verify what happens if we seek mid-fragment.
         // TODO: 2. If e.g. we have 10s fragments and seek, we might want to download the first fragment at a lower quality to restart playback quickly.
         for (const mediaType in bolaStateDict) {
@@ -284,7 +284,7 @@ function BolaRule(config) {
         }
     }
 
-    function onMediaFragmentLoaded(e) {
+    function _onMediaFragmentLoaded(e) {
         if (e && e.chunk && e.chunk.representation.mediaInfo) {
             const bolaState = bolaStateDict[e.chunk.representation.mediaInfo.type];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
@@ -305,7 +305,7 @@ function BolaRule(config) {
         }
     }
 
-    function onMetricAdded(e) {
+    function _onMetricAdded(e) {
         if (e && e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
@@ -353,17 +353,17 @@ function BolaRule(config) {
         }
     }
 
-    function onQualityChangeRequested(e) {
+    function _onQualityChangeRequested(e) {
         // Useful to store change requests when abandoning a download.
         if (e) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-                bolaState.abrQuality = e.newRepresentation.calculatedQualityRank;
+                bolaState.abrQuality = e.newRepresentation.absoluteIndex;
             }
         }
     }
 
-    function onFragmentLoadingAbandoned(e) {
+    function _onFragmentLoadingAbandoned(e) {
         if (e) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
@@ -382,7 +382,7 @@ function BolaRule(config) {
         }
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         try {
             const switchRequest = SwitchRequest(context).create();
             const mediaInfo = rulesContext.getMediaInfo();
@@ -512,16 +512,16 @@ function BolaRule(config) {
     function reset() {
         resetInitialSettings();
 
-        eventBus.off(MediaPlayerEvents.BUFFER_EMPTY, onBufferEmpty, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
-        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
+        eventBus.off(MediaPlayerEvents.BUFFER_EMPTY, _onBufferEmpty, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
+        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

@@ -48,7 +48,6 @@ function RepresentationController(config) {
     const isDynamic = config.isDynamic;
 
     let instance,
-        updating,
         voAvailableRepresentations,
         currentVoRepresentation;
 
