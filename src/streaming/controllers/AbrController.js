@@ -251,6 +251,20 @@ function AbrController() {
         })
     }
 
+    function getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+        if (isNaN(absoluteIndex) || absoluteIndex < 0) {
+            return null;
+        }
+
+        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
+
+        if (absoluteIndex > possibleVoRepresentations.length - 1) {
+            absoluteIndex = possibleVoRepresentations.length - 1;
+        }
+
+        return possibleVoRepresentations[absoluteIndex];
+    }
+
 
     function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
         let voRepresentations = [];
@@ -275,9 +289,6 @@ function AbrController() {
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
-            if (rep.bandwidth === 3000000 && index === 0) {
-                console.log('why');
-            }
             rep.absoluteIndex = index
         })
 
@@ -491,35 +502,32 @@ function AbrController() {
             throughputController,
             videoModel
         });
-        const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext, streamId);
-        const currentRepresentation = streamProcessor.getRepresentation();
+        const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
-        if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
-            const fragmentModel = streamProcessor.getFragmentModel();
-            const request = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_LOADING,
-                index: e.request.index
-            })[0];
-            if (request) {
-                abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
-                switchHistoryDict[streamId][type].reset();
-                switchHistoryDict[streamId][type].push({
-                    previousId: currentRepresentation ? currentRepresentation.id : null,
-                    newId: switchRequest.quality,
-                    confidence: 1,
-                    reason: switchRequest.reason
-                });
-                setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason);
+        if (switchRequest && switchRequest.representation !== SwitchRequest.NO_CHANGE) {
+            _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
+        }
+    }
 
-                clearTimeout(abandonmentTimeout);
-                abandonmentTimeout = setTimeout(
-                    () => {
-                        abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
-                        abandonmentTimeout = null;
-                    },
-                    settings.get().streaming.abandonLoadTimeout
-                );
-            }
+    function _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest) {
+        const fragmentModel = streamProcessor.getFragmentModel();
+        const request = fragmentModel.getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_LOADING,
+            index: e.request.index
+        })[0];
+        if (request) {
+            abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
+            switchHistoryDict[streamId][type].reset();
+            setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason, switchRequest.rule);
+
+            clearTimeout(abandonmentTimeout);
+            abandonmentTimeout = setTimeout(
+                () => {
+                    abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+                    abandonmentTimeout = null;
+                },
+                settings.get().streaming.abandonLoadTimeout
+            );
         }
     }
 
@@ -619,13 +627,13 @@ function AbrController() {
             }
 
             let newRepresentation = switchRequest.representation;
+            switchHistoryDict[streamId][type].push({
+                oldRepresentation: currentRepresentation,
+                newRepresentation
+            });
 
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.bitrateInKbit < currentRepresentation.bitrateInKbit)) {
-                switchHistoryDict[streamId][type].push({
-                    oldValue: currentRepresentation,
-                    newValue: newRepresentation
-                });
-                _changeQuality(streamId, type, currentRepresentation, newRepresentation, switchRequest.reason);
+                _changeQuality(streamId, type, currentRepresentation, newRepresentation, switchRequest.reason, switchRequest.rule);
                 return true;
             }
 
@@ -644,7 +652,7 @@ function AbrController() {
      * @param {Representation} representation
      * @param {string} reason
      */
-    function setPlaybackQuality(type, streamInfo, representation, reason = null) {
+    function setPlaybackQuality(type, streamInfo, representation, reason = null, rule = null) {
         if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type]) {
             return;
         }
@@ -655,7 +663,7 @@ function AbrController() {
 
 
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
-            _changeQuality(streamId, type, currentRepresentation, representation, reason,);
+            _changeQuality(streamId, type, currentRepresentation, representation, reason, rule);
         }
     }
 
@@ -679,12 +687,12 @@ function AbrController() {
      * @param {string} reason
      * @private
      */
-    function _changeQuality(streamId, type, oldRepresentation, newRepresentation, reason) {
+    function _changeQuality(streamId, type, oldRepresentation, newRepresentation, reason, rule) {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
-            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from bitrate ' + oldRepresentation.bitrateInKbit + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+            logger.info('Stream ID: ' + streamId + ' [' + type + '],' + (rule ? rule : '') + ' switch from bitrate ' + oldRepresentation.bitrateInKbit + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
                     oldRepresentation: oldRepresentation,
@@ -768,6 +776,7 @@ function AbrController() {
         getInitialBitrateFor,
         getOptimalRepresentationForBitrate,
         getPossibleVoRepresentations,
+        getRepresentationByAbsoluteIndex,
         initialize,
         isPlayingAtTopQuality,
         registerStreamType,

@@ -685,7 +685,7 @@ function StreamProcessor(config) {
         }
 
         if (pendingSwitchToVoRepresentation) {
-            logger.warning(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.id} for ${type}`);
+            logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.id} for ${type}`);
         }
 
         if (e.isAdaptationSetSwitch) {

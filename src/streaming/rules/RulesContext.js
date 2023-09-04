@@ -91,17 +91,17 @@ function RulesContext(config) {
     }
 
     instance = {
-        getMediaType,
-        getMediaInfo,
-        getDroppedFramesHistory,
-        getCurrentRequest,
-        getSwitchHistory,
-        getStreamInfo,
-        getScheduleController,
-        getThroughputController,
         getAbrController,
+        getCurrentRequest,
+        getDroppedFramesHistory,
+        getMediaInfo,
+        getMediaType,
         getRepresentation,
-        getVideoModel
+        getScheduleController,
+        getStreamInfo,
+        getSwitchHistory,
+        getThroughputController,
+        getVideoModel,
     };
 
     return instance;

@@ -30,7 +30,6 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
-import SwitchRequest from './SwitchRequest.js';
 
 const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
 
@@ -39,28 +38,25 @@ function SwitchRequestHistory() {
     let srHistory = []; // history of each switch
 
     function push(switchRequest) {
-        if (switchRequest.newValue === SwitchRequest.NO_CHANGE) {
-            switchRequest.newValue = switchRequest.oldValue;
-        }
-        if (!switchRequests[switchRequest.oldValue]) {
-            switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
+        if (!switchRequests[switchRequest.oldRepresentation.absoluteIndex]) {
+            switchRequests[switchRequest.oldRepresentation.absoluteIndex] = {noDrops: 0, drops: 0, dropSize: 0};
         }
 
         // Set switch details
-        let indexDiff = switchRequest.newValue - switchRequest.oldValue;
+        let indexDiff = switchRequest.newRepresentation.absoluteIndex - switchRequest.oldRepresentation.absoluteIndex;
         let drop = (indexDiff < 0) ? 1 : 0;
         let dropSize = drop ? -indexDiff : 0;
         let noDrop = drop ? 0 : 1;
 
         // Update running totals
-        switchRequests[switchRequest.oldValue].drops += drop;
-        switchRequests[switchRequest.oldValue].dropSize += dropSize;
-        switchRequests[switchRequest.oldValue].noDrops += noDrop;
+        switchRequests[switchRequest.oldRepresentation.absoluteIndex].drops += drop;
+        switchRequests[switchRequest.oldRepresentation.absoluteIndex].dropSize += dropSize;
+        switchRequests[switchRequest.oldRepresentation.absoluteIndex].noDrops += noDrop;
 
         // Save to history
-        srHistory.push({idx: switchRequest.oldValue, noDrop: noDrop, drop: drop, dropSize: dropSize});
+        srHistory.push({idx: switchRequest.oldRepresentation.absoluteIndex, noDrop: noDrop, drop: drop, dropSize: dropSize});
 
-        // Shift earliest switch off srHistory and readjust to keep depth of running totals constant
+        // Shift the earliest switch off srHistory and readjust to keep depth of running totals constant
         if ( srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH ) {
             let srHistoryFirst = srHistory.shift();
             switchRequests[srHistoryFirst.idx].drops -= srHistoryFirst.drop;
@@ -79,9 +75,9 @@ function SwitchRequestHistory() {
     }
 
     return {
-        push: push,
-        getSwitchRequests: getSwitchRequests,
-        reset: reset
+        push,
+        getSwitchRequests,
+        reset
     };
 }
 

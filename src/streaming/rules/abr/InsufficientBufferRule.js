@@ -53,21 +53,15 @@ function InsufficientBufferRule(config) {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        resetInitialSettings();
+        _resetInitialSettings();
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
-    function checkConfig() {
-        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
-
 
     /**
-     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest.quality=0 until BUFFER_LOADED happens.
-     * Otherwise InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
+     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest. Quality=0 until BUFFER_LOADED happens.
+     * Otherwise, InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
      * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
      * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
@@ -82,8 +76,6 @@ function InsufficientBufferRule(config) {
             return switchRequest;
         }
 
-        checkConfig();
-
         const mediaType = rulesContext.getMediaType();
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
         const voRepresentation = rulesContext.getRepresentation();
@@ -92,9 +84,9 @@ function InsufficientBufferRule(config) {
         const playbackController = scheduleController.getPlaybackController();
 
 
-        // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+        // Don't ask for a bitrate change if there is no info about buffer state or if fragmentDuration is not defined
         const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
-        if (shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
+        if (_shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
             return switchRequest;
         }
 
@@ -107,7 +99,7 @@ function InsufficientBufferRule(config) {
         } else {
             const throughputController = rulesContext.getThroughputController();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputController.getAverageThroughput(mediaType);
+            const throughput = throughputController.getAverageThroughput(mediaType, null, NaN);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
             switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true, true);
@@ -115,21 +107,20 @@ function InsufficientBufferRule(config) {
         }
 
         return switchRequest;
-
     }
 
-    function shouldIgnore(lowLatencyEnabled, mediaType) {
+    function _shouldIgnore(lowLatencyEnabled, mediaType) {
         return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
     }
 
-    function resetInitialSettings() {
+    function _resetInitialSettings() {
         bufferStateDict = {};
         bufferStateDict[Constants.VIDEO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
         bufferStateDict[Constants.AUDIO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
     }
 
     function _onPlaybackSeeking() {
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
     function _onBytesAppended(e) {
@@ -141,7 +132,7 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        resetInitialSettings();
+        _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }

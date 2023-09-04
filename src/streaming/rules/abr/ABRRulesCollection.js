@@ -252,10 +252,14 @@ function ABRRulesCollection(config) {
         return maxQuality || SwitchRequest(context).create();
     }
 
-    function shouldAbandonFragment(rulesContext, streamId) {
-        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
+    function shouldAbandonFragment(rulesContext) {
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
         const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = _getMinSwitchRequest(activeRules);
+
+        if (shouldAbandon) {
+            shouldAbandon.reason.forceAbandon = true
+        }
 
         return shouldAbandon || SwitchRequest(context).create();
     }
@@ -293,14 +297,14 @@ function ABRRulesCollection(config) {
     }
 
     instance = {
+        getAbandonFragmentRules,
+        getBestPossibleSwitchRequest,
+        getBolaState,
+        getQualitySwitchRules,
         initialize,
         reset,
-        getBestPossibleSwitchRequest,
-        shouldAbandonFragment,
-        getQualitySwitchRules,
-        getAbandonFragmentRules,
         setBolaState,
-        getBolaState
+        shouldAbandonFragment,
     };
 
     return instance;
