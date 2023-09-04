@@ -49,7 +49,9 @@ commands:
 
     build_unit_test_steps:
         steps:
-            - browser-tools/install-browser-tools
+            - browser-tools/install-browser-tools:
+                chrome-version: 116.0.5845.96 # TODO remove this when google updates the chrome driver
+                replace-existing: true   
             -   run:
                     name: Build and run unit tests
                     command: |
