@@ -35,6 +35,7 @@ function MediaSourceController() {
 
     let instance,
         mediaSource,
+        settings,
         logger;
 
     const context = this.context;
@@ -74,6 +75,10 @@ function MediaSourceController() {
         if (!mediaSource || mediaSource.readyState !== 'open') return;
         if (value === null && isNaN(value)) return;
         if (mediaSource.duration === value) return;
+
+        if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
+            value = Math.pow(2, 32);
+        }
 
         if (!isBufferUpdating(mediaSource)) {
             logger.info('Set MediaSource duration:' + value);
@@ -120,13 +125,27 @@ function MediaSourceController() {
         return false;
     }
 
+    /**
+     * Set the config of the MediaSourceController
+     * @param {object} config
+     */
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+        if (config.settings) {
+            settings = config.settings;
+        }
+    }
+
     instance = {
         createMediaSource,
         attachMediaSource,
         detachMediaSource,
         setDuration,
         setSeekable,
-        signalEndOfStream
+        signalEndOfStream,
+        setConfig
     };
 
     setup();
