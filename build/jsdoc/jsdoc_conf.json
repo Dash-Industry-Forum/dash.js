@@ -28,7 +28,8 @@
         "linenums": true,
         "collapseSymbols": true,
         "inverseNav": true,
-        "highlightTutorialCode": true
+        "highlightTutorialCode": true,
+        "stylesheets":["../../build/jsdoc/jsdoc-custom.css"]
     },
     "opts": {
         "template": "../../node_modules/foodoc/template",
