@@ -1015,7 +1015,7 @@ function DashAdapter() {
                 return sp.schemeIdUri === DashConstants.ADAPTATION_SET_SWITCHING_SCHEME_ID_URI
             });
             if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
-                const ids = adaptationSetSwitching[0].value.split(',')
+                const ids = adaptationSetSwitching[0].value.toString().split(',')
                 mediaInfo.adaptationSetSwitchingCompatibleIds = ids.map((id) => {
                     return id
                 })
