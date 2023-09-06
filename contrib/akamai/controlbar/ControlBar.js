@@ -575,7 +575,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     }
 
                     if (element.roles[0]) {
-                        info += '- Role: ' + element.roles[0] + ' ';
+                        info += '- Role: ' + element.roles[0].value + ' ';
                     }
 
                     if (element.codec) {
