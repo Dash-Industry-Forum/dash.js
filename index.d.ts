@@ -984,9 +984,10 @@ declare namespace dashjs {
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
-                setStallState?: boolean,
-                avoidCurrentTimeRangePruning?: boolean,
-                useChangeTypeForTrackSwitch?: boolean,
+                setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
+                useChangeTypeForTrackSwitch?: boolean
+                mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {

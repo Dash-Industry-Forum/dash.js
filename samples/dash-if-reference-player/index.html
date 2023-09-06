@@ -189,6 +189,13 @@
                     Reuse SourceBuffers
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Allows duration to be set to Infinity on the MediaSource">
+                    <input type="checkbox" ng-model="mediaSourceDurationInfinitySelected"
+                           ng-change="toggleMediaSourceDurationInfinity()"
+                           ng-checked="mediaSourceDurationInfinitySelected">
+                    MediaSource duration Infinity
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable media settings from last selected track to be used for incoming track selection.">
                     <input type="checkbox" ng-model="saveLastMediaSettingsSelected"
                            ng-change="toggleSaveLastMediaSettings()" ng-checked="saveLastMediaSettingsSelected">

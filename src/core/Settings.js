@@ -108,6 +108,7 @@ import Events from './events/Events';
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
+ *                mediaSourceDurationInfinity: true,
  *                resetSourceBuffersForTrackSwitch: false
  *            },
  *            gaps: {
@@ -330,6 +331,9 @@ import Events from './events/Events';
  * @property {boolean} [useChangeTypeForTrackSwitch=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
  * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
+ * @property {boolean} [mediaSourceDurationInfinity=true]
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely. 
+ * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
  */
 
 /**
@@ -877,7 +881,8 @@ function Settings() {
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
-                resetSourceBuffersForTrackSwitch: false,
+                mediaSourceDurationInfinity: true,
+                resetSourceBuffersForTrackSwitch: false
             },
             gaps: {
                 jumpGaps: true,

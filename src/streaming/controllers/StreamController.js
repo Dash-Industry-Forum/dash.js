@@ -105,6 +105,8 @@ function StreamController() {
         });
         timeSyncController.initialize();
 
+        mediaSourceController.setConfig({ settings });
+
         if (protectionController) {
             eventBus.trigger(Events.PROTECTION_CREATED, {
                 controller: protectionController
