@@ -1021,7 +1021,7 @@ function Settings() {
                     bolaRule: false,
                     insufficientBufferRule: true,
                     switchHistoryRule: true,
-                    droppedFramesRule: false,
+                    droppedFramesRule: true,
                     abandonRequestsRule: true,
                     l2ARule: false,
                     loLPRule: false

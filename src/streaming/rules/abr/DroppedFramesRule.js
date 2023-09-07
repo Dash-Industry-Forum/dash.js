@@ -15,7 +15,7 @@ function DroppedFramesRule() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
@@ -56,7 +56,7 @@ function DroppedFramesRule() {
     }
 
     instance = {
-        getMaxIndex
+        getSwitchRequest
     };
 
     setup();
