@@ -5,6 +5,7 @@ const out_dir = '../dist';
 
 const config = {
     devtool: 'source-map',
+    target: ['web', 'es5'],
     output: {
         path: path.resolve(__dirname, out_dir),
         publicPath: '/dist/',

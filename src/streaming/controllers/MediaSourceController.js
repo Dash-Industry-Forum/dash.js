@@ -37,6 +37,7 @@ function MediaSourceController() {
 
     let instance,
         mediaSource,
+        settings,
         mediaSourceType,
         logger;
 
@@ -102,6 +103,10 @@ function MediaSourceController() {
         if (value === null && isNaN(value)) return;
         if (mediaSource.duration === value) return;
 
+        if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
+            value = Math.pow(2, 32);
+        }
+
         if (!isBufferUpdating(mediaSource)) {
             logger.info('Set MediaSource duration:' + value);
             mediaSource.duration = value;
@@ -147,6 +152,19 @@ function MediaSourceController() {
         return false;
     }
 
+    /**
+     * Set the config of the MediaSourceController
+     * @param {object} config
+     */
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+        if (config.settings) {
+            settings = config.settings;
+        }
+    }
+
     instance = {
         createMediaSource,
         attachMediaSource,
@@ -155,6 +173,7 @@ function MediaSourceController() {
         setSeekable,
         registerEventListener,
         signalEndOfStream
+        setConfig
     };
 
     setup();

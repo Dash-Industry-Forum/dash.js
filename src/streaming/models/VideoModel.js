@@ -51,7 +51,8 @@ function VideoModel() {
         _currentTime,
         TTMLRenderingDiv,
         vttRenderingDiv,
-        previousPlaybackRate;
+        previousPlaybackRate,
+        timeout;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
 
@@ -69,6 +70,7 @@ function VideoModel() {
     }
 
     function reset() {
+        clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
     }
 
@@ -94,6 +96,10 @@ function VideoModel() {
         if (element) {
             _currentTime = currentTime;
             waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                if (!element) {
+                    return;
+                }
+
                 // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
                 // providing playbackRate property equals to zero.
                 if (element.currentTime === _currentTime) {
@@ -112,7 +118,7 @@ function VideoModel() {
                     _currentTime = NaN;
                 } catch (e) {
                     if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                        setTimeout(function () {
+                        timeout = setTimeout(function () {
                             element.currentTime = _currentTime;
                             _currentTime = NaN;
                         }, 400);

@@ -1013,6 +1013,10 @@ function BufferController(config) {
     function _onRemoved(e) {
         logger.debug('onRemoved buffer from:', e.from, 'to', e.to);
 
+        if (!sourceBufferSink) {
+            return;
+        }
+
         const ranges = sourceBufferSink.getAllBufferRanges();
         _showBufferRanges(ranges);
 
