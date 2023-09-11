@@ -59,12 +59,15 @@ function MediaSourceController() {
             // eslint-disable-next-line no-undef
             mediaSource = new ManagedMediaSource();
             mediaSourceType = 'managedMediaSource';
+            logger.info(`Created ManagedMediaSource`)
         }
-        if (hasMediaSource) {
+        else if (hasMediaSource) {
             mediaSource = new MediaSource();
             mediaSourceType = 'mediaSource';
+            logger.info(`Created MediaSource`)
         } else if (hasWebKit) {
             mediaSource = new WebKitMediaSource();
+            logger.info(`Created WebkitMediaSource`)
         }
 
         return mediaSource;
@@ -172,8 +175,8 @@ function MediaSourceController() {
         setDuration,
         setSeekable,
         registerEventListener,
-        signalEndOfStream
-        setConfig
+        signalEndOfStream,
+        setConfig,
     };
 
     setup();
