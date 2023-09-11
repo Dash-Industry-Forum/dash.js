@@ -196,6 +196,13 @@
                     MediaSource duration Infinity
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Reset existing MediaSource Sourcebuffers when switching incompatible track.">
+                    <input type="checkbox" ng-model="resetSourceBuffersForTrackSwitch"
+                           ng-change="toggleResetSourceBuffersForTrackSwitch()"
+                           ng-checked="resetSourceBuffersForTrackSwitch">
+                    Reset SourceBuffers on incompatible track switch
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable media settings from last selected track to be used for incoming track selection.">
                     <input type="checkbox" ng-model="saveLastMediaSettingsSelected"
                            ng-change="toggleSaveLastMediaSettings()" ng-checked="saveLastMediaSettingsSelected">
