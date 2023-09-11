@@ -988,6 +988,7 @@ declare namespace dashjs {
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
