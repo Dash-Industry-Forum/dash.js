@@ -98,7 +98,7 @@ export default [
     },
     {
         'url': 'https://storage.googleapis.com/shaka-demo-assets/sintel-many-subs/dash.mpd',
-        'name': 'Shaka 44 differenr subtitles',
+        'name': 'Shaka 44 different subtitles',
         type: 'vod',
         testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
     }
