@@ -16,6 +16,7 @@
         "test": "karma start karma.unit.conf.js",
         "test-browserunit": "karma start build/karma.conf.js",
         "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
+        "test-functional-mocha": "karma start karma.functional.conf.js --testsuite=content.js",
         "prepare": "node githook.js",
         "prepack": "npm run build"
     },
@@ -39,6 +40,8 @@
         "karma-chrome-launcher": "^3.1.1",
         "karma-coverage": "^2.2.0",
         "karma-firefox-launcher": "^2.1.2",
+        "karma-htmlfile-reporter": "^0.3.8",
+        "karma-junit-reporter": "^2.0.1",
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
         "karma-sourcemap-loader": "^0.3.8",
