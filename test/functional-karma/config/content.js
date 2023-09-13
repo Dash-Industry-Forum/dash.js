@@ -194,7 +194,7 @@ export default [
             emsg: {
                 minimumNumberOfEvents: 2,
                 runtime: 65000,
-                schemeIdUri: 'urn:scte:scte35:2013:xml'
+                schemeIdUri: 'urn:scte:scte35:2013:bin'
             }
         }
     },
