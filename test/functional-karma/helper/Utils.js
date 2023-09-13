@@ -1,6 +1,6 @@
 import Constants from '../helper/Constants';
 import content from '../config/content';
-
+import singleVector from '../config/single-vector';
 
 class Utils {
 
