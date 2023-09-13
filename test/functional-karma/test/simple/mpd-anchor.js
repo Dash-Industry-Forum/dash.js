@@ -8,7 +8,7 @@ const TESTCASE = Constants.TESTCASES.SIMPLE.MPD_ANCHOR;
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Attach with posix - ${item.name} - ${mpd}`, () => {
+    describe(`Simple - Attach with MPD anchor - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
 
