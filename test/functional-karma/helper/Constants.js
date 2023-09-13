@@ -28,6 +28,7 @@ export default {
             LIVE_DELAY: 'simple_live_delay',
             LIVE_CATCHUP: 'simple_live_catchup',
             ATTACH_WITH_POSIX: 'simple_attach_with_posix',
+            MPD_ANCHOR: 'simple_mpd_anchor',
             PREFIX: 'simple_'
         },
         VENDOR: {
@@ -81,6 +82,12 @@ export default {
             NUMBER_OF_RANDOM_ATTACHES: 3,
             VOD_RANDOM_ATTACH_SUBTRACT_OFFSET: 5,
             LIVE_RANDOM_ATTACH_SUBTRACT_OFFSET: 5
+        },
+        MPD_ANCHOR: {
+            NUMBER_OF_RANDOM_ATTACHES: 3,
+            VOD_RANDOM_SUBTRACT_OFFSET: 5,
+            LIVE_RANDOM_POSIX_DELAY: 20,
+            LIVE_TOLERANCE: 5
         },
         INITIAL_BUFFER_TARGET: {
             VALUE: 10,
