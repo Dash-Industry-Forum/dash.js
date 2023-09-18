@@ -987,6 +987,8 @@ declare namespace dashjs {
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
+                mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -1286,6 +1288,8 @@ declare namespace dashjs {
         getDVRWindowSize(): number;
 
         getDVRSeekOffset(value: number): number;
+
+        getTargetLiveDelay(): number;
 
         convertToTimeCode(value: number): string;
 
