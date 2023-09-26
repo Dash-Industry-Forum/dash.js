@@ -32,7 +32,6 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
-import {modifyRequest} from '../utils/RequestModifier.js';
 import AastLowLatencyThroughputModel from '../models/AastLowLatencyThroughputModel.js';
 
 /**
@@ -45,67 +44,40 @@ function FetchLoader() {
     const context = this.context;
     const aastLowLatencyThroughputModel = AastLowLatencyThroughputModel(context).getInstance();
     const settings = Settings(context).getInstance();
-    let instance, dashMetrics, requestModifier, boxParser;
+    let instance, dashMetrics, boxParser;
 
     function setConfig(cfg) {
         dashMetrics = cfg.dashMetrics;
-        requestModifier = cfg.requestModifier;
         boxParser = cfg.boxParser
     }
 
-    function load(httpRequest) {
-        if (requestModifier && requestModifier.modifyRequest) {
-            modifyRequest(httpRequest, requestModifier)
-                .then(() => _request(httpRequest));
-        } else {
-            _request(httpRequest);
-        }
-    }
-
-    function _request(httpLoaderRequest) {
+    function load(httpRequest /* CommonMediaLibrary.request.CommonMediaRequest */, httpResponse /* CommonMediaLibrary.request.CommonMediaResponse */) {
         // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpLoaderRequest.request;
+        const requestObject = httpRequest.customData.request;
 
         const headers = new Headers();
-        if (request.range) {
-            headers.append('Range', 'bytes=' + request.range);
-        }
-
-        if (httpLoaderRequest.headers) {
-            for (let header in httpLoaderRequest.headers) {
-                let value = httpLoaderRequest.headers[header];
+        if (httpRequest.headers) {
+            for (let header in httpRequest.headers) {
+                let value = httpRequest.headers[header];
                 if (value) {
                     headers.append(header, value);
                 }
             }
         }
 
-        if (!request.startDate) {
-            request.startDate = requestStartTime;
-        }
-
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            requestModifier.modifyRequestHeader({
-                setRequestHeader: function (header, value) {
-                    headers.append(header, value);
-                }
-            }, {
-                url: httpLoaderRequest.url
-            });
-        }
-
         let abortController;
         if (typeof window.AbortController === 'function') {
             abortController = new AbortController(); /*jshint ignore:line*/
-            httpLoaderRequest.abortController = abortController;
-            abortController.signal.onabort = httpLoaderRequest.onabort;
+            httpRequest.customData.abortController = abortController;
+            abortController.signal.onabort = httpRequest.onabort;
         }
 
+        httpRequest.abort = abort.bind(httpRequest);
+
         const reqOptions = {
-            method: httpLoaderRequest.method,
+            method: httpRequest.method,
             headers: headers,
-            credentials: httpLoaderRequest.withCredentials ? 'include' : undefined,
+            credentials: httpRequest.credentials,
             signal: abortController ? abortController.signal : undefined
         };
 
@@ -115,7 +87,7 @@ function FetchLoader() {
 
         new Promise((resolve) => {
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
-                throughputCapacityDelayMS = aastLowLatencyThroughputModel.getThroughputCapacityDelayMS(request, dashMetrics.getCurrentBufferLevel(request.mediaType) * 1000);
+                throughputCapacityDelayMS = aastLowLatencyThroughputModel.getThroughputCapacityDelayMS(requestObject, dashMetrics.getCurrentBufferLevel(requestObject.mediaType) * 1000);
                 if (throughputCapacityDelayMS) {
                     // safely delay the "fetch" call a bit to be able to measure the throughput capacity of the line.
                     // this will lead to first few chunks downloaded at max network speed
@@ -127,24 +99,21 @@ function FetchLoader() {
             .then(() => {
                 let markBeforeFetch = performance.now();
 
-                fetch(httpLoaderRequest.url, reqOptions)
+                fetch(httpRequest.url, reqOptions)
                     .then((response) => {
-                        if (!httpLoaderRequest.response) {
-                            httpLoaderRequest.response = {};
-                        }
-                        httpLoaderRequest.response.status = response.status;
-                        httpLoaderRequest.response.statusText = response.statusText;
-                        httpLoaderRequest.response.responseURL = response.url;
+                        httpResponse.status = response.status;
+                        httpResponse.statusText = response.statusText;
+                        httpResponse.url = response.url;
 
                         if (!response.ok) {
-                            httpLoaderRequest.onerror();
+                            httpRequest.onerror();
                         }
 
-                        let responseHeaders = '';
+                        const responseHeaders = {};
                         for (const key of response.headers.keys()) {
-                            responseHeaders += key + ': ' + response.headers.get(key) + '\r\n';
+                            responseHeaders[key] = response.headers.get(key);
                         }
-                        httpLoaderRequest.response.responseHeaders = responseHeaders;
+                        httpResponse.headers = responseHeaders;
 
                         const totalBytes = parseInt(response.headers.get('Content-Length'), 10);
                         let bytesReceived = 0;
@@ -153,9 +122,9 @@ function FetchLoader() {
                         let offset = 0;
 
                         if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
-                            _aastProcessResponse(markBeforeFetch, request, requestTime, throughputCapacityDelayMS, responseHeaders, httpLoaderRequest, response)
+                            _aastProcessResponse(markBeforeFetch, requestObject, requestTime, throughputCapacityDelayMS, responseHeaders, httpRequest, response)
                         } else {
-                            httpLoaderRequest.reader = response.body.getReader();
+                            httpRequest.customData.reader = response.body.getReader();
                         }
 
                         let downloadedData = [];
@@ -179,7 +148,7 @@ function FetchLoader() {
                                 _handleDataReceived(value)
                             }
 
-                            _read(httpLoaderRequest, _processResult);
+                            _read(httpRequest, httpResponse, _processResult);
                         };
 
                         /**
@@ -203,7 +172,7 @@ function FetchLoader() {
                                         calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                                     }
 
-                                    httpLoaderRequest.progress({
+                                    httpRequest.onprogress({
                                         loaded: bytesReceived,
                                         total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                                         lengthComputable: true,
@@ -211,10 +180,10 @@ function FetchLoader() {
                                     });
                                 }
 
-                                httpLoaderRequest.response.response = receivedData.buffer;
+                                httpResponse.data = receivedData.buffer;
                             }
-                            httpLoaderRequest.onload();
-                            httpLoaderRequest.onloadend();
+                            httpRequest.onload();
+                            httpRequest.onloadend();
                         }
 
                         /**
@@ -273,7 +242,7 @@ function FetchLoader() {
 
                                 // Announce progress but don't track traces. Throughput measures are quite unstable
                                 // when they are based in small amount of data
-                                httpLoaderRequest.progress({
+                                httpRequest.onprogress({
                                     data: data.buffer,
                                     lengthComputable: false,
                                     noTrace: true
@@ -285,7 +254,7 @@ function FetchLoader() {
                                 // Call progress, so it generates traces that will be later used to know when the first byte
                                 // were received
                                 if (!signaledFirstByte) {
-                                    httpLoaderRequest.progress({
+                                    httpRequest.onprogress({
                                         lengthComputable: false,
                                         noTrace: true
                                     });
@@ -294,18 +263,18 @@ function FetchLoader() {
                             }
                         }
 
-                        _read(httpLoaderRequest, _processResult);
+                        _read(httpRequest, httpResponse, _processResult);
                     })
                     .catch(function (e) {
-                        if (httpLoaderRequest.onerror) {
-                            httpLoaderRequest.onerror(e);
+                        if (httpRequest.onerror) {
+                            httpRequest.onerror(e);
                         }
                     });
             });
     }
 
 
-    function _aastProcessResponse(markBeforeFetch, request, requestTime, throughputCapacityDelayMS, responseHeaders, httpLoaderRequest, response) {
+    function _aastProcessResponse(markBeforeFetch, requestObject, requestTime, throughputCapacityDelayMS, responseHeaders, httpRequest, response) {
         let markA = markBeforeFetch;
         let markB = 0;
 
@@ -327,7 +296,7 @@ function FetchLoader() {
                             chunkDownloadDurationMS,
                             chunkBytes,
                             kbps: Math.round(8 * chunkBytes / (chunkDownloadDurationMS / 1000)),
-                            bufferLevel: dashMetrics.getCurrentBufferLevel(request.mediaType)
+                            bufferLevel: dashMetrics.getCurrentBufferLevel(requestObject.mediaType)
                         });
                     }
 
@@ -336,13 +305,13 @@ function FetchLoader() {
                         const fetchDuration = markB - markBeforeFetch;
                         const bytesAllChunks = measurement.reduce((prev, curr) => prev + curr.chunkBytes, 0);
 
-                        aastLowLatencyThroughputModel.addMeasurement(request, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
+                        aastLowLatencyThroughputModel.addMeasurement(requestObject, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
 
-                        httpLoaderRequest.progress({
+                        httpRequest.progress({
                             loaded: bytesAllChunks,
                             total: bytesAllChunks,
                             lengthComputable: true,
-                            time: aastLowLatencyThroughputModel.getEstimatedDownloadDurationMS(request)
+                            time: aastLowLatencyThroughputModel.getEstimatedDownloadDurationMS(requestObject)
                         });
                         return;
                     }
@@ -355,7 +324,7 @@ function FetchLoader() {
         // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/tee
         const [forMeasure, forConsumer] = response.body.tee();
         fetchMeassurement(forMeasure);
-        httpLoaderRequest.reader = forConsumer.getReader();
+        httpRequest.customData.reader = forConsumer.getReader();
     }
 
     /**
@@ -364,11 +333,11 @@ function FetchLoader() {
      * @param processResult
      * @private
      */
-    function _read(httpRequest, processResult) {
-        httpRequest.reader.read()
+    function _read(httpRequest, httpResponse, processResult) {
+        httpRequest.customData.reader.read()
             .then(processResult)
             .catch(function (e) {
-                if (httpRequest.onerror && httpRequest.response.status === 200) {
+                if (httpRequest.onerror && httpResponse.status === 200) {
                     // Error, but response code is 200, trigger error
                     httpRequest.onerror(e);
                 }
@@ -399,15 +368,16 @@ function FetchLoader() {
      * Use the AbortController to abort a request
      * @param request
      */
-    function abort(request) {
-        if (request.abortController) {
+    function abort() {
+        // this = httpRequest (CommonMediaRequest)
+        if (this.customData.abortController) {
             // For firefox and edge
-            request.abortController.abort();
-        } else if (request.reader) {
+            this.customData.abortController.abort();
+        } else if (this.customData.reader) {
             // For Chrome
             try {
-                request.reader.cancel();
-                request.onabort();
+                this.customData.reader.cancel();
+                this.onabort();
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
