@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+    <title>Dash.js TS</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="dist/app.js"></script>
+
+    <style>
+      video {
+        background-color: #000000;
+      }
+    </style>
+</head>
+
+<body>
+  <h3>CommonRequestPlugin for dash.js</h3>
+  <div class="video-player">
+    <video width="480" controls></video>
+  </div>
+  <button onclick="play()">Play</button>
+  <button onclick="stop()">Stop</button>
+
+<script>
+  var myApp
+
+  document.addEventListener('DOMContentLoaded', function () {
+    myApp = new app.App()
+  })
+  
+  function play() {
+    myApp.play()
+  }
+
+  function stop() {
+    myApp.stop()
+  }
+</script>
+</body>
+
+</html>
