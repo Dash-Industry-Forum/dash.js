@@ -1,4 +1,4 @@
-import * as CommonMediaLibrary from '@svta.org/common-media-library';
+import * as CommonMediaLibrary from '@svta/common-media-library';
 
 export = dashjs;
 export as namespace dashjs;
