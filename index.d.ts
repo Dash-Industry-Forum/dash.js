@@ -758,8 +758,6 @@ declare namespace dashjs {
         addHttpRequest(request: HTTPRequest, responseURL: string, responseStatus: number, responseHeaders: object, traces: object): void;
 
         addManifestUpdateRepresentationInfo(representation: Representation, mediaType: MediaType): void;
-        
-        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -989,6 +987,8 @@ declare namespace dashjs {
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
+                mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -1044,6 +1044,7 @@ declare namespace dashjs {
                 enabled?: boolean;
                 ttl?: number;
             };
+            saveLastMediaSettingsForCurrentStreamingSession?: boolean;
             cacheLoadThresholds?: {
                 video?: number;
                 audio?: number;
@@ -1288,6 +1289,8 @@ declare namespace dashjs {
 
         getDVRSeekOffset(value: number): number;
 
+        getTargetLiveDelay(): number;
+
         convertToTimeCode(value: number): string;
 
         formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
@@ -1305,6 +1308,8 @@ declare namespace dashjs {
         getVideoElement(): HTMLVideoElement;
 
         getSource(): string | object;
+
+        updateSource(urlOrManifest: string | object): void;
 
         getCurrentLiveLatency(): number;
 
@@ -1344,7 +1349,7 @@ declare namespace dashjs {
 
         getInitialMediaSettingsFor(type: MediaType): MediaSettings;
 
-        setCurrentTrack(track: MediaInfo): void;
+        setCurrentTrack(track: MediaInfo, noSettingsSave?: boolean): void;
 
         addABRCustomRule(type: string, rulename: string, rule: object): void;
 
@@ -4067,7 +4072,7 @@ declare namespace dashjs {
         startTime: number;
         timescale: number;
         type: 'InitializationSegment' | 'MediaSegment' | null;
-        url: string;
+        url: string | null;
         wallStartTime: number | null;
     }
 

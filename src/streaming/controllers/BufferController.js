@@ -343,6 +343,9 @@ function BufferController(config) {
      * @private
      */
     function _appendToBuffer(chunk, request = null) {
+        if (!sourceBufferSink) {
+            return;
+        }
         sourceBufferSink.append(chunk, request)
             .then((e) => {
                 _onAppended(e);
@@ -761,6 +764,9 @@ function BufferController(config) {
     }
 
     function getRangeAt(time, tolerance) {
+        if (!sourceBufferSink) {
+            return null;
+        }
         const ranges = sourceBufferSink.getAllBufferRanges();
         let start = 0;
         let end = 0;
@@ -1012,6 +1018,10 @@ function BufferController(config) {
 
     function _onRemoved(e) {
         logger.debug('onRemoved buffer from:', e.from, 'to', e.to);
+
+        if (!sourceBufferSink) {
+            return;
+        }
 
         const ranges = sourceBufferSink.getAllBufferRanges();
         _showBufferRanges(ranges);
