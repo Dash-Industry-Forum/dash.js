@@ -7,21 +7,18 @@
 		exports["dashjs"] = factory();
 	else
 		root["dashjs"] = factory();
-})(self, () => {
-return /******/ (() => { // webpackBootstrap
+})(self, function() {
+return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./src/core/FactoryMaker.js":
 /*!**********************************!*\
   !*** ./src/core/FactoryMaker.js ***!
   \**********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -301,7 +298,7 @@ var FactoryMaker = function () {
   return instance;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FactoryMaker);
+/* harmony default export */ __webpack_exports__["default"] = (FactoryMaker);
 
 /***/ }),
 
@@ -309,13 +306,10 @@ var FactoryMaker = function () {
 /*!***************************!*\
   !*** ./src/core/Utils.js ***!
   \***************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path_browserify__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
@@ -553,7 +547,7 @@ var Utils = /*#__PURE__*/function () {
   return Utils;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Utils);
+/* harmony default export */ __webpack_exports__["default"] = (Utils);
 
 /***/ }),
 
@@ -561,13 +555,10 @@ var Utils = /*#__PURE__*/function () {
 /*!***************************************!*\
   !*** ./src/core/errors/ErrorsBase.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -632,7 +623,7 @@ var ErrorsBase = /*#__PURE__*/function () {
   return ErrorsBase;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ErrorsBase);
+/* harmony default export */ __webpack_exports__["default"] = (ErrorsBase);
 
 /***/ }),
 
@@ -640,13 +631,10 @@ var ErrorsBase = /*#__PURE__*/function () {
 /*!***************************************!*\
   !*** ./src/core/events/EventsBase.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -711,7 +699,7 @@ var EventsBase = /*#__PURE__*/function () {
   return EventsBase;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EventsBase);
+/* harmony default export */ __webpack_exports__["default"] = (EventsBase);
 
 /***/ }),
 
@@ -719,13 +707,10 @@ var EventsBase = /*#__PURE__*/function () {
 /*!**********************************************!*\
   !*** ./src/streaming/constants/Constants.js ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -1048,7 +1033,7 @@ var Constants = /*#__PURE__*/function () {
 }();
 
 var constants = new Constants();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);
+/* harmony default export */ __webpack_exports__["default"] = (constants);
 
 /***/ }),
 
@@ -1056,13 +1041,10 @@ var constants = new Constants();
 /*!********************************************************!*\
   !*** ./src/streaming/constants/ProtectionConstants.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -1129,7 +1111,7 @@ var ProtectionConstants = /*#__PURE__*/function () {
 }();
 
 var constants = new ProtectionConstants();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);
+/* harmony default export */ __webpack_exports__["default"] = (constants);
 
 /***/ }),
 
@@ -1137,13 +1119,10 @@ var constants = new ProtectionConstants();
 /*!******************************************************!*\
   !*** ./src/streaming/protection/CommonEncryption.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -1452,7 +1431,7 @@ var CommonEncryption = /*#__PURE__*/function () {
   return CommonEncryption;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (CommonEncryption);
+/* harmony default export */ __webpack_exports__["default"] = (CommonEncryption);
 
 /***/ }),
 
@@ -1460,13 +1439,10 @@ var CommonEncryption = /*#__PURE__*/function () {
 /*!******************************************************!*\
   !*** ./src/streaming/protection/ProtectionEvents.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/events/EventsBase */ "./src/core/events/EventsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -1683,7 +1659,7 @@ var ProtectionEvents = /*#__PURE__*/function (_EventsBase) {
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var protectionEvents = new ProtectionEvents();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (protectionEvents);
+/* harmony default export */ __webpack_exports__["default"] = (protectionEvents);
 
 /***/ }),
 
@@ -1691,13 +1667,10 @@ var protectionEvents = new ProtectionEvents();
 /*!**********************************************************************!*\
   !*** ./src/streaming/protection/controllers/ProtectionController.js ***!
   \**********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
 /* harmony import */ var _vo_MediaCapability__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/MediaCapability */ "./src/streaming/protection/vo/MediaCapability.js");
 /* harmony import */ var _vo_KeySystemConfiguration__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/KeySystemConfiguration */ "./src/streaming/protection/vo/KeySystemConfiguration.js");
@@ -2885,7 +2858,7 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_10__["default"].getClassFactory(ProtectionController));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_10__["default"].getClassFactory(ProtectionController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -2894,13 +2867,10 @@ ProtectionController.__dashjs_factory_name = 'ProtectionController';
 /*!*************************************************************************!*\
   !*** ./src/streaming/protection/controllers/ProtectionKeyController.js ***!
   \*************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
 /* harmony import */ var _drm_KeySystemClearKey__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../drm/KeySystemClearKey */ "./src/streaming/protection/drm/KeySystemClearKey.js");
 /* harmony import */ var _drm_KeySystemW3CClearKey__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../drm/KeySystemW3CClearKey */ "./src/streaming/protection/drm/KeySystemW3CClearKey.js");
@@ -3323,7 +3293,7 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3332,13 +3302,10 @@ ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
 /*!***********************************************************!*\
   !*** ./src/streaming/protection/drm/KeySystemClearKey.js ***!
   \***********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_KeyPair__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/KeyPair */ "./src/streaming/protection/vo/KeyPair.js");
 /* harmony import */ var _vo_ClearKeyKeySet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/ClearKeyKeySet */ "./src/streaming/protection/vo/ClearKeyKeySet.js");
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
@@ -3487,7 +3454,7 @@ function KeySystemClearKey(config) {
 }
 
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3496,13 +3463,10 @@ KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
 /*!************************************************************!*\
   !*** ./src/streaming/protection/drm/KeySystemPlayReady.js ***!
   \************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
 /* harmony import */ var _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/ProtectionConstants */ "./src/streaming/constants/ProtectionConstants.js");
 /**
@@ -3797,7 +3761,7 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3806,13 +3770,10 @@ KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
 /*!**************************************************************!*\
   !*** ./src/streaming/protection/drm/KeySystemW3CClearKey.js ***!
   \**************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_KeyPair__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/KeyPair */ "./src/streaming/protection/vo/KeyPair.js");
 /* harmony import */ var _vo_ClearKeyKeySet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/ClearKeyKeySet */ "./src/streaming/protection/vo/ClearKeyKeySet.js");
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
@@ -3933,7 +3894,7 @@ function KeySystemW3CClearKey(config) {
 }
 
 KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3942,13 +3903,10 @@ KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
 /*!***********************************************************!*\
   !*** ./src/streaming/protection/drm/KeySystemWidevine.js ***!
   \***********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _CommonEncryption__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../CommonEncryption */ "./src/streaming/protection/CommonEncryption.js");
 /* harmony import */ var _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/ProtectionConstants */ "./src/streaming/constants/ProtectionConstants.js");
 /**
@@ -4033,7 +3991,7 @@ function KeySystemWidevine(config) {
 }
 
 KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4042,13 +4000,10 @@ KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
 /*!*************************************************************!*\
   !*** ./src/streaming/protection/errors/ProtectionErrors.js ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/errors/ErrorsBase */ "./src/core/errors/ErrorsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -4210,7 +4165,7 @@ var ProtectionErrors = /*#__PURE__*/function (_ErrorsBase) {
 }(_core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var protectionErrors = new ProtectionErrors();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (protectionErrors);
+/* harmony default export */ __webpack_exports__["default"] = (protectionErrors);
 
 /***/ }),
 
@@ -4218,13 +4173,10 @@ var protectionErrors = new ProtectionErrors();
 /*!****************************************************************!*\
   !*** ./src/streaming/protection/models/ProtectionModel_01b.js ***!
   \****************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _controllers_ProtectionKeyController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../controllers/ProtectionKeyController */ "./src/streaming/protection/controllers/ProtectionKeyController.js");
 /* harmony import */ var _vo_NeedKey__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/NeedKey */ "./src/streaming/protection/vo/NeedKey.js");
 /* harmony import */ var _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
@@ -4703,7 +4655,7 @@ function ProtectionModel_01b(config) {
 }
 
 ProtectionModel_01b.__dashjs_factory_name = 'ProtectionModel_01b';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_01b));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_01b));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4712,13 +4664,10 @@ ProtectionModel_01b.__dashjs_factory_name = 'ProtectionModel_01b';
 /*!**********************************************************************!*\
   !*** ./src/streaming/protection/models/ProtectionModel_21Jan2015.js ***!
   \**********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _controllers_ProtectionKeyController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../controllers/ProtectionKeyController */ "./src/streaming/protection/controllers/ProtectionKeyController.js");
 /* harmony import */ var _vo_NeedKey__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/NeedKey */ "./src/streaming/protection/vo/NeedKey.js");
 /* harmony import */ var _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../errors/ProtectionErrors */ "./src/streaming/protection/errors/ProtectionErrors.js");
@@ -4822,15 +4771,9 @@ function ProtectionModel_21Jan2015(config) {
           session = sessions[i];
 
           (function (s) {
-            // Override closed promise resolver
-            session.session.closed.then(function () {
-              done(s);
-            }); // Close the session and handle errors, otherwise promise
-            // resolver above will be called
+            _closeKeySessionInternal(session);
 
-            _closeKeySessionInternal(session)["catch"](function () {
-              done(s);
-            });
+            done(s);
           })(session);
         }
       })();
@@ -4847,9 +4790,9 @@ function ProtectionModel_21Jan2015(config) {
       session = sessions[i];
 
       if (!session.getUsable()) {
-        _closeKeySessionInternal(session)["catch"](function () {
-          removeSession(session);
-        });
+        _closeKeySessionInternal(session);
+
+        removeSession(session);
       }
     }
   }
@@ -5145,6 +5088,10 @@ function ProtectionModel_21Jan2015(config) {
   }
 
   function _closeKeySessionInternal(sessionToken) {
+    if (!sessionToken || !sessionToken.session) {
+      return Promise.resolve;
+    }
+
     var session = sessionToken.session; // Remove event listeners
 
     session.removeEventListener('keystatuseschange', sessionToken);
@@ -5319,7 +5266,7 @@ function ProtectionModel_21Jan2015(config) {
 }
 
 ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5328,13 +5275,10 @@ ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
 /*!*********************************************************************!*\
   !*** ./src/streaming/protection/models/ProtectionModel_3Feb2014.js ***!
   \*********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _controllers_ProtectionKeyController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../controllers/ProtectionKeyController */ "./src/streaming/protection/controllers/ProtectionKeyController.js");
 /* harmony import */ var _vo_NeedKey__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/NeedKey */ "./src/streaming/protection/vo/NeedKey.js");
 /* harmony import */ var _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
@@ -5757,7 +5701,7 @@ function ProtectionModel_3Feb2014(config) {
 }
 
 ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_3Feb2014));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(ProtectionModel_3Feb2014));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5766,13 +5710,10 @@ ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
 /*!******************************************************!*\
   !*** ./src/streaming/protection/servers/ClearKey.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_KeyPair__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/KeyPair */ "./src/streaming/protection/vo/KeyPair.js");
 /* harmony import */ var _vo_ClearKeyKeySet__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/ClearKeyKeySet */ "./src/streaming/protection/vo/ClearKeyKeySet.js");
 /**
@@ -5871,7 +5812,7 @@ function ClearKey() {
 }
 
 ClearKey.__dashjs_factory_name = 'ClearKey';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(ClearKey));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(ClearKey));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5880,13 +5821,10 @@ ClearKey.__dashjs_factory_name = 'ClearKey';
 /*!******************************************************!*\
   !*** ./src/streaming/protection/servers/DRMToday.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _constants_ProtectionConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/ProtectionConstants */ "./src/streaming/constants/ProtectionConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -5997,7 +5935,7 @@ function DRMToday(config) {
 }
 
 DRMToday.__dashjs_factory_name = 'DRMToday';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(DRMToday));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(DRMToday));
 /* jshint ignore:line */
 
 /***/ }),
@@ -6006,13 +5944,10 @@ DRMToday.__dashjs_factory_name = 'DRMToday';
 /*!*******************************************************!*\
   !*** ./src/streaming/protection/servers/PlayReady.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -6166,7 +6101,7 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(PlayReady));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(PlayReady));
 /* jshint ignore:line */
 
 /***/ }),
@@ -6175,13 +6110,10 @@ PlayReady.__dashjs_factory_name = 'PlayReady';
 /*!******************************************************!*\
   !*** ./src/streaming/protection/servers/Widevine.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -6256,7 +6188,7 @@ function Widevine() {
 }
 
 Widevine.__dashjs_factory_name = 'Widevine';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(Widevine));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(Widevine));
 /* jshint ignore:line */
 
 /***/ }),
@@ -6265,13 +6197,10 @@ Widevine.__dashjs_factory_name = 'Widevine';
 /*!*******************************************************!*\
   !*** ./src/streaming/protection/vo/ClearKeyKeySet.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -6376,7 +6305,7 @@ var ClearKeyKeySet = /*#__PURE__*/function () {
   return ClearKeyKeySet;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ClearKeyKeySet);
+/* harmony default export */ __webpack_exports__["default"] = (ClearKeyKeySet);
 
 /***/ }),
 
@@ -6384,13 +6313,10 @@ var ClearKeyKeySet = /*#__PURE__*/function () {
 /*!***************************************************!*\
   !*** ./src/streaming/protection/vo/KeyMessage.js ***!
   \***************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6447,7 +6373,7 @@ function KeyMessage(sessionToken, message, defaultURL, messageType) {
   this.messageType = messageType ? messageType : 'license-request';
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (KeyMessage);
+/* harmony default export */ __webpack_exports__["default"] = (KeyMessage);
 
 /***/ }),
 
@@ -6455,13 +6381,10 @@ function KeyMessage(sessionToken, message, defaultURL, messageType) {
 /*!************************************************!*\
   !*** ./src/streaming/protection/vo/KeyPair.js ***!
   \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6513,7 +6436,7 @@ function KeyPair(keyID, key) {
   this.key = key;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (KeyPair);
+/* harmony default export */ __webpack_exports__["default"] = (KeyPair);
 
 /***/ }),
 
@@ -6521,13 +6444,10 @@ function KeyPair(keyID, key) {
 /*!********************************************************!*\
   !*** ./src/streaming/protection/vo/KeySystemAccess.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6583,7 +6503,7 @@ function KeySystemAccess(keySystem, ksConfiguration) {
   this.ksConfiguration = ksConfiguration;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (KeySystemAccess);
+/* harmony default export */ __webpack_exports__["default"] = (KeySystemAccess);
 
 /***/ }),
 
@@ -6591,13 +6511,10 @@ function KeySystemAccess(keySystem, ksConfiguration) {
 /*!***************************************************************!*\
   !*** ./src/streaming/protection/vo/KeySystemConfiguration.js ***!
   \***************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6670,7 +6587,7 @@ function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiv
   this.sessionTypes = sessionTypes;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (KeySystemConfiguration);
+/* harmony default export */ __webpack_exports__["default"] = (KeySystemConfiguration);
 
 /***/ }),
 
@@ -6678,13 +6595,10 @@ function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiv
 /*!*******************************************************!*\
   !*** ./src/streaming/protection/vo/LicenseRequest.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6772,7 +6686,7 @@ function LicenseRequest(url, method, responseType, headers, withCredentials, mes
   this.data = data;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (LicenseRequest);
+/* harmony default export */ __webpack_exports__["default"] = (LicenseRequest);
 
 /***/ }),
 
@@ -6780,13 +6694,10 @@ function LicenseRequest(url, method, responseType, headers, withCredentials, mes
 /*!********************************************************!*\
   !*** ./src/streaming/protection/vo/LicenseResponse.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6849,7 +6760,7 @@ function LicenseResponse(url, headers, data) {
   this.data = data;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (LicenseResponse);
+/* harmony default export */ __webpack_exports__["default"] = (LicenseResponse);
 
 /***/ }),
 
@@ -6857,13 +6768,10 @@ function LicenseResponse(url, headers, data) {
 /*!********************************************************!*\
   !*** ./src/streaming/protection/vo/MediaCapability.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6915,7 +6823,7 @@ function MediaCapability(contentType, robustness) {
   this.robustness = robustness;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (MediaCapability);
+/* harmony default export */ __webpack_exports__["default"] = (MediaCapability);
 
 /***/ }),
 
@@ -6923,13 +6831,10 @@ function MediaCapability(contentType, robustness) {
 /*!************************************************!*\
   !*** ./src/streaming/protection/vo/NeedKey.js ***!
   \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -6980,7 +6885,7 @@ function NeedKey(initData, initDataType) {
   this.initDataType = initDataType;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (NeedKey);
+/* harmony default export */ __webpack_exports__["default"] = (NeedKey);
 
 /***/ }),
 
@@ -6988,13 +6893,10 @@ function NeedKey(initData, initDataType) {
 /*!*****************************************!*\
   !*** ./src/streaming/vo/DashJSError.js ***!
   \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -7040,7 +6942,7 @@ var DashJSError = function DashJSError(code, message, data) {
   this.data = data || null;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DashJSError);
+/* harmony default export */ __webpack_exports__["default"] = (DashJSError);
 
 /***/ }),
 
@@ -7048,13 +6950,13 @@ var DashJSError = function DashJSError(code, message, data) {
 /*!*************************************************!*\
   !*** ./src/streaming/vo/metrics/HTTPRequest.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "HTTPRequest": () => (/* binding */ HTTPRequest),
-/* harmony export */   "HTTPRequestTrace": () => (/* binding */ HTTPRequestTrace)
+/* harmony export */   "HTTPRequest": function() { return /* binding */ HTTPRequest; },
+/* harmony export */   "HTTPRequestTrace": function() { return /* binding */ HTTPRequestTrace; }
 /* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -7270,7 +7172,7 @@ HTTPRequest.OTHER_TYPE = 'other';
 /*!***********************************************!*\
   !*** ./node_modules/path-browserify/index.js ***!
   \***********************************************/
-/***/ ((module) => {
+/***/ (function(module) {
 
 "use strict";
 // 'path' module extracted from Node.js v8.11.1 (only the posix part)
@@ -8719,62 +8621,59 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/amd options */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		__webpack_require__.amdO = {};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = (module) => {
+/******/ 		__webpack_require__.n = function(module) {
 /******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
+/******/ 				function() { return module['default']; } :
+/******/ 				function() { return module; };
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 		__webpack_require__.d = function(exports, definition) {
 /******/ 			for(var key in definition) {
 /******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
+/******/ 		__webpack_require__.r = function(exports) {
 /******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
 /******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
+!function() {
 "use strict";
 /*!************************************************!*\
   !*** ./src/streaming/protection/Protection.js ***!
   \************************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _controllers_ProtectionController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./controllers/ProtectionController */ "./src/streaming/protection/controllers/ProtectionController.js");
 /* harmony import */ var _controllers_ProtectionKeyController__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./controllers/ProtectionKeyController */ "./src/streaming/protection/controllers/ProtectionKeyController.js");
 /* harmony import */ var _ProtectionEvents__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ProtectionEvents */ "./src/streaming/protection/ProtectionEvents.js");
@@ -8984,9 +8883,8 @@ factory.errors = _errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"
 dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory);
 /* jshint ignore:line */
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
-})();
-
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+}();
 __webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()

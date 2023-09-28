@@ -7,21 +7,18 @@
 		exports["dashjs"] = factory();
 	else
 		root["dashjs"] = factory();
-})(self, () => {
-return /******/ (() => { // webpackBootstrap
+})(self, function() {
+return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./src/core/Debug.js":
 /*!***************************!*\
   !*** ./src/core/Debug.js ***!
   \***************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _EventBus__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventBus */ "./src/core/EventBus.js");
 /* harmony import */ var _events_Events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./events/Events */ "./src/core/events/Events.js");
 /* harmony import */ var _FactoryMaker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./FactoryMaker */ "./src/core/FactoryMaker.js");
@@ -244,7 +241,7 @@ factory.LOG_LEVEL_WARNING = LOG_LEVEL_WARNING;
 factory.LOG_LEVEL_INFO = LOG_LEVEL_INFO;
 factory.LOG_LEVEL_DEBUG = LOG_LEVEL_DEBUG;
 _FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].updateSingletonFactory(Debug.__dashjs_factory_name, factory);
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
 
@@ -252,13 +249,10 @@ _FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].updateSingletonFactory(Deb
 /*!******************************!*\
   !*** ./src/core/EventBus.js ***!
   \******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
 /**
@@ -420,7 +414,7 @@ var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingleton
 factory.EVENT_PRIORITY_LOW = EVENT_PRIORITY_LOW;
 factory.EVENT_PRIORITY_HIGH = EVENT_PRIORITY_HIGH;
 _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].updateSingletonFactory(EventBus.__dashjs_factory_name, factory);
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
 
@@ -428,13 +422,10 @@ _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].updateSingletonFactory(Eve
 /*!**********************************!*\
   !*** ./src/core/FactoryMaker.js ***!
   \**********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -714,7 +705,7 @@ var FactoryMaker = function () {
   return instance;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FactoryMaker);
+/* harmony default export */ __webpack_exports__["default"] = (FactoryMaker);
 
 /***/ }),
 
@@ -722,13 +713,10 @@ var FactoryMaker = function () {
 /*!******************************!*\
   !*** ./src/core/Settings.js ***!
   \******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _Utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Utils.js */ "./src/core/Utils.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/Debug */ "./src/core/Debug.js");
@@ -847,7 +835,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true
+ *                useChangeTypeForTrackSwitch: true,
+ *                mediaSourceDurationInfinity: true,
+ *                resetSourceBuffersForTrackSwitch: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -894,6 +884,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+ *            saveLastMediaSettingsForCurrentStreamingSession: true,
  *            cacheLoadThresholds: { video: 50, audio: 5 },
  *            trackSwitchMode: {
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
@@ -1068,6 +1059,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {boolean} [useChangeTypeForTrackSwitch=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
  * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
+ * @property {boolean} [mediaSourceDurationInfinity=true]
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely. 
+ * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
+ * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
+ * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
+ * that does not properly implement "changeType()", such as webOS 4.0 and before.
  */
 
 /**
@@ -1472,6 +1469,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * The default expiration is one hour, defined in milliseconds.
  *
  * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will be stored during that session.
+ * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
+ * Set to false if you would like to disable the last media settings from being stored to localStorage during playback and used to set the initial track for subsequent playback within the expiration window.
+ *
+ * The default expiration is one hour, defined in milliseconds.
+ * @property {boolean} [saveLastMediaSettingsForCurrentStreamingSession=true]
+ * Set to true if dash.js should save media settings from last selected track for incoming track selection during current streaming session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
  * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
@@ -1609,7 +1612,9 @@ function Settings() {
         useAppendWindow: true,
         setStallState: true,
         avoidCurrentTimeRangePruning: false,
-        useChangeTypeForTrackSwitch: true
+        useChangeTypeForTrackSwitch: true,
+        mediaSourceDurationInfinity: true,
+        resetSourceBuffersForTrackSwitch: false
       },
       gaps: {
         jumpGaps: true,
@@ -1665,6 +1670,7 @@ function Settings() {
         enabled: true,
         ttl: 360000
       },
+      saveLastMediaSettingsForCurrentStreamingSession: true,
       cacheLoadThresholds: {
         video: 50,
         audio: 5
@@ -1814,7 +1820,7 @@ function Settings() {
 
 Settings.__dashjs_factory_name = 'Settings';
 var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(Settings);
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
 
@@ -1822,13 +1828,10 @@ var factory = _FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getSingleton
 /*!***************************!*\
   !*** ./src/core/Utils.js ***!
   \***************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path_browserify__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
@@ -2066,7 +2069,7 @@ var Utils = /*#__PURE__*/function () {
   return Utils;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Utils);
+/* harmony default export */ __webpack_exports__["default"] = (Utils);
 
 /***/ }),
 
@@ -2074,13 +2077,10 @@ var Utils = /*#__PURE__*/function () {
 /*!***************************************!*\
   !*** ./src/core/events/CoreEvents.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventsBase */ "./src/core/events/EventsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -2205,7 +2205,7 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
   return CoreEvents;
 }(_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (CoreEvents);
+/* harmony default export */ __webpack_exports__["default"] = (CoreEvents);
 
 /***/ }),
 
@@ -2213,13 +2213,10 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
 /*!***********************************!*\
   !*** ./src/core/events/Events.js ***!
   \***********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _CoreEvents__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CoreEvents */ "./src/core/events/CoreEvents.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -2291,7 +2288,7 @@ var Events = /*#__PURE__*/function (_CoreEvents) {
 }(_CoreEvents__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var events = new Events();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (events);
+/* harmony default export */ __webpack_exports__["default"] = (events);
 
 /***/ }),
 
@@ -2299,13 +2296,10 @@ var events = new Events();
 /*!***************************************!*\
   !*** ./src/core/events/EventsBase.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -2370,7 +2364,7 @@ var EventsBase = /*#__PURE__*/function () {
   return EventsBase;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EventsBase);
+/* harmony default export */ __webpack_exports__["default"] = (EventsBase);
 
 /***/ }),
 
@@ -2378,13 +2372,10 @@ var EventsBase = /*#__PURE__*/function () {
 /*!**********************************!*\
   !*** ./src/dash/vo/UTCTiming.js ***!
   \**********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -2430,7 +2421,7 @@ var UTCTiming = function UTCTiming() {
   this.value = '';
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (UTCTiming);
+/* harmony default export */ __webpack_exports__["default"] = (UTCTiming);
 
 /***/ }),
 
@@ -2438,13 +2429,10 @@ var UTCTiming = function UTCTiming() {
 /*!********************************************!*\
   !*** ./src/streaming/MediaPlayerEvents.js ***!
   \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/events/EventsBase */ "./src/core/events/EventsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -2921,7 +2909,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var mediaPlayerEvents = new MediaPlayerEvents();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (mediaPlayerEvents);
+/* harmony default export */ __webpack_exports__["default"] = (mediaPlayerEvents);
 
 /***/ }),
 
@@ -2929,13 +2917,10 @@ var mediaPlayerEvents = new MediaPlayerEvents();
 /*!**********************************************!*\
   !*** ./src/streaming/constants/Constants.js ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -3258,7 +3243,7 @@ var Constants = /*#__PURE__*/function () {
 }();
 
 var constants = new Constants();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);
+/* harmony default export */ __webpack_exports__["default"] = (constants);
 
 /***/ }),
 
@@ -3266,13 +3251,10 @@ var constants = new Constants();
 /*!*****************************************************!*\
   !*** ./src/streaming/constants/MetricsConstants.js ***!
   \*****************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -3351,7 +3333,7 @@ var MetricsConstants = /*#__PURE__*/function () {
 }();
 
 var constants = new MetricsConstants();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);
+/* harmony default export */ __webpack_exports__["default"] = (constants);
 
 /***/ }),
 
@@ -3359,13 +3341,10 @@ var constants = new MetricsConstants();
 /*!*********************************************************!*\
   !*** ./src/streaming/metrics/MetricsReportingEvents.js ***!
   \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/events/EventsBase */ "./src/core/events/EventsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -3447,7 +3426,7 @@ var MetricsReportingEvents = /*#__PURE__*/function (_EventsBase) {
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var metricsReportingEvents = new MetricsReportingEvents();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (metricsReportingEvents);
+/* harmony default export */ __webpack_exports__["default"] = (metricsReportingEvents);
 
 /***/ }),
 
@@ -3455,13 +3434,10 @@ var metricsReportingEvents = new MetricsReportingEvents();
 /*!**************************************************************************!*\
   !*** ./src/streaming/metrics/controllers/MetricsCollectionController.js ***!
   \**************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _MetricsController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MetricsController */ "./src/streaming/metrics/controllers/MetricsController.js");
 /* harmony import */ var _utils_ManifestParsing__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/ManifestParsing */ "./src/streaming/metrics/utils/ManifestParsing.js");
 /* harmony import */ var _MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../MetricsReportingEvents */ "./src/streaming/metrics/MetricsReportingEvents.js");
@@ -3566,7 +3542,7 @@ function MetricsCollectionController(config) {
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MetricsCollectionController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MetricsCollectionController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3575,13 +3551,10 @@ MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController
 /*!****************************************************************!*\
   !*** ./src/streaming/metrics/controllers/MetricsController.js ***!
   \****************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _RangeController__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./RangeController */ "./src/streaming/metrics/controllers/RangeController.js");
 /* harmony import */ var _ReportingController__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ReportingController */ "./src/streaming/metrics/controllers/ReportingController.js");
 /* harmony import */ var _MetricsHandlersController__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MetricsHandlersController */ "./src/streaming/metrics/controllers/MetricsHandlersController.js");
@@ -3671,7 +3644,7 @@ function MetricsController(config) {
 }
 
 MetricsController.__dashjs_factory_name = 'MetricsController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MetricsController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MetricsController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3680,13 +3653,10 @@ MetricsController.__dashjs_factory_name = 'MetricsController';
 /*!************************************************************************!*\
   !*** ./src/streaming/metrics/controllers/MetricsHandlersController.js ***!
   \************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _metrics_MetricsHandlerFactory__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../metrics/MetricsHandlerFactory */ "./src/streaming/metrics/metrics/MetricsHandlerFactory.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -3782,7 +3752,7 @@ function MetricsHandlersController(config) {
 }
 
 MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MetricsHandlersController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MetricsHandlersController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3791,13 +3761,10 @@ MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
 /*!**************************************************************!*\
   !*** ./src/streaming/metrics/controllers/RangeController.js ***!
   \**************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _utils_CustomTimeRanges__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/CustomTimeRanges */ "./src/streaming/utils/CustomTimeRanges.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -3891,7 +3858,7 @@ function RangeController(config) {
 }
 
 RangeController.__dashjs_factory_name = 'RangeController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(RangeController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(RangeController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3900,13 +3867,10 @@ RangeController.__dashjs_factory_name = 'RangeController';
 /*!******************************************************************!*\
   !*** ./src/streaming/metrics/controllers/ReportingController.js ***!
   \******************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _reporting_ReportingFactory__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../reporting/ReportingFactory */ "./src/streaming/metrics/reporting/ReportingFactory.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -3982,7 +3946,7 @@ function ReportingController(config) {
 }
 
 ReportingController.__dashjs_factory_name = 'ReportingController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(ReportingController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(ReportingController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3991,13 +3955,10 @@ ReportingController.__dashjs_factory_name = 'ReportingController';
 /*!****************************************************************!*\
   !*** ./src/streaming/metrics/metrics/MetricsHandlerFactory.js ***!
   \****************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _handlers_BufferLevelHandler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./handlers/BufferLevelHandler */ "./src/streaming/metrics/metrics/handlers/BufferLevelHandler.js");
 /* harmony import */ var _handlers_DVBErrorsHandler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./handlers/DVBErrorsHandler */ "./src/streaming/metrics/metrics/handlers/DVBErrorsHandler.js");
 /* harmony import */ var _handlers_HttpListHandler__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./handlers/HttpListHandler */ "./src/streaming/metrics/metrics/handlers/HttpListHandler.js");
@@ -4092,7 +4053,7 @@ function MetricsHandlerFactory(config) {
 }
 
 MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4101,13 +4062,10 @@ MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
 /*!**********************************************************************!*\
   !*** ./src/streaming/metrics/metrics/handlers/BufferLevelHandler.js ***!
   \**********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _utils_HandlerHelpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/HandlerHelpers */ "./src/streaming/metrics/utils/HandlerHelpers.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4206,7 +4164,7 @@ function BufferLevelHandler(config) {
 }
 
 BufferLevelHandler.__dashjs_factory_name = 'BufferLevelHandler';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(BufferLevelHandler));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(BufferLevelHandler));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4215,13 +4173,10 @@ BufferLevelHandler.__dashjs_factory_name = 'BufferLevelHandler';
 /*!********************************************************************!*\
   !*** ./src/streaming/metrics/metrics/handlers/DVBErrorsHandler.js ***!
   \********************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../MetricsReportingEvents */ "./src/streaming/metrics/MetricsReportingEvents.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4297,7 +4252,7 @@ function DVBErrorsHandler(config) {
   return instance;
 }
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4306,13 +4261,10 @@ function DVBErrorsHandler(config) {
 /*!************************************************************************!*\
   !*** ./src/streaming/metrics/metrics/handlers/GenericMetricHandler.js ***!
   \************************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4378,7 +4330,7 @@ function GenericMetricHandler() {
 }
 
 GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(GenericMetricHandler));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(GenericMetricHandler));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4387,13 +4339,10 @@ GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
 /*!*******************************************************************!*\
   !*** ./src/streaming/metrics/metrics/handlers/HttpListHandler.js ***!
   \*******************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _utils_HandlerHelpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/HandlerHelpers */ "./src/streaming/metrics/utils/HandlerHelpers.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4488,7 +4437,7 @@ function HttpListHandler(config) {
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(HttpListHandler));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(HttpListHandler));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4497,13 +4446,10 @@ HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
 /*!*************************************************************!*\
   !*** ./src/streaming/metrics/reporting/ReportingFactory.js ***!
   \*************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _reporters_DVBReporting__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./reporters/DVBReporting */ "./src/streaming/metrics/reporting/reporters/DVBReporting.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4582,7 +4528,7 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(ReportingFactory));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(ReportingFactory));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4591,13 +4537,10 @@ ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
 /*!*******************************************************************!*\
   !*** ./src/streaming/metrics/reporting/reporters/DVBReporting.js ***!
   \*******************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _utils_MetricSerialiser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/MetricSerialiser */ "./src/streaming/metrics/utils/MetricSerialiser.js");
 /* harmony import */ var _utils_RNG__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils/RNG */ "./src/streaming/metrics/utils/RNG.js");
 /* harmony import */ var _models_CustomParametersModel__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../models/CustomParametersModel */ "./src/streaming/models/CustomParametersModel.js");
@@ -4782,7 +4725,7 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(DVBReporting));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(DVBReporting));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4791,13 +4734,10 @@ DVBReporting.__dashjs_factory_name = 'DVBReporting';
 /*!************************************************************!*\
   !*** ./src/streaming/metrics/utils/DVBErrorsTranslator.js ***!
   \************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_DVBErrors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/DVBErrors */ "./src/streaming/metrics/vo/DVBErrors.js");
 /* harmony import */ var _MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../MetricsReportingEvents */ "./src/streaming/metrics/MetricsReportingEvents.js");
 /**
@@ -4962,7 +4902,7 @@ function DVBErrorsTranslator(config) {
 }
 
 DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(DVBErrorsTranslator));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(DVBErrorsTranslator));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4971,13 +4911,10 @@ DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
 /*!*******************************************************!*\
   !*** ./src/streaming/metrics/utils/HandlerHelpers.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5050,7 +4987,7 @@ function HandlerHelpers() {
 }
 
 HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5059,13 +4996,10 @@ HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
 /*!********************************************************!*\
   !*** ./src/streaming/metrics/utils/ManifestParsing.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_Metrics__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/Metrics */ "./src/streaming/metrics/vo/Metrics.js");
 /* harmony import */ var _vo_Range__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/Range */ "./src/streaming/metrics/vo/Range.js");
 /* harmony import */ var _vo_Reporting__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/Reporting */ "./src/streaming/metrics/vo/Reporting.js");
@@ -5188,7 +5122,7 @@ function ManifestParsing(config) {
 }
 
 ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(ManifestParsing));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(ManifestParsing));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5197,13 +5131,10 @@ ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
 /*!*********************************************************!*\
   !*** ./src/streaming/metrics/utils/MetricSerialiser.js ***!
   \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5296,7 +5227,7 @@ function MetricSerialiser() {
 }
 
 MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(MetricSerialiser));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(MetricSerialiser));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5305,13 +5236,10 @@ MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
 /*!********************************************!*\
   !*** ./src/streaming/metrics/utils/RNG.js ***!
   \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5403,7 +5331,7 @@ function RNG() {
 }
 
 RNG.__dashjs_factory_name = 'RNG';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getSingletonFactory(RNG));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getSingletonFactory(RNG));
 /* jshint ignore:line */
 
 /***/ }),
@@ -5412,13 +5340,10 @@ RNG.__dashjs_factory_name = 'RNG';
 /*!***********************************************!*\
   !*** ./src/streaming/metrics/vo/DVBErrors.js ***!
   \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5511,7 +5436,7 @@ DVBErrors.CORRUPT_MEDIA_ISOBMFF = 'M00';
 DVBErrors.CORRUPT_MEDIA_OTHER = 'M01';
 DVBErrors.BASE_URL_CHANGED = 'F00';
 DVBErrors.BECAME_REPORTER = 'S00';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DVBErrors);
+/* harmony default export */ __webpack_exports__["default"] = (DVBErrors);
 
 /***/ }),
 
@@ -5519,13 +5444,10 @@ DVBErrors.BECAME_REPORTER = 'S00';
 /*!*********************************************!*\
   !*** ./src/streaming/metrics/vo/Metrics.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5571,7 +5493,7 @@ var Metrics = function Metrics() {
   this.Reporting = [];
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Metrics);
+/* harmony default export */ __webpack_exports__["default"] = (Metrics);
 
 /***/ }),
 
@@ -5579,13 +5501,10 @@ var Metrics = function Metrics() {
 /*!*******************************************!*\
   !*** ./src/streaming/metrics/vo/Range.js ***!
   \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5633,7 +5552,7 @@ var Range = function Range() {
   this._useWallClockTime = false;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Range);
+/* harmony default export */ __webpack_exports__["default"] = (Range);
 
 /***/ }),
 
@@ -5641,13 +5560,10 @@ var Range = function Range() {
 /*!***********************************************!*\
   !*** ./src/streaming/metrics/vo/Reporting.js ***!
   \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5698,7 +5614,7 @@ var Reporting = function Reporting() {
   this.dvb_probability = DEFAULT_DVB_PROBABILITY;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Reporting);
+/* harmony default export */ __webpack_exports__["default"] = (Reporting);
 
 /***/ }),
 
@@ -5706,13 +5622,10 @@ var Reporting = function Reporting() {
 /*!*******************************************************!*\
   !*** ./src/streaming/models/CustomParametersModel.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _dash_vo_UTCTiming__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../dash/vo/UTCTiming */ "./src/dash/vo/UTCTiming.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Settings__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings */ "./src/core/Settings.js");
@@ -6108,7 +6021,7 @@ function CustomParametersModel() {
 }
 
 CustomParametersModel.__dashjs_factory_name = 'CustomParametersModel';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(CustomParametersModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(CustomParametersModel));
 
 /***/ }),
 
@@ -6116,13 +6029,10 @@ CustomParametersModel.__dashjs_factory_name = 'CustomParametersModel';
 /*!**********************************************!*\
   !*** ./src/streaming/rules/SwitchRequest.js ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -6193,7 +6103,7 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClas
 factory.NO_CHANGE = NO_CHANGE;
 factory.PRIORITY = PRIORITY;
 _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].updateClassFactory(SwitchRequest.__dashjs_factory_name, factory);
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
 
@@ -6201,13 +6111,10 @@ _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].updateClassFactory(Sw
 /*!*******************************************************!*\
   !*** ./src/streaming/rules/abr/ABRRulesCollection.js ***!
   \*******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _ThroughputRule__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ThroughputRule */ "./src/streaming/rules/abr/ThroughputRule.js");
 /* harmony import */ var _InsufficientBufferRule__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./InsufficientBufferRule */ "./src/streaming/rules/abr/InsufficientBufferRule.js");
 /* harmony import */ var _AbandonRequestsRule__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AbandonRequestsRule */ "./src/streaming/rules/abr/AbandonRequestsRule.js");
@@ -6458,7 +6365,7 @@ var factory = _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_8__["default"].getClas
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_8__["default"].updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
 
@@ -6466,13 +6373,10 @@ _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_8__["default"].updateSingletonFactor
 /*!********************************************************!*\
   !*** ./src/streaming/rules/abr/AbandonRequestsRule.js ***!
   \********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/Debug */ "./src/core/Debug.js");
@@ -6633,7 +6537,7 @@ function AbandonRequestsRule(config) {
 }
 
 AbandonRequestsRule.__dashjs_factory_name = 'AbandonRequestsRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(AbandonRequestsRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(AbandonRequestsRule));
 
 /***/ }),
 
@@ -6641,13 +6545,10 @@ AbandonRequestsRule.__dashjs_factory_name = 'AbandonRequestsRule';
 /*!*********************************************!*\
   !*** ./src/streaming/rules/abr/BolaRule.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/MetricsConstants */ "./src/streaming/constants/MetricsConstants.js");
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
@@ -7195,7 +7096,7 @@ function BolaRule(config) {
 }
 
 BolaRule.__dashjs_factory_name = 'BolaRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(BolaRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(BolaRule));
 
 /***/ }),
 
@@ -7203,13 +7104,10 @@ BolaRule.__dashjs_factory_name = 'BolaRule';
 /*!******************************************************!*\
   !*** ./src/streaming/rules/abr/DroppedFramesRule.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/Debug */ "./src/core/Debug.js");
@@ -7277,7 +7175,7 @@ function DroppedFramesRule() {
 }
 
 DroppedFramesRule.__dashjs_factory_name = 'DroppedFramesRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(DroppedFramesRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(DroppedFramesRule));
 
 /***/ }),
 
@@ -7285,13 +7183,10 @@ DroppedFramesRule.__dashjs_factory_name = 'DroppedFramesRule';
 /*!***********************************************************!*\
   !*** ./src/streaming/rules/abr/InsufficientBufferRule.js ***!
   \***********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/EventBus */ "./src/core/EventBus.js");
 /* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/events/Events */ "./src/core/events/Events.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
@@ -7455,7 +7350,7 @@ function InsufficientBufferRule(config) {
 }
 
 InsufficientBufferRule.__dashjs_factory_name = 'InsufficientBufferRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(InsufficientBufferRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(InsufficientBufferRule));
 
 /***/ }),
 
@@ -7463,13 +7358,10 @@ InsufficientBufferRule.__dashjs_factory_name = 'InsufficientBufferRule';
 /*!********************************************!*\
   !*** ./src/streaming/rules/abr/L2ARule.js ***!
   \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _constants_MetricsConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/MetricsConstants */ "./src/streaming/constants/MetricsConstants.js");
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
@@ -7965,7 +7857,7 @@ function L2ARule(config) {
             l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
           }
 
-          l2AState.lastSegment.url = currentHttpRequest.url;
+          l2AState.lastSegmentUrl = currentHttpRequest.url;
         }
 
         switchRequest.quality = quality;
@@ -8023,7 +7915,7 @@ function L2ARule(config) {
 }
 
 L2ARule.__dashjs_factory_name = 'L2ARule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(L2ARule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(L2ARule));
 
 /***/ }),
 
@@ -8031,13 +7923,10 @@ L2ARule.__dashjs_factory_name = 'L2ARule';
 /*!******************************************************!*\
   !*** ./src/streaming/rules/abr/SwitchHistoryRule.js ***!
   \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/Debug */ "./src/core/Debug.js");
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
@@ -8097,7 +7986,7 @@ function SwitchHistoryRule() {
 }
 
 SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SwitchHistoryRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(SwitchHistoryRule));
 
 /***/ }),
 
@@ -8105,13 +7994,10 @@ SwitchHistoryRule.__dashjs_factory_name = 'SwitchHistoryRule';
 /*!***************************************************!*\
   !*** ./src/streaming/rules/abr/ThroughputRule.js ***!
   \***************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _SwitchRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SwitchRequest */ "./src/streaming/rules/SwitchRequest.js");
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../constants/Constants */ "./src/streaming/constants/Constants.js");
@@ -8216,7 +8102,7 @@ function ThroughputRule(config) {
 }
 
 ThroughputRule.__dashjs_factory_name = 'ThroughputRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ThroughputRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(ThroughputRule));
 
 /***/ }),
 
@@ -8224,13 +8110,10 @@ ThroughputRule.__dashjs_factory_name = 'ThroughputRule';
 /*!***************************************************************!*\
   !*** ./src/streaming/rules/abr/lolp/LearningAbrController.js ***!
   \***************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../core/Debug */ "./src/core/Debug.js");
 /**
@@ -8792,7 +8675,7 @@ function LearningAbrController() {
 }
 
 LearningAbrController.__dashjs_factory_name = 'LearningAbrController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LearningAbrController));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LearningAbrController));
 
 /***/ }),
 
@@ -8800,13 +8683,10 @@ LearningAbrController.__dashjs_factory_name = 'LearningAbrController';
 /*!**********************************************************!*\
   !*** ./src/streaming/rules/abr/lolp/LoLpQoEEvaluator.js ***!
   \**********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _QoeInfo__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./QoeInfo */ "./src/streaming/rules/abr/lolp/QoeInfo.js");
 /**
@@ -8993,7 +8873,7 @@ function LoLpQoeEvaluator() {
 }
 
 LoLpQoeEvaluator.__dashjs_factory_name = 'LoLpQoeEvaluator';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpQoeEvaluator));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpQoeEvaluator));
 
 /***/ }),
 
@@ -9001,13 +8881,10 @@ LoLpQoeEvaluator.__dashjs_factory_name = 'LoLpQoeEvaluator';
 /*!**************************************************!*\
   !*** ./src/streaming/rules/abr/lolp/LoLpRule.js ***!
   \**************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../core/Debug */ "./src/core/Debug.js");
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _LearningAbrController__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./LearningAbrController */ "./src/streaming/rules/abr/lolp/LearningAbrController.js");
@@ -9197,7 +9074,7 @@ function LoLPRule(config) {
 }
 
 LoLPRule.__dashjs_factory_name = 'LoLPRule';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(LoLPRule));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(LoLPRule));
 
 /***/ }),
 
@@ -9205,13 +9082,10 @@ LoLPRule.__dashjs_factory_name = 'LoLPRule';
 /*!************************************************************!*\
   !*** ./src/streaming/rules/abr/lolp/LoLpWeightSelector.js ***!
   \************************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -9472,7 +9346,7 @@ function LoLpWeightSelector(config) {
 }
 
 LoLpWeightSelector.__dashjs_factory_name = 'LoLpWeightSelector';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpWeightSelector));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(LoLpWeightSelector));
 
 /***/ }),
 
@@ -9480,13 +9354,10 @@ LoLpWeightSelector.__dashjs_factory_name = 'LoLpWeightSelector';
 /*!*************************************************!*\
   !*** ./src/streaming/rules/abr/lolp/QoeInfo.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -9553,7 +9424,7 @@ var QoeInfo = function QoeInfo() {
   this.totalQoe = 0;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (QoeInfo);
+/* harmony default export */ __webpack_exports__["default"] = (QoeInfo);
 
 /***/ }),
 
@@ -9561,13 +9432,10 @@ var QoeInfo = function QoeInfo() {
 /*!*************************************************!*\
   !*** ./src/streaming/utils/CustomTimeRanges.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
 /**
@@ -9739,7 +9607,7 @@ function CustomTimeRanges() {
 }
 
 CustomTimeRanges.__dashjs_factory_name = 'CustomTimeRanges';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(CustomTimeRanges));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(CustomTimeRanges));
 
 /***/ }),
 
@@ -9747,15 +9615,15 @@ CustomTimeRanges.__dashjs_factory_name = 'CustomTimeRanges';
 /*!************************************************!*\
   !*** ./src/streaming/utils/SupervisorTools.js ***!
   \************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "checkInteger": () => (/* binding */ checkInteger),
-/* harmony export */   "checkIsVideoOrAudioType": () => (/* binding */ checkIsVideoOrAudioType),
-/* harmony export */   "checkParameterType": () => (/* binding */ checkParameterType),
-/* harmony export */   "checkRange": () => (/* binding */ checkRange)
+/* harmony export */   "checkInteger": function() { return /* binding */ checkInteger; },
+/* harmony export */   "checkIsVideoOrAudioType": function() { return /* binding */ checkIsVideoOrAudioType; },
+/* harmony export */   "checkParameterType": function() { return /* binding */ checkParameterType; },
+/* harmony export */   "checkRange": function() { return /* binding */ checkRange; }
 /* harmony export */ });
 /* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -9820,13 +9688,13 @@ function checkIsVideoOrAudioType(type) {
 /*!*************************************************!*\
   !*** ./src/streaming/vo/metrics/HTTPRequest.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "HTTPRequest": () => (/* binding */ HTTPRequest),
-/* harmony export */   "HTTPRequestTrace": () => (/* binding */ HTTPRequestTrace)
+/* harmony export */   "HTTPRequest": function() { return /* binding */ HTTPRequest; },
+/* harmony export */   "HTTPRequestTrace": function() { return /* binding */ HTTPRequestTrace; }
 /* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -10042,7 +9910,7 @@ HTTPRequest.OTHER_TYPE = 'other';
 /*!***********************************************!*\
   !*** ./node_modules/path-browserify/index.js ***!
   \***********************************************/
-/***/ ((module) => {
+/***/ (function(module) {
 
 "use strict";
 // 'path' module extracted from Node.js v8.11.1 (only the posix part)
@@ -11491,62 +11359,59 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/amd options */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		__webpack_require__.amdO = {};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = (module) => {
+/******/ 		__webpack_require__.n = function(module) {
 /******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
+/******/ 				function() { return module['default']; } :
+/******/ 				function() { return module; };
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 		__webpack_require__.d = function(exports, definition) {
 /******/ 			for(var key in definition) {
 /******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
+/******/ 		__webpack_require__.r = function(exports) {
 /******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
 /******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
+!function() {
 "use strict";
 /*!***************************************************!*\
   !*** ./src/streaming/metrics/MetricsReporting.js ***!
   \***************************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _utils_DVBErrorsTranslator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/DVBErrorsTranslator */ "./src/streaming/metrics/utils/DVBErrorsTranslator.js");
 /* harmony import */ var _MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MetricsReportingEvents */ "./src/streaming/metrics/MetricsReportingEvents.js");
 /* harmony import */ var _controllers_MetricsCollectionController__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controllers/MetricsCollectionController */ "./src/streaming/metrics/controllers/MetricsCollectionController.js");
@@ -11642,9 +11507,8 @@ factory.events = _MetricsReportingEvents__WEBPACK_IMPORTED_MODULE_1__["default"]
 dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
 /* jshint ignore:line */
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
-})();
-
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+}();
 __webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()
