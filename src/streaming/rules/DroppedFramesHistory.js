@@ -28,14 +28,16 @@ function DroppedFramesHistory() {
         lastTotalFrames[streamId] = totalVideoFrames;
 
         const current = values[streamId];
-        if (!isNaN(representationId)) {
-            if (!current[representationId]) {
-                current[representationId] = { droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames };
-            } else {
-                current[representationId].droppedVideoFrames += intervalDroppedFrames;
-                current[representationId].totalVideoFrames += intervalTotalFrames;
-            }
+        if (!current[representationId]) {
+            current[representationId] = {
+                droppedVideoFrames: intervalDroppedFrames,
+                totalVideoFrames: intervalTotalFrames
+            };
+        } else {
+            current[representationId].droppedVideoFrames += intervalDroppedFrames;
+            current[representationId].totalVideoFrames += intervalTotalFrames;
         }
+
     }
 
     function getFrameHistory(streamId) {

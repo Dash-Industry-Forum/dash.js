@@ -17,6 +17,7 @@ function DroppedFramesRule() {
 
     function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
             return switchRequest;
@@ -24,23 +25,27 @@ function DroppedFramesRule() {
 
         const droppedFramesHistory = rulesContext.getDroppedFramesHistory();
         const streamId = rulesContext.getStreamInfo().id;
+        const mediaInfo = rulesContext.getMediaInfo();
+        const abrController = rulesContext.getAbrController();
 
         if (droppedFramesHistory) {
             const dfh = droppedFramesHistory.getFrameHistory(streamId);
 
-            if (!dfh || dfh.length === 0) {
+            if (!dfh || Object.keys(dfh.length) === 0) {
                 return switchRequest;
             }
 
             let droppedFrames = 0;
             let totalFrames = 0;
-            let maxIndex = SwitchRequest.NO_CHANGE;
+            let maxIndex = NaN;
+            const representations = abrController.getPossibleVoRepresentations(mediaInfo, true, true);
 
-            //No point in measuring dropped frames for the zeroeth index.
-            for (let i = 1; i < dfh.length; i++) {
-                if (dfh[i]) {
-                    droppedFrames = dfh[i].droppedVideoFrames;
-                    totalFrames = dfh[i].totalVideoFrames;
+            //No point in measuring dropped frames for the first index.
+            for (let i = 1; i < representations.length; i++) {
+                const currentRepresentation = representations[i];
+                if (currentRepresentation && dfh[currentRepresentation.id]) {
+                    droppedFrames = dfh[currentRepresentation.id].droppedVideoFrames;
+                    totalFrames = dfh[currentRepresentation.id].totalVideoFrames;
 
                     if (totalFrames > GOOD_SAMPLE_SIZE && droppedFrames / totalFrames > DROPPED_PERCENTAGE_FORBID) {
                         maxIndex = i - 1;
@@ -49,7 +54,10 @@ function DroppedFramesRule() {
                     }
                 }
             }
-            return SwitchRequest(context).create(maxIndex, { droppedFrames: droppedFrames });
+            if (!isNaN(maxIndex)) {
+                switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(maxIndex, mediaInfo, true, true);
+                switchRequest.reason = { droppedFrames };
+            }
         }
 
         return switchRequest;
