@@ -126,7 +126,7 @@ function AbandonRequestsRule(config) {
                     if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
                         const abrController = rulesContext.getAbrController();
                         const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
-                        const newRepresentation = abrController.getOptimalRepresentationForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps, true, true);
+                        const newRepresentation = abrController.getOptimalRepresentationForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps, true);
                         const estimatedBytesForNewPresentation = fragmentInfo.bytesTotal * newRepresentation.bitrateInKbit / requestedRepresentation.bitrateInKbit;
 
                         if (bytesRemaining > estimatedBytesForNewPresentation) {

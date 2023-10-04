@@ -38,7 +38,7 @@ function DroppedFramesRule() {
             let droppedFrames = 0;
             let totalFrames = 0;
             let maxIndex = NaN;
-            const representations = abrController.getPossibleVoRepresentations(mediaInfo, true, true);
+            const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
 
             //No point in measuring dropped frames for the first index.
             for (let i = 1; i < representations.length; i++) {
@@ -55,7 +55,7 @@ function DroppedFramesRule() {
                 }
             }
             if (!isNaN(maxIndex)) {
-                switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(maxIndex, mediaInfo, true, true);
+                switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(maxIndex, mediaInfo, true);
                 switchRequest.reason = { droppedFrames };
             }
         }

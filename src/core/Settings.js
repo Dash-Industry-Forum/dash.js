@@ -1018,7 +1018,7 @@ function Settings() {
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 activeRules: {
                     throughputRule: true,
-                    bolaRule: false,
+                    bolaRule: true,
                     insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,

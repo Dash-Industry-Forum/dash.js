@@ -94,7 +94,7 @@ function InsufficientBufferRule(config) {
         const abrController = rulesContext.getAbrController();
         if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
-            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, 0, true, true);
+            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, 0, true);
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
         } else {
             const throughputController = rulesContext.getThroughputController();
@@ -102,7 +102,7 @@ function InsufficientBufferRule(config) {
             const throughput = throughputController.getAverageThroughput(mediaType, null, NaN);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
-            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true, true);
+            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true);
             switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
         }
 

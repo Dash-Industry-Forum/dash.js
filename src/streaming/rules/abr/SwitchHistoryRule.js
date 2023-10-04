@@ -39,7 +39,7 @@ function SwitchHistoryRule() {
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
                     const absoluteIndex = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
-                    switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, true, true);
+                    switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, true);
                     switchRequest.reason = {
                         index: switchRequest.quality,
                         drops: drops,

@@ -222,8 +222,8 @@ function AbrController() {
         }
     }
 
-    function getOptimalRepresentationForBitrate(mediaInfo, bitrate, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
-        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
+    function getOptimalRepresentationForBitrate(mediaInfo, bitrate, includeCompatibleMediaInfos = true) {
+        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
             return null;
@@ -245,18 +245,15 @@ function AbrController() {
             return possibleVoRepresentations[0];
         }
 
-        // Return the one that has the highest quality rank. This is not necessarily the one with the highest bitrate
-        return targetRepresentations.reduce((prev, curr) => {
-            return prev.calculatedQualityRank > curr.calculatedQualityRank ? prev : curr
-        })
+        return targetRepresentations[targetRepresentations.length - 1];
     }
 
-    function getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+    function getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, includeCompatibleMediaInfos = true) {
         if (isNaN(absoluteIndex) || absoluteIndex < 0) {
             return null;
         }
 
-        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applySettingsFilter);
+        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
         if (absoluteIndex > possibleVoRepresentations.length - 1) {
             absoluteIndex = possibleVoRepresentations.length - 1;
@@ -265,8 +262,7 @@ function AbrController() {
         return possibleVoRepresentations[absoluteIndex];
     }
 
-
-    function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true, applySettingsFilter = true) {
+    function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true) {
         let voRepresentations = [];
         if (!mediaInfo) {
             return voRepresentations;
@@ -281,11 +277,11 @@ function AbrController() {
             }
         })
 
-        // If set to true we filter the list of options based on the provided settings
-        if (applySettingsFilter) {
-            voRepresentations = _filterByAllowedSettings(voRepresentations)
-        }
-        voRepresentations = _assignAndSortByCalculatedQualityRank(voRepresentations);
+        // Filter the list of options based on the provided settings
+        voRepresentations = _filterByAllowedSettings(voRepresentations)
+
+        // Now sort by quality (usually simply by bitrate)
+        voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
@@ -449,7 +445,7 @@ function AbrController() {
      * @param voRepresentations
      * @private
      */
-    function _assignAndSortByCalculatedQualityRank(voRepresentations) {
+    function _sortByCalculatedQualityRank(voRepresentations) {
 
         // All Representations must have a qualityRanking otherwise we ignore it
         // QualityRanking only applies to Representations within one AS. If we merged multiple AS based on the adaptation-set-switching-2016 supplemental property we can not apply this logic
@@ -471,10 +467,7 @@ function AbrController() {
             })
         }
 
-        return voRepresentations.map((rep, index) => {
-            rep.calculatedQualityRank = index
-            return rep;
-        })
+        return voRepresentations
     }
 
     /**
@@ -632,13 +625,14 @@ function AbrController() {
                 newRepresentation
             });
 
-            if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.bitrateInKbit < currentRepresentation.bitrateInKbit)) {
+            if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
                 _changeQuality(streamId, type, currentRepresentation, newRepresentation, switchRequest.reason, switchRequest.rule);
                 return true;
             }
 
             return false;
         } catch (e) {
+            logger.error(e);
             return false;
         }
 
@@ -744,7 +738,7 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(representation) {
-        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true, true);
+        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
 
         return voRepresentations[voRepresentations.length - 1].id === representation.id;
     }

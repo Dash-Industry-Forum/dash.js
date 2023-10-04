@@ -647,7 +647,7 @@ function StreamProcessor(config) {
                 else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, newMediaInfo)))) {
                     currentMediaInfo = newMediaInfo;
                     const bitrate = abrController.getInitialBitrateFor(type);
-                    targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false, true);
+                    targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false);
                 }
 
                 // MPD update quality remains the same
@@ -657,7 +657,7 @@ function StreamProcessor(config) {
                 }
 
                 // Update Representation Controller with the new data
-                const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false, true);
+                const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
                 const representationId = targetRepresentation.id;
                 return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, representationId)
                     .then(() => {

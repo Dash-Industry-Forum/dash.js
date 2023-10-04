@@ -39,7 +39,11 @@ function SwitchRequestHistory() {
 
     function push(switchRequest) {
         if (!switchRequests[switchRequest.oldRepresentation.absoluteIndex]) {
-            switchRequests[switchRequest.oldRepresentation.absoluteIndex] = {noDrops: 0, drops: 0, dropSize: 0};
+            switchRequests[switchRequest.oldRepresentation.absoluteIndex] = {
+                noDrops: 0,
+                drops: 0,
+                dropSize: 0
+            };
         }
 
         // Set switch details
@@ -54,10 +58,15 @@ function SwitchRequestHistory() {
         switchRequests[switchRequest.oldRepresentation.absoluteIndex].noDrops += noDrop;
 
         // Save to history
-        srHistory.push({idx: switchRequest.oldRepresentation.absoluteIndex, noDrop: noDrop, drop: drop, dropSize: dropSize});
+        srHistory.push({
+            idx: switchRequest.oldRepresentation.absoluteIndex,
+            noDrop: noDrop,
+            drop: drop,
+            dropSize: dropSize
+        });
 
         // Shift the earliest switch off srHistory and readjust to keep depth of running totals constant
-        if ( srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH ) {
+        if (srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH) {
             let srHistoryFirst = srHistory.shift();
             switchRequests[srHistoryFirst.idx].drops -= srHistoryFirst.drop;
             switchRequests[srHistoryFirst.idx].dropSize -= srHistoryFirst.dropSize;

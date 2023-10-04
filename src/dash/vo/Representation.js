@@ -44,7 +44,6 @@ class Representation {
         this.availabilityTimeOffset = 0;
         this.bandwidth = NaN;
         this.bitrateInKbit = NaN;
-        this.calculatedQualityRank = NaN;
         this.codecPrivateData = null;
         this.codecs = null;
         this.fragmentDuration = null;
