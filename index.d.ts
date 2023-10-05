@@ -122,11 +122,11 @@ declare namespace dashjs {
 
         getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
 
-        getAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
-        getSafeAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getSafeAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
-        getAverageLatency(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getAverageLatency(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
         getRawThroughputData(mediaType: MediaType): number
 

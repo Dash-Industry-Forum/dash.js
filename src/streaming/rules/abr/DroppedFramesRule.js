@@ -37,8 +37,8 @@ function DroppedFramesRule() {
 
             let droppedFrames = 0;
             let totalFrames = 0;
-            let maxIndex = NaN;
             const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            let newRepresentation = null;
 
             //No point in measuring dropped frames for the first index.
             for (let i = 1; i < representations.length; i++) {
@@ -48,14 +48,14 @@ function DroppedFramesRule() {
                     totalFrames = dfh[currentRepresentation.id].totalVideoFrames;
 
                     if (totalFrames > GOOD_SAMPLE_SIZE && droppedFrames / totalFrames > DROPPED_PERCENTAGE_FORBID) {
-                        maxIndex = i - 1;
-                        logger.debug('index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
+                        newRepresentation = representations[i - 1];
+                        logger.debug('index: ' + newRepresentation.absoluteIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
                         break;
                     }
                 }
             }
-            if (!isNaN(maxIndex)) {
-                switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(maxIndex, mediaInfo, true);
+            if (newRepresentation) {
+                switchRequest.representation = newRepresentation;
                 switchRequest.reason = { droppedFrames };
             }
         }

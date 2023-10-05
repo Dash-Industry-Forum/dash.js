@@ -1017,13 +1017,13 @@ function Settings() {
                 usePixelRatioInLimitBitrateByPortal: false,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 activeRules: {
-                    throughputRule: true,
-                    bolaRule: true,
-                    insufficientBufferRule: true,
-                    switchHistoryRule: true,
-                    droppedFramesRule: true,
-                    abandonRequestsRule: true,
-                    l2ARule: false,
+                    throughputRule: false,
+                    bolaRule: false,
+                    insufficientBufferRule: false,
+                    switchHistoryRule: false,
+                    droppedFramesRule: false,
+                    abandonRequestsRule: false,
+                    l2ARule: true,
                     loLPRule: false
                 },
                 throughput: {

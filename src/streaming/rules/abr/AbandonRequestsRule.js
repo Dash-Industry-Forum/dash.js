@@ -119,7 +119,9 @@ function AbandonRequestsRule(config) {
                     fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
 
                     // We do not abandon if the estimated download time is below a threshold, or we are on the lowest quality anyway.
-                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentation().absoluteIndex === 0) {
+                    const representation = rulesContext.getRepresentation();
+                    const abrController = rulesContext.getAbrController();
+                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || abrController.isPlayingAtLowestQuality(representation)) {
                         return switchRequest;
                     }
 

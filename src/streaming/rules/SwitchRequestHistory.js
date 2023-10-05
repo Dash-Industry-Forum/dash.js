@@ -34,12 +34,12 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
 
 function SwitchRequestHistory() {
-    let switchRequests = []; // running total
+    let switchRequests = {}; // running total
     let srHistory = []; // history of each switch
 
     function push(switchRequest) {
-        if (!switchRequests[switchRequest.oldRepresentation.absoluteIndex]) {
-            switchRequests[switchRequest.oldRepresentation.absoluteIndex] = {
+        if (!switchRequests[switchRequest.oldRepresentation.id]) {
+            switchRequests[switchRequest.oldRepresentation.id] = {
                 noDrops: 0,
                 drops: 0,
                 dropSize: 0
@@ -53,13 +53,13 @@ function SwitchRequestHistory() {
         let noDrop = drop ? 0 : 1;
 
         // Update running totals
-        switchRequests[switchRequest.oldRepresentation.absoluteIndex].drops += drop;
-        switchRequests[switchRequest.oldRepresentation.absoluteIndex].dropSize += dropSize;
-        switchRequests[switchRequest.oldRepresentation.absoluteIndex].noDrops += noDrop;
+        switchRequests[switchRequest.oldRepresentation.id].drops += drop;
+        switchRequests[switchRequest.oldRepresentation.id].dropSize += dropSize;
+        switchRequests[switchRequest.oldRepresentation.id].noDrops += noDrop;
 
         // Save to history
         srHistory.push({
-            idx: switchRequest.oldRepresentation.absoluteIndex,
+            id: switchRequest.oldRepresentation.id,
             noDrop: noDrop,
             drop: drop,
             dropSize: dropSize
@@ -68,9 +68,9 @@ function SwitchRequestHistory() {
         // Shift the earliest switch off srHistory and readjust to keep depth of running totals constant
         if (srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH) {
             let srHistoryFirst = srHistory.shift();
-            switchRequests[srHistoryFirst.idx].drops -= srHistoryFirst.drop;
-            switchRequests[srHistoryFirst.idx].dropSize -= srHistoryFirst.dropSize;
-            switchRequests[srHistoryFirst.idx].noDrops -= srHistoryFirst.noDrop;
+            switchRequests[srHistoryFirst.id].drops -= srHistoryFirst.drop;
+            switchRequests[srHistoryFirst.id].dropSize -= srHistoryFirst.dropSize;
+            switchRequests[srHistoryFirst.id].noDrops -= srHistoryFirst.noDrop;
         }
     }
 

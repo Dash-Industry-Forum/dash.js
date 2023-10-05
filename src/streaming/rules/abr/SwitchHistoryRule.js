@@ -31,15 +31,18 @@ function SwitchHistoryRule() {
         const switchRequest = SwitchRequest(context).create();
         switchRequest.rule = this.getClassName();
 
-        for (let i = 0; i < switchRequests.length; i++) {
-            if (switchRequests[i] !== undefined) {
-                drops += switchRequests[i].drops;
-                noDrops += switchRequests[i].noDrops;
-                dropSize += switchRequests[i].dropSize;
+        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+
+        for (let i = 0; i < representations.length; i++) {
+            const currentRepresentation = representations[i];
+            if (currentRepresentation && switchRequests[currentRepresentation.id]) {
+                drops += switchRequests[currentRepresentation.id].drops;
+                noDrops += switchRequests[currentRepresentation.id].noDrops;
+                dropSize += switchRequests[currentRepresentation.id].dropSize;
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
-                    const absoluteIndex = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
-                    switchRequest.representation = abrController.getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, true);
+                    const targetRepresentation = (i > 0 && switchRequests[currentRepresentation.id].drops > 0) ? representations[i - 1] : currentRepresentation;
+                    switchRequest.representation = targetRepresentation;
                     switchRequest.reason = {
                         index: switchRequest.quality,
                         drops: drops,

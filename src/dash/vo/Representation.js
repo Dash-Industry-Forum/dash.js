@@ -39,6 +39,7 @@ class Representation {
 
     constructor() {
         this.absoluteIndex = NaN;
+        this.absoluteIndexAfterFiltering = NaN;
         this.adaptation = null;
         this.availabilityTimeComplete = true;
         this.availabilityTimeOffset = 0;

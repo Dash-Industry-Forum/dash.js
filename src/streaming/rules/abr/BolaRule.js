@@ -40,6 +40,7 @@ import Events from '../../../core/events/Events.js';
 import Debug from '../../../core/Debug.js';
 import MediaPlayerEvents from '../../MediaPlayerEvents.js';
 import Constants from '../../constants/Constants.js';
+import AbrController from '../../controllers/AbrController.js';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -64,6 +65,7 @@ function BolaRule(config) {
     const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const eventBus = EventBus(context).getInstance();
+    const abrController = AbrController(context).getInstance();
 
     let instance,
         logger,
@@ -82,7 +84,7 @@ function BolaRule(config) {
 
     /**
      * If we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onBufferEmpty(e) {
@@ -153,7 +155,6 @@ function BolaRule(config) {
     function _getInitialBolaState(rulesContext) {
         const initialState = {};
         const mediaInfo = rulesContext.getMediaInfo();
-        const abrController = rulesContext.getAbrController();
         const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
         const bitrates = representations.map(r => r.bandwidth);
         let utilities = bitrates.map(b => Math.log(b));
@@ -441,7 +442,6 @@ function BolaRule(config) {
      * @private
      */
     function _handleBolaStateStartup(switchRequest, rulesContext, bolaState) {
-        const abrController = rulesContext.getAbrController();
         const mediaType = rulesContext.getMediaType();
         const throughputController = rulesContext.getThroughputController();
         const safeThroughput = throughputController.getSafeAverageThroughput(mediaType);
@@ -472,7 +472,6 @@ function BolaRule(config) {
      */
     function _handleBolaStateSteady(switchRequest, rulesContext, bolaState) {
         const mediaType = rulesContext.getMediaType();
-        const abrController = rulesContext.getAbrController();
         const throughputController = rulesContext.getThroughputController();
         const mediaInfo = rulesContext.getMediaInfo();
         const safeThroughput = throughputController.getSafeAverageThroughput(mediaType);
@@ -535,7 +534,6 @@ function BolaRule(config) {
         const mediaType = rulesContext.getMediaType();
         const throughputController = rulesContext.getThroughputController();
         const safeThroughput = throughputController.getSafeAverageThroughput(mediaType);
-        const abrController = rulesContext.getAbrController();
         switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, safeThroughput, true);
         switchRequest.reason.state = bolaState.state;
         switchRequest.reason.throughput = safeThroughput;

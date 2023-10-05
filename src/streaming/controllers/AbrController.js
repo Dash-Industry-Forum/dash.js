@@ -255,11 +255,9 @@ function AbrController() {
 
         const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
-        if (absoluteIndex > possibleVoRepresentations.length - 1) {
-            absoluteIndex = possibleVoRepresentations.length - 1;
-        }
-
-        return possibleVoRepresentations[absoluteIndex];
+        return possibleVoRepresentations.find((rep) => {
+            return rep.absoluteIndex === absoluteIndex
+        })
     }
 
     function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true) {
@@ -277,15 +275,21 @@ function AbrController() {
             }
         })
 
-        // Filter the list of options based on the provided settings
-        voRepresentations = _filterByAllowedSettings(voRepresentations)
-
         // Now sort by quality (usually simply by bitrate)
         voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
             rep.absoluteIndex = index
+        })
+
+        // Filter the list of options based on the provided settings
+        // We can not apply the filter before otherwise the absolute index would be wrong
+        voRepresentations = _filterByAllowedSettings(voRepresentations)
+
+        // Add an absolute index after filtering
+        voRepresentations.forEach((rep, index) => {
+            rep.absoluteIndexAfterFiltering = index
         })
 
         // Filter the Representations in case we do not want to include compatible Media Infos
@@ -715,6 +719,12 @@ function AbrController() {
         return settings.get().streaming.abr.activeRules.bolaRule && settings.get().streaming.abr.activeRules.throughputRule
     }
 
+    /**
+     * Switch between BOLA and ThroughputRule
+     * @param mediaType
+     * @param bufferLevel
+     * @private
+     */
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
         try {
             const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
@@ -737,6 +747,22 @@ function AbrController() {
         }
     }
 
+    /**
+     * Checks if the provided Representation has the lowest possible quality
+     * @param representation
+     * @returns {boolean}
+     */
+    function isPlayingAtLowestQuality(representation) {
+        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
+
+        return voRepresentations[0].id === representation.id
+    }
+
+    /**
+     * Checks if the provided Representation has the highest possible quality
+     * @param representation
+     * @returns {boolean}
+     */
     function isPlayingAtTopQuality(representation) {
         const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
 
@@ -772,6 +798,7 @@ function AbrController() {
         getPossibleVoRepresentations,
         getRepresentationByAbsoluteIndex,
         initialize,
+        isPlayingAtLowestQuality,
         isPlayingAtTopQuality,
         registerStreamType,
         reset,
