@@ -735,8 +735,7 @@ function StreamProcessor(config) {
                 _prepareForDefaultQualitySwitch(representationInfo);
             }
         } else {
-            scheduleController.startScheduleTimer();
-            qualityChangeInProgress = false;
+            _prepareForDefaultQualitySwitch(representationInfo);
         }
     }
 
