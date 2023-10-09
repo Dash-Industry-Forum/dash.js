@@ -737,6 +737,11 @@ function StreamProcessor(config) {
             _prepareForForceReplacementQualitySwitch(newRepresentation);
         }
 
+        // We abandoned a current request
+        else if (e && e.reason && e.reason.forceAbandon) {
+            _prepareForAbandonQualitySwitch(newRepresentation)
+        }
+
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
             _prepareForFastQualitySwitch(newRepresentation, e);
@@ -744,7 +749,7 @@ function StreamProcessor(config) {
 
         // Default quality switch. We append the new quality to the already buffered stuff
         else {
-            _prepareForDefaultQualitySwitch(newRepresentation, e);
+            _prepareForDefaultQualitySwitch(newRepresentation);
         }
 
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -764,6 +769,7 @@ function StreamProcessor(config) {
             streamId: streamInfo.id
         }, { mediaType: type, streamId: streamInfo.id });
 
+        scheduleController.setCheckPlaybackQuality(false);
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
         bufferController.prepareForForceReplacementQualitySwitch(voRepresentation)
             .then(() => {
@@ -811,34 +817,26 @@ function StreamProcessor(config) {
 
             // If we have buffered a higher quality we do not replace anything. We might cancel the current request due to abandon request rule
             else {
-                _prepareForDefaultQualitySwitch(voRepresentation, e);
+                _prepareForDefaultQualitySwitch(voRepresentation);
             }
         } else {
-            scheduleController.startScheduleTimer();
-            qualityChangeInProgress = false;
+            _prepareForDefaultQualitySwitch(voRepresentation);
         }
     }
 
-    function _prepareForDefaultQualitySwitch(voRepresentation, e) {
-
-        // Check if we need to abandon the request caused by the AbandonRequestRule
-        if (e && e.reason && e.reason.forceAbandon) {
-            _handleAbandonQualitySwitch(voRepresentation)
+    function _prepareForDefaultQualitySwitch(voRepresentation) {
+        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
+        const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
+        if (ongoingRequests && ongoingRequests.length > 0) {
+            logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
+            pendingSwitchToVoRepresentation = voRepresentation;
             return;
         }
 
-        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
-        else {
-            const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
-            if (ongoingRequests && ongoingRequests.length > 0) {
-                logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
-                pendingSwitchToVoRepresentation = voRepresentation;
-                return;
-            }
-        }
 
         bufferController.updateBufferTimestampOffset(voRepresentation)
             .then(() => {
+                scheduleController.setCheckPlaybackQuality(false);
                 if (currentMediaInfo.segmentAlignment || currentMediaInfo.subSegmentAlignment) {
                     scheduleController.startScheduleTimer();
                 } else {
@@ -853,12 +851,9 @@ function StreamProcessor(config) {
             })
     }
 
-    function _handleAbandonQualitySwitch(voRepresentation) {
+    function _prepareForAbandonQualitySwitch(voRepresentation) {
         bufferController.updateBufferTimestampOffset(voRepresentation)
             .then(() => {
-                // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
-                // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
-                // Everything that is already in the buffer queue is ok
                 fragmentModel.abortRequests();
                 shouldRepeatRequest = true;
                 scheduleController.setCheckPlaybackQuality(false);
