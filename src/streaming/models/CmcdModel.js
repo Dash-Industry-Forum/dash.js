@@ -416,10 +416,7 @@ function CmcdModel() {
 
     function _getBitrateByRequest(request) {
         try {
-            const quality = request.quality;
-            const bitrateList = request.representation.mediaInfo.bitrateList;
-
-            return parseInt(bitrateList[quality].bandwidth / 1000);
+            return parseInt(request.bandwidth / 1000);
         } catch (e) {
             return null;
         }
@@ -578,17 +575,16 @@ function CmcdModel() {
             // Get the values we need
             let playbackRate = playbackController.getPlaybackRate();
             if (!playbackRate) playbackRate = 1;
-            let { quality, mediaType, mediaInfo, duration } = request;
+            let { bandwidth, mediaType, mediaInfo, duration } = request;
 
             if (!mediaInfo) {
                 return NaN;
             }
             let currentBufferLevel = _getBufferLevelByType(mediaType);
             if (currentBufferLevel === 0) currentBufferLevel = 500;
-            let bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
             // Calculate RTP
-            let segmentSize = (bitrate * duration) / 1000; // Calculate file size in kilobits
+            let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
             let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
             let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;

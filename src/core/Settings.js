@@ -1023,8 +1023,8 @@ function Settings() {
                     switchHistoryRule: false,
                     droppedFramesRule: false,
                     abandonRequestsRule: false,
-                    l2ARule: true,
-                    loLPRule: false
+                    l2ARule: false,
+                    loLPRule: true
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
