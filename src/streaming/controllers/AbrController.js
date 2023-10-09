@@ -278,18 +278,13 @@ function AbrController() {
         // Now sort by quality (usually simply by bitrate)
         voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
 
-        // Add an absolute index
-        voRepresentations.forEach((rep, index) => {
-            rep.absoluteIndex = index
-        })
-
         // Filter the list of options based on the provided settings
         // We can not apply the filter before otherwise the absolute index would be wrong
         voRepresentations = _filterByAllowedSettings(voRepresentations)
 
         // Add an absolute index after filtering
         voRepresentations.forEach((rep, index) => {
-            rep.absoluteIndexAfterFiltering = index
+            rep.absoluteIndex = index
         })
 
         // Filter the Representations in case we do not want to include compatible Media Infos
