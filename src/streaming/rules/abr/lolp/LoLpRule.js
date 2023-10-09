@@ -66,13 +66,14 @@ function LoLPRule(config) {
         qoeEvaluator = LoLpQoeEvaluator(context).create();
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         try {
             let switchRequest = SwitchRequest(context).create();
+            switchRequest.rule = this.getClassName();
             let mediaType = rulesContext.getMediaInfo().type;
             let abrController = rulesContext.getAbrController();
             const streamInfo = rulesContext.getStreamInfo();
-            let currentQuality = abrController.getQualityFor(mediaType, streamInfo.id);
+            let currentQuality = abrController.getRepresentation();
             const mediaInfo = rulesContext.getMediaInfo();
             const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
             const scheduleController = rulesContext.getScheduleController();
@@ -170,7 +171,7 @@ function LoLPRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

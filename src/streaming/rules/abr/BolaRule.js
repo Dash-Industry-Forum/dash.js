@@ -89,11 +89,12 @@ function BolaRule(config) {
      */
     function _onBufferEmpty(e) {
         const mediaType = e.mediaType;
+        const streamId = e.streamId;
         // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
-        const stateDict = mediaType === Constants.AUDIO ? [Constants.AUDIO] : bolaStateDict;
+        const stateDict = mediaType === Constants.AUDIO ? [Constants.AUDIO] : bolaStateDict[streamId];
         for (const mediaType in stateDict) {
-            if (bolaStateDict.hasOwnProperty(mediaType) && bolaStateDict[mediaType].state === BOLA_STATE_STEADY) {
-                bolaStateDict[mediaType].placeholderBuffer = 0;
+            if (bolaStateDict[streamId].hasOwnProperty(mediaType) && bolaStateDict[streamId][mediaType].state === BOLA_STATE_STEADY) {
+                bolaStateDict[streamId][mediaType].placeholderBuffer = 0;
             }
         }
     }
@@ -102,12 +103,13 @@ function BolaRule(config) {
      * Clear BOLA parameters for each media type once we seek. By setting to BOLA_STATE_STARTUP we use the throughput to get the possible quality.
      * @private
      */
-    function _onPlaybackSeeking() {
+    function _onPlaybackSeeking(e) {
         // TODO: 1. Verify what happens if we seek mid-fragment.
         // TODO: 2. If e.g. we have 10s fragments and seek, we might want to download the first fragment at a lower quality to restart playback quickly.
-        for (const mediaType in bolaStateDict) {
-            if (bolaStateDict.hasOwnProperty(mediaType)) {
-                const bolaState = bolaStateDict[mediaType];
+        const streamId = e.streamId
+        for (const mediaType in bolaStateDict[streamId]) {
+            if (bolaStateDict[streamId].hasOwnProperty(mediaType)) {
+                const bolaState = bolaStateDict[streamId][mediaType];
                 if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                     bolaState.state = BOLA_STATE_STARTUP; // TODO: BOLA_STATE_SEEK?
                     _clearBolaStateOnSeek(bolaState);
@@ -123,7 +125,7 @@ function BolaRule(config) {
      */
     function _onMetricAdded(e) {
         if (e && e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
-            const bolaState = bolaStateDict[e.mediaType];
+            const bolaState = bolaStateDict[e.streamId] && bolaStateDict[e.streamId][e.mediaType] ? bolaStateDict[e.streamId][e.mediaType] : null;
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 bolaState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
                 bolaState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
@@ -139,7 +141,7 @@ function BolaRule(config) {
      */
     function _onQualityChangeRequested(e) {
         if (e) {
-            const bolaState = bolaStateDict[e.mediaType];
+            const bolaState = bolaStateDict[e.streamId][e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 bolaState.currentRepresentation = e.newRepresentation;
             }
@@ -327,7 +329,7 @@ function BolaRule(config) {
 
     function _onMediaFragmentLoaded(e) {
         if (e && e.chunk && e.chunk.representation.mediaInfo) {
-            const bolaState = bolaStateDict[e.chunk.representation.mediaInfo.type];
+            const bolaState = bolaStateDict[e.streamId][e.chunk.representation.mediaInfo.type];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 const start = e.chunk.start;
                 if (isNaN(bolaState.mostAdvancedSegmentStart) || start > bolaState.mostAdvancedSegmentStart) {
@@ -417,7 +419,7 @@ function BolaRule(config) {
      */
     function _onFragmentLoadingAbandoned(e) {
         if (e) {
-            const bolaState = bolaStateDict[e.mediaType];
+            const bolaState = bolaStateDict[e.streamId][e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(e.mediaType);
@@ -577,10 +579,14 @@ function BolaRule(config) {
 
     function _getBolaState(rulesContext) {
         const mediaType = rulesContext.getMediaType();
-        let bolaState = bolaStateDict[mediaType];
+        const streamId = rulesContext.getStreamInfo().id;
+        if (!bolaStateDict[streamId]) {
+            bolaStateDict[streamId] = {};
+        }
+        let bolaState = bolaStateDict[streamId][mediaType];
         if (!bolaState) {
             bolaState = _getInitialBolaState(rulesContext);
-            bolaStateDict[mediaType] = bolaState;
+            bolaStateDict[streamId][mediaType] = bolaState;
         } else if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
             _checkBolaStateBufferTimeDefault(bolaState, mediaType);
         }

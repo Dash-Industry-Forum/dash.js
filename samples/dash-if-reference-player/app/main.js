@@ -425,7 +425,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var availableRepresentations = $scope.player.getRepresentationsByType(e.mediaType)
         var maxIndex = availableRepresentations ? availableRepresentations.length : 0;
 
-        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.absoluteIndexAfterFiltering + 1;
+        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.absoluteIndex + 1;
         $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
@@ -438,7 +438,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndexAfterFiltering + 1;
+        $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndex + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
@@ -1983,7 +1983,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var maxIndex = representations ? representations.length : 1;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndexAfterFiltering + 1;
+            var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndex + 1;
 
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
