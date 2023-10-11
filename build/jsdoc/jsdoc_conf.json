@@ -43,7 +43,10 @@
         "destination": "docs/",
         "theme_opts": {
             "default_theme": "light",
-            "include_css": ["./build/style_jsdoc/jsdoc-custom.css"]
+            "include_css": ["./build/style_jsdoc/jsdoc-custom.css"],
+            "favicon": "https://dashif.org/img/favicon.ico",
+            "includeFilesListInHomepage": true,
+            "homepageTitle": "dash.js API Docs"
         }
     }
 }
