@@ -686,6 +686,7 @@ function StreamProcessor(config) {
         }, { mediaType: type, streamId: streamInfo.id });
 
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+        scheduleController.setCheckPlaybackQuality(false);
         bufferController.prepareForForceReplacementQualitySwitch(representationInfo)
             .then(() => {
                 _bufferClearedForReplacement();
@@ -735,8 +736,7 @@ function StreamProcessor(config) {
                 _prepareForDefaultQualitySwitch(representationInfo);
             }
         } else {
-            scheduleController.startScheduleTimer();
-            qualityChangeInProgress = false;
+            _prepareForDefaultQualitySwitch(representationInfo);
         }
     }
 
@@ -752,6 +752,7 @@ function StreamProcessor(config) {
 
         bufferController.updateBufferTimestampOffset(representationInfo)
             .then(() => {
+                scheduleController.setCheckPlaybackQuality(false);
                 if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
                     scheduleController.startScheduleTimer();
                 } else {

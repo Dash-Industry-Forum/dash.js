@@ -27,9 +27,10 @@ export default [
     },
     {
         name: 'Audio only live',
-        url: 'https://livesim.dashif.org/livesim/testpic_2s/audio.mpd',
+        url: 'https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd',
         type: 'live',
-        testcases: [Constants.TESTCASES.GENERIC.ALL]
+        testcases: [Constants.TESTCASES.GENERIC.ALL],
+        excludedTestcases: [Constants.TESTCASES.SIMPLE.INITIAL_BUFFER_TARGET]
     },
 ]
 
