@@ -1,0 +1,18 @@
+td, th {
+    padding: 10px 10px !important;
+    word-wrap: break-word;
+    max-width: 50px;
+    white-space: inherit;
+    text-overflow: ellipsis;
+  }
+
+  /* Optional: Style the first and last columns differently */
+  td:nth-child(5), th:nth-child(5) {
+    max-width: 150px !important;
+  } 
+  td:first-child, th:first-child {
+    max-width: 100px !important;
+  } 
+.main-wrapper {
+    padding: 0 !important;
+}
