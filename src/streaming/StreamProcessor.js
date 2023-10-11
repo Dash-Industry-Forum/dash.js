@@ -86,6 +86,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         shouldUseExplicitTimeForRequest,
+        shouldRepeatRequest,
         qualityChangeInProgress,
         dashHandler,
         segmentsController,
@@ -194,6 +195,7 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        shouldRepeatRequest = false;
     }
 
     function getStreamId() {
@@ -213,6 +215,7 @@ function StreamProcessor(config) {
         mediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        shouldRepeatRequest = false;
         qualityChangeInProgress = false;
         pendingSwitchToRepresentationInfo = null;
     }
@@ -432,6 +435,7 @@ function StreamProcessor(config) {
         let request = _getFragmentRequest();
         if (request) {
             shouldUseExplicitTimeForRequest = false;
+            shouldRepeatRequest = false;
             _mediaRequestGenerated(request);
         } else {
             _noMediaRequestGenerated(rescheduleIfNoRequest);
@@ -546,6 +550,8 @@ function StreamProcessor(config) {
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(mediaInfo, representation, bufferingTime);
+            } else if (shouldRepeatRequest) {
+                request = dashHandler.repeatSegmentRequest(mediaInfo, representation);
             } else {
                 request = dashHandler.getNextSegmentRequest(mediaInfo, representation);
             }
@@ -657,6 +663,11 @@ function StreamProcessor(config) {
             _prepareForForceReplacementQualitySwitch(representationInfo);
         }
 
+        // We abandoned a current request
+        else if (e && e.reason && e.reason.forceAbandon) {
+            _prepareForAbandonQualitySwitch(representationInfo)
+        }
+
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
             _prepareForFastQualitySwitch(representationInfo);
@@ -690,12 +701,30 @@ function StreamProcessor(config) {
         bufferController.prepareForForceReplacementQualitySwitch(representationInfo)
             .then(() => {
                 _bufferClearedForReplacement();
+                pendingSwitchToRepresentationInfo = null;
                 qualityChangeInProgress = false;
             })
             .catch(() => {
                 _bufferClearedForReplacement();
+                pendingSwitchToRepresentationInfo = null;
                 qualityChangeInProgress = false;
             });
+    }
+
+    function _prepareForAbandonQualitySwitch(representationInfo) {
+        bufferController.updateBufferTimestampOffset(representationInfo)
+            .then(() => {
+                fragmentModel.abortRequests();
+                shouldRepeatRequest = true;
+                scheduleController.setCheckPlaybackQuality(false);
+                scheduleController.startScheduleTimer();
+                qualityChangeInProgress = false;
+                pendingSwitchToRepresentationInfo = null;
+            })
+            .catch(() => {
+                pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
     }
 
     function _prepareForFastQualitySwitch(representationInfo) {
