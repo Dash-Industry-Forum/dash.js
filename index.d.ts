@@ -705,6 +705,8 @@ declare namespace dashjs {
 
         getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
+        repeatSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
+
         getValidTimeCloseToTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation, targetThreshold: number): number;
 
         getValidTimeAheadOfTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation): number;
