@@ -1092,6 +1092,13 @@ declare namespace dashjs {
                     droppedFramesRule?: boolean,
                     abandonRequestsRule?: boolean
                 },
+                abrRulesParameters?: {
+                    abandonRequestsRule: {
+                        graceTimeThreshold: number,
+                        abandonMultiplier: number,
+                        minLengthToAverage: number
+                    }
+                },
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
                 useDeadTimeLatency?: boolean;
