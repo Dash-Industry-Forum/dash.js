@@ -657,6 +657,11 @@ function StreamProcessor(config) {
             _prepareForForceReplacementQualitySwitch(representationInfo);
         }
 
+        // We abandoned a current request
+        else if (e && e.reason && e.reason.forceAbandon) {
+            _prepareForAbandonQualitySwitch(representationInfo)
+        }
+
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
             _prepareForFastQualitySwitch(representationInfo);
@@ -695,6 +700,25 @@ function StreamProcessor(config) {
                 _bufferClearedForReplacement();
                 qualityChangeInProgress = false;
             });
+    }
+
+    function _prepareForAbandonQualitySwitch(representationInfo) {
+        bufferController.updateBufferTimestampOffset(representationInfo)
+            .then(() => {
+                fragmentModel.abortRequests();
+                scheduleController.setCheckPlaybackQuality(false);
+                if (mediaInfo.segmentAlignment || mediaInfo.subSegmentAlignment) {
+                    scheduleController.startScheduleTimer();
+                } else {
+                    _bufferClearedForNonReplacement()
+                }
+                pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
+            .catch(() => {
+                pendingSwitchToRepresentationInfo = null;
+                qualityChangeInProgress = false;
+            })
     }
 
     function _prepareForFastQualitySwitch(representationInfo) {
