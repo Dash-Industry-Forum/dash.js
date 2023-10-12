@@ -37,7 +37,12 @@ import Constants from '../../streaming/constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import Utils from '../../core/Utils.js';
-import {CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders} from '@svta/common-media-library';
+import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CmcdParam';
+import {CmcdObjectType} from '@svta/common-media-library/cmcd/CmcdObjectType';
+import {CmcdStreamType} from '@svta/common-media-library/cmcd/CmcdStreamType';
+import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreamingFormat';
+import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
+import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 
 const CMCD_VERSION = 1;
 const RTP_SAFETY_FACTOR = 5;
