@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import Constants from '../../streaming/constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import DashManifestModel from '../../dash/models/DashManifestModel';
-import Utils from '../../core/Utils';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../../streaming/constants/Constants.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import DashManifestModel from '../../dash/models/DashManifestModel.js';
+import Utils from '../../core/Utils.js';
 import {CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders} from '@svta/common-media-library';
 
 const CMCD_VERSION = 1;
