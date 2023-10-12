@@ -134,7 +134,7 @@ Windows example command:
 
 Mac example command:
 ```
-node test/functional/runTests.js --selenium=local --os=mac --browsers=chrome --app=local --protocol=http --reporters=junit --testSuites="textSwitch" --mpd="https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"
+node test/functional/runTests.js --selenium=local --os=mac --browsers=chrome --app=local --protocol=http --reporters=junit --testSuites="textSwitch" --mpd="https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd"
 ```
 
 #### Troubleshooting
