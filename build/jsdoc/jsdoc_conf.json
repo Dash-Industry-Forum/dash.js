@@ -12,7 +12,8 @@
         "plugins/markdown"
     ],
     "markdown": {
-        "hardwrap": true
+        "hardwrap": true,
+        "idInHeadings": true
     },
     "templates": {
         "cleverLinks": true,
@@ -21,6 +22,7 @@
         "outputSourceFiles": true,
         "outputSourcePath": true,
         "systemName": "dash.js",
+        "systemSummary": "",
         "copyright": "<h3>DASH Industry Forum</h3>",
         "footer": "",
         "navType": "horizontal",
@@ -31,11 +33,20 @@
         "highlightTutorialCode": true
     },
     "opts": {
-        "template": "../../node_modules/ink-docstrap/template",
+        "template": "../../node_modules/clean-jsdoc-theme",
         "encoding": "utf8",
         "recurse": true,
         "query": "value",
         "private": false,
-        "lenient": true
+        "lenient": true,
+        "verbose": true,
+        "destination": "docs/",
+        "theme_opts": {
+            "default_theme": "light",
+            "include_css": ["./build/style_jsdoc/jsdoc-custom.css"],
+            "favicon": "https://dashif.org/img/favicon.ico",
+            "includeFilesListInHomepage": true,
+            "homepageTitle": "dash.js API Docs"
+        }
     }
 }

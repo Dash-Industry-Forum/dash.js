@@ -1274,12 +1274,12 @@
             "name": "Smooth Streaming",
             "submenu": [
                 {
-                    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+                    "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
                     "name": "Super Speedway",
                     "provider": "microsoft"
                 },
                 {
-                    "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+                    "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
                     "name": "Super Speedway + PlayReady DRM",
                     "protData": {
                         "com.microsoft.playready": {
@@ -1288,7 +1288,7 @@
                     "provider": "microsoft"
                 },
                 {
-                    "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+                    "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
                     "name": "Super Speedway + PlayReady DRM (persistent)",
                     "protData": {
                         "com.microsoft.playready": {

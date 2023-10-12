@@ -188,3 +188,7 @@ build/typings/
 
 # Vim
 .vimrc
+
+#Karma Functional tests
+test/functional-karma/coverage
+test/functional-karma/results
