@@ -28,8 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import {CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders} from '@svta/common-media-library';
 import EventBus from '../../core/EventBus';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
@@ -39,6 +37,7 @@ import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
+import {CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders} from '@svta/common-media-library';
 
 const CMCD_VERSION = 1;
 const RTP_SAFETY_FACTOR = 5;
