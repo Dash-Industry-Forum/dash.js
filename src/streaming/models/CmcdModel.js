@@ -37,7 +37,7 @@ import Constants from '../../streaming/constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import Utils from '../../core/Utils.js';
-import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CmcdParam';
+import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
 import {CmcdObjectType} from '@svta/common-media-library/cmcd/CmcdObjectType';
 import {CmcdStreamType} from '@svta/common-media-library/cmcd/CmcdStreamType';
 import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreamingFormat';
