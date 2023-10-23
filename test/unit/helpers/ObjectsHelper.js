@@ -20,10 +20,13 @@ class ObjectsHelper {
                         { bandwidth: 2000000 },
                         { bandwidth: 3000000 },
                     ],
-                    mimeType: "video/mp4"
+                    mimeType: 'video/mp4'
                 }
+            },
+            getRepresentation: () => {
+                return null
             }
-        };
+        }
     }
 
     getDummyLogger() {

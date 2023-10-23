@@ -309,7 +309,7 @@ function OfflineStreamProcessor(config) {
         let voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
         // get representation VO according to id.
-        let quality = voRepresentations.findIndex((representation) => {
+        let quality = voRepresentations.find((representation) => {
             return representation.id === bitrate.id;
         });
 
@@ -318,7 +318,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        representationController.updateData(voRepresentations, type, mediaInfo.isFragmented, quality);
+        representationController.updateData(voRepresentations, mediaInfo.isFragmented, quality.id);
     }
 
     function isUpdating() {

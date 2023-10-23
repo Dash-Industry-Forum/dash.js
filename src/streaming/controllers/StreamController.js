@@ -652,7 +652,7 @@ function StreamController() {
         try {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
-            // - AND changeType method implemented by browser or periods use the same codec.
+            // - AND changeType method is implemented
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream, nextStream) || firstLicenseIsFetched)
                 && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));

@@ -11,7 +11,6 @@ import AdapterMock from './mocks/AdapterMock.js';
 import ManifestModelMock from './mocks/ManifestModelMock.js';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 import AbrControllerMock from './mocks/AbrControllerMock.js';
-import StreamMock from './mocks/StreamMock.js';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock.js';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
 import CapabilitiesMock from './mocks/CapabilitiesMock.js';
@@ -115,44 +114,6 @@ describe('Stream', function () {
             stream.reset();
             const duration = stream.getDuration();
             expect(duration).to.be.NaN; // jshint ignore:line
-        });
-
-        it('should return null false isMediaCodecCompatible is called but stream attribute is undefined', () => {
-            stream.reset();
-            const isCompatible = stream.isMediaCodecCompatible();
-            expect(isCompatible).to.be.false; // jshint ignore:line
-        });
-
-        it('should return false when isMediaCodecCompatible is called but stream attribute is an empty object', () => {
-            stream.reset();
-            const isCompatible = stream.isMediaCodecCompatible({});
-            expect(isCompatible).to.be.false; // jshint ignore:line
-        });
-
-        it('should return false when isMediaCodecCompatible is called with a correct stream attribute', () => {
-            stream.reset();
-            const isCompatible = stream.isMediaCodecCompatible(new StreamMock());
-            expect(isCompatible).to.be.false; // jshint ignore:line
-        });
-
-        it('should return true when isProtectionCompatible is called but new stream attribute is undefined', () => {
-            stream.reset();
-            const isCompatible = stream.isProtectionCompatible();
-            expect(isCompatible).to.be.true; // jshint ignore:line
-        });
-
-        it('should return an empty array when getBitrateListFor is called but no stream processor is defined', () => {
-            stream.reset();
-            const bitrateList = stream.getBitrateListFor('');
-            expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
-            expect(bitrateList).to.be.empty; // jshint ignore:line
-        });
-
-        it('should return an empty array when getBitrateListFor, for image type, is called but thumbnailController is not defined', () => {
-            stream.reset();
-            const bitrateList = stream.getBitrateListFor(Constants.IMAGE);
-            expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
-            expect(bitrateList).to.be.empty; // jshint ignore:line
         });
 
         it('License expired behavior', function () {

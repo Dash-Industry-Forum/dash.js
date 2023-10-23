@@ -52,4 +52,8 @@ StreamMock.prototype.getProcessors = function () {
     return this.streamProcessors;
 };
 
+StreamMock.prototype.getCurrentRepresentationForType = function () {
+    return null;
+}
+
 export default StreamMock;

@@ -644,9 +644,10 @@ function AbrController() {
      * @param {object} streamInfo
      * @param {Representation} representation
      * @param {string} reason
+     * @param {string} rule
      */
     function setPlaybackQuality(type, streamInfo, representation, reason = null, rule = null) {
-        if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type]) {
+        if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type] || !representation) {
             return;
         }
 
@@ -685,7 +686,10 @@ function AbrController() {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
-            logger.info('Stream ID: ' + streamId + ' [' + type + '],' + (rule ? rule : '') + ' switch from bitrate ' + oldRepresentation.bitrateInKbit + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+
+            const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
+            logger.info('Stream ID: ' + streamId + ' [' + type + '],' + (rule ? rule : '') + ' switch from bitrate ' + oldBitrate + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
                     oldRepresentation: oldRepresentation,
@@ -759,6 +763,9 @@ function AbrController() {
      * @returns {boolean}
      */
     function isPlayingAtTopQuality(representation) {
+        if (!representation) {
+            return true;
+        }
         const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
 
         return voRepresentations[voRepresentations.length - 1].id === representation.id;

@@ -15,19 +15,21 @@ import CmsdModel from '../../src/streaming/models/CmsdModel.js';
 import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
-import {expect} from 'chai';
+import {expect, assert} from 'chai';
+import EventBus from '../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import sinon from 'sinon';
 
 describe('AbrController', function () {
     const context = {};
     const voHelper = new VoHelper();
     const objectsHelper = new ObjectsHelper();
-    const defaultQuality = AbrController.QUALITY_DEFAULT;
 
+    const eventBus = EventBus(context).getInstance();
     const settings = Settings(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(Constants.VIDEO);
-    const representationCount = dummyMediaInfo.representationCount;
-    const streamProcessor = objectsHelper.getDummyStreamProcessor(Constants.VIDEO);
+    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0),voHelper.getDummyRepresentation(Constants.VIDEO, 1)];
     const adapterMock = new AdapterMock();
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
@@ -39,6 +41,8 @@ describe('AbrController', function () {
     const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
     const playbackControllerMock = new PlaybackControllerMock();
     const throughputControllerMock = new ThroughputControllerMock();
+
+    let streamProcessor;
 
     mediaPlayerModel.setConfig({
         serviceDescriptionController,
@@ -58,6 +62,7 @@ describe('AbrController', function () {
             throughputController: throughputControllerMock,
             customParametersModel
         });
+        streamProcessor = objectsHelper.getDummyStreamProcessor(Constants.VIDEO);
         abrCtrl.initialize();
         abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
     });
@@ -65,6 +70,7 @@ describe('AbrController', function () {
     afterEach(function () {
         abrCtrl.reset();
         settings.reset();
+        eventBus.reset();
     });
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
@@ -72,9 +78,9 @@ describe('AbrController', function () {
         expect(state).to.be.null;
     });
 
-    it('should return 0 when calling getQualityForBitrate with no mediaInfo', function () {
-        const quality = abrCtrl.getQualityForBitrate(undefined, undefined, true);
-        expect(quality).to.be.equal(0);
+    it('should return null when calling getQualityForBitrate with no mediaInfo', function () {
+        const quality = abrCtrl.getOptimalRepresentationForBitrate(undefined, undefined, true);
+        expect(quality).to.not.exist;
     });
 
     it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
@@ -82,95 +88,36 @@ describe('AbrController', function () {
         expect(isPlayingTopQuality).to.be.true;
     });
 
-    it('should update top quality index', function () {
-        const expectedTopQuality = representationCount - 1;
-        let actualTopQuality;
+    it('should switch to a new Representation', function (done) {
+        const onQualityChange = (e) => {
+            expect(e.oldRepresentation).to.not.exist;
+            expect(e.newRepresentation.id).to.be.equal(dummyRepresentations[0].id)
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange)
+            done()
+        }
 
-        actualTopQuality = abrCtrl.updateTopQualityIndex(dummyMediaInfo);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
 
-        expect(actualTopQuality).to.be.equal(expectedTopQuality);
-    });
-
-    it('should set a quality in a range between zero and a top quality index', function () {
-        const testQuality = 1;
-        let newQuality;
-
-        abrCtrl.updateTopQualityIndex(dummyMediaInfo);
-        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality);
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO, dummyMediaInfo.streamInfo.id);
-        expect(newQuality).to.be.equal(testQuality);
-    });
-
-    it('should throw an exception when attempting to set not a number value for a quality', function () {
-        let testQuality = 'a';
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-
-        testQuality = null;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-
-        testQuality = 2.5;
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-
-        testQuality = {};
-        expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
+        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, dummyRepresentations[0]);
     });
 
     it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {
-        const targetQuality = 2;
-        const oldQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        let newQuality;
+        const spy = sinon.spy();
 
-        abrCtrl.setPlaybackQuality(Constants.VIDEO, null, targetQuality);
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        expect(newQuality).to.be.equal(oldQuality);
+        assert.equal(spy.notCalled, true);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+        abrCtrl.setPlaybackQuality(Constants.VIDEO, null, dummyRepresentations[0]);
     });
 
-    it('should ignore an attempt to set a negative quality value', function () {
-        const negativeQuality = -1;
-        const oldQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        let newQuality;
+    it('should ignore an attempt to set a quality value if no Representation is provided', function () {
+        const spy = sinon.spy();
 
-        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, negativeQuality);
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        expect(newQuality).to.be.equal(oldQuality);
+        assert.equal(spy.notCalled, true);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, null);
     });
 
-    it('should ignore an attempt to set a quality greater than top quality index', function () {
-        const greaterThanTopQualityValue = representationCount;
-        const oldQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        let newQuality;
-
-        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, greaterThanTopQualityValue);
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-
-        expect(newQuality).to.be.equal(oldQuality);
-    });
-
-    it('should restore a default quality value after reset', function () {
-        const testQuality = 1;
-        let newQuality;
-
-        abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality);
-        abrCtrl.reset();
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
-        expect(newQuality).to.be.equal(defaultQuality);
-    });
-
-    it('should compose a list of available bitrates', function () {
-        const expectedBitrates = dummyMediaInfo.bitrateList;
-        const actualBitrates = abrCtrl.getBitrateList(dummyMediaInfo);
-        let item,
-            match;
-
-        match = expectedBitrates.filter(function (val, idx) {
-            item = actualBitrates[idx];
-            return (item && (item.qualityIndex === idx) && (item.bitrate === val.bandwidth) && (item.mediaType === dummyMediaInfo.type) && (item.width === val.width) && (item.height === val.height));
-        });
-
-        expect(match.length).to.be.equal(expectedBitrates.length);
-    });
-
-    it('should return the appropriate max allowed index for the max allowed bitrate set', function () {
+    it('should return the right Representations for maxBitrate values', function () {
         const mediaInfo = streamProcessor.getMediaInfo();
 
         mediaInfo.streamInfo = streamProcessor.getStreamInfo();
