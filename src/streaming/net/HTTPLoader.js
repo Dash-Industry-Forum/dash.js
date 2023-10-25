@@ -231,7 +231,14 @@ function HTTPLoader(cfg) {
          * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
          */
         const _onabort = function () {
-            _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, httpResponse, true, traces);
+
+            requestObject.startDate = requestStartTime;
+            requestObject.endDate = new Date();
+            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+            requestObject.fileLoaderType = fileLoaderType;
+            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
+
+            _addHttpRequestMetric(requestObject, httpResponse, true, traces);
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
@@ -256,7 +263,7 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
-            _addHttpRequestMetric(requestObject, requestStartTime, fileLoaderType, httpRequest, httpResponse, true, traces);
+            _addHttpRequestMetric(requestObject, httpResponse, false, traces);
             _retriggerRequest();
         };
 
