@@ -1,4 +1,4 @@
-import { CommonMediaRequest, CommonMediaResponse, RequestPlugin, ResponsePlugin } from '@svta/common-media-library/request'
+import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
 import { CmcdObjectType } from '@svta/common-media-library/cmcd'
 import * as dashjs from 'dashjs'
 
@@ -35,39 +35,39 @@ export class App {
     this.player.initialize(document.querySelector('video') as HTMLMediaElement)
 
     // Add request plugin to override request url for video segment requests only
-    this.addRequestPlugin()
+    this.addRequestInterceptor()
 
     // Add response plugin to add response header
-    this.addResponsePlugin()
+    this.addResponseInterceptor()
 
     window.player = this.player
   }
 
-  private addRequestPlugin() {
+  private addRequestInterceptor() {
     if (!this.player) {
       return
     }
-    const plugin: RequestPlugin = (request: CommonMediaRequest) => {
+    const interceptor: RequestInterceptor = (request: CommonMediaRequest) => {
       if (request.cmcd?.ot === CmcdObjectType.VIDEO) {
-        request.url += (request.url.includes('?') ? '&' : '?') + 'request-plugin=true'
+        request.url += (request.url.includes('?') ? '&' : '?') + 'request-interceptor=true'
         console.log(request.url)
       }
-      return Promise.resolve()
+      return Promise.resolve(request)
     }
-    this.player.registerRequestPlugin(plugin)
+    this.player.addRequestInterceptor(interceptor)
   }
 
-  private addResponsePlugin() {
+  private addResponseInterceptor() {
     if (!this.player) {
       return
     }
-    const plugin: ResponsePlugin = (response: CommonMediaResponse) => {
+    const interceptor: ResponseInterceptor = (response: CommonMediaResponse) => {
       if (!response.headers) {
         response.headers = {}
       }
-      response.headers['response-plugin'] = 'true'
-      return Promise.resolve()
+      response.headers['response-interceptor'] = 'true'
+      return Promise.resolve(response)
     }
-    this.player.registerResponsePlugin(plugin)
+    this.player.addResponseInterceptor(interceptor)
   }
 }

@@ -1682,47 +1682,47 @@ function MediaPlayer() {
     }
 
     /**
-     * Registers a request plugin. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
-     * The filters are applied in the order they are registered.
-     * @param {function} plugin - the request plugin callback
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the request interceptor callback
      * @memberof module:MediaPlayer
      * @instance
      */
-    function registerRequestPlugin(plugin) {
-        customParametersModel.registerRequestPlugin(plugin);
+    function addRequestInterceptor(interceptor) {
+        customParametersModel.addRequestInterceptor(interceptor);
     }
 
     /**
-     * Unregisters a request plugin.
-     * @param {function} plugin - the request plugin callback
+     * Removes a request interceptor.
+     * @param {function} interceptor - the request interceptor callback
      * @memberof module:MediaPlayer
      * @instance
      */    
-    function unregisterRequestPlugin(plugin) {
-        customParametersModel.unregisterRequestPlugin(plugin);
+    function removeRequestInterceptor(interceptor) {
+        customParametersModel.removeRequestInterceptor(interceptor);
     }
 
     /**
-     * Registers a response plugin. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the plugin process is completed.
-     * The plugins are applied in the order they are registered.
-     * @param {function} plugin - the response plugin callback
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the response interceptor
      * @memberof module:MediaPlayer
      * @instance
      */
-    function registerResponsePlugin(plugin) {
-        customParametersModel.registerResponsePlugin(plugin);
+    function addResponseInterceptor(interceptor) {
+        customParametersModel.addResponseInterceptor(interceptor);
     }
 
     /**
-     * Unregisters a response plugin.
-     * @param {function} plugin - the request plugin callback
+     * Removes a response interceptor.
+     * @param {function} interceptor - the request interceptor
      * @memberof module:MediaPlayer
      * @instance
      */    
-    function unregisterResponsePlugin(plugin) {
-        customParametersModel.unregisterResponsePlugin(plugin);
+    function removeResponseInterceptor(interceptor) {
+        customParametersModel.removeResponseInterceptor(interceptor);
     }
 
     /**
@@ -2615,10 +2615,10 @@ function MediaPlayer() {
         getProtectionController,
         attachProtectionController,
         setProtectionData,
-        registerRequestPlugin,
-        unregisterRequestPlugin,
-        registerResponsePlugin,
-        unregisterResponsePlugin,
+        addRequestInterceptor,
+        removeRequestInterceptor,
+        addResponseInterceptor,
+        removeResponseInterceptor,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
         unregisterLicenseRequestFilter,

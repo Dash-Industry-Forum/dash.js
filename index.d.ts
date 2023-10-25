@@ -1500,13 +1500,13 @@ declare namespace dashjs {
 
         setProtectionData(value: ProtectionDataSet): void;
 
-        registerRequestPlugin(plugin: CommonMediaLibrary.RequestPlugin): void;
+        addRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
 
-        unregisterRequestPlugin(plugin: CommonMediaLibrary.RequestPlugin): void;
+        removeRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
 
-        registerResponsePlugin(plugin: CommonMediaLibrary.ResponsePlugin): void;
+        addResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
 
-        unregisterResponsePlugin(plugin: CommonMediaLibrary.ResponsePlugin): void;
+        removeResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
 
         registerLicenseRequestFilter(filter: RequestFilter): void;
 

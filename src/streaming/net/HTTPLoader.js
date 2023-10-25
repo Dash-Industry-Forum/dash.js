@@ -208,7 +208,8 @@ function HTTPLoader(cfg) {
             requestObject.fileLoaderType = fileLoaderType;
             httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
     
-            _applyResponsePlugins(httpResponse).then(() => {
+            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
+                httpResponse = _httpResponse;
                 if (httpResponse.status >= 200 && httpResponse.status <= 299) {
                     _handleLoaded(true, requestObject, httpRequest, httpResponse, traces, requestStartTime, fileLoaderType);
 
@@ -279,6 +280,25 @@ function HTTPLoader(cfg) {
             }
 
             _retriggerRequest();
+        }
+
+
+        const _loadRequest = function(loader, httpRequest, httpResponse) {
+            _applyRequestModifier(httpRequest).then(() => {
+                _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
+                    httpRequest = _httpRequest;
+    
+                    httpRequest.onload = _onload;
+                    httpRequest.onloadend = _onloadend;
+                    httpRequest.onerror = _onloadend;
+                    httpRequest.onprogress = _onprogress;
+                    httpRequest.onabort = _onabort;
+                    httpRequest.ontimeout = _ontimeout;
+            
+                    httpResponse.resourceTiming.startTime = Date.now();
+                    loader.load(httpRequest, httpResponse);
+                });
+            });
         }
 
         /**
@@ -363,14 +383,6 @@ function HTTPLoader(cfg) {
             customData: { request: requestObject }
         };
 
-        // Pass callbacks into request object
-        httpRequest.onload = _onload;
-        httpRequest.onloadend = _onloadend;
-        httpRequest.onerror = _onloadend;
-        httpRequest.onprogress = _onprogress;
-        httpRequest.onabort = _onabort;
-        httpRequest.ontimeout = _ontimeout;
-
         // Init response (CommonMediaLibrary.request.CommoneMediaResponse)
         httpResponse = {
             request: httpRequest,
@@ -411,15 +423,6 @@ function HTTPLoader(cfg) {
         }
     }
 
-    function _loadRequest(loader, httpRequest, httpResponse) {
-        _applyRequestModifier(httpRequest).then(() => {
-            _applyRequestPlugins(httpRequest).then(() => {
-                httpResponse.resourceTiming.startTime = Date.now();
-                loader.load(httpRequest, httpResponse);
-            });
-        });
-    }
-
     function _applyRequestModifier(httpRequest) {
         if (requestModifier && requestModifier.modifyRequestURL) {
             httpRequest.url = requestModifier.modifyRequestURL(httpRequest.url);
@@ -442,34 +445,26 @@ function HTTPLoader(cfg) {
         return requestModifier && requestModifier.modifyRequest ? modifyRequest(httpRequest, requestModifier) : Promise.resolve();
     }
 
-    function _applyRequestPlugins(httpRequest) {
-        const plugins = customParametersModel.getRequestPlugins();
-        if (!plugins) return Promise.resolve();
+    function _applyRequestInterceptors(httpRequest) {
+        const interceptors = customParametersModel.getRequestInterceptors();
+        if (!interceptors) return Promise.resolve(httpRequest);
 
-        return new Promise(resolve => {
-            plugins.reduce((prev, next) => {
-                return prev.then(() => {
-                    return next(httpRequest);
-                });
-            }, Promise.resolve(false)).then(processed => {
-                resolve(processed); 
+        return interceptors.reduce((prev, next) => {
+            return prev.then((request) => {
+                return next(request);
             });
-        });
+        }, Promise.resolve(httpRequest));
     }
 
-    function _applyResponsePlugins(response) {
-        const plugins = customParametersModel.getResponsePlugins();
-        if (!plugins) return Promise.resolve(response);
+    function _applyResponseInterceptors(response) {
+        const interceptors = customParametersModel.getResponseInterceptors();
+        if (!interceptors) return Promise.resolve(response);
 
-        return new Promise(resolve => {
-            plugins.reduce((prev, next) => {
-                return prev.then(response => {
-                    return next(response);
-                });
-            }, Promise.resolve(response)).then(response => {
-                resolve(response); 
+        return interceptors.reduce((prev, next) => {
+            return prev.then(resp => {
+                return next(resp);
             });
-        });
+        }, Promise.resolve(response));
     }
 
     /**
