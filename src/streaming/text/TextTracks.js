@@ -508,7 +508,7 @@ function TextTracks(config) {
                     // Remove old cues
                     const bufferToKeep = settings.get().streaming.buffer.bufferToKeep;
                     const currentTime = videoModel.getTime();
-                    _deleteOutdatedTrackCues(track, currentTime - bufferToKeep, currentTime);
+                    _deleteOutdatedTrackCues(track, 0, currentTime - bufferToKeep);
                 } else {
                     logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
                 }
@@ -770,6 +770,11 @@ function TextTracks(config) {
     }
 
     function _deleteOutdatedTrackCues(track, start, end) {
+
+        if (end < start) {
+            return;
+        }
+
         if (track && (track.cues || track.manualCueList)) {
             const mode = track.cues && track.cues.length > 0 ? 'native' : 'custom';
             const cues = mode === 'native' ? track.cues : track.manualCueList;
