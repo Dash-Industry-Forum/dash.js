@@ -423,26 +423,6 @@ describe('MediaPlayer', function () {
             expect(minAllowedBitrateFor).to.equal(5);
         });
 
-        it('should update portal size', function () {
-            let elementHeight = abrControllerMock.getElementHeight();
-            let elementWidth = abrControllerMock.getElementWidth();
-            let windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
-
-            expect(elementHeight).to.be.undefined; // jshint ignore:line
-            expect(elementWidth).to.be.undefined; // jshint ignore:line
-            expect(windowResizeEventCalled).to.be.false; // jshint ignore:line
-
-            player.updatePortalSize();
-
-            elementHeight = abrControllerMock.getElementHeight();
-            elementWidth = abrControllerMock.getElementWidth();
-            windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
-
-            expect(elementHeight).to.equal(10);
-            expect(elementWidth).to.equal(10);
-            expect(windowResizeEventCalled).to.be.true; // jshint ignore:line
-        });
-
         it('should configure bitrate according to playback area size', function () {
             let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
             expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
@@ -503,42 +483,11 @@ describe('MediaPlayer', function () {
 
         describe('When it is not initialized', function () {
             it('Method getQualityFor should throw an exception', function () {
-                expect(player.getQualityFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
+                expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method setQualityFor should throw an exception', function () {
-                expect(player.setQualityFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
-            });
-        });
-
-        describe('When it is initialized', function () {
-            beforeEach(function () {
-                player.initialize(videoElementMock, dummyUrl, false);
-            });
-
-            it('should configure quality for type', function () {
-                let qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'DUMMY_STREAM-01'
-                });
-                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
-
-                qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
-
-                player.setQualityFor('video', 10);
-
-                qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'DUMMY_STREAM-01'
-                });
-                expect(qualityFor).to.equal(10);
-
-                qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(10);
-            });
-
-            it('Method getTopBitrateInfoFor should return null when type is undefined', function () {
-                const topBitrateInfo = player.getTopBitrateInfoFor();
-                expect(topBitrateInfo).to.be.null; // jshint ignore:line
+                expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
         });
     });
@@ -701,7 +650,7 @@ describe('MediaPlayer', function () {
 
         it('should configure bufferTimeDefault', function () {
             let bufferTimeDefault = player.getSettings().streaming.buffer.bufferTimeDefault;
-            expect(bufferTimeDefault).to.equal(12);
+            expect(bufferTimeDefault).to.equal(18);
         });
 
         it('should configure BufferTimeAtTopQuality', function () {
@@ -927,7 +876,7 @@ describe('MediaPlayer', function () {
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
             it('Method getBitrateInfoListFor should throw an exception', function () {
-                expect(player.getRepresentationsFor).to.throw('You must first call initialize() and set a source before calling this method');
+                expect(player.getCurrentRepresentationForType).to.throw('You must first call initialize() and set a source before calling this method');
             });
 
             it('Method getStreamsFromManifest should throw an exception', function () {
@@ -965,8 +914,6 @@ describe('MediaPlayer', function () {
     });
 
     describe('Stream and Track Management Functions', function () {
-        describe('When it is not initialized', function () {
-        });
 
         describe('When it is initialized', function () {
             beforeEach(function () {
@@ -975,11 +922,6 @@ describe('MediaPlayer', function () {
                 mediaControllerMock.addTrack('track1');
                 mediaControllerMock.addTrack('track2');
                 mediaControllerMock.setTrack('track1');
-            });
-
-            it('Method getBitrateInfoListFor should return bitrate info list', function () {
-                const bitrateList = player.getRepresentationsFor();
-                expect(bitrateList.length).to.equal(2);
             });
 
             it('Method getTracksFor should return tracks', function () {

@@ -84,7 +84,7 @@ import ThroughputController from './controllers/ThroughputController.js';
 
 /**
  * The media types
- * @typedef {("video" | "audio" | "text" | "image")} MediaType
+ * @typedef {('video' | 'audio' | 'text' | 'image')} MediaType
  */
 
 /**
@@ -1410,11 +1410,12 @@ function MediaPlayer() {
      * @instance
      */
     function getCurrentRepresentationForType(type) {
-        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
-            return null;
-        }
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return null;
         }
 
         const activeStream = getActiveStream();
@@ -1438,7 +1439,6 @@ function MediaPlayer() {
      * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
@@ -1474,7 +1474,6 @@ function MediaPlayer() {
      * @param {number} value - the quality index, 0 corresponding to the lowest absolute index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */

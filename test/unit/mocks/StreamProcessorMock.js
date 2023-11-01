@@ -66,7 +66,8 @@ function StreamProcessorMock (testType, streamInfo) {
         return {
             bitrateList: [],
             mimeType: 'video/mp4',
-            streamInfo: this.streamInfo
+            streamInfo: this.streamInfo,
+            type: 'video'
         };
     };
 

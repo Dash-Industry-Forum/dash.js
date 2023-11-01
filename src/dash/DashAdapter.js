@@ -132,7 +132,8 @@ function DashAdapter() {
      * @instance
      */
     function getMainAdaptationForType(type, streamInfo) {
-        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[streamInfo.index].mpd.manifest, streamInfo.index, type);
+        const index = streamInfo ? streamInfo.index : 0;
+        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[index].mpd.manifest, index, type);
 
         if (!adaptations || adaptations.length === 0) return null;
 

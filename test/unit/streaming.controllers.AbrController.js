@@ -19,6 +19,8 @@ import {expect, assert} from 'chai';
 import EventBus from '../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
+import adapterMock from './mocks/AdapterMock.js';
+import {set} from 'ink-docstrap/fixtures/documents/probe.js';
 
 describe('AbrController', function () {
     const context = {};
@@ -29,9 +31,7 @@ describe('AbrController', function () {
     const settings = Settings(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(Constants.VIDEO);
-    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0),voHelper.getDummyRepresentation(Constants.VIDEO, 1)];
-    const adapterMock = new AdapterMock();
-    const videoModelMock = new VideoModelMock();
+    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1)];
     const domStorageMock = new DomStorageMock();
     const dashMetricsMock = new DashMetricsMock();
     const streamControllerMock = new StreamControllerMock();
@@ -43,6 +43,8 @@ describe('AbrController', function () {
     const throughputControllerMock = new ThroughputControllerMock();
 
     let streamProcessor;
+    let adapterMock;
+    let videoModelMock;
 
     mediaPlayerModel.setConfig({
         serviceDescriptionController,
@@ -50,6 +52,8 @@ describe('AbrController', function () {
     })
 
     beforeEach(function () {
+        adapterMock = new AdapterMock();
+        videoModelMock = new VideoModelMock();
         abrCtrl.setConfig({
             dashMetrics: dashMetricsMock,
             videoModel: videoModelMock,
@@ -119,103 +123,147 @@ describe('AbrController', function () {
 
     it('should return the right Representations for maxBitrate values', function () {
         const mediaInfo = streamProcessor.getMediaInfo();
+        const bitrateList = mediaInfo.bitrateList;
+
+        adapterMock.getVoRepresentations = () => {
+            return [
+                {
+                    bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                    mediaInfo,
+                    id: 1
+                },
+                {
+                    bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                    mediaInfo,
+                    id: 2
+                },
+                {
+                    bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                    mediaInfo,
+                    id: 3
+                }
+            ]
+        }
+
+        adapterMock.areMediaInfosEqual = () => {
+            return true
+        }
 
         mediaInfo.streamInfo = streamProcessor.getStreamInfo();
-        mediaInfo.representationCount = 3;
         mediaInfo.type = Constants.VIDEO;
-        abrCtrl.updateTopQualityIndex(mediaInfo);
 
         // Max allowed bitrate in kbps, bandwidth is in bps
         const s = { streaming: { abr: { maxBitrate: {} } } };
-        const streamId = streamProcessor.getStreamInfo().id;
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[0].bandwidth / 1000;
         settings.update(s);
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo, false);
+        expect(possibleVoRepresentations.length).to.be.equal(1);
+        expect(possibleVoRepresentations[0].id).to.be.equal(1);
 
-        let maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(0);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[1].bandwidth / 1000;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(2);
+        expect(possibleVoRepresentations[1].id).to.be.equal(2);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(1);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[2].bandwidth / 1000;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
+        expect(possibleVoRepresentations[2].id).to.be.equal(3);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(2);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(1);
+        expect(possibleVoRepresentations[0].id).to.be.equal(1);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(0);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(2);
+        expect(possibleVoRepresentations[1].id).to.be.equal(2);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(1);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
+        expect(possibleVoRepresentations[2].id).to.be.equal(3);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(2);
-
-        s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1;
+        s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
-
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(maxAllowedIndex).to.be.equal(0);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
+        expect(possibleVoRepresentations[2].id).to.be.equal(3);
     });
 
-    it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
+    it('should return the right Representations for minBitrate values', function () {
+        const mediaInfo = streamProcessor.getMediaInfo();
+        const bitrateList = mediaInfo.bitrateList;
+
+        adapterMock.getVoRepresentations = () => {
+            return [
+                {
+                    bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                    mediaInfo,
+                    id: 1
+                },
+                {
+                    bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                    mediaInfo,
+                    id: 2
+                },
+                {
+                    bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                    mediaInfo,
+                    id: 3
+                }
+            ]
+        }
+
+        adapterMock.areMediaInfosEqual = () => {
+            return true
+        }
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.type = Constants.VIDEO;
+
         // Min allowed bitrate in kbps, bandwidth is in bps
         const s = { streaming: { abr: { minBitrate: {} } } };
-        const streamId = streamProcessor.getStreamInfo().id;
-        s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[0].bandwidth / 1000;
         settings.update(s);
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
 
-        let minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(0);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[1].bandwidth / 1000;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(2);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(1);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[2].bandwidth / 1000;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(1);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(2);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(1);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(1);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(2);
-
-        s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1;
+        s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
-
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
-        expect(minAllowedIndex).to.be.equal(0);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(3);
     });
 
     it('should configure initial bitrate for video type', function () {
@@ -230,29 +278,89 @@ describe('AbrController', function () {
         expect(initialBitrateFor).to.be.NaN;
     });
 
-    it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {
-        abrCtrl.updateTopQualityIndex(dummyMediaInfo);
-
-        let bitrateInfo = abrCtrl.getTopBitrateInfoFor(Constants.VIDEO);
-        expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
-        expect(bitrateInfo.bitrate).to.be.equal(3000000);
-        expect(bitrateInfo.qualityIndex).to.be.equal(2);
-
+    it('should return the appropriate possible Representations if limitBitrateByPortal is enabled', function () {
+        videoModelMock.getVideoElementSize = () => {
+            return { elementWidth: 800 }
+        };
         const s = { streaming: { abr: { limitBitrateByPortal: true } } };
         settings.update(s);
 
-        bitrateInfo = abrCtrl.getTopBitrateInfoFor(Constants.VIDEO);
-        expect(bitrateInfo).to.be.an.instanceOf(BitrateInfo);
-        expect(bitrateInfo.bitrate).to.be.equal(2000000);
-        expect(bitrateInfo.qualityIndex).to.be.equal(1);
+        const mediaInfo = streamProcessor.getMediaInfo();
+        const bitrateList = mediaInfo.bitrateList;
+
+        adapterMock.getVoRepresentations = () => {
+            return [
+                {
+                    bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                    bandwidth: bitrateList[0].bandwidth,
+                    mediaInfo,
+                    id: 1,
+                    width: 640
+                },
+                {
+                    bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                    bandwidth: bitrateList[1].bandwidth,
+                    mediaInfo,
+                    id: 2,
+                    width: 720
+                },
+                {
+                    bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                    bandwidth: bitrateList[2].bandwidth,
+                    mediaInfo,
+                    id: 3,
+                    width: 1920
+                }
+            ]
+        }
+
+        adapterMock.areMediaInfosEqual = () => {
+            return true
+        }
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.type = Constants.VIDEO;
+
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        expect(possibleVoRepresentations.length).to.be.equal(2);
     });
 
-    it('should return the appropriate top quality index when calling getMaxAllowedIndexFor', function () {
-        videoModelMock.setClientWidth(899);
-        const s = { streaming: { abr: { limitBitrateByPortal: true } } };
-        settings.update(s);
-        abrCtrl.updateTopQualityIndex({ type: Constants.VIDEO, streamInfo: { id: 'test' }, representationCount: 5 });
-        let topQualityIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, 'test');
-        expect(topQualityIndex).to.be.equal(4);
+    it('should return an appropriate Representation when calling getOptimalRepresentationForBitrate', function () {
+        const mediaInfo = streamProcessor.getMediaInfo();
+        const bitrateList = mediaInfo.bitrateList;
+
+        adapterMock.getVoRepresentations = () => {
+            return [
+                {
+                    bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                    bandwidth: bitrateList[0].bandwidth,
+                    mediaInfo,
+                    id: 1
+                },
+                {
+                    bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                    bandwidth: bitrateList[1].bandwidth,
+                    mediaInfo,
+                    id: 2
+                },
+                {
+                    bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                    bandwidth: bitrateList[2].bandwidth,
+                    mediaInfo,
+                    id: 3
+                }
+            ]
+        }
+
+        adapterMock.areMediaInfosEqual = () => {
+            return true
+        }
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.type = Constants.VIDEO;
+
+        let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, bitrateList[2].bandwidth / 1000);
+        expect(optimalRepresentationForBitrate.id).to.be.equal(3);
     });
+
 });

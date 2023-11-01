@@ -12,6 +12,10 @@ class MediaControllerMock {
         this.tracks = [];
     }
 
+    initialize() {
+
+    }
+
     checkInitialMediaSettingsForType() {
     }
 

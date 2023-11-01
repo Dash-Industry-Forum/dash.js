@@ -782,7 +782,7 @@ function StreamProcessor(config) {
             });
     }
 
-    function _prepareForFastQualitySwitch(voRepresentation, e) {
+    function _prepareForFastQualitySwitch(voRepresentation) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
         let safeBufferLevel = 1.5 * (!isNaN(voRepresentation.fragmentDuration) ? voRepresentation.fragmentDuration : 1);

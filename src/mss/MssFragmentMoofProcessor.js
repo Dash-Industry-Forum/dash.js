@@ -32,6 +32,7 @@ import DashJSError from '../streaming/vo/DashJSError.js';
 import MssErrors from './errors/MssErrors.js';
 
 import Events from '../streaming/MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * @module MssFragmentMoofProcessor
@@ -352,4 +353,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);

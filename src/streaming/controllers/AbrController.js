@@ -351,15 +351,15 @@ function AbrController() {
         try {
             const filteredArray = voRepresentations.filter((voRepresentation) => {
                 const type = voRepresentation.mediaInfo.type;
-                const currentBitrate = voRepresentation.bitrateInKbit;
+                const representationBitrate = voRepresentation.bitrateInKbit;
                 const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
                 const minBitrate = mediaPlayerModel.getAbrBitrateParameter('minBitrate', type);
 
-                if (maxBitrate > -1 && currentBitrate > maxBitrate) {
+                if (maxBitrate > -1 && representationBitrate > maxBitrate) {
                     return false;
                 }
 
-                return !(minBitrate > -1 && currentBitrate < minBitrate);
+                return !(minBitrate > -1 && representationBitrate < minBitrate);
             })
 
             if (filteredArray.length > 0) {
@@ -557,6 +557,11 @@ function AbrController() {
      * @memberof AbrController#
      */
     function getInitialBitrateFor(type) {
+
+        if (type === Constants.TEXT) {
+            return NaN;
+        }
+
         let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
         if (configBitrate > 0) {
             return configBitrate;

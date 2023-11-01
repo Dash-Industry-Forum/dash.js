@@ -17,6 +17,7 @@ import TextControllerMock from './mocks/TextControllerMock.js';
 import RepresentationControllerMock from './mocks/RepresentationControllerMock.js';
 
 import chai from 'chai';
+
 const expect = chai.expect;
 
 const context = {};
@@ -129,11 +130,13 @@ describe('BufferController', function () {
             const chunk = {
                 bytes: 'initData',
                 quality: 2,
-                mediaInfo: {
-                    type: 'video'
-                },
                 streamId: streamInfo.id,
-                representationId: 'representationId'
+                representation: {
+                    id: 'representationId',
+                    mediaInfo: {
+                        type: 'video'
+                    },
+                }
             };
 
             initCache.save(chunk);
@@ -183,12 +186,14 @@ describe('BufferController', function () {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,
-                    mediaInfo: {
-                        type: 'video'
-                    },
                     bytes: 'initData',
                     quality: 2,
-                    representationId: 'representationId'
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
+                    }
                 }
             };
             const onInitDataLoaded = function () {
@@ -206,12 +211,14 @@ describe('BufferController', function () {
         it('should save init data into cache', function (done) {
             const chunk = {
                 streamId: streamInfo.id,
-                mediaInfo: {
-                    type: 'video'
-                },
                 bytes: 'initData',
                 quality: 2,
-                representationId: 'representationId'
+                representation: {
+                    id: 'representationId',
+                    mediaInfo: {
+                        type: 'video'
+                    },
+                }
             };
             const event = {
                 chunk: chunk
@@ -220,12 +227,12 @@ describe('BufferController', function () {
             settings.update({ streaming: { cacheInitSegments: true } });
 
             initCache.reset();
-            let cache = initCache.extract(chunk.streamId, chunk.representationId);
+            let cache = initCache.extract(chunk.streamId, chunk.representation.id);
             const onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
 
                 // check initCache
-                cache = initCache.extract(chunk.streamId, chunk.representationId);
+                cache = initCache.extract(chunk.streamId, chunk.representation.id);
                 expect(cache.bytes).to.equal(chunk.bytes);
                 done();
             };
@@ -252,11 +259,14 @@ describe('BufferController', function () {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,
-                    mediaInfo: {
-                        type: 'video'
-                    },
                     bytes: 'data',
-                    quality: 2
+                    quality: 2,
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
+                    }
                 }
             };
             const onMediaFragmentLoaded = function () {
@@ -277,8 +287,11 @@ describe('BufferController', function () {
                     streamId: streamInfo.id,
                     bytes: 'data',
                     quality: 2,
-                    mediaInfo: {
-                        type: 'video'
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
                     }
                 }
             };
