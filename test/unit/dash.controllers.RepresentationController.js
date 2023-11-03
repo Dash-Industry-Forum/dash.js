@@ -1,6 +1,5 @@
 import ObjectsHelper from './helpers/ObjectsHelper.js';
 import VoHelper from './helpers/VOHelper.js';
-import MpdHelper from './helpers/MPDHelper.js';
 import EventBus from '../../src/core/EventBus.js';
 import RepresentationController from '../../src/dash/controllers/RepresentationController.js';
 import Events from '../../src/core/events/Events.js';
@@ -27,8 +26,6 @@ describe('RepresentationController', function () {
     const context = {};
     const testType = 'video';
     const specHelper = new SpecHelper();
-    const mpdHelper = new MpdHelper();
-    const mpd = mpdHelper.getMpd('static');
     const voRepresentations = [];
     voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);

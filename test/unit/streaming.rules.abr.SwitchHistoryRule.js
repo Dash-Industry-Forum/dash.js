@@ -7,16 +7,16 @@ const context = {};
 const switchHistoryRule = SwitchHistoryRule(context).create();
 
 describe('SwitchHistoryRule', function () {
-    it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
-        const switchRequest = switchHistoryRule.getMaxIndex();
+    it('should return an empty switchRequest when getSwitchRequest function is called with an empty parameter', function () {
+        const switchRequest = switchHistoryRule.getSwitchRequest();
 
-        expect(switchRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(switchRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an switchRequest with quality equals 0 when one switchRequest equals to {drops: 7, noDrops: 0, dropSize: 4}, a division by zero occurs', function () {
         let rulesContextMock = new RulesContextMock();
-        const switchRequest = switchHistoryRule.getMaxIndex(rulesContextMock);
+        const switchRequest = switchHistoryRule.getSwitchRequest(rulesContextMock);
 
-        expect(switchRequest.quality).to.be.equal(0);
+        expect(switchRequest.representation.id).to.be.equal(1);
     });
 });

@@ -189,7 +189,7 @@ function ABRRulesCollection(config) {
      * @param {array} srArray
      * @return {object} SwitchRequest
      */
-    function _getMinSwitchRequest(srArray) {
+    function getMinSwitchRequest(srArray) {
         const values = {};
         let newSwitchReq = null;
         let i,
@@ -207,7 +207,7 @@ function ABRRulesCollection(config) {
         for (i = 0, len = srArray.length; i < len; i += 1) {
             currentSwitchRequest = srArray[i];
             if (currentSwitchRequest.representation !== SwitchRequest.NO_CHANGE) {
-                // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
+                // We only use the new quality in case the bitrate is lower than the already saved one or if no new quality has been selected for the respective priority
                 if (values[currentSwitchRequest.priority] === null ||
                     (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE && currentSwitchRequest.representation.bitrateInKbit < values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
                     values[currentSwitchRequest.priority] = currentSwitchRequest;
@@ -247,15 +247,18 @@ function ABRRulesCollection(config) {
         })
         const switchRequestArray = activeQualitySwitchRules.map(rule => rule.getSwitchRequest(rulesContext));
         const activeRules = _getRulesWithChange(switchRequestArray);
-        const maxQuality = _getMinSwitchRequest(activeRules);
+        const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
     }
 
     function shouldAbandonFragment(rulesContext) {
+        if (!rulesContext) {
+            return SwitchRequest(context).create()
+        }
         const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
         const activeRules = _getRulesWithChange(abandonRequestArray);
-        const shouldAbandon = _getMinSwitchRequest(activeRules);
+        const shouldAbandon = getMinSwitchRequest(activeRules);
 
         if (shouldAbandon) {
             shouldAbandon.reason.forceAbandon = true
@@ -300,6 +303,7 @@ function ABRRulesCollection(config) {
         getAbandonFragmentRules,
         getBestPossibleSwitchRequest,
         getBolaState,
+        getMinSwitchRequest,
         getQualitySwitchRules,
         initialize,
         reset,

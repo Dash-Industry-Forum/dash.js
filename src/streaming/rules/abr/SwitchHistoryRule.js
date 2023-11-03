@@ -21,6 +21,12 @@ function SwitchHistoryRule() {
     }
 
     function getSwitchRequest(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
+
+        if (!rulesContext) {
+            return switchRequest;
+        }
         const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
         const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
         const abrController = rulesContext.getAbrController();
@@ -28,7 +34,7 @@ function SwitchHistoryRule() {
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;
-        const switchRequest = SwitchRequest(context).create();
+
         switchRequest.rule = this.getClassName();
 
         const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);

@@ -136,6 +136,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
+                    bandwidth: BITRATE,
                     mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
                     duration: DURATION,
                     url: 'http://test.url/firstRequest'
@@ -505,6 +506,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
+                    bandwidth: BITRATE,
                     mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
                     duration: DURATION,
                     url: 'http://test.url/firstRequest'

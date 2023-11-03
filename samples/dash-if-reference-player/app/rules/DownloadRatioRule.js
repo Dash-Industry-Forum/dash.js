@@ -56,7 +56,7 @@ function DownloadRatioRuleClass() {
         }, 0);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
 
         let mediaType = rulesContext.getMediaInfo().type;
 
@@ -189,7 +189,7 @@ function DownloadRatioRuleClass() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

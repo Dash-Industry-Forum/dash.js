@@ -57,6 +57,7 @@ function ThumbnailTracks(config) {
 
     let instance,
         tracks,
+        representations,
         dashHandler,
         currentTrackIndex,
         mediaInfo,
@@ -119,6 +120,8 @@ function ThumbnailTracks(config) {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
                     _createTrack(rep, true);
                 }
+
+                representations.push(rep);
             });
         }
 
@@ -315,8 +318,13 @@ function ThumbnailTracks(config) {
         return dashHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
     }
 
+    function getRepresentations() {
+        return representations
+    }
+
     function reset() {
         tracks = [];
+        representations = [];
         currentTrackIndex = -1;
         mediaInfo = null;
     }
@@ -325,6 +333,7 @@ function ThumbnailTracks(config) {
         addTracks,
         getCurrentTrack,
         getCurrentTrackIndex,
+        getRepresentations,
         getThumbnailRequestForTime,
         getTracks,
         reset,

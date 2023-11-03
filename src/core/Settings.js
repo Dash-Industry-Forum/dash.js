@@ -101,7 +101,7 @@ import Events from './events/Events.js';
  *                bufferTimeAtTopQuality: 30,
  *                bufferTimeAtTopQualityLongForm: 60,
  *                initialBufferLevel: NaN,
- *                bufferTimeDefault: 12,
+ *                bufferTimeDefault: 18,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.3,
  *                useAppendWindow: true,
@@ -340,7 +340,7 @@ import Events from './events/Events.js';
  *
  * Allows you to modify the buffer that is kept in source buffer in seconds.
  * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
- * @property {number} [bufferTimeDefault=12]
+ * @property {number} [bufferTimeDefault=18]
  * The time that the internal buffer target will be set to when not playing at the top quality.
  * @property {number} [bufferTimeAtTopQuality=30]
  * The time that the internal buffer target will be set to once playing the top quality.

@@ -5,6 +5,7 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 import AdapterMock from './mocks/AdapterMock.js';
 
 import chai from 'chai';
+
 const expect = chai.expect;
 
 const context = {};
@@ -23,10 +24,12 @@ describe('TextSourceBuffer', function () {
     it('call to append function with invalid tttml data should triggered a parse error', function () {
         const buffer = new ArrayBuffer(8);
         textSourceBuffer.append(buffer, {
-            mediaInfo: {
-                type: 'text',
-                mimeType: 'application/ttml+xml',
-                codec: 'application/ttml+xml;codecs=\'undefined\''
+            representation: {
+                mediaInfo: {
+                    type: 'text',
+                    mimeType: 'application/ttml+xml',
+                    codec: 'application/ttml+xml;codecs=\'undefined\''
+                }
             }
         });
         expect(errorHandlerMock.errorCode).to.equal(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE);

@@ -4,7 +4,6 @@ import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents.js
 import EventBus from '../../src/core/EventBus.js';
 import DashJSError from '../../src/streaming/vo/DashJSError.js';
 import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors.js';
-import Constants from '../../src/streaming/constants/Constants.js';
 import Errors from '../../src/core/errors/Errors.js';
 import Settings from '../../src/core/Settings.js';
 import AdapterMock from './mocks/AdapterMock.js';

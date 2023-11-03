@@ -1,5 +1,4 @@
 import DashAdapter from '../../src/dash/DashAdapter.js';
-import MediaInfo from '../../src/dash/vo/MediaInfo.js';
 import Constants from '../../src/streaming/constants/Constants.js';
 import DashConstants from '../../src/dash/constants/DashConstants.js';
 import cea608parser from '../../externals/cea608-parser.js';

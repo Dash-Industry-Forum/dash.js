@@ -38,7 +38,6 @@
 
 import FactoryMaker from '../../../../core/FactoryMaker.js';
 import Debug from '../../../../core/Debug.js';
-import AbrController from '../../../controllers/AbrController.js';
 
 const WEIGHT_SELECTION_MODES = {
     MANUAL: 'manual_weight_selection',

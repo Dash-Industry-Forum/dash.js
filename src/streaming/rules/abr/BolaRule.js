@@ -293,15 +293,15 @@ function BolaRule(config) {
      *  The placeholder buffer increases the effective buffer that is used to calculate the bitrate.
      *  There are two main reasons we might want to increase the placeholder buffer:
      *
-     *  1. When a segment finishes downloading, we would expect to get a call on getMaxIndex() regarding the quality for
+     *  1. When a segment finishes downloading, we would expect to get a call on getSwitchRequest() regarding the quality for
      *  the next segment. However, there might be a delay before the next call. E.g. when streaming live content, the
-     *  next segment might not be available yet. If the call to getMaxIndex() does happens after a delay, we don't
+     *  next segment might not be available yet. If the call to getSwitchRequest() does happens after a delay, we don't
      *  want the delay to change the BOLA decision - we only want to factor download time to decide on bitrate level.
      *
-     * 2. It is possible to get a call to getMaxIndex() without having a segment download. The buffer target in dash.js
-     * is different for top-quality segments and lower-quality segments. If getMaxIndex() returns a lower-than-top
+     * 2. It is possible to get a call to getSwitchRequest() without having a segment download. The buffer target in dash.js
+     * is different for top-quality segments and lower-quality segments. If getSwitchRequest() returns a lower-than-top
      * quality, then the buffer controller might decide not to download a segment. When dash.js is ready for the next
-     * segment, getMaxIndex() will be called again. We don't want this extra delay to factor in the bitrate decision.
+     * segment, getSwitchRequest() will be called again. We don't want this extra delay to factor in the bitrate decision.
      * @param bolaState
      * @param mediaType
      * @private

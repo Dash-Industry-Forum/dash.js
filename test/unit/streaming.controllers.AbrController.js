@@ -1,7 +1,6 @@
 import VoHelper from './helpers/VOHelper.js';
 import ObjectsHelper from './helpers/ObjectsHelper.js';
 import AbrController from '../../src/streaming/controllers/AbrController.js';
-import BitrateInfo from '../../src/streaming/vo/BitrateInfo.js';
 import Constants from '../../src/streaming/constants/Constants.js';
 import Settings from '../../src/core/Settings.js';
 import VideoModelMock from './mocks/VideoModelMock.js';
@@ -19,8 +18,6 @@ import {expect, assert} from 'chai';
 import EventBus from '../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
-import adapterMock from './mocks/AdapterMock.js';
-import {set} from 'ink-docstrap/fixtures/documents/probe.js';
 
 describe('AbrController', function () {
     const context = {};

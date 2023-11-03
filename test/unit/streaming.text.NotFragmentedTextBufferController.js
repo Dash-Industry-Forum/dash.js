@@ -8,6 +8,7 @@ import StreamProcessorMock from './mocks/StreamProcessorMock.js';
 import MediaSourceMock from './mocks/MediaSourceMock.js';
 
 import chai from 'chai';
+
 const expect = chai.expect;
 
 const context = {};
@@ -176,8 +177,10 @@ describe('NotFragmentedTextBufferController', function () {
                         let event = {
                             chunk: {
                                 streamId: 'id',
-                                mediaInfo: {
-                                    type: testType
+                                representation: {
+                                    mediaInfo: {
+                                        type: testType
+                                    }
                                 },
                                 bytes: 'data'
                             }

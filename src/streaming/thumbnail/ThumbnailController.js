@@ -142,7 +142,7 @@ function ThumbnailController(config) {
     }
 
     function getPossibleVoRepresentations() {
-        return thumbnailTracks.getTracks();
+        return thumbnailTracks.getRepresentations();
 
     }
 
