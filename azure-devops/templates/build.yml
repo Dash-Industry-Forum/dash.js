@@ -1,0 +1,3 @@
+steps:
+  - script: npm run build -- --force
+    displayName: 'NPM build'

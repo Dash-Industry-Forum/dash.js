@@ -1,0 +1,39 @@
+trigger: none
+pr: none
+
+name: publish-dash.js-$(Date:yyyy-MM-dd)$(Rev:.r)
+
+parameters:
+  - name: versionBump
+    displayName: Version bump
+    type: string
+    values:
+      - Major
+      - Minor
+      - Bugfix
+    default: Minor
+  - name: isSnapshot
+    displayName: Is snapshot?
+    type: boolean
+    default: true
+
+resources:
+  repositories:
+    - repository: pipelines
+      type: github
+      name: hivestreaming/azure-ci
+      #     ref: refs/heads/EE-1_my-awesome-feature # pin to a specific branch during development
+      endpoint: hivestreaming  # Azure DevOps service connection.
+
+extends:
+  template: templates/npm/publish-library.yml@pipelines
+  parameters:
+    versionBump: ${{ parameters.versionBump }}
+    isSnapshot: ${{ parameters.isSnapshot }}
+    useExistingTag: false
+    projectName: dash.js
+    workingDirectory: .
+    prePublish:
+    - template: templates/install.yml
+    - template: templates/build.yml
+    - template: templates/copy-files.yml
