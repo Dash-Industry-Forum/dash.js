@@ -1,0 +1,14 @@
+steps:
+  - task: CopyFiles@2
+  displayName: 'Copy DashParser dts'
+  inputs:
+    sourceFolder: src/dash/parser
+    contents: 'DashParser.d.ts'
+    targetFolder: build/es5/src/dash/parser
+
+- task: CopyFiles@2
+  displayName: 'Copy X2JS dts'
+  inputs:
+    sourceFolder: externals
+    contents: 'xml2json.d.ts'
+    targetFolder: build/es5/externals
