@@ -1,0 +1,12 @@
+steps:
+  - task: NodeTool@0
+    displayName: Install Node.js
+    inputs:
+      versionSpec: 16.x
+  - task: npmAuthenticate@0
+    displayName: Npm Authenticate
+    inputs:
+      workingFile: .npmrc
+      customEndpoint: npm registry readonly
+  - script: npm ci
+    displayName: Npm Install
