@@ -116,7 +116,7 @@
                 },
                 {
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd",
-                    "name": "SegmentTemplate/Number, live profile",
+                    "name": "On-demand Testcard - Multiple Languages, AAC Stereo and Surround, Audio Description, AVC Video",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
@@ -291,13 +291,13 @@
                     "provider": "hbbtv"
                 }, 
                 {
-                    "name": "Live Testcard Simulcast Stream - Multiple Languages, AVC Video Representations",
+                    "name": "Live Testcard - Multiple Languages, AVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "Live Testcard Simulcast Stream - HEVC Video Representations",
+                    "name": "Live Testcard - Multiple Languages, HEVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/hevc-ctv.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
@@ -338,13 +338,13 @@
                     "provider": "broadpeak"
                 },
                 {
-                    "name": "Live Low-Latency Testcard Simulcast Stream - 4 Chunk Segments, AVC, Multi-language",
+                    "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, AVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-avc-full.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "Live Low-Latency Testcard Simulcast Stream - 4 Chunk Segments, HEVC, Multi-language",
+                    "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, HEVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-hevc-ctv.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
                     "provider": "bbc"
@@ -407,21 +407,21 @@
                     "provider": "dashif"
                 },
                 {
-                    "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
-                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
-                    "provider": "bbc"
-                },
-                {
-                    "name": "BBC R&D EBU-TT-D Subtitling Test",
+                    "name": "On-demand Elephant's Dream - with EBU-TT-D Subtitle Track in English",
                     "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "BBC Reith Font Download Test - English Language Only",
-                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/",
+                    "name": "On-demand Elephant's Dream - with EBU-TT-D 'Snaking' Subtitle Track (random text) - lines grow over time simulating live subtitles",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "Live Testcard - Multiple Subtitle Languages and Downloadable Font Signalling",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
@@ -1275,27 +1275,21 @@
                     "provider": "dashif"
                 },
                 {
-                    "name": "HE and LC AAC Stereo in English (Video-on-demand)",
-                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/",
+                    "name": "Live Testcard Audio - AAC-LC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-lc-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "AAC-LC Surround (4 active channels) in English (Video-on-demand)",
+                    "name": "Live Testcard Audio - HE-AAC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-he-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "On-demand Testcard Audio - AAC-LC Surround (4 active channels) in English",
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-surround-en.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/",
-                    "provider": "bbc"
-                },
-                {
-                    "name": "HE and LC AAC Stereo in English (Live)",
-                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
-                },
-                {
-                    "name": "AAC-LC Surround (4 active channels) in English (Live)",
-                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-surround-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
