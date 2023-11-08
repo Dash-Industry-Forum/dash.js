@@ -1133,12 +1133,14 @@ function MediaPlayer() {
      * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
      * @return {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type) {
-        return throughputController ? throughputController.getAverageThroughput(type) : 0;
+    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
     }
 
     /**
