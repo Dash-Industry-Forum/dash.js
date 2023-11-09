@@ -140,7 +140,7 @@ function BolaRule(config) {
      * @private
      */
     function _onQualityChangeRequested(e) {
-        if (e) {
+        if (e && bolaStateDict[e.streamId] && bolaStateDict[e.streamId][e.mediaType]) {
             const bolaState = bolaStateDict[e.streamId][e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 bolaState.currentRepresentation = e.newRepresentation;
