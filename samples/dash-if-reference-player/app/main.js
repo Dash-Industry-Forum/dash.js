@@ -1983,7 +1983,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var maxIndex = representations ? representations.length : 1;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndex + 1;
+            if ($scope.player.getCurrentRepresentationForType(type)) {
+                var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndex + 1;
+            }
 
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();

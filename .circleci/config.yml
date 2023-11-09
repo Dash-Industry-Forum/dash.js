@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-    browser-tools: circleci/browser-tools@1.4.2
+    browser-tools: circleci/browser-tools@1.4.6
 
 executors:
     dashjs-executor:

@@ -1017,14 +1017,14 @@ function Settings() {
                 usePixelRatioInLimitBitrateByPortal: false,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 activeRules: {
-                    throughputRule: false,
-                    bolaRule: false,
-                    insufficientBufferRule: false,
-                    switchHistoryRule: false,
-                    droppedFramesRule: false,
-                    abandonRequestsRule: false,
+                    throughputRule: true,
+                    bolaRule: true,
+                    insufficientBufferRule: true,
+                    switchHistoryRule: true,
+                    droppedFramesRule: true,
+                    abandonRequestsRule: true,
                     l2ARule: false,
-                    loLPRule: true
+                    loLPRule: false
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,

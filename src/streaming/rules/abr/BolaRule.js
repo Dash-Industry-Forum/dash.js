@@ -93,7 +93,7 @@ function BolaRule(config) {
         // if audio buffer runs empty (due to track switch for example) then reset placeholder buffer only for audio (to avoid decrease video BOLA quality)
         const stateDict = mediaType === Constants.AUDIO ? [Constants.AUDIO] : bolaStateDict[streamId];
         for (const mediaType in stateDict) {
-            if (bolaStateDict[streamId].hasOwnProperty(mediaType) && bolaStateDict[streamId][mediaType].state === BOLA_STATE_STEADY) {
+            if (bolaStateDict[streamId] && bolaStateDict[streamId].hasOwnProperty(mediaType) && bolaStateDict[streamId][mediaType].state === BOLA_STATE_STEADY) {
                 bolaStateDict[streamId][mediaType].placeholderBuffer = 0;
             }
         }
@@ -328,7 +328,7 @@ function BolaRule(config) {
     }
 
     function _onMediaFragmentLoaded(e) {
-        if (e && e.chunk && e.chunk.representation.mediaInfo) {
+        if (e && e.chunk && e.chunk.representation.mediaInfo && bolaStateDict[e.streamId]) {
             const bolaState = bolaStateDict[e.streamId][e.chunk.representation.mediaInfo.type];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 const start = e.chunk.start;
