@@ -194,7 +194,6 @@ function CmcdModel() {
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
-
             if (request.type === HTTPRequest.MPD_TYPE) {
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
@@ -237,7 +236,7 @@ function CmcdModel() {
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
-        const tb = _getTopBitrateByType(request.mediaType);
+        const tb = _getTopBitrateByType(request.representation.mediaInfo);
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(request.mediaType);
@@ -246,7 +245,7 @@ function CmcdModel() {
         if (request.mediaType === Constants.VIDEO) ot = CmcdObjectType.VIDEO;
         if (request.mediaType === Constants.AUDIO) ot = CmcdObjectType.AUDIO;
         if (request.mediaType === Constants.TEXT) {
-            if (request.mediaInfo.mimeType === 'application/mp4') {
+            if (request.representation.mediaInfo.mimeType === 'application/mp4') {
                 ot = CmcdObjectType.TIMED_TEXT;
             } else {
                 ot = CmcdObjectType.CAPTION;
@@ -379,19 +378,18 @@ function CmcdModel() {
 
     function _getBitrateByRequest(request) {
         try {
-            const quality = request.quality;
-            const bitrateList = request.mediaInfo.bitrateList;
-
-            return parseInt(bitrateList[quality].bandwidth / 1000);
+            return parseInt(request.bandwidth / 1000);
         } catch (e) {
             return null;
         }
     }
 
-    function _getTopBitrateByType(mediaType) {
+    function _getTopBitrateByType(mediaInfo) {
         try {
-            const info = abrController.getTopBitrateInfoFor(mediaType);
-            return Math.round(info.bitrate / 1000);
+            const bitrates = abrController.getPossibleVoRepresentations(mediaInfo).map((rep) => {
+                return rep.bitrateInKbit
+            });
+            return Math.max(...bitrates)
         } catch (e) {
             return null;
         }
@@ -508,17 +506,17 @@ function CmcdModel() {
             // Get the values we need
             let playbackRate = playbackController.getPlaybackRate();
             if (!playbackRate) playbackRate = 1;
-            let {quality, mediaType, mediaInfo, duration} = request;
+            let { bandwidth, mediaType, representation, duration } = request;
+            const mediaInfo = representation.mediaInfo
 
             if (!mediaInfo) {
                 return NaN;
             }
             let currentBufferLevel = _getBufferLevelByType(mediaType);
             if (currentBufferLevel === 0) currentBufferLevel = 500;
-            let bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
             // Calculate RTP
-            let segmentSize = (bitrate * duration) / 1000; // Calculate file size in kilobits
+            let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
             let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
             let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;

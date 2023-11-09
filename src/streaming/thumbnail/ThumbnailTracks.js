@@ -57,6 +57,7 @@ function ThumbnailTracks(config) {
 
     let instance,
         tracks,
+        representations,
         dashHandler,
         currentTrackIndex,
         mediaInfo,
@@ -119,6 +120,8 @@ function ThumbnailTracks(config) {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
                     _createTrack(rep, true);
                 }
+
+                representations.push(rep);
             });
         }
 
@@ -174,6 +177,7 @@ function ThumbnailTracks(config) {
         let cache = [];
         const segments = _normalizeSegments(data, representation);
         representation.segments = segments;
+        representation.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
 
         track.readThumbnail = function (time, callback) {
@@ -287,6 +291,20 @@ function ThumbnailTracks(config) {
         currentTrackIndex = index;
     }
 
+    function setTrackById(id) {
+        if (!tracks || tracks.length === 0) {
+            return;
+        }
+
+        const index = tracks.findIndex((elem) => {
+            return elem.id === id
+        })
+
+        if (index !== -1) {
+            currentTrackIndex = index;
+        }
+    }
+
     function getThumbnailRequestForTime(time) {
         let currentVoRep;
         const voReps = adapter.getVoRepresentations(mediaInfo);
@@ -300,20 +318,27 @@ function ThumbnailTracks(config) {
         return dashHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
     }
 
+    function getRepresentations() {
+        return representations
+    }
+
     function reset() {
         tracks = [];
+        representations = [];
         currentTrackIndex = -1;
         mediaInfo = null;
     }
 
     instance = {
-        getTracks,
         addTracks,
-        reset,
-        setTrackByIndex,
         getCurrentTrack,
         getCurrentTrackIndex,
-        getThumbnailRequestForTime
+        getRepresentations,
+        getThumbnailRequestForTime,
+        getTracks,
+        reset,
+        setTrackById,
+        setTrackByIndex,
     };
 
     setup();

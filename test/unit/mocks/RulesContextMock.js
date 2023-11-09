@@ -2,11 +2,13 @@ import FragmentRequest from '../../../src/streaming/vo/FragmentRequest.js';
 
 function SwitchRequestHistoryMock() {
     this.getSwitchRequests = function () {
-        return [{
-            drops: 7,
-            noDrops: 0,
-            dropSize: 4
-        }];
+        return {
+            1: {
+                drops: 7,
+                noDrops: 0,
+                dropSize: 4
+            }
+        };
     };
 }
 
@@ -24,16 +26,19 @@ function RulesContextMock() {
 
         return fragRequest;
     };
-    this.getRepresentationInfo = function () {
+    this.getVoRepresentation = function () {
     };
     this.getAbrController = function () {
         return {
+            getPossibleVoRepresentations: function () {
+                return [{ id: 1 }]
+            }
         };
     };
     this.getSwitchHistory = function () {
         return new SwitchRequestHistoryMock();
     };
-    this.getRepresentationInfo = function () {
+    this.getVoRepresentation = function () {
         return {
             fragmentDuration: NaN
         };

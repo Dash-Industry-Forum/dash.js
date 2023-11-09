@@ -77,14 +77,13 @@ function MssHandler(config) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
-        chunk.mediaInfo = request.mediaInfo;
         chunk.segmentType = request.type;
         chunk.start = request.startTime;
         chunk.duration = request.duration;
         chunk.end = chunk.start + chunk.duration;
         chunk.index = request.index;
-        chunk.quality = request.quality;
-        chunk.representationId = request.representationId;
+        chunk.bandwidth = request.bandwidth;
+        chunk.representation = request.representation;
         chunk.endFragment = endFragment;
 
         return chunk;
@@ -134,9 +133,8 @@ function MssHandler(config) {
         request.mediaType = representation.adaptation.type;
         request.type = initSegmentType;
         request.range = representation.range;
-        request.quality = representation.index;
-        request.mediaInfo = mediaInfo;
-        request.representationId = representation.id;
+        request.bandwidth = representation.bandwidth;
+        request.representation = representation;
 
         const chunk = createDataChunk(request, mediaInfo.streamInfo.id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
@@ -175,7 +173,7 @@ function MssHandler(config) {
         }
 
         // Start MssFragmentInfoControllers in case of start-over streams
-        let manifestInfo = e.request.mediaInfo.streamInfo.manifestInfo;
+        let manifestInfo = e.request.representation.mediaInfo.streamInfo.manifestInfo;
         if (!manifestInfo.isDynamic && manifestInfo.dvrWindowSize !== Infinity) {
             startFragmentInfoControllers();
         }

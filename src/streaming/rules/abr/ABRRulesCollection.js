@@ -181,7 +181,7 @@ function ABRRulesCollection(config) {
     }
 
     function _getRulesWithChange(srArray) {
-        return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
+        return srArray.filter(sr => sr.representation !== SwitchRequest.NO_CHANGE);
     }
 
     /**
@@ -194,50 +194,43 @@ function ABRRulesCollection(config) {
         let newSwitchReq = null;
         let i,
             len,
-            req,
-            quality,
-            reason;
+            currentSwitchRequest;
 
         if (srArray.length === 0) {
             return;
         }
 
-        values[SwitchRequest.PRIORITY.STRONG] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.WEAK] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.DEFAULT] = { quality: SwitchRequest.NO_CHANGE, reason: null };
+        values[SwitchRequest.PRIORITY.STRONG] = null;
+        values[SwitchRequest.PRIORITY.WEAK] = null;
+        values[SwitchRequest.PRIORITY.DEFAULT] = null;
 
         for (i = 0, len = srArray.length; i < len; i += 1) {
-            req = srArray[i];
-            if (req.quality !== SwitchRequest.NO_CHANGE) {
-                // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
-                if (values[req.priority].quality === SwitchRequest.NO_CHANGE || values[req.priority].quality > req.quality) {
-                    values[req.priority].quality = req.quality;
-                    values[req.priority].reason = req.reason || null;
+            currentSwitchRequest = srArray[i];
+            if (currentSwitchRequest.representation !== SwitchRequest.NO_CHANGE) {
+                // We only use the new quality in case the bitrate is lower than the already saved one or if no new quality has been selected for the respective priority
+                if (values[currentSwitchRequest.priority] === null ||
+                    (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE && currentSwitchRequest.representation.bitrateInKbit < values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
+                    values[currentSwitchRequest.priority] = currentSwitchRequest;
                 }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.WEAK] && values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.DEFAULT] && values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.STRONG] && values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
-        if (newSwitchReq) {
-            quality = newSwitchReq.quality;
-            reason = newSwitchReq.reason;
-        }
-
-        return SwitchRequest(context).create(quality, reason);
+        return newSwitchReq
     }
 
-    function getMaxQuality(rulesContext) {
+    function getBestPossibleSwitchRequest(rulesContext) {
         if (!rulesContext) {
             return SwitchRequest(context).create()
         }
@@ -252,17 +245,24 @@ function ABRRulesCollection(config) {
 
             return (shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.BOLA_RULE) || (!shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE)
         })
-        const switchRequestArray = activeQualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
+        const switchRequestArray = activeQualitySwitchRules.map(rule => rule.getSwitchRequest(rulesContext));
         const activeRules = _getRulesWithChange(switchRequestArray);
         const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
     }
 
-    function shouldAbandonFragment(rulesContext, streamId) {
-        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
+    function shouldAbandonFragment(rulesContext) {
+        if (!rulesContext) {
+            return SwitchRequest(context).create()
+        }
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
         const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
+
+        if (shouldAbandon) {
+            shouldAbandon.reason.forceAbandon = true
+        }
 
         return shouldAbandon || SwitchRequest(context).create();
     }
@@ -300,15 +300,15 @@ function ABRRulesCollection(config) {
     }
 
     instance = {
+        getAbandonFragmentRules,
+        getBestPossibleSwitchRequest,
+        getBolaState,
+        getMinSwitchRequest,
+        getQualitySwitchRules,
         initialize,
         reset,
-        getMaxQuality,
-        getMinSwitchRequest,
-        shouldAbandonFragment,
-        getQualitySwitchRules,
-        getAbandonFragmentRules,
         setBolaState,
-        getBolaState
+        shouldAbandonFragment,
     };
 
     return instance;

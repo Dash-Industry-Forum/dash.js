@@ -282,7 +282,7 @@ function DashMetrics(config) {
             request.startTime,
             request.availabilityStartTime,
             request.duration,
-            request.quality,
+            request.bandwidth,
             request.range,
             state);
     }
@@ -359,7 +359,7 @@ function DashMetrics(config) {
     function addManifestUpdateRepresentationInfo(representation, mediaType) {
         if (representation) {
             const manifestUpdateInfo = this.getCurrentManifestUpdate();
-            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation.id, representation.index, representation.streamIndex, mediaType, representation.presentationTimeOffset, representation.startNumber, representation.fragmentInfoType);
+            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation, mediaType);
         }
     }
 

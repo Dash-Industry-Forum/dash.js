@@ -15,7 +15,7 @@ describe('AbandonRequestsRule', function () {
         const abandonRequestsRule = AbandonRequestsRule(context).create({});
         const abandonRequest = abandonRequestsRule.shouldAbandon();
 
-        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(abandonRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty switchRequest when shouldAbandon function is called with a mock parameter', function () {
@@ -31,6 +31,6 @@ describe('AbandonRequestsRule', function () {
 
         const abandonRequest = abandonRequestsRule.shouldAbandon(rulesContextMock);
 
-        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(abandonRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 });

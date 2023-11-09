@@ -6,16 +6,16 @@ const context = {};
 const throughputRule = ThroughputRule(context).create({});
 
 describe('ThroughputRule', function () {
-    it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
-        const maxIndexRequest = throughputRule.getMaxIndex();
+    it('should return an empty switchRequest when getSwitchRequest function is called with an empty parameter', function () {
+        const maxIndexRequest = throughputRule.getSwitchRequest();
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
-    it('should return an empty switchRequest when getMaxIndex function is called with an malformed parameter', function () {
-        const maxIndexRequest = throughputRule.getMaxIndex({});
+    it('should return an empty switchRequest when getSwitchRequest function is called with an malformed parameter', function () {
+        const maxIndexRequest = throughputRule.getSwitchRequest({});
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
 });

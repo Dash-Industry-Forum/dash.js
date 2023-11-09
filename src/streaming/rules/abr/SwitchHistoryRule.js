@@ -1,4 +1,3 @@
-
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
 import SwitchRequest from '../SwitchRequest.js';
@@ -21,24 +20,42 @@ function SwitchHistoryRule() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
+
+        if (!rulesContext) {
+            return switchRequest;
+        }
         const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
         const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
+        const abrController = rulesContext.getAbrController();
+        const mediaInfo = rulesContext.getMediaInfo();
         let drops = 0;
         let noDrops = 0;
         let dropSize = 0;
-        const switchRequest = SwitchRequest(context).create();
 
-        for (let i = 0; i < switchRequests.length; i++) {
-            if (switchRequests[i] !== undefined) {
-                drops += switchRequests[i].drops;
-                noDrops += switchRequests[i].noDrops;
-                dropSize += switchRequests[i].dropSize;
+        switchRequest.rule = this.getClassName();
+
+        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+
+        for (let i = 0; i < representations.length; i++) {
+            const currentRepresentation = representations[i];
+            if (currentRepresentation && switchRequests[currentRepresentation.id]) {
+                drops += switchRequests[currentRepresentation.id].drops;
+                noDrops += switchRequests[currentRepresentation.id].noDrops;
+                dropSize += switchRequests[currentRepresentation.id].dropSize;
 
                 if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
-                    switchRequest.quality = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
-                    switchRequest.reason = {index: switchRequest.quality, drops: drops, noDrops: noDrops, dropSize: dropSize};
-                    logger.debug('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
+                    const targetRepresentation = (i > 0 && switchRequests[currentRepresentation.id].drops > 0) ? representations[i - 1] : currentRepresentation;
+                    switchRequest.representation = targetRepresentation;
+                    switchRequest.reason = {
+                        index: switchRequest.quality,
+                        drops: drops,
+                        noDrops: noDrops,
+                        dropSize: dropSize
+                    };
+                    logger.debug('Switch history rule index: ' + switchRequest.representation.absoluteIndex + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
                     break;
                 }
             }
@@ -48,7 +65,7 @@ function SwitchHistoryRule() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

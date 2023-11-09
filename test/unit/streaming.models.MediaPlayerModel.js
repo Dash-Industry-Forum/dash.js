@@ -7,6 +7,7 @@ import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
 import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
 import chai from 'chai';
+
 const expect = chai.expect;
 
 describe('MediaPlayerModel', function () {
@@ -70,7 +71,7 @@ describe('MediaPlayerModel', function () {
     })
 
     it('Should return catchup playback rates if specified in the settings', () => {
-        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3, min: -0.2 }} } });
+        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3, min: -0.2 } } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
@@ -79,7 +80,7 @@ describe('MediaPlayerModel', function () {
     });
 
     it('Should set playbackRate.min to 0 if only playbackRate.max is specified in the settings', () => {
-        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3 }} } });
+        settings.update({ streaming: { liveCatchup: { playbackRate: { max: 0.3 } } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
@@ -88,7 +89,7 @@ describe('MediaPlayerModel', function () {
     });
 
     it('Should set playbackRate.max to 0 if only playbackRate.min is specified in the settings', () => {
-        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.2 }} } });
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.2 } } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
@@ -115,7 +116,7 @@ describe('MediaPlayerModel', function () {
     });
 
     it('Should limit catchup playback rates from settings if they are beyond the rate thresholds', () => {
-        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.8, max: 2.5 }} } });
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: -0.8, max: 2.5 } } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
@@ -137,7 +138,7 @@ describe('MediaPlayerModel', function () {
 
     it('Should set catchup playback rates from settings to 0 if the sign of the set values is incorrect', () => {
         // i.e. if max rate is incorrectly negative, or min rate is incorrectly positive
-        settings.update({ streaming: { liveCatchup: { playbackRate: { min: 1.5, max: -2.0 }} } });
+        settings.update({ streaming: { liveCatchup: { playbackRate: { min: 1.5, max: -2.0 } } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const playbackRates = mediaPlayerModel.getCatchupPlaybackRates();
 
@@ -163,48 +164,48 @@ describe('MediaPlayerModel', function () {
             }
         });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
-        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'audio');
         expect(value).to.be.equal(1);
-        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'video');
         expect(value).to.be.equal(2);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'audio');
         expect(value).to.be.equal(3);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'video');
         expect(value).to.be.equal(4);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'audio');
         expect(value).to.be.equal(5);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'video');
         expect(value).to.be.equal(6);
     })
 
     it('Should return abr bitrate parameter if specified via Service Description', () => {
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
-        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'audio');
         expect(value).to.be.equal(9000);
-        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'video');
         expect(value).to.be.equal(9000);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'audio');
         expect(value).to.be.equal(1000);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'video');
         expect(value).to.be.equal(1000);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'audio');
         expect(value).to.be.equal(5000);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'video');
         expect(value).to.be.equal(5000);
     })
 
     it('Should return -1 for abr bitrate parameters if not specified', () => {
-        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','audio');
+        let value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'audio');
         expect(value).to.be.equal(-1);
-        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', 'video');
         expect(value).to.be.equal(-1);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'audio');
         expect(value).to.be.equal(-1);
-        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('minBitrate', 'video');
         expect(value).to.be.equal(-1);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','audio');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'audio');
         expect(value).to.be.equal(-1);
-        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate','video');
+        value = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', 'video');
         expect(value).to.be.equal(-1);
     })
 
@@ -312,7 +313,10 @@ describe('MediaPlayerModel', function () {
 
     it('should configure initial buffer level with stable buffer time lower than initial buffer level', function () {
         const bufferTimeDefault = settings.get().streaming.buffer.bufferTimeDefault;
-        const s = { streaming: { buffer: { initialBufferLevel: bufferTimeDefault + 10 } } };
+        const s = { streaming: { buffer: { initialBufferLevel: bufferTimeDefault + 5 } } };
+        playbackController.getLiveDelay = () => {
+            return NaN;
+        }
         settings.update(s);
 
         let value = mediaPlayerModel.getInitialBufferLevel();

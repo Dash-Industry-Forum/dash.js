@@ -36,33 +36,37 @@
 import DashConstants from '../constants/DashConstants.js';
 
 class Representation {
+
     constructor() {
-        this.id = null;
-        this.index = -1;
+        this.absoluteIndex = NaN;
         this.adaptation = null;
-        this.segmentInfoType = null;
-        this.initialization = null;
-        this.codecs = null;
-        this.mimeType = null;
-        this.codecPrivateData = null;
-        this.segmentDuration = NaN;
-        this.timescale = 1;
-        this.startNumber = 1;
-        this.indexRange = null;
-        this.range = null;
-        this.presentationTimeOffset = 0;
-        // Set the source buffer timeOffset to this
-        this.MSETimeOffset = NaN;
-        // The information we need in the DashHandler to determine whether the last segment has been loaded
-        this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-        this.bandwidth = NaN;
-        this.width = NaN;
-        this.height = NaN;
-        this.scanType = null;
-        this.maxPlayoutRate = NaN;
-        this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
+        this.availabilityTimeOffset = 0;
+        this.bandwidth = NaN;
+        this.bitrateInKbit = NaN;
+        this.codecPrivateData = null;
+        this.codecs = null;
+        this.fragmentDuration = null;
         this.frameRate = null;
+        this.height = NaN;
+        this.id = null;
+        this.indexRange = null;
+        this.initialization = null;
+        this.maxPlayoutRate = NaN;
+        this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
+        this.mediaInfo = null;
+        this.mimeType = null;
+        this.mseTimeOffset = NaN;
+        this.presentationTimeOffset = 0;
+        this.qualityRanking = NaN;
+        this.range = null;
+        this.scanType = null;
+        this.segments = null;
+        this.segmentDuration = NaN;
+        this.segmentInfoType = null;
+        this.startNumber = 1;
+        this.timescale = 1;
+        this.width = NaN;
     }
 
     hasInitialization() {

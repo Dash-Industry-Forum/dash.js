@@ -38,29 +38,29 @@ import { HTTPRequest } from './metrics/HTTPRequest.js';
 class FragmentRequest {
     constructor(url) {
         this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaStartTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = url || null;
-        this.serviceLocation = null;
-        this.startDate = null;
-        this.firstByteDate = null;
-        this.endDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
         this.availabilityEndTime = null;
-        this.wallStartTime = null;
+        this.availabilityStartTime = null;
+        this.bandwidth = NaN;
         this.bytesLoaded = NaN;
         this.bytesTotal = NaN;
         this.delayLoadingTime = NaN;
+        this.duration = NaN;
+        this.endDate = null;
+        this.firstByteDate = null;
+        this.index = NaN;
+        this.mediaStartTime = NaN;
+        this.mediaType = null;
+        this.quality = NaN;
+        this.range = null;
+        this.representation = null;
         this.responseType = 'arraybuffer';
-        this.representationId = null;
+        this.serviceLocation = null;
+        this.startDate = null;
+        this.startTime = NaN;
+        this.timescale = NaN;
+        this.type = null;
+        this.url = url || null;
+        this.wallStartTime = null;
     }
 
     isInitializationRequest() {

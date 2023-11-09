@@ -32,6 +32,7 @@ import DashJSError from '../streaming/vo/DashJSError.js';
 import MssErrors from './errors/MssErrors.js';
 
 import Events from '../streaming/MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * @module MssFragmentMoofProcessor
@@ -219,7 +220,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
@@ -317,7 +318,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
@@ -342,9 +343,9 @@ function MssFragmentMoofProcessor(config) {
     }
 
     instance = {
-        convertFragment: convertFragment,
-        updateSegmentList: updateSegmentList,
-        getType: getType
+        convertFragment,
+        updateSegmentList,
+        getType
     };
 
     setup();
@@ -352,4 +353,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);

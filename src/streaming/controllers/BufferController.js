@@ -57,9 +57,7 @@ function BufferController(config) {
     const errHandler = config.errHandler;
     const fragmentModel = config.fragmentModel;
     const representationController = config.representationController;
-    const adapter = config.adapter;
     const textController = config.textController;
-    const abrController = config.abrController;
     const playbackController = config.playbackController;
     const streamInfo = config.streamInfo;
     const type = config.type;
@@ -163,16 +161,6 @@ function BufferController(config) {
     }
 
     /**
-     * Get the RepresentationInfo for a certain quality.
-     * @param {number} quality
-     * @return {object}
-     * @private
-     */
-    function _getRepresentationInfo(quality) {
-        return adapter.convertRepresentationToRepresentationInfo(representationController.getRepresentationForQuality(quality));
-    }
-
-    /**
      * Creates a SourceBufferSink object
      * @param {object} mediaInfo
      * @param {array} oldBufferSinks
@@ -208,9 +196,8 @@ function BufferController(config) {
 
     function _initializeSinkForPrebuffering() {
         return new Promise((resolve, reject) => {
-            const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
-            updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality))
+            updateBufferTimestampOffset(representationController.getCurrentRepresentation())
                 .then(() => {
                     resolve(sourceBufferSink);
                 })
@@ -222,15 +209,14 @@ function BufferController(config) {
 
     function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks) {
         return new Promise((resolve, reject) => {
-            const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
                 eventBus
             });
-            _initializeSink(mediaInfo, oldBufferSinks, requiredQuality)
+            _initializeSink(mediaInfo, oldBufferSinks)
                 .then(() => {
-                    return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
+                    return updateBufferTimestampOffset(representationController.getCurrentRepresentation());
                 })
                 .then(() => {
                     resolve(sourceBufferSink);
@@ -243,13 +229,13 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSink(mediaInfo, oldBufferSinks, requiredQuality) {
-        const selectedRepresentation = _getRepresentationInfo(requiredQuality);
+    function _initializeSink(mediaInfo, oldBufferSinks) {
+        const selectedVoRepresentation = representationController.getCurrentRepresentation();
 
         if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
-            return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
+            return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedVoRepresentation, oldBufferSinks[type]);
         } else {
-            return sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo, selectedRepresentation);
+            return sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo, selectedVoRepresentation);
         }
     }
 
@@ -274,7 +260,7 @@ function BufferController(config) {
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
                 if (chunk.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
-                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
+                    const initChunk = initCache.extract(chunk.streamId, chunk.representation.id);
                     if (initChunk) {
                         if (lastInit !== initChunk) {
                             dischargeFragments.push(initChunk);
@@ -303,7 +289,7 @@ function BufferController(config) {
             logger.info('Init fragment finished loading saving to', type + '\'s init cache');
             initCache.save(e.chunk);
         }
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
+        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representation.id, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         _appendToBuffer(e.chunk);
     }
 
@@ -322,7 +308,7 @@ function BufferController(config) {
         }
 
         // Append init segment into buffer
-        logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
+        logger.info('Append Init fragment', type, ' with representationId:', chunk.representation.id, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
         _appendToBuffer(chunk);
 
         return true;
@@ -351,7 +337,7 @@ function BufferController(config) {
                 _onAppended(e);
             });
 
-        if (chunk.mediaInfo.type === Constants.VIDEO) {
+        if (chunk.representation.mediaInfo.type === Constants.VIDEO) {
             _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
@@ -416,12 +402,12 @@ function BufferController(config) {
 
         if (appendedBytesInfo && !suppressAppendedEvent) {
             _triggerEvent(Events.BYTES_APPENDED_END_FRAGMENT, {
-                quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
                 bufferedRanges: ranges,
                 segmentType: appendedBytesInfo.segmentType,
-                mediaType: type
+                mediaType: type,
+                representationId: appendedBytesInfo.representation.id
             });
         }
     }
@@ -492,9 +478,6 @@ function BufferController(config) {
         }
     }
 
-    //**********************************************************************
-    // START Buffer Level, State & Sufficiency Handling.
-    //**********************************************************************
     function prepareForPlaybackSeek() {
         if (isBufferingCompleted) {
             setIsBufferingCompleted(false);
@@ -504,7 +487,30 @@ function BufferController(config) {
         return sourceBufferSink.abort();
     }
 
-    function prepareForReplacementTrackSwitch(codec) {
+    function prepareForForceReplacementQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            sourceBufferSink.abort()
+                .then(() => {
+                    return updateAppendWindow();
+                })
+                .then(() => {
+                    return pruneAllSafely();
+                })
+                .then(() => {
+                    // In any case we need to update the MSE.timeOffset
+                    return updateBufferTimestampOffset(voRepresentation)
+                })
+                .then(() => {
+                    setIsBufferingCompleted(false);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForReplacementTrackSwitch(representation) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
@@ -512,7 +518,7 @@ function BufferController(config) {
                 })
                 .then(() => {
                     if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(codec);
+                        return sourceBufferSink.changeType(representation);
                     }
 
                     return Promise.resolve();
@@ -530,35 +536,12 @@ function BufferController(config) {
         });
     }
 
-    function prepareForForceReplacementQualitySwitch(representationInfo) {
-        return new Promise((resolve, reject) => {
-            sourceBufferSink.abort()
-                .then(() => {
-                    return updateAppendWindow();
-                })
-                .then(() => {
-                    return pruneAllSafely();
-                })
-                .then(() => {
-                    // In any case we need to update the MSE.timeOffset
-                    return updateBufferTimestampOffset(representationInfo)
-                })
-                .then(() => {
-                    setIsBufferingCompleted(false);
-                    resolve();
-                })
-                .catch((e) => {
-                    reject(e);
-                });
-        });
-    }
-
-    function prepareForNonReplacementTrackSwitch(codec) {
+    function prepareForNonReplacementTrackSwitch(selectedRepresentation) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
                 .then(() => {
                     if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(codec);
+                        return sourceBufferSink.changeType(selectedRepresentation);
                     }
 
                     return Promise.resolve();
@@ -1048,15 +1031,15 @@ function BufferController(config) {
         }
     }
 
-    function updateBufferTimestampOffset(representationInfo) {
+    function updateBufferTimestampOffset(voRepresentation) {
         return new Promise((resolve) => {
-            if (!representationInfo || representationInfo.MSETimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
+            if (!voRepresentation || voRepresentation.mseTimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
                 resolve();
                 return;
             }
             // Each track can have its own @presentationTimeOffset, so we should set the offset
-            // if it has changed after switching the quality or updating an mpd
-            sourceBufferSink.updateTimestampOffset(representationInfo.MSETimeOffset)
+            // if it has changed after switching the quality or updating an MPD
+            sourceBufferSink.updateTimestampOffset(voRepresentation.mseTimeOffset)
                 .then(() => {
                     resolve();
                 })
@@ -1237,36 +1220,36 @@ function BufferController(config) {
     }
 
     instance = {
-        initialize,
-        getStreamId,
-        getType,
-        getBufferControllerType,
+        appendInitSegmentFromCache,
+        clearBuffers,
         createBufferSink,
         dischargePreBuffer,
+        getAllRangesWithSafetyFactor,
         getBuffer,
+        getBufferControllerType,
         getBufferLevel,
-        getRangeAt,
-        hasBufferAtTime,
-        pruneBuffer,
-        setMediaSource,
-        getMediaSource,
-        appendInitSegmentFromCache,
+        getContinuousBufferTimeForTargetTime,
         getIsBufferingCompleted,
-        setIsBufferingCompleted,
         getIsPruningInProgress,
-        reset,
+        getMediaSource,
+        getRangeAt,
+        getStreamId,
+        getType,
+        hasBufferAtTime,
+        initialize,
+        prepareForForceReplacementQualitySwitch,
+        prepareForNonReplacementTrackSwitch,
         prepareForPlaybackSeek,
         prepareForReplacementTrackSwitch,
-        prepareForNonReplacementTrackSwitch,
-        prepareForForceReplacementQualitySwitch,
-        updateAppendWindow,
-        getAllRangesWithSafetyFactor,
-        getContinuousBufferTimeForTargetTime,
-        clearBuffers,
         pruneAllSafely,
-        updateBufferTimestampOffset,
+        pruneBuffer,
+        reset,
+        segmentRequestingCompleted,
+        setIsBufferingCompleted,
+        setMediaSource,
         setSeekTarget,
-        segmentRequestingCompleted
+        updateAppendWindow,
+        updateBufferTimestampOffset,
     };
 
     setup();

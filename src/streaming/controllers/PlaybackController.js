@@ -570,8 +570,8 @@ function PlaybackController() {
     }
 
     function _onDataUpdateCompleted(e) {
-        const representationInfo = adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation);
-        const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
+        const voRepresentation = e.currentRepresentation;
+        const info = voRepresentation ? voRepresentation.mediaInfo.streamInfo : null;
 
         if (info === null || streamInfo.id !== info.id) return;
         streamInfo = info;

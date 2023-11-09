@@ -103,7 +103,7 @@ function LoLpWeightSelector(config) {
                     switch: weightVector[3]
                 };
 
-                let downloadTime = (neuron.bitrate * segmentDuration) / currentThroughput;
+                let downloadTime = (neuron.representation.bandwidth * segmentDuration) / currentThroughput;
                 let nextBuffer = getNextBuffer(currentBuffer, downloadTime);
                 let rebuffer = Math.max(0.00001, (downloadTime - nextBuffer));
                 let wt;
@@ -121,11 +121,11 @@ function LoLpWeightSelector(config) {
                 }
                 let weightedLatency = wt * neuron.state.latency;
 
-                let totalQoE = qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, playbackRate);
+                let totalQoE = qoeEvaluator.calculateSingleUseQoe(neuron.representation.bandwidth, weightedRebuffer, weightedLatency, playbackRate);
                 if ((maxQoE === null || totalQoE > maxQoE) && _checkConstraints(currentLatency, nextBuffer, deltaLatency)) {
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
-                    winnerBitrate = neuron.bitrate;
+                    winnerBitrate = neuron.representation.bandwidth;
                 }
             });
         });

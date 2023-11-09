@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import MssErrors from './errors/MssErrors.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * @module MssFragmentMoovProcessor
@@ -653,4 +654,4 @@ function MssFragmentMoovProcessor(config) {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentMoovProcessor);

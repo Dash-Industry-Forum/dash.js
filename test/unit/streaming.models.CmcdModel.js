@@ -11,6 +11,7 @@ import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
 import {decodeCmcd} from '@svta/common-media-library';
 
 import {expect} from 'chai';
+
 const context = {};
 
 const eventBus = EventBus(context).getInstance();
@@ -23,7 +24,7 @@ const REQUEST_HEADER_NAME = 'CMCD-Request';
 describe('CmcdModel', function () {
     let cmcdModel;
 
-    let abrControllerMock = new AbrControllerMock();
+    let abrControllerMock;
     let dashMetricsMock = new DashMetricsMock();
     let playbackControllerMock = new PlaybackControllerMock();
     const throughputControllerMock = new ThroughputControllerMock();
@@ -31,6 +32,7 @@ describe('CmcdModel', function () {
     let settings = Settings(context).getInstance();
 
     beforeEach(function () {
+        abrControllerMock = new AbrControllerMock();
         cmcdModel = CmcdModel(context).getInstance();
         cmcdModel.initialize();
         settings.update({ streaming: { cmcd: { enabled: true, cid: null } } });
@@ -39,7 +41,6 @@ describe('CmcdModel', function () {
     afterEach(function () {
         cmcdModel.reset();
         cmcdModel = null;
-        abrControllerMock.setTopBitrateInfo(null);
         settings.reset();
     });
 
@@ -123,7 +124,13 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_URL = 'next_object';
                 const NEXT_OBJECT_RANGE = '100-500';
 
-                abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: TOP_BITRATE / 1000
+                        }
+                    ]
+                }
                 throughputControllerMock.getSafeAverageThroughput = function () {
                     return MEASURED_THROUGHPUT;
                 };
@@ -131,7 +138,8 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    bandwidth: BITRATE,
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION,
                     url: 'http://test.url/firstRequest'
                 };
@@ -217,7 +225,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 let headers = cmcdModel.getHeaderParameters(request);
@@ -242,7 +250,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
@@ -273,7 +281,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
@@ -307,7 +315,7 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 let headers = cmcdModel.getHeaderParameters(request);
@@ -335,7 +343,8 @@ describe('CmcdModel', function () {
 
                 let request = {
                     type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                    mediaType: MEDIA_TYPE,
+                    representation: { mediaInfo: {} },
                 };
 
                 settings.update({ streaming: { cmcd: { enabled: true, cid: CID } } });
@@ -355,7 +364,8 @@ describe('CmcdModel', function () {
 
                 let request = {
                     type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                    mediaType: MEDIA_TYPE,
+                    representation: { mediaInfo: {} },
                 };
 
                 settings.update({ streaming: { cmcd: { enabled: true, rtp: 10000 } } });
@@ -375,7 +385,8 @@ describe('CmcdModel', function () {
 
                 let request = {
                     type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                    mediaType: MEDIA_TYPE,
+                    representation: { mediaInfo: {} },
                 };
 
                 settings.update({
@@ -484,7 +495,13 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_URL = 'next_object';
                 const NEXT_OBJECT_RANGE = '100-500';
 
-                abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: 20
+                        }
+                    ]
+                }
                 throughputControllerMock.getSafeAverageThroughput = function () {
                     return MEASURED_THROUGHPUT;
                 };
@@ -492,7 +509,8 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    bandwidth: BITRATE,
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION,
                     url: 'http://test.url/firstRequest'
                 };
@@ -563,11 +581,21 @@ describe('CmcdModel', function () {
                 const DURATION = 987.213;
                 const CHANGED_PLAYBACK_RATE = 2.4;
 
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: BITRATE / 1000
+                        }
+                    ]
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: {
+                        mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                        bitrateInKbit: BITRATE / 1000
+                    },
                     duration: DURATION
                 };
                 let parameters = cmcdModel.getQueryParameter(request);
@@ -588,11 +616,18 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: BITRATE / 1000
+                        }
+                    ]
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 cmcdModel.getQueryParameter(request); // first initial request will set startup to true
@@ -617,11 +652,18 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: BITRATE / 1000
+                        }
+                    ]
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 cmcdModel.getQueryParameter(request); // first initial request will set startup to true
@@ -649,11 +691,18 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                            bitrateInKbit: BITRATE / 1000
+                        }
+                    ]
+                };
                 let request = {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE,
                     quality: 0,
-                    mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
                 let parameters = cmcdModel.getQueryParameter(request);
@@ -681,7 +730,8 @@ describe('CmcdModel', function () {
 
                 let request = {
                     type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                    mediaType: MEDIA_TYPE,
+                    representation: { mediaInfo: {} },
                 };
 
                 settings.update({ streaming: { cmcd: { enabled: true, cid: CID } } });
@@ -701,9 +751,16 @@ describe('CmcdModel', function () {
                 const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
 
+                abrControllerMock.getPossibleVoRepresentations = () => {
+                    return [
+                        {
+                        }
+                    ]
+                };
                 let request = {
                     type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                    mediaType: MEDIA_TYPE,
+                    representation: { mediaInfo: {} },
                 };
 
                 settings.update({ streaming: { cmcd: { enabled: true, rtp: 10000 } } });

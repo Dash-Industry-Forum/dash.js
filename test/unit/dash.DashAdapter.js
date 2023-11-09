@@ -1,5 +1,4 @@
 import DashAdapter from '../../src/dash/DashAdapter.js';
-import MediaInfo from '../../src/dash/vo/MediaInfo.js';
 import Constants from '../../src/streaming/constants/Constants.js';
 import DashConstants from '../../src/dash/constants/DashConstants.js';
 import cea608parser from '../../externals/cea608-parser.js';
@@ -409,20 +408,6 @@ describe('DashAdapter', function () {
             });
         });
 
-        it('should return null when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is null or undefined', function () {
-            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo();
-
-            expect(representationInfo).to.be.null;
-        });
-
-        it('should return correct representationInfo when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
-            const voRepresentation = voHelper.getDummyRepresentation(Constants.VIDEO, 0);
-            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo(voRepresentation);
-
-            expect(representationInfo).not.to.be.null;
-            expect(representationInfo.quality).to.equal(0);
-        });
-
         it('should return undefined when getVoRepresentations is called and mediaInfo parameter is null or undefined', function () {
             const voRepresentations = dashAdapter.getVoRepresentations();
 
@@ -430,7 +415,7 @@ describe('DashAdapter', function () {
             expect(voRepresentations).to.be.empty;
         });
 
-        it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
+        it('should return the first adaptation when getMainAdaptationForType is called and streamInfo is undefined', () => {
             const manifest_with_video = {
                 loadedTime: new Date(),
                 mediaPresentationDuration: 10,
@@ -442,7 +427,7 @@ describe('DashAdapter', function () {
                 }]
             };
             dashAdapter.updatePeriods(manifest_with_video);
-            const adaptation = dashAdapter.getAdaptationForType(0, Constants.VIDEO);
+            const adaptation = dashAdapter.getMainAdaptationForType(Constants.VIDEO);
 
             expect(adaptation.id).to.equal(0);
         });
@@ -507,39 +492,10 @@ describe('DashAdapter', function () {
                 expect(index).to.be.equal(-1);
             });
 
-            it('should return -1 when getMaxIndexForBufferType is called and bufferType and periodIdx are undefined', () => {
-                const index = dashAdapter.getMaxIndexForBufferType();
-
-                expect(index).to.be.equal(-1);
-            });
-
             it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
                 const realAdaptation = dashAdapter.getRealAdaptation(null, voHelper.getDummyMediaInfo(Constants.VIDEO));
 
                 expect(realAdaptation).to.be.undefined;
-            });
-
-            it('should return the correct adaptation when getAdaptationForType is called', () => {
-                const streamInfo = {
-                    id: 'id'
-                };
-
-                const track = new MediaInfo();
-
-                track.id = undefined;
-                track.index = 1;
-                track.streamInfo = streamInfo;
-                track.representationCount = 0;
-                track.lang = 'deu';
-                track.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main'}];
-                track.rolesWithSchemeIdUri = [{ schemeIdUri: 'aScheme', value: 'main' }];
-                track.codec = 'audio/mp4;codecs="mp4a.40.2"';
-                track.mimeType = 'audio/mp4';
-
-                dashAdapter.setCurrentMediaInfo(streamInfo.id, Constants.AUDIO, track);
-                const adaptation = dashAdapter.getAdaptationForType(0, Constants.AUDIO, streamInfo);
-
-                expect(adaptation.lang).to.equal('eng');
             });
 
             it('should return an empty array when getEventsFor is called and info parameter is undefined', function () {

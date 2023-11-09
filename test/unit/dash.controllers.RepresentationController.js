@@ -1,6 +1,5 @@
 import ObjectsHelper from './helpers/ObjectsHelper.js';
 import VoHelper from './helpers/VOHelper.js';
-import MpdHelper from './helpers/MPDHelper.js';
 import EventBus from '../../src/core/EventBus.js';
 import RepresentationController from '../../src/dash/controllers/RepresentationController.js';
 import Events from '../../src/core/events/Events.js';
@@ -27,9 +26,6 @@ describe('RepresentationController', function () {
     const context = {};
     const testType = 'video';
     const specHelper = new SpecHelper();
-    const mpdHelper = new MpdHelper();
-    const mpd = mpdHelper.getMpd('static');
-    const data = mpd.Period[0].AdaptationSet[0];
     const voRepresentations = [];
     voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
@@ -46,28 +42,6 @@ describe('RepresentationController', function () {
 
     let representationController;
 
-    describe('Config not correctly passed', function () {
-        beforeEach(function () {
-            representationController = RepresentationController(context).create({
-                streamInfo: streamProcessor.getStreamInfo(),
-                events: Events,
-                eventBus: eventBus
-            });
-        });
-
-        afterEach(function () {
-            representationController.reset();
-            representationController = null;
-        });
-        it('should not contain data before it is set', function () {
-            // Act
-            const data = representationController.getData();
-
-            // Assert
-            expect(data).not.exist; // jshint ignore:line
-        });
-
-    });
 
     describe('Config correctly passed', function () {
         beforeEach(function () {
@@ -94,39 +68,32 @@ describe('RepresentationController', function () {
 
         describe('when data update completed', function () {
             beforeEach(function (done) {
-                representationController.updateData(data, voRepresentations, testType, true, 0);
+                representationController.updateData(voRepresentations, true, voRepresentations[0].id);
                 setTimeout(function () {
                     done();
                 }, specHelper.getExecutionDelay());
             });
 
-            it('should return the data that was set', function () {
-                expect(representationController.getData()).to.equal(data);
+
+            it('should return current selected representation', function () {
+                const expectedValue = voRepresentations[0].id;
+
+                expect(representationController.getCurrentRepresentation().id).to.equal(expectedValue);
             });
 
-            it('should return correct representation for quality', function () {
-                const quality = 0;
-                const expectedValue = 0;
-
-                expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
+            it('should return null if id is undefined', function () {
+                expect(representationController.getRepresentationById()).to.equal(null);
             });
 
-            it('should return null if quality is undefined', function () {
-                expect(representationController.getRepresentationForQuality()).to.equal(null);
-            });
-
-            it('should return null if quality is greater than voAvailableRepresentations.length - 1', function () {
-                expect(representationController.getRepresentationForQuality(150)).to.equal(null);
-            });
 
             it('should update current representation when preparing a quality change', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
+                expect(currentRepresentation.id).to.equal(voRepresentations[0].id); // jshint ignore:line
 
-                representationController.prepareQualityChange(1);
+                representationController.prepareQualityChange(voRepresentations[1]);
 
                 currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
+                expect(currentRepresentation.id).to.equal(voRepresentations[1].id); // jshint ignore:line
             });
 
             it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
@@ -140,10 +107,10 @@ describe('RepresentationController', function () {
         });
 
         describe('when a call to reset is done', function () {
-            it('should not contain data after a call to reset', function () {
+            it('should not contain representation after a call to reset', function () {
                 representationController.reset();
                 // Act
-                const data = representationController.getData();
+                const data = representationController.getCurrentRepresentation();
 
                 // Assert
                 expect(data).not.exist; // jshint ignore:line

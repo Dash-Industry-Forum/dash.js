@@ -41,7 +41,7 @@ function RulesContext(config) {
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
-    const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
+    const voRepresentation = config.streamProcessor ? config.streamProcessor.getRepresentation() : null;
     const videoModel = config.videoModel ? config.videoModel : null;
 
     function getMediaType() {
@@ -55,11 +55,11 @@ function RulesContext(config) {
     }
 
     function getMediaInfo() {
-        return representationInfo ? representationInfo.mediaInfo : null;
+        return voRepresentation ? voRepresentation.mediaInfo : null;
     }
 
-    function getRepresentationInfo() {
-        return representationInfo;
+    function getRepresentation() {
+        return voRepresentation;
     }
 
     function getScheduleController() {
@@ -91,17 +91,17 @@ function RulesContext(config) {
     }
 
     instance = {
-        getMediaType,
-        getMediaInfo,
-        getDroppedFramesHistory,
-        getCurrentRequest,
-        getSwitchHistory,
-        getStreamInfo,
-        getScheduleController,
-        getThroughputController,
         getAbrController,
-        getRepresentationInfo,
-        getVideoModel
+        getCurrentRequest,
+        getDroppedFramesHistory,
+        getMediaInfo,
+        getMediaType,
+        getRepresentation,
+        getScheduleController,
+        getStreamInfo,
+        getSwitchHistory,
+        getThroughputController,
+        getVideoModel,
     };
 
     return instance;
