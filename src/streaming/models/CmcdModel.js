@@ -194,7 +194,6 @@ function CmcdModel() {
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
-
             if (request.type === HTTPRequest.MPD_TYPE) {
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
@@ -237,7 +236,7 @@ function CmcdModel() {
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
-        const tb = _getTopBitrateByType(request.mediaType);
+        const tb = _getTopBitrateByType(request.representation.mediaInfo);
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(request.mediaType);
@@ -385,10 +384,12 @@ function CmcdModel() {
         }
     }
 
-    function _getTopBitrateByType(mediaType) {
+    function _getTopBitrateByType(mediaInfo) {
         try {
-            const info = abrController.getTopBitrateInfoFor(mediaType);
-            return Math.round(info.bitrate / 1000);
+            const bitrates = abrController.getPossibleVoRepresentations(mediaInfo).map((rep) => {
+                return rep.bitrateInKbit
+            });
+            return Math.max(...bitrates)
         } catch (e) {
             return null;
         }
@@ -505,7 +506,8 @@ function CmcdModel() {
             // Get the values we need
             let playbackRate = playbackController.getPlaybackRate();
             if (!playbackRate) playbackRate = 1;
-            let { bandwidth, mediaType, mediaInfo, duration } = request;
+            let { bandwidth, mediaType, representation, duration } = request;
+            const mediaInfo = representation.mediaInfo
 
             if (!mediaInfo) {
                 return NaN;
