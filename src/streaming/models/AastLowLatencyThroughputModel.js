@@ -228,7 +228,7 @@ function AastLowLatencyThroughputModel() {
         if (request && request.mediaType && !measurements[request.mediaType]) {
             measurements[request.mediaType] = [];
         }
-        const bitrateEntry = request.mediaInfo.bitrateList.find(item => item.id === request.representationId);
+        const bitrateEntry = request.representation.mediaInfo.bitrateList.find(item => item.id === request.representation.id);
         measurements[request.mediaType].push({
             index: request.index,
             repId: request.representationId,
@@ -239,7 +239,7 @@ function AastLowLatencyThroughputModel() {
             chunksDurationMS: chunkMeasurements.reduce((prev, curr) => prev + curr.chunkDownloadDurationMS, 0),
             segmentBytes: chunkMeasurements.reduce((prev, curr) => prev + curr.chunkBytes, 0),
             bitrate: bitrateEntry && bitrateEntry.bandwidth,
-            bitrateList: request.mediaInfo.bitrateList,
+            bitrateList: request.representation.mediaInfo.bitrateList,
             chunkMeasurements,
             fetchDownloadDurationMS,
             throughputCapacityDelayMS,

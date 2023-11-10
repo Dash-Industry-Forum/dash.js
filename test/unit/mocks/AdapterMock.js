@@ -136,10 +136,6 @@ function AdapterMock() {
     this.applyPatchToManifest = function () {
     };
 
-    this.convertRepresentationToRepresentationInfo = function () {
-        return null;
-    };
-
     this.getIsTypeOf = function () {
         return true;
     };

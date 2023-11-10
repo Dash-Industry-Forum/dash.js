@@ -200,7 +200,7 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const timeShiftBufferDepth = voPeriod.mpd.timeShiftBufferDepth;
         const start = !isNaN(timeShiftBufferDepth) ? now - timeShiftBufferDepth : 0;
-        // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
+        // check if we find a suitable period for that starttime. Otherwise, we use the time closest to that
         range.start = _adjustTimeBasedOnPeriodRanges(streams, start);
         range.end = !isNaN(range.start) && now < range.start ? now : _adjustTimeBasedOnPeriodRanges(streams, now, true);
 
@@ -235,10 +235,19 @@ function TimelineConverter() {
         }
 
         streams.forEach((stream) => {
-            const adapter = stream.getAdapter();
-            const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
-            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-            const voRepresentation = voRepresentations[0];
+            let voRepresentation = stream.getCurrentRepresentationForType(Constants.VIDEO);
+            if (!voRepresentation) {
+                voRepresentation = stream.getCurrentRepresentationForType(Constants.AUDIO)
+            }
+
+            // If we still got not voRepresentation we are in the startup phase and nothing was selected yet. Use the default Representation
+            if (!voRepresentation) {
+                const adapter = stream.getAdapter();
+                const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
+                const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                voRepresentation = voRepresentations[0];
+            }
+
             let periodRange = { start: NaN, end: NaN };
 
             if (voRepresentation) {

@@ -30,10 +30,8 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Constants from '../constants/Constants.js';
 import Thumbnail from '../vo/Thumbnail.js';
 import ThumbnailTracks from './ThumbnailTracks.js';
-import BitrateInfo from '../vo/BitrateInfo.js';
 import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailController(config) {
@@ -131,23 +129,21 @@ function ThumbnailController(config) {
         thumbnailTracks.setTrackByIndex(index);
     }
 
+    function setTrackById(id) {
+        thumbnailTracks.setTrackById(id);
+    }
+
     function getCurrentTrackIndex() {
         return thumbnailTracks.getCurrentTrackIndex();
     }
 
-    function getBitrateList() {
-        const tracks = thumbnailTracks.getTracks();
-        let i = 0;
+    function getCurrentTrack() {
+        return thumbnailTracks.getCurrentTrack();
+    }
 
-        return tracks.map((t) => {
-            const bitrateInfo = new BitrateInfo();
-            bitrateInfo.mediaType = Constants.IMAGE;
-            bitrateInfo.qualityIndex = i++;
-            bitrateInfo.bitrate = t.bitrate;
-            bitrateInfo.width = t.width;
-            bitrateInfo.height = t.height;
-            return bitrateInfo;
-        });
+    function getPossibleVoRepresentations() {
+        return thumbnailTracks.getRepresentations();
+
     }
 
     function reset() {
@@ -157,13 +153,15 @@ function ThumbnailController(config) {
     }
 
     instance = {
+        getCurrentTrack,
+        getCurrentTrackIndex,
+        getPossibleVoRepresentations,
         getStreamId,
         initialize,
         provide,
+        reset,
         setTrackByIndex,
-        getCurrentTrackIndex,
-        getBitrateList,
-        reset
+        setTrackById
     };
 
     setup();

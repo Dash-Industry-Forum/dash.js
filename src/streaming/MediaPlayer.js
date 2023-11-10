@@ -84,7 +84,7 @@ import ThroughputController from './controllers/ThroughputController.js';
 
 /**
  * The media types
- * @typedef {("video" | "audio" | "text" | "image")} MediaType
+ * @typedef {('video' | 'audio' | 'text' | 'image')} MediaType
  */
 
 /**
@@ -398,7 +398,9 @@ function MediaPlayer() {
             mediaController.setConfig({
                 domStorage,
                 settings,
-                customParametersModel
+                mediaPlayerModel,
+                customParametersModel,
+                videoModel
             });
 
             mediaPlayerModel.setConfig({
@@ -954,100 +956,6 @@ function MediaPlayer() {
         return _getAsUTC(duration());
     }
 
-    /*
-    ---------------------------------------------------------------------------
-
-        AUTO BITRATE
-
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     * It calls getMaxAllowedIndexFor internally
-     *
-     * @param {MediaType} type - 'video' or 'audio'
-     * @memberof module:MediaPlayer
-     * @returns {BitrateInfo | null}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getTopBitrateInfoFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        return abrController.getTopBitrateInfoFor(type);
-    }
-
-    /**
-     * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
-     * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
-     * type, thumbnails, there is no ABR algorithm and quality is set manually.
-     *
-     * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
-     * @returns {number} the quality index, 0 corresponding to the lowest bitrate
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getQualityFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        if (type === Constants.IMAGE) {
-            const activeStream = getActiveStream();
-            if (!activeStream) {
-                return -1;
-            }
-            const thumbnailController = activeStream.getThumbnailController();
-
-            return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
-        }
-        return abrController.getQualityFor(type);
-    }
-
-    /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
-     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
-     *
-     * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
-     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function setQualityFor(type, value, forceReplace = false) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        if (type === Constants.IMAGE) {
-            const activeStream = getActiveStream();
-            if (!activeStream) {
-                return;
-            }
-            const thumbnailController = activeStream.getThumbnailController();
-            if (thumbnailController) {
-                thumbnailController.setTrackByIndex(value);
-            }
-        }
-        abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { forceReplace });
-    }
-
-    /**
-     * Update the video element size variables
-     * Should be called on window resize (or any other time player is resized). Fullscreen does trigger a window resize event.
-     *
-     * Once windowResizeEventCalled = true, abrController.checkPortalSize() will use element size variables rather than querying clientWidth every time.
-     *
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function updatePortalSize() {
-        abrController.setElementSize();
-        abrController.setWindowResizeEventCalled(true);
-    }
 
     /*
     ---------------------------------------------------------------------------
@@ -1225,12 +1133,14 @@ function MediaPlayer() {
      * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
      * @return {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type) {
-        return throughputController ? throughputController.getAverageThroughput(type) : 0;
+    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
     }
 
     /**
@@ -1484,23 +1394,129 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
-        STREAM AND TRACK MANAGEMENT
+        QUALITY AND TRACK MANAGEMENT
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
+     * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
+     * type, thumbnails, there is no ABR algorithm and quality is set manually.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
+     * @returns {Representation | null} the quality index, 0 corresponding to the lowest bitrate
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#getCurrentRepresentationForType getCurrentRepresentationForType()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function getCurrentRepresentationForType(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return null;
+        }
+
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return null;
+        }
+
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            return !thumbnailController ? -1 : thumbnailController.getCurrentTrack();
+        }
+
+        return activeStream.getCurrentRepresentationForType(type);
+    }
+
+    /**
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image'
+     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
+     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function setRepresentationForTypeById(type, id, forceReplace = false) {
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return;
+        }
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return;
+        }
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            if (thumbnailController) {
+                thumbnailController.setTrackById(id);
+            }
+        } else {
+            const representation = activeStream.getRepresentationForTypeById(type, id);
+            if (representation) {
+                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+            }
+        }
+    }
+
+    /**
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image'
+     * @param {number} value - the quality index, 0 corresponding to the lowest absolute index
+     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function setRepresentationForTypeByIndex(type, index, forceReplace = false) {
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return;
+        }
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return;
+        }
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            if (thumbnailController) {
+                thumbnailController.setTrackByIndex(index);
+            }
+        } else {
+            const representation = activeStream.getRepresentationForTypeByIndex(type, index);
+            if (representation) {
+                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+            }
+        }
+    }
+
     /**
      * @param {MediaType} type
+     * @param {string} streamId
      * @returns {Array}
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function getBitrateInfoListFor(type) {
+    function getRepresentationsByType(type, streamId = null) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        let stream = getActiveStream();
-        return stream ? stream.getBitrateListFor(type) : [];
+        let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
+        return stream ? stream.getRepresentationsByType(type) : [];
     }
 
     /**
@@ -2292,7 +2308,8 @@ function MediaPlayer() {
         cmsdModel.setConfig({});
 
         // initializes controller
-        throughputController.initialize()
+        mediaController.initialize();
+        throughputController.initialize();
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
@@ -2538,108 +2555,107 @@ function MediaPlayer() {
     }
 
     instance = {
-        initialize,
-        setConfig,
-        on,
-        off,
-        extend,
-        attachView,
+        addABRCustomRule,
+        addRequestInterceptor,
+        addResponseInterceptor,
+        addUTCTimingSource,
+        attachProtectionController,
         attachSource,
-        isReady,
-        preload,
-        play,
-        isPaused,
-        pause,
-        isSeeking,
-        isDynamic,
-        getLowLatencyModeEnabled,
-        seek,
-        seekToOriginalLive,
-        setPlaybackRate,
-        getPlaybackRate,
-        setMute,
-        isMuted,
-        setVolume,
-        getVolume,
-        time,
+        attachTTMLRenderingDiv,
+        attachView,
+        attachVttRenderingDiv,
+        clearDefaultUTCTimingSources,
+        convertToTimeCode,
+        destroy,
         duration,
-        timeAsUTC,
         durationAsUTC,
+        enableForcedTextStreaming,
+        enableText,
+        extend,
+        formatUTC,
+        getABRCustomRules,
         getActiveStream,
-        getDVRWindowSize,
-        getDVRSeekOffset,
+        getAutoPlay,
         getAvailableBaseUrls,
         getAvailableLocations,
-        getTargetLiveDelay,
-        convertToTimeCode,
-        formatUTC,
-        getVersion,
-        getDebug,
+        getAverageThroughput,
         getBufferLength,
-        getTTMLRenderingDiv,
-        getVideoElement,
-        getSource,
-        updateSource,
         getCurrentLiveLatency,
-        getTopBitrateInfoFor,
-        setAutoPlay,
-        getAutoPlay,
+        getCurrentSteeringResponseData,
+        getCurrentTextTrackIndex,
+        getCurrentTrackFor,
+        getDVRSeekOffset,
+        getDVRWindowSize,
+        getDashAdapter,
         getDashMetrics,
-        getQualityFor,
-        setQualityFor,
-        updatePortalSize,
-        enableText,
-        enableForcedTextStreaming,
-        isTextEnabled,
-        setTextTrack,
-        getBitrateInfoListFor,
+        getDebug,
+        getInitialMediaSettingsFor,
+        getLowLatencyModeEnabled,
+        getOfflineController,
+        getPlaybackRate,
+        getProtectionController,
+        getCurrentRepresentationForType,
+        getRepresentationsByType,
+        getSettings,
+        getSource,
         getStreamsFromManifest,
+        getTTMLRenderingDiv,
+        getTargetLiveDelay,
         getTracksFor,
         getTracksForTypeFromManifest,
-        getCurrentTrackFor,
-        setInitialMediaSettingsFor,
-        getInitialMediaSettingsFor,
-        setCurrentTrack,
-        addABRCustomRule,
-        removeABRCustomRule,
-        removeAllABRCustomRule,
-        getABRCustomRules,
-        getAverageThroughput,
-        retrieveManifest,
-        addUTCTimingSource,
-        removeUTCTimingSource,
-        clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType,
+        getVersion,
+        getVideoElement,
+        getVolume,
         getXHRWithCredentialsForType,
-        getProtectionController,
-        attachProtectionController,
-        setProtectionData,
-        addRequestInterceptor,
-        removeRequestInterceptor,
-        addResponseInterceptor,
-        removeResponseInterceptor,
+        initialize,
+        isDynamic,
+        isMuted,
+        isPaused,
+        isReady,
+        isSeeking,
+        isTextEnabled,
+        off,
+        on,
+        pause,
+        play,
+        preload,
+        provideThumbnail,
+        registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
+        removeABRCustomRule,
+        removeAllABRCustomRule,
+        removeRequestInterceptor,
+        removeResponseInterceptor,
+        removeUTCTimingSource,
+        reset,
+        resetCustomInitialTrackSelectionFunction,
+        resetSettings,
+        restoreDefaultUTCTimingSources,
+        retrieveManifest,
+        seek,
+        seekToOriginalLive,
+        setAutoPlay,
+        setConfig,
+        setCurrentTrack,
+        setCustomInitialTrackSelectionFunction,
+        setInitialMediaSettingsFor,
+        setMute,
+        setPlaybackRate,
+        setProtectionData,
+        setRepresentationForTypeByIndex,
+        setRepresentationForTypeById,
+        setTextTrack,
+        setVolume,
+        setXHRWithCredentialsForType,
+        time,
+        timeAsUTC,
+        triggerSteeringRequest,
+        unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
-        registerCustomCapabilitiesFilter,
-        unregisterCustomCapabilitiesFilter,
-        setCustomInitialTrackSelectionFunction,
-        resetCustomInitialTrackSelectionFunction,
-        attachTTMLRenderingDiv,
-        attachVttRenderingDiv,
-        getCurrentTextTrackIndex,
-        provideThumbnail,
-        getDashAdapter,
-        getOfflineController,
-        triggerSteeringRequest,
-        getCurrentSteeringResponseData,
-        getSettings,
         updateSettings,
-        resetSettings,
-        reset,
-        destroy
+        updateSource,
     };
 
     setup();

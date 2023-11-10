@@ -106,6 +106,10 @@ function AbrControllerMock () {
     this.getMinAllowedIndexFor = function () {};
 
     this.clearDataForStream = function () {};
+
+    this.getPossibleVoRepresentations = function () {
+        return []
+    }
 }
 
 export default AbrControllerMock;

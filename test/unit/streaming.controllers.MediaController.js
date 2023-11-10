@@ -90,7 +90,7 @@ describe('MediaController', function () {
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
 
             };
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.false;
 
         });
@@ -114,7 +114,7 @@ describe('MediaController', function () {
                 accessibility: { schemeIdUri: 'urn:scheme:test:2:2023', value: 'description' },
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.false;
 
         });
@@ -138,7 +138,7 @@ describe('MediaController', function () {
                 accessibility: { schemeIdUri: 'urn:scheme:test:2023', value: 'description' },
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.false;
 
         });
@@ -162,7 +162,7 @@ describe('MediaController', function () {
                 accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
 
@@ -178,7 +178,7 @@ describe('MediaController', function () {
                 accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }],
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
             };
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.false;
         });
 
@@ -195,7 +195,7 @@ describe('MediaController', function () {
 
             let track2 = null;
 
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.false;
         });
 
@@ -204,7 +204,7 @@ describe('MediaController', function () {
             let track1 = null;
 
             let track2 = null;
-            let equal = mediaController.isTracksEqual(track1, track2);
+            let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
     });
@@ -530,7 +530,7 @@ describe('MediaController', function () {
             mediaController.addTrack(enTrack);
             mediaController.addTrack(enADTrack);
             mediaController.addTrack(esTrack);
-            
+
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(3);
             expect(objectUtils.areEqual(trackList[0], enTrack)).to.be.true;
@@ -654,7 +654,7 @@ describe('MediaController', function () {
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
-        
+
         it('should not check initial media settings to choose initial track when it has already selected a track', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);

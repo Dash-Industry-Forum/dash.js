@@ -22,8 +22,8 @@
  *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR
+ *  PROFITS, OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
@@ -31,156 +31,143 @@
 
 /**
  * Dash constants declaration
- * @class
  * @ignore
  */
-class DashConstants {
-
-    init() {
-        this.BASE_URL = 'BaseURL';
-        this.SEGMENT_BASE = 'SegmentBase';
-        this.SEGMENT_TEMPLATE = 'SegmentTemplate';
-        this.SEGMENT_LIST = 'SegmentList';
-        this.SEGMENT_URL = 'SegmentURL';
-        this.SEGMENT_TIMELINE = 'SegmentTimeline';
-        this.S = 'S';
-        this.SEGMENT_PROFILES = 'segmentProfiles';
-        this.ADAPTATION_SET = 'AdaptationSet';
-        this.REPRESENTATION = 'Representation';
-        this.REPRESENTATION_INDEX = 'RepresentationIndex';
-        this.SUB_REPRESENTATION = 'SubRepresentation';
-        this.INITIALIZATION = 'Initialization';
-        this.INITIALIZATION_MINUS = 'initialization';
-        this.MPD = 'MPD';
-        this.PERIOD = 'Period';
-        this.ASSET_IDENTIFIER = 'AssetIdentifier';
-        this.EVENT_STREAM = 'EventStream';
-        this.EVENT = 'Event';
-        this.ID = 'id';
-        this.PROFILES = 'profiles';
-        this.LOCATION = 'Location';
-        this.SERVICE_LOCATION = 'serviceLocation';
-        this.RANGE = 'range';
-        this.INDEX = 'index';
-        this.MEDIA = 'media';
-        this.BYTE_RANGE = 'byteRange';
-        this.INDEX_RANGE = 'indexRange';
-        this.MEDIA_RANGE = 'mediaRange';
-        this.VALUE = 'value';
-        this.CONTENT_TYPE = 'contentType';
-        this.MIME_TYPE = 'mimeType';
-        this.BITSTREAM_SWITCHING = 'BitstreamSwitching';
-        this.BITSTREAM_SWITCHING_MINUS = 'bitstreamSwitching';
-        this.CODECS = 'codecs';
-        this.DEPENDENCY_ID = 'dependencyId';
-        this.MEDIA_STREAM_STRUCTURE_ID = 'mediaStreamStructureId';
-        this.METRICS = 'Metrics';
-        this.METRICS_MINUS = 'metrics';
-        this.REPORTING = 'Reporting';
-        this.WIDTH = 'width';
-        this.HEIGHT = 'height';
-        this.SAR = 'sar';
-        this.FRAMERATE = 'frameRate';
-        this.AUDIO_SAMPLING_RATE = 'audioSamplingRate';
-        this.MAXIMUM_SAP_PERIOD = 'maximumSAPPeriod';
-        this.START_WITH_SAP = 'startWithSAP';
-        this.MAX_PLAYOUT_RATE = 'maxPlayoutRate';
-        this.CODING_DEPENDENCY = 'codingDependency';
-        this.SCAN_TYPE = 'scanType';
-        this.FRAME_PACKING = 'FramePacking';
-        this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
-        this.CONTENT_PROTECTION = 'ContentProtection';
-        this.ESSENTIAL_PROPERTY = 'EssentialProperty';
-        this.LABEL = 'Label';
-        this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
-        this.INBAND_EVENT_STREAM = 'InbandEventStream';
-        this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
-        this.INBAND = 'inband';
-        this.TYPE = 'type';
-        this.ACCESSIBILITY = 'Accessibility';
-        this.ROLE = 'Role';
-        this.RATING = 'Rating';
-        this.CONTENT_COMPONENT = 'ContentComponent';
-        this.SUBSET = 'Subset';
-        this.LANG = 'lang';
-        this.VIEWPOINT = 'Viewpoint';
-        this.ROLE = 'Role';
-        this.ACCESSIBILITY = 'Accessibility';
-        this.MAIN = 'main';
-        this.DYNAMIC = 'dynamic';
-        this.STATIC = 'static';
-        this.MEDIA_PRESENTATION_DURATION = 'mediaPresentationDuration';
-        this.MINIMUM_UPDATE_PERIOD = 'minimumUpdatePeriod';
-        this.CODEC_PRIVATE_DATA = 'codecPrivateData';
-        this.BANDWITH = 'bandwidth';
-        this.SOURCE_URL = 'sourceURL';
-        this.TIMESCALE = 'timescale';
-        this.DURATION = 'duration';
-        this.START_NUMBER = 'startNumber';
-        this.PRESENTATION_TIME_OFFSET = 'presentationTimeOffset';
-        this.AVAILABILITY_START_TIME = 'availabilityStartTime';
-        this.AVAILABILITY_END_TIME = 'availabilityEndTime';
-        this.TIMESHIFT_BUFFER_DEPTH = 'timeShiftBufferDepth';
-        this.MAX_SEGMENT_DURATION = 'maxSegmentDuration';
-        this.PRESENTATION_TIME = 'presentationTime';
-        this.MIN_BUFFER_TIME = 'minBufferTime';
-        this.MAX_SUBSEGMENT_DURATION = 'maxSubsegmentDuration';
-        this.START = 'start';
-        this.AVAILABILITY_TIME_OFFSET = 'availabilityTimeOffset';
-        this.AVAILABILITY_TIME_COMPLETE = 'availabilityTimeComplete';
-        this.CENC_DEFAULT_KID = 'cenc:default_KID';
-        this.DVB_PRIORITY = 'dvb:priority';
-        this.DVB_WEIGHT = 'dvb:weight';
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
-        this.SERVICE_DESCRIPTION = 'ServiceDescription';
-        this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
-        this.SERVICE_DESCRIPTION_LATENCY = 'Latency';
-        this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
-        this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
-        this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
-        this.PATCH_LOCATION = 'PatchLocation';
-        this.LOCATION = 'Location';
-        this.PUBLISH_TIME = 'publishTime';
-        this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
-        this.ORIGINAL_MPD_ID = 'mpdId';
-        this.REPLACE = 'replace';
-        this.ADD = 'add';
-        this.REMOVE = 'remove';
-        this.WALL_CLOCK_TIME = 'wallClockTime';
-        this.PRESENTATION_TIME = 'presentationTime';
-        this.UTC_TIMING = 'UTCTiming';
-        this.LABEL = 'Label';
-        this.GROUP_LABEL = 'GroupLabel';
-        this.CONTENT_STEERING = 'ContentSteering';
-        this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
-        this.QUERY_BEFORE_START = 'queryBeforeStart';
-        this.CLIENT_REQUIREMENT = 'clientRequirement';
-        this.TTL = 'ttl';
-        this.CONTENT_STEERING_RESPONSE = {
-            VERSION: 'VERSION',
-            TTL: 'TTL',
-            RELOAD_URI: 'RELOAD-URI',
-            PATHWAY_PRIORITY : 'PATHWAY-PRIORITY',
-            PATHWAY_CLONES : 'PATHWAY-CLONES',
-            BASE_ID: 'BASE-ID',
-            ID: 'ID',
-            URI_REPLACEMENT: 'URI-REPLACEMENT',
-            HOST: 'HOST',
-            PARAMS: 'PARAMS'
-        };
-        this.PRODUCER_REFERENCE_TIME_TYPE = {
-            ENCODER: 'encoder',
-            CAPTURED: 'captured',
-            APPLICATION: 'application'
-        }
-        this.SEGMENT_ALIGNMENT = 'segmentAlignment';
-        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
-    }
-
-    constructor () {
-        this.init();
-    }
+export default {
+    ACCESSIBILITY: 'Accessibility',
+    ADAPTATION_SET: 'AdaptationSet',
+    ADAPTATION_SET_SWITCHING_SCHEME_ID_URI: 'urn:mpeg:dash:adaptation-set-switching:2016',
+    ADD: 'add',
+    ASSET_IDENTIFIER: 'AssetIdentifier',
+    AUDIO_CHANNEL_CONFIGURATION: 'AudioChannelConfiguration',
+    AUDIO_SAMPLING_RATE: 'audioSamplingRate',
+    AVAILABILITY_END_TIME: 'availabilityEndTime',
+    AVAILABILITY_START_TIME: 'availabilityStartTime',
+    AVAILABILITY_TIME_COMPLETE: 'availabilityTimeComplete',
+    AVAILABILITY_TIME_OFFSET: 'availabilityTimeOffset',
+    BANDWITH: 'bandwidth',
+    BASE_URL: 'BaseURL',
+    BITSTREAM_SWITCHING: 'BitstreamSwitching',
+    BITSTREAM_SWITCHING_MINUS: 'bitstreamSwitching',
+    BYTE_RANGE: 'byteRange',
+    CENC_DEFAULT_KID: 'cenc:default_KID',
+    CLIENT_REQUIREMENT: 'clientRequirement',
+    CODECS: 'codecs',
+    CODEC_PRIVATE_DATA: 'codecPrivateData',
+    CODING_DEPENDENCY: 'codingDependency',
+    CONTENT_COMPONENT: 'ContentComponent',
+    CONTENT_PROTECTION: 'ContentProtection',
+    CONTENT_STEERING: 'ContentSteering',
+    CONTENT_STEERING_RESPONSE: {
+        VERSION: 'VERSION',
+        TTL: 'TTL',
+        RELOAD_URI: 'RELOAD-URI',
+        PATHWAY_PRIORITY: 'PATHWAY-PRIORITY',
+        PATHWAY_CLONES: 'PATHWAY-CLONES',
+        BASE_ID: 'BASE-ID',
+        ID: 'ID',
+        URI_REPLACEMENT: 'URI-REPLACEMENT',
+        HOST: 'HOST',
+        PARAMS: 'PARAMS'
+    },
+    CONTENT_TYPE: 'contentType',
+    DEFAULT_SERVICE_LOCATION: 'defaultServiceLocation',
+    DEPENDENCY_ID: 'dependencyId',
+    DURATION: 'duration',
+    DVB_PRIORITY: 'dvb:priority',
+    DVB_WEIGHT: 'dvb:weight',
+    DYNAMIC: 'dynamic',
+    ESSENTIAL_PROPERTY: 'EssentialProperty',
+    EVENT: 'Event',
+    EVENT_STREAM: 'EventStream',
+    FRAMERATE: 'frameRate',
+    FRAME_PACKING: 'FramePacking',
+    GROUP_LABEL: 'GroupLabel',
+    HEIGHT: 'height',
+    ID: 'id',
+    INBAND: 'inband',
+    INBAND_EVENT_STREAM: 'InbandEventStream',
+    INDEX: 'index',
+    INDEX_RANGE: 'indexRange',
+    INITIALIZATION: 'Initialization',
+    INITIALIZATION_MINUS: 'initialization',
+    LABEL: 'Label',
+    LANG: 'lang',
+    LOCATION: 'Location',
+    MAIN: 'main',
+    MAXIMUM_SAP_PERIOD: 'maximumSAPPeriod',
+    MAX_PLAYOUT_RATE: 'maxPlayoutRate',
+    MAX_SEGMENT_DURATION: 'maxSegmentDuration',
+    MAX_SUBSEGMENT_DURATION: 'maxSubsegmentDuration',
+    MEDIA: 'media',
+    MEDIA_PRESENTATION_DURATION: 'mediaPresentationDuration',
+    MEDIA_RANGE: 'mediaRange',
+    MEDIA_STREAM_STRUCTURE_ID: 'mediaStreamStructureId',
+    METRICS: 'Metrics',
+    METRICS_MINUS: 'metrics',
+    MIME_TYPE: 'mimeType',
+    MINIMUM_UPDATE_PERIOD: 'minimumUpdatePeriod',
+    MIN_BUFFER_TIME: 'minBufferTime',
+    MPD: 'MPD',
+    ORIGINAL_MPD_ID: 'mpdId',
+    ORIGINAL_PUBLISH_TIME: 'originalPublishTime',
+    PATCH_LOCATION: 'PatchLocation',
+    PERIOD: 'Period',
+    PRESENTATION_TIME: 'presentationTime',
+    PRESENTATION_TIME_OFFSET: 'presentationTimeOffset',
+    PRODUCER_REFERENCE_TIME: 'ProducerReferenceTime',
+    PRODUCER_REFERENCE_TIME_TYPE: {
+        ENCODER: 'encoder',
+        CAPTURED: 'captured',
+        APPLICATION: 'application'
+    },
+    PROFILES: 'profiles',
+    PUBLISH_TIME: 'publishTime',
+    QUALITY_RANKING : 'qualityRanking',
+    QUERY_BEFORE_START: 'queryBeforeStart',
+    RANGE: 'range',
+    RATING: 'Rating',
+    REMOVE: 'remove',
+    REPLACE: 'replace',
+    REPORTING: 'Reporting',
+    REPRESENTATION: 'Representation',
+    REPRESENTATION_INDEX: 'RepresentationIndex',
+    ROLE: 'Role',
+    S: 'S',
+    SAR: 'sar',
+    SCAN_TYPE: 'scanType',
+    SEGMENT_ALIGNMENT: 'segmentAlignment',
+    SEGMENT_BASE: 'SegmentBase',
+    SEGMENT_LIST: 'SegmentList',
+    SEGMENT_PROFILES: 'segmentProfiles',
+    SEGMENT_TEMPLATE: 'SegmentTemplate',
+    SEGMENT_TIMELINE: 'SegmentTimeline',
+    SEGMENT_URL: 'SegmentURL',
+    SERVICE_DESCRIPTION: 'ServiceDescription',
+    SERVICE_DESCRIPTION_LATENCY: 'Latency',
+    SERVICE_DESCRIPTION_OPERATING_BANDWIDTH: 'OperatingBandwidth',
+    SERVICE_DESCRIPTION_OPERATING_QUALITY: 'OperatingQuality',
+    SERVICE_DESCRIPTION_PLAYBACK_RATE: 'PlaybackRate',
+    SERVICE_DESCRIPTION_SCOPE: 'Scope',
+    SERVICE_LOCATION: 'serviceLocation',
+    SOURCE_URL: 'sourceURL',
+    START: 'start',
+    START_NUMBER: 'startNumber',
+    START_WITH_SAP: 'startWithSAP',
+    STATIC: 'static',
+    SUBSET: 'Subset',
+    SUB_REPRESENTATION: 'SubRepresentation',
+    SUB_SEGMENT_ALIGNMENT: 'subsegmentAlignment',
+    SUGGESTED_PRESENTATION_DELAY: 'suggestedPresentationDelay',
+    SUPPLEMENTAL_PROPERTY: 'SupplementalProperty',
+    TIMESCALE: 'timescale',
+    TIMESHIFT_BUFFER_DEPTH: 'timeShiftBufferDepth',
+    TTL: 'ttl',
+    TYPE: 'type',
+    UTC_TIMING: 'UTCTiming',
+    VALUE: 'value',
+    VIEWPOINT: 'Viewpoint',
+    WALL_CLOCK_TIME: 'wallClockTime',
+    WIDTH: 'width',
 }
 
-let constants = new DashConstants();
-export default constants;

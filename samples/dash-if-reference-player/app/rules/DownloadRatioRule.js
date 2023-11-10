@@ -56,7 +56,7 @@ function DownloadRatioRuleClass() {
         }, 0);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
 
         let mediaType = rulesContext.getMediaInfo().type;
 
@@ -156,7 +156,7 @@ function DownloadRatioRuleClass() {
         }
 
         count = rulesContext.getMediaInfo().representationCount;
-        currentRepresentation = rulesContext.getRepresentationInfo();
+        currentRepresentation = rulesContext.getVoRepresentation();
         currentBandwidth = dashManifest.getBandwidth(currentRepresentation);
         for (i = 0; i < count; i += 1) {
             bandwidths.push(rulesContext.getMediaInfo().bitrateList[i].bandwidth);
@@ -189,7 +189,7 @@ function DownloadRatioRuleClass() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

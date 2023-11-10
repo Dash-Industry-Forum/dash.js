@@ -34,29 +34,31 @@
  */
 class MediaInfo {
     constructor() {
+        this.KID = null;
+        this.accessibility = null;
+        this.adaptationSetSwitchingCompatibleIds = [];
+        this.audioChannelConfiguration = null;
+        this.bitrateList = null;
+        this.codec = null;
+        this.contentProtection = null;
         this.id = null;
         this.index = null;
-        this.type = null;
-        this.streamInfo = null;
-        this.representationCount = 0;
+        this.isEmbedded = null;
+        this.isFragmented = null;
+        this.hasProtectedRepresentations = false;
+        this.isText = false;
         this.labels = null;
         this.lang = null;
-        this.viewpoint = null;
-        this.accessibility = null;
-        this.audioChannelConfiguration = null;
-        this.roles = null;
-        this.codec = null;
         this.mimeType = null;
-        this.contentProtection = null;
-        this.isText = false;
-        this.KID = null;
-        this.bitrateList = null;
-        this.isFragmented = null;
-        this.isEmbedded = null;
-        this.selectionPriority = 1;
-        this.supplementalProperties = {};
+        this.representationCount = 0;
+        this.roles = null;
         this.segmentAlignment = false;
+        this.selectionPriority = 1;
+        this.streamInfo = null;
         this.subSegmentAlignment = false;
+        this.supplementalProperties = {};
+        this.type = null;
+        this.viewpoint = null;
     }
 
 }

@@ -204,7 +204,7 @@ function StreamController() {
      * @private
      */
     function _onTimeSyncCompleted( /*e*/) {
-        _composeStreams();
+        _composePeriods();
     }
 
     /**
@@ -219,7 +219,7 @@ function StreamController() {
      * Setup the stream objects after the stream start and each MPD reload. This function is called after the UTC sync has been done (TIME_SYNCHRONIZATION_COMPLETED)
      * @private
      */
-    function _composeStreams() {
+    function _composePeriods() {
         try {
             const streamsInfo = adapter.getStreamsInfo();
 
@@ -652,8 +652,10 @@ function StreamController() {
         try {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
-            // - AND changeType method implemented by browser or periods use the same codec.
-            return (settings.get().streaming.buffer.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream) || firstLicenseIsFetched) && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch || previousStream.isMediaCodecCompatible(nextStream, previousStream)));
+            // - AND changeType method is implemented
+            return (settings.get().streaming.buffer.reuseExistingSourceBuffers
+                && (capabilities.isProtectionCompatible(previousStream, nextStream) || firstLicenseIsFetched)
+                && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));
         } catch (e) {
             return false;
         }
@@ -756,7 +758,7 @@ function StreamController() {
     }
 
     /**
-     * When the quality is changed in the currently active stream and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
+     * When the quality is changed in the currently active stream, and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
      * Otherwise preloading can go on.
      * @param e
      * @private
@@ -1219,56 +1221,14 @@ function StreamController() {
      */
     function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
         try {
-            let fragmentDuration = NaN;
+            let segmentDuration = NaN;
 
             //  We use the maxFragmentDuration attribute if present
             if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
                 return manifestInfo.maxFragmentDuration;
             }
 
-            // For single period manifests we can iterate over all AS and use the maximum segment length
-            if (streamInfos && streamInfos.length === 1) {
-                const streamInfo = streamInfos[0];
-                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
-
-
-                const fragmentDurations = mediaTypes
-                    .reduce((acc, mediaType) => {
-                        const mediaInfo = adapter.getMediaInfoForType(streamInfo, mediaType);
-
-                        if (mediaInfo && mediaInfo.isFragmented !== false) {
-                            acc.push(mediaInfo);
-                        }
-
-                        return acc;
-                    }, [])
-                    .reduce((acc, mediaInfo) => {
-                        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-
-                        if (voRepresentations && voRepresentations.length > 0) {
-                            voRepresentations.forEach((voRepresentation) => {
-                                if (voRepresentation) {
-                                    acc.push(voRepresentation);
-                                }
-                            });
-                        }
-
-                        return acc;
-                    }, [])
-                    .reduce((acc, voRepresentation) => {
-                        const representation = adapter.convertRepresentationToRepresentationInfo(voRepresentation);
-
-                        if (representation && representation.fragmentDuration && !isNaN(representation.fragmentDuration)) {
-                            acc.push(representation.fragmentDuration);
-                        }
-
-                        return acc;
-                    }, []);
-
-                fragmentDuration = Math.max(...fragmentDurations);
-            }
-
-            return isFinite(fragmentDuration) ? fragmentDuration : NaN;
+            return isFinite(segmentDuration) ? segmentDuration : NaN;
         } catch (e) {
             return NaN;
         }
@@ -1276,33 +1236,33 @@ function StreamController() {
 
     /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
-     * Finally attempt UTC sync
+     * Finally, attempt UTC sync
      * @param {object} e
      * @private
      */
     function _onManifestUpdated(e) {
         if (!e.error) {
             logger.info('Manifest updated... updating data system wide.');
+
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
 
-            let manifestUTCTimingSources = adapter.getUTCTimingSources();
-
-            if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
-                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
-                    level: ConformanceViolationConstants.LEVELS.WARNING,
-                    event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
-                });
-            }
-
-            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
-
             // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
+
+                    let manifestUTCTimingSources = adapter.getUTCTimingSources();
+                    if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                        eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                            level: ConformanceViolationConstants.LEVELS.WARNING,
+                            event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
+                        });
+                    }
+
+                    let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
                 });
         } else {
@@ -1603,27 +1563,27 @@ function StreamController() {
     }
 
     instance = {
-        initialize,
-        getActiveStreamInfo,
         addDVRMetric,
-        hasVideoTrack,
-        hasAudioTrack,
+        getActiveStream,
+        getActiveStreamInfo,
+        getActiveStreamProcessors,
+        getAutoPlay,
+        getHasMediaOrInitialisationError,
+        getInitialPlayback,
+        getIsStreamSwitchInProgress,
         getStreamById,
         getStreamForTime,
+        getStreams,
         getTimeRelativeToStreamId,
+        hasAudioTrack,
+        hasVideoTrack,
+        initialize,
         load,
         loadWithManifest,
-        getActiveStreamProcessors,
+        reset,
         setConfig,
         setProtectionData,
-        getIsStreamSwitchInProgress,
         switchToVideoElement,
-        getHasMediaOrInitialisationError,
-        getStreams,
-        getActiveStream,
-        getInitialPlayback,
-        getAutoPlay,
-        reset
     };
 
     setup();

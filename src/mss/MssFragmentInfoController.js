@@ -122,11 +122,10 @@ function MssFragmentInfoController(config) {
         // request.availabilityStartTime = segment.availabilityStartTime;
         // request.availabilityEndTime = segment.availabilityEndTime;
         // request.wallStartTime = segment.wallStartTime;
-        request.quality = representation.index;
+        request.bandwidth = representation.bandwidth;
         request.index = index++;
-        request.mediaInfo = streamProcessor.getMediaInfo();
         request.adaptationIndex = representation.adaptation.index;
-        request.representationId = representation.id;
+        request.representation = representation;
         request.url = baseURLController.resolve(representation.path).url + adaptation.SegmentTemplate.media;
         request.url = request.url.replace('$Bandwidth$', representation.bandwidth);
         request.url = request.url.replace('$Time$', segment.tManifest ? segment.tManifest : segment.t);

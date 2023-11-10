@@ -279,18 +279,18 @@ describe('ABRRulesCollection', function () {
         });
 
         it('should return an empty SwitchRequest when getMaxQuality function is called and rulesContext is undefined', function () {
-            const maxQuality = abrRulesCollection.getMaxQuality();
+            const maxQuality = abrRulesCollection.getBestPossibleSwitchRequest();
 
-            expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+            expect(maxQuality.representation).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
         it('should return an empty SwitchRequest when shouldAbandonFragment function is called and rulesContext is undefined', function () {
             const shouldAbandonFragment = abrRulesCollection.shouldAbandonFragment();
 
-            expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+            expect(shouldAbandonFragment.representation).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
-        it('should return correct switch request in getMinSwitchRequest for a single item', () => {
+        it('should return correct switch request for a single item', () => {
             const srArray = [{
                 quality: 5,
                 priority: SwitchRequest.PRIORITY.WEAK,
@@ -309,6 +309,7 @@ describe('ABRRulesCollection', function () {
             const srArray = [
                 {
                     quality: 6,
+                    representation: { bitrateInKbit: 60 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 60
@@ -316,6 +317,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 4,
+                    representation: { bitrateInKbit: 40 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 40
@@ -323,6 +325,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 5,
+                    representation: { bitrateInKbit: 50 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 50
@@ -371,6 +374,7 @@ describe('ABRRulesCollection', function () {
             const srArray = [
                 {
                     quality: 6,
+                    representation: { bitrateInKbit: 60 },
                     priority: SwitchRequest.PRIORITY.DEFAULT,
                     reason: {
                         throughput: 60
@@ -378,6 +382,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 5,
+                    representation: { bitrateInKbit: 50 },
                     priority: SwitchRequest.PRIORITY.STRONG,
                     reason: {
                         throughput: 50
@@ -385,6 +390,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 4,
+                    representation: { bitrateInKbit: 40 },
                     priority: SwitchRequest.PRIORITY.STRONG,
                     reason: {
                         throughput: 40
@@ -392,6 +398,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 7,
+                    representation: { bitrateInKbit: 70},
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 70
@@ -403,18 +410,6 @@ describe('ABRRulesCollection', function () {
 
             expect(sr.quality).to.be.equal(4);
             expect(sr.reason.throughput).to.be.equal(40);
-        });
-
-        it('should return correct switch request in getMinSwitchRequest for a single item without reason', () => {
-            const srArray = [{
-                quality: 5,
-                priority: SwitchRequest.PRIORITY.WEAK
-            }];
-
-            const sr = abrRulesCollection.getMinSwitchRequest(srArray);
-
-            expect(sr.quality).to.be.equal(5);
-            expect(sr.reason).to.be.null;
         });
 
     });

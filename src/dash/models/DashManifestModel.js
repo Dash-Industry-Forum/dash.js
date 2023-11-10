@@ -234,7 +234,7 @@ function DashManifestModel() {
 
     function getViewpointForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT) || !adaptation[DashConstants.VIEWPOINT].length) return [];
-        return adaptation[DashConstants.VIEWPOINT].map( viewpoint => {
+        return adaptation[DashConstants.VIEWPOINT].map(viewpoint => {
             const vp = new DescriptorType();
             return vp.init(viewpoint);
         });
@@ -242,7 +242,7 @@ function DashManifestModel() {
 
     function getRolesForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE) || !adaptation[DashConstants.ROLE].length) return [];
-        return adaptation[DashConstants.ROLE].map( role => {
+        return adaptation[DashConstants.ROLE].map(role => {
             const r = new DescriptorType();
             return r.init(role);
         });
@@ -250,7 +250,7 @@ function DashManifestModel() {
 
     function getAccessibilityForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY) || !adaptation[DashConstants.ACCESSIBILITY].length) return [];
-        return adaptation[DashConstants.ACCESSIBILITY].map( accessibility => {
+        return adaptation[DashConstants.ACCESSIBILITY].map(accessibility => {
             const a = new DescriptorType();
             return a.init(accessibility);
         });
@@ -258,7 +258,7 @@ function DashManifestModel() {
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
-        return adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map( audioChanCfg => {
+        return adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
             return acc.init(audioChanCfg);
         });
@@ -266,7 +266,7 @@ function DashManifestModel() {
 
     function getAudioChannelConfigurationForRepresentation(representation) {
         if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
-        return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map( audioChanCfg => {
+        return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
             return acc.init(audioChanCfg);
         });
@@ -370,7 +370,7 @@ function DashManifestModel() {
             }
         }
 
-        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        // If the codec contains a profiles parameter we remove it. Otherwise, it will cause problems when checking for codec capabilities of the platform
         if (codec) {
             codec = codec.replace(/\sprofiles=[^;]*/g, '');
         }
@@ -427,6 +427,21 @@ function DashManifestModel() {
             return null;
         }
         return adaptation.ContentProtection;
+    }
+
+    function getAdaptationHasProtectedRepresentations(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && adaptation.ContentProtection.length > 0) {
+            return true;
+        }
+
+        let encryptedRepresentations = [];
+        if (adaptation.Representation && adaptation.Representation.length > 0) {
+            encryptedRepresentations = adaptation.Representation.some((rep) => {
+                return rep.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && rep.ContentProtection.length > 0
+            })
+        }
+
+        return encryptedRepresentations.length > 0;
     }
 
     function getIsDynamic(manifest) {
@@ -536,7 +551,7 @@ function DashManifestModel() {
         }
     }
 
-    function getRepresentationsForAdaptation(voAdaptation) {
+    function getRepresentationsForAdaptation(voAdaptation, mediaInfo) {
         const voRepresentations = [];
         const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
         let segmentInfo,
@@ -558,6 +573,7 @@ function DashManifestModel() {
                 const voRepresentation = new Representation();
                 voRepresentation.index = i;
                 voRepresentation.adaptation = voAdaptation;
+                voRepresentation.mediaInfo = mediaInfo;
 
                 if (realRepresentation.hasOwnProperty(DashConstants.ID)) {
                     voRepresentation.id = realRepresentation.id;
@@ -573,6 +589,7 @@ function DashManifestModel() {
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.BANDWITH)) {
                     voRepresentation.bandwidth = realRepresentation.bandwidth;
+                    voRepresentation.bitrateInKbit = realRepresentation.bandwidth / 1000;
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.WIDTH)) {
                     voRepresentation.width = realRepresentation.width;
@@ -582,6 +599,9 @@ function DashManifestModel() {
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.SCAN_TYPE)) {
                     voRepresentation.scanType = realRepresentation.scanType;
+                }
+                if (realRepresentation.hasOwnProperty(DashConstants.QUALITY_RANKING)) {
+                    voRepresentation.qualityRanking = realRepresentation[DashConstants.QUALITY_RANKING];
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.MAX_PLAYOUT_RATE)) {
                     voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
@@ -677,7 +697,7 @@ function DashManifestModel() {
                     }
                 }
 
-                voRepresentation.MSETimeOffset = calcMSETimeOffset(voRepresentation);
+                voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
                 voRepresentations.push(voRepresentation);
             }
@@ -695,7 +715,7 @@ function DashManifestModel() {
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
     }
 
-    function calcMSETimeOffset(representation) {
+    function calcMseTimeOffset(representation) {
         // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
         const presentationOffset = representation.presentationTimeOffset;
         const periodStart = representation.adaptation.period.start;
@@ -1292,7 +1312,7 @@ function DashManifestModel() {
 
     function getSupplementalPropertiesForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) return [];
-        return adaptation.SupplementalProperty.map( supp => {
+        return adaptation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             return s.init(supp);
         });
@@ -1300,7 +1320,7 @@ function DashManifestModel() {
 
     function getSupplementalPropertiesForRepresentation(representation) {
         if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) return [];
-        return representation.SupplementalProperty.map( supp => {
+        return representation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             return s.init(supp);
         });
@@ -1330,6 +1350,7 @@ function DashManifestModel() {
         getAudioChannelConfigurationForAdaptation,
         getAudioChannelConfigurationForRepresentation,
         getAdaptationForIndex,
+        getAdaptationHasProtectedRepresentations,
         getIndexForAdaptation,
         getAdaptationForId,
         getAdaptationsForType,

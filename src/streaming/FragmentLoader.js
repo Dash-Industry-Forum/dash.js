@@ -103,6 +103,8 @@ function FragmentLoader(config) {
                         stream: event.stream,
                         streamId
                     });
+
+                    // Only in case of FetchAPI and low latency streaming. XHR does not have data attribute.
                     if (event.data) {
                         eventBus.trigger(events.LOADING_DATA_PROGRESS, {
                             request: request,

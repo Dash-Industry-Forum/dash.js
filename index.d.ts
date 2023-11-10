@@ -124,11 +124,11 @@ declare namespace dashjs {
 
         getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
 
-        getAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
-        getSafeAverageThroughput(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getSafeAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
-        getAverageLatency(mediaType: MediaType, calculationMode: Constants["THROUGHPUT_CALCULATION_MODES"], sampleSize: number): number
+        getAverageLatency(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
         getRawThroughputData(mediaType: MediaType): number
 
@@ -150,7 +150,7 @@ declare namespace dashjs {
 
         getCurrentRepresentation(): object;
 
-        getCurrentRepresentationInfo(): RepresentationInfo;
+        getCurrentRepresentation(): Representation;
 
         getRepresentationForQuality(quality: number): object | null;
 
@@ -574,41 +574,34 @@ declare namespace dashjs {
     }
 
     export interface Representation {
-        id: string;
-        index: number;
-        //adaptation needs checking
         adaptation: AdaptationSet | null;
-        segmentInfoType: string | null;
-        initialization: object | null;
-        codecs: string | null;
-        mimeType: string | null;
-        codecPrivateData: string | null;
-        segmentDuration: number;
-        timescale: number;
-        startNumber: number;
-        indexRange: string | null;
-        range: Range | null;
-        presentationTimeOffset: number;
-        MSETimeOffset: number;
-        mediaFinishedInformation: MediaFinishedInformation;
+        availabilityTimeComplete: boolean;
+        availabilityTimeOffset: number;
         availableSegmentsNumber: number;
         bandwidth: number;
-        width: number;
-        height: number;
-        scanType: string;
-        maxPlayoutRate: number;
-        availabilityTimeOffset: number;
-        availabilityTimeComplete: boolean;
-        segments: any[];
-        frameRate: number;
-    }
-
-    export interface RepresentationInfo {
-        id: string | null;
-        quality: number | null;
+        codecPrivateData: string | null;
+        codecs: string | null;
         fragmentDuration: number | null;
+        frameRate: number;
+        height: number;
+        id: string;
+        index: number;
+        indexRange: string | null;
+        initialization: object | null;
+        maxPlayoutRate: number;
+        mediaFinishedInformation: MediaFinishedInformation;
         mediaInfo: MediaInfo | null;
-        MSETimeOffset: number | null;
+        mimeType: string | null;
+        mseTimeOffset: number;
+        presentationTimeOffset: number;
+        range: Range | null;
+        scanType: string;
+        segmentDuration: number;
+        segmentInfoType: string | null;
+        segments: any[];
+        startNumber: number;
+        timescale: number;
+        width: number;
     }
 
     export interface Segment {
@@ -1227,15 +1220,7 @@ declare namespace dashjs {
                     audio?: number;
                     video?: number;
                 };
-                maxRepresentationRatio?: {
-                    audio?: number;
-                    video?: number;
-                };
                 initialBitrate?: {
-                    audio?: number;
-                    video?: number;
-                };
-                initialRepresentationRatio?: {
                     audio?: number;
                     video?: number;
                 };
@@ -1456,7 +1441,7 @@ declare namespace dashjs {
 
         setTextTrack(idx: number): void;
 
-        getBitrateInfoListFor(type: MediaType): BitrateInfo[];
+        getRepresentationsFor(type: MediaType): Representation[];
 
         getStreamsFromManifest(manifest: object): StreamInfo[];
 
@@ -2115,7 +2100,7 @@ declare namespace dashjs {
 
         getTopBitrateInfoFor(type: string, streamId?: string): BitrateInfo | null;
 
-        getInitialBitrateFor(type: string, streamId: string): number;
+        getInitialBitrateFor(type: string): number;
 
         checkPlaybackQuality(type: string, streamId: string): boolean;
 
@@ -2179,7 +2164,7 @@ declare namespace dashjs {
 
         prepareForReplacementTrackSwitch(codec: string): Promise<any>;
 
-        prepareForForceReplacementQualitySwitch(representationInfo: RepresentationInfo): Promise<any>;
+        prepareForForceReplacementQualitySwitch(voRepresentation: Representation): Promise<any>;
 
         prepareForNonReplacementTrackSwitch(codec: string): Promise<any>;
 
@@ -2191,7 +2176,7 @@ declare namespace dashjs {
 
         clearBuffers(ranges: Range[]): Promise<any>;
 
-        updateBufferTimestampOffset(representationInfo: RepresentationInfo): Promise<any>;
+        updateBufferTimestampOffset(voRepresentation: Representation): Promise<any>;
 
         updateAppendWindow(): Promise<any>;
 
@@ -2265,7 +2250,7 @@ declare namespace dashjs {
 
         saveTextSettingsDisabled(): void;
 
-        isTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
+        areTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
 
         setConfig(config: object): void;
 
@@ -2354,8 +2339,6 @@ declare namespace dashjs {
         getType(): string;
 
         getStreamId(): string;
-
-        setCurrentRepresentation(representationInfo: RepresentationInfo): void;
 
         startScheduleTimer(value: object): void;
 
@@ -2684,8 +2667,6 @@ declare namespace dashjs {
         reset(): void;
 
         resetInitialSettings(): void;
-
-        addExecutedRequest(request: HTTPRequest): void;
     }
 
     export interface AastLowLatencyThroughputModel {
@@ -2695,7 +2676,7 @@ declare namespace dashjs {
 
         getThroughputCapacityDelayMS(request: HTTPRequest, currentBufferLevel: number): number;
 
-        getEstimaredDownloadDurationMS(request: HTTPRequest): number;
+        getEstimatedDownloadDurationMS(request: HTTPRequest): number;
     }
 
     export interface ThroughputModel {
@@ -2704,7 +2685,7 @@ declare namespace dashjs {
         getThroughputDict(mediaType: MediaType): ThroughputDictEntry;
 
         getEwmaThroughputDict(mediaType: MediaType): ThroughputEwmaDictEntry;
-        
+
         getEwmaLatencyDict(mediaType: MediaType): ThroughputEwmaDictEntry;
 
         getEwmaHalfLife(mediaType: MediaType): object;
@@ -2781,13 +2762,13 @@ declare namespace dashjs {
 
         addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
 
-        addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number, availabilityStartTime: number, presentationStartTime: number, clientTimeOffset: number, currentTime: number, buffered: RepresentationInfo, latency: number): void;
+        addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number): void;
 
         updateManifestUpdateInfo(manifestUpdate: ManifestUpdate, updatedFields: any[]): void;
 
         addManifestUpdateStreamInfo(manifestUpdate: ManifestUpdate, id: string, index: number, start: number, duration: number): void;
 
-        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, id: string, index: number, streamIndex: number, mediaType: MediaType, presentationTimeOffset: number, startNumber: number, fragmentInfoType: string): void;
+        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, representation: Representation, mediaType: MediaType): void;
 
         addPlayList(vo: any): void;
 
@@ -3602,7 +3583,7 @@ declare namespace dashjs {
         getCurrentRequest(): SwitchRequest;
 
         getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
-        
+
         getStreamInfo(): StreamInfo;
 
         getScheduleController(): ScheduleController;
@@ -3611,7 +3592,7 @@ declare namespace dashjs {
 
         getAbrController(): AbrController;
 
-        getRepresentationInfo(): RepresentationInfo
+        getVoRepresentation(): Representation;
 
         getVideoModel(): VideoModel;
     }
@@ -4095,11 +4076,19 @@ declare namespace dashjs {
         presentationStartTime: number;
         clientTimeOffset: number;
         currentTime: number | null;
-        buffered: RepresentationInfo;
+        buffered: object | null;
         latency: number;
         streamInfo: StreamInfo[];
-        representationInfo: RepresentationInfo;
+        representationInfo: ManifestUpdateRepresentationInfo[];
 
+    }
+
+    export interface ManifestUpdateRepresentationInfo {
+        id: string | null;
+        index: number | null;
+        mediaType: MediaType | null;
+        presentationTimeOffset: number | null;
+        startNumber: number | null;
     }
 
     export interface PlayList {
@@ -4474,7 +4463,7 @@ declare namespace dashjs {
 
         reset(): void;
 
-        updateTimestampOffset(MSETimeOffset: number): void;
+        updateTimestampOffset(mseTimeOffset: number): void;
 
         initializeForStreamSwitch(mInfo: MediaInfo, selectedRepresentation: Representation, oldSourceBufferSink: SourceBufferSink): Promise<any>;
 
@@ -4515,8 +4504,6 @@ declare namespace dashjs {
         startPreloading(mediaSource: MediaSource, previousBuffers: any[]): void;
 
         getThumbnailController(): object;
-
-        getBitrateListFor(type: MediaType): BitrateInfo[];
 
         updateData(updatedStreamInfo: StreamInfo): void;
 
@@ -4566,7 +4553,7 @@ declare namespace dashjs {
 
         getRepresentationController(): RepresentationController;
 
-        getRepresentationInfo(quality: number): RepresentationInfo;
+        getVoRepresentation(quality: number): Representation;
 
         getBufferLevel(): number;
 

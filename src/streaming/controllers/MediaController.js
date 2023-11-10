@@ -35,6 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function MediaController() {
 
@@ -47,12 +48,65 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
+        lastSelectedRepresentations,
         customParametersModel,
+        mediaPlayerModel,
+        videoModel,
         domStorage;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         reset();
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.domStorage) {
+            domStorage = config.domStorage;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
+
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+    }
+
+    function initialize() {
+        _registerEvents();
+    }
+
+    function _registerEvents() {
+        eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    }
+
+    function _unRegisterEvents() {
+        eventBus.off(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    }
+
+    /**
+     * Save the last selected bitrate for each media type. In case we transition to a new period and have multiple AdaptationSets that we can choose
+     * from we choose the one with a bitrate closest to the current one.
+     * @param e
+     * @private
+     */
+    function _onRepresentationSwitched(e) {
+        if (!e || !e.currentRepresentation || !e.currentRepresentation.mediaInfo || !e.currentRepresentation.mediaInfo.type) {
+            return
+        }
+        const type = e.currentRepresentation.mediaInfo.type;
+        lastSelectedRepresentations[type] = e.currentRepresentation;
     }
 
     /**
@@ -62,38 +116,45 @@ function MediaController() {
      */
     function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
-        const tracksForType = getTracksFor(type, streamInfo.id);
-        let tracks = [];
+        const possibleTracks = getTracksFor(type, streamInfo.id);
+        let filteredTracks = [];
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
             setInitialSettings(type, settings);
         }
 
-        if (!tracksForType || (tracksForType.length === 0)) return;
+        if (!possibleTracks || (possibleTracks.length === 0)) return;
 
         if (settings) {
-            tracks = Array.from(tracksForType);
-            logger.info('Filtering '+tracks.length+' '+type+' tracks based on settings');
+            filteredTracks = Array.from(possibleTracks);
+            logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
-            tracks = filterTracksBySettings(tracks, matchSettingsLang, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsIndex, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsViewPoint, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
-                tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
+                filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, settings);
             }
-            tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
-            logger.info('Filtering '+type+' tracks ended, found '+tracks.length+' matching track(s).');
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, settings);
+            logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
-        if (tracks.length === 0) {
-            setTrack(selectInitialTrack(type, tracksForType), true);
-        } else {
-            if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks));
-            } else {
-                setTrack(tracks[0]);
+        // We did not apply any filter. We can select from all possible tracks
+        if (filteredTracks.length === 0) {
+            setTrack(selectInitialTrack(type, possibleTracks));
+        }
+
+        // We have some tracks based on the filtering we did.
+        else {
+            // More than one possibility
+            if (filteredTracks.length > 1) {
+                setTrack(selectInitialTrack(type, filteredTracks));
+            }
+            // Only one possibility use this one
+            else {
+                setTrack(filteredTracks[0]);
             }
         }
     }
@@ -116,7 +177,7 @@ function MediaController() {
         const mediaTracks = tracks[streamId][mediaType].list;
         for (let i = 0, len = mediaTracks.length; i < len; ++i) {
             //track is already set.
-            if (isTracksEqual(mediaTracks[i], track)) {
+            if (areTracksEqual(mediaTracks[i], track)) {
                 return;
             }
         }
@@ -161,7 +222,7 @@ function MediaController() {
         const type = track.type;
         const id = track.streamInfo.id;
 
-        return (tracks[id] && tracks[id][type] && isTracksEqual(tracks[id][type].current, track));
+        return (tracks[id] && tracks[id][type] && areTracksEqual(tracks[id][type].current, track));
     }
 
     /**
@@ -181,7 +242,7 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current && ((type !== Constants.TEXT && !isTracksEqual(track, current)) || (type === Constants.TEXT && track.isFragmented))) {
+        if (tracks[id][type].current && ((type !== Constants.TEXT && !areTracksEqual(track, current)) || (type === Constants.TEXT && track.isFragmented))) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
@@ -257,7 +318,7 @@ function MediaController() {
      * @returns {boolean}
      * @memberof MediaController#
      */
-    function isTracksEqual(t1, t2) {
+    function areTracksEqual(t1, t2) {
         if (!t1 && !t2) {
             return true;
         }
@@ -277,22 +338,6 @@ function MediaController() {
         return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.domStorage) {
-            domStorage = config.domStorage;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-        if (config.customParametersModel) {
-            customParametersModel = config.customParametersModel;
-        }
-    }
-
 
     /**
      * @memberof MediaController#
@@ -300,7 +345,9 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
+        lastSelectedRepresentations = {};
         resetInitialSettings();
+        _unRegisterEvents();
     }
 
     function extractSettings(mediaInfo) {
@@ -327,7 +374,7 @@ function MediaController() {
         if (tracksAfterMatcher.length !== 0) {
             return tracksAfterMatcher;
         } else {
-            logger.info('Filter-Function ('+filterFn.name+') resulted in no tracks; setting ignored');
+            logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         }
         return tracks;
     }
@@ -515,42 +562,166 @@ function MediaController() {
         return result;
     }
 
-    function selectInitialTrack(type, tracks) {
-        if (type === Constants.TEXT) return tracks[0];
+    function selectInitialTrack(type, mediaInfos) {
+        if (type === Constants.TEXT) return mediaInfos[0];
 
-        let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr;
         const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();
 
+        tmpArr = _initialFilterMediaInfosByAllowedSettings(mediaInfos);
+
+        // If we have a custom function that selects the track we use this one
         if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
-            tmpArr = customInitialTrackSelectionFunction(tracks);
-        } else {
+            tmpArr = customInitialTrackSelectionFunction(tmpArr);
+        }
+
+        // If we know the current selected bitrate for the media type we select the AdaptationSet that comes closest to this. This should only be relevant for multiperiod when we transition to the next period.
+        else if (lastSelectedRepresentations[type]) {
+            tmpArr = _trackSelectionModeClosestBitrate(tmpArr, type)
+        }
+
+        // Use the track selection function that is defined in the settings
+        else {
+            let mode = settings.get().streaming.selectionModeForInitialTrack;
             switch (mode) {
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
-                    tmpArr = _trackSelectionModeHighestSelectionPriority(tracks);
+                    tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
                     break;
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                    tmpArr = _trackSelectionModeHighestBitrate(tracks);
+                    tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
                     break;
                 case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                    tmpArr = _trackSelectionModeFirstTrack(tracks);
+                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
                     break;
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                    tmpArr = _trackSelectionModeHighestEfficiency(tracks);
+                    tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
                     break;
                 case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                    tmpArr = _trackSelectionModeWidestRange(tracks);
+                    tmpArr = _trackSelectionModeWidestRange(tmpArr);
                     break;
                 default:
                     logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
-                    tmpArr = _trackSelectionModeFirstTrack(tracks);
+                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
                     break;
             }
         }
 
-        return tmpArr.length > 0 ? tmpArr[0] : tracks[0];
+        return tmpArr.length > 0 ? tmpArr[0] : mediaInfos[0];
     }
 
+    /**
+     * @param {MediaInfo[]} mediaInfos
+     * @return {MediaInfo[]}
+     */
+    function _initialFilterMediaInfosByAllowedSettings(mediaInfos) {
+        try {
+            let tmpArr;
+
+            tmpArr = _filterMediaInfosByPossibleBitrate(mediaInfos);
+            tmpArr = _filterMediaInfosByPortalSize(tmpArr);
+
+            return tmpArr;
+        } catch (e) {
+            logger.error(e);
+            return mediaInfos
+        }
+    }
+
+    /**
+     * Returns all MediaInfo objects that have at least one bitrate that fulfills the constraint.
+     * If all fail the constraint we return the original array.
+     * @param {MediaInfo[]} mediaInfos
+     * @return {MediaInfo[]}
+     */
+    function _filterMediaInfosByPossibleBitrate(mediaInfos) {
+        try {
+            const filteredArray = mediaInfos.filter((mediaInfo) => {
+                const type = mediaInfo.type;
+
+                return mediaInfo.bitrateList.some((bitrateInfo) => {
+                    const maxBitrate = mediaPlayerModel.getAbrBitrateParameter('maxBitrate', type);
+                    const minBitrate = mediaPlayerModel.getAbrBitrateParameter('minBitrate', type);
+
+                    if (maxBitrate > -1 && bitrateInfo.bandwidth > maxBitrate * 1000) {
+                        return false;
+                    }
+
+                    return !(minBitrate > -1 && bitrateInfo.bandwidth < minBitrate * 1000);
+                })
+
+            })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return mediaInfos
+        } catch (e) {
+            logger.error(e);
+            return mediaInfos
+        }
+    }
+
+    /**
+     * @param {MediaInfo[]} mediaInfos
+     * @return {MediaInfo[]}
+     * @private
+     */
+    function _filterMediaInfosByPortalSize(mediaInfos) {
+        try {
+            if (!settings.get().streaming.abr.limitBitrateByPortal) {
+                return mediaInfos;
+            }
+
+            const { elementWidth } = videoModel.getVideoElementSize();
+
+            const filteredArray = mediaInfos.filter((mediaInfo) => {
+                return mediaInfo.type !== Constants.VIDEO || mediaInfo.bitrateList.some((bitrateInfo) => {
+                    return bitrateInfo.width <= elementWidth
+                });
+            })
+
+            if (filteredArray.length > 0) {
+                return filteredArray
+            }
+
+            return mediaInfos
+        } catch (e) {
+            logger.error(e);
+            return mediaInfos
+        }
+    }
+
+    /**
+     * Find the track that has a bitrate that matches the currenly selected one
+     * @param tracks
+     * @param type
+     * @returns {*}
+     * @private
+     */
+    function _trackSelectionModeClosestBitrate(tracks, type) {
+        if (!tracks || tracks.length === 0 || !type || !lastSelectedRepresentations[type]) {
+            return tracks
+        }
+
+        const targetBitrate = lastSelectedRepresentations[type].bandwidth;
+        if (!targetBitrate || isNaN(targetBitrate)) {
+            return tracks;
+        }
+
+        let current = { min: NaN, track: null };
+        tracks.forEach((track) => {
+            track.bitrateList.forEach((entry) => {
+                const diff = Math.abs(entry.bandwidth - targetBitrate);
+                if (isNaN(current.min) || diff < current.min) {
+                    current.min = diff;
+                    current.track = track;
+                }
+            })
+        })
+
+        return current.track ? [current.track] : tracks
+    }
 
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
@@ -600,7 +771,7 @@ function MediaController() {
         return tmpArr;
     }
 
-    function _compareDescriptorType(v1,v2) {
+    function _compareDescriptorType(v1, v2) {
         if (v1 && v2) {
             let t1 = JSON.stringify({
                 schemeIdUri: v1.schemeIdUri,
@@ -643,29 +814,30 @@ function MediaController() {
     }
 
     instance = {
-        setInitialMediaSettingsForType,
         addTrack,
-        getTracksFor,
+        areTracksEqual,
         getCurrentTrackFor,
-        isCurrentTrack,
-        setTrack,
-        selectInitialTrack,
-        setInitialSettings,
         getInitialSettings,
+        getTracksFor,
         getTracksWithHighestBitrate,
         getTracksWithHighestEfficiency,
         getTracksWithWidestRange,
-        isTracksEqual,
+        initialize,
+        isCurrentTrack,
         matchSettings,
-        matchSettingsLang,
-        matchSettingsIndex,
-        matchSettingsViewPoint,
-        matchSettingsRole,
         matchSettingsAccessibility,
         matchSettingsAudioChannelConfig,
+        matchSettingsIndex,
+        matchSettingsLang,
+        matchSettingsRole,
+        matchSettingsViewPoint,
+        reset,
         saveTextSettingsDisabled,
+        selectInitialTrack,
         setConfig,
-        reset
+        setInitialMediaSettingsForType,
+        setInitialSettings,
+        setTrack,
     };
 
     setup();

@@ -55,8 +55,8 @@ describe('ScheduleController', function () {
                 expect(result).to.be.NaN;
             });
 
-            it('should return NaN if representationInfo is undefined', () => {
-                representationController.getCurrentRepresentationInfo = function () {
+            it('should return NaN if voRepresentation is undefined', () => {
+                representationController.getCurrentRepresentation = function () {
                     return undefined
                 }
                 scheduleController = ScheduleController(context).create({
@@ -90,7 +90,7 @@ describe('ScheduleController', function () {
             })
 
             it('should return 16 (value returns by getCurrentBufferLevel of DashMetricsMock + 1) if current representation is audio and videoTrackPresent is true', () => {
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return {}
                 }
                 scheduleController.initialize(true);
@@ -100,7 +100,7 @@ describe('ScheduleController', function () {
 
             it('should return 12 (DEFAULT_MIN_BUFFER_TIME of MediaPlayerModelMock) if current representation is audio and videoTrackPresent is false', () => {
                 scheduleController.initialize(false);
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -111,7 +111,7 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: 10 };
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -122,7 +122,7 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: Infinity };
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -147,7 +147,7 @@ describe('ScheduleController', function () {
 
             it('should return 15 (value returns by getCurrentBufferLevel of DashMetricsMock) if current representation is video', () => {
                 scheduleController.initialize(true);
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -158,7 +158,7 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: 10 };
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -169,7 +169,7 @@ describe('ScheduleController', function () {
                 scheduleController.initialize(false);
                 abrController.isPlayingAtTopQuality = () => true;
                 streamInfo.manifestInfo = { duration: Infinity };
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return { mediaInfo: { streamInfo: streamInfo } }
                 }
                 const result = scheduleController.getBufferTarget();
@@ -195,16 +195,16 @@ describe('ScheduleController', function () {
             })
 
             it('should return 0 if current representation is text, and subtitles are disabled', function () {
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return {}
                 }
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(0);
             });
 
-            it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if current representation is text, and subtitles are enabled', function () {
+            it('should return 6 (value returns by voRepresentation.fragmentDuration) if current representation is text, and subtitles are enabled', function () {
                 textController.enableText(true);
-                representationController.getCurrentRepresentationInfo = function () {
+                representationController.getCurrentRepresentation = function () {
                     return {fragmentDuration: 6}
                 }
                 const result = scheduleController.getBufferTarget();
