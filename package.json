@@ -23,7 +23,6 @@
         "@babel/core": "^7.13.8",
         "@babel/eslint-parser": "^7.13.14",
         "@babel/preset-env": "^7.13.12",
-        "@svta/common-media-library": "0.4.5",
         "babel": "^5.3.1",
         "babel-eslint": "^10.1.0",
         "babel-loader": "^8.2.2",
@@ -59,7 +58,7 @@
         "yargs": "16.0.3"
     },
     "dependencies": {
-        "@svta/common-media-library": "^0.4.5",
+        "@svta/common-media-library": "^0.5.0",
         "bcp-47-match": "^2.0.3",
         "bcp-47-normalize": "^2.3.0",
         "codem-isoboxer": "0.3.9",
