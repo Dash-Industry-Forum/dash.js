@@ -39,9 +39,10 @@ import Utils from '../../core/Utils.js';
 function XHRLoader() {
 
     let instance;
+    let xhr;
 
     function load(httpRequest /* CommonMediaLibrary.request.CommonMediaRequest */, httpResponse /* CommonMediaLibrary.request.CommonMediaResponse */) {
-        let xhr = new XMLHttpRequest();
+        xhr = new XMLHttpRequest();
         xhr.open(httpRequest.method, httpRequest.url, true);
 
         if (httpRequest.responseType) {
@@ -58,6 +59,7 @@ function XHRLoader() {
         }
 
         xhr.withCredentials = httpRequest.credentials === 'include';
+        xhr.timeout = httpRequest.timeout;
 
         xhr.onload = function(e) {
             httpResponse.url = this.responseURL;
@@ -75,19 +77,23 @@ function XHRLoader() {
 
         xhr.send();
 
-        httpRequest.abort = abort.bind(xhr);
+        httpRequest.abort = abort.bind(this);
         return true;
     }
 
     function abort() {
-        // this = xhr
-        this.onloadend = this.onerror = this.onprogress = null; // Ignore events from aborted requests.
-        this.abort();
+        xhr.onloadend = xhr.onerror = xhr.onprogress = null; // Ignore events from aborted requests.
+        xhr.abort();
+    }
+
+    function getXhr() {
+        return xhr
     }
 
     instance = {
         load,
-        abort
+        abort,
+        getXhr
     };
 
     return instance;
