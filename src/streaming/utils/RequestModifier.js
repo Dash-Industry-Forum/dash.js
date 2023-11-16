@@ -39,10 +39,12 @@ export function modifyRequest(httpRequest, requestModifier) {
         credentials: httpRequest.withCredentials ? 'include' : undefined,
     };
 
-    return Promise.resolve(requestModifier.modifyRequest(request))
-        .then(() =>
-            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' })
-        );
+    return new Promise((resolve) => {
+        requestModifier.modifyRequest(request).then(() => {
+            Object.assign(httpRequest, request, { withCredentials: request.credentials === 'include' });
+            resolve(httpRequest);
+        })
+    });
 }
 
 function RequestModifier() {
