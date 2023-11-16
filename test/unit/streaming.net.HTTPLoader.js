@@ -52,7 +52,7 @@ describe('HTTPLoader', function () {
         expect(httpLoader.load.bind(httpLoader, {request: {}})).to.throw('config object is not correct or missing');
     });
 
-    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', () => {
+    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -72,12 +72,14 @@ describe('HTTPLoader', function () {
                 type: HTTPRequest.MEDIA_SEGMENT_TYPE,
                 availabilityTimeComplete: false
             }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        }).then(() => {
+            expect(self.requests.length).to.equal(1);
+            self.requests[0].respond(200);
+            done();
         });
-        expect(self.requests.length).to.equal(1);
-        self.requests[0].respond(200);
     });
 
-    it('should use XHRLoader and call success and complete callback when load is called successfully', () => {
+    it('should use XHRLoader and call success and complete callback when load is called successfully', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -96,15 +98,17 @@ describe('HTTPLoader', function () {
             success: callbackSucceeded,
             complete: callbackCompleted,
             error: callbackError
+        }).then(() => {
+            expect(self.requests.length).to.equal(1);
+            self.requests[0].respond(200);
+            sinon.assert.calledOnce(callbackSucceeded);
+            sinon.assert.calledOnce(callbackCompleted);
+            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            done();
         });
-        expect(self.requests.length).to.equal(1);
-        self.requests[0].respond(200);
-        sinon.assert.calledOnce(callbackSucceeded);
-        sinon.assert.calledOnce(callbackCompleted);
-        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader and call error and complete callback when load is called with error', () => {
+    it('should use XHRLoader and call error and complete callback when load is called with error', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -123,16 +127,18 @@ describe('HTTPLoader', function () {
             success: callbackSucceeded,
             complete: callbackCompleted,
             error: callbackError
+        }).then(() => {
+            expect(self.requests.length).to.equal(1);
+            setTimeout(() => self.requests[0].respond(404), 1);
+            sinon.assert.calledOnce(callbackError);
+            sinon.assert.calledOnce(callbackCompleted);
+            sinon.assert.notCalled(callbackSucceeded);
+            expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            done();
         });
-        expect(self.requests.length).to.equal(1);
-        self.requests[0].respond(404);
-        sinon.assert.calledOnce(callbackError);
-        sinon.assert.calledOnce(callbackCompleted);
-        sinon.assert.notCalled(callbackSucceeded);
-        expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', () => {
+    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', (done) => {
         let self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
@@ -152,9 +158,11 @@ describe('HTTPLoader', function () {
                 type: HTTPRequest.INIT_SEGMENT_TYPE,
                 availabilityTimeComplete: false
             }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
+        }).then(() => {
+            expect(self.requests.length).to.equal(1);
+            self.requests[0].respond(200);
+            done();
         });
-        expect(self.requests.length).to.equal(1);
-        self.requests[0].respond(200);
     });
 });
 

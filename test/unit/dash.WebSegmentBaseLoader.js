@@ -76,7 +76,7 @@ describe('WebmSegmentBaseLoader', function () {
                 .catch((e) => {
                     done(e);
                 });
-            self.requests[0].respond(200);
+            setTimeout(() => self.requests[0].respond(200), 1)
         });
 
         it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', function (done) {
@@ -93,7 +93,7 @@ describe('WebmSegmentBaseLoader', function () {
                     done(e);
                 });
 
-            self.requests[0].respond(200);
+            setTimeout(() => self.requests[0].respond(200), 1)
         });
     });
 });

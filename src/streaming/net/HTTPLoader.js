@@ -106,11 +106,12 @@ function HTTPLoader(cfg) {
     function load(config) {
         if (config.request) {
             const retryAttempts = mediaPlayerModel.getRetryAttemptsForType(config.request.type);
-            _internalLoad(config, retryAttempts);
+            return _internalLoad(config, retryAttempts);
         } else {
             if (config.error) {
                 config.error(config.request, 'error');
             }
+            return Promise.resolve();
         }
     }
 
@@ -291,19 +292,22 @@ function HTTPLoader(cfg) {
 
 
         const _loadRequest = function(loader, httpRequest, httpResponse) {
-            _applyRequestModifier(httpRequest).then(() => {
-                _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
-                    httpRequest = _httpRequest;
-    
-                    httpRequest.onload = _onload;
-                    httpRequest.onloadend = _onloadend;
-                    httpRequest.onerror = _onloadend;
-                    httpRequest.onprogress = _onprogress;
-                    httpRequest.onabort = _onabort;
-                    httpRequest.ontimeout = _ontimeout;
-            
-                    httpResponse.resourceTiming.startTime = Date.now();
-                    loader.load(httpRequest, httpResponse);
+            return new Promise((resolve) => {
+                _applyRequestModifier(httpRequest).then(() => {
+                    _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
+                        httpRequest = _httpRequest;
+        
+                        httpRequest.onload = _onload;
+                        httpRequest.onloadend = _onloadend;
+                        httpRequest.onerror = _onloadend;
+                        httpRequest.onprogress = _onprogress;
+                        httpRequest.onabort = _onabort;
+                        httpRequest.ontimeout = _ontimeout;
+                
+                        httpResponse.resourceTiming.startTime = Date.now();
+                        loader.load(httpRequest, httpResponse);
+                        resolve();
+                    });
                 });
             });
         }
@@ -404,7 +408,7 @@ function HTTPLoader(cfg) {
         if (isNaN(requestObject.delayLoadingTime) || now >= requestObject.delayLoadingTime) {
             // no delay - just send
             httpRequests.push(httpRequest);
-            _loadRequest(loader, httpRequest, httpResponse);
+            return _loadRequest(loader, httpRequest, httpResponse);
         } else {
             // delay
             let delayedRequest = {
@@ -427,6 +431,8 @@ function HTTPLoader(cfg) {
                     delayedRequest.httpRequest.onerror();
                 }
             }, (requestObject.delayLoadingTime - now));
+
+            return Promise.resolve();
         }
     }
 
