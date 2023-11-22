@@ -488,7 +488,6 @@ function StreamController() {
         function _open() {
             mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
             mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
-            mediaSourceController.registerEventListener();
             sourceUrl = mediaSourceController.attachMediaSource(videoModel);
             logger.debug('MediaSource attached to element.  Waiting on open...');
         }

@@ -59,8 +59,7 @@ function MediaSourceController() {
             mediaSource = new ManagedMediaSource();
             mediaSourceType = 'managedMediaSource';
             logger.info(`Created ManagedMediaSource`)
-        }
-        else if (hasMediaSource) {
+        } else if (hasMediaSource) {
             mediaSource = new MediaSource();
             mediaSourceType = 'mediaSource';
             logger.info(`Created MediaSource`)
@@ -72,17 +71,6 @@ function MediaSourceController() {
         return mediaSource;
     }
 
-    function registerEventListener() {
-        if (mediaSource) {
-            mediaSource.addEventListener('startstreaming', () => {
-                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
-            })
-            mediaSource.addEventListener('endstreaming', () => {
-                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
-            })
-        }
-    }
-
     function attachMediaSource(videoModel) {
 
         let objectURL = window.URL.createObjectURL(mediaSource);
@@ -91,6 +79,12 @@ function MediaSourceController() {
 
         if (mediaSourceType === 'managedMediaSource') {
             videoModel.setDisableRemotePlayback(true);
+            mediaSource.addEventListener('startstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
+            })
+            mediaSource.addEventListener('endstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
+            })
         }
 
         return objectURL;
@@ -173,7 +167,6 @@ function MediaSourceController() {
         detachMediaSource,
         setDuration,
         setSeekable,
-        registerEventListener,
         signalEndOfStream,
         setConfig,
     };
