@@ -162,13 +162,13 @@ function MediaSourceController() {
     }
 
     instance = {
-        createMediaSource,
         attachMediaSource,
+        createMediaSource,
         detachMediaSource,
+        setConfig,
         setDuration,
         setSeekable,
         signalEndOfStream,
-        setConfig,
     };
 
     setup();
