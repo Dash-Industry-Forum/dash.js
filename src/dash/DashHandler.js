@@ -276,14 +276,27 @@ function DashHandler(config) {
      * @return {FragmentRequest|null}
      */
     function getNextSegmentRequest(mediaInfo, representation) {
-        let request = null;
-
         if (!representation || !representation.segmentInfoType) {
             return null;
         }
 
         let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
 
+        return _getRequest(mediaInfo, representation, indexToRequest);
+    }
+
+    function repeatSegmentRequest(mediaInfo, representation) {
+        if (!representation || !representation.segmentInfoType) {
+            return null;
+        }
+
+        let indexToRequest = lastSegment ? lastSegment.index : 0;
+
+        return _getRequest(mediaInfo, representation, indexToRequest);
+    }
+
+    function _getRequest(mediaInfo, representation, indexToRequest) {
+        let request = null;
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
 
         // No segment found
@@ -391,18 +404,19 @@ function DashHandler(config) {
     }
 
     instance = {
-        initialize,
-        getStreamId,
-        getType,
-        getStreamInfo,
-        getInitRequest,
-        getSegmentRequestForTime,
         getCurrentIndex,
+        getInitRequest,
         getNextSegmentRequest,
-        isLastSegmentRequested,
-        reset,
         getNextSegmentRequestIdempotent,
-        getValidTimeAheadOfTargetTime
+        getSegmentRequestForTime,
+        getStreamId,
+        getStreamInfo,
+        getType,
+        getValidTimeAheadOfTargetTime,
+        initialize,
+        isLastSegmentRequested,
+        repeatSegmentRequest,
+        reset,
     };
 
     setup();

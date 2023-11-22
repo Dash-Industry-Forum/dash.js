@@ -49,6 +49,7 @@ function VideoModel() {
         logger,
         element,
         _currentTime,
+        setCurrentTimeReadyStateFunction,
         TTMLRenderingDiv,
         vttRenderingDiv,
         previousPlaybackRate,
@@ -94,8 +95,11 @@ function VideoModel() {
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
         if (element) {
+            if (setCurrentTimeReadyStateFunction && setCurrentTimeReadyStateFunction.func && setCurrentTimeReadyStateFunction.event) {
+                removeEventListener(setCurrentTimeReadyStateFunction.event, setCurrentTimeReadyStateFunction.func);
+            }
             _currentTime = currentTime;
-            waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+            setCurrentTimeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
                 if (!element) {
                     return;
                 }
@@ -114,7 +118,9 @@ function VideoModel() {
                 // setTimeout is used to workaround InvalidStateError in IE11
                 try {
                     _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
-                    element.currentTime = _currentTime;
+                    if (!isNaN(_currentTime)) {
+                        element.currentTime = _currentTime;
+                    }
                     _currentTime = NaN;
                 } catch (e) {
                     if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
@@ -438,10 +444,11 @@ function VideoModel() {
         if (targetReadyState === Constants.VIDEO_ELEMENT_READY_STATES.HAVE_NOTHING ||
             getReadyState() >= targetReadyState) {
             callback();
+            return null;
         } else {
             // wait for the appropriate callback before checking again
             const event = READY_STATES_TO_EVENT_NAMES.get(targetReadyState);
-            _listenOnce(event, callback);
+            return _listenOnce(event, callback);
         }
     }
 
@@ -453,49 +460,51 @@ function VideoModel() {
             callback(event);
         };
         addEventListener(event, func);
+
+        return { func, event }
     }
 
     instance = {
-        initialize,
-        setCurrentTime,
-        play,
-        isPaused,
-        pause,
-        isStalled,
-        isSeeking,
-        getTime,
-        getPlaybackRate,
-        setPlaybackRate,
-        getPlayedRanges,
-        getEnded,
-        setStallState,
-        getElement,
-        setElement,
-        setSource,
-        getSource,
-        getTTMLRenderingDiv,
-        setTTMLRenderingDiv,
-        getVttRenderingDiv,
-        setVttRenderingDiv,
-        getPlaybackQuality,
         addEventListener,
-        removeEventListener,
-        getReadyState,
-        getBufferRange,
-        getClientWidth,
-        getClientHeight,
-        getTextTracks,
-        getTextTrack,
         addTextTrack,
         appendChild,
-        removeChild,
-        getVideoWidth,
+        getBufferRange,
+        getClientHeight,
+        getClientWidth,
+        getElement,
+        getEnded,
+        getPlaybackQuality,
+        getPlaybackRate,
+        getPlayedRanges,
+        getReadyState,
+        getSource,
+        getTTMLRenderingDiv,
+        getTextTrack,
+        getTextTracks,
+        getTime,
         getVideoHeight,
-        getVideoRelativeOffsetTop,
         getVideoRelativeOffsetLeft,
+        getVideoRelativeOffsetTop,
+        getVideoWidth,
+        getVttRenderingDiv,
+        initialize,
+        isPaused,
+        isSeeking,
+        isStalled,
+        pause,
+        play,
+        removeChild,
+        removeEventListener,
+        reset,
+        setCurrentTime,
+        setElement,
+        setPlaybackRate,
+        setSource,
+        setStallState,
+        setTTMLRenderingDiv,
+        setVttRenderingDiv,
         waitForReadyState,
         setDisableRemotePlayback,
-        reset
     };
 
     setup();

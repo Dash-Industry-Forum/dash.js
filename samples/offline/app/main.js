@@ -58,7 +58,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
 
     $scope.selectedItem = {
-        url: 'https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd'
+        url: 'https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd'
     };
 
     sources.query(function (data) {

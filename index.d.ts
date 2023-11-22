@@ -705,6 +705,8 @@ declare namespace dashjs {
 
         getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
+        repeatSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
+
         getValidTimeCloseToTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation, targetThreshold: number): number;
 
         getValidTimeAheadOfTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation): number;
@@ -988,6 +990,7 @@ declare namespace dashjs {
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -1088,6 +1091,13 @@ declare namespace dashjs {
                     switchHistoryRule?: boolean,
                     droppedFramesRule?: boolean,
                     abandonRequestsRule?: boolean
+                },
+                abrRulesParameters?: {
+                    abandonRequestsRule: {
+                        graceTimeThreshold: number,
+                        abandonMultiplier: number,
+                        minLengthToAverage: number
+                    }
                 },
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;

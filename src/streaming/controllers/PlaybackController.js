@@ -140,6 +140,7 @@ function PlaybackController() {
         eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
         eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -729,6 +730,10 @@ function PlaybackController() {
                 updateCurrentTime();
             }
         }
+    }
+
+    function _onDynamicToStatic() {
+        isDynamic = false;
     }
 
     function _updateLivePlaybackTime() {

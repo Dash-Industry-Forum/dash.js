@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" maxSegmentDuration="PT0H0M6.000S" mediaPresentationDuration="PT0H1M30.000S" minBufferTime="PT12.000S" profiles="urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash264,urn:hbbtv:dash:profile:isoff-live:2012" type="static">
+    <BaseURL>http://refapp.hbbtv.org/videos/01_llama_drama_1080p_25f75g6sv3/</BaseURL>
+    <Period duration="PT0H1M30.000S" id="p0">
+        <AdaptationSet lang="und" maxFrameRate="25" maxHeight="1080" maxWidth="1920" par="16:9" segmentAlignment="true" startWithSAP="1">
+            <SegmentTemplate initialization="$RepresentationID$_i.mp4" presentationTimeOffset="-30000" media="$RepresentationID$_$Number$.m4s" startNumber="1" timescale="12800">
+                <SegmentTimeline>
+                    <S d="76800" r="14" t="0"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation bandwidth="488352" codecs="avc1.4D4028" frameRate="25" height="360" id="v1" mimeType="video/mp4" sar="1:1" width="640">
+            </Representation>
+            <Representation bandwidth="1405311" codecs="avc1.4D4028" frameRate="25" height="720" id="v2" mimeType="video/mp4" sar="1:1" width="1280">
+            </Representation>
+            <Representation bandwidth="1945126" codecs="avc1.4D4028" frameRate="25" height="1080" id="v3" mimeType="video/mp4" sar="1:1" width="1920">
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet lang="und" segmentAlignment="true" startWithSAP="1">
+            <SegmentTemplate initialization="$RepresentationID$_i.mp4" media="$RepresentationID$_$Number$.m4s" startNumber="1" timescale="44100">
+                <SegmentTimeline>
+                    <S d="263177" t="0"/>
+                    <S d="264192" r="13"/>
+                    <S d="7168"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation audioSamplingRate="44100" bandwidth="129896" codecs="mp4a.40.2" id="a1" mimeType="audio/mp4">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>
