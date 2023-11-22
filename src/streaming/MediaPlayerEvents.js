@@ -439,7 +439,16 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.INBAND_PRFT = 'inbandPrft';
 
+        /**
+         * The streaming attribute of the Managed Media Source is true
+         * @type {string}
+         */
         this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+
+        /**
+         * The streaming attribute of the Managed Media Source is false
+         * @type {string}
+         */
         this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     }
 }
