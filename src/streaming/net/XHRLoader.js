@@ -41,7 +41,12 @@ function XHRLoader() {
     let instance;
     let xhr;
 
-    function load(httpRequest /* CommonMediaLibrary.request.CommonMediaRequest */, httpResponse /* CommonMediaLibrary.request.CommonMediaResponse */) {
+    /**
+     * Load request
+     * @param {CommonMediaLibrary.request.CommonMediaRequest} httpRequest
+     * @param {CommonMediaLibrary.request.CommonMediaResponse} httpResponse
+     */
+    function load(httpRequest, httpResponse) {
         xhr = new XMLHttpRequest();
         xhr.open(httpRequest.method, httpRequest.url, true);
 

@@ -51,7 +51,12 @@ function FetchLoader() {
         boxParser = cfg.boxParser
     }
 
-    function load(httpRequest /* CommonMediaLibrary.request.CommonMediaRequest */, httpResponse /* CommonMediaLibrary.request.CommonMediaResponse */) {
+    /**
+     * Load request
+     * @param {CommonMediaLibrary.request.CommonMediaRequest} httpRequest
+     * @param {CommonMediaLibrary.request.CommonMediaResponse} httpResponse
+     */
+    function load(httpRequest, httpResponse) {
         // Variables will be used in the callback functions
         const requestObject = httpRequest.customData.request;
 
