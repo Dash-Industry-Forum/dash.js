@@ -58,7 +58,7 @@ function FetchLoader() {
      */
     function load(httpRequest, httpResponse) {
         // Variables will be used in the callback functions
-        const requestObject = httpRequest.customData.request;
+        const fragmentRequest = httpRequest.customData.request;
 
         const headers = new Headers();
         if (httpRequest.headers) {
@@ -92,7 +92,7 @@ function FetchLoader() {
 
         new Promise((resolve) => {
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
-                throughputCapacityDelayMS = aastLowLatencyThroughputModel.getThroughputCapacityDelayMS(requestObject, dashMetrics.getCurrentBufferLevel(requestObject.mediaType) * 1000);
+                throughputCapacityDelayMS = aastLowLatencyThroughputModel.getThroughputCapacityDelayMS(fragmentRequest, dashMetrics.getCurrentBufferLevel(fragmentRequest.mediaType) * 1000);
                 if (throughputCapacityDelayMS) {
                     // safely delay the "fetch" call a bit to be able to measure the throughput capacity of the line.
                     // this will lead to first few chunks downloaded at max network speed
@@ -127,7 +127,7 @@ function FetchLoader() {
                         let offset = 0;
 
                         if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST && aastLowLatencyThroughputModel) {
-                            _aastProcessResponse(markBeforeFetch, requestObject, requestTime, throughputCapacityDelayMS, responseHeaders, httpRequest, response)
+                            _aastProcessResponse(markBeforeFetch, httpRequest, requestTime, throughputCapacityDelayMS, responseHeaders, response);
                         } else {
                             httpRequest.customData.reader = response.body.getReader();
                         }
@@ -279,13 +279,14 @@ function FetchLoader() {
     }
 
 
-    function _aastProcessResponse(markBeforeFetch, requestObject, requestTime, throughputCapacityDelayMS, responseHeaders, httpRequest, response) {
+    function _aastProcessResponse(markBeforeFetch, httpRequest, requestTime, throughputCapacityDelayMS, responseHeaders, response) {
         let markA = markBeforeFetch;
         let markB = 0;
 
         function fetchMeassurement(stream) {
             const reader = stream.getReader();
             const measurement = [];
+            const fragmentRequest = httpRequest.customData.request;
 
             reader.read()
                 .then(function processFetch(args) {
@@ -301,7 +302,7 @@ function FetchLoader() {
                             chunkDownloadDurationMS,
                             chunkBytes,
                             kbps: Math.round(8 * chunkBytes / (chunkDownloadDurationMS / 1000)),
-                            bufferLevel: dashMetrics.getCurrentBufferLevel(requestObject.mediaType)
+                            bufferLevel: dashMetrics.getCurrentBufferLevel(fragmentRequest.mediaType)
                         });
                     }
 
@@ -310,13 +311,13 @@ function FetchLoader() {
                         const fetchDuration = markB - markBeforeFetch;
                         const bytesAllChunks = measurement.reduce((prev, curr) => prev + curr.chunkBytes, 0);
 
-                        aastLowLatencyThroughputModel.addMeasurement(requestObject, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
+                        aastLowLatencyThroughputModel.addMeasurement(fragmentRequest, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
 
                         httpRequest.progress({
                             loaded: bytesAllChunks,
                             total: bytesAllChunks,
                             lengthComputable: true,
-                            time: aastLowLatencyThroughputModel.getEstimatedDownloadDurationMS(requestObject)
+                            time: aastLowLatencyThroughputModel.getEstimatedDownloadDurationMS(fragmentRequest)
                         });
                         return;
                     }
