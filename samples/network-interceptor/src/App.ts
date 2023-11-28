@@ -12,27 +12,14 @@ export class App {
 
   player: dashjs.MediaPlayerClass | null = null
 
+  mpd: string = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+
   constructor() {
-    this.initDashPlayer()
   }
   
-  public play() {
-    if (!this.player) {
-      return
-    }
-    this.player.attachSource('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd')
-  }
-
-  public stop() {
-    if (!this.player) {
-      return
-    }
-    this.player.attachSource('')
-  }
-
-  private initDashPlayer(): void {
+  public init(): void {
     this.player = dashjs.MediaPlayer().create()
-    this.player.initialize(document.querySelector('video') as HTMLMediaElement)
+    this.player.initialize(document.querySelector('video') as HTMLMediaElement, this.mpd, true)
 
     // Add request plugin to override request url for video segment requests only
     this.addRequestInterceptor()
