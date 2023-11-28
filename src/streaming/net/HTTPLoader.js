@@ -197,18 +197,19 @@ function HTTPLoader(cfg) {
             }
         };
 
+        const _oncomplete = function() {
+            requestObject.startDate = requestStartTime;
+            requestObject.endDate = new Date();
+            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
+        }
+
         /**
          * Fired when an XMLHttpRequest transaction completes.
          * This includes status codes such as 404. We handle errors in the _onError function.
          */
         const _onload = function () {
-
-            requestObject.startDate = requestStartTime;
-            requestObject.endDate = new Date();
-            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-            requestObject.fileLoaderType = fileLoaderType;
-            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
-    
+            _oncomplete();
             _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
                 httpResponse = _httpResponse;
                 if (httpResponse.status >= 200 && httpResponse.status <= 299) {
@@ -232,13 +233,7 @@ function HTTPLoader(cfg) {
          * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
          */
         const _onabort = function () {
-
-            requestObject.startDate = requestStartTime;
-            requestObject.endDate = new Date();
-            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-            requestObject.fileLoaderType = fileLoaderType;
-            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
-
+            _oncomplete();
             _addHttpRequestMetric(requestObject, httpResponse, true, traces);
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
