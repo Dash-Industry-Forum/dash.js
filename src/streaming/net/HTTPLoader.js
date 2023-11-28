@@ -186,7 +186,6 @@ function HTTPLoader(cfg) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
                     logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
-                    // httpRequest.response.onabort = null;
                     httpRequest.loader.abort(httpRequest);
                     _onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
@@ -213,7 +212,7 @@ function HTTPLoader(cfg) {
             _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
                 httpResponse = _httpResponse;
                 if (httpResponse.status >= 200 && httpResponse.status <= 299) {
-                    _handleLoaded(true, requestObject, httpRequest, httpResponse, traces, requestStartTime, fileLoaderType);
+                    _handleLoaded(true, httpRequest, httpResponse, traces);
 
                     if (config.success) {
                         config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
@@ -267,7 +266,7 @@ function HTTPLoader(cfg) {
          * Fired when the request encountered an error.
          */
         const _onerror = function () {
-            _handleLoaded(false, requestObject, httpRequest, httpResponse, traces, requestStartTime, fileLoaderType);
+            _handleLoaded(false, httpRequest, httpResponse, traces);
 
             // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
             try {
@@ -284,7 +283,6 @@ function HTTPLoader(cfg) {
 
             _retriggerRequest();
         }
-
 
         const _loadRequest = function(loader, httpRequest, httpResponse) {
             return new Promise((resolve) => {
@@ -347,8 +345,7 @@ function HTTPLoader(cfg) {
         // Main code after inline functions
         const requestObject = config.request;
         const traces = [];
-        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, fileLoaderType,
-            progressTimeout;
+        let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, progressTimeout;
 
         let httpRequest; // CommonMediaLibrary.request.CommonMediaRequest
         let httpResponse; // CommonMediaLibrary.request.CommonMediaResponse
@@ -360,7 +357,6 @@ function HTTPLoader(cfg) {
         requestStartTime = new Date();
         lastTraceTime = requestStartTime;
         lastTraceReceivedCount = 0;
-        fileLoaderType = '';
         progressTimeout = null;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
@@ -369,7 +365,7 @@ function HTTPLoader(cfg) {
 
         const loaderInformation = _getLoader(requestObject);
         const loader = loaderInformation.loader;
-        fileLoaderType = loaderInformation.fileLoaderType;
+        requestObject.fileLoaderType = loaderInformation.fileLoaderType;
 
         requestObject.headers = {};
         _updateRequestUrlAndHeaders(requestObject);
@@ -478,14 +474,13 @@ function HTTPLoader(cfg) {
     /**
      * Function to be called after the request has been loaded. Either successfully or unsuccesfully
      * @param {boolean} success
-     * @param {object} requestObject
-     * @param {object} httpRequest
+     * @param {CommonMediaRequest} httpRequest
+     * @param {CommonMediaResponse} httpResponse
      * @param {array} traces
-     * @param {date} requestStartTime
-     * @param {string} fileLoaderType
      * @private
      */
-    function _handleLoaded(success, requestObject, httpRequest, httpResponse, traces) {
+    function _handleLoaded(success, httpRequest, httpResponse, traces) {
+        const requestObject = httpRequest.customData.request;
         // If enabled the ResourceTimingApi we add the corresponding information to the request object.
         // These values are more accurate and can be used by the ThroughputController later
         if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
