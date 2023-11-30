@@ -121,6 +121,11 @@ function MediaController() {
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
+            if (settings) {
+                // If the settings are defined locally, do not take codec into account or it'll be too strict.
+                // eg: An audio track should not be selected by codec but merely by lang.
+                delete settings.codec;
+            }
             setInitialSettings(type, settings);
         }
 
@@ -138,6 +143,7 @@ function MediaController() {
             }
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, settings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
@@ -356,7 +362,8 @@ function MediaController() {
             viewpoint: mediaInfo.viewpoint,
             roles: mediaInfo.roles,
             accessibility: mediaInfo.accessibility,
-            audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+            audioChannelConfiguration: mediaInfo.audioChannelConfiguration,
+            codec: mediaInfo.codec
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
             (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
@@ -423,6 +430,10 @@ function MediaController() {
             return _compareDescriptorType(item, settings.audioChannelConfiguration);
         })[0];
         return matchAudioChannelConfiguration;
+    }
+
+    function matchSettingsCodec(settings, track) {
+        return !settings.codec || (settings.codec === track.codec);
     }
 
     function matchSettings(settings, track, isTrackActive = false) {

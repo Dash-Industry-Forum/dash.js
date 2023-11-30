@@ -97,7 +97,7 @@ function PatchManifestModel() {
             }
 
             let value = null;
-            if (xpath.findsAttribute()) {
+            if (xpath.findsAttribute() || xpath.findsTextReplace()) {
                 value = node.__text || '';
             } else if (action !== 'remove') {
                 value = node.__children.reduce((groups, child) => {

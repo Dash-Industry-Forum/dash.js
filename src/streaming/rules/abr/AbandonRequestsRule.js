@@ -35,11 +35,6 @@ import Debug from '../../../core/Debug.js';
 function AbandonRequestsRule(config) {
 
     config = config || {};
-    const mediaPlayerModel = config.mediaPlayerModel;
-    const dashMetrics = config.dashMetrics;
-    const ABANDON_MULTIPLIER = 1.8;
-    const GRACE_TIME_THRESHOLD = 500;
-    const MIN_LENGTH_TO_AVERAGE = 5;
 
     const context = this.context;
 
@@ -83,7 +78,7 @@ function AbandonRequestsRule(config) {
 
                 const stableBufferTime = mediaPlayerModel.getBufferTimeDefault();
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-                if ( bufferLevel > stableBufferTime ) {
+                if (bufferLevel > stableBufferTime) {
                     return switchRequest;
                 }
 
@@ -109,8 +104,8 @@ function AbandonRequestsRule(config) {
                 }
 
                 // Activate rule once we have enough samples and initial startup time has elapsed
-                if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE &&
-                    fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD &&
+                if (throughputArray[mediaType].length >= settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.minLengthToAverage &&
+                    fragmentInfo.elapsedTime > settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.graceTimeThreshold &&
                     fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
 
                     const requestedRepresentation = req.representation;

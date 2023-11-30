@@ -107,7 +107,9 @@ import Events from './events/Events.js';
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true
+ *                useChangeTypeForTrackSwitch: true,
+ *                mediaSourceDurationInfinity: true,
+ *                resetSourceBuffersForTrackSwitch: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -200,6 +202,13 @@ import Events from './events/Events.js';
  *                     abandonRequestsRule: true,
  *                     l2ARule: false,
  *                     loLPRule: false
+ *                 },
+ *                abrRulesParameters: {
+ *                     abandonRequestsRule: {
+ *                         graceTimeThreshold: 500,
+ *                         abandonMultiplier: 1.8,
+ *                         minLengthToAverage: 5
+ *                     }
  *                 },
  *                 throughput: {
  *                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
@@ -367,6 +376,12 @@ import Events from './events/Events.js';
  * @property {boolean} [useChangeTypeForTrackSwitch=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
  * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
+ * @property {boolean} [mediaSourceDurationInfinity=true]
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
+ * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
+ * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
+ * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
+ * that does not properly implement "changeType()", such as webOS 4.0 and before.
  */
 
 /**
@@ -597,6 +612,22 @@ import Events from './events/Events.js';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ */
+
+/**
+ * @typedef {Object} AbrRulesParameters
+ * @property {module:Settings~AbandonRequestRuleParameters} abandonRequestRule
+ * Configuration parameters for the AbandonRequestRule
+ */
+
+/**
+ * @typedef {Object} AbandonRequestRuleParameters
+ * @property {number} [graceTimeThreshold=500]
+ * Minimum elapsed time in milliseconds that the segment download has to run before the rule considers abandoning the download.
+ * @property {number} [abandonMultiplier]
+ * This value is multiplied with the segment duration and compared to the estimated time of the download to decide the request should be abandoned.
+ * @property {number} [minLengthToAverage]
+ * Minimum number of throughput samples required to consider abandoning the download of the segment.
  */
 
 /**
@@ -919,7 +950,9 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: true
+                useChangeTypeForTrackSwitch: true,
+                mediaSourceDurationInfinity: true,
+                resetSourceBuffersForTrackSwitch: false
             },
             gaps: {
                 jumpGaps: true,
@@ -1025,6 +1058,13 @@ function Settings() {
                     abandonRequestsRule: true,
                     l2ARule: false,
                     loLPRule: false
+                },
+                abrRulesParameters: {
+                    abandonRequestsRule: {
+                        graceTimeThreshold: 500,
+                        abandonMultiplier: 1.8,
+                        minLengthToAverage: 5
+                    }
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,

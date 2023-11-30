@@ -774,10 +774,12 @@ function StreamProcessor(config) {
         bufferController.prepareForForceReplacementQualitySwitch(voRepresentation)
             .then(() => {
                 _bufferClearedForReplacement();
+                pendingSwitchToVoRepresentation = null;
                 qualityChangeInProgress = false;
             })
             .catch(() => {
                 _bufferClearedForReplacement();
+                pendingSwitchToVoRepresentation = null;
                 qualityChangeInProgress = false;
             });
     }

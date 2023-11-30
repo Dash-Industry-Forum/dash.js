@@ -1079,6 +1079,8 @@ declare namespace dashjs {
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
+                mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -1183,6 +1185,13 @@ declare namespace dashjs {
                     abandonRequestsRule?: boolean
                     l2ARule?: boolean
                     loLPRule?: boolean
+                },
+                abrRulesParameters?: {
+                    abandonRequestsRule: {
+                        graceTimeThreshold: number,
+                        abandonMultiplier: number,
+                        minLengthToAverage: number
+                    }
                 },
                 throughput?: {
                     averageCalculationMode?: ThroughputCalculationModes,
@@ -1394,6 +1403,8 @@ declare namespace dashjs {
         getDVRWindowSize(): number;
 
         getDVRSeekOffset(value: number): number;
+
+        getTargetLiveDelay(): number;
 
         convertToTimeCode(value: number): string;
 

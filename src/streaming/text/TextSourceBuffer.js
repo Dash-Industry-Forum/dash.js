@@ -73,6 +73,7 @@ function TextSourceBuffer(config) {
         embeddedTracks,
         embeddedTimescale,
         embeddedLastSequenceNumber,
+        lastChunkEnd,
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender;
 
@@ -186,6 +187,7 @@ function TextSourceBuffer(config) {
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
         embeddedLastSequenceNumber = null;
+        lastChunkEnd = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
 
@@ -203,6 +205,7 @@ function TextSourceBuffer(config) {
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
         embeddedLastSequenceNumber = null;
+        lastChunkEnd = null;
     }
 
     function addEmbeddedTrack(mediaInfo) {
@@ -412,6 +415,18 @@ function TextSourceBuffer(config) {
         }
     }
 
+    function _isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, numSequences, lastChunkEnd, chunkStart) {
+        if (embeddedLastSequenceNumber === null || sequenceNumber === null || lastChunkEnd === null || chunkStart === null) {
+            return false
+        }
+        // Sequence number is always 1 for low latency streams
+        if (sequenceNumber === embeddedLastSequenceNumber) {
+            // time-based continuity check
+            return lastChunkEnd !== chunkStart
+        }
+        return sequenceNumber !== embeddedLastSequenceNumber + numSequences;
+    }
+
     function _appendEmbeddedText(bytes, chunk) {
         let i, samplesInfo;
 
@@ -433,12 +448,15 @@ function TextSourceBuffer(config) {
             samplesInfo = boxParser.getSamplesInfo(bytes);
 
             const sequenceNumber = samplesInfo.lastSequenceNumber;
+            const chunkStart = Math.trunc(chunk.start);
+            const chunkEnd = Math.trunc(chunk.end);
+
             if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                 _setupCeaParser();
             }
 
             if (embeddedTimescale) {
-                if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + samplesInfo.numSequences) {
+                if (_isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, samplesInfo.numSequences, lastChunkEnd, chunkStart)) {
                     for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                         if (embeddedCea608FieldParsers[i]) {
                             embeddedCea608FieldParsers[i].reset();
@@ -458,6 +476,7 @@ function TextSourceBuffer(config) {
                     }
                 }
                 embeddedLastSequenceNumber = sequenceNumber;
+                lastChunkEnd = chunkEnd;
             }
         }
     }

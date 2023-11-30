@@ -329,6 +329,9 @@ function BufferController(config) {
      * @private
      */
     function _appendToBuffer(chunk, request = null) {
+        if (!sourceBufferSink) {
+            return;
+        }
         sourceBufferSink.append(chunk, request)
             .then((e) => {
                 _onAppended(e);
@@ -744,6 +747,9 @@ function BufferController(config) {
     }
 
     function getRangeAt(time, tolerance) {
+        if (!sourceBufferSink) {
+            return null;
+        }
         const ranges = sourceBufferSink.getAllBufferRanges();
         let start = 0;
         let end = 0;

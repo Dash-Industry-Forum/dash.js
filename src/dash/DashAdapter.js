@@ -837,8 +837,8 @@ function DashAdapter() {
 
                 let { name, target, leaf } = result;
 
-                // short circuit for attribute selectors
-                if (operation.xpath.findsAttribute()) {
+                // short circuit for attribute selectors and text replacement
+                if (operation.xpath.findsAttribute() || name === '__text') {
                     switch (operation.action) {
                         case 'add':
                         case 'replace':
@@ -1035,7 +1035,8 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        mediaInfo.lang = bcp47Normalize(lang);
+        let normLang = bcp47Normalize(lang);
+        mediaInfo.lang = (normLang) ? normLang : lang;
         mediaInfo.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }];
     }
 
