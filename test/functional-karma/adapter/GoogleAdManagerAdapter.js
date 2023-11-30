@@ -1,4 +1,4 @@
-import Constants from '../helper/Constants';
+import Constants from '../helper/Constants.js';
 
 const NETWORK_CODE = '51636543';
 const CUSTOM_ASSET_KEY = 'dash-pod-serving-manifest-1';

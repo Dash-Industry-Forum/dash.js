@@ -1,4 +1,4 @@
-import Constants from '../helper/Constants';
+import Constants from '../helper/Constants.js';
 
 class DashJsAdapter {
 

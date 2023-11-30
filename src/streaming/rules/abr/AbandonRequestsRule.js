@@ -35,7 +35,9 @@ import Debug from '../../../core/Debug.js';
 function AbandonRequestsRule(config) {
 
     config = config || {};
-
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const settings = config.settings;
+    const dashMetrics = config.dashMetrics;
     const context = this.context;
 
     let instance,
@@ -116,7 +118,7 @@ function AbandonRequestsRule(config) {
                     // We do not abandon if the estimated download time is below a threshold, or we are on the lowest quality anyway.
                     const representation = rulesContext.getRepresentation();
                     const abrController = rulesContext.getAbrController();
-                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || abrController.isPlayingAtLowestQuality(representation)) {
+                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.abandonMultiplier || abrController.isPlayingAtLowestQuality(representation)) {
                         return switchRequest;
                     }
 
