@@ -290,12 +290,12 @@ function HTTPLoader(cfg) {
                     _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                         httpRequest = _httpRequest;
         
-                        httpRequest.onload = _onload;
-                        httpRequest.onloadend = _onloadend;
-                        httpRequest.onerror = _onloadend;
-                        httpRequest.onprogress = _onprogress;
-                        httpRequest.onabort = _onabort;
-                        httpRequest.ontimeout = _ontimeout;
+                        httpRequest.customData.onload = _onload;
+                        httpRequest.customData.onloadend = _onloadend;
+                        httpRequest.customData.onerror = _onloadend;
+                        httpRequest.customData.onprogress = _onprogress;
+                        httpRequest.customData.onabort = _onabort;
+                        httpRequest.customData.ontimeout = _ontimeout;
                 
                         httpResponse.resourceTiming.startTime = Date.now();
                         loader.load(httpRequest, httpResponse);
@@ -633,18 +633,22 @@ function HTTPLoader(cfg) {
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];
 
-        httpRequests.forEach(x => {
+        httpRequests.forEach(req => {
+            const reqData = req.customData
+            if (!reqData) {
+                return
+            }
             // MSS patch: ignore FragmentInfo requests
-            if (x.customData && x.customData.request && x.customData.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+            if (reqData.request && reqData.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
                 return;
             }
 
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            x.onloadend = x.onerror = x.onprogress = undefined;
-            if (x.abort) {
-                x.abort();
+            reqData.onloadend = reqData.onerror = reqData.onprogress = undefined;
+            if (reqData.abort) {
+                reqData.abort();
             }
         });
         httpRequests = [];

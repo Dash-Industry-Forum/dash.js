@@ -72,17 +72,17 @@ function XHRLoader() {
             httpResponse.statusText = this.statusText;
             httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
             httpResponse.data = this.response;
-            httpRequest.onload(e);
+            httpRequest.customData.onload(e);
         }
-        xhr.onloadend = httpRequest.onloadend;
-        xhr.onerror = httpRequest.onerror;
-        xhr.onprogress = httpRequest.onprogress;
-        xhr.onabort = httpRequest.onabort;
-        xhr.ontimeout = httpRequest.ontimeout;
+        xhr.onloadend = httpRequest.customData.onloadend;
+        xhr.onerror = httpRequest.customData.onerror;
+        xhr.onprogress = httpRequest.customData.onprogress;
+        xhr.onabort = httpRequest.customData.onabort;
+        xhr.ontimeout = httpRequest.customData.ontimeout;
 
         xhr.send();
 
-        httpRequest.abort = abort.bind(this);
+        httpRequest.customData.abort = abort.bind(this);
         return true;
     }
 

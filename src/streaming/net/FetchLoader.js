@@ -74,10 +74,10 @@ function FetchLoader() {
         if (typeof window.AbortController === 'function') {
             abortController = new AbortController(); /*jshint ignore:line*/
             httpRequest.customData.abortController = abortController;
-            abortController.signal.onabort = httpRequest.onabort;
+            abortController.signal.onabort = httpRequest.customData.onabort;
         }
 
-        httpRequest.abort = abort.bind(httpRequest);
+        httpRequest.customData.abort = abort.bind(httpRequest);
 
         const reqOptions = {
             method: httpRequest.method,
@@ -111,7 +111,7 @@ function FetchLoader() {
                         httpResponse.url = response.url;
 
                         if (!response.ok) {
-                            httpRequest.onerror();
+                            httpRequest.customData.onerror();
                         }
 
                         const responseHeaders = {};
@@ -177,7 +177,7 @@ function FetchLoader() {
                                         calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
                                     }
 
-                                    httpRequest.onprogress({
+                                    httpRequest.customData.onprogress({
                                         loaded: bytesReceived,
                                         total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                                         lengthComputable: true,
@@ -187,8 +187,8 @@ function FetchLoader() {
 
                                 httpResponse.data = receivedData.buffer;
                             }
-                            httpRequest.onload();
-                            httpRequest.onloadend();
+                            httpRequest.customData.onload();
+                            httpRequest.customData.onloadend();
                         }
 
                         /**
@@ -247,7 +247,7 @@ function FetchLoader() {
 
                                 // Announce progress but don't track traces. Throughput measures are quite unstable
                                 // when they are based in small amount of data
-                                httpRequest.onprogress({
+                                httpRequest.customData.onprogress({
                                     data: data.buffer,
                                     lengthComputable: false,
                                     noTrace: true
@@ -259,7 +259,7 @@ function FetchLoader() {
                                 // Call progress, so it generates traces that will be later used to know when the first byte
                                 // were received
                                 if (!signaledFirstByte) {
-                                    httpRequest.onprogress({
+                                    httpRequest.customData.onprogress({
                                         lengthComputable: false,
                                         noTrace: true
                                     });
@@ -271,8 +271,8 @@ function FetchLoader() {
                         _read(httpRequest, httpResponse, _processResult);
                     })
                     .catch(function (e) {
-                        if (httpRequest.onerror) {
-                            httpRequest.onerror(e);
+                        if (httpRequest.customData.onerror) {
+                            httpRequest.customData.onerror(e);
                         }
                     });
             });
@@ -343,9 +343,9 @@ function FetchLoader() {
         httpRequest.customData.reader.read()
             .then(processResult)
             .catch(function (e) {
-                if (httpRequest.onerror && httpResponse.status === 200) {
+                if (httpRequest.customData.onerror && httpResponse.status === 200) {
                     // Error, but response code is 200, trigger error
-                    httpRequest.onerror(e);
+                    httpRequest.customData.onerror(e);
                 }
             });
     }
