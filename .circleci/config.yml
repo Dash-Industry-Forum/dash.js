@@ -55,6 +55,7 @@ commands:
                     command: |
                         npm run build
                         npm run test
+
     process_test_results: # CircleCI can not handle NaN values so we replace them with 0
         steps:
             -   run:
@@ -97,13 +98,32 @@ commands:
                     name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
                     command:
                         node test/functional/runTests.cjs --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+    build_samples:
+        # parameters:
+        #     samples:
+        #         default: "network-interceptor"
+        #         type: string
+        steps:
+            -   run:
+                    name: Install dependencies and build samples
+                    command: |
+                        for sample in "${SAMPLES}[@]"; do
+                            echo "Build sample $sample"
+                            cd samples/$sample
+                            npm install
+                            npm run build
+                        done
+
 jobs:
     build-and-unit-test:
+        environment:
+            SAMPLES: "network-interceptor"
         executor: dashjs-executor
         steps:
             - checkout
             - dependencies_setup
             - build_unit_test_steps
+            - build_samples
 
     merge-build-and-unit-test:
         executor: dashjs-executor
