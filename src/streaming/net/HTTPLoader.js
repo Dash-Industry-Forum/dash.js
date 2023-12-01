@@ -42,7 +42,6 @@ import Events from '../../core/events/Events.js';
 import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
-import { modifyRequest } from '../utils/RequestModifier.js';
 
 /**
  * @module HTTPLoader
@@ -58,7 +57,6 @@ function HTTPLoader(cfg) {
     const errHandler = cfg.errHandler;
     const dashMetrics = cfg.dashMetrics;
     const mediaPlayerModel = cfg.mediaPlayerModel;
-    const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
     const errors = cfg.errors;
     const requestTimeout = cfg.requestTimeout || 0;
@@ -286,21 +284,19 @@ function HTTPLoader(cfg) {
 
         const _loadRequest = function(loader, httpRequest, httpResponse) {
             return new Promise((resolve) => {
-                _applyRequestModifier(httpRequest).then(() => {
-                    _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
-                        httpRequest = _httpRequest;
-        
-                        httpRequest.customData.onload = _onload;
-                        httpRequest.customData.onloadend = _onloadend;
-                        httpRequest.customData.onerror = _onloadend;
-                        httpRequest.customData.onprogress = _onprogress;
-                        httpRequest.customData.onabort = _onabort;
-                        httpRequest.customData.ontimeout = _ontimeout;
-                
-                        httpResponse.resourceTiming.startTime = Date.now();
-                        loader.load(httpRequest, httpResponse);
-                        resolve();
-                    });
+                _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
+                    httpRequest = _httpRequest;
+    
+                    httpRequest.customData.onload = _onload;
+                    httpRequest.customData.onloadend = _onloadend;
+                    httpRequest.customData.onerror = _onloadend;
+                    httpRequest.customData.onprogress = _onprogress;
+                    httpRequest.customData.onabort = _onabort;
+                    httpRequest.customData.ontimeout = _ontimeout;
+            
+                    httpResponse.resourceTiming.startTime = Date.now();
+                    loader.load(httpRequest, httpResponse);
+                    resolve();
                 });
             });
         }
@@ -359,7 +355,7 @@ function HTTPLoader(cfg) {
         lastTraceReceivedCount = 0;
         progressTimeout = null;
 
-        if (!requestModifier || !dashMetrics || !errHandler) {
+        if (!dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
 
@@ -427,28 +423,6 @@ function HTTPLoader(cfg) {
         }
     }
 
-    function _applyRequestModifier(httpRequest) {
-        if (requestModifier && requestModifier.modifyRequestURL) {
-            httpRequest.url = requestModifier.modifyRequestURL(httpRequest.url);
-        }
-
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            // modifyRequestHeader expects a XMLHttpRequest object so,
-            // to keep backward compatibility, we should expose a setRequestHeader method
-            // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
-            // a more generic way to intercept/modify requests
-            requestModifier.modifyRequestHeader({
-                setRequestHeader: function (key, value) {
-                    httpRequest.headers[key] = value;
-                }
-            }, {
-                url: httpRequest.url
-            });
-        }
-
-        return requestModifier && requestModifier.modifyRequest ? modifyRequest(httpRequest, requestModifier) : Promise.resolve();
-    }
-
     function _applyRequestInterceptors(httpRequest) {
         const interceptors = customParametersModel.getRequestInterceptors();
         if (!interceptors) return Promise.resolve(httpRequest);
@@ -487,7 +461,7 @@ function HTTPLoader(cfg) {
             _addResourceTimingValues(requestObject);
         }
 
-        // Update input request object url that could have been modified by any request plugin or RequestModifier
+        // Update input request object url that could have been modified by any request plugin
         requestObject.url = httpRequest.url;
 
         _addHttpRequestMetric(requestObject, httpResponse, success, traces);

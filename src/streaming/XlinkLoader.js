@@ -49,7 +49,6 @@ function XlinkLoader(config) {
         errHandler: config.errHandler,
         dashMetrics: config.dashMetrics,
         mediaPlayerModel: config.mediaPlayerModel,
-        requestModifier: config.requestModifier,
         errors: Errors
     });
 

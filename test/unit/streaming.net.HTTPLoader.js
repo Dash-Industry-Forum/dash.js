@@ -1,5 +1,4 @@
 import HTTPLoader from '../../src/streaming/net/HTTPLoader.js';
-import RequestModifier from '../../src/streaming/utils/RequestModifier.js';
 import Errors from '../../src/core/errors/Errors.js';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler.js';
 import DashMetrics from '../../src/dash/DashMetrics.js';
@@ -14,7 +13,6 @@ const context = {};
 
 let errHandler;
 let dashMetrics;
-let requestModifier;
 let mediaPlayerModelMock;
 let httpLoader;
 let settings = Settings(context).getInstance();
@@ -27,7 +25,6 @@ describe('HTTPLoader', function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         errHandler = ErrorHandler(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
-        requestModifier = RequestModifier(context).getInstance();
     });
 
     beforeEach(function () {
@@ -61,7 +58,6 @@ describe('HTTPLoader', function () {
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
-            requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             errors: Errors
         });
@@ -87,7 +83,6 @@ describe('HTTPLoader', function () {
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
-            requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             errors: Errors
         });
@@ -115,7 +110,6 @@ describe('HTTPLoader', function () {
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
-            requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             errors: Errors
         });
@@ -144,7 +138,6 @@ describe('HTTPLoader', function () {
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
-            requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             errors: Errors
         });

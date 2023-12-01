@@ -652,10 +652,10 @@
                 ]
             },
             {
-                "title": "Extending Dash.js",
-                "description": "This sample shows how to use dash.js extend mechanism to add custom HTTP headers and modify URL's of the requests done by the player.",
-                "href": "advanced/extend.html",
-                "image": "lib/img/bbb-4.jpg",
+                "title": "Network interceptor",
+                "description": "This sample shows how to apply network request and response interceptor based on CommonMediaLibray API.",
+                "href": "network-interceptor/index.html",
+                "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",
                     "Video",

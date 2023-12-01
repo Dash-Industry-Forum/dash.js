@@ -45,7 +45,6 @@ import DashHandler from '../dash/DashHandler.js';
 import Errors from '../core/errors/Errors.js';
 import DashJSError from './vo/DashJSError.js';
 import Debug from '../core/Debug.js';
-import RequestModifier from './utils/RequestModifier.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
 import {PlayListTrace} from './vo/metrics/PlayList.js';
 import SegmentsController from '../dash/controllers/SegmentsController.js';
@@ -140,7 +139,6 @@ function StreamProcessor(config) {
             eventBus,
             errors: Errors,
             debug: Debug(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance(),
             dashConstants: DashConstants,
             constants: Constants,
             urlUtils: URLUtils(context).getInstance()

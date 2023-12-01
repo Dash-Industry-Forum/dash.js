@@ -32,7 +32,6 @@ import Constants from '../constants/Constants.js';
 import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
 import FragmentLoader from '../FragmentLoader.js';
-import RequestModifier from '../utils/RequestModifier.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
@@ -80,7 +79,6 @@ function FragmentController(config) {
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
-                    requestModifier: RequestModifier(context).getInstance(),
                     settings: config.settings,
                     boxParser: config.boxParser,
                     eventBus: eventBus,

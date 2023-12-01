@@ -44,7 +44,6 @@ import ManifestLoader from './ManifestLoader.js';
 import ErrorHandler from './utils/ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
-import RequestModifier from './utils/RequestModifier.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
@@ -389,7 +388,6 @@ function MediaPlayer() {
                     eventBus: eventBus,
                     debug: debug,
                     boxParser: BoxParser(context).getInstance(),
-                    requestModifier: RequestModifier(context).getInstance(),
                     errors: Errors
                 });
             }
@@ -416,8 +414,7 @@ function MediaPlayer() {
                 manifestModel,
                 serviceDescriptionController,
                 throughputController,
-                eventBus,
-                requestModifier: RequestModifier(context).getInstance()
+                eventBus
             })
 
             restoreDefaultUTCTimingSources();
@@ -2327,7 +2324,6 @@ function MediaPlayer() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler,
             settings: settings
         });
