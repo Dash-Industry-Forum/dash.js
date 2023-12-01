@@ -35,10 +35,12 @@ describe('XHRLoader', function () {
         xhrLoader = XHRLoader(context).create({});
         const request = {
             request: {},
-            onload: callbackSucceeded,
-            onloadend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
         xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
@@ -58,10 +60,12 @@ describe('XHRLoader', function () {
         const callbackAbort = sinon.spy();
         xhrLoader = XHRLoader(context).create({});
         const request = {
-            onload: callbackSucceeded,
-            onloadend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
         xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
@@ -82,10 +86,12 @@ describe('XHRLoader', function () {
         xhrLoader = XHRLoader(context).create({});
 
         const request = {
-            onload: callbackSucceeded,
-            onloadend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
         xhrLoader.load(request, {});
         xhrLoader.abort();
@@ -105,10 +111,12 @@ describe('XHRLoader', function () {
         const callbackAbort = sinon.spy();
         xhrLoader = XHRLoader(context).create({});
         const request = {
-            onload: callbackSucceeded,
-            onloadend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
         xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
@@ -123,7 +131,9 @@ describe('XHRLoader', function () {
     it('should set timeout on the sending XHR request', () => {
         xhrLoader = XHRLoader(context).create({});
         const request = {
-            timeout: 100
+            timeout: 100,
+            customData: {
+            }
         };
         xhrLoader.load(request, {});
         expect(xhrLoader.getXhr().timeout).to.be.equal(100);
