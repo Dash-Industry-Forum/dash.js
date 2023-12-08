@@ -66,6 +66,7 @@ function SourceBufferSink(config) {
     let isAppendingInProgress = false;
     let mediaSource = config.mediaSource;
     let lastRequestAppended = null;
+    let currentCodecString = '';
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -100,19 +101,41 @@ function SourceBufferSink(config) {
 
     function changeType(representation) {
         const codec = _getCodecStringForRepresentation(representation);
+
+        // The codec does not change no need to call changeType
+        if (_canAvoidUsingChangeType(codec) || !buffer.changeType) {
+            return Promise.resolve()
+        }
+
         return new Promise((resolve) => {
             _waitForUpdateEnd(() => {
                 if (buffer.changeType) {
-                    logger.debug(`Changing SourceBuffer codec to ${codec}`);
+                    logger.debug(`ChangeType: Changing SourceBuffer codec to ${codec}`);
                     buffer.changeType(codec);
+                    currentCodecString = codec;
                 }
                 resolve();
             });
         });
     }
 
+    /**
+     * Checks if we can avoid calling changeType, for instance in case the codec string stays exactly the same
+     * @param codec
+     * @returns {boolean}
+     * @private
+     */
+    function _canAvoidUsingChangeType(codec) {
+        try {
+            return currentCodecString !== '' && currentCodecString === codec
+        } catch (e) {
+            return false;
+        }
+    }
+
     function _copyPreviousSinkData(oldSourceBufferSink) {
         buffer = oldSourceBufferSink.getBuffer();
+        currentCodecString = oldSourceBufferSink.getCurrentCodecString();
     }
 
     function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
@@ -129,6 +152,7 @@ function SourceBufferSink(config) {
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
+            currentCodecString = codec;
 
             _addEventListeners();
 
@@ -274,6 +298,10 @@ function SourceBufferSink(config) {
 
     function getBuffer() {
         return buffer;
+    }
+
+    function getCurrentCodecString() {
+        return currentCodecString
     }
 
     function getAllBufferRanges() {
@@ -477,6 +505,7 @@ function SourceBufferSink(config) {
         changeType,
         getAllBufferRanges,
         getBuffer,
+        getCurrentCodecString,
         getType,
         initializeForFirstUse,
         initializeForStreamSwitch,
