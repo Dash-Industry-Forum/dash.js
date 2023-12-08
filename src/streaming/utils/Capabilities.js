@@ -44,10 +44,11 @@ const codecCompatibilityTable = [
 ];
 
 export function supportsMediaSource() {
+    let hasManagedMediaSource = ('ManagedMediaSource' in window)
     let hasWebKit = ('WebKitMediaSource' in window);
     let hasMediaSource = ('MediaSource' in window);
 
-    return (hasWebKit || hasMediaSource);
+    return (hasManagedMediaSource || hasWebKit || hasMediaSource);
 }
 
 function Capabilities() {
@@ -137,7 +138,11 @@ function Capabilities() {
                 codec += ';width="' + config.width + '";height="' + config.height + '"';
             }
 
-            if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
+            // eslint-disable-next-line no-undef
+            if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(codec)) {
+                resolve(true);
+                return;
+            } else if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
                 resolve(true);
                 return;
             } else if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {

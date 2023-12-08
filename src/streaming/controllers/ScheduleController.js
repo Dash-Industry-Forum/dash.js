@@ -64,6 +64,7 @@ function ScheduleController(config) {
         lastInitializedQuality,
         switchTrack,
         initSegmentRequired,
+        managedMediaSourceAllowsRequest,
         checkPlaybackQuality;
 
     function setup() {
@@ -79,6 +80,16 @@ function ScheduleController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
+    }
+
+    function _onManagedMediaSourceStartStreaming() {
+        managedMediaSourceAllowsRequest = true;
+    }
+
+    function _onManagedMediaSourceEndStreaming() {
+        managedMediaSourceAllowsRequest = false;
     }
 
     function getType() {
@@ -207,6 +218,9 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
+            if (!managedMediaSourceAllowsRequest) {
+                return false;
+            }
             const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || _shouldBuffer());
         } catch (e) {
@@ -367,7 +381,6 @@ function ScheduleController(config) {
     }
 
 
-
     function _onURLResolutionFailed() {
         fragmentModel.abortRequests();
         clearScheduleTimer();
@@ -415,6 +428,7 @@ function ScheduleController(config) {
         topQualityIndex = NaN;
         switchTrack = false;
         initSegmentRequired = false;
+        managedMediaSourceAllowsRequest = true;
     }
 
     function reset() {
@@ -422,6 +436,8 @@ function ScheduleController(config) {
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
 
         clearScheduleTimer();
         _completeQualityChange(false);
