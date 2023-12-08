@@ -1488,6 +1488,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                   droppedFramesRule: true,
  *                   abandonRequestsRule: true
  *                },
+ *                abrRulesParameters: {
+ *                     abandonRequestsRule: {
+ *                         graceTimeThreshold: 500,
+ *                         abandonMultiplier: 1.8,
+ *                         minLengthToAverage: 5
+ *                     }
+ *                 },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
@@ -1621,7 +1628,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
  * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
- * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely. 
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
  * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
  * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
@@ -1858,6 +1865,22 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  */
 
 /**
+ * @typedef {Object} AbrRulesParameters
+ * @property {module:Settings~AbandonRequestRuleParameters} abandonRequestRule
+ * Configuration parameters for the AbandonRequestRule
+ */
+
+/**
+ * @typedef {Object} AbandonRequestRuleParameters
+ * @property {number} [graceTimeThreshold=500]
+ * Minimum elapsed time in milliseconds that the segment download has to run before the rule considers abandoning the download.
+ * @property {number} [abandonMultiplier]
+ * This value is multiplied with the segment duration and compared to the estimated time of the download to decide the request should be abandoned.
+ * @property {number} [minLengthToAverage]
+ * Minimum number of throughput samples required to consider abandoning the download of the segment.
+ */
+
+/**
  * @typedef {Object} AbrSettings
  * @property {string} [movingAverageMethod="slidingWindow"]
  * Sets the moving average method used for smoothing throughput estimates.
@@ -1884,6 +1907,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
  * @property {object} [additionalAbrRules={insufficientBufferRule: true,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: true}]
  * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {module:Settings~AbrRulesParameters} abrRulesParameters Configuration options for the different ABR rules
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
@@ -2254,6 +2278,13 @@ function Settings() {
           switchHistoryRule: true,
           droppedFramesRule: true,
           abandonRequestsRule: true
+        },
+        abrRulesParameters: {
+          abandonRequestsRule: {
+            graceTimeThreshold: 500,
+            abandonMultiplier: 1.8,
+            minLengthToAverage: 5
+          }
         },
         bandwidthSafetyFactor: 0.9,
         useDefaultABRRules: true,
@@ -3491,13 +3522,25 @@ function DashHandler(config) {
 
 
   function getNextSegmentRequest(mediaInfo, representation) {
-    var request = null;
-
     if (!representation || !representation.segmentInfoType) {
       return null;
     }
 
     var indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
+    return _getRequest(mediaInfo, representation, indexToRequest);
+  }
+
+  function repeatSegmentRequest(mediaInfo, representation) {
+    if (!representation || !representation.segmentInfoType) {
+      return null;
+    }
+
+    var indexToRequest = lastSegment ? lastSegment.index : 0;
+    return _getRequest(mediaInfo, representation, indexToRequest);
+  }
+
+  function _getRequest(mediaInfo, representation, indexToRequest) {
+    var request = null;
     var segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1); // No segment found
 
     if (!segment) {
@@ -3601,18 +3644,19 @@ function DashHandler(config) {
   }
 
   instance = {
-    initialize: initialize,
-    getStreamId: getStreamId,
-    getType: getType,
-    getStreamInfo: getStreamInfo,
-    getInitRequest: getInitRequest,
-    getSegmentRequestForTime: getSegmentRequestForTime,
     getCurrentIndex: getCurrentIndex,
+    getInitRequest: getInitRequest,
     getNextSegmentRequest: getNextSegmentRequest,
-    isLastSegmentRequested: isLastSegmentRequested,
-    reset: reset,
     getNextSegmentRequestIdempotent: getNextSegmentRequestIdempotent,
-    getValidTimeAheadOfTargetTime: getValidTimeAheadOfTargetTime
+    getSegmentRequestForTime: getSegmentRequestForTime,
+    getStreamId: getStreamId,
+    getStreamInfo: getStreamInfo,
+    getType: getType,
+    getValidTimeAheadOfTargetTime: getValidTimeAheadOfTargetTime,
+    initialize: initialize,
+    isLastSegmentRequested: isLastSegmentRequested,
+    repeatSegmentRequest: repeatSegmentRequest,
+    reset: reset
   };
   setup();
   return instance;
@@ -6681,7 +6725,7 @@ var LangMatcher = /*#__PURE__*/function (_BaseMatcher) {
     }, function (str) {
       var lang = bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2___default()(str);
 
-      if (lang !== undefined) {
+      if (lang) {
         return lang;
       }
 
@@ -9994,6 +10038,7 @@ function OfflineStreamProcessor(config) {
       events: events,
       eventBus: eventBus,
       errors: errors,
+      adapter: adapter,
       segmentsController: segmentsController
     });
     fragmentModel = (0,_streaming_models_FragmentModel__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
@@ -13030,6 +13075,18 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.INBAND_PRFT = 'inbandPrft';
+    /**
+     * The streaming attribute of the Managed Media Source is true
+     * @type {string}
+     */
+
+    _this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+    /**
+     * The streaming attribute of the Managed Media Source is false
+     * @type {string}
+     */
+
+    _this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     return _this;
   }
 
@@ -17285,6 +17342,11 @@ function ABRRulesCollection(config) {
     var activeRules = _getRulesWithChange(abandonRequestArray);
 
     var shouldAbandon = getMinSwitchRequest(activeRules);
+
+    if (shouldAbandon) {
+      shouldAbandon.reason.forceAbandon = true;
+    }
+
     return shouldAbandon || (0,_SwitchRequest__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create();
   }
 
@@ -17371,9 +17433,6 @@ __webpack_require__.r(__webpack_exports__);
 
 function AbandonRequestsRule(config) {
   config = config || {};
-  var ABANDON_MULTIPLIER = 1.8;
-  var GRACE_TIME_THRESHOLD = 500;
-  var MIN_LENGTH_TO_AVERAGE = 5;
   var context = this.context;
   var mediaPlayerModel = config.mediaPlayerModel;
   var dashMetrics = config.dashMetrics;
@@ -17441,14 +17500,14 @@ function AbandonRequestsRule(config) {
         storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
       }
 
-      if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE && fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD && fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
+      if (throughputArray[mediaType].length >= settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.minLengthToAverage && fragmentInfo.elapsedTime > settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.graceTimeThreshold && fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
         var totalSampledValue = throughputArray[mediaType].reduce(function (a, b) {
           return a + b;
         }, 0);
         fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
         fragmentInfo.estimatedTimeOfDownload = +(fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps / 1000).toFixed(2);
 
-        if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0) {
+        if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.abandonMultiplier || rulesContext.getRepresentationInfo().quality === 0) {
           return switchRequest;
         } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
           var abrController = rulesContext.getAbrController();

@@ -5094,6 +5094,18 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.INBAND_PRFT = 'inbandPrft';
+    /**
+     * The streaming attribute of the Managed Media Source is true
+     * @type {string}
+     */
+
+    _this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+    /**
+     * The streaming attribute of the Managed Media Source is false
+     * @type {string}
+     */
+
+    _this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     return _this;
   }
 
