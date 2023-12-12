@@ -144,7 +144,7 @@ function MetricsModel(config) {
         // The redirect-to URL or alternative url (where multiple have been
         // provided in the MPD) will appear as the actualurl of the next
         // entry with the same url value.
-        if (actualurl && (actualurl !== url)) {
+        if (actualurl !== null && actualurl !== undefined && (actualurl !== url)) {
 
             // given the above, add an entry for the original request
             addHttpRequest(
@@ -154,7 +154,7 @@ function MetricsModel(config) {
                 url,
                 quality,
                 null,
-                null,
+                serviceLocation,
                 range,
                 trequest,
                 null, // unknown
@@ -168,6 +168,7 @@ function MetricsModel(config) {
             );
 
             vo.actualurl = actualurl;
+            return;
         }
 
         vo.tcpid = tcpid;
