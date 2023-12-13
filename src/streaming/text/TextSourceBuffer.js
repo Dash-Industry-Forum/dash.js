@@ -277,10 +277,12 @@ function TextSourceBuffer(config) {
     function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
             samplesInfo;
+        let dvbFontDownload = false;
 
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
             timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            console.log('CHECK IS')
         } else {
             if (!initializationSegmentReceived) {
                 return;
@@ -312,6 +314,7 @@ function TextSourceBuffer(config) {
             instance.buffered.add(start, end);
             const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
             let ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
+            // console.log(ccContent);
             const images = [];
             let subOffset = sample.offset + sample.subSizes[0];
 
@@ -329,6 +332,7 @@ function TextSourceBuffer(config) {
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
 
                 const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                console.log(result);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();

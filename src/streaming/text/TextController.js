@@ -34,6 +34,7 @@ import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
 import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
+import URLUtils from '../utils/URLUtils';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -43,11 +44,13 @@ import {checkParameterType} from '../utils/SupervisorTools';
 function TextController(config) {
 
     let context = this.context;
+    const urlUtils = URLUtils(context).getInstance();
 
     const adapter = config.adapter;
     const errHandler = config.errHandler;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
+    const baseURLController = config.baseURLController;
     const videoModel = config.videoModel;
     const settings = config.settings;
 
@@ -166,6 +169,174 @@ function TextController(config) {
         textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
     }
 
+    /**
+     * @typedef {Object} FontInfo
+     * @property {String} fontFamily - Font family name prefixed with 'dashjs-'
+     * @property {String} url - Resolved download URL of font
+     * @property {String} mimeType - Mimetype of font to download
+     * @property {Boolean} isEssential - True if font was described in EssentialProperty descriptor tag
+     */
+
+    /**
+     * Check the attributes of a supplemental or essential property descriptor to establish if 
+     * it has the mandatory values for a dvb font download
+     * @param {Object} attrs 
+     * @returns {Boolean} true if mandatory attributes present
+     */
+    function _hasMandatoryDvbFontAttributes(attrs) {
+        // TODO: Can we check if a url is a valid url (even if its relative to a BASE URL) or does that come later?
+        if (
+            (attrs.value && attrs.value === '1') &&
+            (attrs.dvb_url && attrs.dvb_url.length > 0) && 
+            (attrs.dvb_fontFamily && attrs.dvb_fontFamily.length > 0) &&
+            (attrs.dvb_mimeType && (attrs.dvb_mimeType === Constants.OFF_MIMETYPE || attrs.dvb_mimeType === Constants.WOFF_MIMETYPE))
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Prefix the fontFamily name of a dvb custom font download so the font does
+     * not clash with any fonts of the same name in the browser/locally.
+     * @param {String} fontFamily - font family name
+     * @returns {String} - Prefixed font name
+     */
+    function _prefixDvbCustomFont(fontFamily) {
+        // Trim any white space - imsc will do the same when processing TTML/parsing HTML
+        let prefixedFontFamily = fontFamily.trim();
+        // Handle names with white space within them, hence wrapped in quotes
+        if (fontFamily.charAt(0) === `"` || fontFamily.charAt(0) === `'`) {
+            prefixedFontFamily = `${prefixedFontFamily.slice(0,1)}dashjs-${prefixedFontFamily.slice(1)}`;
+        } else {
+            prefixedFontFamily = `dashjs-${prefixedFontFamily}`;
+        }
+
+        return prefixedFontFamily;
+    };
+
+    /**
+     * Resolves a given font download URL.
+     * TODO: Still need to check bits of URL resolution
+     * @param {String} fontUrl 
+     * @returns 
+     */
+    function _resolveFontUrl(fontUrl) {
+        if (urlUtils.isPathAbsolute(fontUrl)) {
+            return fontUrl;
+        } else if (urlUtils.isRelative(fontUrl)) {
+            const baseUrl = baseURLController.resolve();
+
+            if (baseUrl) {
+                // TODO: What about other parts of the baseURL? Path attribute somewhere?
+                return urlUtils.resolve(fontUrl, baseUrl.url);
+            } else {
+                // TODO: Should this be against MPD location or current page location?
+                return urlUtils.resolve(fontUrl);
+            }
+        } else {
+            return fontUrl; 
+        }
+    };
+
+    /**
+     * Event that is triggered if a font download of a font described in an essential property descriptor
+     * tag fails. 
+     * @param {Object} e - Event
+     * @param {object} e.font - Font information
+     * @param {Object} e.track -
+     * @param {Number} e.streamId -
+     */
+    function _onEssentialFontDownloadFailure(e) {
+        // TODO: Isn't there an error logger?
+        console.error(`Could not download essential font - fontFamily: ${e.font.fontFamily}, url: ${e.font.url}`);
+        let idx = textTracks[e.streamId].getTrackIdxForId(e.track.id);
+        textTracks[e.streamId].deleteTextTrack(idx);
+    };
+
+    /**
+     * Initiate the download of a dvb custom font.
+     * TODO: Does the mimetype need to be specified somewhere?
+     * @param {Object} font - Font properties - TODO: break these down
+     * @param {String} font.fontFamily - Prefixed font family name
+     * @param {String} font.url - Resolved font download url
+     * @
+     */
+    function _downloadDvbCustomFont(font, track, streamId) {
+        const customFont = new FontFace(
+            font.fontFamily,
+            font.url
+        );
+
+        customFont.load().then(
+            () => {
+                // TODO: 'complete' property?
+                eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, {font});
+            },
+            (err) => {
+                // TODO: Font download failed event
+                // TODO: Setup listener on essential track initialisation if this failure event is triggered 
+                // then the track is removed from the track list.
+                eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, {font, track, streamId});
+
+                // TODO: Handle error better
+                console.error(err);
+            }
+        )
+    }
+
+    /**
+     * Handle subtitles tracks to check if 
+     * @param {Object} track - Subtitles track information
+     */
+    function _handleDvbCustomFonts(track, streamId) {
+        let essentialProperty = false;
+        let dvbFontProps;
+        
+        // TODO: Filter is better? Filter is definitely better.
+        const essentialTags = track.essentialPropertiesAsArray.map(tag => {
+            if (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME) {
+                return tag;
+            }
+        });
+        const supplementalTags = track.supplementalPropertiesAsArray.map(tag => {
+            if (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME) {
+                return tag;
+            }
+        });
+
+        // When it comes to the property descriptors it's Essential OR Supplementary, with Essential taking preference
+        if (essentialTags.length > 0) {
+            essentialProperty = true;
+            dvbFontProps = essentialTags;
+        } else {
+            dvbFontProps = supplementalTags;
+        }
+
+
+        dvbFontProps.forEach(attrs => {
+            if (_hasMandatoryDvbFontAttributes(attrs)) {
+                const resolvedFontUrl = _resolveFontUrl(attrs.dvb_url);
+                if (resolvedFontUrl !== null) {
+
+                    // Set event to delete the track if download fails 
+                    if (essentialProperty) {
+                        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
+                    }
+
+                    const font = {
+                        fontFamily: _prefixDvbCustomFont(attrs.fontFamily),
+                        url: resolvedFontUrl,
+                        mimeType: attrs.dvb_mimeType,
+                        isEssential: essentialProperty
+                    }
+                    _downloadDvbCustomFont(font, track, streamId);
+                }
+            }
+        });
+
+    }
+
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
@@ -208,6 +379,12 @@ function TextController(config) {
         });
 
         textTracksAdded = true;
+
+        // TODO: Neater
+        for (let i = 0; i < tracks.length; i++) {
+            let track = tracks[i];            
+            _handleDvbCustomFonts(track, streamId);
+        };
     }
 
     function _onPlaybackTimeUpdated(e) {
@@ -377,6 +554,7 @@ function TextController(config) {
     function reset() {
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)

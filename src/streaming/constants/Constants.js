@@ -285,10 +285,13 @@ class Constants {
         this.START_TIME = 'starttime';
         this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
         this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+        this.FONT_DOWNLOAD_DVB_SCHEME = 'urn:dvb:dash:fontdownload:2014';
         this.XML = 'XML';
         this.ARRAY_BUFFER = 'ArrayBuffer';
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
         this.DVB_PROBABILITY = 'dvb:probability';
+        this.OFF_MIMETYPE = 'application/font-sfnt';
+        this.WOFF_MIMETYPE = 'application/font-woff';
         this.VIDEO_ELEMENT_READY_STATES = {
             HAVE_NOTHING: 0,
             HAVE_METADATA: 1,

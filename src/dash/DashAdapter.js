@@ -1121,6 +1121,12 @@ function DashAdapter() {
             }
         }
 
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
+        // TODO: Understand the above - is it just to cut down repeated information?
+
+        mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
+        // TODO: As above
+
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 

@@ -2142,6 +2142,7 @@ function MediaPlayer() {
                 manifestModel,
                 adapter,
                 mediaController,
+                baseURLController,
                 videoModel,
                 settings
             });

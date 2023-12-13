@@ -171,6 +171,19 @@ function TextTracks(config) {
                 }
             }
 
+            // Mark tracks as essential if there is an essential property descriptor
+            if (
+                textTrackQueue[i].essentialProperties && 
+                textTrackQueue[i].essentialProperties[Constants.FONT_DOWNLOAD_DVB_SCHEME] && 
+                textTrackQueue[i].essentialProperties[Constants.FONT_DOWNLOAD_DVB_SCHEME].value === 1
+            ) {
+                textTrack.isEssential = true;
+                // TODO: Set up event to delete the track if the font download fails - Means we need track idx. Is that just i? yup. ok. 
+                // TODO: This may mess up other things, especially if this track is selected? - maybe if this track is the default move it to another if possible?
+            } else {
+                textTrack.isEssential = false;
+            }
+
             addCaptions(i, 0, textTrackQueue[i].captionData);
             eventBus.trigger(MediaPlayerEvents.TEXT_TRACK_ADDED);
         }

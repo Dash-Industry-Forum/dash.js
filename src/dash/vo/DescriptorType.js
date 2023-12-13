@@ -32,11 +32,17 @@
  * @class
  * @ignore
  */
+import DashConstants from '../constants/DashConstants'
+
 class DescriptorType {
     constructor() {
         this.schemeIdUri = null;
         this.value = null;
         this.id = null;
+        // TODO: Only add if they exist?
+        //this.dvb_url = null;
+        //this.dvb_mimeType = null;
+        //this.dvb_fontFamily = null;
     }
 
     init(data) {
@@ -44,6 +50,16 @@ class DescriptorType {
             this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
             this.value = data.value ? data.value : null;
             this.id = data.id ? data.id : null;
+            // Only add the DVB extensions if they exist
+            if (data[DashConstants.DVB_URL]) {
+                this.dvb_url = data[DashConstants.DVB_URL]
+            }
+            if (data[DashConstants.DVB_MIMETYPE]) {
+                this.dvb_mimeType = data[DashConstants.DVB_MIMETYPE]
+            }
+            if (data[DashConstants.DVB_FONTFAMILY]) {
+                this.dvb_fontFamily = data[DashConstants.DVB_FONTFAMILY]
+            }
         }
         return this;
     }

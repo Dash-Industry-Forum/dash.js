@@ -88,6 +88,7 @@ class DashConstants {
         this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
         this.CONTENT_PROTECTION = 'ContentProtection';
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+        this.ESSENTIAL_PROPERTY_ASARRAY = 'EssentialProperty_asArray';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
@@ -133,6 +134,9 @@ class DashConstants {
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
+        this.DVB_URL = 'dvb:url';
+        this.DVB_MIMETYPE = 'dvb:mimeType';
+        this.DVB_FONTFAMILY = 'dvb:fontFamily';
         this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.SERVICE_DESCRIPTION = 'ServiceDescription';
         this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
