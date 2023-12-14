@@ -276,13 +276,12 @@ function TextSourceBuffer(config) {
 
     function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
-            samplesInfo;
-        let dvbFontDownload = false;
+            samplesInfo,
+            dvbFont;
 
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
             timescale = boxParser.getMediaTimescaleFromMoov(bytes);
-            console.log('CHECK IS')
         } else {
             if (!initializationSegmentReceived) {
                 return;
@@ -292,15 +291,23 @@ function TextSourceBuffer(config) {
             if (sampleList.length > 0) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
+            if (chunk.mediaInfo && 
+                (chunk.mediaInfo.supplementalProperties && chunk.mediaInfo.essentialProperties) && 
+                (chunk.mediaInfo.supplementalProperties[Constants.FONT_DOWNLOAD_DVB_SCHEME]) || ) {
+                
+                    // Set this flag so if we know there's no font download signalled on the track we don't
+                    // have to search through the TTML to append 'dashjs-' to the font family names
+                    dvbFont = true;
+            }
             if (codecType.search(Constants.STPP) >= 0) {
-                _appendFragmentedSttp(bytes, sampleList, codecType);
+                _appendFragmentedSttp(bytes, sampleList, codecType, dvbFont);
             } else {
                 _appendFragmentedWebVtt(bytes, sampleList);
             }
         }
     }
 
-    function _appendFragmentedSttp(bytes, sampleList, codecType) {
+    function _appendFragmentedSttp(bytes, sampleList, codecType, dvbFont) {
         let i, j;
 
         parser = parser !== null ? parser : _getParser(codecType);
@@ -331,7 +338,7 @@ function TextSourceBuffer(config) {
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
 
-                const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, dvbFont);
                 console.log(result);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             } catch (e) {

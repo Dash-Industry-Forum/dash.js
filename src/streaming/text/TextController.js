@@ -65,12 +65,14 @@ function TextController(config) {
         allTracksAreDisabled,
         forceTextStreaming,
         textTracksAdded,
-        disableTextBeforeTextTracksAdded;
+        disableTextBeforeTextTracksAdded,
+        fontDownloadList;
 
     function setup() {
         forceTextStreaming = false;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;
+        fontDownloadList = [];
 
         vttParser = VTTParser(context).getInstance();
         vttCustomRenderingParser = VttCustomRenderingParser(context).getInstance();
@@ -221,15 +223,15 @@ function TextController(config) {
      * @param {String} fontUrl 
      * @returns 
      */
-    function _resolveFontUrl(fontUrl) {
+    function _resolveFontUrl(fontUrl, track) {
         if (urlUtils.isPathAbsolute(fontUrl)) {
             return fontUrl;
         } else if (urlUtils.isRelative(fontUrl)) {
             const baseUrl = baseURLController.resolve();
 
             if (baseUrl) {
-                // TODO: What about other parts of the baseURL? Path attribute somewhere?
-                return urlUtils.resolve(fontUrl, baseUrl.url);
+                const reps = adapter.getVoRepresentations(track);
+                return urlUtils.resolve(fontUrl, baseURLController.resolve(reps[0].path).url);
             } else {
                 // TODO: Should this be against MPD location or current page location?
                 return urlUtils.resolve(fontUrl);
@@ -243,9 +245,9 @@ function TextController(config) {
      * Event that is triggered if a font download of a font described in an essential property descriptor
      * tag fails. 
      * @param {Object} e - Event
-     * @param {object} e.font - Font information
-     * @param {Object} e.track -
-     * @param {Number} e.streamId -
+     * @param {FontInfo} e.font - Font information
+     * @param {Object} e.track - Track information
+     * @param {Number} e.streamId - StreamId
      */
     function _onEssentialFontDownloadFailure(e) {
         // TODO: Isn't there an error logger?
@@ -257,37 +259,56 @@ function TextController(config) {
     /**
      * Initiate the download of a dvb custom font.
      * TODO: Does the mimetype need to be specified somewhere?
-     * @param {Object} font - Font properties - TODO: break these down
-     * @param {String} font.fontFamily - Prefixed font family name
-     * @param {String} font.url - Resolved font download url
+     * @param {FontInfo} font - Font properties - TODO: break these down
+     * @param {Object} track - Track information
+     * @param {Number} streamId - StreamId
      * @
      */
     function _downloadDvbCustomFont(font, track, streamId) {
         const customFont = new FontFace(
             font.fontFamily,
-            font.url
+            `url(${font.url})`
         );
 
-        customFont.load().then(
-            () => {
-                // TODO: 'complete' property?
-                eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, {font});
-            },
-            (err) => {
-                // TODO: Font download failed event
-                // TODO: Setup listener on essential track initialisation if this failure event is triggered 
-                // then the track is removed from the track list.
-                eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, {font, track, streamId});
+        // Set event to delete the track if download fails 
+        if (font.isEssential) {
+            eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
+        }
 
-                // TODO: Handle error better
-                console.error(err);
-            }
-        )
+        // Only need to test the fontFamily name as we don't want clashing family names with different URLs
+        let processedFont = fontDownloadList.some((downloadedFont) => downloadedFont.fontFamily === font.fontFamily);
+
+        // If the font is essential then do the download even if it's a duplicate font.
+        // This is to ensure the font download failed event is triggered and the track is deleted
+        if (font.isEssential || (!font.isEssential && !processedFont)) {
+            // TODO: Add status strings to some kind of object/enum
+            eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, {...font, status: 'added'});
+            // Add to the list of processed fonts to stop repeat downloads
+            fontDownloadList.push(font);
+            // Handle font load success and failure
+            customFont.load().then(
+                () => {
+                    // TODO: 'complete' property?
+                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, {...font, status: 'downloaded'});
+                },
+                (err) => {
+                    // TODO: Font download failed event
+                    // TODO: Setup listener on essential track initialisation if this failure event is triggered 
+                    // then the track is removed from the track list.
+                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, { font: {...font, status: 'failed'}, track, streamId });
+    
+                    // TODO: Handle error better
+                    console.error(err);
+                }
+            )
+        }
     }
 
     /**
      * Handle subtitles tracks to check if 
      * @param {Object} track - Subtitles track information
+     * @param {Object} track - Track information
+     * @param {Number} streamId - StreamId
      */
     function _handleDvbCustomFonts(track, streamId) {
         let essentialProperty = false;
@@ -313,19 +334,13 @@ function TextController(config) {
             dvbFontProps = supplementalTags;
         }
 
-
         dvbFontProps.forEach(attrs => {
             if (_hasMandatoryDvbFontAttributes(attrs)) {
-                const resolvedFontUrl = _resolveFontUrl(attrs.dvb_url);
+                const resolvedFontUrl = _resolveFontUrl(attrs.dvb_url, track);
                 if (resolvedFontUrl !== null) {
 
-                    // Set event to delete the track if download fails 
-                    if (essentialProperty) {
-                        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
-                    }
-
                     const font = {
-                        fontFamily: _prefixDvbCustomFont(attrs.fontFamily),
+                        fontFamily: _prefixDvbCustomFont(attrs.dvb_fontFamily),
                         url: resolvedFontUrl,
                         mimeType: attrs.dvb_mimeType,
                         isEssential: essentialProperty
@@ -549,6 +564,7 @@ function TextController(config) {
         allTracksAreDisabled = true;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;
+        fontDownloadList = [];
     }
 
     function reset() {

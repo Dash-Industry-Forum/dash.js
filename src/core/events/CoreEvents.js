@@ -49,6 +49,7 @@ class CoreEvents extends EventsBase {
         this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
+        this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
         this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
         this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
         this.INBAND_EVENTS = 'inbandEvents';

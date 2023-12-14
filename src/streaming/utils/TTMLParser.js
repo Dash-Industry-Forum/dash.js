@@ -59,6 +59,10 @@ function TTMLParser() {
         return id;
     }
 
+    function _addDvbFontFamilyPrefix(imsc1doc) {
+
+    };
+
     /**
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
@@ -68,7 +72,7 @@ function TTMLParser() {
      * @param {integer} endTimeSegment - endTime for the current segment
      * @param {Array} images - images array referenced by subs MP4 box
      */
-    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
+    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images, dvbFont) {
         let errorMsg = '';
         const captionArray = [];
         let startTime,
@@ -127,9 +131,11 @@ function TTMLParser() {
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
 
-        const imsc1doc = fromXML(content.data, function (msg) {
+        let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
+
+        imsc1doc = _addDvbFontFamilyPrefix(imsc1doc);
 
         eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 
