@@ -3972,12 +3972,6 @@ declare namespace dashjs {
         areEqual(obj1: object, obj2: object): boolean;
     }
 
-    export interface RequestModifier {
-        modifyRequestURL(url: string): string;
-
-        modifyRequestHeader(request: Request): Request;
-    }
-
     export interface SupervisorTools {
         checkParameterType(parameter: any, type: string): void;
 
