@@ -213,7 +213,16 @@ function HTTPLoader(cfg) {
         const _onload = function () {
             _oncomplete();
 
-            _handleLoaded(httpRequest, httpResponse, traces).then(() => {
+            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
+                httpResponse = _httpResponse;
+
+                _addHttpRequestMetric(httpRequest, httpResponse, traces);
+
+                if (requestObject.type === HTTPRequest.MPD_TYPE) {
+                    dashMetrics.addManifestUpdate(requestObject);
+                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
+                }
+
                 if (httpResponse.status >= 200 && httpResponse.status <= 299) {
                     if (config.success) {
                         config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
@@ -225,7 +234,7 @@ function HTTPLoader(cfg) {
                 } else {
                     _onerror();
                 }
-            })
+            });    
         };
 
         /**
@@ -441,34 +450,6 @@ function HTTPLoader(cfg) {
                 return next(resp);
             });
         }, Promise.resolve(response));
-    }
-
-    /**
-     * Function to be called after the request has been loaded. Either successfully or unsuccesfully
-     * @param {CommonMediaRequest} httpRequest
-     * @param {CommonMediaResponse} httpResponse
-     * @param {array} traces
-     * @private
-     */
-    function _handleLoaded(httpRequest, httpResponse, traces) {
-        // Update input request object url that could have been modified by any request plugin
-        const requestObject = httpRequest.customData.request;
-        requestObject.url = httpRequest.url;
-
-        return new Promise((resolve) => {
-            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
-                httpResponse = _httpResponse;
-
-                _addHttpRequestMetric(httpRequest, httpResponse, traces);
-
-                if (requestObject.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(requestObject);
-                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
-                }
-
-                resolve();
-            });    
-        });
     }
 
     function _addHttpRequestMetric(httpRequest, httpResponse, traces) {
