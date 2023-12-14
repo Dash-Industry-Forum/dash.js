@@ -195,10 +195,15 @@ function HTTPLoader(cfg) {
         };
 
         const _oncomplete = function() {
+            // Update request timing info
             requestObject.startDate = requestStartTime;
             requestObject.endDate = new Date();
             requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
             httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
+
+            // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+            // These values are more accurate and can be used by the ThroughputController later
+            _addResourceTimingValues(httpRequest, httpResponse);
         }
 
         /**
@@ -207,11 +212,9 @@ function HTTPLoader(cfg) {
          */
         const _onload = function () {
             _oncomplete();
-            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
-                httpResponse = _httpResponse;
-                if (httpResponse.status >= 200 && httpResponse.status <= 299) {
-                    _handleLoaded(true, httpRequest, httpResponse, traces);
 
+            _handleLoaded(httpRequest, httpResponse, traces).then(() => {
+                if (httpResponse.status >= 200 && httpResponse.status <= 299) {
                     if (config.success) {
                         config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
                     }
@@ -219,11 +222,10 @@ function HTTPLoader(cfg) {
                     if (config.complete) {
                         config.complete(requestObject, httpResponse.statusText);
                     }
-
                 } else {
                     _onerror();
                 }
-            });
+            })
         };
 
         /**
@@ -231,7 +233,7 @@ function HTTPLoader(cfg) {
          */
         const _onabort = function () {
             _oncomplete();
-            _addHttpRequestMetric(requestObject, httpResponse, true, traces);
+            _addHttpRequestMetric(httpRequest, httpResponse, traces);
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
@@ -256,7 +258,7 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
-            _addHttpRequestMetric(requestObject, httpResponse, false, traces);
+            _addHttpRequestMetric(httpRequest, httpResponse, traces);
             _retriggerRequest();
         };
 
@@ -264,8 +266,6 @@ function HTTPLoader(cfg) {
          * Fired when the request encountered an error.
          */
         const _onerror = function () {
-            _handleLoaded(false, httpRequest, httpResponse, traces);
-
             // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
             try {
                 if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
@@ -275,9 +275,7 @@ function HTTPLoader(cfg) {
                         eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
                     }
                 }
-            } catch (e) {
-
-            }
+            } catch (e) {}
 
             _retriggerRequest();
         }
@@ -447,34 +445,36 @@ function HTTPLoader(cfg) {
 
     /**
      * Function to be called after the request has been loaded. Either successfully or unsuccesfully
-     * @param {boolean} success
      * @param {CommonMediaRequest} httpRequest
      * @param {CommonMediaResponse} httpResponse
      * @param {array} traces
      * @private
      */
-    function _handleLoaded(success, httpRequest, httpResponse, traces) {
-        const requestObject = httpRequest.customData.request;
-        // If enabled the ResourceTimingApi we add the corresponding information to the request object.
-        // These values are more accurate and can be used by the ThroughputController later
-        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
-            _addResourceTimingValues(requestObject);
-        }
-
+    function _handleLoaded(httpRequest, httpResponse, traces) {
         // Update input request object url that could have been modified by any request plugin
+        const requestObject = httpRequest.customData.request;
         requestObject.url = httpRequest.url;
 
-        _addHttpRequestMetric(requestObject, httpResponse, success, traces);
+        return new Promise((resolve) => {
+            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
+                httpResponse = _httpResponse;
 
-        if (requestObject.type === HTTPRequest.MPD_TYPE) {
-            dashMetrics.addManifestUpdate(requestObject);
-            eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
-        }
+                _addHttpRequestMetric(httpRequest, httpResponse, traces);
+
+                if (requestObject.type === HTTPRequest.MPD_TYPE) {
+                    dashMetrics.addManifestUpdate(requestObject);
+                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
+                }
+
+                resolve();
+            });    
+        });
     }
 
-    function _addHttpRequestMetric(requestObject, httpResponse, success, traces) {
+    function _addHttpRequestMetric(httpRequest, httpResponse, traces) {
+        const requestObject = httpRequest.customData.request;
         const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(httpResponse.headers, requestObject.mediaType) : null;
-        dashMetrics.addHttpRequest(requestObject, httpResponse.url, httpResponse.status, httpResponse.headers, success ? traces : null, cmsd);
+        dashMetrics.addHttpRequest(requestObject, httpResponse.url, httpResponse.status, httpResponse.headers, traces, cmsd);
     }
 
     /**
@@ -482,9 +482,12 @@ function HTTPLoader(cfg) {
      * @param requestObject
      * @private
      */
-    function _addResourceTimingValues(requestObject) {
+    function _addResourceTimingValues(httpRequest, httpResponse) {
+        if (!settings.get().streaming.abr.throughput.useResourceTimingApi) {
+            return;
+        }
         // Check performance support. We do not support range requests, needs to figure out how to find the right resource here.
-        if (typeof performance === 'undefined' || requestObject.range) {
+        if (typeof performance === 'undefined' || httpRequest.range) {
             return;
         }
 
@@ -498,14 +501,23 @@ function HTTPLoader(cfg) {
         let i = 0;
         let resource = null;
         while (i < resources.length) {
-            if (resources[i].name === requestObject.url) {
+            if (resources[i].name === httpRequest.url) {
                 resource = resources[i];
                 break;
             }
             i += 1;
         }
 
-        requestObject.resourceTimingValues = resource;
+        httpRequest.customData.request.resourceTimingValues = resource;
+
+        // Use Resource Timing info when available for CommonMediaResponse
+        if (resource) {
+            httpResponse.resourceTiming.startTime = resource.startTime;
+            httpResponse.resourceTiming.encodedBodySize = resource.startTime;
+            httpResponse.resourceTiming.responseStart = resource.startTime;
+            httpResponse.resourceTiming.responseEnd = resource.responseEnd;
+            httpResponse.resourceTiming.duration = resource.duration;
+        }
     }
 
     /**
