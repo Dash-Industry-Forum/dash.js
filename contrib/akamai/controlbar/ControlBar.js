@@ -372,7 +372,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 durationDisplay.onclick = seekLive;
                 durationDisplay.classList.add('live-icon');
             }
-        } else if (!isNaN(value)) {
+        } else if (!isNaN(value) && isFinite(value)) {
             durationDisplay.textContent = displayUTCTimeCodes ? self.player.formatUTC(value) : self.player.convertToTimeCode(value);
             durationDisplay.classList.remove('live-icon');
         }

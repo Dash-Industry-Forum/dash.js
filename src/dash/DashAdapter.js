@@ -906,8 +906,8 @@ function DashAdapter() {
 
                 let { name, target, leaf } = result;
 
-                // short circuit for attribute selectors
-                if (operation.xpath.findsAttribute()) {
+                // short circuit for attribute selectors and text replacement
+                if (operation.xpath.findsAttribute() || name === '__text') {
                     switch (operation.action) {
                         case 'add':
                         case 'replace':
@@ -1045,7 +1045,7 @@ function DashAdapter() {
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
         mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
-        
+
         accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
         mediaInfo.accessibility = accessibility.map(function (accessibility) {
             let accessibilityValue = accessibility.value;
@@ -1075,13 +1075,13 @@ function DashAdapter() {
             });
             mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
         }
-        
+
         roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.roles = roles.map(function (role) {
             return role.value;
         });
         mediaInfo.rolesWithSchemeIdUri = roles;
-        
+
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
@@ -1120,7 +1120,7 @@ function DashAdapter() {
                 mediaInfo.supplementalPropertiesAsArray = arr[0];
             }
         }
-        
+
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
@@ -1134,7 +1134,8 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        mediaInfo.lang = bcp47Normalize(lang);
+        let normLang = bcp47Normalize(lang);
+        mediaInfo.lang = (normLang) ? normLang : lang;
         mediaInfo.roles = ['caption'];
         mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }

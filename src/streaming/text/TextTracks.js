@@ -503,15 +503,19 @@ function TextTracks(config) {
                                 track.addCue(cue);
                             }
                         }
-
                     }
+
+                    // Remove old cues
+                    const bufferToKeep = settings.get().streaming.buffer.bufferToKeep;
+                    const currentTime = videoModel.getTime();
+                    _deleteOutdatedTrackCues(track, 0, currentTime - bufferToKeep);
                 } else {
                     logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
                 }
             } catch (e) {
                 // Edge crash, delete everything and start adding again
                 // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
-                deleteTrackCues(track);
+                _deleteTrackCues(track);
                 track.addCue(cue);
                 throw e;
             }
@@ -765,7 +769,35 @@ function TextTracks(config) {
         return (isNaN(start) || (strict ? cue.startTime : cue.endTime) >= start) && (isNaN(end) || (strict ? cue.endTime : cue.startTime) <= end);
     }
 
-    function deleteTrackCues(track, start, end, strict = true) {
+    function _deleteOutdatedTrackCues(track, start, end) {
+
+        if (end < start) {
+            return;
+        }
+
+        if (track && (track.cues || track.manualCueList)) {
+            const mode = track.cues && track.cues.length > 0 ? 'native' : 'custom';
+            const cues = mode === 'native' ? track.cues : track.manualCueList;
+
+            if (!cues || cues.length === 0) {
+                return;
+            }
+            const lastIdx = cues.length - 1;
+
+            for (let r = lastIdx; r >= 0; r--) {
+                if (cueInRange(cues[r], start, end, true) && !_isCueActive(cues[r])) {
+                    if (mode === 'native') {
+                        track.removeCue(cues[r]);
+                    } else {
+                        _removeManualCue(cues[r]);
+                        delete track.manualCueList[r]
+                    }
+                }
+            }
+        }
+    }
+
+    function _deleteTrackCues(track, start, end, strict = true) {
         if (track && (track.cues || track.manualCueList)) {
             const mode = track.cues && track.cues.length > 0 ? 'native' : 'custom';
             const cues = mode === 'native' ? track.cues : track.manualCueList;
@@ -791,10 +823,16 @@ function TextTracks(config) {
         }
     }
 
+    function _isCueActive(cue) {
+        const currentTime = videoModel.getTime();
+
+        return cue.startTime >= currentTime && cue.endTime <= currentTime
+    }
+
     function deleteCuesFromTrackIdx(trackIdx, start, end) {
         const track = getTrackByIdx(trackIdx);
         if (track) {
-            deleteTrackCues(track, start, end);
+            _deleteTrackCues(track, start, end);
         }
     }
 
@@ -803,7 +841,7 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
-                deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
+                _deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
             }
         }
         nativeTrackElementArr = [];
