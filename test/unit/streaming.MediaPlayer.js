@@ -16,6 +16,7 @@ import Settings from '../../src/core/Settings';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
 
+const sinon = require('sinon');
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
@@ -1160,7 +1161,7 @@ describe('MediaPlayer with context injected', () => {
         const customParametersModel = CustomParametersModel(context).getInstance();
         eventBus = EventBus(context).getInstance();
         settings = Settings(context).getInstance();
-        
+
         player = MediaPlayer(context).create();
 
         // to avoid unwanted log
@@ -1199,7 +1200,7 @@ describe('MediaPlayer with context injected', () => {
                 player.refreshManifest(stub);
 
                 expect(streamControllerMock.refreshManifest.calledOnce).to.be.true;
-                
+
                 eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: { __mocked: true } });
 
                 expect(stub.calledOnce).to.be.true;
