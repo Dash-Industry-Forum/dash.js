@@ -184,7 +184,7 @@ function HTTPLoader(cfg) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
                     logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
-                    httpRequest.loader.abort(httpRequest);
+                    loader.abort(httpRequest);
                     _onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
             }
@@ -257,8 +257,9 @@ function HTTPLoader(cfg) {
          * @param event
          */
         const _ontimeout = function (event) {
-            let timeoutMessage;
+            _oncomplete();
 
+            let timeoutMessage;
             // We know how much we already downloaded by looking at the timeout event
             if (event.lengthComputable) {
                 let percentageComplete = (event.loaded / event.total) * 100;
