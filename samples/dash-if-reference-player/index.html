@@ -699,6 +699,30 @@
             </div>
         </div>
         <div class="options-item">
+            <div class="options-item-title">Text</div>
+            <div class="options-item-body">
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">IMSC</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Enable Roll-up mode">
+                            <input type="checkbox" id="imscEnableRollUp" ng-model="imscEnableRollUp" autocomplete="off" ng-checked="imscEnableRollUp"
+                                   ng-change="toggleImscEnableRollUp()" name="inputMode">
+                            Enable Roll-up
+                        </label>
+                    </div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Forced Only Mode">
+                            <input type="checkbox" id="imscDisplayForcedOnly" ng-model="imscDisplayForcedOnly" ng-checked="imscDisplayForcedOnly" autocomplete="off"
+                                   ng-change="toggleImscDisplayForcedOnly()" name="inputMode">
+                            Forced Only
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="options-item">
             <div class="options-item-title">Initial Settings</div>
             <div class="options-item-body">
                 <label class="options-label">Initial bitrate Video:</label>
