@@ -33,6 +33,7 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
+import DVBFontUtils from '../utils/DVBFontUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
@@ -56,6 +57,7 @@ function TextSourceBuffer(config) {
     const settings = config.settings;
 
     const context = this.context;
+    const dvbFontUtils = DVBFontUtils(context).getInstance();
     const eventBus = EventBus(context).getInstance();
     let embeddedInitialized = false;
 
@@ -277,7 +279,7 @@ function TextSourceBuffer(config) {
     function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
             samplesInfo,
-            dvbFont;
+            dvbFonts;
 
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
@@ -291,23 +293,19 @@ function TextSourceBuffer(config) {
             if (sampleList.length > 0) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
-            if (chunk.mediaInfo && 
-                (chunk.mediaInfo.supplementalProperties && chunk.mediaInfo.essentialProperties) && 
-                (chunk.mediaInfo.supplementalProperties[Constants.FONT_DOWNLOAD_DVB_SCHEME]) || ) {
-                
-                    // Set this flag so if we know there's no font download signalled on the track we don't
-                    // have to search through the TTML to append 'dashjs-' to the font family names
-                    dvbFont = true;
-            }
+
+            // Establish if there are DVB Font downloads as to not look through TTML styles unnecessarily
+            dvbFonts = dvbFontUtils.getFontInfo(chunk.mediaInfo);
+
             if (codecType.search(Constants.STPP) >= 0) {
-                _appendFragmentedSttp(bytes, sampleList, codecType, dvbFont);
+                _appendFragmentedSttp(bytes, sampleList, codecType, dvbFonts);
             } else {
                 _appendFragmentedWebVtt(bytes, sampleList);
             }
         }
     }
 
-    function _appendFragmentedSttp(bytes, sampleList, codecType, dvbFont) {
+    function _appendFragmentedSttp(bytes, sampleList, codecType, dvbFonts) {
         let i, j;
 
         parser = parser !== null ? parser : _getParser(codecType);
@@ -338,7 +336,7 @@ function TextSourceBuffer(config) {
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
 
-                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, dvbFont);
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, dvbFonts);
                 console.log(result);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             } catch (e) {

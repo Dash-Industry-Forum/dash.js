@@ -35,6 +35,7 @@ import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
 import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
 import URLUtils from '../utils/URLUtils';
+import DVBFontUtils from '../utils/DVBFontUtils';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -45,6 +46,7 @@ function TextController(config) {
 
     let context = this.context;
     const urlUtils = URLUtils(context).getInstance();
+    const dvbFontUtils = DVBFontUtils(context).getInstance();
 
     const adapter = config.adapter;
     const errHandler = config.errHandler;
@@ -172,72 +174,16 @@ function TextController(config) {
     }
 
     /**
-     * @typedef {Object} FontInfo
-     * @property {String} fontFamily - Font family name prefixed with 'dashjs-'
-     * @property {String} url - Resolved download URL of font
-     * @property {String} mimeType - Mimetype of font to download
-     * @property {Boolean} isEssential - True if font was described in EssentialProperty descriptor tag
+     * Clean up dvb font downloads
      */
-
-    /**
-     * Check the attributes of a supplemental or essential property descriptor to establish if 
-     * it has the mandatory values for a dvb font download
-     * @param {Object} attrs 
-     * @returns {Boolean} true if mandatory attributes present
-     */
-    function _hasMandatoryDvbFontAttributes(attrs) {
-        // TODO: Can we check if a url is a valid url (even if its relative to a BASE URL) or does that come later?
-        if (
-            (attrs.value && attrs.value === '1') &&
-            (attrs.dvb_url && attrs.dvb_url.length > 0) && 
-            (attrs.dvb_fontFamily && attrs.dvb_fontFamily.length > 0) &&
-            (attrs.dvb_mimeType && (attrs.dvb_mimeType === Constants.OFF_MIMETYPE || attrs.dvb_mimeType === Constants.WOFF_MIMETYPE))
-        ) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Prefix the fontFamily name of a dvb custom font download so the font does
-     * not clash with any fonts of the same name in the browser/locally.
-     * @param {String} fontFamily - font family name
-     * @returns {String} - Prefixed font name
-     */
-    function _prefixDvbCustomFont(fontFamily) {
-        // Trim any white space - imsc will do the same when processing TTML/parsing HTML
-        let prefixedFontFamily = fontFamily.trim();
-        // Handle names with white space within them, hence wrapped in quotes
-        if (fontFamily.charAt(0) === `"` || fontFamily.charAt(0) === `'`) {
-            prefixedFontFamily = `${prefixedFontFamily.slice(0,1)}dashjs-${prefixedFontFamily.slice(1)}`;
-        } else {
-            prefixedFontFamily = `dashjs-${prefixedFontFamily}`;
-        }
-
-        return prefixedFontFamily;
-    };
-
-    /**
-     * Resolves a given font download URL.
-     * TODO: Still need to check bits of URL resolution
-     * @param {String} fontUrl 
-     * @returns 
-     */
-    function _resolveFontUrl(fontUrl, track) {
-        if (urlUtils.isPathAbsolute(fontUrl)) {
-            return fontUrl;
-        } else if (urlUtils.isRelative(fontUrl)) {
-            const baseUrl = baseURLController.resolve();
-
-            if (baseUrl) {
-                const reps = adapter.getVoRepresentations(track);
-                return urlUtils.resolve(fontUrl, baseURLController.resolve(reps[0].path).url);
-            } else {
-                // TODO: Should this be against MPD location or current page location?
-                return urlUtils.resolve(fontUrl);
-            }
-        } else {
-            return fontUrl; 
+    function _cleanUpDvbCustomFonts() {
+        for (const font in fontDownloadList) {
+            const customFont = new FontFace(
+                font.fontFamily,
+                `url(${font.url})`, 
+                { display: 'swap' }
+            );
+            document.fonts.delete(customFont);
         }
     };
 
@@ -267,7 +213,8 @@ function TextController(config) {
     function _downloadDvbCustomFont(font, track, streamId) {
         const customFont = new FontFace(
             font.fontFamily,
-            `url(${font.url})`
+            `url(${font.url})`, 
+            { display: 'swap' }
         );
 
         // Set event to delete the track if download fails 
@@ -282,14 +229,16 @@ function TextController(config) {
         // This is to ensure the font download failed event is triggered and the track is deleted
         if (font.isEssential || (!font.isEssential && !processedFont)) {
             // TODO: Add status strings to some kind of object/enum
-            eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, {...font, status: 'added'});
+            eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, { font: {...font, status: 'added'}} );
             // Add to the list of processed fonts to stop repeat downloads
             fontDownloadList.push(font);
             // Handle font load success and failure
-            customFont.load().then(
+            document.fonts.add(customFont);
+            customFont.load();
+            customFont.loaded.then(
                 () => {
                     // TODO: 'complete' property?
-                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, {...font, status: 'downloaded'});
+                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, { font: {...font, status: 'downloaded'}});
                 },
                 (err) => {
                     // TODO: Font download failed event
@@ -311,45 +260,18 @@ function TextController(config) {
      * @param {Number} streamId - StreamId
      */
     function _handleDvbCustomFonts(track, streamId) {
-        let essentialProperty = false;
-        let dvbFontProps;
-        
-        // TODO: Filter is better? Filter is definitely better.
-        const essentialTags = track.essentialPropertiesAsArray.map(tag => {
-            if (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME) {
-                return tag;
-            }
-        });
-        const supplementalTags = track.supplementalPropertiesAsArray.map(tag => {
-            if (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME) {
-                return tag;
-            }
-        });
+        let dvbFonts;
+        let asBaseUrl;
 
-        // When it comes to the property descriptors it's Essential OR Supplementary, with Essential taking preference
-        if (essentialTags.length > 0) {
-            essentialProperty = true;
-            dvbFontProps = essentialTags;
-        } else {
-            dvbFontProps = supplementalTags;
+        // If there is a baseurl in the manifest resolve against a representation inside the current adaptation set
+        if (baseURLController.resolve()) {
+            const reps = adapter.getVoRepresentations(track);
+            asBaseUrl = baseURLController.resolve(reps[0].path).url
         }
-
-        dvbFontProps.forEach(attrs => {
-            if (_hasMandatoryDvbFontAttributes(attrs)) {
-                const resolvedFontUrl = _resolveFontUrl(attrs.dvb_url, track);
-                if (resolvedFontUrl !== null) {
-
-                    const font = {
-                        fontFamily: _prefixDvbCustomFont(attrs.dvb_fontFamily),
-                        url: resolvedFontUrl,
-                        mimeType: attrs.dvb_mimeType,
-                        isEssential: essentialProperty
-                    }
-                    _downloadDvbCustomFont(font, track, streamId);
-                }
-            }
-        });
-
+        
+        dvbFonts = dvbFontUtils.getFontInfo(track, asBaseUrl);
+        
+        dvbFonts.forEach(font => _downloadDvbCustomFont(font, track, streamId));
     }
 
     function _onTextTracksAdded(e) {
@@ -568,6 +490,7 @@ function TextController(config) {
     }
 
     function reset() {
+        _cleanUpDvbCustomFonts();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);

@@ -35,6 +35,7 @@ import Events from '../../core/events/Events';
 import {fromXML, generateISD} from 'imsc';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import Constants from '../constants/Constants';
 
 function TTMLParser() {
 
@@ -59,8 +60,61 @@ function TTMLParser() {
         return id;
     }
 
-    function _addDvbFontFamilyPrefix(imsc1doc) {
+    /**
+     * Drill down into JS representation of TTML Doc to look for tts:FontFamily styling properties.
+     * Match the given fontFamily names against active DVB font downloads and prefix the fontFamily
+     * names so they are unique to dashjs and don't clash with other browser/local fontFamily names.
+     * @param {Object} imsc1doc - JS Representation of TTML Doc
+     * @param {Array} dvbFonts - Active DVB Font Downloads
+     * @returns {Object} - JS Representation of TTML Doc with prefixed font families
+     */
+    function _addDvbFontFamilyPrefix(imsc1doc, dvbFonts) {
 
+        // Get original, unprefixed names
+        const fontFamilies = dvbFonts.map(fontInfo => {
+            return fontInfo.fontFamily.replace(Constants.DASHJS_DVB_FONT_PREFIX,'');
+        });
+
+        // Go through nested contents and looks for tts:fontFamily styling to prefix
+        function iterateForFonts (el) {
+            if (el.contents && el.contents.length > 0) {
+                for (const deeperEl of el.contents) {
+                    iterateForFonts(deeperEl);
+                }
+            }
+
+            if (el.styleAttrs) {
+                for (const style in el.styleAttrs) {
+                    if (style === Constants.TTS_FONT_FAMILY) {
+                        el.styleAttrs[Constants.TTS_FONT_FAMILY] = el.styleAttrs[Constants.TTS_FONT_FAMILY].map(familyName => {
+                            let trimmedName = familyName.trim();
+                            const matchedName = fontFamilies.find((name) => name === trimmedName);
+                            if (matchedName !== undefined) {
+                                // Matched name, return prefixed
+                                return familyName.replace(matchedName, `${Constants.DASHJS_DVB_FONT_PREFIX}${matchedName}`)
+                            } else {
+                                // Solve some issues that will be fixed in IMSC V1.1.5
+                                return (trimmedName === 'default') ? 'monospaceSerif' : trimmedName;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        // Check regions for styling first 
+        if (imsc1doc.head && imsc1doc.head.layout && imsc1doc.head.layout.regions) {
+            for (const region in imsc1doc.head.layout.regions) {
+                iterateForFonts(imsc1doc.head.layout.regions[region])
+            }
+        }
+
+        // Check body elements
+        if (imsc1doc.body) {
+            iterateForFonts(imsc1doc.body);
+        }
+
+        return imsc1doc;
     };
 
     /**
@@ -72,7 +126,7 @@ function TTMLParser() {
      * @param {integer} endTimeSegment - endTime for the current segment
      * @param {Array} images - images array referenced by subs MP4 box
      */
-    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images, dvbFont) {
+    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images, dvbFonts) {
         let errorMsg = '';
         const captionArray = [];
         let startTime,
@@ -131,11 +185,15 @@ function TTMLParser() {
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
 
+        // TODO: Compare _addDvbFontFamilyPrefix to string replacement inside TTML doc in terms of performance
+
         let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
 
-        imsc1doc = _addDvbFontFamilyPrefix(imsc1doc);
+        if (dvbFonts && dvbFonts.length > 0) {
+            imsc1doc = _addDvbFontFamilyPrefix(imsc1doc, dvbFonts);
+        }
 
         eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 
