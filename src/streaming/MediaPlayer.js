@@ -1919,7 +1919,7 @@ function MediaPlayer() {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
 
-        if(!isReady()) {
+        if (!isReady()) {
             return callback(null, SOURCE_NOT_ATTACHED_ERROR);
         }
 
