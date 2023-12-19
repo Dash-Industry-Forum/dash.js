@@ -1024,6 +1024,10 @@ declare namespace dashjs {
             text?: {
                 defaultEnabled?: boolean,
                 extendSegmentedCues?: boolean,
+                imsc?: {
+                    displayForcedOnlyMode?: boolean,
+                    enableRollUp?: boolean
+                },
                 webvtt?: {
                     customRenderingEnabled?: number
                 }

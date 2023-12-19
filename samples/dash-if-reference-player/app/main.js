@@ -234,7 +234,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.drmToday = false;
 
     $scope.imscEnableRollUp = true;
-    $scope.imscDisplayForcedOnly = false;
+    $scope.imscdisplayForcedOnlyMode = false;
 
     $scope.isDynamic = false;
 
@@ -248,7 +248,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         muted: false,
         drmToday: false,
         enableRollUp: true,
-        displayForcedOnly: false,
+        displayForcedOnlyMode: false,
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
         languageAudio: null,
@@ -830,8 +830,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
     }
 
-    $scope.toggleImscDisplayForcedOnly = function() {
-        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscDisplayForcedOnly }}}});
+    $scope.toggleImscdisplayForcedOnlyMode = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -1551,7 +1551,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             muted: $scope.muted,
             drmToday: $scope.drmToday,
             enableRollUp: $scope.imscEnableRollUp,
-            displayForcedOnly: $scope.imscDisplayForcedOnly,
+            displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
             languageAudio: $scope.initialSettings.audio,
@@ -1833,8 +1833,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'enableRollUp':
                     $scope.imscEnableRollUp = this.parseBoolean(value);
                     break;
-                case 'displayForcedOnly':
-                    $scope.imscDisplayForcedOnly = this.parseBoolean(value);
+                case 'displayForcedOnlyMode':
+                    $scope.imscdisplayForcedOnlyMode = this.parseBoolean(value);
                     break;
                 case 'forceQualitySwitchSelected':
                     $scope.forceQualitySwitchSelected = this.parseBoolean(value);
@@ -2204,7 +2204,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     function setTextOptions() {
         var currentConfig = $scope.player.getSettings();
         $scope.imscEnableRollUp = currentConfig.streaming.text.imsc.enableRollUp;
-        $scope.imscDisplayForcedOnly = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
+        $scope.imscdisplayForcedOnlyMode = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
     }
 
     function setLiveDelayOptions() {
