@@ -33,7 +33,6 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
-import DVBFontUtils from '../utils/DVBFontUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
@@ -46,6 +45,7 @@ import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
+    const dvbFonts = config.dvbFonts;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
     const videoModel = config.videoModel;
@@ -57,7 +57,6 @@ function TextSourceBuffer(config) {
     const settings = config.settings;
 
     const context = this.context;
-    const dvbFontUtils = DVBFontUtils(context).getInstance();
     const eventBus = EventBus(context).getInstance();
     let embeddedInitialized = false;
 
@@ -279,7 +278,7 @@ function TextSourceBuffer(config) {
     function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
             samplesInfo,
-            dvbFonts;
+            currentFonts;
 
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
@@ -295,17 +294,19 @@ function TextSourceBuffer(config) {
             }
 
             // Establish if there are DVB Font downloads as to not look through TTML styles unnecessarily
-            dvbFonts = dvbFontUtils.getFontInfo(chunk.mediaInfo);
-
+            if (chunk.mediaInfo.id) {
+                currentFonts = dvbFonts.getFontsForTrackId(chunk.mediaInfo.id);
+            }
+            
             if (codecType.search(Constants.STPP) >= 0) {
-                _appendFragmentedSttp(bytes, sampleList, codecType, dvbFonts);
+                _appendFragmentedSttp(bytes, sampleList, codecType, currentFonts);
             } else {
                 _appendFragmentedWebVtt(bytes, sampleList);
             }
         }
     }
 
-    function _appendFragmentedSttp(bytes, sampleList, codecType, dvbFonts) {
+    function _appendFragmentedSttp(bytes, sampleList, codecType, currentFonts) {
         let i, j;
 
         parser = parser !== null ? parser : _getParser(codecType);
@@ -335,10 +336,16 @@ function TextSourceBuffer(config) {
 
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, currentFonts);
 
-                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, dvbFonts);
-                console.log(result);
-                textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+                // If an essential font isn't loaded for this track dont add this ttml doc
+                // TODO: This is actually pretty annoying as you will have to wait for the next TTML doc.
+                // It would be better to just hide the rendering div for this track (even if track is active) until font is loaded successfully or download fails and track is deleted
+                if (currentFonts[0].isEssential && currentFonts[0].status !== 'loaded') {
+                    logger.debug('Cannot show subtitles yet as essential font has not yet loaded');
+                } else {
+                    textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+                }
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();

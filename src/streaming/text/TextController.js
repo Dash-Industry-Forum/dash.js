@@ -34,19 +34,17 @@ import TextSourceBuffer from './TextSourceBuffer';
 import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
 import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
-import URLUtils from '../utils/URLUtils';
-import DVBFontUtils from '../utils/DVBFontUtils';
 import TTMLParser from '../utils/TTMLParser';
+import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {checkParameterType} from '../utils/SupervisorTools';
+import DVBFonts from './DVBFonts';
 
 function TextController(config) {
 
     let context = this.context;
-    const urlUtils = URLUtils(context).getInstance();
-    const dvbFontUtils = DVBFontUtils(context).getInstance();
 
     const adapter = config.adapter;
     const errHandler = config.errHandler;
@@ -68,24 +66,31 @@ function TextController(config) {
         forceTextStreaming,
         textTracksAdded,
         disableTextBeforeTextTracksAdded,
-        fontDownloadList;
+        dvbFonts,
+        logger;
 
     function setup() {
         forceTextStreaming = false;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;
-        fontDownloadList = [];
 
         vttParser = VTTParser(context).getInstance();
         vttCustomRenderingParser = VttCustomRenderingParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
         eventBus = EventBus(context).getInstance();
+        logger = Debug(context).getInstance().getLogger(instance);
 
         resetInitialSettings();
     }
 
     function initialize() {
+        dvbFonts = DVBFonts(context).create({
+            adapter,
+            baseURLController,
+        });
+        dvbFonts.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -105,6 +110,7 @@ function TextController(config) {
         const textSourceBuffer = TextSourceBuffer(context).create({
             errHandler,
             adapter,
+            dvbFonts,
             manifestModel,
             mediaController,
             videoModel,
@@ -174,105 +180,18 @@ function TextController(config) {
     }
 
     /**
-     * Clean up dvb font downloads
-     */
-    function _cleanUpDvbCustomFonts() {
-        for (const font in fontDownloadList) {
-            const customFont = new FontFace(
-                font.fontFamily,
-                `url(${font.url})`, 
-                { display: 'swap' }
-            );
-            document.fonts.delete(customFont);
-        }
-    };
-
-    /**
      * Event that is triggered if a font download of a font described in an essential property descriptor
      * tag fails. 
-     * @param {Object} e - Event
-     * @param {FontInfo} e.font - Font information
-     * @param {Object} e.track - Track information
-     * @param {Number} e.streamId - StreamId
+     * @param {FontInfo} font - font information
      */
-    function _onEssentialFontDownloadFailure(e) {
-        // TODO: Isn't there an error logger?
-        console.error(`Could not download essential font - fontFamily: ${e.font.fontFamily}, url: ${e.font.url}`);
-        let idx = textTracks[e.streamId].getTrackIdxForId(e.track.id);
-        textTracks[e.streamId].deleteTextTrack(idx);
-    };
-
-    /**
-     * Initiate the download of a dvb custom font.
-     * TODO: Does the mimetype need to be specified somewhere?
-     * @param {FontInfo} font - Font properties - TODO: break these down
-     * @param {Object} track - Track information
-     * @param {Number} streamId - StreamId
-     * @
-     */
-    function _downloadDvbCustomFont(font, track, streamId) {
-        const customFont = new FontFace(
-            font.fontFamily,
-            `url(${font.url})`, 
-            { display: 'swap' }
-        );
-
-        // Set event to delete the track if download fails 
+    function _onEssentialFontDownloadFailure(font) {
         if (font.isEssential) {
-            eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
+            logger.error(`Could not download essential font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
+            let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+            // TODO: This doesn't really work and I don't think its been used before. Cant actually remove tracks from the video element. Look into this.
+            textTracks[font.streamId].deleteTextTrack(idx);
         }
-
-        // Only need to test the fontFamily name as we don't want clashing family names with different URLs
-        let processedFont = fontDownloadList.some((downloadedFont) => downloadedFont.fontFamily === font.fontFamily);
-
-        // If the font is essential then do the download even if it's a duplicate font.
-        // This is to ensure the font download failed event is triggered and the track is deleted
-        if (font.isEssential || (!font.isEssential && !processedFont)) {
-            // TODO: Add status strings to some kind of object/enum
-            eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, { font: {...font, status: 'added'}} );
-            // Add to the list of processed fonts to stop repeat downloads
-            fontDownloadList.push(font);
-            // Handle font load success and failure
-            document.fonts.add(customFont);
-            customFont.load();
-            customFont.loaded.then(
-                () => {
-                    // TODO: 'complete' property?
-                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, { font: {...font, status: 'downloaded'}});
-                },
-                (err) => {
-                    // TODO: Font download failed event
-                    // TODO: Setup listener on essential track initialisation if this failure event is triggered 
-                    // then the track is removed from the track list.
-                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, { font: {...font, status: 'failed'}, track, streamId });
-    
-                    // TODO: Handle error better
-                    console.error(err);
-                }
-            )
-        }
-    }
-
-    /**
-     * Handle subtitles tracks to check if 
-     * @param {Object} track - Subtitles track information
-     * @param {Object} track - Track information
-     * @param {Number} streamId - StreamId
-     */
-    function _handleDvbCustomFonts(track, streamId) {
-        let dvbFonts;
-        let asBaseUrl;
-
-        // If there is a baseurl in the manifest resolve against a representation inside the current adaptation set
-        if (baseURLController.resolve()) {
-            const reps = adapter.getVoRepresentations(track);
-            asBaseUrl = baseURLController.resolve(reps[0].path).url
-        }
-        
-        dvbFonts = dvbFontUtils.getFontInfo(track, asBaseUrl);
-        
-        dvbFonts.forEach(font => _downloadDvbCustomFont(font, track, streamId));
-    }
+    };
 
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
@@ -317,11 +236,10 @@ function TextController(config) {
 
         textTracksAdded = true;
 
-        // TODO: Neater
-        for (let i = 0; i < tracks.length; i++) {
-            let track = tracks[i];            
-            _handleDvbCustomFonts(track, streamId);
-        };
+        // TODO: Would be good at this point to check for dvb extension uri is present on MPD 
+        // Handle any DVB font downloads present
+        dvbFonts.addFontsFromTracks(tracks, streamId);
+        dvbFonts.downloadFonts();
     }
 
     function _onPlaybackTimeUpdated(e) {
@@ -486,11 +404,11 @@ function TextController(config) {
         allTracksAreDisabled = true;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;
-        fontDownloadList = [];
     }
 
     function reset() {
-        _cleanUpDvbCustomFonts();
+        // TODO: reset dvb fonts
+        dvbFonts.reset();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
