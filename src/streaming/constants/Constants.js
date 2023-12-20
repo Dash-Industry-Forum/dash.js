@@ -278,6 +278,7 @@ class Constants {
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';
         this.TEXT_HIDDEN = 'hidden';
+        this.TEXT_DISABLED = 'disabled';
         this.CC1 = 'CC1';
         this.CC3 = 'CC3';
         this.UTF8 = 'utf-8';

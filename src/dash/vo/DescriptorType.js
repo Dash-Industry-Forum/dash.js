@@ -39,10 +39,6 @@ class DescriptorType {
         this.schemeIdUri = null;
         this.value = null;
         this.id = null;
-        // TODO: Only add if they exist?
-        //this.dvb_url = null;
-        //this.dvb_mimeType = null;
-        //this.dvb_fontFamily = null;
     }
 
     init(data) {

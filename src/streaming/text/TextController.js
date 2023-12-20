@@ -88,9 +88,9 @@ function TextController(config) {
             adapter,
             baseURLController,
         });
-        dvbFonts.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
-        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
+        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+        eventBus.on(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -184,14 +184,26 @@ function TextController(config) {
      * tag fails. 
      * @param {FontInfo} font - font information
      */
-    function _onEssentialFontDownloadFailure(font) {
+    function _onFontDownloadFailure(font) {
+        logger.error(`Could not download ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
         if (font.isEssential) {
-            logger.error(`Could not download essential font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
             let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
-            // TODO: This doesn't really work and I don't think its been used before. Cant actually remove tracks from the video element. Look into this.
-            textTracks[font.streamId].deleteTextTrack(idx);
+            textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_DISABLED);
         }
     };
+
+    // Set a font with an essential property 
+    function _onFontDownloadSuccess(font) {
+        logger.debug(`Successfully downloaded ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
+        if (font.isEssential) {
+            let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+            if (idx === textTracks[font.streamId].getCurrentTrackIdx()) {
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
+            } else {
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_HIDDEN);
+            }
+        }
+    }
 
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
@@ -236,9 +248,16 @@ function TextController(config) {
 
         textTracksAdded = true;
 
-        // TODO: Would be good at this point to check for dvb extension uri is present on MPD 
-        // Handle any DVB font downloads present
         dvbFonts.addFontsFromTracks(tracks, streamId);
+
+        // Initially disable any tracks with essential property font downloads
+        dvbFonts.getFonts().forEach(font => {
+            if (font.isEssential) {
+                let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_DISABLED);
+            }
+        });
+
         dvbFonts.downloadFonts();
     }
 
@@ -321,14 +340,22 @@ function TextController(config) {
             return;
         }
 
-
         textTracks[streamId].disableManualTracks();
 
-        textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
-        textTracks[streamId].setCurrentTrackIdx(idx);
-        textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
-
         let currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+
+        // Don't change disabled tracks - dvb font download for essential property failed or not complete
+        if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+            textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
+        }
+        
+        textTracks[streamId].setCurrentTrackIdx(idx);
+
+        currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+
+        if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+            textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
+        }
 
         if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
             _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx);
@@ -407,11 +434,11 @@ function TextController(config) {
     }
 
     function reset() {
-        // TODO: reset dvb fonts
         dvbFonts.reset();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
-        eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onEssentialFontDownloadFailure, instance);
+        eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+        eventBus.off(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)

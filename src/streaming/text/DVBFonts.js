@@ -69,7 +69,6 @@ function DVBFonts(config) {
             asBaseUrl = baseURLController.resolve(reps[0].path).url
         }
 
-        // TODO: Filter is better? Filter is definitely better.
         const essentialTags = track.essentialPropertiesAsArray.filter(tag => 
             (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME)
         );
@@ -87,14 +86,21 @@ function DVBFonts(config) {
 
         dvbFontProps.forEach(attrs => {
             if (_hasMandatoryDvbFontAttributes(attrs)) {
+                let prefixedName = _prefixDvbCustomFont(attrs.dvb_fontFamily);
+                let resolvedUrl = _resolveFontUrl(attrs.dvb_url, asBaseUrl);
                 dvbFontList.push({
-                    fontFamily: _prefixDvbCustomFont(attrs.dvb_fontFamily),
-                    url: _resolveFontUrl(attrs.dvb_url, asBaseUrl),
+                    fontFamily: prefixedName,
+                    url: resolvedUrl,
                     mimeType: attrs.dvb_mimeType,
                     trackId: track.id,
                     streamId,
                     isEssential: essentialProperty,
-                    status: 'unloaded'
+                    status: 'unloaded',
+                    fontFace: new FontFace(
+                        prefixedName,
+                        `url(${resolvedUrl})`, 
+                        { display: 'swap' }
+                    )
                 });
             }
         });
@@ -104,13 +110,10 @@ function DVBFonts(config) {
      * Clean up dvb font downloads
      */
     function _cleanUpDvbCustomFonts() {
-        for (const font in dvbFontList) {
-            const customFont = new FontFace(
-                font.fontFamily,
-                `url(${font.url})`, 
-                { display: 'swap' }
-            );
-            document.fonts.delete(customFont);
+        for (const font of dvbFontList) {
+            // document.fonts.add(customFont);
+            let deleted = document.fonts.delete(font.fontFace);
+            console.log(deleted);
         }
     };
 
@@ -121,7 +124,6 @@ function DVBFonts(config) {
      * @returns {boolean} true if mandatory attributes present
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
-        // TODO: Can we check if a url is a valid url (even if its relative to a BASE URL) or does that come later?
         if (
             (attrs.value && attrs.value === '1') &&
             (attrs.dvb_url && attrs.dvb_url.length > 0) && 
@@ -154,9 +156,8 @@ function DVBFonts(config) {
 
     /**
      * Resolves a given font download URL.
-     * TODO: Still need to check bits of URL resolution
      * @param {string} fontUrl - URL as in the 'dvb:url' property
-     * @param {string} baseUrl - BaseURL for Adapatation Set 
+     * @param {string} baseUrl - BaseURL for Adaptation Set 
      * @returns {string} resolved URL
      */
     function _resolveFontUrl(fontUrl, baseUrl) {
@@ -166,7 +167,6 @@ function DVBFonts(config) {
             if (baseUrl) {
                 return urlUtils.resolve(fontUrl, baseUrl);
             } else {
-                // TODO: Should this be against MPD location or current page location?
                 return urlUtils.resolve(fontUrl);
             }
         } else {
@@ -200,30 +200,21 @@ function DVBFonts(config) {
     /**
      * Initiate the download of a dvb custom font.
      * The browser will neatly handle duplicate fonts
-     * TODO: Does the mimetype need to be specified somewhere?
-     * @param {FontInfo} font - Font properties - TODO: break these down
-     * @param {Object} track - Track information
-     * @param {Number} streamId - StreamId
+     * @param {object} font - Font properties
+     * @param {object} track - Track information
+     * @param {number} streamId - StreamId
      * @
      */
     function downloadFonts() {
         for (let i = 0; i < dvbFontList.length; i++) {
             let font = dvbFontList[i];
 
-            const customFont = new FontFace(
-                font.fontFamily,
-                `url(${font.url})`, 
-                { display: 'swap' }
-            );
-
-            // TODO: Add status strings to some kind of object/enum
-            
             // Add to the list of processed fonts to stop repeat downloads
-            document.fonts.add(customFont);
+            document.fonts.add(font.fontFace);
             eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, font);
 
-            customFont.load();
-            customFont.loaded.then(
+            font.fontFace.load();
+            font.fontFace.loaded.then(
                 () => {
                     _updateFontStatus(i, 'loaded');
                     eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, font);

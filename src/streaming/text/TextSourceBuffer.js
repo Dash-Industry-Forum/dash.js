@@ -337,15 +337,8 @@ function TextSourceBuffer(config) {
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, currentFonts);
-
-                // If an essential font isn't loaded for this track dont add this ttml doc
-                // TODO: This is actually pretty annoying as you will have to wait for the next TTML doc.
-                // It would be better to just hide the rendering div for this track (even if track is active) until font is loaded successfully or download fails and track is deleted
-                if (currentFonts[0].isEssential && currentFonts[0].status !== 'loaded') {
-                    logger.debug('Cannot show subtitles yet as essential font has not yet loaded');
-                } else {
-                    textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
-                }
+                textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+            
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();
