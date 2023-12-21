@@ -67,6 +67,7 @@ function TTMLParser() {
      * @param {object} imsc1doc - JS Representation of TTML Doc
      * @param {array} dvbFonts - Active DVB Font Downloads
      * @returns {object} - JS Representation of TTML Doc with prefixed font families
+     * @private
      */
     function _addDvbFontFamilyPrefix(imsc1doc, dvbFonts) {
 
@@ -93,7 +94,7 @@ function TTMLParser() {
                                 // Matched name, return prefixed
                                 return familyName.replace(matchedName, `${Constants.DASHJS_DVB_FONT_PREFIX}${matchedName}`)
                             } else {
-                                // Solve some issues that will be fixed in IMSC V1.1.5
+                                // Solve some issues that will be fixed in imscJS V1.1.5
                                 return (trimmedName === 'default') ? 'monospaceSerif' : trimmedName;
                             }
                         });
@@ -124,7 +125,9 @@ function TTMLParser() {
      * @param {number} offsetTime - offset time to apply to cue time
      * @param {integer} startTimeSegment - startTime for the current segment
      * @param {integer} endTimeSegment - endTime for the current segment
-     * @param {Array} images - images array referenced by subs MP4 box
+     * @param {array} images - images array referenced by subs MP4 box
+     * @param {array} dvbFonts - dvbFonts associated with current track
+     * @returns {array} captionArray
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images, dvbFonts) {
         let errorMsg = '';

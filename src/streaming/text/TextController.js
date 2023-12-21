@@ -183,6 +183,7 @@ function TextController(config) {
      * Event that is triggered if a font download of a font described in an essential property descriptor
      * tag fails. 
      * @param {FontInfo} font - font information
+     * @private
      */
     function _onFontDownloadFailure(font) {
         logger.error(`Could not download ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
@@ -192,7 +193,10 @@ function TextController(config) {
         }
     };
 
-    // Set a font with an essential property 
+    /**
+     * Set a font with an essential property 
+     * @private
+     */ 
     function _onFontDownloadSuccess(font) {
         logger.debug(`Successfully downloaded ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
         if (font.isEssential) {

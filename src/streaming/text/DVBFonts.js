@@ -42,7 +42,12 @@ function DVBFonts(config) {
     const urlUtils = URLUtils(context).getInstance();
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
-    // const settings = config.settings;
+
+    const FONT_DOWNLOAD_STATUS = {
+        ERROR: 'error',
+        LOADED: 'loaded',
+        UNLOADED: 'unloaded'
+    };
 
     let instance,
         logger,
@@ -57,6 +62,7 @@ function DVBFonts(config) {
      * Add any dvb fonts from a single track to the dvbFontList
      * @param {object} track - A text track
      * @param {string} streamId - Id of current stream
+     * @private
      */
     function _addFontFromTrack(track, streamId) {
         let asBaseUrl;
@@ -95,7 +101,7 @@ function DVBFonts(config) {
                     trackId: track.id,
                     streamId,
                     isEssential: essentialProperty,
-                    status: 'unloaded',
+                    status: FONT_DOWNLOAD_STATUS.UNLOADED,
                     fontFace: new FontFace(
                         prefixedName,
                         `url(${resolvedUrl})`, 
@@ -106,22 +112,23 @@ function DVBFonts(config) {
         });
     }
 
-    /**
-     * Clean up dvb font downloads
+    /** 
+     * Clean up dvb font downloads 
+     * @private
      */
     function _cleanUpDvbCustomFonts() {
         for (const font of dvbFontList) {
-            // document.fonts.add(customFont);
             let deleted = document.fonts.delete(font.fontFace);
-            console.log(deleted);
+            logger.debug(`Removal of fontFamily: ${font.fontFamily} was ${deleted ? 'successful' : 'unsuccessful'}`);
         }
     };
 
     /**
      * Check the attributes of a supplemental or essential property descriptor to establish if 
      * it has the mandatory values for a dvb font download
-     * @param {object} attrs 
+     * @param {object} attrs - property descriptor attributes
      * @returns {boolean} true if mandatory attributes present
+     * @private
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
         if (
@@ -138,8 +145,9 @@ function DVBFonts(config) {
     /**
      * Prefix the fontFamily name of a dvb custom font download so the font does
      * not clash with any fonts of the same name in the browser/locally.
-     * @param {string} fontFamily - font family name
-     * @returns {string} - Prefixed font name
+     * @param {string} fontFamily - fontFamily value
+     * @returns {string} Prefixed font name
+     * @private
      */
     function _prefixDvbCustomFont(fontFamily) {
         // Trim any white space - imsc will do the same when processing TTML/parsing HTML
@@ -159,6 +167,7 @@ function DVBFonts(config) {
      * @param {string} fontUrl - URL as in the 'dvb:url' property
      * @param {string} baseUrl - BaseURL for Adaptation Set 
      * @returns {string} resolved URL
+     * @private
      */
     function _resolveFontUrl(fontUrl, baseUrl) {
         if (urlUtils.isPathAbsolute(fontUrl)) {
@@ -178,7 +187,8 @@ function DVBFonts(config) {
      * Updates the status of a given dvb font relative to whether it is loaded in the browser
      * or if the download has failed
      * @param {number} index - Index of font in dvbFontList
-     * @param {string} newStatus - Status value to update: 'unloaded'|'loaded'|'failed' 
+     * @param {string} newStatus - Status value to update. Property of FONT_DOWNLOAD_STATUS
+     * @private
      */
     function _updateFontStatus(index, newStatus) {
         const font = dvbFontList[index];
@@ -200,10 +210,6 @@ function DVBFonts(config) {
     /**
      * Initiate the download of a dvb custom font.
      * The browser will neatly handle duplicate fonts
-     * @param {object} font - Font properties
-     * @param {object} track - Track information
-     * @param {number} streamId - StreamId
-     * @
      */
     function downloadFonts() {
         for (let i = 0; i < dvbFontList.length; i++) {
@@ -216,11 +222,11 @@ function DVBFonts(config) {
             font.fontFace.load();
             font.fontFace.loaded.then(
                 () => {
-                    _updateFontStatus(i, 'loaded');
+                    _updateFontStatus(i, FONT_DOWNLOAD_STATUS.LOADED);
                     eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, font);
                 },
                 (err) => {
-                    _updateFontStatus(i, 'failed')
+                    _updateFontStatus(i, FONT_DOWNLOAD_STATUS.ERROR);
                     eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, font);
                     logger.debug(err);
                 }
@@ -230,7 +236,7 @@ function DVBFonts(config) {
 
     /**
      * Returns current list of all known DVB Fonts
-     * @returns {array}
+     * @returns {array} dvbFontList
      */
     function getFonts() {
         return dvbFontList;
@@ -239,7 +245,7 @@ function DVBFonts(config) {
     /**
      * Returns dvbFonts relative to a track given a trackId
      * @param {number} - TrackId
-     * @returns {array} - DVB Fonts
+     * @returns {array} filtered DVBFontList
      */
     function getFontsForTrackId(trackId) {
         return dvbFontList.filter(font => 
@@ -251,6 +257,7 @@ function DVBFonts(config) {
         dvbFontList = [];
     }
 
+    /** Reset DVBFonts instance */
     function reset() {
         _cleanUpDvbCustomFonts();
         resetInitialSettings();

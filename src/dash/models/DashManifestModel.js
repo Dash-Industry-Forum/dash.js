@@ -1342,10 +1342,10 @@ function DashManifestModel() {
         const essentialProperties = {};
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY)) {
-            for (const sp of adaptation.EssentialProperty_asArray) {
-                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+            for (const ep of adaptation.EssentialProperty_asArray) {
+                if (ep.hasOwnProperty(Constants.SCHEME_ID_URI)) {
                     // N.B this will only work where there is a single EssentialProperty descriptor with this SchemeIdUri
-                    essentialProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
+                    essentialProperties[ep[Constants.SCHEME_ID_URI]] = {...ep};
                 }
             }
         }
