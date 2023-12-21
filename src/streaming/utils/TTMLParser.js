@@ -64,9 +64,9 @@ function TTMLParser() {
      * Drill down into JS representation of TTML Doc to look for tts:FontFamily styling properties.
      * Match the given fontFamily names against active DVB font downloads and prefix the fontFamily
      * names so they are unique to dashjs and don't clash with other browser/local fontFamily names.
-     * @param {Object} imsc1doc - JS Representation of TTML Doc
-     * @param {Array} dvbFonts - Active DVB Font Downloads
-     * @returns {Object} - JS Representation of TTML Doc with prefixed font families
+     * @param {object} imsc1doc - JS Representation of TTML Doc
+     * @param {array} dvbFonts - Active DVB Font Downloads
+     * @returns {object} - JS Representation of TTML Doc with prefixed font families
      */
     function _addDvbFontFamilyPrefix(imsc1doc, dvbFonts) {
 
@@ -184,8 +184,6 @@ function TTMLParser() {
         content.data = data;
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
-
-        // TODO: Compare _addDvbFontFamilyPrefix to string replacement inside TTML doc in terms of performance
 
         let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
