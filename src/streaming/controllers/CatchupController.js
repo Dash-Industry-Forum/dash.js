@@ -393,14 +393,14 @@ function CatchupController() {
             logger.debug('[LoL+ playback control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
         } else {
             // Hybrid: Latency-based
-            // Buffer is safe, vary playback rate based on latency
-            const cpr = liveCatchUpPlaybackRates.max;
             // Check if latency is within range of target latency
             const minDifference = 0.02;
             if (Math.abs(currentLiveLatency - liveDelay) <= (minDifference * liveDelay)) {
                 newRate = 1;
             } else {
                 const deltaLatency = currentLiveLatency - liveDelay;
+                // Buffer is safe, vary playback rate based on latency
+                const cpr = (deltaLatency < 0) ? Math.abs(liveCatchUpPlaybackRates.min) : liveCatchUpPlaybackRates.max;
                 const d = deltaLatency * 5;
 
                 // Playback rate must be between (1 - cpr) - (1 + cpr)
