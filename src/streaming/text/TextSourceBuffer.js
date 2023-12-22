@@ -293,7 +293,7 @@ function TextSourceBuffer(config) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
 
-            // Establish if there are DVB Font downloads as to not look through TTML styles unnecessarily
+            // Establish if there are DVB Font downloads so as to not look through TTML styles unnecessarily
             if (chunk.mediaInfo.id) {
                 currentFonts = dvbFonts.getFontsForTrackId(chunk.mediaInfo.id);
             }
@@ -320,7 +320,6 @@ function TextSourceBuffer(config) {
             instance.buffered.add(start, end);
             const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
             let ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
-            // console.log(ccContent);
             const images = [];
             let subOffset = sample.offset + sample.subSizes[0];
 

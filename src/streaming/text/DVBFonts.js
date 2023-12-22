@@ -227,8 +227,8 @@ function DVBFonts(config) {
                 },
                 (err) => {
                     _updateFontStatus(i, FONT_DOWNLOAD_STATUS.ERROR);
+                    logger.debug('Font download error: ', err);
                     eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, font);
-                    logger.debug(err);
                 }
             )
         };
