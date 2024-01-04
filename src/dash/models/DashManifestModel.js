@@ -1290,7 +1290,7 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    /* SUPPLIMENTAL PROPERTY DESCRIPTORS */
+    /* SUPPLEMENTAL PROPERTY DESCRIPTORS */
 
     function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
@@ -1319,7 +1319,7 @@ function DashManifestModel() {
 
         if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of representation.SupplementalProperty_asArray) {
-                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
                     // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
                     supplementalProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
                 }
