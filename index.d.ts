@@ -1701,7 +1701,9 @@ declare namespace dashjs {
     export type ErrorEvent =
         GenericErrorEvent
         | DownloadErrorEvent
+        | KeyErrorEvent
         | ManifestErrorEvent
+        | PlaybackErrorEvent
         | TimedTextErrorEvent
         | MediaPlayerErrorEvent;
 
@@ -1941,11 +1943,6 @@ declare namespace dashjs {
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
         type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
         adaptationSet: object;
-    }
-
-    export interface PlaybackErrorEvent extends Event {
-        type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
     }
 
     export interface MediaSettings {
