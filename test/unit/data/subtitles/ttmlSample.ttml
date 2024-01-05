@@ -7,7 +7,7 @@
 
     <head>
         <styling>
-            <style xml:id="S0" tts:wrapOption="wrap" tts:fontFamily="UnitTestFont,Arial,Roboto,proportionalSansSerif,default" tts:textAlign="center" tts:fontSize="80%" />
+            <style xml:id="S0" tts:wrapOption="wrap" tts:fontFamily="UnitTestFont,Arial,Roboto,proportionalSansSerif, default" tts:textAlign="center" tts:fontSize="80%" />
         </styling>
         <layout>
             <region xml:id="R1" tts:origin="12.5% 75%" tts:extent="75% 20%" tts:overflow="hidden" tts:displayAlign="before"/>

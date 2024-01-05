@@ -201,10 +201,12 @@ function DVBFonts(config) {
      * @param {string} streamId - Id of the stream
      */
     function addFontsFromTracks(tracks, streamId) {
-        for (let i = 0; i < tracks.length; i++) {
-            let track = tracks[i];
-            _addFontFromTrack(track, streamId);
-        };
+        if (tracks && Array.isArray(tracks) && streamId) {
+            for (let i = 0; i < tracks.length; i++) {
+                let track = tracks[i];
+                _addFontFromTrack(track, streamId);
+            };
+        }
     }
 
     /**
