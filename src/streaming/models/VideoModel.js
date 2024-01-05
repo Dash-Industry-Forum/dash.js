@@ -191,6 +191,12 @@ function VideoModel() {
         }
     }
 
+    function setDisableRemotePlayback(value) {
+        if (element) {
+            element.disableRemotePlayback = value;
+        }
+    }
+
     function getSource() {
         return element ? element.src : null;
     }
@@ -498,6 +504,7 @@ function VideoModel() {
         setTTMLRenderingDiv,
         setVttRenderingDiv,
         waitForReadyState,
+        setDisableRemotePlayback,
     };
 
     setup();

@@ -30,15 +30,19 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 
 function MediaSourceController() {
 
     let instance,
         mediaSource,
         settings,
+        mediaSourceType,
         logger;
 
     const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -48,11 +52,20 @@ function MediaSourceController() {
 
         let hasWebKit = ('WebKitMediaSource' in window);
         let hasMediaSource = ('MediaSource' in window);
+        let hasManagedMediaSource = ('ManagedMediaSource' in window);
 
-        if (hasMediaSource) {
+        if (hasManagedMediaSource) {
+            // eslint-disable-next-line no-undef
+            mediaSource = new ManagedMediaSource();
+            mediaSourceType = 'managedMediaSource';
+            logger.info(`Created ManagedMediaSource`)
+        } else if (hasMediaSource) {
             mediaSource = new MediaSource();
+            mediaSourceType = 'mediaSource';
+            logger.info(`Created MediaSource`)
         } else if (hasWebKit) {
             mediaSource = new WebKitMediaSource();
+            logger.info(`Created WebkitMediaSource`)
         }
 
         return mediaSource;
@@ -63,6 +76,16 @@ function MediaSourceController() {
         let objectURL = window.URL.createObjectURL(mediaSource);
 
         videoModel.setSource(objectURL);
+
+        if (mediaSourceType === 'managedMediaSource') {
+            videoModel.setDisableRemotePlayback(true);
+            mediaSource.addEventListener('startstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
+            })
+            mediaSource.addEventListener('endstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
+            })
+        }
 
         return objectURL;
     }
@@ -139,13 +162,13 @@ function MediaSourceController() {
     }
 
     instance = {
-        createMediaSource,
         attachMediaSource,
+        createMediaSource,
         detachMediaSource,
+        setConfig,
         setDuration,
         setSeekable,
         signalEndOfStream,
-        setConfig
     };
 
     setup();
