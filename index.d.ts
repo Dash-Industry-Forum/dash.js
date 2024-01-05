@@ -216,6 +216,10 @@ declare namespace dashjs {
 
         getSelectionPriority(realAdaptation: object): number;
 
+        getEssentialPropertiesForAdaptation(adaptation: object): object;
+
+        getEssentialPropertiesAsArrayForAdaptation(adaptation: object): any[];
+
         getEssentialPropertiesForRepresentation(realRepresentation: object): {schemeIdUri: string, value: string}
 
         getRepresentationFor(index: number, adaptation: object): object;
@@ -254,9 +258,19 @@ declare namespace dashjs {
 
         getServiceDescriptions(manifest: object): serviceDescriptions;
 
-        getSupplementalProperties(adaptation: object): object;
         getSegmentAlignment(adaptation: object): boolean;
+
         getSubSegmentAlignment(adaptation: object): boolean;
+
+        getSupplementalPropertiesForAdaptation(adaptation: object): object;
+
+        getSupplementalPropertiesAsArrayForAdaptation(adaptation: object): any[];
+        
+        getSupplementalPropertiesForRepresentation(representation: Representation): object;
+
+        getSupplementalPropertiesAsArrayForRepresentation(representation: Representation): any[];
+
+        setConfig(config: object): void;
     }
 
     export interface PatchManifestModel {
@@ -472,6 +486,9 @@ declare namespace dashjs {
         isEmbedded: any | null;
         selectionPriority: number;
         supplementalProperties: object;
+        supplementalPropertiesAsArray: any[];
+        essentialProperties: object;
+        essentialPropertiesAsArray: any[];
         segmentAlignment: boolean;
         subSegmentAlignment: boolean;
     }
@@ -582,6 +599,9 @@ declare namespace dashjs {
         schemeIdUri: string;
         value: string;
         id: string;
+        dvb_url?: string;
+        dvb_mimeType?: string;
+        dvb_fontFamily?: string;
     }
 
     export class ContentSteeringResponse {
@@ -3502,7 +3522,32 @@ declare namespace dashjs {
      * Streaming - Text
      **/
 
-     export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+    export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+
+    export type FontDownloadStatus = 'unloaded' | 'loaded' | 'error';
+
+    export interface FontInfo {
+        fontFamily: string;
+        url: string;
+        mimeType: string;
+        trackId: number;
+        streamId: string;
+        isEssential: boolean;
+        status: FontDownloadStatus;
+        fontFace: FontFace;
+    }
+
+    export interface DVBFonts {
+        addFontsFromTracks(tracks: TextTrackInfo, streamId: string): void;
+
+        downloadFonts(): void;
+
+        getFonts(): FontInfo[];
+
+        getFontsForTrackId(trackId: number): FontInfo[];
+        
+        reset(): void;
+    }
 
     export interface EmbeddedTextHtmlRender {
         createHTMLCaptionsFromScreen(videoElement: HTMLVideoElement, startTime: number, endTime: number, captionScreen: any): any[];
@@ -3642,8 +3687,6 @@ declare namespace dashjs {
         deleteCuesFromTrackIdx(trackIdx: number, start: number, end: number): void;
 
         deleteAllTextTracks(): void;
-
-        deleteTextTrack(idx: number): void;
     }
 
     /**
@@ -3876,7 +3919,7 @@ declare namespace dashjs {
     }
 
     export interface TTMLParser {
-        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): {start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[]}[];
+        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[], dvbFonts: FontInfo[]): {start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[]}[];
     }
 
     export interface URLUtils {
