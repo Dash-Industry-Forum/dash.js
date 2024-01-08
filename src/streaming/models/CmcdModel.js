@@ -131,7 +131,7 @@ function CmcdModel() {
     function getQueryParameter(request) {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-                const cmcdData = _getCmcdData(request);
+                const cmcdData = getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const finalPayloadString = encodeCmcd(filteredCmcdData);
 
@@ -172,7 +172,7 @@ function CmcdModel() {
     function getHeaderParameters(request) {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-                const cmcdData = _getCmcdData(request);
+                const cmcdData = getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const headers = toCmcdHeaders(filteredCmcdData)
 
@@ -191,7 +191,7 @@ function CmcdModel() {
         }
     }
 
-    function _getCmcdData(request) {
+    function getCmcdData(request) {
         try {
             let cmcdData = null;
             if (request.type === HTTPRequest.MPD_TYPE) {
@@ -540,6 +540,7 @@ function CmcdModel() {
     }
 
     instance = {
+        getCmcdData,
         getQueryParameter,
         getHeaderParameters,
         setConfig,

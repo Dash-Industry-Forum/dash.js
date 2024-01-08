@@ -68,7 +68,6 @@ function ManifestLoader(config) {
             errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             urlUtils: urlUtils,
             constants: Constants,
             dashConstants: DashConstants,
@@ -80,7 +79,6 @@ function ManifestLoader(config) {
             errHandler: errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             settings: config.settings
         });
 

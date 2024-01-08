@@ -418,7 +418,7 @@ function BolaRule(config) {
      * @private
      */
     function _onFragmentLoadingAbandoned(e) {
-        if (e) {
+        if (e && bolaStateDict[e.streamId]) {
             const bolaState = bolaStateDict[e.streamId][e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning

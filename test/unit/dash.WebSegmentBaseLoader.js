@@ -3,7 +3,6 @@ import Constants from '../../src/streaming/constants/Constants.js';
 import EventBus from '../../src/core/EventBus.js';
 import Events from '../../src/core/events/Events.js';
 import Errors from '../../src/core/errors/Errors.js';
-import RequestModifier from '../../src/streaming/utils/RequestModifier.js';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
 import DashMetricsMock from './mocks/DashMetricsMock.js';
@@ -57,8 +56,7 @@ describe('WebmSegmentBaseLoader', function () {
                 debug: new DebugMock(),
                 eventBus: eventBus,
                 events: Events,
-                errors: Errors,
-                requestModifier: RequestModifier(context).getInstance()
+                errors: Errors
             });
             webmSegmentBaseLoader.initialize();
         });
@@ -76,7 +74,7 @@ describe('WebmSegmentBaseLoader', function () {
                 .catch((e) => {
                     done(e);
                 });
-            self.requests[0].respond(200);
+            setTimeout(() => self.requests[0].respond(200), 1)
         });
 
         it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', function (done) {
@@ -93,7 +91,7 @@ describe('WebmSegmentBaseLoader', function () {
                     done(e);
                 });
 
-            self.requests[0].respond(200);
+            setTimeout(() => self.requests[0].respond(200), 1)
         });
     });
 });

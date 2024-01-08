@@ -58,7 +58,6 @@ function XlinkController(config) {
             errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             settings: config.settings
         });
     }

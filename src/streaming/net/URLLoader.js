@@ -54,7 +54,6 @@ function URLLoader(cfg) {
             loader = loaderFactory(context).create({
                 errHandler: cfg.errHandler,
                 mediaPlayerModel: cfg.mediaPlayerModel,
-                requestModifier: cfg.requestModifier,
                 dashMetrics: cfg.dashMetrics,
                 boxParser: cfg.boxParser ? cfg.boxParser : null,
                 constants: cfg.constants ? cfg.constants : null,

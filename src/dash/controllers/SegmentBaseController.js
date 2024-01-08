@@ -45,7 +45,6 @@ function SegmentBaseController(config) {
     const baseURLController = config.baseURLController;
     const debug = config.debug;
     const boxParser = config.boxParser;
-    const requestModifier = config.requestModifier;
     const errors = config.errors;
 
     let instance,
@@ -65,8 +64,7 @@ function SegmentBaseController(config) {
             events: events,
             errors: errors,
             debug: debug,
-            boxParser: boxParser,
-            requestModifier: requestModifier
+            boxParser: boxParser
         });
 
         webmSegmentBaseLoader.setConfig({
@@ -77,8 +75,7 @@ function SegmentBaseController(config) {
             eventBus: eventBus,
             events: events,
             errors: errors,
-            debug: debug,
-            requestModifier: requestModifier
+            debug: debug
         });
     }
 

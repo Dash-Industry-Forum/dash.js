@@ -14,7 +14,6 @@ function WebmSegmentBaseLoader() {
         logger,
         WebM,
         errHandler,
-        requestModifier,
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
@@ -92,7 +91,6 @@ function WebmSegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
             errors: errors
         });
     }
@@ -107,7 +105,6 @@ function WebmSegmentBaseLoader() {
         errHandler = config.errHandler;
         errors = config.errors;
         logger = config.debug.getLogger(instance);
-        requestModifier = config.requestModifier;
     }
 
     function parseCues(ab) {
