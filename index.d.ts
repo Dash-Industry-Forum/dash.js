@@ -1702,7 +1702,6 @@ declare namespace dashjs {
         GenericErrorEvent
         | DownloadErrorEvent
         | ManifestErrorEvent
-        | PlaybackErrorEvent
         | TimedTextErrorEvent
         | MediaPlayerErrorEvent;
 
