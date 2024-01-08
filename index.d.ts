@@ -944,6 +944,7 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
             applyServiceDescription?: boolean,
+            applyCMCDParameters?:boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
             cacheInitSegments?: boolean,

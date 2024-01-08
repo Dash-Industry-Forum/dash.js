@@ -739,6 +739,8 @@ import Events from './events/Events';
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
+ * Set to true if dash.js should use the cmcd parameters defined in MDP or js elements.
+ * @property {boolean} [applyCMCDParameters=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
@@ -866,6 +868,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
+            applyCMCDParameters: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
