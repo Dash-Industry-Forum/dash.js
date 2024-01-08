@@ -29,90 +29,76 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-import { modifyRequest } from '../utils/RequestModifier.js';
+import Utils from '../../core/Utils.js';
 
 /**
  * @module XHRLoader
  * @ignore
  * @description Manages download of resources via HTTP.
- * @param {Object} cfg - dependencies from parent
  */
-function XHRLoader(cfg) {
-
-    cfg = cfg || {};
-    const requestModifier = cfg.requestModifier;
+function XHRLoader() {
 
     let instance;
+    let xhr;
 
-    function load(httpLoaderRequest) {
-        if (requestModifier && requestModifier.modifyRequest) {
-            modifyRequest(httpLoaderRequest, requestModifier)
-                .then(() => _request(httpLoaderRequest));
-        }
-        else {
-            _request(httpLoaderRequest);
-        }
-    }
+    /**
+     * Load request
+     * @param {CommonMediaLibrary.request.CommonMediaRequest} httpRequest
+     * @param {CommonMediaLibrary.request.CommonMediaResponse} httpResponse
+     */
+    function load(httpRequest, httpResponse) {
+        xhr = new XMLHttpRequest();
+        xhr.open(httpRequest.method, httpRequest.url, true);
 
-    function _request(httpLoaderRequest) {
-        // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpLoaderRequest.request;
-
-        let xhr = new XMLHttpRequest();
-        xhr.open(httpLoaderRequest.method, httpLoaderRequest.url, true);
-
-        if (request.responseType) {
-            xhr.responseType = request.responseType;
+        if (httpRequest.responseType) {
+            xhr.responseType = httpRequest.responseType;
         }
 
-        if (request.range) {
-            xhr.setRequestHeader('Range', 'bytes=' + request.range);
-        }
-
-        if (!request.startDate) {
-            request.startDate = requestStartTime;
-        }
-
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            xhr = requestModifier.modifyRequestHeader(xhr, {
-                url: httpLoaderRequest.url
-            });
-        }
-
-        if (httpLoaderRequest.headers) {
-            for (let header in httpLoaderRequest.headers) {
-                let value = httpLoaderRequest.headers[header];
+        if (httpRequest.headers) {
+            for (let header in httpRequest.headers) {
+                let value = httpRequest.headers[header];
                 if (value) {
                     xhr.setRequestHeader(header, value);
                 }
             }
         }
 
-        xhr.withCredentials = httpLoaderRequest.withCredentials;
+        xhr.withCredentials = httpRequest.credentials === 'include';
+        xhr.timeout = httpRequest.timeout;
 
-        xhr.onload = httpLoaderRequest.onload;
-        xhr.onloadend = httpLoaderRequest.onloadend;
-        xhr.onerror = httpLoaderRequest.onerror;
-        xhr.onprogress = httpLoaderRequest.progress;
-        xhr.onabort = httpLoaderRequest.onabort;
-        xhr.ontimeout = httpLoaderRequest.ontimeout;
-        xhr.timeout = httpLoaderRequest.timeout;
+        xhr.onload = function(e) {
+            httpResponse.url = this.responseURL;
+            httpResponse.status = this.status;
+            httpResponse.statusText = this.statusText;
+            httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
+            httpResponse.data = this.response;
+            httpRequest.customData.onload(e);
+        }
+        xhr.onloadend = httpRequest.customData.onloadend;
+        xhr.onerror = httpRequest.customData.onerror;
+        xhr.onprogress = httpRequest.customData.onprogress;
+        xhr.onabort = httpRequest.customData.onabort;
+        xhr.ontimeout = httpRequest.customData.ontimeout;
 
         xhr.send();
 
-        httpLoaderRequest.response = xhr;
+        httpRequest.customData.abort = abort.bind(this);
+        return true;
     }
 
-    function abort(request) {
-        const x = request.response;
-        x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
-        x.abort();
+    function abort() {
+        xhr.onloadend = xhr.onerror = xhr.onprogress = null; // Ignore events from aborted requests.
+        xhr.abort();
+    }
+
+    function getXhr() {
+        return xhr
     }
 
     instance = {
         load,
-        abort
+        abort,
+        getXhr
     };
 
     return instance;

@@ -44,7 +44,6 @@ import ManifestLoader from './ManifestLoader.js';
 import ErrorHandler from './utils/ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
-import RequestModifier from './utils/RequestModifier.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
@@ -389,7 +388,6 @@ function MediaPlayer() {
                     eventBus: eventBus,
                     debug: debug,
                     boxParser: BoxParser(context).getInstance(),
-                    requestModifier: RequestModifier(context).getInstance(),
                     errors: Errors
                 });
             }
@@ -416,8 +414,7 @@ function MediaPlayer() {
                 manifestModel,
                 serviceDescriptionController,
                 throughputController,
-                eventBus,
-                requestModifier: RequestModifier(context).getInstance()
+                eventBus
             })
 
             restoreDefaultUTCTimingSources();
@@ -1698,6 +1695,50 @@ function MediaPlayer() {
     }
 
     /**
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the request interceptor callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addRequestInterceptor(interceptor) {
+        customParametersModel.addRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Removes a request interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */    
+    function removeRequestInterceptor(interceptor) {
+        customParametersModel.removeRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the response interceptor
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addResponseInterceptor(interceptor) {
+        customParametersModel.addResponseInterceptor(interceptor);
+    }
+
+    /**
+     * Removes a response interceptor.
+     * @param {function} interceptor - the request interceptor
+     * @memberof module:MediaPlayer
+     * @instance
+     */    
+    function removeResponseInterceptor(interceptor) {
+        customParametersModel.removeResponseInterceptor(interceptor);
+    }
+
+    /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
@@ -2283,7 +2324,6 @@ function MediaPlayer() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler,
             settings: settings
         });
@@ -2512,6 +2552,8 @@ function MediaPlayer() {
 
     instance = {
         addABRCustomRule,
+        addRequestInterceptor,
+        addResponseInterceptor,
         addUTCTimingSource,
         attachProtectionController,
         attachSource,
@@ -2579,6 +2621,8 @@ function MediaPlayer() {
         registerLicenseResponseFilter,
         removeABRCustomRule,
         removeAllABRCustomRule,
+        removeRequestInterceptor,
+        removeResponseInterceptor,
         removeUTCTimingSource,
         reset,
         resetCustomInitialTrackSelectionFunction,

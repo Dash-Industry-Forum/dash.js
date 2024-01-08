@@ -64,7 +64,6 @@ function ContentSteeringController() {
         dashMetrics,
         mediaPlayerModel,
         manifestModel,
-        requestModifier,
         serviceDescriptionController,
         throughputController,
         eventBus,
@@ -90,9 +89,6 @@ function ContentSteeringController() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
-        }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
@@ -115,7 +111,6 @@ function ContentSteeringController() {
             errHandler,
             dashMetrics,
             mediaPlayerModel,
-            requestModifier,
             errors: Errors
         });
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);

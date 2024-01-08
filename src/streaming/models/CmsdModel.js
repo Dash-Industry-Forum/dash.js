@@ -144,28 +144,22 @@ function CmsdModel() {
     function parseResponseHeaders(responseHeaders, mediaType) {
         let staticParams = null;
         let dynamicParams = null;
-        const headers = responseHeaders.split('\r\n');
-        // Ge in reverse order in order to consider only last CMSD-Dynamic header
-        for (let i = headers.length - 1; i >= 0; i--) {
-            const header = headers[i];
-            let m = header.match(/^(?<key>[^:]*):\s*(?<value>.*)$/);
-            if (m && m.groups) {
-                // Note: in modern browsers, the header names are returned in all lower case
-                let key = m.groups.key.toLowerCase(),
-                    value = m.groups.value;
-                switch (key) {
-                    case CMSD_STATIC_RESPONSE_FIELD_NAME:
-                        staticParams = _parseCMSDStatic(value);
-                        eventBus.trigger(Events.CMSD_STATIC_HEADER, staticParams);
-                        break;
-                    case CMSD_DYNAMIC_RESPONSE_FIELD_NAME:
-                        if (!dynamicParams) {
-                            dynamicParams = _parseCMSDDynamic(value);
-                        }
-                        break;
-                    default:
-                        break;
-                }
+
+        // Note: responseHeaders as a record of key:value
+        for (const key in responseHeaders) {
+            const value = responseHeaders[key];
+            switch (key) {
+                case CMSD_STATIC_RESPONSE_FIELD_NAME:
+                    staticParams = _parseCMSDStatic(value);
+                    eventBus.trigger(Events.CMSD_STATIC_HEADER, staticParams);
+                    break;
+                case CMSD_DYNAMIC_RESPONSE_FIELD_NAME:
+                    if (!dynamicParams) {
+                        dynamicParams = _parseCMSDDynamic(value);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 

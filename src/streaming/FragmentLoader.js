@@ -53,7 +53,6 @@ function FragmentLoader(config) {
             errors: errors,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             urlUtils: urlUtils,
             constants: Constants,
             boxParser: config.boxParser,

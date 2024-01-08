@@ -1,3 +1,5 @@
+import * as CommonMediaLibrary from '@svta/common-media-library';
+
 export = dashjs;
 export as namespace dashjs;
 
@@ -1482,6 +1484,14 @@ declare namespace dashjs {
         attachProtectionController(value: ProtectionController): void;
 
         setProtectionData(value: ProtectionDataSet): void;
+
+        addRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
+
+        removeRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
+
+        addResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
+
+        removeResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
 
         registerLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -3960,12 +3970,6 @@ declare namespace dashjs {
 
     export interface ObjectUtils {
         areEqual(obj1: object, obj2: object): boolean;
-    }
-
-    export interface RequestModifier {
-        modifyRequestURL(url: string): string;
-
-        modifyRequestHeader(request: Request): Request;
     }
 
     export interface SupervisorTools {

@@ -42,7 +42,6 @@ function SegmentBaseLoader() {
         logger,
         errHandler,
         boxParser,
-        requestModifier,
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
@@ -60,7 +59,6 @@ function SegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
             boxParser: boxParser,
             errors: errors,
             urlUtils: urlUtils,
@@ -92,10 +90,6 @@ function SegmentBaseLoader() {
 
         if (config.debug) {
             logger = config.debug.getLogger(instance);
-        }
-
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
         }
 
         if (config.errors) {

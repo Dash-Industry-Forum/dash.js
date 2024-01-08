@@ -33,7 +33,6 @@ import RepresentationController from '../dash/controllers/RepresentationControll
 import FragmentModel from '../streaming/models/FragmentModel.js';
 import FragmentLoader from '../streaming/FragmentLoader.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
-import RequestModifier from '../streaming/utils/RequestModifier.js';
 import SegmentsController from '../dash/controllers/SegmentsController.js';
 
 function OfflineStreamProcessor(config) {
@@ -102,7 +101,6 @@ function OfflineStreamProcessor(config) {
             eventBus: eventBus,
             events: events,
             debug: debug,
-            requestModifier: RequestModifier(context).getInstance(),
             dashConstants: dashConstants,
             constants: constants,
             segmentsController: segmentsController,
@@ -130,7 +128,6 @@ function OfflineStreamProcessor(config) {
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 errHandler: errHandler,
-                requestModifier: RequestModifier(context).getInstance(),
                 settings: settings,
                 eventBus: eventBus,
                 events: events,
