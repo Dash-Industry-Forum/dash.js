@@ -72,11 +72,11 @@ function TTMLParser() {
      */
     function _addFontFamilyParsingFix(imsc1doc) {
 
-        // Go through nested contents and looks for tts:fontFamily styling to prefix
-        function recursivelyPrefixFontFamilies (el) {
+        // Go through nested contents and looks for tts:fontFamily styling to correct
+        function recursivelyTrimFontFamilies (el) {
             if (el.contents && el.contents.length > 0) {
                 for (const deeperEl of el.contents) {
-                    recursivelyPrefixFontFamilies(deeperEl);
+                    recursivelyTrimFontFamilies(deeperEl);
                 }
             }
 
@@ -96,13 +96,13 @@ function TTMLParser() {
         // Check regions for styling first 
         if (imsc1doc.head && imsc1doc.head.layout && imsc1doc.head.layout.regions) {
             for (const region in imsc1doc.head.layout.regions) {
-                recursivelyPrefixFontFamilies(imsc1doc.head.layout.regions[region])
+                recursivelyTrimFontFamilies(imsc1doc.head.layout.regions[region])
             }
         }
 
         // Check body elements
         if (imsc1doc.body) {
-            recursivelyPrefixFontFamilies(imsc1doc.body);
+            recursivelyTrimFontFamilies(imsc1doc.body);
         }
 
         return imsc1doc;
