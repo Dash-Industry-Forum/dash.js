@@ -32,13 +32,15 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import Debug from '../../core/Debug.js';
+import { CMSD_DYNAMIC } from '@svta/common-media-library/cmsd/CMSD_DYNAMIC.js';
+import { CMSD_STATIC } from '@svta/common-media-library/cmsd/CMSD_STATIC.js';
+import { CmsdObjectType } from '@svta/common-media-library/cmsd/CmsdObjectType.js';
+import { decodeCmsdDynamic } from '@svta/common-media-library/cmsd/decodeCmsdDynamic.js';
+import { decodeCmsdStatic } from '@svta/common-media-library/cmsd/decodeCmsdStatic.js';
 
 // Note: in modern browsers, the header names are returned in all lower case
-const CMSD_STATIC = 'static';
-const CMSD_DYNAMIC = 'dynamic';
-const CMSD_RESPONSE_FIELD_BASENAME = 'cmsd-';
-const CMSD_STATIC_RESPONSE_FIELD_NAME = CMSD_RESPONSE_FIELD_BASENAME + CMSD_STATIC;
-const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = CMSD_RESPONSE_FIELD_BASENAME + CMSD_DYNAMIC;
+const CMSD_STATIC_RESPONSE_FIELD_NAME = CMSD_STATIC.toLowerCase();
+const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = CMSD_DYNAMIC.toLowerCase();
 const CMSD_KEYS = {
     AVAILABILITY_TIME: 'at',
     DURESS: 'du',
@@ -58,17 +60,6 @@ const CMSD_KEYS = {
     STREAMING_FORMAT: 'sf',
     VERSION: 'v'
 }
-const OBJECT_TYPES = {
-    MANIFEST: 'm',
-    AUDIO: 'a',
-    VIDEO: 'v',
-    INIT: 'i',
-    CAPTION: 'c',
-    ISOBMFF_TEXT_TRACK: 'tt',
-    ENCRYPTION_KEY: 'k',
-    OTHER: 'o',
-    STREAM: 'stream' // Specific value for parameters without object type, which apply for all media/objects
-};
 
 const PERSISTENT_PARAMS = [
     CMSD_KEYS.MAX_SUGGESTED_BITRATE,
@@ -78,13 +69,11 @@ const PERSISTENT_PARAMS = [
 ];
 
 const MEDIATYPE_TO_OBJECTTYPE = {
-    'video': OBJECT_TYPES.VIDEO,
-    'audio': OBJECT_TYPES.AUDIO,
-    'text': OBJECT_TYPES.ISOBMFF_TEXT_TRACK,
-    'stream': OBJECT_TYPES.STREAM
+    'video': CmsdObjectType.VIDEO,
+    'audio': CmsdObjectType.AUDIO,
+    'text': CmsdObjectType.ISOBMFF_TEXT_TRACK,
+    'stream': CmsdObjectType.STREAM
 }
-
-const integerRegex = /^[-0-9]/
 
 function CmsdModel() {
 
@@ -101,9 +90,9 @@ function CmsdModel() {
         _resetInitialSettings();
     }
 
-    function initialize() {}
+    function initialize() { }
 
-    function setConfig(/*config*/) {}
+    function setConfig(/*config*/) { }
 
     function _resetInitialSettings() {
         _staticParamsDict = {};
@@ -121,35 +110,9 @@ function CmsdModel() {
         })
     }
 
-    function _parseParameterValue(value) {
-        // If the value type is BOOLEAN and the value is TRUE, then the equals sign and the value are omitted
-        if (!value) {
-            return true;
-        }
-        // Check if boolean 'false'
-        if (value.toLowerCase() === 'false') {
-            return false;
-        }
-        // Check if a number
-        if (integerRegex.test(value)) {
-            return parseInt(value, 10);
-        }
-        // Value is a string, remove double quotes from string value
-        return value.replace(/["]+/g, '');
-    }
-
     function _parseCMSDStatic(value) {
         try {
-            const params = {};
-            const items = value.split(',');
-            for (let i = 0; i < items.length; i++) {
-                // <key>=<value>
-                const substrs = items[i].split('=');
-                const key = substrs[0];
-                const v = _parseParameterValue(substrs[1]);
-                params[key] = v;
-            }
-            return params;
+            return decodeCmsdStatic(value);
         } catch (e) {
             logger.error('Failed to parse CMSD-Static response header value:', e);
         }
@@ -157,34 +120,23 @@ function CmsdModel() {
 
     function _parseCMSDDynamic(value) {
         try {
-            const params = {};
-            const entries = value.split(',');
-            // Consider only last CMSD-Dynamic entry
-            const entry = entries[entries.length - 1];
-            const items = entry.split(';');
-            // Server identifier as 1st item
-            for (let i = 1; i < items.length; i++) {
-                // <key>=<value>
-                const substrs = items[i].split('=');
-                const key = substrs[0];
-                const v = _parseParameterValue(substrs[1]);
-                params[key] = v;
-            }
-            return params;
+            const items = decodeCmsdDynamic(value);
+            const last = items[items.length - 1];
+            return last?.params || {};
         } catch (e) {
             logger.error('Failed to parse CMSD-Dynamic response header value:', e);
-            return [];
+            return {};
         }
     }
 
     function _mediaTypetoObjectType(mediaType) {
-        return MEDIATYPE_TO_OBJECTTYPE[mediaType] || OBJECT_TYPES.OTHER;
+        return MEDIATYPE_TO_OBJECTTYPE[mediaType] || CmsdObjectType.OTHER;
     }
 
     function _getParamValueForObjectType(paramsType, ot, key) {
         const params = paramsType === CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
         const otParams = params[ot] || {};
-        const streamParams = params[OBJECT_TYPES.STREAM] || {};
+        const streamParams = params[CmsdObjectType.STREAM] || {};
         const value = otParams[key] || streamParams[key];
         return value;
     }
@@ -218,7 +170,7 @@ function CmsdModel() {
         }
 
         // Get object type
-        let ot = OBJECT_TYPES.STREAM;
+        let ot = CmsdObjectType.STREAM;
         if (staticParams && staticParams[CMSD_KEYS.OBJECT_TYPE]) {
             ot = staticParams[CMSD_KEYS.OBJECT_TYPE];
         } else if (mediaType) {
