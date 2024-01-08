@@ -32,7 +32,6 @@ describe('Constants', function () {
         expect(Constants.DVB_PROBABILITY).to.equal('dvb:probability');
         expect(Constants.OFF_MIMETYPE).to.equal('application/font-sfnt');
         expect(Constants.WOFF_MIMETYPE).to.equal('application/font-woff');
-        expect(Constants.DASHJS_DVB_FONT_PREFIX).to.equal('dashjs-');
         expect(Constants.TTS_FONT_FAMILY).to.equal('http://www.w3.org/ns/ttml#styling fontFamily');
     });
 });

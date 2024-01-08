@@ -39,13 +39,8 @@ describe('TTMLParser', function () {
             expect(captionsArray[0].end).to.equal(5);
         });
     
-        it('should append a prefix to recognised dvb font download font families', () => {
-            const captionsArray = ttmlParser.parse(ttml_file, 0, 0, 10, [], mockDvbFonts);
-            expect(captionsArray[0].isd.contents[0].contents[0].contents[0].contents[0].kind).to.equal('p');
-            expect(captionsArray[0].isd.contents[0].contents[0].contents[0].contents[0].styleAttrs['http://www.w3.org/ns/ttml#styling fontFamily'][0]).to.equal('dashjs-UnitTestFont');
-        });
-        
-        it('should correct for a bug in IMSCjs v1.1.4', () => {
+        // TODO: Can be removed when imscJS v1.1.5 is released and used    
+        it('should correct for a bug in imscJS v1.1.4', () => {
             const captionsArray = ttmlParser.parse(ttml_file, 0, 0, 10, [], mockDvbFonts);
             const lastFontFamily = captionsArray[0].isd.contents[0].contents[0].contents[0].contents[0].styleAttrs['http://www.w3.org/ns/ttml#styling fontFamily'].pop();
             expect(lastFontFamily).to.equal('monospaceSerif');

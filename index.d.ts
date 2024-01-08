@@ -3919,7 +3919,7 @@ declare namespace dashjs {
     }
 
     export interface TTMLParser {
-        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[], dvbFonts: FontInfo[]): {start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[]}[];
+        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): {start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[]}[];
     }
 
     export interface URLUtils {

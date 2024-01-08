@@ -62,19 +62,15 @@ function TTMLParser() {
 
     /**
      * Drill down into JS representation of TTML Doc to look for tts:FontFamily styling properties.
-     * Match the given fontFamily names against active DVB font downloads and prefix the fontFamily
-     * names so they are unique to dashjs and don't clash with other browser/local fontFamily names.
+     * Cover for some missing functionality in imscJS v1.1.4 to correctly replace default to monospaceSerif.
+     * Default is a reserved word in CSS so this can result in no fontFamily being correctly applied.
+     * This is covered further in the imscJS Github repository, PR #251 and issue #250 
+     * TODO: This can be removed when imscJS v1.1.5 is released and used
      * @param {object} imsc1doc - JS Representation of TTML Doc
-     * @param {array} dvbFonts - Active DVB Font Downloads
-     * @returns {object} - JS Representation of TTML Doc with prefixed font families
+     * @returns {object} - JS Representation of TTML Doc with fixed fontFamily
      * @private
      */
-    function _addDvbFontFamilyPrefix(imsc1doc, dvbFonts) {
-
-        // Get original, unprefixed names
-        const fontFamilies = dvbFonts.map(fontInfo => {
-            return fontInfo.fontFamily.replace(Constants.DASHJS_DVB_FONT_PREFIX,'');
-        });
+    function _addFontFamilyParsingFix(imsc1doc) {
 
         // Go through nested contents and looks for tts:fontFamily styling to prefix
         function recursivelyPrefixFontFamilies (el) {
@@ -89,14 +85,8 @@ function TTMLParser() {
                     if (style === Constants.TTS_FONT_FAMILY) {
                         el.styleAttrs[Constants.TTS_FONT_FAMILY] = el.styleAttrs[Constants.TTS_FONT_FAMILY].map(familyName => {
                             let trimmedName = familyName.trim();
-                            const matchedName = fontFamilies.find((name) => name === trimmedName);
-                            if (matchedName !== undefined) {
-                                // Matched name, return prefixed
-                                return familyName.replace(matchedName, `${Constants.DASHJS_DVB_FONT_PREFIX}${matchedName}`)
-                            } else {
-                                // Solve some issues that will be fixed in imscJS V1.1.5
-                                return (trimmedName === 'default') ? 'monospaceSerif' : trimmedName;
-                            }
+                            // This is the crux of this issue
+                            return (trimmedName === 'default') ? 'monospaceSerif' : trimmedName;
                         });
                     }
                 }
@@ -126,10 +116,9 @@ function TTMLParser() {
      * @param {integer} startTimeSegment - startTime for the current segment
      * @param {integer} endTimeSegment - endTime for the current segment
      * @param {array} images - images array referenced by subs MP4 box
-     * @param {array} dvbFonts - dvbFonts associated with current track
      * @returns {array} captionArray
      */
-    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images, dvbFonts) {
+    function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
         let errorMsg = '';
         const captionArray = [];
         let startTime,
@@ -192,9 +181,8 @@ function TTMLParser() {
             errorMsg = msg;
         }, metadataHandler);
 
-        if (dvbFonts && dvbFonts.length > 0) {
-            imsc1doc = _addDvbFontFamilyPrefix(imsc1doc, dvbFonts);
-        }
+        // TODO: Fix bug in imscJS V1.1.4 - Can be removed when v1.1.5 is released and used
+        imsc1doc = _addFontFamilyParsingFix(imsc1doc);
 
         eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 

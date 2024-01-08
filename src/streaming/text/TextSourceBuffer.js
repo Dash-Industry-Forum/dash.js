@@ -45,7 +45,6 @@ import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
-    const dvbFonts = config.dvbFonts;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
     const videoModel = config.videoModel;
@@ -277,8 +276,7 @@ function TextSourceBuffer(config) {
 
     function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
-            samplesInfo,
-            currentFonts;
+            samplesInfo;
 
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
@@ -293,20 +291,15 @@ function TextSourceBuffer(config) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
 
-            // Establish if there are DVB Font downloads so as to not look through TTML styles unnecessarily
-            if (chunk.mediaInfo.id) {
-                currentFonts = dvbFonts.getFontsForTrackId(chunk.mediaInfo.id);
-            }
-            
             if (codecType.search(Constants.STPP) >= 0) {
-                _appendFragmentedSttp(bytes, sampleList, codecType, currentFonts);
+                _appendFragmentedSttp(bytes, sampleList, codecType);
             } else {
                 _appendFragmentedWebVtt(bytes, sampleList);
             }
         }
     }
 
-    function _appendFragmentedSttp(bytes, sampleList, codecType, currentFonts) {
+    function _appendFragmentedSttp(bytes, sampleList, codecType) {
         let i, j;
 
         parser = parser !== null ? parser : _getParser(codecType);
@@ -335,7 +328,7 @@ function TextSourceBuffer(config) {
 
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
-                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images, currentFonts);
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             
             } catch (e) {

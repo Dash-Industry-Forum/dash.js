@@ -92,10 +92,9 @@ function DVBFonts(config) {
 
         dvbFontProps.forEach(attrs => {
             if (_hasMandatoryDvbFontAttributes(attrs)) {
-                let prefixedName = _prefixDvbCustomFont(attrs.dvb_fontFamily);
                 let resolvedUrl = _resolveFontUrl(attrs.dvb_url, asBaseUrl);
                 dvbFontList.push({
-                    fontFamily: prefixedName,
+                    fontFamily: attrs.dvb_fontFamily,
                     url: resolvedUrl,
                     mimeType: attrs.dvb_mimeType,
                     trackId: track.id,
@@ -103,7 +102,7 @@ function DVBFonts(config) {
                     isEssential: essentialProperty,
                     status: FONT_DOWNLOAD_STATUS.UNLOADED,
                     fontFace: new FontFace(
-                        prefixedName,
+                        attrs.dvb_fontFamily,
                         `url(${resolvedUrl})`, 
                         { display: 'swap' }
                     )
@@ -141,26 +140,6 @@ function DVBFonts(config) {
         }
         return false;
     }
-
-    /**
-     * Prefix the fontFamily name of a dvb custom font download so the font does
-     * not clash with any fonts of the same name in the browser/locally.
-     * @param {string} fontFamily - fontFamily value
-     * @returns {string} Prefixed font name
-     * @private
-     */
-    function _prefixDvbCustomFont(fontFamily) {
-        // Trim any white space - imsc will do the same when processing TTML/parsing HTML
-        let prefixedFontFamily = fontFamily.trim();
-        // Handle names with white space within them, hence wrapped in quotes
-        if (fontFamily.charAt(0) === `"` || fontFamily.charAt(0) === `'`) {
-            prefixedFontFamily = `${prefixedFontFamily.slice(0,1)}${Constants.DASHJS_DVB_FONT_PREFIX}${prefixedFontFamily.slice(1)}`;
-        } else {
-            prefixedFontFamily = `${Constants.DASHJS_DVB_FONT_PREFIX}${prefixedFontFamily}`;
-        }
-
-        return prefixedFontFamily;
-    };
 
     /**
      * Resolves a given font download URL.
