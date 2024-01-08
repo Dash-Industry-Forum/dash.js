@@ -50,6 +50,7 @@ import Errors from '../../core/errors/Errors';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
 import MpdLocation from '../vo/MpdLocation';
 import PatchLocation from '../vo/PatchLocation';
+import ClientDataReporting from '../vo/ClientDataReporting';
 
 function DashManifestModel() {
     let instance,
@@ -1187,6 +1188,24 @@ function DashManifestModel() {
         return entry;
     }
 
+    function _createClientDataResportingInstance(element){
+        const entry = new ClientDataReporting();
+
+        if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS)) {
+            entry.CMCDParameters = element[DashConstants.CMCD_PARAMETERS];
+        }
+
+        if(element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS)){
+            entry.serviceLocations = element[DashConstants.SERVICE_LOCATION];
+        }
+
+        if(element.hasOwnProperty(DashConstants.ADAPTATION_SETS)){
+            entry.adaptationSets = element[DashConstants.ADAPTATION_SETS];
+        }
+
+        return entry;
+    }
+
     function getLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(DashConstants.LOCATION_AS_ARRAY)) {
             return manifest[DashConstants.LOCATION_AS_ARRAY].map((entry) => {
@@ -1233,7 +1252,8 @@ function DashManifestModel() {
                     playbackRate = null,
                     operatingQuality = null,
                     operatingBandwidth = null,
-                    contentSteering = null;
+                    contentSteering = null,
+                    clientDataReporting = null;
 
                 for (const prop in sd) {
                     if (sd.hasOwnProperty(prop)) {
@@ -1271,6 +1291,8 @@ function DashManifestModel() {
                             }
                         } else if (prop === DashConstants.CONTENT_STEERING) {
                             contentSteering = _createContentSteeringInstance(sd[prop])
+                        } else if (prop === DashConstants.CLIENT_DATA_REPORTING) {
+                            clientDataReporting = _createClientDataResportingInstance(sd[prop]);
                         }
                     }
                 }
@@ -1282,7 +1304,8 @@ function DashManifestModel() {
                     playbackRate,
                     operatingQuality,
                     operatingBandwidth,
-                    contentSteering
+                    contentSteering,
+                    clientDataReporting
                 });
             }
         }

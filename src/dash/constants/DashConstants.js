@@ -175,7 +175,13 @@ class DashConstants {
             APPLICATION: 'application'
         }
         this.SEGMENT_ALIGNMENT = 'segmentAlignment';
-        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
+        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment';
+        this.CLIENT_DATA_REPORTING = 'ClientDataReporting';
+        this.CLIENT_DATA_REPORTING_AS_ARRAY = 'ClientDataReporting_asArray';
+        this.CMCD_PARAMETERS = 'CMCDParameters';
+        this.CMCD_PARAMETERS_AS_ARRAY = 'CMCDParameters_asArray';
+        this.SERVICE_LOCATIONS = 'serviceLocations';
+        this.ADAPTATION_SETS = 'AdaptationSets';
     }
 
     constructor () {
