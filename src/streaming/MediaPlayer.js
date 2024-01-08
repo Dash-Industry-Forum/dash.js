@@ -2223,7 +2223,8 @@ function MediaPlayer() {
         cmcdModel.setConfig({
             abrController,
             dashMetrics,
-            playbackController
+            playbackController,
+            serviceDescriptionController,
         });
 
         cmsdModel.setConfig({});

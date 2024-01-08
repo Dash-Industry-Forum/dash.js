@@ -80,7 +80,8 @@ function ServiceDescriptionController() {
             minBitrate: {},
             maxBitrate: {},
             initialBitrate: {},
-            contentSteering: null
+            contentSteering: null,
+            clientDataReporting: null,
         };
         prftOffsets = [];
     }
