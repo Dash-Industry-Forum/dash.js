@@ -306,8 +306,9 @@ function HTTPLoader(cfg) {
 
         let headers = null;
         let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
-        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-            const cmcdMode = settings.get().streaming.cmcd.mode;
+        if (cmcdModel.isCmcdEnabled()) {
+            const cmcdParameters = cmcdModel.getCmcdParametersMDP();
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
                 modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);

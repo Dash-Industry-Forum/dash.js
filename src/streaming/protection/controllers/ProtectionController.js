@@ -818,9 +818,10 @@ function ProtectionController(config) {
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
+        const cmcdParameters = cmcdModel.getCmcdParametersMDP();
 
-        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-            const cmcdMode = settings.get().streaming.cmcd.mode;
+        if (cmcdModel.isCmcdEnabled()) {
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const cmcdParams = cmcdModel.getQueryParameter({
                     url: request.url,
@@ -843,8 +844,8 @@ function ProtectionController(config) {
             xhr.setRequestHeader(key, request.headers[key]);
         }
 
-        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-            const cmcdMode = settings.get().streaming.cmcd.mode;
+        if (cmcdModel.isCmcdEnabled()) {
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 const cmcdHeaders = cmcdModel.getHeaderParameters({
                     url: request.url,

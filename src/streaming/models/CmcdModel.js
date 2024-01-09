@@ -144,7 +144,7 @@ function CmcdModel() {
 
     function getQueryParameter(request) {
         try {
-            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            if (isCmcdEnabled()) {
                 const cmcdData = _getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const finalPayloadString = _buildFinalString(filteredCmcdData);
@@ -169,15 +169,11 @@ function CmcdModel() {
 
     function _applyWhitelist(cmcdData) {
         try {
-            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+            const cmcdParameters = getCmcdParametersMDP();
             let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
 
-            if (
-                settings.get().streaming.applyCMCDParameters &&
-                serviceDescription.clientDataReporting && 
-                serviceDescription.clientDataReporting.CMCDParameters) 
-            {
-                enabledCMCDKeys = serviceDescription.clientDataReporting.CMCDParameters.keys;
+            if (cmcdParameters.version) {
+                enabledCMCDKeys = cmcdParameters.keys;
                 enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
 
                 if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
@@ -209,7 +205,7 @@ function CmcdModel() {
 
     function getHeaderParameters(request) {
         try {
-            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            if (isCmcdEnabled()) {
                 const cmcdData = _getCmcdData(request);
                 const cmcdObjectHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['br', 'd', 'ot', 'tb']));
                 const cmcdRequestHeader = _copyParameters(cmcdData, _applyWhitelistByKeys(['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']));
@@ -237,16 +233,33 @@ function CmcdModel() {
         }
     }
 
-    function _applyWhitelistByKeys(keys) {
+    function isCmcdEnabled() {
+        const cmcdParameters = getCmcdParametersMDP();
+
+        return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
+    }
+
+    function getCmcdParametersMDP() {
         const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
-        let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
+        let cmcdParameters = {};
 
         if (
             settings.get().streaming.applyCMCDParameters &&
             serviceDescription.clientDataReporting && 
             serviceDescription.clientDataReporting.CMCDParameters
         ) {
-            enabledCMCDKeys = serviceDescription.clientDataReporting.CMCDParameters.keys;
+            cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+        }
+
+        return cmcdParameters;
+    }
+
+    function _applyWhitelistByKeys(keys) {
+        const cmcdParameters = getCmcdParametersMDP();
+        let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
+
+        if (cmcdParameters.version) {
+            enabledCMCDKeys = cmcdParameters.keys;
             enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
 
             if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
@@ -415,23 +428,16 @@ function CmcdModel() {
 
 
     function _getGenericCmcdData() {
+        const cmcdParameters = getCmcdParametersMDP();
         const data = {};
-        const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
 
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
 
-        data.v = CMCD_VERSION;
+        data.v = cmcdParameters.version ? cmcdParameters.version : CMCD_VERSION;
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
 
-        if (
-            settings.get().streaming.applyCMCDParameters &&
-            serviceDescription.clientDataReporting && 
-            serviceDescription.clientDataReporting.CMCDParameters
-        ) {
-            const cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
-            cid = cmcdParameters.contentID || cid;
-            data.sid = cmcdParameters.sessionID || data.sid;
-        }
+        cid = cmcdParameters.contentID ? cmcdParameters.contentID : cid;
+        data.sid = cmcdParameters.sessionID ? cmcdParameters.sessionID : data.sid;
 
         data.sid = `${data.sid}`;
 
@@ -654,9 +660,11 @@ function CmcdModel() {
     instance = {
         getQueryParameter,
         getHeaderParameters,
+        getCmcdParametersMDP,
         setConfig,
         reset,
-        initialize
+        initialize,
+        isCmcdEnabled,
     };
 
     setup();
