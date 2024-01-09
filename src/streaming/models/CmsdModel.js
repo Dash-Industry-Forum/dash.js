@@ -72,7 +72,7 @@ const MEDIATYPE_TO_OBJECTTYPE = {
     'video': CmsdObjectType.VIDEO,
     'audio': CmsdObjectType.AUDIO,
     'text': CmsdObjectType.TIMED_TEXT,
-    'stream': 'stream'
+    'stream': 'stream' // Specific value for parameters without object type, which apply for all media/objects
 }
 
 function CmsdModel() {
