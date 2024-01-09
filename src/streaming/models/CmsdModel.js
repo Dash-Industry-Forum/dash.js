@@ -71,8 +71,8 @@ const PERSISTENT_PARAMS = [
 const MEDIATYPE_TO_OBJECTTYPE = {
     'video': CmsdObjectType.VIDEO,
     'audio': CmsdObjectType.AUDIO,
-    'text': CmsdObjectType.ISOBMFF_TEXT_TRACK,
-    'stream': CmsdObjectType.STREAM
+    'text': CmsdObjectType.TIMED_TEXT,
+    'stream': 'stream'
 }
 
 function CmsdModel() {
