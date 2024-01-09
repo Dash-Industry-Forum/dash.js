@@ -90,9 +90,9 @@ function CmsdModel() {
         _resetInitialSettings();
     }
 
-    function initialize() { }
+    function initialize() {}
 
-    function setConfig(/*config*/) { }
+    function setConfig(/*config*/) {}
 
     function _resetInitialSettings() {
         _staticParamsDict = {};
