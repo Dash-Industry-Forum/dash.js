@@ -247,8 +247,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         autoLoad: false,
         muted: false,
         drmToday: false,
-        enableRollUp: true,
-        displayForcedOnlyMode: false,
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
         languageAudio: null,
@@ -1550,8 +1548,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             autoLoad: $scope.autoLoadSelected,
             muted: $scope.muted,
             drmToday: $scope.drmToday,
-            enableRollUp: $scope.imscEnableRollUp,
-            displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
             languageAudio: $scope.initialSettings.audio,
@@ -1829,12 +1825,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
-                    break;
-                case 'enableRollUp':
-                    $scope.imscEnableRollUp = this.parseBoolean(value);
-                    break;
-                case 'displayForcedOnlyMode':
-                    $scope.imscdisplayForcedOnlyMode = this.parseBoolean(value);
                     break;
                 case 'forceQualitySwitchSelected':
                     $scope.forceQualitySwitchSelected = this.parseBoolean(value);
