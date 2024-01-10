@@ -49,6 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
+            -   browser-tools/install-browser-tools
             -   run:
                     name: Build and run unit tests
                     command: |
