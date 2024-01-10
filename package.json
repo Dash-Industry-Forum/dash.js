@@ -70,7 +70,7 @@
         "imsc": "^1.1.4",
         "localforage": "^1.7.1",
         "path-browserify": "^1.0.1",
-        "ua-parser-js": "^1.0.2"
+        "ua-parser-js": "^1.0.37"
     },
     "repository": {
         "type": "git",
