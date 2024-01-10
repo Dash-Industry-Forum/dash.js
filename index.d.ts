@@ -1254,6 +1254,8 @@ declare namespace dashjs {
 
         attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
+        refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
+
         isReady(): boolean;
 
         preload(): void;
@@ -1942,11 +1944,6 @@ declare namespace dashjs {
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
         type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
         adaptationSet: object;
-    }
-
-    export interface PlaybackErrorEvent extends Event {
-        type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
     }
 
     export interface MediaSettings {
