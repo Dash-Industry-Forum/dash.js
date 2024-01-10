@@ -1945,11 +1945,6 @@ declare namespace dashjs {
         adaptationSet: object;
     }
 
-    export interface PlaybackErrorEvent extends Event {
-        type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
-    }
-
     export interface MediaSettings {
         lang?: string;
         viewpoint?: any;
