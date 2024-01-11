@@ -233,6 +233,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.drmToday = false;
 
+    $scope.imscEnableRollUp = true;
+    $scope.imscdisplayForcedOnlyMode = false;
+
     $scope.isDynamic = false;
 
     $scope.conformanceViolations = [];
@@ -819,6 +822,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleForcedTextStreaming = function () {
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
+    }
+
+    $scope.toggleImscEnableRollUp = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
+    }
+
+    $scope.toggleImscdisplayForcedOnlyMode = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -2180,6 +2191,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
     }
 
+    function setTextOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.imscEnableRollUp = currentConfig.streaming.text.imsc.enableRollUp;
+        $scope.imscdisplayForcedOnlyMode = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
+    }
+
     function setLiveDelayOptions() {
         var currentConfig = $scope.player.getSettings();
         $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
@@ -2335,6 +2352,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
             setDrmOptions();
+            setTextOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();
