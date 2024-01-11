@@ -39,8 +39,6 @@ class ClientDataReporting {
         this.serviceLocationsArray = [];
         this.adaptationSets = null;
         this.adaptationSetsArray = [];
-        this.includeInRequests = 'segment';
-        this.includeInRequestsArray = ['segment'];
     }
 }
 
