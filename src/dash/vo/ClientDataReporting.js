@@ -34,11 +34,13 @@
  */
 class ClientDataReporting {
     constructor() {
+        this.CMCDParameters = null;
         this.serviceLocations = null;
         this.serviceLocationsArray = [];
         this.adaptationSets = null;
         this.adaptationSetsArray = [];
-        this.CMCDParameters = null;
+        this.includeInRequests = 'segment';
+        this.includeInRequestsArray = ['segment'];
     }
 }
 

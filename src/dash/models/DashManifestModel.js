@@ -1200,9 +1200,9 @@ function DashManifestModel() {
             entry.serviceLocationsArray = entry.serviceLocations.split(' ');
         }
 
-        if(element.hasOwnProperty(DashConstants.ADAPTATION_SETS)){
+        if(element.hasOwnProperty(DashConstants.ADAPTATION_SETS) && element[DashConstants.ADAPTATION_SETS] !== ''){
             entry.adaptationSets = element[DashConstants.ADAPTATION_SETS];
-            entry.adaptationSetsArray = entry.adaptationSets.split(' ');
+            entry.adaptationSetsArray = entry.adaptationSets.toString().split(' ');
         }
 
         return entry;
