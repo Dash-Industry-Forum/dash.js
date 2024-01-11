@@ -1195,9 +1195,9 @@ function DashManifestModel() {
             entry.CMCDParameters = element[DashConstants.CMCD_PARAMETERS];
         }
 
-        if(element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS)){
+        if(element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS) && element[DashConstants.SERVICE_LOCATIONS] !== ''){
             entry.serviceLocations = element[DashConstants.SERVICE_LOCATIONS];
-            entry.serviceLocationsArray = entry.serviceLocations.split(' ');
+            entry.serviceLocationsArray = entry.serviceLocations.toString().split(' ');
         }
 
         if(element.hasOwnProperty(DashConstants.ADAPTATION_SETS) && element[DashConstants.ADAPTATION_SETS] !== ''){
