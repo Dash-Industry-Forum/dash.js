@@ -79,7 +79,8 @@ function TextTracks(config) {
         displayCCOnTop,
         previousISDState,
         topZIndex,
-        resizeObserver;
+        resizeObserver,
+        hasRequestAnimationFrame;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -104,6 +105,7 @@ function TextTracks(config) {
         displayCCOnTop = false;
         topZIndex = 2147483647;
         previousISDState = null;
+        hasRequestAnimationFrame = ('requestAnimationFrame' in window);
 
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
@@ -416,6 +418,7 @@ function TextTracks(config) {
             
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
+            
             previousISDState = renderHTML(
                 cue.isd, 
                 finalCue, 
@@ -432,29 +435,33 @@ function TextTracks(config) {
         }
     }
 
-    function _extendLastCue(cue, track) {
-        if (!settings.get().streaming.text.extendSegmentedCues) {
+    // Check that a new cue immediately follows the previous cue
+    function _areCuesAdjacent(cue, prevCue) {
+        if (!prevCue) { 
             return false;
         }
-        if (!track.cues || track.cues.length === 0) {
-            return false;
-        }
-        const prevCue = track.cues[track.cues.length - 1];
         // Check previous cue endTime with current cue startTime
         // (should we consider an epsilon margin? for example to get around rounding issues)
         if (prevCue.endTime < cue.startTime) {
             return false;
         }
-        // Compare cues content
-        if (_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
-            // Extend the previous cue if they are identical
-            prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
-        } else {
-            // If they are not the identical, but still immediately follow, let the new cue rendering clear up the captionsContainer
-            prevCue.onexit = function () { };
+
+        return true;
+    }
+
+    // Check if cue content is identical. If it is, extend the previous cue.
+    function _extendLastCue(cue, prevCue) {
+        if (!settings.get().streaming.text.extendSegmentedCues) {
             return false;
         }
-        
+
+        // Compare cues content
+        if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
+            // Extend the previous cue if they are identical
+            return false;
+        } 
+
+        prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
         return true;
     }
 
@@ -514,7 +521,20 @@ function TextTracks(config) {
                             }
                             track.manualCueList.push(cue);
                         } else {
-                            if (!_extendLastCue(cue, track)) {
+                            // Handle adjacent cues
+                            let prevCue;
+                            if (track.cues && track.cues.length !== 0) {
+                                prevCue = track.cues[track.cues.length - 1];
+                            }
+
+                            if (_areCuesAdjacent(cue, prevCue)) {
+                                if (!_extendLastCue(cue, prevCue)) {
+                                    // If cues are adjacent but not identical (extended), let the render function of the next cue 
+                                    // clear up the captionsContainer so removal and appending are instantaneous
+                                    prevCue.onexit = function () { };
+                                    track.addCue(cue);
+                                }
+                            } else {
                                 track.addCue(cue);
                             }
                         }
@@ -565,7 +585,12 @@ function TextTracks(config) {
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
                 if (this.isd) {
-                    _renderCaption(this);
+                    if (hasRequestAnimationFrame) { 
+                        // Ensure everything in _renderCaption happens in the same frame
+                        requestAnimationFrame(() => _renderCaption(this));
+                    } else {
+                        _renderCaption(this)
+                    }
                     logger.debug('Cue enter id:' + this.cueID);
                 } else {
                     captionContainer.appendChild(this.cueHTMLElement);
