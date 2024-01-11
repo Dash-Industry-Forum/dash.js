@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-    browser-tools: circleci/browser-tools@1.4.4
+    browser-tools: circleci/browser-tools@1.4.6
 
 executors:
     dashjs-executor:
@@ -49,8 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
-            - browser-tools/install-browser-tools:
-                chrome-version: 116.0.5845.96 # TODO remove this when google updates the chrome driver
+            -   browser-tools/install-browser-tools
             -   run:
                     name: Build and run unit tests
                     command: |

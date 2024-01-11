@@ -1522,6 +1522,9 @@ function StreamController() {
         if (config.segmentBaseController) {
             segmentBaseController = config.segmentBaseController;
         }
+        if (config.manifestUpdater) {
+            manifestUpdater = config.manifestUpdater;
+        }
     }
 
     function setProtectionData(protData) {
@@ -1607,6 +1610,12 @@ function StreamController() {
         }
     }
 
+    function refreshManifest() {
+        if (!manifestUpdater.getIsUpdating()) {
+            manifestUpdater.refreshManifest();
+        }
+    }
+
     function getStreams() {
         return streams;
     }
@@ -1632,6 +1641,7 @@ function StreamController() {
         getActiveStream,
         getInitialPlayback,
         getAutoPlay,
+        refreshManifest,
         reset
     };
 

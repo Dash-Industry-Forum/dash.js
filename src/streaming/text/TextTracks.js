@@ -425,10 +425,10 @@ function TextTracks(config) {
                 function (src) { return _resolveImageSrc(cue, src) }, 
                 captionContainer.clientHeight, 
                 captionContainer.clientWidth, 
-                false /*displayForcedOnlyMode*/,
+                settings.get().streaming.text.imsc.displayForcedOnlyMode,
                 function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
                 previousISDState,
-                true /*enableRollUp*/
+                settings.get().streaming.text.imsc.enableRollUp
             );
             finalCue.id = cue.cueID;
             eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
