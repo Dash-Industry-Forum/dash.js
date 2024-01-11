@@ -142,15 +142,8 @@ function CmcdModel() {
         streamProcessors = activeStream.getProcessors();
     }
 
-    function _getClienDataReportingFiltersFromRequest(request) {
-        const serviceLocationsArray = request?.mediaInfo?.streamInfo?.manifestInfo?.serviceDescriptions?.[0]?.clientDataReporting?.serviceLocationsArray ?? [];
-        const adaptationSetsArray = request?.mediaInfo?.streamInfo?.manifestInfo?.serviceDescriptions?.[0]?.clientDataReporting?.adaptationSetsArray ?? [];
-        
-        return {serviceLocationsArray, adaptationSetsArray};
-    }
-
     function _applyClientDataReportingFilters(request) {
-        const {serviceLocationsArray, adaptationSetsArray } = _getClienDataReportingFiltersFromRequest(request);
+        const {serviceLocationsArray, adaptationSetsArray } = serviceDescriptionController.getServiceDescriptionSettings().clientDataReporting;
         const actualCdn = request?.serviceLocation;
         const actualAdaptationId = request?.mediaInfo?.id?.toString();
 
