@@ -169,7 +169,7 @@ function CmcdModel() {
 
     function _applyWhitelist(cmcdData) {
         try {
-            const cmcdParameters = getCmcdParametersMDP();
+            const cmcdParameters = getCmcdParametersFromManifest();
             let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
 
             if (cmcdParameters.version) {
@@ -234,12 +234,11 @@ function CmcdModel() {
     }
 
     function isCmcdEnabled() {
-        const cmcdParameters = getCmcdParametersMDP();
-
+        const cmcdParameters = getCmcdParametersFromManifest();
         return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
-    function getCmcdParametersMDP() {
+    function getCmcdParametersFromManifest() {
         const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
         let cmcdParameters = {};
 
@@ -255,7 +254,7 @@ function CmcdModel() {
     }
 
     function _applyWhitelistByKeys(keys) {
-        const cmcdParameters = getCmcdParametersMDP();
+        const cmcdParameters = getCmcdParametersFromManifest();
         let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
 
         if (cmcdParameters.version) {
@@ -285,12 +284,22 @@ function CmcdModel() {
                 return _getCmcdDataForOther(request);
             } else if (request.type === HTTPRequest.LICENSE) {
                 return _getCmcdDataForLicense(request);
+            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                return _getCmcdDataForSteering(request);
             }
 
             return cmcdData;
         } catch (e) {
             return null;
         }
+    }
+
+    function _getCmcdDataForSteering() {
+        const data = _getGenericCmcdData();
+
+        data.ot = OBJECT_TYPES.OTHER;
+
+        return data;
     }
 
     function _getCmcdDataForLicense(request) {
@@ -428,7 +437,7 @@ function CmcdModel() {
 
 
     function _getGenericCmcdData() {
-        const cmcdParameters = getCmcdParametersMDP();
+        const cmcdParameters = getCmcdParametersFromManifest();
         const data = {};
 
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
@@ -660,7 +669,7 @@ function CmcdModel() {
     instance = {
         getQueryParameter,
         getHeaderParameters,
-        getCmcdParametersMDP,
+        getCmcdParametersFromManifest,
         setConfig,
         reset,
         initialize,
