@@ -409,14 +409,24 @@ function TextTracks(config) {
 
     function _renderCaption(cue) {
         if (captionContainer) {
+
+            while (captionContainer.firstChild) {
+                captionContainer.removeChild(captionContainer.firstChild);
+            }
+            
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
-            previousISDState = renderHTML(cue.isd, finalCue, function (src) {
-                return _resolveImageSrc(cue, src);
-            }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
-                logger.info('renderCaption :', err);
-                //TODO add ErrorHandler management
-            }, previousISDState, true /*enableRollUp*/);
+            previousISDState = renderHTML(
+                cue.isd, 
+                finalCue, 
+                function (src) { return _resolveImageSrc(cue, src) }, 
+                captionContainer.clientHeight, 
+                captionContainer.clientWidth, 
+                false /*displayForcedOnlyMode*/,
+                function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
+                previousISDState,
+                true /*enableRollUp*/
+            );
             finalCue.id = cue.cueID;
             eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }
@@ -436,10 +446,15 @@ function TextTracks(config) {
             return false;
         }
         // Compare cues content
-        if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
+        if (_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
+            // Extend the previous cue if they are identical
+            prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
+        } else {
+            // If they are not the identical, but still immediately follow, let the new cue rendering clear up the captionsContainer
+            prevCue.onexit = function () { };
             return false;
         }
-        prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
+        
         return true;
     }
 
