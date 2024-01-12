@@ -205,7 +205,7 @@ function DVBFonts(config) {
                     eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_FAILED, font);
                 }
             );
-        };
+        }
     }
 
     /**
