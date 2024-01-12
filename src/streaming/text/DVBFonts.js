@@ -32,7 +32,7 @@ import Constants from '../constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
 import URLUtils from '../utils/URLUtils';
 import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 import Debug from '../../core/Debug';
 
 function DVBFonts(config) {
@@ -197,18 +197,18 @@ function DVBFonts(config) {
             let font = dvbFontList[i];
 
             document.fonts.add(font.fontFace);
-            eventBus.trigger(Events.DVB_FONT_DOWNLOAD_ADDED, font);
+            eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, font);
 
             font.fontFace.load();
             font.fontFace.loaded.then(
                 () => {
                     _updateFontStatus(i, FONT_DOWNLOAD_STATUS.LOADED);
-                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_COMPLETE, font);
+                    eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_COMPLETE, font);
                 },
                 (err) => {
                     _updateFontStatus(i, FONT_DOWNLOAD_STATUS.ERROR);
                     logger.debug('Font download error: ', err);
-                    eventBus.trigger(Events.DVB_FONT_DOWNLOAD_FAILED, font);
+                    eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_FAILED, font);
                 }
             )
         };

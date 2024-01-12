@@ -1528,7 +1528,10 @@ declare namespace dashjs {
         CAN_PLAY_THROUGH: 'canPlayThrough';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
-        CONFORMANCE_VIOLATION: 'conformanceViolation'
+        CONFORMANCE_VIOLATION: 'conformanceViolation';
+        DVB_FONT_DOWNLOAD_ADDED: 'dvbFontDownloadAdded';
+        DVB_FONT_DOWNLOAD_COMPLETE: 'dvbFontDownloadComplete';
+        DVB_FONT_DOWNLOAD_FAILED: 'dvbFontDownloadFailed';
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
@@ -1738,6 +1741,20 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
     }
 
+    export interface dvbFontDownloadAdded extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
+        font: FontInfo
+    }
+
+    export interface dvbFontDownloadComplete extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
+        font: FontInfo
+    }
+
+    export interface dvbFontDownloadFailed extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
+        font: FontInfo
+    }
     export interface DynamicToStaticEvent extends Event {
         type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
     }

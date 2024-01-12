@@ -1,7 +1,7 @@
 import DVBFonts from '../../src/streaming/text/DVBFonts';
 import BaseURLControllerMock from './mocks/BaseURLControllerMock';
 import AdapterMock from './mocks/AdapterMock';
-import Events from '../../src/core/events/Events';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import EventBus from '../../src/core/EventBus';
 
 const chai = require('chai');
@@ -150,11 +150,11 @@ describe('DVBFonts', function () {
 
         it('should trigger font added event', () => {
             let spy = chai.spy();
-            eventBus.on(Events.DVB_FONT_DOWNLOAD_ADDED, spy);
+            eventBus.on(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, spy);
             dvbFonts.addFontsFromTracks(mockSupplementalDownloadTracks, 'id');
             dvbFonts.downloadFonts();
             expect(spy).to.have.been.called.exactly(1);
-            eventBus.off(Events.DVB_FONT_DOWNLOAD_ADDED, spy);
+            eventBus.off(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, spy);
         });
 
     });
