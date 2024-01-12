@@ -1121,7 +1121,6 @@ function DashAdapter() {
             }
         }
 
-        // TODO: Unsure if grabbing essential properties present on all representations is necessary like it has been done above
         mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);        
         mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
         

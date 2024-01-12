@@ -326,7 +326,7 @@ function TextSourceBuffer(config) {
             try {
                 const manifest = manifestModel.getValue();
 
-                // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+                // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);

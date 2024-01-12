@@ -1743,17 +1743,17 @@ declare namespace dashjs {
 
     export interface dvbFontDownloadAdded extends Event {
         type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
-        font: FontInfo
+        font: FontInfo;
     }
 
     export interface dvbFontDownloadComplete extends Event {
         type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
-        font: FontInfo
+        font: FontInfo;
     }
 
     export interface dvbFontDownloadFailed extends Event {
         type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
-        font: FontInfo
+        font: FontInfo;
     }
     export interface DynamicToStaticEvent extends Event {
         type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];

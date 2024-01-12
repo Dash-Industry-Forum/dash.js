@@ -1290,8 +1290,6 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    /* SUPPLEMENTAL PROPERTY DESCRIPTORS */
-
     function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
 
@@ -1336,8 +1334,6 @@ function DashManifestModel() {
         });
     }
 
-    /* ESSENTIAL PROPERTY DESCRIPTORS */
-
     function getEssentialPropertiesForAdaptation(adaptation) {
         const essentialProperties = {};
 
@@ -1354,9 +1350,9 @@ function DashManifestModel() {
 
     function getEssentialPropertiesAsArrayForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY) || !adaptation.EssentialProperty_asArray.length) return [];
-        return adaptation.EssentialProperty_asArray.map( supp => {
+        return adaptation.EssentialProperty_asArray.map( ep => {
             const s = new DescriptorType();
-            return s.init(supp);
+            return s.init(ep);
         });
     }
 
