@@ -269,23 +269,47 @@ function CmcdModel() {
         return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
+    function _isIncludedInRequestFilter(type){
+        const {includeInRequests} = getCmcdParametersFromManifest();
+        const includeInRequestsArray = includeInRequests.split(' ');
+
+        if(includeInRequestsArray.find(include => include === '*')){
+            return true;
+        }
+
+        const filtersTypes = {
+            'segment': HTTPRequest.INIT_SEGMENT_TYPE | 
+                HTTPRequest.INDEX_SEGMENT_TYPE | 
+                HTTPRequest.MEDIA_SEGMENT_TYPE | 
+                HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE | 
+                HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE ,
+            'xlink': HTTPRequest.XLINK_EXPANSION_TYPE,
+            'mpd': HTTPRequest.MPD_TYPE,
+            'steering': HTTPRequest.CONTENT_STEERING_TYPE,
+        }
+
+        return includeInRequestsArray.some(include => filtersTypes[include] === type);
+    }
+
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
 
-            if (request.type === HTTPRequest.MPD_TYPE) {
-                return _getCmcdDataForMpd(request);
-            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                _initForMediaType(request.mediaType);
-                return _getCmcdDataForMediaSegment(request);
-            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                return _getCmcdDataForInitSegment(request);
-            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                return _getCmcdDataForOther(request);
-            } else if (request.type === HTTPRequest.LICENSE) {
-                return _getCmcdDataForLicense(request);
-            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                return _getCmcdDataForSteering(request);
+            if(_isIncludedInRequestFilter(request.type)){
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    return _getCmcdDataForMpd(request);
+                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    _initForMediaType(request.mediaType);
+                    return _getCmcdDataForMediaSegment(request);
+                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                    return _getCmcdDataForInitSegment(request);
+                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                    return _getCmcdDataForOther(request);
+                } else if (request.type === HTTPRequest.LICENSE) {
+                    return _getCmcdDataForLicense(request);
+                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                    return _getCmcdDataForSteering(request);
+                }
             }
 
             return cmcdData;
