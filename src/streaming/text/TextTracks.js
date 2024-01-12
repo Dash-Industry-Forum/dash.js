@@ -455,9 +455,7 @@ function TextTracks(config) {
             return false;
         }
 
-        // Compare cues content
         if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
-            // Extend the previous cue if they are identical
             return false;
         } 
 
@@ -529,9 +527,13 @@ function TextTracks(config) {
 
                             if (_areCuesAdjacent(cue, prevCue)) {
                                 if (!_extendLastCue(cue, prevCue)) {
-                                    // If cues are adjacent but not identical (extended), let the render function of the next cue 
-                                    // clear up the captionsContainer so removal and appending are instantaneous
-                                    prevCue.onexit = function () { };
+                                    /* If cues are adjacent but not identical (extended), let the render function of the next cue 
+                                     * clear up the captionsContainer so removal and appending are instantaneous.
+                                     * Only do this for imsc subs (where isd is present).
+                                     */
+                                    if (prevCue.isd) {
+                                        prevCue.onexit = function () { };
+                                    }
                                     track.addCue(cue);
                                 }
                             } else {
@@ -603,6 +605,7 @@ function TextTracks(config) {
             }
         };
 
+        // For imsc subs, this could be reassigned to not do anything if there is a cue that immediately follows this one
         cue.onexit = function () {
             if (captionContainer) {
                 const divs = captionContainer.childNodes;
