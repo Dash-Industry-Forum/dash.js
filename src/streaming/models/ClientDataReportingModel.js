@@ -43,18 +43,26 @@ function ClientDataReportingModel() {
         }
     }
 
-    function isIncludedFilters(currentServiceLocation, currentAdaptationSetId){
-        const {serviceLocationsArray, adaptationSetsArray} = serviceDescriptionController.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+    function serviceLocationIncluded(serviceLocation){
+        const { serviceLocationsArray } = serviceDescriptionController.getServiceDescriptionSettings()?.clientDataReporting ?? {};
 
-        const isServiceLocationIncluded = serviceLocationsArray && (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(currentServiceLocation));
-        const isAdaptationsIncluded = adaptationSetsArray && (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(currentAdaptationSetId));
+        const isServiceLocationIncluded = serviceLocationsArray && (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation));
 
-        return isServiceLocationIncluded && isAdaptationsIncluded;
+        return isServiceLocationIncluded;
+    }
+
+    function adaptationSetIncluded(adaptationSet){
+        const { adaptationSetsArray } = serviceDescriptionController.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+
+        const isAdaptationsIncluded = adaptationSetsArray && (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet));
+
+        return isAdaptationsIncluded;
     }
 
     instance = {
         setConfig:setConfig,
-        isIncludedFilters: isIncludedFilters,
+        adaptationSetIncluded: adaptationSetIncluded,
+        serviceLocationIncluded: serviceLocationIncluded,
     };
 
     return instance;

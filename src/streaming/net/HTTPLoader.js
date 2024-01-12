@@ -311,7 +311,7 @@ function HTTPLoader(cfg) {
         let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
-        const isIncludedFilters = clientDataReportingModel.isIncludedFilters(currentServiceLocation,currentAdaptationSetId);
+        const isIncludedFilters = clientDataReportingModel.serviceLocationIncluded(currentServiceLocation) && clientDataReportingModel.adaptationSetIncluded(currentAdaptationSetId);
         if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
             const cmcdParameters = cmcdModel.getCmcdParametersMDP();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
