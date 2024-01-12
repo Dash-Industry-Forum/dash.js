@@ -53,6 +53,7 @@ import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
 import CmsdModel from './models/CmsdModel';
+import ClientDataReportingModel from './models/ClientDataReportingModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -159,6 +160,7 @@ function MediaPlayer() {
         manifestModel,
         cmcdModel,
         cmsdModel,
+        clientDataReportingModel,
         videoModel,
         uriFragmentModel,
         domStorage,
@@ -340,6 +342,8 @@ function MediaPlayer() {
             cmcdModel = CmcdModel(context).getInstance();
 
             cmsdModel = CmsdModel(context).getInstance();
+
+            clientDataReportingModel = ClientDataReportingModel(context).getInstance();
 
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
@@ -2226,6 +2230,10 @@ function MediaPlayer() {
             playbackController,
             serviceDescriptionController,
         });
+
+        clientDataReportingModel.setConfig({
+            serviceDescriptionController
+        })
 
         cmsdModel.setConfig({});
 

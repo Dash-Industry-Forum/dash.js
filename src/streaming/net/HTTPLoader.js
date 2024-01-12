@@ -35,6 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
 import CmsdModel from '../models/CmsdModel';
+import ClientDataReportingModel from '../models/ClientDataReportingModel';
 import Utils from '../../core/Utils';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
@@ -72,6 +73,7 @@ function HTTPLoader(cfg) {
         downloadErrorToRequestTypeMap,
         cmcdModel,
         cmsdModel,
+        clientDataReportingModel,
         customParametersModel,
         lowLatencyThroughputModel,
         logger;
@@ -82,6 +84,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        clientDataReportingModel = ClientDataReportingModel(context).getInstance();
         cmsdModel = CmsdModel(context).getInstance();
         lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
@@ -306,7 +309,10 @@ function HTTPLoader(cfg) {
 
         let headers = null;
         let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
-        if (cmcdModel.isCmcdEnabled()) {
+        const currentServiceLocation = request?.serviceLocation;
+        const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
+        const isIncludedFilters = clientDataReportingModel.serviceLocationIncluded(currentServiceLocation) && clientDataReportingModel.adaptationSetIncluded(currentAdaptationSetId);
+        if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {

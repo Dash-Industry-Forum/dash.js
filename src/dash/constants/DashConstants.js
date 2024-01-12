@@ -181,7 +181,7 @@ class DashConstants {
         this.CMCD_PARAMETERS = 'CMCDParameters';
         this.CMCD_PARAMETERS_AS_ARRAY = 'CMCDParameters_asArray';
         this.SERVICE_LOCATIONS = 'serviceLocations';
-        this.ADAPTATION_SETS = 'AdaptationSets';
+        this.ADAPTATION_SETS = 'adaptationSets';
     }
 
     constructor () {
