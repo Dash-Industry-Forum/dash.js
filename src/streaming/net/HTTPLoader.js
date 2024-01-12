@@ -313,7 +313,7 @@ function HTTPLoader(cfg) {
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingModel.serviceLocationIncluded(currentServiceLocation) && clientDataReportingModel.adaptationSetIncluded(currentAdaptationSetId);
         if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
-            const cmcdParameters = cmcdModel.getCmcdParametersMDP();
+            const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);

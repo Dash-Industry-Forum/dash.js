@@ -818,7 +818,7 @@ function ProtectionController(config) {
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
-        const cmcdParameters = cmcdModel.getCmcdParametersMDP();
+        const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
 
         if (cmcdModel.isCmcdEnabled()) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
