@@ -66,7 +66,7 @@ function DVBFonts(config) {
      */
     function _addFontFromTrack(track, streamId) {
         let asBaseUrl;
-        let essentialProperty = false;
+        let isEssential = false;
         let dvbFontProps;
 
         // If there is a baseurl in the manifest resolve against a representation inside the current adaptation set
@@ -84,7 +84,7 @@ function DVBFonts(config) {
 
         // When it comes to the property descriptors it's Essential OR Supplementary, with Essential taking preference
         if (essentialTags.length > 0) {
-            essentialProperty = true;
+            isEssential = true;
             dvbFontProps = essentialTags;
         } else {
             dvbFontProps = supplementalTags;
@@ -99,7 +99,7 @@ function DVBFonts(config) {
                     mimeType: attrs.dvb_mimeType,
                     trackId: track.id,
                     streamId,
-                    isEssential: essentialProperty,
+                    isEssential,
                     status: FONT_DOWNLOAD_STATUS.UNLOADED,
                     fontFace: new FontFace(
                         attrs.dvb_fontFamily,
@@ -120,7 +120,7 @@ function DVBFonts(config) {
             let deleted = document.fonts.delete(font.fontFace);
             logger.debug(`Removal of fontFamily: ${font.fontFamily} was ${deleted ? 'successful' : 'unsuccessful'}`);
         }
-    };
+    }
 
     /**
      * Check the attributes of a supplemental or essential property descriptor to establish if 
@@ -130,15 +130,10 @@ function DVBFonts(config) {
      * @private
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
-        if (
-            (attrs.value && attrs.value === '1') &&
-            (attrs.dvb_url && attrs.dvb_url.length > 0) && 
-            (attrs.dvb_fontFamily && attrs.dvb_fontFamily.length > 0) &&
-            (attrs.dvb_mimeType && (attrs.dvb_mimeType === Constants.OFF_MIMETYPE || attrs.dvb_mimeType === Constants.WOFF_MIMETYPE))
-        ) {
-            return true;
-        }
-        return false;
+        return !!((attrs.value && attrs.value === '1') &&
+        (attrs.dvb_url && attrs.dvb_url.length > 0) &&
+        (attrs.dvb_fontFamily && attrs.dvb_fontFamily.length > 0) &&
+        (attrs.dvb_mimeType && (attrs.dvb_mimeType === Constants.OFF_MIMETYPE || attrs.dvb_mimeType === Constants.WOFF_MIMETYPE)));
     }
 
     /**
@@ -160,7 +155,7 @@ function DVBFonts(config) {
         } else {
             return fontUrl; 
         }
-    };
+    }
 
     /**
      * Updates the status of a given dvb font relative to whether it is loaded in the browser
@@ -172,7 +167,7 @@ function DVBFonts(config) {
     function _updateFontStatus(index, newStatus) {
         const font = dvbFontList[index];
         dvbFontList[index] = {...font, status: newStatus};
-    };
+    }
 
     /**
      * Adds all fonts to the dvb font list from all tracks
@@ -199,8 +194,7 @@ function DVBFonts(config) {
             document.fonts.add(font.fontFace);
             eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, font);
 
-            font.fontFace.load();
-            font.fontFace.loaded.then(
+            font.fontFace.load().then(
                 () => {
                     _updateFontStatus(i, FONT_DOWNLOAD_STATUS.LOADED);
                     eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_COMPLETE, font);
@@ -210,7 +204,7 @@ function DVBFonts(config) {
                     logger.debug('Font download error: ', err);
                     eventBus.trigger(MediaPlayerEvents.DVB_FONT_DOWNLOAD_FAILED, font);
                 }
-            )
+            );
         };
     }
 
