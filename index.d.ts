@@ -1584,6 +1584,8 @@ declare namespace dashjs {
         THROUGHPUT_MEASUREMENT_STORED: 'throughputMeasurementStored';
         TTML_PARSED: 'ttmlParsed';
         TTML_TO_PARSE: 'ttmlToParse';
+        CUE_ENTER: 'cueEnter';
+        CUE_EXIT: 'cueExit';
     }
 
     export interface AstInFutureEvent extends Event {
@@ -1943,6 +1945,19 @@ declare namespace dashjs {
     export interface TtmlToParseEvent extends Event {
         type: MediaPlayerEvents['TTML_TO_PARSE'];
         content: object;
+    }
+
+    export interface CueEnterEvent extends Event {
+        type: MediaPlayerEvents['CUE_ENTER'];
+        id: string,
+        text: string,
+        start: number,
+        end: number
+    }
+
+    export interface CueExitEvent extends Event {
+        type: MediaPlayerEvents['CUE_EXIT'];
+        id: string,
     }
 
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {

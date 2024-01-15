@@ -136,6 +136,7 @@ function TextTracks(config) {
     }
 
     function createTracks() {
+        const fireCueEvents = settings.get().streaming.text.fireCueEvents;
 
         //Sort in same order as in manifest
         textTrackQueue.sort(function (a, b) {
@@ -193,7 +194,7 @@ function TextTracks(config) {
             for (let idx = 0; idx < textTrackQueue.length; idx++) {
                 const videoTextTrack = getTrackByIdx(idx);
                 if (videoTextTrack) {
-                    videoTextTrack.mode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    videoTextTrack.mode = (idx === defaultIndex && !fireCueEvents) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                     videoTextTrack.manualMode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
             }
@@ -470,6 +471,7 @@ function TextTracks(config) {
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
         const track = getTrackByIdx(trackIdx);
+        const fireCueEvents = settings.get().streaming.text.fireCueEvents;
 
         if (!track) {
             return;
@@ -480,16 +482,22 @@ function TextTracks(config) {
         }
 
         for (let item = 0; item < captionData.length; item++) {
-            let cue;
+            let cue = null;
             const currentItem = captionData[item];
 
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
-                cue = currentItem.type === 'html' && captionContainer ? _handleHtmlCaption(currentItem, timeOffset, track)
-                    : currentItem.data ? _handleNonHtmlCaption(currentItem, timeOffset, track) : null;
+                if (fireCueEvents) {
+                    cue = _handleCaptionEvents(currentItem, timeOffset, track, item);
+                } else if (currentItem.type === 'html' && captionContainer) {
+                    cue = _handleHtmlCaption(currentItem, timeOffset, track)
+                } else if (currentItem.data) {
+                    cue = _handleNonHtmlCaption(currentItem, timeOffset, track)
+                }
             }
+
             try {
                 if (cue) {
                     if (!cueInTrack(track, cue)) {
@@ -520,6 +528,41 @@ function TextTracks(config) {
                 throw e;
             }
         }
+    }
+
+    function _handleCaptionEvents(currentItem, timeOffset, track, itemPos) {
+        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, currentItem.data);
+        cue.cueId = currentItem.cueID || itemPos;
+        cue.data = currentItem.data;
+
+        cue.onenter = function () {
+            _fireCueEnter(cue);
+        }
+
+        cue.onexit = function () {
+            _fireCueExit(cue);
+        }
+
+        return cue;
+    }
+
+    function _fireCueEnter(cue) {
+        // This cleans up the VTT elements inside of the cue data.
+        const tmp = document.createElement('div');
+        tmp.innerHTML = cue.data;
+
+        eventBus.trigger(MediaPlayerEvents.CUE_ENTER, {
+            id: cue.cueId,
+            text: tmp.textContent,
+            start: cue.startTime,
+            end: cue.endTime
+        });
+    }
+
+    function _fireCueExit(cue) {
+        eventBus.trigger(MediaPlayerEvents.CUE_EXIT, {
+            id: cue.cueId
+        });
     }
 
     function _handleHtmlCaption(currentItem, timeOffset, track) {
@@ -623,17 +666,24 @@ function TextTracks(config) {
             const targetTrack = activeTracks[0];
             const cues = targetTrack.manualCueList;
 
-
             if (cues && cues.length > 0) {
                 cues.forEach((cue) => {
                     // Render cue if target time is reached and not in active state
                     if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
                         cue.isActive = true;
-                        // eslint-disable-next-line no-undef
-                        WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
+                        if (settings.get().streaming.text.fireCueEvents) {
+                            _fireCueEnter(cue);
+                        } else {
+                            // eslint-disable-next-line no-undef
+                            WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
+                        }
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
-                        _removeManualCue(cue);
+                        if (settings.get().streaming.text.fireCueEvents) {
+                            _fireCueExit(cue);
+                        } else {
+                            _removeManualCue(cue);
+                        }
                     }
                 })
             }
@@ -664,7 +714,9 @@ function TextTracks(config) {
                 cues.forEach((cue) => {
                     if (cue.isActive) {
                         cue.isActive = false;
-                        if (vttCaptionContainer) {
+                        if (settings.get().streaming.text.fireCueEvents) {
+                            _fireCueExit(cue);
+                        } else if (vttCaptionContainer) {
                             const divs = vttCaptionContainer.childNodes;
                             for (let i = 0; i < divs.length; ++i) {
                                 if (divs[i].id === cue.cueID) {
