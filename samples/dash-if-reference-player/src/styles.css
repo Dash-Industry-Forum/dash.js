@@ -1,0 +1,174 @@
+
+:root {
+  --color-blue-primary: rgb(31, 138, 249);
+  --color-blue-light: rgba(31, 138, 249,.54);
+  --color-font-main: #000000;
+  --color-font-dark: #404040;
+  --color-scrollbars: #999;
+  --color-scrollbars-hover: #777;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+  "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+@media (min-width: 1440px) {
+  .container, .container-sm, .container-md, .container-lg, .container-xl {
+    max-width: 1400px;
+  }
+  .overlayLarge {
+    width: 75vw;
+  }
+}
+
+body {
+  background-color: #eff3f6;
+  margin: 0;
+  min-width: 480px;
+  overflow-x: auto;
+  overflow-y: scroll;
+  scrollbar-color: var(--color-scrollbars) transparent;
+}
+
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbars);
+  border: 4px solid transparent;
+  border-radius: 5px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbars-hover);
+}
+
+h1 {
+  font-size: 16px !important;
+  line-height: 20px !important;
+  font-weight: 500 !important;
+  color: var(--color-font-dark);
+}
+
+h2 {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 500 !important;
+  color: var(--color-blue-primary);
+}
+
+h3 {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  font-weight: 400 !important;
+  text-transform: uppercase;
+  color: var(--color-font-main);
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.defaultBtn {
+  width: 100%;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  border-radius: 4px;
+}
+
+input {
+  width: 100%;
+  color: var(--color-font-main);
+}
+
+/**
+ * Styles for Angular Material
+ */
+mat-divider {
+  margin: 0 15px !important;
+}
+
+.overlayLarge {
+  width: 85vw;
+}
+
+.matMenuItemSmall {
+  line-height: 32px !important;
+  height: 32px !important;
+}
+
+.mat-input-label, .mat-label, .mat-card {
+  color: var(--color-font-main) !important;
+}
+
+.mat-checkbox-label, .mat-label, .mat-card {
+  color: var(--color-font-main) !important;
+}
+
+.mat-select-label, mat.label, .mat.card {
+  color: var(--color-font-main) !important;
+}
+
+.mat-card > h1 {
+  margin-top: -10px !important;
+}
+
+.mat-checkbox-checked.mat-accent .mat-checkbox-ripple .mat-ripple-element {
+  opacity: 0.03 !important;
+  background: var(--color-blue-primary);
+}
+
+.mat-checkbox-frame {
+  color: var(--color-font-main) !important;
+  border-width: 1px !important;
+}
+
+.mat-slide-toggle.mat-checked .mat-slide-toggle-bar {
+  background: var(--color-blue-light);
+}
+
+.mat-accent .mat-slider-track-fill, .mat-accent .mat-slider-thumb, .mat-accent .mat-slider-thumb-label, .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background, .mat-checkbox-checked.mat-accent .mat-checkbox-background, .mat-form-field.mat-focused .mat-form-field-ripple.mat-accent, .mat-radio-button.mat-accent .mat-radio-inner-circle, .mat-radio-button.mat-accent .mat-radio-ripple .mat-ripple-element:not(.mat-radio-persistent-ripple), .mat-radio-button.mat-accent.mat-radio-checked .mat-radio-persistent-ripple, .mat-radio-button.mat-accent:active .mat-radio-persistent-ripple, .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb, .mat-slide-toggle.mat-checked .mat-ripple-element, .mat-pseudo-checkbox-checked, .mat-pseudo-checkbox-indeterminate, .mat-accent .mat-pseudo-checkbox-checked, .mat-accent .mat-pseudo-checkbox-indeterminate, .mat-checkbox-checked:not(.mat-checkbox-disabled).mat-accent .mat-ripple-element, .mat-checkbox:active:not(.mat-checkbox-disabled).mat-accent .mat-ripple-element {
+  background: var(--color-blue-primary);
+}
+
+.mat-accent .mat-option.mat-selected:not(.mat-option-disabled), .mat-form-field.mat-focused .mat-form-field-label.mat-accent, .mat-focused .mat-form-field-required-marker, .mat-form-field.mat-focused.mat-accent .mat-select-arrow, .mat-form-field-appearance-outline.mat-focused.mat-accent .mat-form-field-outline-thick, .mat-form-field-type-mat-native-select.mat-focused:not(.mat-form-field-invalid).mat-accent .mat-form-field-infix::after {
+  color: var(--color-blue-primary);
+}
+
+.mat-form-field.mat-accent .mat-input-element {
+  caret-color: var(--color-blue-primary);
+}
+
+.mat-radio-button.mat-accent.mat-radio-checked .mat-radio-outer-circle {
+  border-width: 1px;
+  border-color: var(--color-blue-primary);
+}
+
+.mat-radio-button .mat-radio-outer-circle {
+  border-width: 1px;
+}
+
+.mat-checkbox-layout {
+  white-space: unset !important;
+}
+
+.mat-expansion-panel .mat-expansion-panel-header.cdk-keyboard-focused:not([aria-disabled=true]), .mat-expansion-panel .mat-expansion-panel-header.cdk-program-focused:not([aria-disabled=true]), .mat-expansion-panel:not(.mat-expanded) .mat-expansion-panel-header:hover:not([aria-disabled=true]) {
+  background: rgba(31, 138, 249, .04)
+}
+
+.mat-expansion-panel {
+  background: #fff;
+  color: var(--color-font-main);
+}
+
+.mat-simple-snackbar span {
+  color: white !important;
+}

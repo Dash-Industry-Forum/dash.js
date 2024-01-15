@@ -1,0 +1,16 @@
+
+.playerContainer {
+  background-color: #000;
+  padding: 10px 10px 0;
+  border-radius: 4px;
+}
+
+video {
+  width: 100%;
+  height: auto;
+}
+
+.video-controller {
+  margin-top: -7px;
+  z-index: 800;
+}

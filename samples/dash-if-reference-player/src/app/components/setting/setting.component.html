@@ -1,0 +1,638 @@
+<div id="set-accordionPanel">
+  <button name="copySettings" class="btn btn-primary copy-btn" (click)="copyQueryUrl()">Copy Url</button>
+  <ngx-masonry [ordered]="true">
+    <div ngxMasonryItem class="set-masonry-item col-lg-3 col-md-4 col-12" *ngFor="let group of _groups">
+
+      <mat-accordion>
+        <mat-expansion-panel class="set-content" (afterExpand)="updateMasonry()" (afterCollapse)="updateMasonry()">
+
+          <mat-expansion-panel-header>
+            <h2><b>{{group[0]}}</b></h2>
+          </mat-expansion-panel-header>
+
+          <!-- PLAYBACK (hardcoded) -->
+          <div *ngIf="group[0] === 'PLAYBACK'">
+            <!-- Video Quality -->
+            <div class="singleSetting sliderContainer">
+              <span [matTooltip]="'Select a video quality index'" [matTooltipPosition]="'after'">
+                <b>Set Video Quality</b>
+              </span>
+              <div *ngIf="playerService.videoQualities; else inactiveQualitySlider">
+                <mat-slider #slider min="1" max="{{ playerService.videoQualities.length }}" step="1" tickInterval="1"
+                            thumbLabel (change)="selectVideoQuality(slider)"></mat-slider>
+                <div class="sliderLabels">
+                  <span>1</span>
+                  <span><b>{{ playerService.videoQualities.length }}</b></span>
+                </div>
+              </div>
+              <ng-template #inactiveQualitySlider>
+                <div>
+                  <mat-slider disabled [matTooltip]="'Please load a video first'" [matTooltipPosition]="'after'">
+                  </mat-slider>
+                  <div class="sliderLabels">
+                    <span>1</span>
+                    <span>n</span>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Loop -->
+            <div class="singleSetting">
+              <mat-slide-toggle [(ngModel)]="loopSelected" [labelPosition]="'after'">
+                <b>Loop</b><a [matTooltip]="'Loop media once playback has completed'"
+                       [matTooltipPosition]="'after'">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a>
+              </mat-slide-toggle>
+            </div>
+
+            <!-- AutoPlay -->
+            <div class="singleSetting">
+              <mat-slide-toggle [(ngModel)]="autoPlaySelected" [labelPosition]="'after'" (change)="applyAutoPlay()">
+                <b>Auto-Play</b><a [matTooltip]="'Automatic starup of the media once it is loaded'"
+                            [matTooltipPosition]="'after'">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a>
+              </mat-slide-toggle>
+            </div>
+          </div>
+          <!-- PLAYBACK END -->
+
+          <!-- DRM (hardcoded) -->
+          <div *ngIf="group[0] === 'DRM SYSTEM'">
+            <div class="singleSetting">
+              <mat-slide-toggle #drmToggleElement [(ngModel)]="drmSelected"
+                                [labelPosition]="'after'" (change)="drmToggle(drmToggleElement); updateMasonry()">
+                <b>Add DRM Key System</b><a [matTooltip]="'Add a DRM Key System. Use this option to add or change protection' +
+                  ' data. Applying a new dataset will trigger a player reload. Turning off will trigger a reload' +
+                  ' without any protection data applied.'"
+                                     [matTooltipPosition]="'after'">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a>
+              </mat-slide-toggle>
+              <mat-slide-toggle #priorityToggleElement [(ngModel)]="prioritiesEnabled"
+                                [disabled]="!drmToggleElement.checked" [labelPosition]="'after'" 
+                                (change)="updateMasonry()">
+                <b>Allow Priority Selection</b><a [matTooltip]="'Enable selecting the priority with which key systems are selected.' +
+                  'Turning this option off will trigger a player reload without priorities applied. Does not remove selected DRMs.'"
+                                     [matTooltipPosition]="'after'">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a>
+              </mat-slide-toggle>
+              <!--DRM Input Form-->
+              <form #drmForm="ngForm" class="container mt-3">
+                  <!--Set DRM to active only if it is expanded-->
+                  <mat-expansion-panel class="set-content"  *ngIf="drmToggleElement.checked"
+                                      [expanded]="this.drmHandler.drmPlayready.isActive" 
+                                      (afterExpand)="this.drmHandler.drmPlayready.isActive = true; updateMasonry()"
+                                      (afterCollapse)="this.drmHandler.drmPlayready.isActive = false; updateMasonry()">
+                    <mat-expansion-panel-header>
+                      <h2>PlayReady</h2>
+                    </mat-expansion-panel-header>
+                    <div>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmPlayready.drmKeySystem" name="drmKeySystemPlayready"
+                      matTooltip="Modify the Drm System String; Default is com.microsoft.playready"/>
+                    </div>
+                    <div>
+                      <label>License Server URL</label>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmPlayready.licenseServerUrl" name="licenseServerUrlPlayready"/>                
+                    </div>
+
+                    <div>
+                      <label>HTTP Timeout</label>
+                      <input type="number" [(ngModel)]="this.drmHandler.drmPlayready.httpTimeout" name="httpTimeoutPlayready"
+                             matTooltip="Define a timeout in milliseconds. Leave blank for no timeout. Default is 5000ms">
+                    </div>
+
+                    <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Audio Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmPlayready.audioRobustness" name="audioRobustnessPlayready" 
+                                    matTooltip="Select the desired Audio Robustness">
+                          <mat-option *ngFor="let audioRobustness of this.drmHandler.playreadyRobustnessSettings" [value]="audioRobustness.value">
+                            {{audioRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Video Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmPlayready.videoRobustness" name="videoRobustnessPlayready" 
+                                    matTooltip="Select the desired Video Robustness">
+                          <mat-option *ngFor="let videoRobustness of this.drmHandler.playreadyRobustnessSettings" [value]="videoRobustness.value">
+                            {{videoRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary" 
+                            (click)="this.drmHandler.openDialogue('playready')">
+                            Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" (click)="this.drmHandler.closeDialogue('playready')">&times;</button>
+                            <button class="btn btn-primary" (click)="this.drmHandler.addPopupInput('playready')">
+                              Add additional Header</button>
+
+                            <section *ngFor="let header of this.drmHandler.playreadyRequestHeaders; let i = index;">
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.key" name="playreadyKey_<b>{{header.id}}</b>">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.value" name="playreadyValue_<b>{{header.id}}</b>">
+                                <button class="btn btn-danger" (click)="this.drmHandler.removePopupInput('playready', i)">
+                                  Remove Header</button>
+
+                            </section>   
+                            
+                        </div>
+                    </div>
+
+                    <!--Activate slider if priorities are enabled-->
+                    <div *ngIf="priorityToggleElement.checked">
+                      <mat-slider #prioritySlider name="playReadyPrioritySlider" min="0" max="2" step="1" tickInterval="1" value="1"
+                        thumbLabel [(ngModel)]="this.drmHandler.drmPlayready.priority"></mat-slider>
+                        <div class="sliderLabels">
+                          <span>0</span>
+                          <span>2</span>
+                        </div>
+                    </div>
+                  </mat-expansion-panel>
+
+                  <mat-expansion-panel class="set-content"  *ngIf="drmToggleElement.checked" 
+                                        [expanded]="this.drmHandler.drmWidevine.isActive" 
+                                        (afterExpand)="this.drmHandler.drmWidevine.isActive = true; updateMasonry()"
+                                        (afterCollapse)="this.drmHandler.drmWidevine.isActive = false; updateMasonry()">
+                    <mat-expansion-panel-header>
+                      <h2>Widevine</h2>
+                    </mat-expansion-panel-header>
+
+                    <div>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmWidevine.drmKeySystem" name="drmKeySystemWidevine"
+                      matTooltip="Modify the Drm System String; Default is com.widevine.alpha"/>
+                    </div>
+
+                    <div>
+                      <label>License Server URL</label>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmWidevine.licenseServerUrl" name="licenseServerUrlWidevine"/>                 
+                    </div>
+
+                    <div>
+                      <label>HTTP Timeout</label>
+                      <input type="number" [(ngModel)]="this.drmHandler.drmWidevine.httpTimeout" name="httpTimeoutWidevine"
+                             matTooltip="Define a timeout in milliseconds. Leave blank for no timeout. Default is 5000ms">
+                    </div>
+
+                    <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Audio Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmWidevine.audioRobustness" name="audioRobustnessWidevine" 
+                                    matTooltip="Select the desired Audio Robustness">
+                          <mat-option *ngFor="let audioRobustness of this.drmHandler.audioRobustnessSettings" [value]="audioRobustness.value">
+                            {{audioRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Video Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmWidevine.videoRobustness" name="videoRobustnessWidevine" 
+                                    matTooltip="Select the desired Video Robustness">
+                          <mat-option *ngFor="let videoRobustness of this.drmHandler.videoRobustnessSettings" [value]="videoRobustness.value">
+                            {{videoRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary" 
+                            (click)="this.drmHandler.openDialogue('widevine')">
+                            Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" (click)="this.drmHandler.closeDialogue('widevine')">&times;</button>
+                            <button class="btn btn-primary" (click)="this.drmHandler.addPopupInput('widevine')">
+                              Add additional Header</button>
+
+                            <section *ngFor="let header of this.drmHandler.widevineRequestHeaders; let i = index;">
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.key" name="widevineKey_<b>{{header.id}}</b>">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.value" name="widevineValue_<b>{{header.id}}</b>">
+                                <button class="btn btn-danger" (click)="this.drmHandler.removePopupInput('widevine', i)">
+                                  Remove Header</button>
+
+                            </section>   
+                            
+                        </div>
+                    </div>
+
+                    <div *ngIf="priorityToggleElement.checked">
+                      <mat-slider #prioritySlider name="widevinePrioritySlider" min="0" max="2" step="1" tickInterval="1"
+                        thumbLabel [(ngModel)]="this.drmHandler.drmWidevine.isActive"></mat-slider>
+                        <div class="sliderLabels">
+                          <span>0</span>
+                          <span>2</span>
+                        </div>
+                    </div>
+                  </mat-expansion-panel>
+
+                  <mat-expansion-panel class="set-content"  *ngIf="drmToggleElement.checked" 
+                                      [expanded]="this.drmHandler.drmClearkey.isActive" 
+                                      (afterExpand)="this.drmHandler.drmClearkey.isActive = true; updateMasonry()"
+                                      (afterCollapse)="this.drmHandler.drmClearkey.isActive = false; updateMasonry()">
+                    <mat-expansion-panel-header>
+                      <h2>Clearkey</h2>
+                    </mat-expansion-panel-header>
+
+                    <div>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmClearkey.drmKeySystem" name="drmKeySystemClearkey"
+                      matTooltip="Modify the Drm System String; Default is org.w3.clearkey"/>
+                    </div>
+
+                    <div>
+                      <mat-radio-group name="clearkeyRadioGroup" aria-labelledby="Radio-Button-Settings"
+                                       class="set-radioButtonSettingGroup" [value]="false" [(ngModel)]="this.drmHandler.drmClearkey.inputMode">
+                        <label>Input Mode:</label>
+                        <mat-radio-button [value]="false">KID=KEY</mat-radio-button>
+                        <mat-radio-button [value]="true" >License Server</mat-radio-button>
+                      </mat-radio-group>                      
+                    </div>
+
+                    <div *ngIf="drmToggleElement.checked && (this.drmHandler.drmClearkey.inputMode === true)">
+                      <label>License Server URL</label>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmClearkey.licenseServerUrl" name="licenseServerUrlClearkey"/>                
+                    </div>
+
+                    <div *ngIf="drmToggleElement.checked && (this.drmHandler.drmClearkey.inputMode === false)">
+                      <label>KID</label>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmClearkey.kid" name="kidClearkey" value="defaultKidClearkey"/>
+                      <label>KEY</label>
+                      <input type="text" [(ngModel)]="this.drmHandler.drmClearkey.key" name="keyClearkey" value="defaultKeyClearkey"/>                  
+                    </div>
+
+                    <div>
+                      <label>HTTP Timeout</label>
+                      <input type="number" [(ngModel)]="this.drmHandler.drmClearkey.httpTimeout" name="httpTimeoutClearkey"
+                             matTooltip="Define a timeout in milliseconds. Leave blank for no timeout. Default is 5000ms">
+                    </div>
+
+                    <!-- <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Audio Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmClearkey.audioRobustness" name="audioRobustnessClearkey" 
+                                    matTooltip="Select the desired Audio Robustness">
+                          <mat-option *ngFor="let audioRobustness of this.drmHandler.audioRobustnessSettings" [value]="audioRobustness.value">
+                            {{audioRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <div>
+                      <mat-form-field>
+                        <mat-label class="mat-select-label">Video Robustness</mat-label>
+                        <mat-select [(ngModel)]="this.drmHandler.drmClearkey.videoRobustness" name="videoRobustnessClearkey" 
+                                    matTooltip="Select the desired Video Robustness">
+                          <mat-option *ngFor="let videoRobustness of this.drmHandler.videoRobustnessSettings" [value]="videoRobustness.value">
+                            {{videoRobustness.viewValue}}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div> -->
+
+                    <!-- Open KID=KEY Dialogue Window -->
+                    <button id="additionalClearkeysDialogueBtn" class="btn btn-primary" 
+                            (click)="this.drmHandler.openDialogue('additionalClearkeys')">
+                      Add additional clearkeys</button>
+
+                  <!-- KID=KEY Dialogue Window Content -->
+                  <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
+                      <div class="requestHeaderDialogueContent">
+                          <button class="close" (click)="this.drmHandler.closeDialogue('additionalClearkeys')">&times;</button>
+                          <button class="btn btn-primary" (click)="this.drmHandler.addPopupInput('additionalClearkeys')">
+                            Add KID=KEY pair</button>
+
+                          <section *ngFor="let clearkey of this.drmHandler.additionalClearkeyPairs; let i = index;">
+                              
+
+                              <label class="options-label">clearkeys KID: </label>
+                              <input type="text" class="form-control" placeholder="" 
+                                      [(ngModel)]="clearkey.kid" name="clearkeyKID_<b>{{clearkey.id}}</b>">
+                              <label class="options-label">clearkeys KEY: </label>
+                              <input type="text" class="form-control" placeholder="" 
+                                      [(ngModel)]="clearkey.key" name="clearkeyKEY_<b>{{clearkey.id}}</b>">
+                              <button class="btn btn-danger" (click)="this.drmHandler.removePopupInput('additionalClearkeys', i)">
+                                Remove KID=KEY pair</button>
+                          </section>   
+                          
+                      </div>
+                  </div>
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="clearkeyRequestHeaderDialogueBtn" class="btn btn-primary" 
+                            (click)="this.drmHandler.openDialogue('clearkey')">
+                            Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" (click)="this.drmHandler.closeDialogue('clearkey')">&times;</button>
+                            <button class="btn btn-primary" (click)="this.drmHandler.addPopupInput('clearkey')">
+                              Add additional Header</button>
+
+                            <section *ngFor="let header of this.drmHandler.clearkeyRequestHeaders; let i = index;">
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.key" name="clearkeyKey_<b>{{header.id}}</b>">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        [(ngModel)]="header.value" name="clearkeyValue_<b>{{header.id}}</b>">
+                                <button class="btn btn-danger" (click)="this.drmHandler.removePopupInput('clearkey', i)">
+                                  Remove Header</button>
+
+                            </section>   
+                            
+                        </div>
+                    </div>
+
+                    <div *ngIf="priorityToggleElement.checked">
+                      <mat-slider #prioritySlider name="clearkeyPrioritySlider" min="0" max="2" step="1" tickInterval="1" value="2"
+                        thumbLabel [(ngModel)]="this.drmHandler.drmClearkey.isActive"></mat-slider>
+                        <div class="sliderLabels">
+                          <span>0</span>
+                          <span>2</span>
+                        </div>
+                    </div>
+                  </mat-expansion-panel>
+              </form>
+            </div>
+          </div>
+          <!-- DRM END -->
+
+          <!-- Text Settings (hardcoded) -->
+          <div class="singleSetting" *ngIf="group[0] === 'INITIAL'">
+            <div class="fields">
+              <mat-form-field>
+                <mat-label>Text initial lang</mat-label>
+                <input #input [type]="'text'" matInput placeholder="Text initial lang, e.g. 'en'"
+                       (change)="updateMediaSettings('lang', input)">
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Text initial role</mat-label>
+                <input #input [type]="'text'" matInput placeholder="Text initial role, e.g. 'caption'"
+                       (change)="updateMediaSettings('role', input)">
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Audio initial lang</mat-label>
+                <input #input [type]="'text'" matInput placeholder="Audio initial lang, e.g. 'en'"
+                       (change)="updateMediaSettings('audio', input)">
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Video initial role</mat-label>
+                <input #input [type]="'text'" matInput placeholder="Video initial role, e.g. 'alternate'"
+                       (change)="updateMediaSettings('video', input)">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="singleSetting" *ngFor="let setting of group[1] | keyvalue:keepOrder">
+            <!-- Log Level (hardcoded) -->
+            <div *ngIf="isLogLevel(setting.key)" class="radio">
+              <label class="Radio-Button-Settings"><b>{{setting.key}}</b>:
+                <a [matTooltip]="getApiDescription(group[0], setting.key)" [matTooltipPosition]="'after'"
+                   href="http://cdn.dashjs.org/latest/jsdoc/module-Settings.html" target="_blank"
+                >
+                  <img class="set-info" alt="Info Icon with link to setting description"
+                       src="assets/images/question.png">
+                </a>
+              </label>
+              <mat-radio-group aria-labelledby="Radio-Button-Settings" class="set-radioButtonSettingGroup"
+                               [(ngModel)]="ngRadioBoxes['logLevel']">
+                <mat-radio-button *ngFor="let option of radioValues.logLevel | keyvalue" [value]="option.key"
+                                  (change)="updateLogLevel(option.key)">
+                  <b>{{option.key}}</b>
+                </mat-radio-button>
+              </mat-radio-group>
+            </div>
+
+            <!-- Average Calculation Mode (hardcoded) -->
+            <!-- TODO: Investigate why using a function that checks whether the passed value is in a list does not work for this -->
+            <div *ngIf="isDropdown(setting.key, 'Average Calculation Mode')" class="select">
+              <mat-form-field>
+                <mat-label class="mat-select-label"><b>{{setting.key}}</b></mat-label>
+                <mat-select [(ngModel)]="selectedAverageCalculationMode" name="averageCalculationMode" (selectionChange)="update(setting.value[1], selectedAverageCalculationMode)"
+                            [matTooltip]="getApiDescription(group[0], setting.key)">
+                  <mat-option *ngFor="let averageCalculationMode of averageCalculationModes" [value]="averageCalculationMode.value">
+                    {{averageCalculationMode.viewValue}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- Low Latency Download Time Calculation Mode -->
+            <div *ngIf="isDropdown(setting.key, 'Low Latency Download Time Calculation Mode')" class="select">
+              <mat-form-field>
+                <mat-label class="mat-select-label"><b>{{setting.key}}</b></mat-label>
+                <mat-select [(ngModel)]="selectedLowLatencyDownloadTimeCalculationMode" name="lowLatencyDownloadTimeCalculationMode" (selectionChange)="update(setting.value[1], selectedLowLatencyDownloadTimeCalculationMode)"
+                            [matTooltip]="getApiDescription(group[0], setting.key)">
+                  <mat-option *ngFor="let lowLatencyDownloadTimeCalculationMode of lowLatencyDownloadTimeCalculationModes" [value]="lowLatencyDownloadTimeCalculationMode.value">
+                    {{lowLatencyDownloadTimeCalculationMode.viewValue}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- Selectionmode for Initial Track -->
+            <div *ngIf="isDropdown(setting.key, 'Selection Mode For Initial Track')" class="select">
+              <mat-form-field>
+                <mat-label class="mat-select-label"><b>{{setting.key}}</b></mat-label>
+                <mat-select [(ngModel)]="selectedModeForInitialTrack" name="selectionModeForInitialTrack" (selectionChange)="update(setting.value[1], selectedModeForInitialTrack)"
+                            [matTooltip]="getApiDescription(group[0], setting.key)">
+                  <mat-option *ngFor="let selectionModeForInitialTrack of selectionModeForInitialTracks" [value]="selectionModeForInitialTrack.value">
+                    {{selectionModeForInitialTrack.viewValue}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- Checkboxes / Slide Toggle Ungrouped -->
+            <div *ngIf="isBool(setting.value[0])">
+              <mat-slide-toggle #slideToggle [checked]="setting.value[0]" [labelPosition]="'after'"
+                                (change)="update(setting.value[1], slideToggle.checked)">
+                <b>{{setting.key}}</b><a [matTooltip]="getApiDescription(group[0], setting.key)"
+                                  [matTooltipPosition]="'after'"
+                                  href="http://cdn.dashjs.org/latest/jsdoc/module-Settings.html"
+                                  target="_blank">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a>
+              </mat-slide-toggle>
+            </div>
+
+            <!-- Input Fields Ungrouped -->
+            <div *ngIf="isInput(setting.value[0]) && !isLogLevel(setting.key) 
+                        && !isDropdown(setting.key, 'Average Calculation Mode')
+                        && !isDropdown(setting.key, 'Low Latency Download Time Calculation Mode')
+                        && !isDropdown(setting.key, 'Selection Mode For Initial Track')" class="fields">
+              <mat-form-field [matTooltip]="getApiDescription(group[0], setting.key)">
+                <mat-label class="mat-input-label"><b>{{setting.key}}</b></mat-label>
+                <input #inputField [type]="isNumber(setting.value[0]) ? 'number' : 'text'" [name]="setting.key"
+                       [value]="setting.value[0]" matInput placeholder="placeholder"
+                       (change)="update(setting.value[1], inputField.value)">
+              </mat-form-field>
+            </div>
+
+            <!-- Radio Button Group -->
+            <!-- <div *ngIf="isRadio(setting.key) && !isLogLevel(setting.key) 
+                        && !isDropdown(setting.key, 'Average Calculation Mode')" class="radio">
+              <label class="Radio-Button-Settings"><b>{{setting.key}}</b>:<a
+                [matTooltip]="getApiDescription(group[0], setting.key)"
+                [matTooltipPosition]="'after'"
+                href="http://cdn.dashjs.org/latest/jsdoc/module-Settings.html"
+                target="_blank">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a></label>
+              <div *ngFor="let cons of radioValues | keyvalue">
+                <div *ngIf="compareRadioKey(cons.key, setting.key)">
+                  <mat-radio-group aria-labelledby="Radio-Button-Settings" class="set-radioButtonSettingGroup" [(ngModel)]="ngRadioBoxes[cons.key]">
+                    <mat-radio-button *ngFor="let option of setting.value[0]" [value]="option.key">
+                      <b>{{deriveNameStringFromCamelCase(option.key)}}</b>
+                    </mat-radio-button>
+                  </mat-radio-group>
+                  <mat-radio-group aria-labelledby="Radio-Button-Settings" class="set-radioButtonSettingGroup"
+                                   [(ngModel)]="ngRadioBoxes[cons.key]">
+                    <mat-radio-button *ngFor="let option of cons.value | keyvalue" [value]="option.key"
+                                      (change)="update(setting.value[1], $any(option.key))">
+                      <b>{{formatRadioOption(option.key)}}</b>
+                    </mat-radio-button>
+                  </mat-radio-group>
+                </div>
+              </div>
+            </div> -->
+
+            <!-- Grouped Settings -->
+            <div *ngIf="isGroup(setting.value[1])" class="singleSubSetting my-3">
+              <h3><b>{{setting.key}}</b><a [matTooltip]="getApiDescription(group[0], setting.key)"
+                                    [matTooltipPosition]="'after'"
+                                    href="http://cdn.dashjs.org/latest/jsdoc/module-Settings.html"
+                                    target="_blank">
+                <img class="set-info" alt="Info Icon with link to setting description" src="assets/images/question.png">
+              </a></h3>
+              <div *ngFor="let sub of setting.value">
+                <div class="groupSubSetting" *ngFor="let subset of sub | keyvalue">
+
+                  <!-- Live Catchup Mode (hardcoded) -->
+                  <div *ngIf="isDropdown(subset.key, 'mode')">
+                    <mat-form-field>
+                      <mat-label class="mat-select-label"><b>{{deriveNameStringFromCamelCase(subset.key)}}</b></mat-label>
+                      <mat-select [(ngModel)]="selectedLiveCatchupMode" name="liveCatchupMode" (selectionChange)="update(subset.value[1], selectedLiveCatchupMode)"
+                                  [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                        <mat-option *ngFor="let liveCatchupMode of liveCatchupModes" [value]="liveCatchupMode.value">
+                          {{liveCatchupMode.viewValue}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <!-- Trackswitch Mode (hardcoded) -->
+                  <div *ngIf="isDropdown(subset.key, 'audio', setting.key, 'Track Switch Mode')">
+                    <mat-form-field>
+                      <mat-label class="mat-select-label"><b>{{deriveNameStringFromCamelCase(subset.key)}}</b></mat-label>
+                      <mat-select [(ngModel)]="selectedTrackSwitchModeAudio" name="trackSwitchModeAudio" (selectionChange)="update(subset.value[1], selectedTrackSwitchModeAudio)"
+                                  [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                        <mat-option *ngFor="let trackSwitchModeAudio of trackSwitchModesAudio" [value]="trackSwitchModeAudio.value">
+                          {{trackSwitchModeAudio.viewValue}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <div *ngIf="isDropdown(subset.key, 'video', setting.key, 'Track Switch Mode')">
+                    <mat-form-field>
+                      <mat-label class="mat-select-label"><b>{{deriveNameStringFromCamelCase(subset.key)}}</b></mat-label>
+                      <mat-select [(ngModel)]="selectedTrackSwitchModeVideo" name="trackSwitchModeVideo" (selectionChange)="update(subset.value[1], selectedTrackSwitchModeVideo)"
+                                  [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                        <mat-option *ngFor="let trackSwitchModeVideo of trackSwitchModesVideo" [value]="trackSwitchModeVideo.value">
+                          {{trackSwitchModeVideo.viewValue}}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <!-- Input Field -->
+                  <div *ngIf="isInput(subset.value[0]) && !isDropdown(subset.key, 'mode') 
+                        && !isDropdown(subset.key, 'audio', setting.key, 'Track Switch Mode') 
+                        && !isDropdown(subset.key, 'video', setting.key, 'Track Switch Mode')">
+                    <mat-form-field>
+                      <mat-label>
+                        <span *ngIf="deriveNameStringFromCamelCase(subset.key) !== 'Enabled'" [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                          <b>{{deriveNameStringFromCamelCase(subset.key)}}</b>
+                        </span>
+                      </mat-label>
+                      <input #inputField [type]="isNumber(setting.value[0]) ? 'number' : 'text'"
+                             [name]="subset.key" matInput placeholder="placeholder" [value]="subset.value[0]"
+                             (change)="update(subset.value[1], inputField.value)">
+                    </mat-form-field>
+                  </div>
+
+                  <!-- Checkboxes / Slide Toggle -->
+                  <mat-slide-toggle #slideToggle *ngIf="isBool(subset.value[0]) && !isDropdown(subset.key, 'mode')"
+                                    [checked]="subset.value[0]" [labelPosition]="'after'"
+                                    (change)="update(subset.value[1], slideToggle.checked)">
+                    <span *ngIf="deriveNameStringFromCamelCase(subset.key) !== 'Enabled'" [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                      <b>{{deriveNameStringFromCamelCase(subset.key)}}</b>
+                    </span>
+                  </mat-slide-toggle>
+
+                  <!-- Radio Buttons -->
+                  <!-- <div *ngIf="isRadio(subset.value[0]) && !isLogLevel(setting.key) && !isAverageCalculationMode(setting.key) && !isDropdown(subset.key, 'mode')" class="radio">
+                    <label class="Radio-Button-Settings">
+                      <span *ngIf="deriveNameStringFromCamelCase(subset.key) !== 'Enabled'" [matTooltip]="getApiDescription(group[0], deriveNameStringFromCamelCase(subset.key))">
+                        <b>{{deriveNameStringFromCamelCase(subset.key)}}</b>:
+                      </span>
+                    </label>
+                    <div *ngFor="let cons of radioValues | keyvalue">
+                      <div *ngIf="compareRadioKey(cons.key, setting.key)">
+                        <div *ngFor="let subConst of cons.value | keyvalue">
+                          <div *ngIf="compareRadioKey(subConst.key, subset.key)">
+                            <mat-radio-group aria-labelledby="Radio-Button-Settings" class="set-radioButtonSettingGroup"
+                                             [(ngModel)]="ngRadioBoxes[cons.key + '.' + subConst.key]">
+                              <mat-radio-button *ngFor="let option of $any(subConst.value) | keyvalue"
+                                                [value]="option.key" [checked]="option.value"
+                                                (change)="update(subset.value[1], $any(option.key))">
+                                <b>{{option.key}}</b>
+                              </mat-radio-button>
+                            </mat-radio-group>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </ngx-masonry>
+</div>
+<mat-divider></mat-divider>

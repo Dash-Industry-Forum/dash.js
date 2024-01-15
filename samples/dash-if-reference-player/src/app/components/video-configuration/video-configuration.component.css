@@ -1,0 +1,118 @@
+/**
+* No view encapsulation
+*/
+#vc-comp .vc-collapse {
+  margin: 0;
+  max-height: 30rem;
+  overflow-y: auto;
+  scrollbar-color: var(--color-scrollbars) transparent;
+  scrollbar-width: thin;
+}
+
+#vc-comp .vc-collapse::-webkit-scrollbar {
+  width: 6px;
+}
+
+#vc-comp .vc-collapse::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#vc-comp .vc-collapse::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbars);
+  border: 2px solid transparent;
+  border-radius: 3px;
+}
+
+#vc-comp .vc-collapse::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbars-hover);
+}
+
+#vc-comp .vc-collapse > li {
+  list-style-type: none;
+}
+
+#vc-comp .vc-collapse .badge {
+  color: #f2f2f2;
+  vertical-align: text-bottom;
+}
+
+#vc-comp .vc-dropdown-item {
+  cursor: pointer;
+  padding: 0.25rem 3px;
+  border: 1px solid transparent;
+  color: var(--color-font-main);
+}
+
+#vc-comp .vc-custom-active {
+  background-color: #e9ecef;
+}
+
+#vc-comp .vc-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+#vc-comp .vc-dropdown-menu>div {
+  -webkit-box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2),0px 1px 1px 0px rgba(0, 0, 0, 0.14),0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2),0px 1px 1px 0px rgba(0, 0, 0, 0.14),0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+}
+
+#vc-comp .vc-dropdown-menu .mat-expansion-panel {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  padding-left: 4px;
+}
+
+#vc-comp .vc-dropdown-menu .mat-expansion-panel-body {
+  padding-bottom: 6px;
+}
+
+#vc-comp .vc-dropdown-menu .mat-expansion-panel-header {
+  height: 2rem;
+  font-size: 0.9rem;
+}
+
+#vc-comp .vc-dropdown-menu .mat-expansion-panel-header-title {
+  color: var(--color-font-dark);
+}
+
+#vc-comp .form-control {
+  font-size: 15px;
+  height: auto;
+}
+
+#vc-comp .btn-group {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+#settingMenuContainer {
+  overflow: hidden;
+}
+
+#settingsBtn, #settingMenu {
+  width: 100%;
+}
+
+#streamGroupMenuBtn {
+  position: absolute;
+  top: -3px;
+  left: 9px;
+  z-index: 1001;
+}
+
+@media (min-width: 768px) {
+  #vc-comp .btn-group {
+    margin: unset;
+  }
+
+  #vc-comp .input-group, .vc-dropdown-menu {
+    padding-right: unset !important;
+  }
+}

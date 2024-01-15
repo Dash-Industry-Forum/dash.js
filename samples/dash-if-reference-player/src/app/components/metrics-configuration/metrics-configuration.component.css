@@ -1,0 +1,79 @@
+table {
+  width: 100%;
+}
+
+thead th>h2 {
+  font-size: 14px !important;
+  line-height: 14px !important;
+  font-weight: 600;
+  color: #505050;
+  padding-bottom: 0.4rem !important;
+  margin-bottom: 0 !important;
+}
+
+@media (min-width: 992px) and (max-width: 1440px) {
+  thead th>h2 {
+    transform: rotate(-45deg);
+    position: relative;
+    left: 0.5rem;
+    padding-bottom: 0.6rem !important;
+  }
+}
+
+tbody tr:hover {
+  background-color: #f2f2f2;
+}
+
+th, td:not(.d-sm-flex) {
+  text-align: center;
+}
+
+td {
+  padding: 0 0.2rem;
+}
+
+.cBox {
+  padding-top: 0.6rem;
+}
+
+.tName {
+  padding: 0.6rem 0 !important;
+}
+
+.tMetrics {
+  text-align: right;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  padding-right: 2px;
+}
+
+.mContainer {
+  height: 1rem;
+}
+
+.mValue, .badge {
+  display: inline-block;
+  padding: 0.25em 0.4em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  position: relative;
+  top: -0.4em;
+}
+
+.mValue {
+  vertical-align: bottom;
+  padding: 0.16em 0.4em !important;
+}
+
+@media (min-width: 1440px) {
+  .tMetrics {
+    font-size: 0.8rem;
+  }
+  .mContainer {
+    height: 1.1rem;
+  }
+  .mValue, .badge {
+    top: -0.25em;
+  }
+}

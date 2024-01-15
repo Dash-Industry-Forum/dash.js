@@ -1,0 +1,160 @@
+<mat-card>
+  <h1>Stream Metrics</h1>
+  <table>
+    <thead>
+    <tr><th><h2>Video</h2></th><th><h2>Audio</h2></th><th></th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let option of options">
+        <!-- Checkboxes //-->
+        <td class="cBox" *ngIf="option.type === 'stream'; else tNotStream" colspan="2">
+          <mat-checkbox #checkbox
+                        (change)="optionChange(checkbox, option.key, 'stream')"
+                        ></mat-checkbox>
+        </td>
+        <ng-template #tNotStream>
+          <td class="cBox">
+            <mat-checkbox #checkbox
+                          *ngIf="option.type === 'v' || option.type === 'av'"
+                          (change)="optionChange(checkbox, option.key, 'video')"
+                          ></mat-checkbox>
+          </td>
+          <td class="cBox">
+            <mat-checkbox #checkbox
+                          *ngIf="option.type === 'a' || option.type === 'av'"
+                          (change)="optionChange(checkbox, option.key, 'audio')"
+                          ></mat-checkbox>
+          </td>
+        </ng-template>
+        <!-- Name //-->
+        <td class="d-flex justify-content-between align-items-center">
+          <div class="tName" matTooltip="{{ option.description }}" matTooltipPosition="above">
+            {{ option.name }}
+          </div>
+        <!-- Live Metrics //-->
+          <div class="tMetrics">
+            <!-- If plain number //-->
+            <div *ngIf="metrics[option.key] && ( _isNumber(metrics[option.key].stream)
+                                                || _isNumber(metrics[option.key].video)
+                                                || _isNumber(metrics[option.key].audio) ); else mIsObject">
+              <div *ngIf="_isNumber(metrics[option.key].stream)" class="mContainer">
+                <span class="mValue">
+                  <span *ngIf="_isNaN(metrics[option.key].stream); then NaNBlock else elseBlock"></span>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                  <ng-template #elseBlock>{{ metrics[option.key].stream | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span></ng-template>
+                  
+                </span>
+                <span class="badge badge-secondary">Stream</span>
+              </div>
+              <div *ngIf="_isNumber(metrics[option.key].video)" class="mContainer">
+                <span class="mValue">
+                  <span *ngIf="_isNaN(metrics[option.key].video); then NaNBlock else elseBlock"></span>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                  <ng-template #elseBlock>{{ metrics[option.key].video | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span></ng-template>
+                </span>
+                <span class="badge badge-primary">Video</span>
+              </div>
+              <div *ngIf="_isNumber(metrics[option.key].audio)" class="mContainer">
+                <span class="mValue">
+                  <span *ngIf="_isNaN(metrics[option.key].audio); then NaNBlock else elseBlock" class="mValue"></span>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                  <ng-template #elseBlock>{{ metrics[option.key].audio | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span></ng-template>
+                </span>
+                <span class="badge badge-secondary">Audio</span>
+              </div>
+            </div>
+
+            <!-- If object... -->
+            <ng-template #mIsObject>
+              <!-- ..with props current and max -->
+              <div *ngIf="metrics[option.key] && metrics[option.key].video
+                && _isNumber(metrics[option.key].video['current']) && _isNumber(metrics[option.key].video['max'])"
+                class="mContainer">
+                <span class="mValue" matTooltip="current | max" matTooltipPosition="above">
+                  <span *ngIf="_isNaN(metrics[option.key].video['current']); then NaNBlock else elseBlockCurrent"></span>
+                  <ng-template #elseBlockCurrent>
+                    {{ metrics[option.key].video['current'] | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  |
+                  <span *ngIf="_isNaN(metrics[option.key].video['max']); then NaNBlock else elseBlockMax"></span>
+                  <ng-template #elseBlockMax>
+                    {{ metrics[option.key].video['max'] | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                </span>
+                <span class="badge badge-primary">Video</span>
+              </div>
+              <div *ngIf="metrics[option.key] && metrics[option.key].audio
+                && _isNumber(metrics[option.key].audio['current']) && _isNumber(metrics[option.key].audio['max'])"
+                class="mContainer">
+                <span class="mValue" matTooltip="current | max" matTooltipPosition="above">
+                  <span *ngIf="_isNaN(metrics[option.key].audio['current']); then NaNBlock
+                    else elseBlockCurrent"></span>
+                  <ng-template #elseBlockCurrent>
+                    {{ metrics[option.key].audio['current'] | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  |
+                  <span *ngIf="_isNaN(metrics[option.key].audio['max']); then NaNBlock else elseBlockMax"></span>
+                  <ng-template #elseBlockMax>
+                    {{ metrics[option.key].audio['max'] | number:'1.0-2' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                </span>
+                <span class="badge badge-secondary">Audio</span>
+              </div>
+
+              <!-- ..with props min, avg and max -->
+              <div *ngIf="metrics[option.key] && metrics[option.key].video
+                && _isNumber(metrics[option.key].video['min']) && _isNumber(metrics[option.key].video['avg'])
+                && _isNumber(metrics[option.key].video['max'])"
+                class="mContainer">
+                <span class="mValue" matTooltip="min | avg | max" matTooltipPosition="above">
+                  <span *ngIf="_isNaN(metrics[option.key].video['min']); then NaNBlock else elseBlockMin"></span>
+                  <ng-template #elseBlockMin>
+                    {{ metrics[option.key].video['min'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  |
+                  <span *ngIf="_isNaN(metrics[option.key].video['avg']); then NaNBlock else elseBlockAvg"></span>
+                  <ng-template #elseBlockAvg>
+                    {{ metrics[option.key].video['avg'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  |
+                  <span *ngIf="_isNaN(metrics[option.key].video['max']); then NaNBlock else elseBlockMax"></span>
+                  <ng-template #elseBlockMax>
+                    {{ metrics[option.key].video['max'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                  </ng-template>
+                  <ng-template #NaNBlock>NaN</ng-template>
+                </span>
+                <span class="badge badge-primary">Video</span>
+                </div>
+                <div *ngIf="metrics[option.key] && metrics[option.key].audio
+                  && _isNumber(metrics[option.key].audio['min']) && _isNumber(metrics[option.key].audio['avg'])
+                  && _isNumber(metrics[option.key].audio['max'])"
+                  class="mContainer">
+                  <span class="mValue" matTooltip="min | avg | max" matTooltipPosition="above">
+                    <span *ngIf="_isNaN(metrics[option.key].audio['min']); then NaNBlock else elseBlockMin"></span>
+                    <ng-template #elseBlockMin>
+                      {{ metrics[option.key].audio['min'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                    </ng-template>
+                    |
+                    <span *ngIf="_isNaN(metrics[option.key].audio['avg']); then NaNBlock else elseBlockAvg"></span>
+                    <ng-template #elseBlockAvg>
+                      {{ metrics[option.key].audio['avg'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                    </ng-template>
+                    |
+                    <span *ngIf="_isNaN(metrics[option.key].audio['max']); then NaNBlock else elseBlockMax"></span>
+                    <ng-template #elseBlockMax>
+                      {{ metrics[option.key].audio['max'] | number:'1.0-0' }} <span *ngIf="option.unit"> {{option.unit}}</span>
+                    </ng-template>
+                    <ng-template #NaNBlock>NaN</ng-template>
+                  </span>
+                  <span class="badge badge-secondary">Audio</span>
+                </div>
+            </ng-template>
+
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</mat-card>

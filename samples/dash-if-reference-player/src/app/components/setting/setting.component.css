@@ -1,0 +1,238 @@
+/**
+* No view encapsulation
+*/
+#set-accordionPanel {
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+}
+
+#set-accordionPanel:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+#set-accordionPanel ngx-masonry {
+  transition: height 0.2s linear;
+}
+
+#set-accordionPanel .set-masonry-item {
+  padding: 5px;
+  transition: top 0.4s ease-in-out, left 0.4s ease-in-out;
+}
+
+#set-accordionPanel .set-masonry-item:hover {
+  z-index: 999 !important;
+}
+
+#set-accordionPanel h2 {
+  margin: auto 0 !important;
+}
+
+#set-accordionPanel h3 {
+  margin: -5px 0 3px !important;
+  padding: 0 !important;
+  border-bottom: 1px solid gray;
+}
+
+#set-accordionPanel .btn {
+  line-height: 1.1;
+  margin-top: 8px;
+  font-size: 95% !important;
+}
+
+#set-accordionPanel mat-accordion .mat-expansion-panel {
+  border-radius: 0 !important;
+}
+
+#set-accordionPanel .mat-expansion-panel-body {
+  margin-right: 2px;
+  margin-bottom: 2px;
+  max-height: 30rem;
+  overflow-y: auto;
+  scrollbar-color: var(--color-scrollbars) transparent;
+  scrollbar-width: thin;
+}
+
+#set-accordionPanel .mat-expansion-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+#set-accordionPanel .mat-expansion-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#set-accordionPanel .mat-expansion-panel-body::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbars);
+  border: 2px solid transparent;
+  border-radius: 3px;
+}
+
+#set-accordionPanel .mat-expansion-panel-body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbars-hover);
+}
+
+#set-accordionPanel .mat-slide-toggle {
+  height: unset !important;
+}
+
+#set-accordionPanel .mat-slide-toggle-content {
+  white-space: normal !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+  line-height: 1rem !important;
+  position: relative;
+}
+
+#set-accordionPanel .mat-slider-horizontal {
+  width: 100%;
+  height: 24px;
+}
+#set-accordionPanel .mat-slider-wrapper {
+  top: 10px;
+}
+#set-accordionPanel .mat-slider-thumb-label {
+  width: 20px;
+  height: 20px;
+  top: -32px;
+  right: -10px;
+}
+
+#set-accordionPanel .mat-slide-toggle-thumb-container {
+  top: -2px;
+}
+
+#set-accordionPanel .mat-slide-toggle-bar {
+  width: 23px;
+  height: 10px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+#set-accordionPanel .mat-slide-toggle.mat-checked .mat-slide-toggle-thumb-container {
+  transform: translate3d(9px, 0, 0);
+}
+
+#set-accordionPanel .mat-slide-toggle-thumb-container, #set-accordionPanel .mat-slide-toggle-thumb, #set-accordionPanel .mat-radio-container, #set-accordionPanel .mat-radio-outer-circle, #set-accordionPanel .mat-radio-inner-circle {
+  width: 14px;
+  height: 14px;
+}
+#set-accordionPanel .mat-slide-toggle-bar .mat-ripple-element, #set-accordionPanel .mat-radio-ripple .mat-ripple-element {
+  transform: scale(0.80) !important;
+}
+
+#set-accordionPanel .sliderLabels {
+  margin-top: -7px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+  padding: 0 5px;
+}
+
+#set-accordionPanel .mat-form-field {
+  width: 100%;
+  margin: 4px 0 -6px;
+  padding: 0;
+}
+
+#set-accordionPanel .singleSubSetting {
+  margin: 5px 0 !important;
+}
+
+#set-accordionPanel .singleSubSetting label {
+  display: flex;
+  color: var(--color-font-main);
+}
+
+#set-accordionPanel .singleSetting {
+  padding: 6px 4px 4px !important;
+  margin: 4px 0 !important;
+  font-size: 80%;
+  background-color: #f4f4f4;
+  border-radius: 4px;
+}
+
+#set-accordionPanel .singleSetting label {
+  margin-bottom: 2px !important;
+}
+
+#set-accordionPanel .set-content {
+  width: 100%;
+  background-color: white;
+  -webkit-box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#set-accordionPanel .set-radioButtonSettingGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+#set-accordionPanel .set-info {
+  margin-left: 4px;
+  height: 8px;
+  width: auto;
+  vertical-align: text-top;
+}
+
+.clearkeyRadio{
+  padding-bottom: 5px;
+}
+
+@media (min-width: 1440px) {
+  #set-accordionPanel .mat-slide-toggle-content {
+    top: 1px;
+  }
+  #set-accordionPanel .singleSetting {
+    font-size: 90%;
+  }
+}
+
+/********************************************************
+DRM Header Dialogue
+*********************************************************/
+
+.requestHeaderDialogue {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  text-align: center;
+  background-color: rgb(255, 255, 255);
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.requestHeaderDialogueContent {
+  display: inline-block;
+  background-color: #fefefe;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+  color: rgb(255, 0, 0);
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.copy-btn {
+  margin-left: 5px;
+  margin-bottom: 5px;
+}

@@ -1,0 +1,33 @@
+<div class="container my-3">
+  <mat-card class="contributors">
+    <h1>Contributors</h1>
+    <div class="contributorContainer">
+      <div class="contributorItem" *ngFor="let item of contributors">
+        <a href="{{ item['link'] }}" target="_blank">
+          <img *ngIf="item['logo']; else noLogo" src="{{ item['logo'] }}" alt="{{ item['name'] }}">
+          <ng-template #noLogo>
+            <span>{{ item['name'] }}</span>
+          </ng-template>
+        </a>
+      </div>
+    </div>
+  </mat-card>
+</div>
+
+<div class="spacer"></div>
+<!-- <footer>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <div>
+        <div>
+          project advanced web technologies
+        </div>
+        <div>
+          Berit Frech, Johannes Beyer, Anna Mockenhaupt
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer> -->

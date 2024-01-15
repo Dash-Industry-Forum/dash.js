@@ -1,0 +1,15 @@
+
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Protection Data (JSON)</mat-label>
+    <textarea [(ngModel)]="data" (keyup)="checkSyntax()"
+              matInput matTextareaAutosize placeholder="Protection Data (JSON)"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-divider></mat-divider>
+<mat-dialog-actions align="end">
+  <span *ngIf="!isValidJSON" class="jsonInvalid">Entered string is no valid JSON</span>
+  <span *ngIf="isValidJSON" class="jsonValid">Entered string is valid JSON</span>
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="data" [disabled]="!isValidJSON">Apply</button>
+</mat-dialog-actions>

@@ -1,0 +1,45 @@
+
+.mat-dialog-content {
+  margin: 0;
+  scrollbar-color: var(--color-scrollbars) transparent;
+  scrollbar-width: thin;
+}
+
+.mat-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mat-dialog-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mat-dialog-content::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbars);
+  border: 2px solid transparent;
+  border-radius: 3px;
+}
+
+.mat-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbars-hover);
+}
+
+.mat-form-field {
+  width: 100%;
+  height: 100%;
+}
+
+textarea {
+  overflow-y: hidden;
+}
+
+.jsonInvalid {
+  margin-right: 10px;
+  font-weight: 500;
+  color: darkred;
+}
+
+.jsonValid {
+  margin-right: 10px;
+  font-weight: 500;
+  color: darkgreen;
+}

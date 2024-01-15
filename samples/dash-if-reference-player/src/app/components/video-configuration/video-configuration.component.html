@@ -1,0 +1,115 @@
+<div id="vc-comp" class="container">
+  <form class="row form-inline">
+    <div class="col-12 form-group p-0">
+      <div class="col-md-8 col-12 input-group flex-grow-1">
+        <div class="input-group-prepend dropdown-container">
+          <button (click)="streamsDropdownToggle()" class="defaultBtn btn btn-primary dropdown-toggle"
+                  aria-haspopup="true" aria-expanded="false">
+            Stream
+          </button>
+          <div [@streamsDropdownShowHide]="streamsDropdownIsVisible"
+                          class="vc-dropdown-menu col-md-12">
+            <div>
+
+              <button id="streamGroupMenuBtn" mat-icon-button [matMenuTriggerFor]="menu"
+                      aria-label="Toggle Group of Streams">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button class="matMenuItemSmall" mat-menu-item
+                        [disabled]="streamsGroupBy === 'type'" (click)="streamsGroupBy = 'type'">
+                  <span>Group by Stream Type</span>
+                </button>
+                <button class="matMenuItemSmall" mat-menu-item
+                        [disabled]="streamsGroupBy === 'provider'" (click)="streamsGroupBy = 'provider'">
+                  <span>Group by Provider</span>
+                </button>
+              </mat-menu>
+
+              <!-- Streams by type -->
+              <mat-accordion displayMode=flat *ngIf="streamsGroupBy === 'type'">
+                <mat-expansion-panel #expPanel *ngFor="let item of srcItems"
+                                     (opened)="setStreamsDropdownExpandedPanel(expPanel)">
+
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ item['name'] }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <ul class="vc-collapse">
+                    <li *ngFor="let subItem of item['submenu']">
+                      <a (click)="selectStream(subItem)"
+                         class="dropdown-item vc-dropdown-item text-truncate"
+                         [class.vc-custom-active]="srcItemSelectedJSON === JSON.stringify(subItem)">
+                        <span class="badge badge-pill"
+                              [style.background-color]="getBadgeColor(srcProvider[subItem['provider']]['badgeColor'])"
+                              matTooltip="{{ srcProvider[subItem['provider']]['name'] }}"
+                              matTooltipPosition="above">
+                          {{ srcProvider[subItem['provider']]['acronym'] }}
+                        </span>
+                        <span matTooltip="{{ subItem['name'] }}" matTooltipPosition="above" matTooltipShowDelay="1000">
+                          {{ subItem['name'] }}
+                        </span>
+                      </a>
+                    </li>
+                  </ul>
+                </mat-expansion-panel>
+              </mat-accordion>
+
+              <!-- Streams by provider -->
+              <mat-accordion displayMode=flat *ngIf="streamsGroupBy === 'provider'">
+                <mat-expansion-panel #expPanel *ngFor="let item of srcProvider | keyvalue"
+                                     (opened)="setStreamsDropdownExpandedPanel(expPanel)">
+
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ item.value['name'] }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <ul class="vc-collapse">
+                    <ng-template ngFor let-streamTypes [ngForOf]="srcItems">
+                      <ng-template ngFor let-subItem [ngForOf]="streamTypes['submenu']">
+
+                        <li *ngIf="subItem['provider'] === item.key">
+                          <a (click)="selectStream(subItem)"
+                             class="dropdown-item vc-dropdown-item text-truncate"
+                             [class.vc-custom-active]="srcItemSelectedJSON === JSON.stringify(subItem)">
+                            <span matTooltip="{{ streamTypes['name'] }} --- {{ subItem['name'] }}"
+                                  matTooltipPosition="above">
+                              {{ subItem['name'] }}
+                            </span>
+                          </a>
+
+                        </li>
+                      </ng-template>
+                    </ng-template>
+                  </ul>
+                </mat-expansion-panel>
+              </mat-accordion>
+              <!-- End streams -->
+
+            </div>
+          </div>
+        </div>
+        <input [(ngModel)]="inputVarStreamAddr" (change)="changeStreamUrl()" name="inputNameStreamAddr" id="inputNameStreamAddr" type="text"
+               class="form-control" placeholder="Stream Address" aria-label="Stream Address">
+      </div>
+      <div class="col-md-2 col-12 btn-group">
+        <button (click)="playerService.stop()" class="defaultBtn btn btn-secondary">Stop</button>
+        <button (click)="load()" class="defaultBtn btn btn-primary">Load</button>
+      </div>
+      <div class="col-md-2 col-12">
+        <button (click)="settingsSectionToggle()" id="settingsBtn" class="defaultBtn btn btn-primary">Settings</button>
+      </div>
+    </div>
+  </form>
+
+  <div [@settingsShowHide]="settingsSectionIsVisible" id="settingMenuContainer" class="row">
+    <div id="settingMenu">
+      <app-setting [groups]="groups" [settingGroup]="orderGroups">
+      </app-setting>
+    </div>
+  </div>
+</div>

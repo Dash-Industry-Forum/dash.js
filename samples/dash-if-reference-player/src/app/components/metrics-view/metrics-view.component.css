@@ -1,0 +1,11 @@
+
+mat-card {
+  height: 290px;
+  padding: 10px 10px 0;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.inactive {
+  opacity: 0.4;
+}
