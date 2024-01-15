@@ -36,7 +36,7 @@
             "scripts": [
               "./node_modules/apexcharts/dist/apexcharts.min.js",
               "src/assets/akamai/controlbar/ControlBar.js",
-              "./lib/dash.all.min.js"
+              "../../dist/dash.all.min.js"
             ]
           },
           "configurations": {
