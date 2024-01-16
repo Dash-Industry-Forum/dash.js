@@ -273,10 +273,10 @@ function CmcdModel() {
         const {includeInRequests} = getCmcdParametersFromManifest();
         const includeInRequestsArray = includeInRequests.split(' ');
 
-        if(includeInRequestsArray.find(include => include === '*')){
+        if(!includeInRequests || includeInRequestsArray.find(include => include === '*')){
             return true;
         }
-
+ 
         const filtersTypes = {
             'segment': HTTPRequest.INIT_SEGMENT_TYPE | 
                 HTTPRequest.INDEX_SEGMENT_TYPE | 
