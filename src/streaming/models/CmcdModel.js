@@ -278,11 +278,7 @@ function CmcdModel() {
         }
  
         const filtersTypes = {
-            'segment': HTTPRequest.INIT_SEGMENT_TYPE | 
-                HTTPRequest.INDEX_SEGMENT_TYPE | 
-                HTTPRequest.MEDIA_SEGMENT_TYPE | 
-                HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE | 
-                HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE ,
+            'segment': HTTPRequest.INIT_SEGMENT_TYPE | HTTPRequest.MEDIA_SEGMENT_TYPE,
             'xlink': HTTPRequest.XLINK_EXPANSION_TYPE,
             'mpd': HTTPRequest.MPD_TYPE,
             'steering': HTTPRequest.CONTENT_STEERING_TYPE,
