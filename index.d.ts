@@ -2498,8 +2498,8 @@ declare namespace dashjs {
 
         schemeIdUri: string;
         value: string;
-        dvb_reportingUrl: string;
-        dvb_probability: number;
+        dvbReportingUrl: string;
+        dvbProbability: number;
     }
 
     /**
