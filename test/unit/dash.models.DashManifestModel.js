@@ -1390,5 +1390,276 @@ describe('DashManifestModel', function () {
             })
 
         })
+
+        describe('get CMCD data from Manifest', () => {
+
+            it('should return client data reporting from manifest', () => {
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+
+                            },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+
+                                },
+                                'serviceLocations': 'cdn-a cdn-b',
+                                'adaptationSets': 'test1 test2'
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const clientDataReporting = data[0].clientDataReporting;
+                expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+            })
+
+            it('should return cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                            },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+                                    'contentID':contentID,
+                                    'includeInRequests':includeInRequests,
+                                    'keys':keys,
+                                    'mode':mode,
+                                    'sessionID':sessionID,
+                                },
+                                'serviceLocations': 'cdn-a cdn-b',
+                                'adaptationSets': 'test1 test2'
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
+                expect(CMCDParameters.contentID).to.be.equal(contentID);
+                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
+                expect(CMCDParameters.keys).to.be.equal(keys);
+                expect(CMCDParameters.mode).to.be.equal(mode);
+                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+            })
+
+            it('should return client data reporting and cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const serviceLocations = 'cdn-a cdn-b';
+                const adaptationSets = 'test1 test2';
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                            },
+                            'serviceLocations': serviceLocations,
+                            'adaptationSets': adaptationSets
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+                                    'contentID':contentID,
+                                    'includeInRequests':includeInRequests,
+                                    'keys':keys,
+                                    'mode':mode,
+                                    'sessionID':sessionID,
+                                },
+                                'serviceLocations': serviceLocations,
+                                'adaptationSets': adaptationSets
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
+                const clientDataReporting = data[0].clientDataReporting;
+                expect(clientDataReporting.serviceLocations).to.be.equal(serviceLocations);
+                expect(clientDataReporting.adaptationSets).to.be.equal(adaptationSets);
+                expect(CMCDParameters.contentID).to.be.equal(contentID);
+                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
+                expect(CMCDParameters.keys).to.be.equal(keys);
+                expect(CMCDParameters.mode).to.be.equal(mode);
+                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+            })
+
+        })
     });
 });
+
+
+// {
+//     "ContentSteering": {
+//         "__children": [
+//             {
+//                 "#text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//             }
+//         ],
+//         "defaultServiceLocation": "cdn-a",
+//         "queryBeforeStart": "true",
+//         "__text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//     },
+//     "ContentSteering_asArray": [
+//         {
+//             "__children": [
+//                 {
+//                     "#text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//                 }
+//             ],
+//             "defaultServiceLocation": "cdn-a",
+//             "queryBeforeStart": "true",
+//             "__text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//         }
+//     ],
+//     "ClientDataReporting": {
+//         "CMCDParameters": {
+//             "__children": [],
+//             "mode": "query",
+//             "includeInRequests": "*",
+//             "keys": "br sid cid",
+//             "contentID": 1,
+//             "sessionID": 2
+//         },
+//         "CMCDParameters_asArray": [
+//             {
+//                 "__children": [],
+//                 "mode": "query",
+//                 "includeInRequests": "*",
+//                 "keys": "br sid cid",
+//                 "contentID": 1,
+//                 "sessionID": 2
+//             }
+//         ],
+//         "__children": [
+//             {
+//                 "CMCDParameters": {
+//                     "__children": [],
+//                     "mode": "query",
+//                     "includeInRequests": "*",
+//                     "keys": "br sid cid",
+//                     "contentID": 1,
+//                     "sessionID": 2
+//                 }
+//             }
+//         ],
+//         "serviceLocations": "cdn-a",
+//         "adaptationSets": "1 2"
+//     },
+//     "ClientDataReporting_asArray": [
+//         {
+//             "CMCDParameters": {
+//                 "__children": [],
+//                 "mode": "query",
+//                 "includeInRequests": "*",
+//                 "keys": "br sid cid",
+//                 "contentID": 1,
+//                 "sessionID": 2
+//             },
+//             "CMCDParameters_asArray": [
+//                 {
+//                     "__children": [],
+//                     "mode": "query",
+//                     "includeInRequests": "*",
+//                     "keys": "br sid cid",
+//                     "contentID": 1,
+//                     "sessionID": 2
+//                 }
+//             ],
+//             "__children": [
+//                 {
+//                     "CMCDParameters": {
+//                         "__children": [],
+//                         "mode": "query",
+//                         "includeInRequests": "*",
+//                         "keys": "br sid cid",
+//                         "contentID": 1,
+//                         "sessionID": 2
+//                     }
+//                 }
+//             ],
+//             "serviceLocations": "cdn-a",
+//             "adaptationSets": "1 2"
+//         }
+//     ],
+//     "__children": [
+//         {
+//             "ContentSteering": {
+//                 "__children": [
+//                     {
+//                         "#text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//                     }
+//                 ],
+//                 "defaultServiceLocation": "cdn-a",
+//                 "queryBeforeStart": "true",
+//                 "__text": "https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0="
+//             }
+//         },
+//         {
+//             "ClientDataReporting": {
+//                 "CMCDParameters": {
+//                     "__children": [],
+//                     "mode": "query",
+//                     "includeInRequests": "*",
+//                     "keys": "br sid cid",
+//                     "contentID": 1,
+//                     "sessionID": 2
+//                 },
+//                 "CMCDParameters_asArray": [
+//                     {
+//                         "__children": [],
+//                         "mode": "query",
+//                         "includeInRequests": "*",
+//                         "keys": "br sid cid",
+//                         "contentID": 1,
+//                         "sessionID": 2
+//                     }
+//                 ],
+//                 "__children": [
+//                     {
+//                         "CMCDParameters": {
+//                             "__children": [],
+//                             "mode": "query",
+//                             "includeInRequests": "*",
+//                             "keys": "br sid cid",
+//                             "contentID": 1,
+//                             "sessionID": 2
+//                         }
+//                     }
+//                 ],
+//                 "serviceLocations": "cdn-a",
+//                 "adaptationSets": "1 2"
+//             }
+//         }
+//     ]
+// }
