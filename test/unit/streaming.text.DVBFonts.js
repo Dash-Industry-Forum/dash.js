@@ -27,9 +27,9 @@ const mockSupplementalDownloadTracks = [
         index: 5,
         supplementalPropertiesAsArray: [
             {
-                dvb_fontFamily: 'UnitTestFont',
-                dvb_mimeType: 'application/font-sfnt',
-                dvb_url: 'https://notARealUrl/fonts/unitTestFont.otf',
+                dvbFontFamily: 'UnitTestFont',
+                dvbMimeType: 'application/font-sfnt',
+                dvbUrl: 'https://notARealUrl/fonts/unitTestFont.otf',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
                 value: '1'  
@@ -46,9 +46,9 @@ const mockEssentialDownloadTracks = [
         supplementalPropertiesAsArray: [],
         essentialPropertiesAsArray: [
             {
-                dvb_fontFamily: 'UnitTestFont2',
-                dvb_mimeType: 'application/font-woff',
-                dvb_url: 'https://notARealUrl/fonts/unitTestFont2.woff',
+                dvbFontFamily: 'UnitTestFont2',
+                dvbMimeType: 'application/font-woff',
+                dvbUrl: 'https://notARealUrl/fonts/unitTestFont2.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
                 value: '1'  
@@ -63,9 +63,9 @@ const mockBothDownloadTracks = [
         index: 5,
         supplementalPropertiesAsArray: [
             {
-                dvb_fontFamily: 'UnitTestFont',
-                dvb_mimeType: 'application/font-woff',
-                dvb_url: 'https://notARealUrl/fonts/unitTestFont.woff',
+                dvbFontFamily: 'UnitTestFont',
+                dvbMimeType: 'application/font-woff',
+                dvbUrl: 'https://notARealUrl/fonts/unitTestFont.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
                 value: '1'  
@@ -73,9 +73,9 @@ const mockBothDownloadTracks = [
         ],
         essentialPropertiesAsArray: [
             {
-                dvb_fontFamily: 'UnitTestFont2',
-                dvb_mimeType: 'application/font-woff',
-                dvb_url: 'https://notARealUrl/fonts/unitTestFont2.woff',
+                dvbFontFamily: 'UnitTestFont2',
+                dvbMimeType: 'application/font-woff',
+                dvbUrl: 'https://notARealUrl/fonts/unitTestFont2.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
                 value: '1'  

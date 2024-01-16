@@ -599,9 +599,9 @@ declare namespace dashjs {
         schemeIdUri: string;
         value: string;
         id: string;
-        dvb_url?: string;
-        dvb_mimeType?: string;
-        dvb_fontFamily?: string;
+        dvbUrl?: string;
+        dvbMimeType?: string;
+        dvbFontFamily?: string;
     }
 
     export class ContentSteeringResponse {

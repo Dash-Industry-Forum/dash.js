@@ -92,17 +92,17 @@ function DVBFonts(config) {
 
         dvbFontProps.forEach(attrs => {
             if (_hasMandatoryDvbFontAttributes(attrs)) {
-                let resolvedUrl = _resolveFontUrl(attrs.dvb_url, asBaseUrl);
+                let resolvedUrl = _resolveFontUrl(attrs.dvbUrl, asBaseUrl);
                 dvbFontList.push({
-                    fontFamily: attrs.dvb_fontFamily,
+                    fontFamily: attrs.dvbFontFamily,
                     url: resolvedUrl,
-                    mimeType: attrs.dvb_mimeType,
+                    mimeType: attrs.dvbMimeType,
                     trackId: track.id,
                     streamId,
                     isEssential,
                     status: FONT_DOWNLOAD_STATUS.UNLOADED,
                     fontFace: new FontFace(
-                        attrs.dvb_fontFamily,
+                        attrs.dvbFontFamily,
                         `url(${resolvedUrl})`, 
                         { display: 'swap' }
                     )
@@ -131,9 +131,9 @@ function DVBFonts(config) {
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
         return !!((attrs.value && attrs.value === '1') &&
-        (attrs.dvb_url && attrs.dvb_url.length > 0) &&
-        (attrs.dvb_fontFamily && attrs.dvb_fontFamily.length > 0) &&
-        (attrs.dvb_mimeType && (attrs.dvb_mimeType === Constants.OFF_MIMETYPE || attrs.dvb_mimeType === Constants.WOFF_MIMETYPE)));
+        (attrs.dvbUrl && attrs.dvbUrl.length > 0) &&
+        (attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0) &&
+        (attrs.dvbMimeType && (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
     }
 
     /**

@@ -48,13 +48,13 @@ class DescriptorType {
             this.id = data.id ? data.id : null;
             // Only add the DVB extensions if they exist
             if (data[DashConstants.DVB_URL]) {
-                this.dvb_url = data[DashConstants.DVB_URL]
+                this.dvbUrl = data[DashConstants.DVB_URL]
             }
             if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvb_mimeType = data[DashConstants.DVB_MIMETYPE]
+                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
             }
             if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvb_fontFamily = data[DashConstants.DVB_FONTFAMILY]
+                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
             }
         }
         return this;

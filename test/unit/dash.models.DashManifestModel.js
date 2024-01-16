@@ -171,7 +171,7 @@ describe('DashManifestModel', function () {
             expect(suppPropArray[0].value).equals('testVal');
             expect(suppPropArray[1].schemeIdUri).equals('test.scheme1');
             expect(suppPropArray[1].value).equals('test2Val');
-            expect(suppPropArray[1].dvb_mimeType).equals('extVal');
+            expect(suppPropArray[1].dvbMimeType).equals('extVal');
             expect(suppPropArray[2].schemeIdUri).equals('test.scheme2');
             expect(suppPropArray[2].value).to.be.null;
         });
@@ -231,7 +231,7 @@ describe('DashManifestModel', function () {
             expect(essPropArray[0].value).equals('testVal');
             expect(essPropArray[1].schemeIdUri).equals('test.scheme1');
             expect(essPropArray[1].value).equals('test2Val');
-            expect(essPropArray[1].dvb_mimeType).equals('extVal');
+            expect(essPropArray[1].dvbMimeType).equals('extVal');
             expect(essPropArray[2].schemeIdUri).equals('test.scheme2');
             expect(essPropArray[2].value).to.be.null;
         });

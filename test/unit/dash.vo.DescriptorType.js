@@ -37,7 +37,7 @@ describe('DescriptorType', () => {
             schemeIdUri: 'testScheme',
             value: '1',
             id: null,
-            dvb_url: 'testUrl'
+            dvbUrl: 'testUrl'
         });
     });
 
