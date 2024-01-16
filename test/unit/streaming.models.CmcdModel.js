@@ -8,6 +8,7 @@ import DashConstants from '../../src/dash/constants/DashConstants';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -25,6 +26,7 @@ describe('CmcdModel', function () {
     let abrControllerMock = new AbrControllerMock();
     let dashMetricsMock = new DashMetricsMock();
     let playbackControllerMock = new PlaybackControllerMock();
+    let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
 
     let settings = Settings(context).getInstance();
 
@@ -46,7 +48,8 @@ describe('CmcdModel', function () {
             cmcdModel.setConfig({
                 abrController: abrControllerMock,
                 dashMetrics: dashMetricsMock,
-                playbackController: playbackControllerMock
+                playbackController: playbackControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
             });
         });
 
