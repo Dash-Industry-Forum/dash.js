@@ -411,10 +411,7 @@ function TextTracks(config) {
 
     function _renderCaption(cue) {
         if (captionContainer) {
-
-            while (captionContainer.firstChild) {
-                captionContainer.removeChild(captionContainer.firstChild);
-            }
+            clearCaptionContainer.call(this);
             
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
@@ -442,11 +439,7 @@ function TextTracks(config) {
         }
         // Check previous cue endTime with current cue startTime
         // (should we consider an epsilon margin? for example to get around rounding issues)
-        if (prevCue.endTime < cue.startTime) {
-            return false;
-        }
-
-        return true;
+        return prevCue.endTime >= cue.startTime;
     }
 
     // Check if cue content is identical. If it is, extend the previous cue.
