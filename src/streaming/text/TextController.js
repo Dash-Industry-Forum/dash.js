@@ -347,15 +347,17 @@ function TextController(config) {
         textTracks[streamId].disableManualTracks();
 
         let currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
 
         // Don't change disabled tracks - dvb font download for essential property failed or not complete
-        if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+        if (currentNativeTrackInfo && (currentNativeTrackInfo.mode !== Constants.TEXT_DISABLED)) {
             textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
         }
         
         textTracks[streamId].setCurrentTrackIdx(idx);
 
         currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
 
         if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
             textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
