@@ -394,8 +394,8 @@ declare namespace dashjs {
     export interface BaseURL {
         url: string;
         serviceLocation: string;
-        dvb_priority: number;
-        dvb_weight: number;
+        dvbPriority: number;
+        dvbWeight: number;
         availabilityTimeOffset: number;
         availabilityTimeComplete: boolean;
         queryParams: object;
