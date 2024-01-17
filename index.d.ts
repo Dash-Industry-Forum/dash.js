@@ -1846,7 +1846,7 @@ declare namespace dashjs {
 
     export interface PlaybackErrorEvent extends Event {
         type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
+        error: MediaError;
     }
 
     export interface PlaybackPausedEvent extends Event {
@@ -4461,5 +4461,4 @@ declare namespace dashjs {
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
     export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 }
-
 
