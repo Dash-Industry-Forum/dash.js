@@ -831,7 +831,7 @@ describe('CmcdModel', function () {
                     let parameters = cmcdModel.getQueryParameter(request);
                     expect(parameters).to.have.property('key');
                     expect(parameters.key).to.equal('CMCD');
-                    expect(parameters.value).to.not.equal(null);// check esto
+                    expect(parameters.value).to.not.equal(null);
                 });
     
                 describe('getQueryParameter() return cmcd data if includeInRequests is correctly type', () => {
