@@ -42,8 +42,8 @@ class BaseURL {
         this.serviceLocation = serviceLocation || url || '';
 
         // DVB extensions
-        this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
-        this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
+        this.dvbPriority = priority || DEFAULT_DVB_PRIORITY;
+        this.dvbWeight = weight || DEFAULT_DVB_WEIGHT;
 
         this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
