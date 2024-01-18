@@ -436,6 +436,269 @@ describe('CmcdModel', function () {
                 expect(headers[STATUS_HEADER_NAME]).to.be.empty;
                 expect(headers[SESSION_HEADER_NAME]).to.be.empty;
             });
+
+            describe.only('getHeadersParameters() return CMCD data correctly', () => {
+
+                it('getHeadersParameters() sould not return cmcd data if isCmcdEnabled() is false', function () {
+                    const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                    const MEDIA_TYPE = 'video';
+    
+                    let request = {
+                        type: REQUEST_TYPE,
+                        mediaType: MEDIA_TYPE
+                    };
+    
+                    settings.update({
+                        streaming: {
+                            cmcd: {
+                                enabled: false
+                            }
+                        }
+                    });
+    
+                    let headers = cmcdModel.getHeaderParameters(request);
+                    expect(headers).to.equals(null);
+                });
+    
+                it('getHeadersParameters() sould return cmcd data if isCmcdEnabled() is true ', function () {
+                    const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                    const MEDIA_TYPE = 'video';
+    
+                    let request = {
+                        type: REQUEST_TYPE,
+                        mediaType: MEDIA_TYPE
+                    };
+    
+                    let headers = cmcdModel.getHeaderParameters(request);
+                    expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                    expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                    expect(headers).to.have.property(STATUS_HEADER_NAME);
+                    expect(headers).to.have.property(SESSION_HEADER_NAME);
+                });
+    
+                describe('getHeadersParameters() return cmcd data if includeInRequests is correctly type', () => {
+                    
+                    it('should return cmcd data if includeInRequests is empty', function () {
+                        const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const MEDIA_TYPE = 'video';
+                    
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                    
+                        let serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': { }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+                    
+                    it('should return cmcd data if includeInRequests is any type', function () {
+                        const MEDIA_SEMGENT_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const INIT_SEMGENT_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const XLINK_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const MDP_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const STEERING_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        let serviceDescriptionSettings,request,headers;
+                        
+                        serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': '*'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                        request = {
+                            type: MEDIA_SEMGENT_REQUEST_TYPE,
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+    
+                        request = {
+                            type: INIT_SEMGENT_REQUEST_TYPE,
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+    
+                        request = {
+                            type: XLINK_REQUEST_TYPE,
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+    
+                        request = {
+                            type: MDP_REQUEST_TYPE,
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+    
+                        request = {
+                            type: STEERING_REQUEST_TYPE,
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+
+                    });
+    
+                    it('should not return cmcd data if type does not included in includeInRequests', function () {
+                        const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                    
+                        let request = {
+                            type: REQUEST_TYPE,
+                        };
+                    
+                        let serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': 'mdp xlink steering'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.equals(null);
+                    });
+    
+                    it('should return cmcd data if includeInRequests include segment and type is segment', function () {
+                        const INIT_SGMENT_REQUEST_TYPE = HTTPRequest.INIT_SEGMENT_TYPE;
+                        const MEDIA_SEGMENT_REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const MEDIA_TYPE = 'video';
+                        let serviceDescriptionSettings,request,headers;
+                    
+                        serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': 'segment'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                        
+                        request = {
+                            type: MEDIA_SEGMENT_REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+    
+                        request = {
+                            type: INIT_SGMENT_REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                        headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+    
+                    it('should return cmcd data if includeInRequests include mdp and type is mdp', function () {
+                        const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
+                        const MEDIA_TYPE = 'video';
+                    
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                    
+                        let serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': 'mpd'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+    
+                    it('should return cmcd data if includeInRequests include xlink and type is xlink', function () {
+                        const REQUEST_TYPE = HTTPRequest.XLINK_EXPANSION_TYPE;
+                        const MEDIA_TYPE = 'video';
+                    
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                    
+                        let serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': 'xlink'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+    
+                    it('should return cmcd data if includeInRequests include steering and type is steering', function () {
+                        const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
+                        const MEDIA_TYPE = 'video';
+                    
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                    
+                        let serviceDescriptionSettings = {
+                            clientDataReporting: {
+                                'CMCDParameters': {
+                                    'includeInRequests': 'steering'
+                                }
+                            }
+                        }
+                        serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
+                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
+                        expect(headers).to.have.property(STATUS_HEADER_NAME);
+                        expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+
+                });
+
+            })
         })
 
         describe('getQueryParameter()', () => {
