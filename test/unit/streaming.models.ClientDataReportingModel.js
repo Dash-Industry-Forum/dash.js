@@ -33,4 +33,68 @@ describe('ClientDataReportingModel', function () {
             expect(result).to.equal(true);
         });
     });
+
+    describe('if configured', function () {
+
+        it('serviceLocationIncluded returns true when service location is included in the filter', function () {
+            const serviceLocation='test-b';
+
+            const serviceDescriptionSettings = {
+                clientDataReporting: {
+                    serviceLocationsArray: ['test-a', 'test-b']
+                }
+            }
+            serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+
+            const result = clientDataReportingModel.serviceLocationIncluded(serviceLocation);
+
+            expect(result).to.equal(true);
+        });
+
+        it('adaptationSetIncluded returns true when adaptation set is included in the filter', function () {
+            const adaptationId='test-a';
+
+            const serviceDescriptionSettings = {
+                clientDataReporting: {
+                    adaptationSetsArray: ['test-a', 'test-b']
+                }
+            }
+            serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+
+            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+
+            expect(result).to.equal(true);
+        });
+
+
+        it('serviceLocationIncluded returns false when service location is not included in the filter', function () {
+            const serviceLocation='test-c';
+
+            const serviceDescriptionSettings = {
+                clientDataReporting: {
+                    serviceLocationsArray: ['test-a', 'test-b']
+                }
+            }
+            serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+
+            const result = clientDataReportingModel.serviceLocationIncluded(serviceLocation);
+
+            expect(result).to.equal(false);
+        });
+
+        it('adaptationSetIncluded returns false when adaptation set is not included in the filter', function () {
+            const adaptationId='test-c';
+
+            const serviceDescriptionSettings = {
+                clientDataReporting: {
+                    adaptationSetsArray: ['test-a', 'test-b']
+                }
+            }
+            serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+
+            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+
+            expect(result).to.equal(false);
+        });
+    });
 });
