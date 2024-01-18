@@ -1304,7 +1304,85 @@ describe('CmcdModel', function () {
     
                 })
             });
-        })
+        });
+
+        describe('applyCMCDParameters', () => {
+            it('should ignore service description cmcd configuration when applyCMCDParameters is false', function () {
+                const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
+                const MEDIA_TYPE = 'video';
+                    
+                let request = {
+                    type: REQUEST_TYPE,
+                    mediaType: MEDIA_TYPE
+                };
+
+                settings.update({
+                    streaming: {
+                        applyCMCDParameters: false,
+                        cmcd: {
+                            enabled: true,
+                            cid: 'test-cid',
+                            sid: 'test-sid',
+                            enabledKeys: ['cid'],
+                        }
+                    }
+                });
+
+                let serviceDescriptionSettings = {
+                    clientDataReporting: {
+                        CMCDParameters: {
+                            version: '1',
+                            keys: 'sid',
+                            sessionID: 'sid-123',
+                        }
+                    }
+                };
+                serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                let parameters = cmcdModel.getQueryParameter(request);
+                expect(parameters).to.have.property('key');
+                expect(parameters.key).to.equal('CMCD');
+                expect(parameters.value).to.equal('cid="test-cid"');
+            });
+
+            it('should ignore player cmcd configuration when applyCMCDParameters is true', function () {
+                const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
+                const MEDIA_TYPE = 'video';
+                    
+                let request = {
+                    type: REQUEST_TYPE,
+                    mediaType: MEDIA_TYPE
+                };
+
+                settings.update({
+                    streaming: {
+                        applyCMCDParameters: true,
+                        cmcd: {
+                            enabled: true,
+                            cid: 'test-cid',
+                            sid: 'test-sid',
+                            enabledKeys: ['cid'],
+                        }
+                    }
+                });
+
+                let serviceDescriptionSettings = {
+                    clientDataReporting: {
+                        CMCDParameters: {
+                            version: '1',
+                            keys: 'sid',
+                            sessionID: 'sid-123',
+                        }
+                    }
+                };
+                serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
+                    
+                let parameters = cmcdModel.getQueryParameter(request);
+                expect(parameters).to.have.property('key');
+                expect(parameters.key).to.equal('CMCD');
+                expect(parameters.value).to.equal('sid="sid-123"');
+            });
+        });
 
     });
 
