@@ -394,8 +394,8 @@ declare namespace dashjs {
     export interface BaseURL {
         url: string;
         serviceLocation: string;
-        dvb_priority: number;
-        dvb_weight: number;
+        dvbPriority: number;
+        dvbWeight: number;
         availabilityTimeOffset: number;
         availabilityTimeComplete: boolean;
         queryParams: object;
@@ -1848,7 +1848,7 @@ declare namespace dashjs {
 
     export interface PlaybackErrorEvent extends Event {
         type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
+        error: MediaError;
     }
 
     export interface PlaybackPausedEvent extends Event {
@@ -2513,8 +2513,8 @@ declare namespace dashjs {
 
         schemeIdUri: string;
         value: string;
-        dvb_reportingUrl: string;
-        dvb_probability: number;
+        dvbReportingUrl: string;
+        dvbProbability: number;
     }
 
     /**
@@ -4476,5 +4476,4 @@ declare namespace dashjs {
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
     export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 }
-
 
