@@ -41,6 +41,7 @@ describe('CmcdModel', function () {
         cmcdModel = null;
         abrControllerMock.setTopBitrateInfo(null);
         settings.reset();
+        serviceDescriptionControllerMock.reset();
     });
 
     describe('if configured', function () {

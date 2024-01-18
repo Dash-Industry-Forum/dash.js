@@ -41,6 +41,21 @@ class ServiceDescriptionControllerMock {
     }
 
     reset() {
+        this.serviceDescriptionSettings = {
+            liveDelay: NaN,
+            liveCatchup: {
+                maxDrift: NaN,
+                playbackRate: {
+                    min: NaN,
+                    max: NaN
+                },
+            },
+            minBitrate: {},
+            maxBitrate: {},
+            initialBitrate: {},
+            contentSteering: null,
+            clientDataReporting: null,
+        };
     }
 
     setConfig() {

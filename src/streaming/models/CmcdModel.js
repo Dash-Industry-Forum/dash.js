@@ -239,17 +239,17 @@ function CmcdModel() {
     }
 
     function getCmcdParametersFromManifest() {
-        const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
         let cmcdParameters = {};
-
-        if (
-            settings.get().streaming.applyCMCDParameters &&
-            serviceDescription.clientDataReporting && 
-            serviceDescription.clientDataReporting.CMCDParameters
-        ) {
-            cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+        if (serviceDescriptionController) {
+            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+            if (
+                settings.get().streaming.applyCMCDParameters &&
+                serviceDescription.clientDataReporting && 
+                serviceDescription.clientDataReporting.CMCDParameters
+            ) {
+                cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+            }
         }
-
         return cmcdParameters;
     }
 
