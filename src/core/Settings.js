@@ -142,7 +142,7 @@ import Events from './events/Events';
  *            },
  *            text: {
  *                defaultEnabled: true,
- *                fireCueEvents: false,
+ *                dispatchForManualRendering: false,
  *                extendSegmentedCues: true,
  *                imsc: {
  *                    displayForcedOnlyMode: false,
@@ -483,7 +483,7 @@ import Events from './events/Events';
  * @typedef {Object} Text
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
- * @property {boolean} [fireCueEvents=false]
+ * @property {boolean} [dispatchForManualRendering=false]
  * Enable/disable subtitle rendering by default.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
@@ -954,7 +954,7 @@ function Settings() {
             },
             text: {
                 defaultEnabled: true,
-                fireCueEvents: false,
+                dispatchForManualRendering: false,
                 extendSegmentedCues: true,
                 imsc: {
                     displayForcedOnlyMode: false,

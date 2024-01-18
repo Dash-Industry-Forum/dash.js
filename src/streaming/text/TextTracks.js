@@ -138,7 +138,7 @@ function TextTracks(config) {
     }
 
     function createTracks() {
-        const fireCueEvents = settings.get().streaming.text.fireCueEvents;
+        const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
 
         //Sort in same order as in manifest
         textTrackQueue.sort(function (a, b) {
@@ -196,7 +196,7 @@ function TextTracks(config) {
             for (let idx = 0; idx < textTrackQueue.length; idx++) {
                 const videoTextTrack = getTrackByIdx(idx);
                 if (videoTextTrack) {
-                    videoTextTrack.mode = (idx === defaultIndex && !fireCueEvents) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    videoTextTrack.mode = (idx === defaultIndex && !dispatchForManualRendering) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                     videoTextTrack.manualMode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
             }
@@ -413,16 +413,16 @@ function TextTracks(config) {
     function _renderCaption(cue) {
         if (captionContainer) {
             clearCaptionContainer.call(this);
-            
+
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
-            
+
             previousISDState = renderHTML(
-                cue.isd, 
-                finalCue, 
-                function (src) { return _resolveImageSrc(cue, src) }, 
-                captionContainer.clientHeight, 
-                captionContainer.clientWidth, 
+                cue.isd,
+                finalCue,
+                function (src) { return _resolveImageSrc(cue, src) },
+                captionContainer.clientHeight,
+                captionContainer.clientWidth,
                 settings.get().streaming.text.imsc.displayForcedOnlyMode,
                 function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
                 previousISDState,
@@ -435,7 +435,7 @@ function TextTracks(config) {
 
     // Check that a new cue immediately follows the previous cue
     function _areCuesAdjacent(cue, prevCue) {
-        if (!prevCue) { 
+        if (!prevCue) {
             return false;
         }
         // Check previous cue endTime with current cue startTime
@@ -451,7 +451,7 @@ function TextTracks(config) {
 
         if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
             return false;
-        } 
+        }
 
         prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
         return true;
@@ -484,7 +484,7 @@ function TextTracks(config) {
      */
     function addCaptions(trackIdx, timeOffset, captionData) {
         const track = getTrackByIdx(trackIdx);
-        const fireCueEvents = settings.get().streaming.text.fireCueEvents;
+        const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
 
         if (!track) {
             return;
@@ -502,7 +502,7 @@ function TextTracks(config) {
             track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
-                if (fireCueEvents) {
+                if (dispatchForManualRendering) {
                     cue = _handleCaptionEvents(currentItem, timeOffset, track, item);
                 } else if (currentItem.type === 'html' && captionContainer) {
                     cue = _handleHtmlCaption(currentItem, timeOffset, track)
@@ -528,7 +528,7 @@ function TextTracks(config) {
 
                             if (_areCuesAdjacent(cue, prevCue)) {
                                 if (!_extendLastCue(cue, prevCue)) {
-                                    /* If cues are adjacent but not identical (extended), let the render function of the next cue 
+                                    /* If cues are adjacent but not identical (extended), let the render function of the next cue
                                      * clear up the captionsContainer so removal and appending are instantaneous.
                                      * Only do this for imsc subs (where isd is present).
                                      */
@@ -623,7 +623,7 @@ function TextTracks(config) {
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
                 if (this.isd) {
-                    if (hasRequestAnimationFrame) { 
+                    if (hasRequestAnimationFrame) {
                         // Ensure everything in _renderCaption happens in the same frame
                         requestAnimationFrame(() => _renderCaption(this));
                     } else {
@@ -707,7 +707,7 @@ function TextTracks(config) {
                     // Render cue if target time is reached and not in active state
                     if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
                         cue.isActive = true;
-                        if (settings.get().streaming.text.fireCueEvents) {
+                        if (settings.get().streaming.text.dispatchForManualRendering) {
                             _fireCueEnter(cue);
                         } else {
                             // eslint-disable-next-line no-undef
@@ -715,7 +715,7 @@ function TextTracks(config) {
                         }
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
-                        if (settings.get().streaming.text.fireCueEvents) {
+                        if (settings.get().streaming.text.dispatchForManualRendering) {
                             _fireCueExit(cue);
                         } else {
                             _removeManualCue(cue);
@@ -750,7 +750,7 @@ function TextTracks(config) {
                 cues.forEach((cue) => {
                     if (cue.isActive) {
                         cue.isActive = false;
-                        if (settings.get().streaming.text.fireCueEvents) {
+                        if (settings.get().streaming.text.dispatchForManualRendering) {
                             _fireCueExit(cue);
                         } else if (vttCaptionContainer) {
                             const divs = vttCaptionContainer.childNodes;
