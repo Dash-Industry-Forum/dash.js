@@ -437,12 +437,12 @@ describe('CmcdModel', function () {
                 expect(headers[SESSION_HEADER_NAME]).to.be.empty;
             });
 
-            describe.only('getHeadersParameters() return CMCD data correctly', () => {
+            describe('getHeadersParameters() return CMCD data correctly', () => {
 
                 it('getHeadersParameters() sould not return cmcd data if isCmcdEnabled() is false', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
-    
+
                     let request = {
                         type: REQUEST_TYPE,
                         mediaType: MEDIA_TYPE
