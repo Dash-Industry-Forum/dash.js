@@ -596,15 +596,29 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var _getNativeVideoTrackMode = function (element) {
-        const videoTracks = video.textTracks;
+    // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
+    var _matchTrackWithNativeTrack = function(track, nativeTrack) {
+        let label = track.id !== undefined ? track.id.toString() : track.lang;
+
+        return !!(
+            (track.kind === nativeTrack.kind) &&
+            (track.lang === nativeTrack.language) &&
+            (track.isTTML === nativeTrack.isTTML) &&
+            (track.isEmbedded === nativeTrack.isEmbedded) &&
+            (label === nativeTrack.label)
+        );
+    }
+
+    // Compare track information against native video element tracks to get the current track mode
+    var _getNativeVideoTrackMode = function (track) {
+        const nativeTracks = video.textTracks;
         let trackMode;
-        for (let i = 0; i < videoTracks.length; i++) {
-            const track = videoTracks[i];
-            if (track.label === element.id.toString() || track.label === element.lang) {
-                trackMode = track.mode; 
+        for (let i = 0; i < nativeTracks.length; i++) {
+            const nativeTrack = nativeTracks[i];
+            if (_matchTrackWithNativeTrack(track, nativeTrack)) {
+                trackMode = nativeTrack.mode;
                 break;
-            } 
+            }
         };
 
         return (trackMode === undefined) ? 'showing' : trackMode;
