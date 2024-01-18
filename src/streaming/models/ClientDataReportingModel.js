@@ -46,7 +46,7 @@ function ClientDataReportingModel() {
     function serviceLocationIncluded(serviceLocation){
         const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
 
-        const isServiceLocationIncluded = serviceLocationsArray && (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation));
+        const isServiceLocationIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
 
         return isServiceLocationIncluded;
     }
@@ -54,7 +54,7 @@ function ClientDataReportingModel() {
     function adaptationSetIncluded(adaptationSet){
         const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
 
-        const isAdaptationsIncluded = adaptationSetsArray && (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet));
+        const isAdaptationsIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
 
         return isAdaptationsIncluded;
     }
