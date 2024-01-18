@@ -394,8 +394,8 @@ declare namespace dashjs {
     export interface BaseURL {
         url: string;
         serviceLocation: string;
-        dvb_priority: number;
-        dvb_weight: number;
+        dvbPriority: number;
+        dvbWeight: number;
         availabilityTimeOffset: number;
         availabilityTimeComplete: boolean;
         queryParams: object;
@@ -2498,8 +2498,8 @@ declare namespace dashjs {
 
         schemeIdUri: string;
         value: string;
-        dvb_reportingUrl: string;
-        dvb_probability: number;
+        dvbReportingUrl: string;
+        dvbProbability: number;
     }
 
     /**
