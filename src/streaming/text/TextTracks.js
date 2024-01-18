@@ -79,7 +79,8 @@ function TextTracks(config) {
         displayCCOnTop,
         previousISDState,
         topZIndex,
-        resizeObserver;
+        resizeObserver,
+        hasRequestAnimationFrame;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -104,6 +105,7 @@ function TextTracks(config) {
         displayCCOnTop = false;
         topZIndex = 2147483647;
         previousISDState = null;
+        hasRequestAnimationFrame = ('requestAnimationFrame' in window);
 
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
@@ -409,36 +411,47 @@ function TextTracks(config) {
 
     function _renderCaption(cue) {
         if (captionContainer) {
+            clearCaptionContainer.call(this);
+            
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
-            previousISDState = renderHTML(cue.isd, finalCue, function (src) {
-                return _resolveImageSrc(cue, src);
-            }, captionContainer.clientHeight, captionContainer.clientWidth, settings.get().streaming.text.imsc.displayForcedOnlyMode, function (err) {
-                logger.info('renderCaption :', err);
-                //TODO add ErrorHandler management
-            }, previousISDState, settings.get().streaming.text.imsc.enableRollUp);
+            
+            previousISDState = renderHTML(
+                cue.isd, 
+                finalCue, 
+                function (src) { return _resolveImageSrc(cue, src) }, 
+                captionContainer.clientHeight, 
+                captionContainer.clientWidth, 
+                settings.get().streaming.text.imsc.displayForcedOnlyMode,
+                function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
+                previousISDState,
+                settings.get().streaming.text.imsc.enableRollUp
+            );
             finalCue.id = cue.cueID;
             eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }
     }
 
-    function _extendLastCue(cue, track) {
+    // Check that a new cue immediately follows the previous cue
+    function _areCuesAdjacent(cue, prevCue) {
+        if (!prevCue) { 
+            return false;
+        }
+        // Check previous cue endTime with current cue startTime
+        // (should we consider an epsilon margin? for example to get around rounding issues)
+        return prevCue.endTime >= cue.startTime;
+    }
+
+    // Check if cue content is identical. If it is, extend the previous cue.
+    function _extendLastCue(cue, prevCue) {
         if (!settings.get().streaming.text.extendSegmentedCues) {
             return false;
         }
-        if (!track.cues || track.cues.length === 0) {
-            return false;
-        }
-        const prevCue = track.cues[track.cues.length - 1];
-        // Check previous cue endTime with current cue startTime
-        // (should we consider an epsilon margin? for example to get around rounding issues)
-        if (prevCue.endTime < cue.startTime) {
-            return false;
-        }
-        // Compare cues content
+
         if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
             return false;
-        }
+        } 
+
         prevCue.endTime = Math.max(prevCue.endTime, cue.endTime);
         return true;
     }
@@ -499,7 +512,24 @@ function TextTracks(config) {
                             }
                             track.manualCueList.push(cue);
                         } else {
-                            if (!_extendLastCue(cue, track)) {
+                            // Handle adjacent cues
+                            let prevCue;
+                            if (track.cues && track.cues.length !== 0) {
+                                prevCue = track.cues[track.cues.length - 1];
+                            }
+
+                            if (_areCuesAdjacent(cue, prevCue)) {
+                                if (!_extendLastCue(cue, prevCue)) {
+                                    /* If cues are adjacent but not identical (extended), let the render function of the next cue 
+                                     * clear up the captionsContainer so removal and appending are instantaneous.
+                                     * Only do this for imsc subs (where isd is present).
+                                     */
+                                    if (prevCue.isd) {
+                                        prevCue.onexit = function () { };
+                                    }
+                                    track.addCue(cue);
+                                }
+                            } else {
                                 track.addCue(cue);
                             }
                         }
@@ -550,7 +580,12 @@ function TextTracks(config) {
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
                 if (this.isd) {
-                    _renderCaption(this);
+                    if (hasRequestAnimationFrame) { 
+                        // Ensure everything in _renderCaption happens in the same frame
+                        requestAnimationFrame(() => _renderCaption(this));
+                    } else {
+                        _renderCaption(this)
+                    }
                     logger.debug('Cue enter id:' + this.cueID);
                 } else {
                     captionContainer.appendChild(this.cueHTMLElement);
@@ -563,6 +598,7 @@ function TextTracks(config) {
             }
         };
 
+        // For imsc subs, this could be reassigned to not do anything if there is a cue that immediately follows this one
         cue.onexit = function () {
             if (captionContainer) {
                 const divs = captionContainer.childNodes;
