@@ -32,7 +32,12 @@ class ServiceDescriptionControllerMock {
     calculateProducerReferenceTimeOffsets() {
     }
 
-    applyServiceDescription() {
+    applyServiceDescription(config) {
+        this.serviceDescriptionSettings = {
+            ...this.serviceDescriptionSettings,
+            contentSteering: config?.contentSteering || null,
+            clientDataReporting: config?.clientDataReporting || null,
+        };
     }
 
     reset() {
