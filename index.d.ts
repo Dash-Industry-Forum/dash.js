@@ -1513,6 +1513,8 @@ declare namespace dashjs {
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
         CONFORMANCE_VIOLATION: 'conformanceViolation'
+        CUE_ENTER: 'cueEnter';
+        CUE_EXIT: 'cueExit';
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
@@ -1584,8 +1586,6 @@ declare namespace dashjs {
         THROUGHPUT_MEASUREMENT_STORED: 'throughputMeasurementStored';
         TTML_PARSED: 'ttmlParsed';
         TTML_TO_PARSE: 'ttmlToParse';
-        CUE_ENTER: 'cueEnter';
-        CUE_EXIT: 'cueExit';
     }
 
     export interface AstInFutureEvent extends Event {
