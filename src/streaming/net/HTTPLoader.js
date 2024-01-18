@@ -495,7 +495,7 @@ function HTTPLoader(cfg) {
         // Use Resource Timing info when available for CommonMediaResponse
         if (resource) {
             httpResponse.resourceTiming.startTime = resource.startTime;
-            httpResponse.resourceTiming.encodedBodySize = resource.startTime;
+            httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
             httpResponse.resourceTiming.responseStart = resource.startTime;
             httpResponse.resourceTiming.responseEnd = resource.responseEnd;
             httpResponse.resourceTiming.duration = resource.duration;
