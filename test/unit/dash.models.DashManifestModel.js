@@ -1390,5 +1390,130 @@ describe('DashManifestModel', function () {
             })
 
         })
+
+        describe('get CMCD data from Manifest', () => {
+
+            it('should return client data reporting from manifest', () => {
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+
+                            },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+
+                                },
+                                'serviceLocations': 'cdn-a cdn-b',
+                                'adaptationSets': 'test1 test2'
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const clientDataReporting = data[0].clientDataReporting;
+                expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+            })
+
+            it('should return cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                            },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+                                    'contentID':contentID,
+                                    'includeInRequests':includeInRequests,
+                                    'keys':keys,
+                                    'mode':mode,
+                                    'sessionID':sessionID,
+                                },
+                                'serviceLocations': 'cdn-a cdn-b',
+                                'adaptationSets': 'test1 test2'
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
+                expect(CMCDParameters.contentID).to.be.equal(contentID);
+                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
+                expect(CMCDParameters.keys).to.be.equal(keys);
+                expect(CMCDParameters.mode).to.be.equal(mode);
+                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+            })
+
+            it('should return client data reporting and cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const serviceLocations = 'cdn-a cdn-b';
+                const adaptationSets = 'test1 test2';
+                const manifestData = {
+                    ServiceDescription:{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                            },
+                            'serviceLocations': serviceLocations,
+                            'adaptationSets': adaptationSets
+                        },
+                    },
+                    ServiceDescription_asArray:
+                        [{
+                            'ClientDataReporting':{
+                                'CMCDParameters': {
+                                    'contentID':contentID,
+                                    'includeInRequests':includeInRequests,
+                                    'keys':keys,
+                                    'mode':mode,
+                                    'sessionID':sessionID,
+                                },
+                                'serviceLocations': serviceLocations,
+                                'adaptationSets': adaptationSets
+                            },
+                        }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
+                const clientDataReporting = data[0].clientDataReporting;
+                expect(clientDataReporting.serviceLocations).to.be.equal(serviceLocations);
+                expect(clientDataReporting.adaptationSets).to.be.equal(adaptationSets);
+                expect(CMCDParameters.contentID).to.be.equal(contentID);
+                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
+                expect(CMCDParameters.keys).to.be.equal(keys);
+                expect(CMCDParameters.mode).to.be.equal(mode);
+                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+            })
+
+        })
     });
 });
