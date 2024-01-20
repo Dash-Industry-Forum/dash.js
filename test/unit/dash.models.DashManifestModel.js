@@ -1129,8 +1129,8 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] having correct priority and weight for DVB extensions when specified', () => {
@@ -1148,8 +1148,8 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(TEST_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(TEST_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(TEST_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(TEST_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is specified and the input url is relative', () => {
