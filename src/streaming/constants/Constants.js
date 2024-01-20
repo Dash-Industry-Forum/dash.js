@@ -293,7 +293,6 @@ class Constants {
         this.DVB_PROBABILITY = 'dvb:probability';
         this.OFF_MIMETYPE = 'application/font-sfnt';
         this.WOFF_MIMETYPE = 'application/font-woff';
-        this.TTS_FONT_FAMILY = 'http://www.w3.org/ns/ttml#styling fontFamily';
         this.VIDEO_ELEMENT_READY_STATES = {
             HAVE_NOTHING: 0,
             HAVE_METADATA: 1,

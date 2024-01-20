@@ -35,7 +35,6 @@ import Events from '../../core/events/Events';
 import {fromXML, generateISD} from 'imsc';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
-import Constants from '../constants/Constants';
 
 function TTMLParser() {
 
@@ -59,54 +58,6 @@ function TTMLParser() {
         cueCounter++;
         return id;
     }
-
-    /**
-     * Drill down into JS representation of TTML Doc to look for tts:FontFamily styling properties.
-     * Cover for some missing functionality in imscJS v1.1.4 to correctly replace default to monospaceSerif.
-     * Default is a reserved word in CSS so this can result in no fontFamily being correctly applied.
-     * This is covered further in the imscJS Github repository, PR #251 and issue #250 
-     * TODO: This can be removed when imscJS v1.1.5 is released and used
-     * @param {object} imsc1doc - JS Representation of TTML Doc
-     * @returns {object} - JS Representation of TTML Doc with fixed fontFamily
-     * @private
-     */
-    function _addFontFamilyParsingFix(imsc1doc) {
-
-        // Go through nested contents and looks for tts:fontFamily styling to correct
-        function recursivelyTrimFontFamilies (el) {
-            if (el.contents && el.contents.length > 0) {
-                for (const deeperEl of el.contents) {
-                    recursivelyTrimFontFamilies(deeperEl);
-                }
-            }
-
-            if (el.styleAttrs) {
-                for (const style in el.styleAttrs) {
-                    if (style === Constants.TTS_FONT_FAMILY) {
-                        el.styleAttrs[Constants.TTS_FONT_FAMILY] = el.styleAttrs[Constants.TTS_FONT_FAMILY].map(familyName => {
-                            let trimmedName = familyName.trim();
-                            // This is the crux of this issue
-                            return (trimmedName === 'default') ? 'monospaceSerif' : trimmedName;
-                        });
-                    }
-                }
-            }
-        }
-
-        // Check regions for styling first 
-        if (imsc1doc.head && imsc1doc.head.layout && imsc1doc.head.layout.regions) {
-            for (const region in imsc1doc.head.layout.regions) {
-                recursivelyTrimFontFamilies(imsc1doc.head.layout.regions[region])
-            }
-        }
-
-        // Check body elements
-        if (imsc1doc.body) {
-            recursivelyTrimFontFamilies(imsc1doc.body);
-        }
-
-        return imsc1doc;
-    };
 
     /**
      * Parse the raw data and process it to return the HTML element representing the cue.
@@ -180,9 +131,6 @@ function TTMLParser() {
         let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
-
-        // TODO: Fix bug in imscJS V1.1.4 - Can be removed when v1.1.5 is released and used
-        imsc1doc = _addFontFamilyParsingFix(imsc1doc);
 
         eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 

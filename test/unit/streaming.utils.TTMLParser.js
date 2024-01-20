@@ -5,18 +5,6 @@ const expect = require('chai').expect;
 
 const context = {};
 const ttmlParser = TTMLParser(context).getInstance();
-const mockDvbFonts = [
-    {
-        fontFace: {}, // Font face instance
-        fontFamily: 'dashjs-UnitTestFont',
-        isEssential: false,
-        mimeType: 'application/font-woff',
-        status: 'loaded',
-        streamId: 'first',
-        trackId: 888,
-        url: ''
-    }
-];
 let ttml_file;
 
 describe('TTMLParser', function () {
@@ -37,13 +25,6 @@ describe('TTMLParser', function () {
             expect(captionsArray).to.have.lengthOf(2);
             expect(captionsArray[0].start).to.equal(0);
             expect(captionsArray[0].end).to.equal(5);
-        });
-    
-        // TODO: Can be removed when imscJS v1.1.5 is released and used    
-        it('should correct for a bug in imscJS v1.1.4', () => {
-            const captionsArray = ttmlParser.parse(ttml_file, 0, 0, 10, [], mockDvbFonts);
-            const lastFontFamily = captionsArray[0].isd.contents[0].contents[0].contents[0].contents[0].styleAttrs['http://www.w3.org/ns/ttml#styling fontFamily'].pop();
-            expect(lastFontFamily).to.equal('monospaceSerif');
         });
     });
 
