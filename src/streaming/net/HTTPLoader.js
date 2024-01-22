@@ -490,16 +490,34 @@ function HTTPLoader(cfg) {
             i += 1;
         }
 
+        // Check if PerformanceResourceTiming values are usable
+        // Note: to allow seeing cross-origin timing information, the Timing-Allow-Origin HTTP response header needs to be set
+        // See https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming#cross-origin_timing_information
+        if (!_areResourceTimingValuesUsable(resource)) {
+            return;
+        }
+
         httpRequest.customData.request.resourceTimingValues = resource;
 
-        // Use Resource Timing info when available for CommonMediaResponse
-        if (resource) {
-            httpResponse.resourceTiming.startTime = resource.startTime;
-            httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
-            httpResponse.resourceTiming.responseStart = resource.startTime;
-            httpResponse.resourceTiming.responseEnd = resource.responseEnd;
-            httpResponse.resourceTiming.duration = resource.duration;
-        }
+        // Update CommonMediaResponse Resouce Timing info
+        httpResponse.resourceTiming.startTime = resource.startTime;
+        httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
+        httpResponse.resourceTiming.responseStart = resource.startTime;
+        httpResponse.resourceTiming.responseEnd = resource.responseEnd;
+        httpResponse.resourceTiming.duration = resource.duration;
+    }
+
+    /**
+     * Checks if we got usable ResourceTimingAPI values
+     * @param httpRequest
+     * @returns {boolean}
+     * @private
+     */
+    function _areResourceTimingValuesUsable(resource) {
+        return resource &&
+            !isNaN(resource.responseStart) && resource.responseStart > 0 &&
+            !isNaN(resource.responseEnd) && resource.responseEnd > 0 &&
+            !isNaN(resource.transferSize) && resource.transferSize > 0
     }
 
     /**

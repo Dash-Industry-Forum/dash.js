@@ -185,20 +185,14 @@ function ThroughputModel(config) {
      * @private
      */
     function _calculateThroughputValuesForXhr(httpRequest, latencyInMs) {
-        let resourceTimingValues = null;
         let downloadedBytes = NaN;
         let downloadTimeInMs = NaN;
         let deriveThroughputViaResourceTimingApi = false;
 
-
-        if (settings.get().streaming.abr.throughput.useResourceTimingApi) {
-            resourceTimingValues = _deriveDownloadValuesFromResourceTimingApi(httpRequest)
-        }
-
-        // Calculate the throughput using the ResourceTimingAPI if we got useful values
-        if (resourceTimingValues && !isNaN(resourceTimingValues.downloadedBytes) && !isNaN(resourceTimingValues.downloadTimeInMs)) {
-            downloadTimeInMs = resourceTimingValues.downloadTimeInMs;
-            downloadedBytes = resourceTimingValues.downloadedBytes;
+        // Calculate the throughput using the ResourceTimingAPI if available
+        if (httpRequest._resourceTimingValues) {
+            downloadedBytes = httpRequest._resourceTimingValues.transferSize;
+            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
             deriveThroughputViaResourceTimingApi = true;
         }
 
@@ -232,36 +226,6 @@ function ThroughputModel(config) {
     }
 
     /**
-     * Calculate the downloaded bytes and the download times using the resource timing API
-     * @param httpRequest
-     * @returns {{downloadTimeInMs: (*|number|NaN), downloadedBytes: (*|number|NaN)}}
-     * @private
-     */
-    function _deriveDownloadValuesFromResourceTimingApi(httpRequest) {
-        let downloadedBytes = NaN;
-        let downloadTimeInMs = NaN;
-
-        if (_areResourceTimingValuesUsable(httpRequest)) {
-            downloadedBytes = httpRequest._resourceTimingValues.transferSize;
-            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
-        }
-
-        return { downloadedBytes, downloadTimeInMs }
-    }
-
-    /**
-     * Checks if we got useful ResourceTimingAPI values
-     * @param httpRequest
-     * @param {boolean} ignoreTransferSize
-     * @returns {null|*|boolean}
-     * @private
-     */
-    function _areResourceTimingValuesUsable(httpRequest, ignoreTransferSize = false) {
-        return settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues && !isNaN(httpRequest._resourceTimingValues.responseStart) && httpRequest._resourceTimingValues.responseStart > 0
-            && !isNaN(httpRequest._resourceTimingValues.responseEnd) && httpRequest._resourceTimingValues.responseEnd > 0 && ((!isNaN(httpRequest._resourceTimingValues.transferSize) && httpRequest._resourceTimingValues.transferSize > 0) || ignoreTransferSize)
-    }
-
-    /**
      * Return the current estimated bandwidth based on NetworkInformation.downlink if the API is available
      * @returns {*|number}
      * @private
@@ -285,7 +249,7 @@ function ThroughputModel(config) {
      */
     function _isCachedResponse(mediaType, cacheReferenceTime, httpRequest) {
 
-        if (_areResourceTimingValuesUsable(httpRequest, true)) {
+        if (httpRequest._resourceTimingValues) {
             return httpRequest._resourceTimingValues.transferSize === 0 && httpRequest._resourceTimingValues.decodedBodySize > 0
         }
 
