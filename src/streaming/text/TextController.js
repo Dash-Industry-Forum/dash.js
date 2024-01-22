@@ -35,10 +35,12 @@ import TextTracks from './TextTracks';
 import VTTParser from '../utils/VTTParser';
 import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
 import TTMLParser from '../utils/TTMLParser';
+import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {checkParameterType} from '../utils/SupervisorTools';
+import DVBFonts from './DVBFonts';
 
 function TextController(config) {
 
@@ -48,6 +50,7 @@ function TextController(config) {
     const errHandler = config.errHandler;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
+    const baseURLController = config.baseURLController;
     const videoModel = config.videoModel;
     const settings = config.settings;
 
@@ -62,7 +65,9 @@ function TextController(config) {
         allTracksAreDisabled,
         forceTextStreaming,
         textTracksAdded,
-        disableTextBeforeTextTracksAdded;
+        disableTextBeforeTextTracksAdded,
+        dvbFonts,
+        logger;
 
     function setup() {
         forceTextStreaming = false;
@@ -73,12 +78,19 @@ function TextController(config) {
         vttCustomRenderingParser = VttCustomRenderingParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
         eventBus = EventBus(context).getInstance();
+        logger = Debug(context).getInstance().getLogger(instance);
 
         resetInitialSettings();
     }
 
     function initialize() {
+        dvbFonts = DVBFonts(context).create({
+            adapter,
+            baseURLController,
+        });
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+        eventBus.on(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -98,6 +110,7 @@ function TextController(config) {
         const textSourceBuffer = TextSourceBuffer(context).create({
             errHandler,
             adapter,
+            dvbFonts,
             manifestModel,
             mediaController,
             videoModel,
@@ -166,6 +179,36 @@ function TextController(config) {
         textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
     }
 
+    /**
+     * Event that is triggered if a font download of a font described in an essential property descriptor
+     * tag fails. 
+     * @param {FontInfo} font - font information
+     * @private
+     */
+    function _onFontDownloadFailure(font) {
+        logger.error(`Could not download ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
+        if (font.isEssential) {
+            let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+            textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_DISABLED);
+        }
+    };
+
+    /**
+     * Set a font with an essential property 
+     * @private
+     */ 
+    function _onFontDownloadSuccess(font) {
+        logger.debug(`Successfully downloaded ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
+        if (font.isEssential) {
+            let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+            if (idx === textTracks[font.streamId].getCurrentTrackIdx()) {
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
+            } else {
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_HIDDEN);
+            }
+        }
+    }
+
     function _onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
@@ -208,6 +251,18 @@ function TextController(config) {
         });
 
         textTracksAdded = true;
+
+        dvbFonts.addFontsFromTracks(tracks, streamId);
+
+        // Initially disable any tracks with essential property font downloads
+        dvbFonts.getFonts().forEach(font => {
+            if (font.isEssential) {
+                let idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+                textTracks[font.streamId].setModeForTrackIdx(idx, Constants.TEXT_DISABLED);
+            }
+        });
+
+        dvbFonts.downloadFonts();
     }
 
     function _onPlaybackTimeUpdated(e) {
@@ -289,14 +344,24 @@ function TextController(config) {
             return;
         }
 
-
         textTracks[streamId].disableManualTracks();
 
-        textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
-        textTracks[streamId].setCurrentTrackIdx(idx);
-        textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
-
         let currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
+
+        // Don't change disabled tracks - dvb font download for essential property failed or not complete
+        if (currentNativeTrackInfo && (currentNativeTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+            textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
+        }
+        
+        textTracks[streamId].setCurrentTrackIdx(idx);
+
+        currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
+
+        if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+            textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
+        }
 
         if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
             _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx);
@@ -375,8 +440,11 @@ function TextController(config) {
     }
 
     function reset() {
+        dvbFonts.reset();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+        eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+        eventBus.off(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)

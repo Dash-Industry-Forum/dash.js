@@ -216,6 +216,10 @@ declare namespace dashjs {
 
         getSelectionPriority(realAdaptation: object): number;
 
+        getEssentialPropertiesForAdaptation(adaptation: object): object;
+
+        getEssentialPropertiesAsArrayForAdaptation(adaptation: object): any[];
+
         getEssentialPropertiesForRepresentation(realRepresentation: object): {schemeIdUri: string, value: string}
 
         getRepresentationFor(index: number, adaptation: object): object;
@@ -254,9 +258,19 @@ declare namespace dashjs {
 
         getServiceDescriptions(manifest: object): serviceDescriptions;
 
-        getSupplementalProperties(adaptation: object): object;
         getSegmentAlignment(adaptation: object): boolean;
+
         getSubSegmentAlignment(adaptation: object): boolean;
+
+        getSupplementalPropertiesForAdaptation(adaptation: object): object;
+
+        getSupplementalPropertiesAsArrayForAdaptation(adaptation: object): any[];
+        
+        getSupplementalPropertiesForRepresentation(representation: Representation): object;
+
+        getSupplementalPropertiesAsArrayForRepresentation(representation: Representation): any[];
+
+        setConfig(config: object): void;
     }
 
     export interface PatchManifestModel {
@@ -472,6 +486,9 @@ declare namespace dashjs {
         isEmbedded: any | null;
         selectionPriority: number;
         supplementalProperties: object;
+        supplementalPropertiesAsArray: any[];
+        essentialProperties: object;
+        essentialPropertiesAsArray: any[];
         segmentAlignment: boolean;
         subSegmentAlignment: boolean;
     }
@@ -582,6 +599,9 @@ declare namespace dashjs {
         schemeIdUri: string;
         value: string;
         id: string;
+        dvbUrl?: string;
+        dvbMimeType?: string;
+        dvbFontFamily?: string;
     }
 
     export class ContentSteeringResponse {
@@ -1512,7 +1532,10 @@ declare namespace dashjs {
         CAN_PLAY_THROUGH: 'canPlayThrough';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
-        CONFORMANCE_VIOLATION: 'conformanceViolation'
+        CONFORMANCE_VIOLATION: 'conformanceViolation';
+        DVB_FONT_DOWNLOAD_ADDED: 'dvbFontDownloadAdded';
+        DVB_FONT_DOWNLOAD_COMPLETE: 'dvbFontDownloadComplete';
+        DVB_FONT_DOWNLOAD_FAILED: 'dvbFontDownloadFailed';
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
@@ -1722,6 +1745,20 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
     }
 
+    export interface dvbFontDownloadAdded extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
+        font: FontInfo;
+    }
+
+    export interface dvbFontDownloadComplete extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
+        font: FontInfo;
+    }
+
+    export interface dvbFontDownloadFailed extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
+        font: FontInfo;
+    }
     export interface DynamicToStaticEvent extends Event {
         type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
     }
@@ -3504,7 +3541,32 @@ declare namespace dashjs {
      * Streaming - Text
      **/
 
-     export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+    export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+
+    export type FontDownloadStatus = 'unloaded' | 'loaded' | 'error';
+
+    export interface FontInfo {
+        fontFamily: string;
+        url: string;
+        mimeType: string;
+        trackId: number;
+        streamId: string;
+        isEssential: boolean;
+        status: FontDownloadStatus;
+        fontFace: FontFace;
+    }
+
+    export interface DVBFonts {
+        addFontsFromTracks(tracks: TextTrackInfo, streamId: string): void;
+
+        downloadFonts(): void;
+
+        getFonts(): FontInfo[];
+
+        getFontsForTrackId(trackId: number): FontInfo[];
+        
+        reset(): void;
+    }
 
     export interface EmbeddedTextHtmlRender {
         createHTMLCaptionsFromScreen(videoElement: HTMLVideoElement, startTime: number, endTime: number, captionScreen: any): any[];
@@ -3644,8 +3706,6 @@ declare namespace dashjs {
         deleteCuesFromTrackIdx(trackIdx: number, start: number, end: number): void;
 
         deleteAllTextTracks(): void;
-
-        deleteTextTrack(idx: number): void;
     }
 
     /**

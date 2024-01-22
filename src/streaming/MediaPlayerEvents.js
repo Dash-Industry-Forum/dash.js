@@ -82,6 +82,24 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
 
         /**
+         * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+         */
+        this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+         */
+        this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+         */
+        this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
+
+        /**
          * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
          * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
          */

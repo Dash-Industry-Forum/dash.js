@@ -1295,8 +1295,9 @@ function DashManifestModel() {
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of adaptation.SupplementalProperty_asArray) {
-                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
-                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
                 }
             }
         }
@@ -1316,8 +1317,9 @@ function DashManifestModel() {
 
         if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of representation.SupplementalProperty_asArray) {
-                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
-                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
                 }
             }
         }
@@ -1329,6 +1331,28 @@ function DashManifestModel() {
         return representation.SupplementalProperty_asArray.map( supp => {
             const s = new DescriptorType();
             return s.init(supp);
+        });
+    }
+
+    function getEssentialPropertiesForAdaptation(adaptation) {
+        const essentialProperties = {};
+
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY)) {
+            for (const ep of adaptation.EssentialProperty_asArray) {
+                if (ep.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single EssentialProperty descriptor with this SchemeIdUri
+                    essentialProperties[ep[Constants.SCHEME_ID_URI]] = {...ep};
+                }
+            }
+        }
+        return essentialProperties;
+    }
+
+    function getEssentialPropertiesAsArrayForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY) || !adaptation.EssentialProperty_asArray.length) return [];
+        return adaptation.EssentialProperty_asArray.map( ep => {
+            const s = new DescriptorType();
+            return s.init(ep);
         });
     }
 
@@ -1382,6 +1406,8 @@ function DashManifestModel() {
         getRegularPeriods,
         getMpd,
         getEventsForPeriod,
+        getEssentialPropertiesForAdaptation,
+        getEssentialPropertiesAsArrayForAdaptation,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
