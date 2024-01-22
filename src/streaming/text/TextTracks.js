@@ -535,10 +535,15 @@ function TextTracks(config) {
                                     if (prevCue.isd) {
                                         prevCue.onexit = function () { };
                                     }
-                                    track.addCue(cue);
+                                    // If cues are added when the track is disabled they can still persist in memory
+                                    if (track.mode !== Constants.TEXT_DISABLED) {
+                                        track.addCue(cue);
+                                    }
                                 }
                             } else {
-                                track.addCue(cue);
+                                if (track.mode !== Constants.TEXT_DISABLED) {
+                                    track.addCue(cue);
+                                }
                             }
                         }
                     }
@@ -946,11 +951,6 @@ function TextTracks(config) {
         clearCaptionContainer.call(this);
     }
 
-    function deleteTextTrack(idx) {
-        videoModel.removeChild(nativeTrackElementArr[idx]);
-        nativeTrackElementArr.splice(idx, 1);
-    }
-
     /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
         let styleElement = document.getElementById('native-cue-style');
@@ -1021,7 +1021,6 @@ function TextTracks(config) {
         setModeForTrackIdx,
         deleteCuesFromTrackIdx,
         deleteAllTextTracks,
-        deleteTextTrack,
         manualCueProcessing,
         disableManualTracks
     };

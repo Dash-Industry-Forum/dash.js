@@ -130,6 +130,20 @@ const manifest_with_supplemental_properties_on_only_one_repr = {
         }]
     }]
 };
+const manifest_with_essential_properties = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0, 
+            mimeType: Constants.VIDEO,
+            EssentialProperty_asArray: [
+                { schemeIdUri: 'test:scheme', value: 'value1'}, 
+                { schemeIdUri: 'test:scheme', value: 'value2' }
+            ]
+        }]
+    }]
+};
 const manifest_with_audioChanCfg = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
@@ -603,6 +617,7 @@ describe('DashAdapter', function () {
             });
 
             describe('mediainfo populated from manifest', function () {
+
                 it('supplemental properties should be empty if not defined', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                         id: 'defaultId_0',
@@ -672,6 +687,41 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].supplementalPropertiesAsArray).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].supplementalPropertiesAsArray.length).equals(0);
+                });
+
+                it('essential properties should be empty if not defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_without_supplemental_properties);
+                    // works for no essential properties too
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].essentialProperties).not.to.be.null;
+                    expect(Object.keys(mediaInfoArray[0].essentialProperties).length).equals(0);
+
+                    expect(mediaInfoArray[0].essentialPropertiesAsArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].essentialPropertiesAsArray.length).equals(0);
+                });
+
+                it('essential properties should be filled if correctly defined', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_essential_properties);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].codec).to.be.null;
+
+                    expect(mediaInfoArray[0].essentialProperties).not.to.be.null;
+                    expect(Object.keys(mediaInfoArray[0].essentialProperties).length).equals(1);
+
+                    expect(mediaInfoArray[0].essentialPropertiesAsArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].essentialPropertiesAsArray.length).equals(2);
                 });
 
                 it('audio channel config should be filled', function () {

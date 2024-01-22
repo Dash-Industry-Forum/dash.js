@@ -1121,6 +1121,9 @@ function DashAdapter() {
             }
         }
 
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);        
+        mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
+        
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 

@@ -425,6 +425,30 @@
                     "provider": "bbc"
                 },
                 {
+                    "name": "On-demand Testcard - WOFF Font Download signalled with supplemental property descriptor",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-sfdt-woff.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "On-demand Testcard - WOFF Font Download signalled with essential property descriptor",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-efdt-woff.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "Live Testcard - WOFF Font Download signalled with supplemental property descriptor",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-sfdt-woff.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "Live Testcard - WOFF Font Download signalled with essential property descriptor",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-efdt-woff.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles",
+                    "provider": "bbc"
+                },
+                {
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
