@@ -182,7 +182,6 @@ function DVBFonts(config) {
                 let track = tracks[i];
                 _addFontFromTrack(track, streamId);
             }
-            ;
         }
     }
 
