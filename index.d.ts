@@ -1532,7 +1532,7 @@ declare namespace dashjs {
         CAN_PLAY_THROUGH: 'canPlayThrough';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
-        CONFORMANCE_VIOLATION: 'conformanceViolation'
+        CONFORMANCE_VIOLATION: 'conformanceViolation';
         CUE_ENTER: 'cueEnter';
         CUE_EXIT: 'cueExit';
         DVB_FONT_DOWNLOAD_ADDED: 'dvbFontDownloadAdded';
