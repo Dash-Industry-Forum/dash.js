@@ -340,10 +340,14 @@ function MediaController() {
     }
 
     function matchSettingsLang(settings, track) {
-        return !settings.lang ||
-        (settings.lang instanceof RegExp) ?
-            (track.lang.match(settings.lang)) : track.lang !== '' ?
-                (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        try {
+            return !settings.lang ||
+            (settings.lang instanceof RegExp) ?
+                (track.lang.match(settings.lang)) : track.lang !== '' ?
+                    (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        } catch (e) {
+            return false
+        }
     }
 
     function matchSettingsIndex(settings, track) {
