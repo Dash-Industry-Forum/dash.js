@@ -72,13 +72,15 @@ function DVBFonts(config) {
         // If there is a baseurl in the manifest resolve against a representation inside the current adaptation set
         if (baseURLController.resolve()) {
             const reps = adapter.getVoRepresentations(track);
-            asBaseUrl = baseURLController.resolve(reps[0].path).url
+            if (reps && reps.length > 0) {
+                asBaseUrl = baseURLController.resolve(reps[0].path).url
+            }
         }
 
-        const essentialTags = track.essentialPropertiesAsArray.filter(tag => 
+        const essentialTags = track.essentialPropertiesAsArray.filter(tag =>
             (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME)
         );
-        const supplementalTags = track.supplementalPropertiesAsArray.filter(tag => 
+        const supplementalTags = track.supplementalPropertiesAsArray.filter(tag =>
             (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME)
         );
 
@@ -103,7 +105,7 @@ function DVBFonts(config) {
                     status: FONT_DOWNLOAD_STATUS.UNLOADED,
                     fontFace: new FontFace(
                         attrs.dvbFontFamily,
-                        `url(${resolvedUrl})`, 
+                        `url(${resolvedUrl})`,
                         { display: 'swap' }
                     )
                 });
@@ -111,8 +113,8 @@ function DVBFonts(config) {
         });
     }
 
-    /** 
-     * Clean up dvb font downloads 
+    /**
+     * Clean up dvb font downloads
      * @private
      */
     function _cleanUpDvbCustomFonts() {
@@ -123,7 +125,7 @@ function DVBFonts(config) {
     }
 
     /**
-     * Check the attributes of a supplemental or essential property descriptor to establish if 
+     * Check the attributes of a supplemental or essential property descriptor to establish if
      * it has the mandatory values for a dvb font download
      * @param {object} attrs - property descriptor attributes
      * @returns {boolean} true if mandatory attributes present
@@ -131,15 +133,15 @@ function DVBFonts(config) {
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
         return !!((attrs.value && attrs.value === '1') &&
-        (attrs.dvbUrl && attrs.dvbUrl.length > 0) &&
-        (attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0) &&
-        (attrs.dvbMimeType && (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
+            (attrs.dvbUrl && attrs.dvbUrl.length > 0) &&
+            (attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0) &&
+            (attrs.dvbMimeType && (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
     }
 
     /**
      * Resolves a given font download URL.
      * @param {string} fontUrl - URL as in the 'dvb:url' property
-     * @param {string} baseUrl - BaseURL for Adaptation Set 
+     * @param {string} baseUrl - BaseURL for Adaptation Set
      * @returns {string} resolved URL
      * @private
      */
@@ -153,7 +155,7 @@ function DVBFonts(config) {
                 return urlUtils.resolve(fontUrl);
             }
         } else {
-            return fontUrl; 
+            return fontUrl;
         }
     }
 
@@ -166,7 +168,7 @@ function DVBFonts(config) {
      */
     function _updateFontStatus(index, newStatus) {
         const font = dvbFontList[index];
-        dvbFontList[index] = {...font, status: newStatus};
+        dvbFontList[index] = { ...font, status: newStatus };
     }
 
     /**
@@ -179,7 +181,8 @@ function DVBFonts(config) {
             for (let i = 0; i < tracks.length; i++) {
                 let track = tracks[i];
                 _addFontFromTrack(track, streamId);
-            };
+            }
+            ;
         }
     }
 
@@ -222,7 +225,7 @@ function DVBFonts(config) {
      * @returns {array} filtered DVBFontList
      */
     function getFontsForTrackId(trackId) {
-        return dvbFontList.filter(font => 
+        return dvbFontList.filter(font =>
             (font.trackId && font.trackId === trackId)
         );
     }
