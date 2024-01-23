@@ -190,7 +190,7 @@ function ThroughputModel(config) {
         let deriveThroughputViaResourceTimingApi = false;
 
         // Calculate the throughput using the ResourceTimingAPI if available
-        if (httpRequest._resourceTimingValues) {
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues) {
             downloadedBytes = httpRequest._resourceTimingValues.transferSize;
             downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
             deriveThroughputViaResourceTimingApi = true;
@@ -249,7 +249,7 @@ function ThroughputModel(config) {
      */
     function _isCachedResponse(mediaType, cacheReferenceTime, httpRequest) {
 
-        if (httpRequest._resourceTimingValues) {
+        if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues) {
             return httpRequest._resourceTimingValues.transferSize === 0 && httpRequest._resourceTimingValues.decodedBodySize > 0
         }
 
