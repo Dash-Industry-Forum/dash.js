@@ -68,11 +68,13 @@ const PERSISTENT_PARAMS = [
     CMSD_KEYS.VERSION
 ];
 
+const STREAM = 'stream'
+
 const MEDIATYPE_TO_OBJECTTYPE = {
     'video': CmsdObjectType.VIDEO,
     'audio': CmsdObjectType.AUDIO,
     'text': CmsdObjectType.TIMED_TEXT,
-    'stream': 'stream' // Specific value for parameters without object type, which apply for all media/objects
+    'stream': STREAM // Specific value for parameters without object type, which apply for all media/objects
 }
 
 function CmsdModel() {
@@ -136,7 +138,7 @@ function CmsdModel() {
     function _getParamValueForObjectType(paramsType, ot, key) {
         const params = paramsType === CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
         const otParams = params[ot] || {};
-        const streamParams = params[CmsdObjectType.STREAM] || {};
+        const streamParams = params[STREAM] || {};
         const value = otParams[key] || streamParams[key];
         return value;
     }
@@ -164,7 +166,7 @@ function CmsdModel() {
         }
 
         // Get object type
-        let ot = CmsdObjectType.STREAM;
+        let ot = STREAM;
         if (staticParams && staticParams[CMSD_KEYS.OBJECT_TYPE]) {
             ot = staticParams[CMSD_KEYS.OBJECT_TYPE];
         } else if (mediaType) {
