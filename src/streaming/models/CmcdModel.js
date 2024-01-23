@@ -294,10 +294,41 @@ function CmcdModel() {
         }
     }
 
-    function _getCmcdDataForSteering() {
+    function _getCmcdDataForSteering(request) {
         const data = _getGenericCmcdData();
+        const mtp = _getMeasuredThroughputByType(Constants.VIDEO);
+        const dl = _getDeadlineByType(Constants.VIDEO);
+        const bl = _getBufferLevelByType(Constants.VIDEO);
+        const tb = _getTopBitrateByType(Constants.VIDEO);
+        let rtp = settings.get().streaming.cmcd.rtp;
+
+        const nextRequest = _probeNextRequest(Constants.VIDEO);
 
         data.ot = OBJECT_TYPES.OTHER;
+
+        if (nextRequest) {
+            if (request.url !== nextRequest.url) {
+                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
+            } else if (nextRequest.range) {
+                data.nrr = nextRequest.range;
+            }
+        }
+
+        if (!isNaN(rtp)) {
+            data.rtp = rtp;
+        }
+        if (!isNaN(mtp)) {
+            data.mtp = mtp;
+        }
+        if (!isNaN(dl)) {
+            data.dl = dl;
+        }
+        if (!isNaN(bl)) {
+            data.bl = bl;
+        }
+        if (!isNaN(tb)) {
+            data.tb = tb;
+        }
 
         return data;
     }
