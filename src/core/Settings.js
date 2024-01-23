@@ -698,6 +698,10 @@ import Events from './events/Events';
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
  * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
+ * @property {Array.<string>} [includeInRequests]
+ * Specifies which HTTP GET requests shall carry parameters.
+ * 
+ * If not specified this value defaults to ['mpd', 'segment'].
  */
 
 /**
@@ -1059,7 +1063,8 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+                includeInRequests: ['mpd', 'segment']
             },
             cmsd: {
                 enabled: false,
