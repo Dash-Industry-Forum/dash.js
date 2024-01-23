@@ -499,7 +499,7 @@ function HTTPLoader(cfg) {
 
         httpRequest.customData.request.resourceTimingValues = resource;
 
-        // Update CommonMediaResponse Resouce Timing info
+        // Update CommonMediaResponse Resource Timing info
         httpResponse.resourceTiming.startTime = resource.startTime;
         httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
         httpResponse.resourceTiming.responseStart = resource.startTime;
