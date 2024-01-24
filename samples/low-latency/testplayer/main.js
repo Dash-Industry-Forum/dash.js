@@ -104,15 +104,31 @@ App.prototype._applyParameters = function () {
                 mode: settings.catchupMechanism
             },
             abr: {
-                activeRules: {
-                    throughputRule: settings.abrThroughputRule,
-                    bolaRule: settings.abrBolaRule,
-                    insufficientBufferRule: settings.abrInsufficientBufferRule,
-                    switchHistoryRule: settings.abrSwitchHistoryRule,
-                    droppedFramesRule: settings.abrDroppedFramesRule,
-                    abandonRequestsRule: settings.abrAbandonRequestRule,
-                    l2ARule: settings.abrL2ARule,
-                    loLPRule: settings.abrLoLPRule,
+                rules: {
+                    throughputRule: {
+                        active: settings.abrThroughputRule
+                    },
+                    bolaRule: {
+                        active: settings.abrBolaRule
+                    },
+                    insufficientBufferRule: {
+                        active: settings.abrInsufficientBufferRule
+                    },
+                    switchHistoryRule: {
+                        active: settings.abrSwitchHistoryRule
+                    },
+                    droppedFramesRule: {
+                        active: settings.abrDroppedFramesRule
+                    },
+                    abandonRequestsRule: {
+                        active: settings.abrAbandonRequestRule
+                    },
+                    l2ARule: {
+                        active: settings.abrL2ARule
+                    },
+                    loLPRule: {
+                        active: settings.abrLoLPRule
+                    },
                 },
                 throughput: {
                     averageCalculationMode: settings.throughputEstimation,

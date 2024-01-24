@@ -127,7 +127,7 @@ function AbrController() {
         // Do not change current value if it has been set before
         const currentState = abrRulesCollection.getBolaState(type)
         if (currentState === undefined) {
-            abrRulesCollection.setBolaState(type, settings.get().streaming.abr.activeRules.bolaRule && !_shouldApplyDynamicAbrStrategy());
+            abrRulesCollection.setBolaState(type, settings.get().streaming.abr.rules.bolaRule.active && !_shouldApplyDynamicAbrStrategy());
         }
 
     }
@@ -720,7 +720,7 @@ function AbrController() {
      * @private
      */
     function _shouldApplyDynamicAbrStrategy() {
-        return settings.get().streaming.abr.activeRules.bolaRule && settings.get().streaming.abr.activeRules.throughputRule
+        return settings.get().streaming.abr.rules.bolaRule.active && settings.get().streaming.abr.rules.throughputRule.active
     }
 
     /**

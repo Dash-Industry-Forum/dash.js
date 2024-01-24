@@ -32,12 +32,24 @@
             player.updateSettings({
                 abr: {
                     activeRules: {
-                        throughputRule: false,
-                        bolaRule: false,
-                        insufficientBufferRule: false,
-                        switchHistoryRule: false,
-                        droppedFramesRule: false,
-                        abandonRequestsRule: false
+                        throughputRule: {
+                            active: false
+                        },
+                        bolaRule: {
+                            active: false
+                        },
+                        insufficientBufferRule: {
+                            active: false
+                        },
+                        switchHistoryRule: {
+                            active: false
+                        },
+                        droppedFramesRule: {
+                            active: false
+                        },
+                        abandonRequestsRule: {
+                            active: false
+                        }
                     }
                 }
             });

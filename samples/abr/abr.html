@@ -29,13 +29,25 @@
             player.updateSettings({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: false,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            } ,
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            }
                         }
                     }
                 }

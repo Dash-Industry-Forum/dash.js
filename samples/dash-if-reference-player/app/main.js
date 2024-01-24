@@ -574,15 +574,31 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             streaming: {
                 abr: {
-                    activeRules: {
-                        throughputRule: $scope.activeAbrRules.throughputRule,
-                        bolaRule: $scope.activeAbrRules.bolaRule,
-                        insufficientBufferRule: $scope.activeAbrRules.insufficientBufferRule,
-                        switchHistoryRule: $scope.activeAbrRules.switchHistoryRule,
-                        droppedFramesRule: $scope.activeAbrRules.droppedFramesRule,
-                        abandonRequestsRule: $scope.activeAbrRules.abandonRequestsRule,
-                        l2ARule: $scope.activeAbrRules.l2ARule,
-                        loLPRule: $scope.activeAbrRules.loLPRule,
+                    rules: {
+                        throughputRule: {
+                            active: $scope.activeAbrRules.throughputRule
+                        },
+                        bolaRule: {
+                            active: $scope.activeAbrRules.bolaRule
+                        },
+                        insufficientBufferRule: {
+                            active: $scope.activeAbrRules.insufficientBufferRule,
+                        },
+                        switchHistoryRule: {
+                            active: $scope.activeAbrRules.switchHistoryRule
+                        },
+                        droppedFramesRule: {
+                            active: $scope.activeAbrRules.droppedFramesRule
+                        },
+                        abandonRequestsRule: {
+                            active: $scope.activeAbrRules.abandonRequestsRule
+                        },
+                        l2ARule: {
+                            active: $scope.activeAbrRules.l2ARule
+                        },
+                        loLPRule: {
+                            active: $scope.activeAbrRules.loLPRule
+                        }
                     }
                 }
             }
@@ -2071,14 +2087,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAbrRules() {
         var currentConfig = $scope.player.getSettings();
-        $scope.activeAbrRules.throughputRule = currentConfig.streaming.abr.activeRules.throughputRule;
-        $scope.activeAbrRules.bolaRule = currentConfig.streaming.abr.activeRules.bolaRule;
-        $scope.activeAbrRules.insufficientBufferRule = currentConfig.streaming.abr.activeRules.insufficientBufferRule;
-        $scope.activeAbrRules.switchHistoryRule = currentConfig.streaming.abr.activeRules.switchHistoryRule;
-        $scope.activeAbrRules.droppedFramesRule = currentConfig.streaming.abr.activeRules.droppedFramesRule;
-        $scope.activeAbrRules.abandonRequestsRule = currentConfig.streaming.abr.activeRules.abandonRequestsRule;
-        $scope.activeAbrRules.loLPRule = currentConfig.streaming.abr.activeRules.loLPRule;
-        $scope.activeAbrRules.l2ARule = currentConfig.streaming.abr.activeRules.l2ARule;
+        $scope.activeAbrRules.throughputRule = currentConfig.streaming.abr.rules.throughputRule.active;
+        $scope.activeAbrRules.bolaRule = currentConfig.streaming.abr.rules.bolaRule.active;
+        $scope.activeAbrRules.insufficientBufferRule = currentConfig.streaming.abr.rules.insufficientBufferRule.active;
+        $scope.activeAbrRules.switchHistoryRule = currentConfig.streaming.abr.rules.switchHistoryRule.active;
+        $scope.activeAbrRules.droppedFramesRule = currentConfig.streaming.abr.rules.droppedFramesRule.active;
+        $scope.activeAbrRules.abandonRequestsRule = currentConfig.streaming.abr.rules.abandonRequestsRule.active;
+        $scope.activeAbrRules.loLPRule = currentConfig.streaming.abr.rules.loLPRule.active;
+        $scope.activeAbrRules.l2ARule = currentConfig.streaming.abr.rules.l2ARule.active;
     }
 
     function setAdditionalPlaybackOptions() {
