@@ -62,7 +62,7 @@
                     console.log("cueEnter", e);
                     const subtitle = document.createElement("p")
                     subtitle.setAttribute("id", "subtitle-" + e.id)
-                    subtitle.innerHTML = e.text;
+                    subtitle.innerHTML = e.data;
                     document.getElementById("subtitles").appendChild(subtitle);
                 }); 
                 player.on("cueExit", function (e) {

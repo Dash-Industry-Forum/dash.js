@@ -582,13 +582,9 @@ function TextTracks(config) {
     }
 
     function _fireCueEnter(cue) {
-        // This cleans up the VTT elements inside of the cue data.
-        const tmp = document.createElement('div');
-        tmp.innerHTML = cue.data;
-
         eventBus.trigger(MediaPlayerEvents.CUE_ENTER, {
             id: cue.cueId,
-            text: tmp.textContent,
+            data: cue.data,
             start: cue.startTime,
             end: cue.endTime
         });
