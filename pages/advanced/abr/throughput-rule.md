@@ -24,3 +24,19 @@ switchRequest.representation = abrController.getOptimalRepresentationForBitrate(
 There are no values that are specifically targeting the rule. However, there are some throughput related parameters that
 implicitly influence this rule as it is using `throughputController.getSafeAverageThroughput()`. The throughput related
 parameters are documented [here](throughput-calculation.html).
+
+## Example
+
+```js
+player.updateSettings({
+    streaming: {
+        abr: {
+            activeRules: {
+                throughputRule: {
+                    active: true
+                }
+            }
+        }
+    }
+});
+```

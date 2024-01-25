@@ -53,4 +53,23 @@ if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
 | `minThroughputSamplesThreshold`       | Minimum throughput samples (equivalent to number of `progress` events) required before the `AbandonRequestRule` kicks in.                             |
 
 
+## Example
 
+```js
+player.updateSettings({
+    streaming: {
+        abr: {
+            activeRules: {
+                abandonRequestsRule: {
+                    active: true,
+                    parameters: {
+                        abandonDurationMultiplier: 1.8,
+                        minSegmentDownloadTimeThresholdInMs: 500,
+                        minThroughputSamplesThreshold: 6
+                    }
+                }
+            }
+        }
+    }
+});
+```

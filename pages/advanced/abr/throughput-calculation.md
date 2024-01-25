@@ -7,8 +7,11 @@ grand_parent: Advanced Features
 
 # Throughput Calculation
 
+## Description
 dash.js provides multiple options to configure the calculation of the current average throughput. This calculation is an
 important input for most of the ABR rules e.g. the [ThroughputRule](throughput-rule.html).
+
+## Configuration Options
 The following options are available:
 
 | Throughput Calculation Mode          | Description                                                                                                                                                                                                                                                                                                                                     |
@@ -25,6 +28,7 @@ The following options are available:
 The default mode is `EWMA`. Most of the throughput calculation modes work on a fixed number of throughput samples.
 The `settings.abr.throughput.sampleSettings` objects allows the configuration of sample related settings.
 
+## Example 
 In the example below we change the default mode to byte size weighted harmonic mean. In addition, we change the number
 of samples to be used to five and disable the automatic adjustment of the sample
 size.
