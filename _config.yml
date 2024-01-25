@@ -33,7 +33,7 @@ aux_links:
     - "//github.com/Dash-Industry-Forum/dash.js"
 
 # Build settings
-remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
 color_scheme: custom
 
 # Footer content
@@ -51,7 +51,6 @@ last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https:/
 
 # Build settings
 plugins:
-  - jekyll-remote-theme
   - jekyll-feed
 
 # Exclude from processing.
