@@ -1,9 +1,8 @@
 ---
 layout: default
-title: L2A
+title: L2A Rule
 parent: Adaptive Bitrate Streaming
 grand_parent: Advanced Features
-nav_order: 2
 ---
 
 # L2A

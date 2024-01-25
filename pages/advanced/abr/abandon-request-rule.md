@@ -3,7 +3,6 @@ layout: default
 title: AbandonRequestRule
 parent: Adaptive Bitrate Streaming
 grand_parent: Advanced Features
-nav_order: 2
 ---
 
 # AbandonRequestRule
@@ -47,11 +46,11 @@ if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
 
 ## Configuration Options
 
-| ABR Rule                 | Description                                                                                                                                           |
-|:-------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `abandonDurationMultiplier` | Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above. |
-| `minSegmentDownloadTimeThresholdInMs`      | The `AbandonRequestRule` only kicks if the download time of the current segment exceeds this value.                                                   |
-| `minThroughputSamplesThreshold`      | Minimum throughput samples (equivalent to number of `progress` events) required before the `AbandonRequestRule` kicks in.                             |
+| Parameter                                     | Description                                                                                                                                           |
+|:--------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `abandonDurationMultiplier`           | Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above. |
+| `minSegmentDownloadTimeThresholdInMs` | The `AbandonRequestRule` only kicks if the download time of the current segment exceeds this value.                                                   |
+| `minThroughputSamplesThreshold`       | Minimum throughput samples (equivalent to number of `progress` events) required before the `AbandonRequestRule` kicks in.                             |
 
 
 

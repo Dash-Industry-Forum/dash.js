@@ -1,9 +1,8 @@
 ---
 layout: default
-title: LoL+
+title: LoL+ Rule
 parent: Adaptive Bitrate Streaming
 grand_parent: Advanced Features
-nav_order: 2
 ---
 
 # LoL+
