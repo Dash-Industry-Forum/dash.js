@@ -33,7 +33,7 @@ aux_links:
     - "//github.com/Dash-Industry-Forum/dash.js"
 
 # Build settings
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 color_scheme: custom
 
 # Footer content
@@ -48,6 +48,11 @@ footer_content: "Copyright &copy; DASH Industry Forum"
 # Footer last edited timestamp
 last_edit_timestamp: true # show or hide edit time - page must have `last_modified_date` defined in the frontmatter
 last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https://ruby-doc.org/stdlib-2.7.0/libdoc/time/rdoc/Time.html
+
+# Build settings
+plugins:
+  - jekyll-remote-theme
+  - jekyll-feed
 
 # Exclude from processing.
 # The following items will not be processed, by default.
