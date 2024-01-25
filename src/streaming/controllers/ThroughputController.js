@@ -93,7 +93,7 @@ function ThroughputController() {
     }
 
     /**
-     * Push new values to the throughput model once a HTTP request completed
+     * Push new values to the throughput model once an HTTP request completed
      * @param {object} e
      * @private
      */

@@ -171,6 +171,7 @@ function HTTPLoader(cfg) {
                     t: event.throughput
                 });
 
+                requestObject.traces = traces;
                 lastTraceTime = currentTime;
                 lastTraceReceivedCount = event.loaded;
             }
@@ -234,7 +235,7 @@ function HTTPLoader(cfg) {
                 } else {
                     _onerror();
                 }
-            });    
+            });
         };
 
         /**
@@ -294,14 +295,14 @@ function HTTPLoader(cfg) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
-    
+
                     httpRequest.customData.onload = _onload;
                     httpRequest.customData.onloadend = _onloadend;
                     httpRequest.customData.onerror = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
                     httpRequest.customData.ontimeout = _ontimeout;
-            
+
                     httpResponse.resourceTiming.startTime = Date.now();
                     loader.load(httpRequest, httpResponse);
                     resolve();
@@ -353,10 +354,11 @@ function HTTPLoader(cfg) {
 
         let httpRequest; // CommonMediaLibrary.request.CommonMediaRequest
         let httpResponse; // CommonMediaLibrary.request.CommonMediaResponse
-    
+
         requestObject.bytesLoaded = NaN;
         requestObject.bytesTotal = NaN;
         requestObject.firstByteDate = null;
+        requestObject.traces = [];
         firstProgress = true;
         requestStartTime = new Date();
         lastTraceTime = requestStartTime;

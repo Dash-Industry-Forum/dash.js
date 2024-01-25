@@ -191,15 +191,32 @@ import Events from './events/Events.js';
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
- *                 activeRules: {
- *                     throughputRule: true,
- *                     bolaRule: true,
- *                     insufficientBufferRule: true,
- *                     switchHistoryRule: true,
- *                     droppedFramesRule: true,
- *                     abandonRequestsRule: true,
- *                     l2ARule: false,
- *                     loLPRule: false
+ *                 rules: {
+ *                     throughputRule: {
+ *                        active: true
+ *                    },
+ *                    bolaRule: {
+ *                        active: true
+ *                    },
+ *                     insufficientBufferRule: {
+ *                        active: true
+ *                    },
+ *                    switchHistoryRule: {
+ *                        active: true
+ *                    },
+ *                    droppedFramesRule: {
+ *                        active: true
+ *                    },
+ *                    abandonRequestsRule: {
+ *                        active: true
+ *                    },
+ *                   l2ARule: {
+ *                        active: false
+ *                    },
+ *                   loLPRule: {
+ *                        active: false
+ *                    }
+ *
  *                 },
  *                 throughput: {
  *                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
@@ -607,7 +624,7 @@ import Events from './events/Events.js';
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
  *
  * Useful on, for example, retina displays.
- * @property {object} [activeRules={throughputRule: true, bolaRule: true, insufficientBufferRule: true,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: true, l2ARule: false, loLPRule: false}]
+ * @property {object} [activeRules={throughputRule: {active: true}, bolaRule: {active: true}, insufficientBufferRule: {active: true},switchHistoryRule: {active: true},droppedFramesRule: {active: true},abandonRequestsRule: {active: true}, l2ARule: {active: false}, loLPRule: {active: false}}]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
  *
@@ -851,14 +868,14 @@ function Settings() {
         'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED,
         'streaming.liveCatchup.playbackRate.min': Events.SETTING_UPDATED_PLAYBACK_RATE_MIN,
         'streaming.liveCatchup.playbackRate.max': Events.SETTING_UPDATED_PLAYBACK_RATE_MAX,
-        'streaming.abr.activeRules.throughputRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.bolaRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.insufficientBufferRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.switchHistoryRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.droppedFramesRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.abandonRequestsRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.l2ARule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
-        'streaming.abr.activeRules.loLPRule': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.throughputRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.bolaRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.insufficientBufferRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.switchHistoryRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.droppedFramesRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.abandonRequestsRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.l2ARule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.rules.loLPRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
     };
 
     /**
@@ -1016,15 +1033,36 @@ function Settings() {
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
-                activeRules: {
-                    throughputRule: true,
-                    bolaRule: true,
-                    insufficientBufferRule: true,
-                    switchHistoryRule: true,
-                    droppedFramesRule: true,
-                    abandonRequestsRule: true,
-                    l2ARule: false,
-                    loLPRule: false
+                rules: {
+                    throughputRule: {
+                        active: true
+                    },
+                    bolaRule: {
+                        active: true
+                    },
+                    insufficientBufferRule: {
+                        active: true
+                    },
+                    switchHistoryRule: {
+                        active: true
+                    },
+                    droppedFramesRule: {
+                        active: true
+                    },
+                    abandonRequestsRule: {
+                        active: true,
+                        parameters: {
+                            abandonDurationMultiplier: 1.8,
+                            minSegmentDownloadTimeThresholdInMs: 500,
+                            minThroughputSamplesThreshold: 6
+                        }
+                    },
+                    l2ARule: {
+                        active: false
+                    },
+                    loLPRule: {
+                        active: false
+                    }
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,

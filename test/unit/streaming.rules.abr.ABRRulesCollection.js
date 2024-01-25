@@ -25,15 +25,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: true,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: true,
-                            droppedFramesRule: true,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: true
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -65,15 +81,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: true,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: true,
-                            droppedFramesRule: true,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: true
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -102,15 +134,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: false,
-                            bolaRule: false,
-                            insufficientBufferRule: false,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: false
+                            },
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -140,15 +188,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: false,
-                            bolaRule: false,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: true,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: false
+                            },
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -174,15 +238,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: true,
-                            insufficientBufferRule: false,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -205,15 +285,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: false,
-                            bolaRule: false,
-                            insufficientBufferRule: true,
-                            switchHistoryRule: true,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: false,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }
@@ -233,15 +329,31 @@ describe('ABRRulesCollection', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        activeRules: {
-                            throughputRule: true,
-                            bolaRule: true,
-                            insufficientBufferRule: false,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: true,
-                            l2ARule: false,
-                            loLPRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
                         }
                     }
                 }

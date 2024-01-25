@@ -115,13 +115,13 @@ function ABRRulesCollection(config) {
     function _handleRuleUpdate(ruleName, rulesCollection) {
         // we use camel case in the settings while the rules start with a capital latter. Not ideal but convert between these formats
         const attribute = ruleName.charAt(0).toLowerCase() + ruleName.slice(1);
-        if (settings.get().streaming.abr.activeRules[attribute] && !_arrayContainsRule(rulesCollection, ruleName)) {
+        if (settings.get().streaming.abr.rules[attribute].active && !_arrayContainsRule(rulesCollection, ruleName)) {
             rulesCollection.push(
                 _createRuleInstance(ruleName)
             );
 
             return rulesCollection
-        } else if (!settings.get().streaming.abr.activeRules[attribute]) {
+        } else if (!settings.get().streaming.abr.rules[attribute].active) {
             return _removeRuleFromArray(rulesCollection, ruleName)
         }
 

@@ -31,122 +31,57 @@
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Debug from '../../../core/Debug.js';
+import Settings from '../../../core/Settings.js';
 
 function AbandonRequestsRule(config) {
 
     config = config || {};
     const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
-    const ABANDON_MULTIPLIER = 1.8;
-    const GRACE_TIME_THRESHOLD = 500;
-    const MIN_LENGTH_TO_AVERAGE = 5;
-
     const context = this.context;
+    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
-        fragmentDict,
-        abandonDict,
-        throughputArray;
+        abandonDict;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         reset();
     }
 
-    function _setFragmentRequestDict(type, id) {
-        fragmentDict[type] = fragmentDict[type] || {};
-        fragmentDict[type][id] = fragmentDict[type][id] || {};
-    }
-
-    function _storeLastRequestThroughputByType(type, throughput) {
-        throughputArray[type] = throughputArray[type] || [];
-        throughputArray[type].push(throughput);
-    }
 
     function shouldAbandon(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
         switchRequest.rule = this.getClassName();
 
         try {
-
             if (!rulesContext) {
                 return switchRequest
             }
+            const request = rulesContext.getCurrentRequest();
 
-            const mediaInfo = rulesContext.getMediaInfo();
-            const mediaType = rulesContext.getMediaType();
-            const req = rulesContext.getCurrentRequest();
+            if (!isNaN(request.index)) {
 
-            if (!isNaN(req.index)) {
-                _setFragmentRequestDict(mediaType, req.index);
+                // In case we abandoned already or do not have enough information to proceed we return here
+                if (request.firstByteDate === null || abandonDict.hasOwnProperty(request.index)) {
+                    return switchRequest;
+                }
 
+                // Do not abandon if the buffer level is larger than the stable time
                 const stableBufferTime = mediaPlayerModel.getBufferTimeDefault();
+                const mediaType = rulesContext.getMediaType();
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-                if ( bufferLevel > stableBufferTime ) {
+                if (bufferLevel > stableBufferTime) {
                     return switchRequest;
                 }
 
-                const fragmentInfo = fragmentDict[mediaType][req.index];
-                if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                    return switchRequest;
-                }
-
-                // setup some init info based on first progress event
-                if (fragmentInfo.firstByteTime === undefined) {
-                    throughputArray[mediaType] = [];
-                    fragmentInfo.firstByteTime = req.firstByteDate.getTime();
-                    fragmentInfo.segmentDuration = req.duration;
-                    fragmentInfo.bytesTotal = req.bytesTotal;
-                    fragmentInfo.id = req.index;
-                }
-                fragmentInfo.bytesLoaded = req.bytesLoaded;
-                fragmentInfo.elapsedTime = new Date().getTime() - fragmentInfo.firstByteTime;
-
-                // Store throughput for each progress event we are getting, see ABR controller
-                if (fragmentInfo.bytesLoaded > 0 && fragmentInfo.elapsedTime > 0) {
-                    _storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
-                }
-
-                // Activate rule once we have enough samples and initial startup time has elapsed
-                if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE &&
-                    fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD &&
-                    fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
-
-                    const requestedRepresentation = req.representation;
-                    const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
-                    fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
-                    fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
-
-                    // We do not abandon if the estimated download time is below a threshold, or we are on the lowest quality anyway.
-                    const representation = rulesContext.getRepresentation();
-                    const abrController = rulesContext.getAbrController();
-                    if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || abrController.isPlayingAtLowestQuality(representation)) {
-                        return switchRequest;
-                    }
-
-                    if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                        const abrController = rulesContext.getAbrController();
-                        const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
-                        const newRepresentation = abrController.getOptimalRepresentationForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps, true);
-                        const estimatedBytesForNewPresentation = fragmentInfo.bytesTotal * newRepresentation.bitrateInKbit / requestedRepresentation.bitrateInKbit;
-
-                        if (bytesRemaining > estimatedBytesForNewPresentation) {
-                            switchRequest.representation = newRepresentation;
-                            switchRequest.reason = {
-                                throughput: fragmentInfo.measuredBandwidthInKbps,
-                                fragmentID: fragmentInfo.id
-                            }
-                            abandonDict[fragmentInfo.id] = fragmentInfo;
-                            logger.debug('[' + mediaType + '] frag id', fragmentInfo.id, ' is asking to abandon and switch to quality to ', newRepresentation.absoluteIndex, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
-                            delete fragmentDict[mediaType][fragmentInfo.id];
-                        }
-                    }
-                }
-
-                // Done loading we can delete the fragment from the dict
-                else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
-                    delete fragmentDict[mediaType][fragmentInfo.id];
+                // Activate rule once we have enough samples, the initial startup time has elapsed and the download is not finished yet
+                const elapsedTimeSinceFirstByteInMs = Date.now() - request.firstByteDate.getTime();
+                if (request.traces.length >= settings.get().streaming.abr.rules.abandonRequestsRule.parameters.minThroughputSamplesThreshold &&
+                    elapsedTimeSinceFirstByteInMs > settings.get().streaming.abr.rules.abandonRequestsRule.parameters.minSegmentDownloadTimeThresholdInMs &&
+                    request.bytesLoaded < request.bytesTotal) {
+                    return _getSwitchRequest(rulesContext, request, switchRequest);
                 }
             }
 
@@ -157,10 +92,45 @@ function AbandonRequestsRule(config) {
         }
     }
 
+    function _getSwitchRequest(rulesContext, request, switchRequest) {
+        const mediaInfo = rulesContext.getMediaInfo();
+        const mediaType = rulesContext.getMediaType();
+
+        // Use the traces of the request to derive the mean throughput. We ignore the first entries as they contain the latency of the request.
+        const downloadedBytes = request.traces.reduce((prev, curr) => prev + curr.b[0], 0) - request.traces[0].b[0];
+        const downloadTimeInMs = Math.max(request.traces.reduce((prev, curr) => prev + curr.d, 0) - request.traces[0].d, 1);
+        const throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs)
+        const estimatedTimeOfDownloadInSeconds = Number((request.bytesTotal * 8 / throughputInKbit) / 1000).toFixed(2);
+
+        // We do not abandon if the estimated download time is below a constant multiple of the segment duration, or if we are on the lowest quality anyway.
+        const representation = rulesContext.getRepresentation();
+        const abrController = rulesContext.getAbrController();
+        if (estimatedTimeOfDownloadInSeconds < request.duration * settings.get().streaming.abr.rules.abandonRequestsRule.parameters.abandonDurationMultiplier || abrController.isPlayingAtLowestQuality(representation)) {
+            return switchRequest;
+        }
+
+        if (!abandonDict.hasOwnProperty(request.index)) {
+            const abrController = rulesContext.getAbrController();
+            const remainingBytesToDownload = request.bytesTotal - request.bytesLoaded;
+            const optimalRepresentationForBitrate = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughputInKbit, true);
+            const currentRequestedRepresentation = request.representation;
+            const totalBytesForOptimalRepresentation = request.bytesTotal * optimalRepresentationForBitrate.bitrateInKbit / currentRequestedRepresentation.bitrateInKbit;
+
+            if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
+                switchRequest.representation = optimalRepresentationForBitrate;
+                switchRequest.reason = {
+                    throughputInKbit
+                }
+                abandonDict[request.index] = true;
+                logger.info(`[AbandonRequestRule][${mediaType} is asking to abandon and switch to quality to ${optimalRepresentationForBitrate.absoluteIndex}. The measured bandwidth was ${throughputInKbit} kbit/s`);
+            }
+        }
+
+        return switchRequest
+    }
+
     function reset() {
-        fragmentDict = {};
         abandonDict = {};
-        throughputArray = [];
     }
 
     instance = {

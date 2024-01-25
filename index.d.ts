@@ -1176,15 +1176,31 @@ declare namespace dashjs {
             abr?: {
                 limitBitrateByPortal?: boolean;
                 usePixelRatioInLimitBitrateByPortal?: boolean;
-                activeRules?: {
-                    throughputRule?: boolean,
-                    bolaRule?: boolean,
-                    insufficientBufferRule?: boolean,
-                    switchHistoryRule?: boolean,
-                    droppedFramesRule?: boolean,
-                    abandonRequestsRule?: boolean
-                    l2ARule?: boolean
-                    loLPRule?: boolean
+                rules?: {
+                    throughputRule?: {
+                        active?: boolean
+                    },
+                    bolaRule?: {
+                        active?: boolean
+                    },
+                    insufficientBufferRule?: {
+                        active?: boolean
+                    },
+                    switchHistoryRule?: {
+                        active?: boolean
+                    },
+                    droppedFramesRule?: {
+                        active?: boolean
+                    },
+                    abandonRequestsRule?: {
+                        active?: boolean
+                    }
+                    l2ARule?: {
+                        active?: boolean
+                    }
+                    loLPRule?: {
+                        active?: boolean
+                    }
                 },
                 throughput?: {
                     averageCalculationMode?: ThroughputCalculationModes,
