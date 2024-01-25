@@ -33,7 +33,7 @@ aux_links:
     - "//github.com/Dash-Industry-Forum/dash.js"
 
 # Build settings
-theme: just-the-docs
+remote_theme: just-the-docs
 color_scheme: custom
 
 # Footer content
