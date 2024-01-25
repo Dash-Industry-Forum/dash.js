@@ -51,6 +51,7 @@ last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https:/
 
 # Build settings
 plugins:
+  - jekyll-remote-theme
   - jekyll-feed
 
 # Exclude from processing.
