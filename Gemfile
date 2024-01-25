@@ -33,4 +33,4 @@ gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]
 gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
 gem "webrick"
-gem "just-the-docs"
+gem "just-the-docs", "0.5.3"  # pinned to the current release 2023-6-17
