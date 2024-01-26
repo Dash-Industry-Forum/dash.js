@@ -46,6 +46,7 @@ player.updateSettings({
                     active: true,
                     parameters: {
                         throughputSafetyFactor: 0.9,
+                        segmentIgnoreCount: 2
                     }
                 }
             }
