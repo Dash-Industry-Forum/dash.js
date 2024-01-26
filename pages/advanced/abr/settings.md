@@ -88,14 +88,14 @@ player.updateSettings({
 });
 ```
 
-| ABR Rule                 | Description                                     |
-|:-------------------------|:------------------------------------------------|
-| `insufficientBufferRule` | tbd                                             |
-| `switchHistoryRule`      | tbd                                             |
-| `droppedFramesRule`      | tbd                                             |
-| `abandonRequestsRule`    | [AbandonRequestRule](abandon-request-rule.html) |
-| `l2ARule`                | [L2ARule](l2a.html)                             |
-| `loLPRule`               | [LoL+](lol_plus.html)                           |
+| ABR Rule                 | Description                                             |
+|:-------------------------|:--------------------------------------------------------|
+| `insufficientBufferRule` | [InsufficientBufferRule](insufficient-buffer-rule.html) |
+| `switchHistoryRule`      | tbd                                                     |
+| `droppedFramesRule`      | tbd                                                     |
+| `abandonRequestsRule`    | [AbandonRequestRule](abandon-request-rule.html)         |
+| `l2ARule`                | [L2ARule](l2a.html)                                     |
+| `loLPRule`               | [LoL+](lol_plus.html)                                   |
 
 A detailed example is available [here](https://reference.dashif.org/dash.js/nightly/samples/abr/abr.html).
 
