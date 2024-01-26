@@ -36,16 +36,16 @@ import SwitchRequest from '../SwitchRequest.js';
 import Constants from '../../constants/Constants.js';
 import MetricsConstants from '../../constants/MetricsConstants.js';
 import MediaPlayerEvents from '../../MediaPlayerEvents.js';
+import Settings from '../../../core/Settings.js';
 
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
-    const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
+    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -83,10 +83,7 @@ function InsufficientBufferRule(config) {
         const scheduleController = rulesContext.getScheduleController();
         const playbackController = scheduleController.getPlaybackController();
 
-
-        // Don't ask for a bitrate change if there is no info about buffer state or if fragmentDuration is not defined
-        const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
-        if (_shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
+        if (!_shouldExecuteRule(playbackController, mediaType, fragmentDuration)) {
             return switchRequest;
         }
 
@@ -95,28 +92,36 @@ function InsufficientBufferRule(config) {
         if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, 0, true);
-            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+            switchRequest.reason = {
+                message: '[InsufficientBufferRule]: Switching to lowest Representation because buffer is empty'
+            };
         } else {
             const throughputController = rulesContext.getThroughputController();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             const throughput = throughputController.getAverageThroughput(mediaType, null, NaN);
-            const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
+            const safeThroughput = throughput * settings.get().streaming.abr.rules.insufficientBufferRule.parameters.throughputSafetyFactor;
+            const bitrate = safeThroughput * bufferLevel / fragmentDuration
 
             switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true);
-            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
+            switchRequest.reason = {
+                message: '[InsufficientBufferRule]: Limiting maximum bitrate to avoid a buffer underrun.',
+                bitrate
+            };
         }
 
         return switchRequest;
     }
 
-    function _shouldIgnore(lowLatencyEnabled, mediaType) {
-        return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
+    function _shouldExecuteRule(playbackController, mediaType, fragmentDuration) {
+        const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
+        return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount <= 0 && fragmentDuration;
     }
 
     function _resetInitialSettings() {
+        const segmentIgnoreCount = settings.get().streaming.abr.rules.insufficientBufferRule.parameters.segmentIgnoreCount
         bufferStateDict = {};
-        bufferStateDict[Constants.VIDEO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
-        bufferStateDict[Constants.AUDIO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
+        bufferStateDict[Constants.VIDEO] = { ignoreCount: segmentIgnoreCount };
+        bufferStateDict[Constants.AUDIO] = { ignoreCount: segmentIgnoreCount };
     }
 
     function _onPlaybackSeeking() {

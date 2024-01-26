@@ -1041,7 +1041,11 @@ function Settings() {
                         active: true
                     },
                     insufficientBufferRule: {
-                        active: true
+                        active: true,
+                        parameters: {
+                            throughputSafetyFactor: 0.7,
+                            segmentIgnoreCount: 2
+                        }
                     },
                     switchHistoryRule: {
                         active: true
