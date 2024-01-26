@@ -181,7 +181,7 @@ function TextController(config) {
 
     /**
      * Event that is triggered if a font download of a font described in an essential property descriptor
-     * tag fails. 
+     * tag fails.
      * @param {FontInfo} font - font information
      * @private
      */
@@ -194,9 +194,9 @@ function TextController(config) {
     };
 
     /**
-     * Set a font with an essential property 
+     * Set a font with an essential property
      * @private
-     */ 
+     */
     function _onFontDownloadSuccess(font) {
         logger.debug(`Successfully downloaded ${font.isEssential ? 'an essential' : 'a'} font - fontFamily: ${font.fontFamily}, url: ${font.url}`);
         if (font.isEssential) {
@@ -353,13 +353,15 @@ function TextController(config) {
         if (currentNativeTrackInfo && (currentNativeTrackInfo.mode !== Constants.TEXT_DISABLED)) {
             textTracks[streamId].setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
         }
-        
+
         textTracks[streamId].setCurrentTrackIdx(idx);
 
         currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
         currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
 
-        if (currentTrackInfo && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
+        const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
+
+        if (currentTrackInfo && !dispatchForManualRendering && (currentTrackInfo.mode !== Constants.TEXT_DISABLED)) {
             textTracks[streamId].setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
         }
 

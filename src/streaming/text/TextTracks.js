@@ -80,7 +80,8 @@ function TextTracks(config) {
         previousISDState,
         topZIndex,
         resizeObserver,
-        hasRequestAnimationFrame;
+        hasRequestAnimationFrame,
+        currentCaptionEventCue;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -503,7 +504,7 @@ function TextTracks(config) {
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
-                    cue = _handleCaptionEvents(currentItem, timeOffset, track, item);
+                    cue = _handleCaptionEvents(currentItem, timeOffset);
                 } else if (currentItem.type === 'html' && captionContainer) {
                     cue = _handleHtmlCaption(currentItem, timeOffset, track)
                 } else if (currentItem.data) {
@@ -565,61 +566,45 @@ function TextTracks(config) {
         }
     }
 
-    function _handleCaptionEvents(currentItem, timeOffset, track, itemPos) {
-        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, currentItem.data);
-        cue.cueId = currentItem.cueID || itemPos;
-        cue.data = currentItem.data;
+    function _handleCaptionEvents(currentItem, timeOffset) {
+        let cue = _getCueInformation(currentItem, timeOffset)
 
         cue.onenter = function () {
-            _fireCueEnter(cue);
+            // HTML Tracks don't trigger the onexit event when a new cue is entered,
+            // we need to manually trigger it
+            if (currentItem.type == 'html' && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
+                _triggerCueExit(currentCaptionEventCue);
+            }
+            currentCaptionEventCue = cue;
+            _triggerCueEnter(cue);
         }
 
         cue.onexit = function () {
-            _fireCueExit(cue);
+            _triggerCueExit(cue);
+            currentCaptionEventCue = null;
         }
 
         return cue;
     }
 
-    function _fireCueEnter(cue) {
-        eventBus.trigger(MediaPlayerEvents.CUE_ENTER, {
-            id: cue.cueId,
-            data: cue.data,
-            start: cue.startTime,
-            end: cue.endTime
-        });
+    function _triggerCueEnter(cue) {
+        eventBus.trigger(MediaPlayerEvents.CUE_ENTER, cue);
     }
 
-    function _fireCueExit(cue) {
+    function _triggerCueExit(cue) {
         eventBus.trigger(MediaPlayerEvents.CUE_EXIT, {
-            id: cue.cueId
+            cueID: cue.cueID
         });
     }
 
     function _handleHtmlCaption(currentItem, timeOffset, track) {
         const self = this;
-        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
-        cue.cueHTMLElement = currentItem.cueHTMLElement;
-        cue.isd = currentItem.isd;
-        cue.images = currentItem.images;
-        cue.embeddedImages = currentItem.embeddedImages;
-        cue.cueID = currentItem.cueID;
-        cue.scaleCue = _scaleCue.bind(self);
-        //useful parameters for cea608 subtitles, not for TTML one.
-        cue.cellResolution = currentItem.cellResolution;
-        cue.lineHeight = currentItem.lineHeight;
-        cue.linePadding = currentItem.linePadding;
-        cue.fontSize = currentItem.fontSize;
+        let cue = _getCueInformation(currentItem, timeOffset)
 
         captionContainer.style.left = actualVideoLeft + 'px';
         captionContainer.style.top = actualVideoTop + 'px';
         captionContainer.style.width = actualVideoWidth + 'px';
         captionContainer.style.height = actualVideoHeight + 'px';
-
-        // Resolve images sources
-        if (cue.isd) {
-            _resolveImagesInContents(cue, cue.isd.contents);
-        }
 
         cue.onenter = function () {
             if (track.mode === Constants.TEXT_SHOWING) {
@@ -660,9 +645,7 @@ function TextTracks(config) {
     }
 
     function _handleNonHtmlCaption(currentItem, timeOffset, track) {
-        let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-
-        cue.cueID = `${cue.startTime}_${cue.endTime}`;
+        let cue = _getCueInformation(currentItem, timeOffset)
         cue.isActive = false;
 
         if (currentItem.styles) {
@@ -696,6 +679,34 @@ function TextTracks(config) {
         return cue;
     }
 
+    function _getCueInformation(currentItem, timeOffset) {
+        if (currentItem.type === 'html') {
+            let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
+            cue.cueHTMLElement = currentItem.cueHTMLElement;
+            cue.isd = currentItem.isd;
+            cue.images = currentItem.images;
+            cue.embeddedImages = currentItem.embeddedImages;
+            cue.cueID = currentItem.cueID;
+            cue.scaleCue = _scaleCue.bind(self);
+            //useful parameters for cea608 subtitles, not for TTML one.
+            cue.cellResolution = currentItem.cellResolution;
+            cue.lineHeight = currentItem.lineHeight;
+            cue.linePadding = currentItem.linePadding;
+            cue.fontSize = currentItem.fontSize;
+
+            // Resolve images sources
+            if (cue.isd) {
+                _resolveImagesInContents(cue, cue.isd.contents);
+            }
+
+            return cue;
+        }
+
+        let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+        cue.cueID = `${cue.startTime}_${cue.endTime}`;
+        return cue
+    }
+
     function manualCueProcessing(time) {
         const activeTracks = _getManualActiveTracks();
 
@@ -709,7 +720,7 @@ function TextTracks(config) {
                     if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
                         cue.isActive = true;
                         if (settings.get().streaming.text.dispatchForManualRendering) {
-                            _fireCueEnter(cue);
+                            _triggerCueEnter(cue);
                         } else {
                             // eslint-disable-next-line no-undef
                             WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
@@ -717,7 +728,7 @@ function TextTracks(config) {
                     } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
                         cue.isActive = false;
                         if (settings.get().streaming.text.dispatchForManualRendering) {
-                            _fireCueExit(cue);
+                            _triggerCueExit(cue);
                         } else {
                             _removeManualCue(cue);
                         }
@@ -752,7 +763,7 @@ function TextTracks(config) {
                     if (cue.isActive) {
                         cue.isActive = false;
                         if (settings.get().streaming.text.dispatchForManualRendering) {
-                            _fireCueExit(cue);
+                            _triggerCueExit(cue);
                         } else if (vttCaptionContainer) {
                             const divs = vttCaptionContainer.childNodes;
                             for (let i = 0; i < divs.length; ++i) {
