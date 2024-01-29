@@ -206,7 +206,11 @@ import Events from './events/Events.js';
  *                         }
  *                     },
  *                     switchHistoryRule: {
- *                         active: true
+ *                         active: true,
+ *                         parameters: {
+ *                             sampleSize: 8,
+ *                             switchPercentageThreshold: 0.075
+ *                         }
  *                     },
  *                     droppedFramesRule: {
  *                         active: true,
@@ -698,14 +702,19 @@ import Events from './events/Events.js';
  * @property {object} [parameters={throughputSafetyFactor=0.7, segmentIgnoreCount=2}]
  * Configures the rule specific parameters.
  *
- * - throughputSafetyFactor: The safety factor that is applied to the derived throughput, see example in the Description.
- * - segmentIgnoreCount: This rule is not taken into account until the first segmentIgnoreCount media segments have been appended to the buffer.
+ * - `throughputSafetyFactor`: The safety factor that is applied to the derived throughput, see example in the Description.
+ * - `segmentIgnoreCount`: This rule is not taken into account until the first segmentIgnoreCount media segments have been appended to the buffer.
  */
 
 /**
  * @typedef {Object} SwitchHistoryRule
  * @property {boolean} [active=true]
  * Enable or disable the rule
+ * @property {object} [parameters={sampleSize=8, switchPercentageThreshold=0.075}]
+ * Configures the rule specific parameters.
+ *
+ * - `sampleSize`: Number of switch requests ("no switch", because of the selected Representation is already playing or "actual switches") required before the rule is applied
+ * - `switchPercentageThreshold`: Ratio of actual quality drops compared to no drops before a quality down-switch is triggered
  */
 
 /**
@@ -715,8 +724,8 @@ import Events from './events/Events.js';
  * @property {object} [parameters={minimumSampleSize=375, droppedFramesPercentageThreshold=0.15}]
  * Configures the rule specific parameters.
  *
- * - minimumSampleSize: Sum of rendered and dropped frames required for each Representation before the rule kicks in.
- * - droppedFramesPercentageThreshold: Minimum percentage of dropped frames to trigger a quality down switch. Values are defined in the range of 0 - 1.
+ * - `minimumSampleSize`: Sum of rendered and dropped frames required for each Representation before the rule kicks in.
+ * - `droppedFramesPercentageThreshold`: Minimum percentage of dropped frames to trigger a quality down switch. Values are defined in the range of 0 - 1.
  */
 
 /**
@@ -726,9 +735,9 @@ import Events from './events/Events.js';
  * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500, minThroughputSamplesThreshold=6}]
  * Configures the rule specific parameters.
  *
- * - abandonDurationMultiplier: Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above.
- * - minSegmentDownloadTimeThresholdInMs: The AbandonRequestRule only kicks if the download time of the current segment exceeds this value.
- * - minThroughputSamplesThreshold: Minimum throughput samples (equivalent to number of progress events) required before the AbandonRequestRule kicks in.
+ * - `abandonDurationMultiplier`: Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above.
+ * - `minSegmentDownloadTimeThresholdInMs`: The AbandonRequestRule only kicks if the download time of the current segment exceeds this value.
+ * - `minThroughputSamplesThreshold`: Minimum throughput samples (equivalent to number of progress events) required before the AbandonRequestRule kicks in.
  */
 
 /**
@@ -769,19 +778,19 @@ import Events from './events/Events.js';
  * It should be between 0 and 1, with lower values giving less rebuffering (but also lower quality)
  * @property {object} [sampleSettings = {live=3,vod=4,enableSampleSizeAdjustment=true,decreaseScale=0.7,increaseScale=1.3,maxMeasurementsToKeep=20,averageLatencySampleAmount=4}]
  * When deriving the throughput based on the arithmetic or harmonic mean these settings define:
- * - live: Number of throughput samples to use (sample size) for live streams
- * - vod: Number of throughput samples to use (sample size) for VoD streams
- * - enableSampleSizeAdjustment: Adjust the sample sizes if throughput samples vary a lot
- * - decreaseScale: Increase sample size by one if the ratio of current and previous sample is below or equal this value
- * - increaseScale: Increase sample size by one if the ratio of current and previous sample is higher or equal this value
- * - maxMeasurementsToKeep: Number of samples to keep before sliding samples out of the window
- * - averageLatencySampleAmount: Number of latency samples to use (sample size)
+ * - `live`: Number of throughput samples to use (sample size) for live streams
+ * - `vod`: Number of throughput samples to use (sample size) for VoD streams
+ * - `enableSampleSizeAdjustment`: Adjust the sample sizes if throughput samples vary a lot
+ * - `decreaseScale`: Increase sample size by one if the ratio of current and previous sample is below or equal this value
+ * - `increaseScale`: Increase sample size by one if the ratio of current and previous sample is higher or equal this value
+ * - `maxMeasurementsToKeep`: Number of samples to keep before sliding samples out of the window
+ * - `averageLatencySampleAmount`: Number of latency samples to use (sample size)
  * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
- * - throughputSlowHalfLifeSeconds: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
- * - throughputFastHalfLifeSeconds: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
- * - latencySlowHalfLifeCount: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
- * - latencyFastHalfLifeCount: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
+ * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
+ * - `throughputFastHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
+ * - `latencySlowHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
+ * - `latencyFastHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
  */
 
 /**
