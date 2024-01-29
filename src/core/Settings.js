@@ -191,32 +191,44 @@ import Events from './events/Events.js';
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
- *                 rules: {
+ *                rules: {
  *                     throughputRule: {
- *                        active: true
- *                    },
- *                    bolaRule: {
- *                        active: true
- *                    },
+ *                         active: true
+ *                     },
+ *                     bolaRule: {
+ *                         active: true
+ *                     },
  *                     insufficientBufferRule: {
- *                        active: true
- *                    },
- *                    switchHistoryRule: {
- *                        active: true
- *                    },
- *                    droppedFramesRule: {
- *                        active: true
- *                    },
- *                    abandonRequestsRule: {
- *                        active: true
- *                    },
- *                   l2ARule: {
- *                        active: false
- *                    },
- *                   loLPRule: {
- *                        active: false
- *                    }
- *
+ *                         active: true,
+ *                         parameters: {
+ *                             throughputSafetyFactor: 0.7,
+ *                             segmentIgnoreCount: 2
+ *                         }
+ *                     },
+ *                     switchHistoryRule: {
+ *                         active: true
+ *                     },
+ *                     droppedFramesRule: {
+ *                         active: true,
+ *                         parameters: {
+ *                             minimumSampleSize: 375,
+ *                             droppedFramesPercentageThreshold: 0.15
+ *                         }
+ *                     },
+ *                     abandonRequestsRule: {
+ *                         active: true,
+ *                         parameters: {
+ *                             abandonDurationMultiplier: 1.8,
+ *                             minSegmentDownloadTimeThresholdInMs: 500,
+ *                             minThroughputSamplesThreshold: 6
+ *                         }
+ *                     },
+ *                     l2ARule: {
+ *                         active: false
+ *                     },
+ *                     loLPRule: {
+ *                         active: false
+ *                     }
  *                 },
  *                 throughput: {
  *                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
@@ -624,7 +636,7 @@ import Events from './events/Events.js';
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
  *
  * Useful on, for example, retina displays.
- * @property {object} [activeRules={throughputRule: {active: true}, bolaRule: {active: true}, insufficientBufferRule: {active: true},switchHistoryRule: {active: true},droppedFramesRule: {active: true},abandonRequestsRule: {active: true}, l2ARule: {active: false}, loLPRule: {active: false}}]
+ * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
  *
@@ -645,7 +657,90 @@ import Events from './events/Events.js';
  * Use -1 to let the player decide.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}]
  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ */
 
+/**
+ * @typedef {Object} AbrRules
+ * @property {module:Settings~ThroughputRule} [throughputRule]
+ * Configuration of the Throughput rule
+ * @property {module:Settings~BolaRule} [bolaRule]
+ * Configuration of the BOLA rule
+ * @property {module:Settings~InsufficientBufferRule} [insufficientBufferRule]
+ * Configuration of the Insufficient Buffer rule
+ * @property {module:Settings~SwitchHistoryRule} [switchHistoryRule]
+ * Configuration of the Switch History rule
+ * @property {module:Settings~DroppedFramesRule} [droppedFramesRule]
+ * Configuration of the Dropped Frames rule
+ * @property {module:Settings~AbandonRequestsRule} [abandonRequestsRule]
+ * Configuration of the Abandon Requests rule
+ * @property {module:Settings~L2ARule} [l2ARule]
+ * Configuration of the L2A rule
+ * @property {module:Settings~LoLPRule} [loLPRule]
+ * Configuration of the LoLP rule
+ */
+
+/**
+ * @typedef {Object} ThroughputRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ */
+
+/**
+ * @typedef {Object} BolaRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ */
+
+/**
+ * @typedef {Object} InsufficientBufferRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ * @property {object} [parameters={throughputSafetyFactor=0.7, segmentIgnoreCount=2}]
+ * Configures the rule specific parameters.
+ *
+ * - throughputSafetyFactor: The safety factor that is applied to the derived throughput, see example in the Description.
+ * - segmentIgnoreCount: This rule is not taken into account until the first segmentIgnoreCount media segments have been appended to the buffer.
+ */
+
+/**
+ * @typedef {Object} SwitchHistoryRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ */
+
+/**
+ * @typedef {Object} DroppedFramesRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ * @property {object} [parameters={minimumSampleSize=375, droppedFramesPercentageThreshold=0.15}]
+ * Configures the rule specific parameters.
+ *
+ * - minimumSampleSize: Sum of rendered and dropped frames required for each Representation before the rule kicks in.
+ * - droppedFramesPercentageThreshold: Minimum percentage of dropped frames to trigger a quality down switch. Values are defined in the range of 0 - 1.
+ */
+
+/**
+ * @typedef {Object} AbandonRequestsRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500, minThroughputSamplesThreshold=6}]
+ * Configures the rule specific parameters.
+ *
+ * - abandonDurationMultiplier: Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above.
+ * - minSegmentDownloadTimeThresholdInMs: The AbandonRequestRule only kicks if the download time of the current segment exceeds this value.
+ * - minThroughputSamplesThreshold: Minimum throughput samples (equivalent to number of progress events) required before the AbandonRequestRule kicks in.
+ */
+
+/**
+ * @typedef {Object} L2ARule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
+ */
+
+/**
+ * @typedef {Object} LoLPRule
+ * @property {boolean} [active=true]
+ * Enable or disable the rule
  */
 
 /**
@@ -1051,7 +1146,11 @@ function Settings() {
                         active: true
                     },
                     droppedFramesRule: {
-                        active: true
+                        active: true,
+                        parameters: {
+                            minimumSampleSize: 375,
+                            droppedFramesPercentageThreshold: 0.15
+                        }
                     },
                     abandonRequestsRule: {
                         active: true,
