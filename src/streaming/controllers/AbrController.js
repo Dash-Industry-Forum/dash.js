@@ -279,7 +279,6 @@ function AbrController() {
         voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
 
         // Filter the list of options based on the provided settings
-        // We can not apply the filter before otherwise the absolute index would be wrong
         voRepresentations = _filterByAllowedSettings(voRepresentations)
 
         // Add an absolute index after filtering
