@@ -67,7 +67,7 @@ function AbrController() {
         cmsdModel,
         domStorage,
         playbackRepresentationId,
-        switchHistoryDict,
+        switchRequestHistory,
         droppedFramesHistory,
         throughputController,
         dashMetrics,
@@ -83,13 +83,13 @@ function AbrController() {
      */
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
+        switchRequestHistory = SwitchRequestHistory(context).create();
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics,
             customParametersModel,
             mediaPlayerModel,
             settings
         });
-
         abrRulesCollection.initialize();
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
@@ -109,18 +109,11 @@ function AbrController() {
         if (!streamProcessorDict[streamId]) {
             streamProcessorDict[streamId] = {};
         }
-
-        if (!switchHistoryDict[streamId]) {
-            switchHistoryDict[streamId] = {};
-        }
+        streamProcessorDict[streamId][type] = streamProcessor;
 
         if (!abandonmentStateDict[streamId]) {
             abandonmentStateDict[streamId] = {};
         }
-
-        switchHistoryDict[streamId][type] = SwitchRequestHistory(context).create();
-        streamProcessorDict[streamId][type] = streamProcessor;
-
         abandonmentStateDict[streamId][type] = {};
         abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
 
@@ -143,10 +136,6 @@ function AbrController() {
                 delete streamProcessorDict[streamId][type];
             }
 
-            if (switchHistoryDict[streamId] && switchHistoryDict[streamId][type]) {
-                delete switchHistoryDict[streamId][type];
-            }
-
             if (abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type]) {
                 delete abandonmentStateDict[streamId][type];
             }
@@ -159,7 +148,6 @@ function AbrController() {
     function resetInitialSettings() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
-        switchHistoryDict = {};
 
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
@@ -168,8 +156,13 @@ function AbrController() {
             droppedFramesHistory.reset();
         }
 
+        if (switchRequestHistory) {
+            switchRequestHistory.reset();
+        }
+
         playbackRepresentationId = undefined;
         droppedFramesHistory = undefined;
+        switchRequestHistory = undefined;
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
     }
@@ -508,8 +501,8 @@ function AbrController() {
         })[0];
         if (request) {
             abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
-            switchHistoryDict[streamId][type].reset();
-            setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason, switchRequest.rule);
+            switchRequestHistory.reset();
+            setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason);
 
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = setTimeout(
@@ -601,7 +594,6 @@ function AbrController() {
                 }
             }
 
-            // ABR is turned off, do nothing
             if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
                 return false;
             }
@@ -611,7 +603,7 @@ function AbrController() {
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
                 throughputController,
-                switchHistory: switchHistoryDict[streamId][type],
+                switchRequestHistory,
                 droppedFramesHistory,
                 streamProcessor,
                 videoModel
@@ -623,13 +615,13 @@ function AbrController() {
             }
 
             let newRepresentation = switchRequest.representation;
-            switchHistoryDict[streamId][type].push({
-                oldRepresentation: currentRepresentation,
+            switchRequestHistory.push({
+                currentRepresentation,
                 newRepresentation
             });
 
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
-                _changeQuality(streamId, type, currentRepresentation, newRepresentation, switchRequest.reason, switchRequest.rule);
+                _changeQuality(currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
 
@@ -638,7 +630,6 @@ function AbrController() {
             logger.error(e);
             return false;
         }
-
     }
 
     /**
@@ -650,18 +641,17 @@ function AbrController() {
      * @param {string} reason
      * @param {string} rule
      */
-    function setPlaybackQuality(type, streamInfo, representation, reason = null, rule = null) {
+    function setPlaybackQuality(type, streamInfo, representation, reason = {}) {
         if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type] || !representation) {
             return;
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
-        const streamId = streamInfo.id;
         const currentRepresentation = streamProcessor.getRepresentation();
 
 
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
-            _changeQuality(streamId, type, currentRepresentation, representation, reason, rule);
+            _changeQuality(currentRepresentation, representation, reason);
         }
     }
 
@@ -678,21 +668,21 @@ function AbrController() {
 
     /**
      * Changes the internal qualityDict values according to the new quality
-     * @param {string} streamId
-     * @param {string} type
      * @param {Representation} oldRepresentation
      * @param {Representation} newRepresentation
      * @param {string} reason
      * @private
      */
-    function _changeQuality(streamId, type, oldRepresentation, newRepresentation, reason, rule) {
+    function _changeQuality(oldRepresentation, newRepresentation, reason) {
+        const streamId = newRepresentation.mediaInfo.streamInfo.id;
+        const type = newRepresentation.mediaInfo.type;
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
 
             const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
-            logger.info('Stream ID: ' + streamId + ' [' + type + '],' + (rule ? rule : '') + ' switch from bitrate ' + oldBitrate + ' to bitrate ' + newRepresentation.bitrateInKbit + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+            logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
 
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
@@ -786,10 +776,9 @@ function AbrController() {
         if (streamProcessorDict[streamId]) {
             delete streamProcessorDict[streamId];
         }
-        if (switchHistoryDict[streamId]) {
-            delete switchHistoryDict[streamId];
+        if (switchRequestHistory) {
+            switchRequestHistory.clearForStream(streamId);
         }
-
         if (abandonmentStateDict[streamId]) {
             delete abandonmentStateDict[streamId];
         }

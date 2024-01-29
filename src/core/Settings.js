@@ -1143,7 +1143,11 @@ function Settings() {
                         }
                     },
                     switchHistoryRule: {
-                        active: true
+                        active: true,
+                        parameters: {
+                            sampleSize: 8,
+                            switchPercentageThreshold: 0.075
+                        }
                     },
                     droppedFramesRule: {
                         active: true,

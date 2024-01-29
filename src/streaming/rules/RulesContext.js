@@ -37,7 +37,7 @@ function RulesContext(config) {
     let instance;
     const abrController = config.abrController;
     const throughputController = config.throughputController;
-    const switchHistory = config.switchHistory;
+    const switchRequestHistory = config.switchRequestHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
@@ -74,8 +74,8 @@ function RulesContext(config) {
         return throughputController;
     }
 
-    function getSwitchHistory() {
-        return switchHistory;
+    function getSwitchRequestHistory() {
+        return switchRequestHistory;
     }
 
     function getVideoModel() {
@@ -99,7 +99,7 @@ function RulesContext(config) {
         getRepresentation,
         getScheduleController,
         getStreamInfo,
-        getSwitchHistory,
+        getSwitchRequestHistory,
         getThroughputController,
         getVideoModel,
     };
