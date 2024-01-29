@@ -41,7 +41,7 @@ So in this case we can select a maximum bitrate of `11.25 Mbit/s`.
 player.updateSettings({
     streaming: {
         abr: {
-            activeRules: {
+            rules: {
                 insufficientBufferRule: {
                     active: true,
                     parameters: {

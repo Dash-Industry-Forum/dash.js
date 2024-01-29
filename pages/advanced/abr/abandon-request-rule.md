@@ -59,7 +59,7 @@ if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
 player.updateSettings({
     streaming: {
         abr: {
-            activeRules: {
+            rules: {
                 abandonRequestsRule: {
                     active: true,
                     parameters: {

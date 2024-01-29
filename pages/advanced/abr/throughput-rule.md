@@ -31,7 +31,7 @@ parameters are documented [here](throughput-calculation.html).
 player.updateSettings({
     streaming: {
         abr: {
-            activeRules: {
+            rules: {
                 throughputRule: {
                     active: true
                 }

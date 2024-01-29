@@ -31,7 +31,7 @@ ABR rule (`bolaRule`). The `abr` section in `Settings.js` allows a reconfigurati
 player.updateSettings({
     streaming: {
         abr: {
-            activeRules: {
+            rules: {
                 throughputRule: {
                     active: true
                 },
@@ -64,7 +64,7 @@ can be dynamically enabled and disabled.
 ```js
 player.updateSettings({
     abr: {
-        activeRules: {
+        rules: {
             insufficientBufferRule: {
                 active: false
             },
@@ -92,7 +92,7 @@ player.updateSettings({
 |:-------------------------|:--------------------------------------------------------|
 | `insufficientBufferRule` | [InsufficientBufferRule](insufficient-buffer-rule.html) |
 | `switchHistoryRule`      | tbd                                                     |
-| `droppedFramesRule`      | tbd                                                     |
+| `droppedFramesRule`      | [DroppedFramesRule](dropped-frames-rule.html)           |
 | `abandonRequestsRule`    | [AbandonRequestRule](abandon-request-rule.html)         |
 | `l2ARule`                | [L2ARule](l2a.html)                                     |
 | `loLPRule`               | [LoL+](lol_plus.html)                                   |
@@ -108,7 +108,7 @@ use `player.addABRCustomRule()` to add your new rule:
 /* don't use dash.js default rules */
 player.updateSettings({
     abr: {
-        activeRules: {
+        rules: {
             throughputRule: {
                 active: false
             },
