@@ -389,18 +389,6 @@ describe('DashManifestModel', function () {
             expect(mimeType).to.be.null;
         });
 
-        it('should return null when getKID is called and adaptation is undefined', () => {
-            const kid = dashManifestModel.getKID();
-
-            expect(kid).to.be.null;
-        });
-
-        it('should return kid value when getKID is called and adaptation is well defined', () => {
-            const kid = dashManifestModel.getKID({ 'cenc:default_KID': 'testKid' });
-
-            expect(kid).to.equal('testKid');
-        });
-
         it('should return empty array when getLabelsForAdaptation is called and adaptation is undefined', () => {
             const labels = dashManifestModel.getLabelsForAdaptation();
 
@@ -442,17 +430,60 @@ describe('DashManifestModel', function () {
             expect(labels[0].lang).to.equal('fre');
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is undefined', () => {
-            const contentProtection = dashManifestModel.getContentProtectionData();
+        it('should return an empty array when getContentProtectionByAdaptation is called and adaptation is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByAdaptation();
 
-            expect(contentProtection).to.be.null;
+            expect(contentProtection).to.be.empty;
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection is an empty array', () => {
+        it('should return an empty array when getContentProtectionByAdaptation is called and adaptation is defined, but ContentProtection is an empty array', () => {
             const adaptation = { ContentProtection: [] };
-            const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
+            const contentProtection = dashManifestModel.getContentProtectionByAdaptation(adaptation);
 
-            expect(contentProtection).to.be.null;
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByManifest is called and manifest is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByManifest();
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByManifest is called and manifest is defined, but ContentProtection is an empty array', () => {
+            const manifest = { ContentProtection: [] };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return all content protection elements when getContentProtectionByManifest is called and manifest is defined', () => {
+            const manifest = {
+                ContentProtection: [{
+                    'value': 'manifest_value',
+                    'schemeIdUri': 'manifest_scheme'
+                }],
+                Period: [{
+                    ContentProtection: [{
+                        'value': 'period_value',
+                        'schemeIdUri': 'period_scheme'
+                    }, {
+                        'value': 'period_value_2',
+                        'schemeIdUri': 'period_scheme_2'
+                    }],
+                    AdaptationSet: [{
+                        ContentProtection: [{
+                            'value': 'as_value',
+                            'schemeIdUri': 'as_scheme'
+                        }, {
+                            'value': 'as_value_2',
+                            'schemeIdUri': 'as_scheme_2'
+                        }]
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
+
+            expect(contentProtection).to.have.lengthOf(5);
         });
 
         it('should return false when getIsDynamic is called and manifest is undefined', () => {

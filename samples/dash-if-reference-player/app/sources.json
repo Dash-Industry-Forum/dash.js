@@ -405,8 +405,21 @@
             "name": "DRM (modern)",
             "submenu": [
                 {
+                    "name": "Multiperiod - ContentProtection Reference",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/out/v1/feb9354da126479386ae8d47ba103cf8/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAidGVzdHNlc3Npb25tdWx0aWtleSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQ=="
+                            }
+                        }
+                    },
+                    "provider": "aws"
+                },
+                {
                     "name": "Multiperiod - Supplemental Property \"urn:mpeg:dash:adaptation-set-switching:2016\" ",
-                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/out/v1/a234169feb7b4b4ba9fd100b36629ae1/index.mpd",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/out/v1/d0409ade052145c5a639d8db3c5ce4b4/index.mpd",
                     "protData": {
                         "com.widevine.alpha": {
                             "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
