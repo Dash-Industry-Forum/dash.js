@@ -4,7 +4,7 @@ function SwitchRequestHistoryMock() {
     this.getSwitchRequests = function () {
         return {
             1: {
-                drops: 7,
+                drops: 10,
                 noDrops: 0,
                 dropSize: 4
             }
@@ -35,7 +35,7 @@ function RulesContextMock() {
             }
         };
     };
-    this.getSwitchHistory = function () {
+    this.getSwitchRequestHistory = function () {
         return new SwitchRequestHistoryMock();
     };
     this.getVoRepresentation = function () {

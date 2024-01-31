@@ -13,9 +13,7 @@ function DroppedFramesHistory() {
         }
 
         if (!values[streamId]) {
-            values[streamId] = [];
-            lastDroppedFrames[streamId] = 0;
-            lastTotalFrames[streamId] = 0;
+            _initializeForStream(streamId);
         }
 
         let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
@@ -40,18 +38,20 @@ function DroppedFramesHistory() {
 
     }
 
+    function _initializeForStream(streamId) {
+        values[streamId] = [];
+        lastDroppedFrames[streamId] = 0;
+        lastTotalFrames[streamId] = 0;
+    }
+
     function getFrameHistory(streamId) {
         return values[streamId];
     }
 
     function clearForStream(streamId) {
-        try {
-            delete values[streamId];
-            delete lastDroppedFrames[streamId];
-            delete lastTotalFrames[streamId];
-        } catch (e) {
-
-        }
+        delete values[streamId];
+        delete lastDroppedFrames[streamId];
+        delete lastTotalFrames[streamId];
     }
 
     function reset() {
@@ -61,9 +61,9 @@ function DroppedFramesHistory() {
     }
 
     return {
-        push,
-        getFrameHistory,
         clearForStream,
+        getFrameHistory,
+        push,
         reset
     };
 }

@@ -1,18 +1,12 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import SwitchRequest from '../SwitchRequest.js';
-import Debug from '../../../core/Debug.js';
 import Settings from '../../../core/Settings.js';
 
 function DroppedFramesRule() {
 
     const context = this.context;
     const settings = Settings(context).getInstance();
-    let instance,
-        logger;
-
-    function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
-    }
+    let instance;
 
     function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
@@ -49,14 +43,16 @@ function DroppedFramesRule() {
 
                 if (totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.minimumSampleSize && droppedFrames / totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.droppedFramesPercentageThreshold) {
                     newRepresentation = representations[i - 1];
-                    logger.debug('index: ' + newRepresentation.absoluteIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
                     break;
                 }
             }
         }
         if (newRepresentation) {
             switchRequest.representation = newRepresentation;
-            switchRequest.reason = { droppedFrames };
+            switchRequest.reason = {
+                droppedFrames,
+                message: `[DroppedFramesRule]: Switching to index ${newRepresentation.absoluteIndex}. Dropped Frames: ${droppedFrames}, Total Frames: ${totalFrames}`
+            };
         }
 
         return switchRequest;
@@ -65,8 +61,6 @@ function DroppedFramesRule() {
     instance = {
         getSwitchRequest
     };
-
-    setup();
 
     return instance;
 }

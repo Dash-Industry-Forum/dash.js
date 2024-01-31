@@ -119,10 +119,10 @@ function AbandonRequestsRule(config) {
             if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
                 switchRequest.representation = optimalRepresentationForBitrate;
                 switchRequest.reason = {
-                    throughputInKbit
+                    throughputInKbit,
+                    message: `[AbandonRequestRule][${mediaType} is asking to abandon and switch to quality to ${optimalRepresentationForBitrate.absoluteIndex}. The measured bandwidth was ${throughputInKbit} kbit/s`
                 }
                 abandonDict[request.index] = true;
-                logger.info(`[AbandonRequestRule][${mediaType} is asking to abandon and switch to quality to ${optimalRepresentationForBitrate.absoluteIndex}. The measured bandwidth was ${throughputInKbit} kbit/s`);
             }
         }
 

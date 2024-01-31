@@ -69,7 +69,11 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(streamId, mediaType) === MetricsConstants.ALLOW_LOAD) {
                 if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
                     switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughput, true);
-                    switchRequest.reason = { throughput: throughput, latency: latency };
+                    switchRequest.reason = {
+                        throughput,
+                        latency,
+                        message: `[ThroughputRule]: Switching to Representation with bitrate ${switchRequest.representation.bitrateInKbit} kbit/s. Throughput: ${throughput}`
+                    };
                     scheduleController.setTimeToLoadDelay(0);
                 }
             }
