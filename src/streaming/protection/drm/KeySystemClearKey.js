@@ -80,7 +80,7 @@ function KeySystemClearKey(config) {
             let initData = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
 
             if (!initData && cencContentProtection) {
-                const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection['cenc:default_KID']);
+                const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection.cencDefaultKid);
                 const data = { kids: [cencDefaultKid] };
                 initData = new TextEncoder().encode(JSON.stringify(data));
             }

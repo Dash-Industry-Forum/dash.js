@@ -979,53 +979,99 @@ function DashAdapter() {
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
-        mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
+        mediaInfo.contentProtection = dashManifestModel.getContentProtectionByAdaptation(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
         mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
-        if (mediaInfo.contentProtection) {
-            // Get the default key ID and apply it to all key systems
-            const keyIds = mediaInfo.contentProtection.map(cp => dashManifestModel.getKID(cp)).filter(kid => kid !== null);
-            if (keyIds.length) {
-                const keyId = keyIds[0];
-                mediaInfo.contentProtection.forEach(cp => {
-                    cp.keyId = keyId;
-                });
-            }
+        if (mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
+            mediaInfo.contentProtection = _applyContentProtectionReferencing(mediaInfo.contentProtection, adaptation.period.mpd.manifest);
+            mediaInfo.contentProtection = _applyDefaultKeyId(mediaInfo.contentProtection);
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
         if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            let arr = realAdaptation.Representation.map(repr => {
-                return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
-            });
-            if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
-                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
-                mediaInfo.supplementalProperties = arr[0];
-            }
+            mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation);
         }
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.hasProtectedRepresentations = dashManifestModel.getAdaptationHasProtectedRepresentations(realAdaptation);
-
-        // Save IDs of AS that we can switch to
-        try {
-            const adaptationSetSwitching = mediaInfo.supplementalProperties.filter((sp) => {
-                return sp.schemeIdUri === DashConstants.ADAPTATION_SET_SWITCHING_SCHEME_ID_URI
-            });
-            if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
-                const ids = adaptationSetSwitching[0].value.toString().split(',')
-                mediaInfo.adaptationSetSwitchingCompatibleIds = ids.map((id) => {
-                    return id
-                })
-            }
-        } catch (e) {
-            return mediaInfo;
-        }
+        mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
 
         return mediaInfo;
+    }
+
+    function _applyDefaultKeyId(contentProtection) {
+        const keyIds = contentProtection.map(cp => cp.cencDefaultKid).filter(kid => kid !== null);
+        if (keyIds.length) {
+            const keyId = keyIds[0];
+            contentProtection.forEach(cp => {
+                cp.keyId = keyId;
+            });
+        }
+
+        return contentProtection
+    }
+
+    function _applyContentProtectionReferencing(contentProtection, manifest) {
+        if (!contentProtection || !contentProtection.length || !manifest) {
+            return contentProtection
+        }
+
+        const allContentProtectionElements = dashManifestModel.getContentProtectionByManifest(manifest)
+        if (!allContentProtectionElements || !allContentProtectionElements.length) {
+            return contentProtection
+        }
+
+        const contentProtectionElementsByRefId = allContentProtectionElements.reduce((acc, curr) => {
+            if (curr.refId) {
+                acc.set(curr.refId, curr);
+            }
+            return acc
+        }, new Map())
+
+        return contentProtection.map((contentProtectionElement) => {
+            if (contentProtectionElement.ref) {
+                const contentProtectionElementSource = contentProtectionElementsByRefId.get(contentProtectionElement.ref);
+                if (contentProtectionElementSource) {
+                    contentProtectionElement.mergeAttributesFromReference(contentProtectionElementSource)
+                }
+            }
+            return contentProtectionElement
+        })
+    }
+
+    function _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation) {
+        let arr = realAdaptation.Representation.map(repr => {
+            return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
+        });
+
+        if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
+            // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
+            return arr[0];
+        }
+
+        return []
+    }
+
+    function _getAdaptationSetSwitchingCompatibleIds(mediaInfo) {
+        if (!mediaInfo || !mediaInfo.supplementalProperties) {
+            return []
+        }
+
+        let adaptationSetSwitchingCompatibleIds = []
+        const adaptationSetSwitching = mediaInfo.supplementalProperties.filter((sp) => {
+            return sp.schemeIdUri === DashConstants.ADAPTATION_SET_SWITCHING_SCHEME_ID_URI
+        });
+        if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
+            const ids = adaptationSetSwitching[0].value.toString().split(',')
+            adaptationSetSwitchingCompatibleIds = ids.map((id) => {
+                return id
+            })
+        }
+
+        return adaptationSetSwitchingCompatibleIds
     }
 
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {

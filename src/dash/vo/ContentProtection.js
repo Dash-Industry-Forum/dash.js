@@ -28,24 +28,58 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DescriptorType from './DescriptorType.js'
+import DashConstants from '../constants/DashConstants.js';
+
 /**
  * @class
  * @ignore
  */
-class DescriptorType {
+class ContentProtection extends DescriptorType {
+
     constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
+        super();
+        this.ref = null;
+        this.refId = null;
+        this.robustness = null;
+        this.keyId = null;
     }
 
     init(data) {
+        super.init(data);
         if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value ? data.value : null;
-            this.id = data.id ? data.id : null;
+            this.ref = data.hasOwnProperty(DashConstants.REF) ? data[DashConstants.REF] : null;
+            this.refId = data.hasOwnProperty(DashConstants.REF_ID) ? data[DashConstants.REF_ID] : null;
+            this.robustness = data.hasOwnProperty(DashConstants.ROBUSTNESS) ? data[DashConstants.ROBUSTNESS] : null;
+            this.cencDefaultKid = data.hasOwnProperty(DashConstants.CENC_DEFAULT_KID) ? data[DashConstants.CENC_DEFAULT_KID] : null;
+            this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
+            this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
+        }
+    }
+
+    mergeAttributesFromReference(reference) {
+        if (this.schemeIdUri === null) {
+            this.schemeIdUri = reference.schemeIdUri
+        }
+        if (this.value === null) {
+            this.value = reference.value
+        }
+        if (this.id === null) {
+            this.id = reference.id
+        }
+        if (this.robustness === null) {
+            this.robustness = reference.robustness;
+        }
+        if (this.cencDefaultKid === null) {
+            this.cencDefaultKid = reference.cencDefaultKid;
+        }
+        if (this.pro === null) {
+            this.pro = reference.pro;
+        }
+        if (this.pssh === null) {
+            this.pssh = reference.pssh;
         }
     }
 }
 
-export default DescriptorType;
+export default ContentProtection;

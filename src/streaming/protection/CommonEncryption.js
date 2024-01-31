@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
     attributes: ['Laurl', 'laurl'],
@@ -41,17 +42,17 @@ const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
-     * that indicates support for MPEG Common Encryption
+     * that indicates support for MP4 Common Encryption
      *
      * @param {Array} cpArray array of content protection elements
      * @returns {Object|null} the Common Encryption content protection element or
      * null if one was not found
      */
-    static findCencContentProtection(cpArray) {
+    static findMp4ProtectionElement(cpArray) {
         let retVal = null;
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
-            if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
+            if (cp.schemeIdUri && cp.schemeIdUri.toLowerCase() === DashConstants.MP4_PROTECTION_SCHEME && cp.value &&
                 (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs'))
                 retVal = cp;
         }
@@ -108,7 +109,7 @@ class CommonEncryption {
      * @returns {ArrayBuffer|null} the init data or null if not found
      */
     static parseInitDataFromContentProtection(cpData, BASE64) {
-        if ('pssh' in cpData) {
+        if ('pssh' in cpData && cpData.pssh) {
 
             // Remove whitespaces and newlines from pssh text
             cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g, '').replace(/\s+/g, '');

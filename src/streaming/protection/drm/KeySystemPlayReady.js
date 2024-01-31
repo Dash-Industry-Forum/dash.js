@@ -197,14 +197,14 @@ function KeySystemPlayReady(config) {
             return null;
         }
         // Handle common encryption PSSH
-        if ('pssh' in cpData) {
+        if ('pssh' in cpData && cpData.pssh) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
         }
         // Handle native MS PlayReady ContentProtection elements
-        if ('pro' in cpData) {
+        if ('pro' in cpData && cpData.pro) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
         }
-        else if ('prheader' in cpData) {
+        else if ('prheader' in cpData && cpData.prheader) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.prheader.__text);
         }
         else {

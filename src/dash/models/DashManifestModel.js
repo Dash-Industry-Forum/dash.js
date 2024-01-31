@@ -50,6 +50,7 @@ import Errors from '../../core/errors/Errors.js';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks.js';
 import MpdLocation from '../vo/MpdLocation.js';
 import PatchLocation from '../vo/PatchLocation.js';
+import ContentProtection from '../vo/ContentProtection.js';
 
 function DashManifestModel() {
     let instance,
@@ -236,7 +237,8 @@ function DashManifestModel() {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT) || !adaptation[DashConstants.VIEWPOINT].length) return [];
         return adaptation[DashConstants.VIEWPOINT].map(viewpoint => {
             const vp = new DescriptorType();
-            return vp.init(viewpoint);
+            vp.init(viewpoint);
+            return vp
         });
     }
 
@@ -244,7 +246,8 @@ function DashManifestModel() {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE) || !adaptation[DashConstants.ROLE].length) return [];
         return adaptation[DashConstants.ROLE].map(role => {
             const r = new DescriptorType();
-            return r.init(role);
+            r.init(role);
+            return r
         });
     }
 
@@ -252,7 +255,8 @@ function DashManifestModel() {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY) || !adaptation[DashConstants.ACCESSIBILITY].length) return [];
         return adaptation[DashConstants.ACCESSIBILITY].map(accessibility => {
             const a = new DescriptorType();
-            return a.init(accessibility);
+            a.init(accessibility);
+            return a
         });
     }
 
@@ -260,7 +264,8 @@ function DashManifestModel() {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
         return adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
-            return acc.init(audioChanCfg);
+            acc.init(audioChanCfg);
+            return acc
         });
     }
 
@@ -268,7 +273,8 @@ function DashManifestModel() {
         if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
         return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
-            return acc.init(audioChanCfg);
+            acc.init(audioChanCfg);
+            return acc
         });
     }
 
@@ -398,13 +404,6 @@ function DashManifestModel() {
         return false
     }
 
-    function getKID(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.CENC_DEFAULT_KID)) {
-            return null;
-        }
-        return adaptation[DashConstants.CENC_DEFAULT_KID];
-    }
-
     function getLabelsForAdaptation(adaptation) {
         if (!adaptation || !adaptation.Label) {
             return [];
@@ -422,11 +421,49 @@ function DashManifestModel() {
         return labelArray;
     }
 
-    function getContentProtectionData(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.CONTENT_PROTECTION) || adaptation.ContentProtection.length === 0) {
-            return null;
+
+    function getContentProtectionByManifest(manifest) {
+        let protectionElements = [];
+
+        if (!manifest) {
+            return protectionElements
         }
-        return adaptation.ContentProtection;
+
+        const mpdElements = _getContentProtectionFromElement(manifest);
+        protectionElements = protectionElements.concat(mpdElements);
+
+        if (manifest.hasOwnProperty(DashConstants.PERIOD) && manifest[DashConstants.PERIOD].length > 0) {
+            manifest[DashConstants.PERIOD].forEach((period) => {
+                const curr = _getContentProtectionFromElement(period);
+                protectionElements = protectionElements.concat(curr);
+
+                if (period.hasOwnProperty(DashConstants.ADAPTATION_SET) && period[DashConstants.ADAPTATION_SET].length > 0) {
+                    period[DashConstants.ADAPTATION_SET].forEach((as) => {
+                        const curr = _getContentProtectionFromElement(as);
+                        protectionElements = protectionElements.concat(curr);
+                    })
+                }
+            })
+        }
+
+        return protectionElements
+    }
+
+
+    function getContentProtectionByAdaptation(adaptation) {
+        return _getContentProtectionFromElement(adaptation);
+    }
+
+    function _getContentProtectionFromElement(element) {
+        if (!element || !element.hasOwnProperty(DashConstants.CONTENT_PROTECTION) || element.ContentProtection.length === 0) {
+            return [];
+        }
+
+        return element[DashConstants.CONTENT_PROTECTION].map(contentProtectionData => {
+            const cp = new ContentProtection();
+            cp.init(contentProtectionData);
+            return cp
+        });
     }
 
     function getAdaptationHasProtectedRepresentations(adaptation) {
@@ -1314,7 +1351,8 @@ function DashManifestModel() {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) return [];
         return adaptation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
-            return s.init(supp);
+            s.init(supp);
+            return s
         });
     }
 
@@ -1322,7 +1360,8 @@ function DashManifestModel() {
         if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) return [];
         return representation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
-            return s.init(supp);
+            s.init(supp);
+            return s
         });
     }
 
@@ -1359,9 +1398,9 @@ function DashManifestModel() {
         getCodec,
         getSelectionPriority,
         getMimeType,
-        getKID,
         getLabelsForAdaptation,
-        getContentProtectionData,
+        getContentProtectionByAdaptation,
+        getContentProtectionByManifest,
         getIsDynamic,
         getId,
         hasProfile,
