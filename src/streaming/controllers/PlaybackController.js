@@ -58,6 +58,7 @@ function PlaybackController() {
         isDynamic,
         playOnceInitialized,
         lastLivePlaybackTime,
+        lastLiveUpdateTime,
         availabilityStartTime,
         availabilityTimeComplete,
         lowLatencyModeEnabled,
@@ -723,11 +724,15 @@ function PlaybackController() {
         // Updates playback time for paused dynamic streams
         // (video element doesn't call timeupdate when the playback is paused)
         if (getIsDynamic()) {
-            streamController.addDVRMetric();
-            if (isPaused()) {
-                _updateLivePlaybackTime();
-            } else {
-                updateCurrentTime();
+            const now = Date.now();
+            if (!lastLiveUpdateTime || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThreshold) {
+                streamController.addDVRMetric();
+                if (isPaused()) {
+                    _updateLivePlaybackTime();
+                } else {
+                    updateCurrentTime();
+                }
+                lastLiveUpdateTime = now;
             }
         }
     }
