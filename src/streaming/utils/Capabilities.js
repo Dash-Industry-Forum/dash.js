@@ -59,23 +59,11 @@ function Capabilities() {
         }
     }
 
-    function isProtectionCompatible(previousStream, newStream) {
-        if (!newStream) {
+    function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
+        if (!newStreamInfo) {
             return true;
         }
-        return _compareProtectionConfig(Constants.VIDEO, previousStream, newStream) && _compareProtectionConfig(Constants.AUDIO, previousStream, newStream);
-    }
-
-    function _compareProtectionConfig(type, previousStream, newStream) {
-        const previousMediaInfo = previousStream.getCurrentMediaInfoForType(type);
-        const newMediaInfo = newStream.getCurrentMediaInfoForType(type);
-
-        if (!previousMediaInfo || !newMediaInfo) {
-            return true;
-        }
-
-        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !(!previousMediaInfo.hasProtectedRepresentations && newMediaInfo.hasProtectedRepresentations);
+        return !(!previousStreamInfo.isEncrypted && newStreamInfo.isEncrypted);
     }
 
     /**

@@ -996,7 +996,6 @@ function DashAdapter() {
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
-        mediaInfo.hasProtectedRepresentations = dashManifestModel.getAdaptationHasProtectedRepresentations(realAdaptation);
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
 
         return mediaInfo;
@@ -1099,6 +1098,7 @@ function DashAdapter() {
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
         streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isEncrypted = period.isEncrypted;
 
         return streamInfo;
     }

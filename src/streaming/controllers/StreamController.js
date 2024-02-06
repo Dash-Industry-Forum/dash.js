@@ -654,7 +654,7 @@ function StreamController() {
             // - none of the periods uses contentProtection.
             // - AND changeType method is implemented
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
-                && (capabilities.isProtectionCompatible(previousStream, nextStream) || firstLicenseIsFetched)
+                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
                 && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));
         } catch (e) {
             return false;
