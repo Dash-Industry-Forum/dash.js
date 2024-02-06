@@ -417,7 +417,7 @@ describe('DashManifestModel', function () {
             expect(labels).to.be.empty;
         });
 
-        it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
+        it('should return correct array when getLabelsForAdaptation() is called and adaptation is well defined', () => {
             const labels = dashManifestModel.getLabelsForAdaptation({
                 Label: [{
                     lang: 'fre',
@@ -430,33 +430,33 @@ describe('DashManifestModel', function () {
             expect(labels[0].lang).to.equal('fre');
         });
 
-        it('should return an empty array when getContentProtectionByAdaptation is called and adaptation is undefined', () => {
+        it('should return an empty array when getContentProtectionByAdaptation() is called and adaptation is undefined', () => {
             const contentProtection = dashManifestModel.getContentProtectionByAdaptation();
 
             expect(contentProtection).to.be.empty;
         });
 
-        it('should return an empty array when getContentProtectionByAdaptation is called and adaptation is defined, but ContentProtection is an empty array', () => {
+        it('should return an empty array when getContentProtectionByAdaptation() is called and adaptation is defined, but ContentProtection is an empty array', () => {
             const adaptation = { ContentProtection: [] };
             const contentProtection = dashManifestModel.getContentProtectionByAdaptation(adaptation);
 
             expect(contentProtection).to.be.empty;
         });
 
-        it('should return an empty array when getContentProtectionByManifest is called and manifest is undefined', () => {
+        it('should return an empty array when getContentProtectionByManifest() is called and manifest is undefined', () => {
             const contentProtection = dashManifestModel.getContentProtectionByManifest();
 
             expect(contentProtection).to.be.empty;
         });
 
-        it('should return an empty array when getContentProtectionByManifest is called and manifest is defined, but ContentProtection is an empty array', () => {
+        it('should return an empty array when getContentProtectionByManifest() is called and manifest is defined, but ContentProtection is an empty array', () => {
             const manifest = { ContentProtection: [] };
             const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
 
             expect(contentProtection).to.be.empty;
         });
 
-        it('should return all content protection elements when getContentProtectionByManifest is called and manifest is defined', () => {
+        it('should return all content protection elements when getContentProtectionByManifest() is called and manifest is defined', () => {
             const manifest = {
                 ContentProtection: [{
                     'value': 'manifest_value',
@@ -484,6 +484,89 @@ describe('DashManifestModel', function () {
             const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
 
             expect(contentProtection).to.have.lengthOf(5);
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByPeriod();
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is defined, but ContentProtection is an empty array', () => {
+            const period = { ContentProtection: [] };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(period);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is defined, but ContentProtection in all child entities is an empty array', () => {
+            const period = { ContentProtection: [], AdaptationSet: { ContentProtection: [] } };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(period);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return all content protection elements when getContentProtectionByPeriod() is called and period is defined', () => {
+            const period = {
+                ContentProtection: [{
+                    'value': 'period_value',
+                    'schemeIdUri': 'period_scheme'
+                }],
+                AdaptationSet: [{
+                    ContentProtection: [{
+                        'value': 'as_value',
+                        'schemeIdUri': 'as_scheme'
+                    }, {
+                        'value': 'as_value_2',
+                        'schemeIdUri': 'as_scheme_2'
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.getContentProtectionByPeriod(period);
+
+            expect(contentProtection).to.have.lengthOf(3);
+        });
+
+        it('should return true when isPeriodEncrypted() is called and content protection is defined', () => {
+            const period = {
+                ContentProtection: [{
+                    'value': 'period_value',
+                    'schemeIdUri': 'period_scheme'
+                }],
+                AdaptationSet: [{
+                    ContentProtection: [{
+                        'value': 'as_value',
+                        'schemeIdUri': 'as_scheme'
+                    }, {
+                        'value': 'as_value_2',
+                        'schemeIdUri': 'as_scheme_2'
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.true
+        });
+
+        it('should return false when isPeriodEncrypted() is called and content protection is empty', () => {
+            const period = {
+                ContentProtection: [],
+                AdaptationSet: [{
+                    ContentProtection: []
+                }]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.false
+        });
+
+        it('should return false when isPeriodEncrypted() is called and content protection is not defined', () => {
+            const period = {
+                AdaptationSet: [{}]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.false
         });
 
         it('should return false when getIsDynamic is called and manifest is undefined', () => {

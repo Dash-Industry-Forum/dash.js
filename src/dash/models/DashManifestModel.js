@@ -421,6 +421,11 @@ function DashManifestModel() {
         return labelArray;
     }
 
+    function isPeriodEncrypted(period) {
+        const contentProtectionElements = getContentProtectionByPeriod(period);
+
+        return contentProtectionElements && contentProtectionElements.length > 0;
+    }
 
     function getContentProtectionByManifest(manifest) {
         let protectionElements = [];
@@ -434,21 +439,33 @@ function DashManifestModel() {
 
         if (manifest.hasOwnProperty(DashConstants.PERIOD) && manifest[DashConstants.PERIOD].length > 0) {
             manifest[DashConstants.PERIOD].forEach((period) => {
-                const curr = _getContentProtectionFromElement(period);
+                const curr = getContentProtectionByPeriod(period)
                 protectionElements = protectionElements.concat(curr);
-
-                if (period.hasOwnProperty(DashConstants.ADAPTATION_SET) && period[DashConstants.ADAPTATION_SET].length > 0) {
-                    period[DashConstants.ADAPTATION_SET].forEach((as) => {
-                        const curr = _getContentProtectionFromElement(as);
-                        protectionElements = protectionElements.concat(curr);
-                    })
-                }
             })
         }
 
         return protectionElements
     }
 
+    function getContentProtectionByPeriod(period) {
+        let protectionElements = [];
+
+        if (!period) {
+            return protectionElements
+        }
+
+        const periodProtectionElements = _getContentProtectionFromElement(period);
+        protectionElements = protectionElements.concat(periodProtectionElements);
+
+        if (period.hasOwnProperty(DashConstants.ADAPTATION_SET) && period[DashConstants.ADAPTATION_SET].length > 0) {
+            period[DashConstants.ADAPTATION_SET].forEach((as) => {
+                const curr = _getContentProtectionFromElement(as);
+                protectionElements = protectionElements.concat(curr);
+            })
+        }
+
+        return protectionElements
+    }
 
     function getContentProtectionByAdaptation(adaptation) {
         return _getContentProtectionFromElement(adaptation);
@@ -460,25 +477,11 @@ function DashManifestModel() {
         }
 
         return element[DashConstants.CONTENT_PROTECTION].map(contentProtectionData => {
-            const cp = new ContentProtection();
-            cp.init(contentProtectionData);
-            return cp
+            const contentProtection = new ContentProtection();
+            contentProtection.init(contentProtectionData);
+
+            return contentProtection
         });
-    }
-
-    function getAdaptationHasProtectedRepresentations(adaptation) {
-        if (adaptation && adaptation.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && adaptation.ContentProtection.length > 0) {
-            return true;
-        }
-
-        let encryptedRepresentations = [];
-        if (adaptation.Representation && adaptation.Representation.length > 0) {
-            encryptedRepresentations = adaptation.Representation.some((rep) => {
-                return rep.hasOwnProperty(DashConstants.CONTENT_PROTECTION) && rep.ContentProtection.length > 0
-            })
-        }
-
-        return encryptedRepresentations.length > 0;
     }
 
     function getIsDynamic(manifest) {
@@ -842,6 +845,7 @@ function DashManifestModel() {
                 voPeriod.id = getPeriodId(realPeriod, i);
                 voPeriod.index = i;
                 voPeriod.mpd = mpd;
+                voPeriod.isEncrypted = isPeriodEncrypted(realPeriod);
 
                 if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
                     voPeriod.duration = realPeriod.duration;
@@ -1378,60 +1382,61 @@ function DashManifestModel() {
     }
 
     instance = {
-        getIsTypeOf,
-        getIsText,
-        getIsFragmented,
-        getProducerReferenceTimesForAdaptation,
-        getLanguageForAdaptation,
-        getViewpointForAdaptation,
-        getRolesForAdaptation,
         getAccessibilityForAdaptation,
+        getAdaptationForId,
+        getAdaptationForIndex,
+        getAdaptationsForPeriod,
+        getAdaptationsForType,
         getAudioChannelConfigurationForAdaptation,
         getAudioChannelConfigurationForRepresentation,
-        getAdaptationForIndex,
-        getAdaptationHasProtectedRepresentations,
-        getIndexForAdaptation,
-        getAdaptationForId,
-        getAdaptationsForType,
-        getRealPeriods,
-        getRealPeriodForIndex,
+        getAvailabilityStartTime,
+        getBandwidth,
+        getBaseURLsFromElement,
+        getBitrateListForAdaptation,
         getCodec,
-        getSelectionPriority,
-        getMimeType,
-        getLabelsForAdaptation,
         getContentProtectionByAdaptation,
         getContentProtectionByManifest,
-        getIsDynamic,
-        getId,
-        hasProfile,
+        getContentProtectionByPeriod,
+        getContentSteering,
         getDuration,
-        getBandwidth,
-        getManifestUpdatePeriod,
-        getPublishTime,
-        getRepresentationCount,
-        getBitrateListForAdaptation,
-        getRepresentationFor,
-        getRepresentationsForAdaptation,
-        getAdaptationsForPeriod,
-        getRegularPeriods,
-        getMpd,
-        getEventsForPeriod,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
-        getUTCTimingSources,
-        getBaseURLsFromElement,
-        getRepresentationSortFunction,
-        getContentSteering,
+        getEventsForPeriod,
+        getId,
+        getIndexForAdaptation,
+        getIsDynamic,
+        getIsFragmented,
+        getIsText,
+        getIsTypeOf,
+        getLabelsForAdaptation,
+        getLanguageForAdaptation,
         getLocation,
+        getManifestUpdatePeriod,
+        getMimeType,
+        getMpd,
         getPatchLocation,
-        getSuggestedPresentationDelay,
-        getAvailabilityStartTime,
-        getServiceDescriptions,
+        getProducerReferenceTimesForAdaptation,
+        getPublishTime,
+        getRealPeriodForIndex,
+        getRealPeriods,
+        getRegularPeriods,
+        getRepresentationCount,
+        getRepresentationFor,
+        getRepresentationSortFunction,
+        getRepresentationsForAdaptation,
+        getRolesForAdaptation,
         getSegmentAlignment,
+        getSelectionPriority,
+        getServiceDescriptions,
         getSubSegmentAlignment,
+        getSuggestedPresentationDelay,
         getSupplementalPropertiesForAdaptation,
         getSupplementalPropertiesForRepresentation,
+        getUTCTimingSources,
+        getViewpointForAdaptation,
+        hasProfile,
+        isPeriodEncrypted,
         setConfig
     };
 
