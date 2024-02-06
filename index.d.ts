@@ -963,6 +963,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
+            liveUpdateTimeThresholdInMilliseconds?: number,
             applyServiceDescription?: boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,

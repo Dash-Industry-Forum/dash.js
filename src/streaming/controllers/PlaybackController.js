@@ -89,6 +89,7 @@ function PlaybackController() {
         lowLatencyModeEnabled = false;
         initialCatchupModeActivated = false;
         seekTarget = NaN;
+        liveUpdateTimeThresholdInMilliseconds = NaN;
 
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
@@ -725,7 +726,8 @@ function PlaybackController() {
         // (video element doesn't call timeupdate when the playback is paused)
         if (getIsDynamic()) {
             const now = Date.now();
-            if (!lastLiveUpdateTime || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThreshold) {
+            // When liveUpdateTimeThresholdInMilliseconds is NaN, we do not throttle and update time each tick.
+            if (isNaN(settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) || !lastLiveUpdateTime || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) {
                 streamController.addDVRMetric();
                 if (isPaused()) {
                     _updateLivePlaybackTime();
