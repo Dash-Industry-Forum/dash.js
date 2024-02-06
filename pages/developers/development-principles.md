@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Development Principles
-parent: Developers Corner
+parent: Developers
 ---
 
 # Development Principles

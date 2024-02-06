@@ -1,7 +1,7 @@
 ---
 layout: default 
 title: How to contribute
-parent: Developers Corner
+parent: Developers
 nav_order: 1
 ---
 

@@ -1,5 +1,5 @@
 ---
 layout: default
 title: Architecture
-parent: Developers Corner
+parent: Developers
 ---

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Code Quality
-parent: Developers Corner
+parent: Developers
 ---
 
 # Code quality
