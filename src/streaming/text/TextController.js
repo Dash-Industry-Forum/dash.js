@@ -357,7 +357,6 @@ function TextController(config) {
         textTracks[streamId].setCurrentTrackIdx(idx);
 
         currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
-        currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
 
         const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
 

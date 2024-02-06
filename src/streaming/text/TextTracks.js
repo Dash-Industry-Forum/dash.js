@@ -505,7 +505,7 @@ function TextTracks(config) {
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
                     cue = _handleCaptionEvents(currentItem, timeOffset);
-                } else if (currentItem.type === 'html' && captionContainer) {
+                } else if (_isHTMLCue(currentItem) && captionContainer) {
                     cue = _handleHtmlCaption(currentItem, timeOffset, track)
                 } else if (currentItem.data) {
                     cue = _handleNonHtmlCaption(currentItem, timeOffset, track)
@@ -572,7 +572,7 @@ function TextTracks(config) {
         cue.onenter = function () {
             // HTML Tracks don't trigger the onexit event when a new cue is entered,
             // we need to manually trigger it
-            if (currentItem.type == 'html' && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
+            if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
                 _triggerCueExit(currentCaptionEventCue);
             }
             currentCaptionEventCue = cue;
@@ -679,32 +679,44 @@ function TextTracks(config) {
         return cue;
     }
 
+    function _isHTMLCue(cue) {
+        return (cue.type === 'html')
+    }
+
     function _getCueInformation(currentItem, timeOffset) {
-        if (currentItem.type === 'html') {
-            let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
-            cue.cueHTMLElement = currentItem.cueHTMLElement;
-            cue.isd = currentItem.isd;
-            cue.images = currentItem.images;
-            cue.embeddedImages = currentItem.embeddedImages;
-            cue.cueID = currentItem.cueID;
-            cue.scaleCue = _scaleCue.bind(self);
-            //useful parameters for cea608 subtitles, not for TTML one.
-            cue.cellResolution = currentItem.cellResolution;
-            cue.lineHeight = currentItem.lineHeight;
-            cue.linePadding = currentItem.linePadding;
-            cue.fontSize = currentItem.fontSize;
-
-            // Resolve images sources
-            if (cue.isd) {
-                _resolveImagesInContents(cue, cue.isd.contents);
-            }
-
-            return cue;
+        if (_isHTMLCue(currentItem)) {
+            return _getCueInformationForHtml(currentItem, timeOffset);
         }
 
+        return _getCueInformationForNonHtml(currentItem, timeOffset);
+    }
+
+    function _getCueInformationForHtml(currentItem, timeOffset) {
+        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
+        cue.cueHTMLElement = currentItem.cueHTMLElement;
+        cue.isd = currentItem.isd;
+        cue.images = currentItem.images;
+        cue.embeddedImages = currentItem.embeddedImages;
+        cue.cueID = currentItem.cueID;
+        cue.scaleCue = _scaleCue.bind(self);
+        //useful parameters for cea608 subtitles, not for TTML one.
+        cue.cellResolution = currentItem.cellResolution;
+        cue.lineHeight = currentItem.lineHeight;
+        cue.linePadding = currentItem.linePadding;
+        cue.fontSize = currentItem.fontSize;
+
+        // Resolve images sources
+        if (cue.isd) {
+            _resolveImagesInContents(cue, cue.isd.contents);
+        }
+
+        return cue;
+    }
+
+    function _getCueInformationForNonHtml(currentItem, timeOffset) {
         let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
         cue.cueID = `${cue.startTime}_${cue.endTime}`;
-        return cue
+        return cue;
     }
 
     function manualCueProcessing(time) {

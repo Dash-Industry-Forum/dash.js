@@ -1043,6 +1043,7 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                dispatchForManualRendering?: boolean,
                 extendSegmentedCues?: boolean,
                 imsc?: {
                     displayForcedOnlyMode?: boolean,
