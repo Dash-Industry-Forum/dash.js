@@ -260,6 +260,18 @@ class MediaPlayerEvents extends EventsBase {
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
 
         /**
+         * Triggered when a text track should be shown
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_ENTER = 'cueEnter'
+
+        /**
+         * Triggered when a text track should be hidden
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_EXIT = 'cueExit'
+
+        /**
          * Triggered when a throughput measurement based on the last segment request has been stored
          * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
          */

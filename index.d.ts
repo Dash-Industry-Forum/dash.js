@@ -1044,6 +1044,7 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                dispatchForManualRendering?: boolean,
                 extendSegmentedCues?: boolean,
                 imsc?: {
                     displayForcedOnlyMode?: boolean,
@@ -1534,6 +1535,8 @@ declare namespace dashjs {
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
         CONFORMANCE_VIOLATION: 'conformanceViolation';
+        CUE_ENTER: 'cueEnter';
+        CUE_EXIT: 'cueExit';
         DVB_FONT_DOWNLOAD_ADDED: 'dvbFontDownloadAdded';
         DVB_FONT_DOWNLOAD_COMPLETE: 'dvbFontDownloadComplete';
         DVB_FONT_DOWNLOAD_FAILED: 'dvbFontDownloadFailed';
@@ -1981,6 +1984,19 @@ declare namespace dashjs {
     export interface TtmlToParseEvent extends Event {
         type: MediaPlayerEvents['TTML_TO_PARSE'];
         content: object;
+    }
+
+    export interface CueEnterEvent extends Event {
+        type: MediaPlayerEvents['CUE_ENTER'];
+        id: string,
+        text: string,
+        start: number,
+        end: number
+    }
+
+    export interface CueExitEvent extends Event {
+        type: MediaPlayerEvents['CUE_EXIT'];
+        id: string,
     }
 
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
