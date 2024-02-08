@@ -270,10 +270,15 @@ function CmcdModel() {
     }
 
     function _isIncludedInRequestFilter(type){
-        const { includeInRequests } = getCmcdParametersFromManifest();
-        const includeInRequestsArray = includeInRequests?.split(' ');
+        const cmcdParameters = getCmcdParametersFromManifest();
+        let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
 
-        if(!includeInRequests || includeInRequestsArray.find(include => include === '*')){
+        if (cmcdParameters.version) {
+            const includeInRequests = cmcdParameters.includeInRequests;
+            includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_KEYS];
+        }
+
+        if(includeInRequestsArray.find(t => t === CMCD_ALL_KEYS)){
             return true;
         }
 
@@ -285,7 +290,7 @@ function CmcdModel() {
             [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
         };
 
-        return includeInRequestsArray.some(include => filtersTypes[type] === include);
+        return includeInRequestsArray.some(t => filtersTypes[type] === t);
     }
 
     function _getCmcdData(request) {
