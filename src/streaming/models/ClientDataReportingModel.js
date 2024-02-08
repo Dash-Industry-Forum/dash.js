@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 function ClientDataReportingModel() {
 
@@ -43,19 +44,19 @@ function ClientDataReportingModel() {
         }
     }
 
-    function serviceLocationIncluded(serviceLocation){
+    function serviceLocationIncluded(requestType, serviceLocation){
+
+        if(requestType == HTTPRequest.CONTENT_STEERING_TYPE)
+            return true;
+
         const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-
         const isServiceLocationIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
-
         return isServiceLocationIncluded;
     }
 
     function adaptationSetIncluded(adaptationSet){
         const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-
         const isAdaptationsIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
-
         return isAdaptationsIncluded;
     }
 
