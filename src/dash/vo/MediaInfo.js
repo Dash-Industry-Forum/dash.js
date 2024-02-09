@@ -55,7 +55,8 @@ class MediaInfo {
         this.selectionPriority = 1;
         this.streamInfo = null;
         this.subSegmentAlignment = false;
-        this.supplementalProperties = {};
+        this.supplementalProperties = [];
+        this.essentialProperties = [];
         this.type = null;
         this.viewpoint = null;
     }
