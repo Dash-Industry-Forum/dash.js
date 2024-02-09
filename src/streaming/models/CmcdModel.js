@@ -33,6 +33,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
+import Debug from '../../core/Debug';
 import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -40,7 +41,7 @@ import Utils from '../../core/Utils';
 
 const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
-const CMCD_ALL_KEYS = '*';
+const CMCD_ALL_REQUESTS = '*';
 const OBJECT_TYPES = {
     MANIFEST: 'm',
     AUDIO: 'a',
@@ -65,6 +66,7 @@ function CmcdModel() {
 
     let dashManifestModel,
         instance,
+        logger,
         internalData,
         abrController,
         dashMetrics,
@@ -78,10 +80,11 @@ function CmcdModel() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
+    let debug = Debug(context).getInstance();
 
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
-
+        logger = debug.getLogger(instance);
         _resetInitialSettings();
     }
 
@@ -170,22 +173,12 @@ function CmcdModel() {
     function _applyWhitelist(cmcdData) {
         try {
             const cmcdParameters = getCmcdParametersFromManifest();
-            let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
-
-            if (cmcdParameters.version) {
-                enabledCMCDKeys = cmcdParameters.keys;
-                enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
-
-                if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
-                    return cmcdData;
-                }
-            }
+            const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys : settings.get().streaming.cmcd.enabledKeys;
 
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
                     obj[key] = cmcdData[key];
-
                     return obj;
                 }, {});
         } catch (e) {
@@ -235,6 +228,32 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
+        
+        if (Object.keys(cmcdParameters).length) {
+            if(!cmcdParameters.version){
+                logger.error(`[CMCD] version parameter must be defined.`);
+                return false;
+            }
+
+            if(!cmcdParameters.keys){
+                logger.error(`[CMCD] keys parameter must be defined.`);
+                return false;
+            }
+
+            const defaultSettings = settings.get().streaming.cmcd.enabledKeys;
+            const enabledCMCDKeys = cmcdParameters.keys;
+            const invalidKeys = enabledCMCDKeys.filter(k => !defaultSettings.includes(k))
+            
+            if(invalidKeys.length == enabledCMCDKeys.length){
+                logger.error(`[CMCD] all the keys parameters are not implemented.`);
+                return false;
+            }
+
+            invalidKeys.map((k) => {
+                logger.warning(`[CMCD] key parameter ${k} is not implemented.`);
+            });
+        }
+
         return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
@@ -255,17 +274,7 @@ function CmcdModel() {
 
     function _applyWhitelistByKeys(keys) {
         const cmcdParameters = getCmcdParametersFromManifest();
-        let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
-
-        if (cmcdParameters.version) {
-            enabledCMCDKeys = cmcdParameters.keys;
-            enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
-
-            if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
-                return keys;
-            }
-        }
-
+        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys : settings.get().streaming.cmcd.enabledKeys;
         return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
@@ -275,10 +284,10 @@ function CmcdModel() {
 
         if (cmcdParameters.version) {
             const includeInRequests = cmcdParameters.includeInRequests;
-            includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_KEYS];
+            includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_REQUESTS];
         }
 
-        if(includeInRequestsArray.find(t => t === CMCD_ALL_KEYS)){
+        if(includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS)){
             return true;
         }
 
