@@ -187,8 +187,10 @@ function Capabilities() {
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
-        try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+        let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
+        supportedEssentialProps.push(...THUMBNAILS_SCHEME_ID_URIS);
+         try {
+            return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
         } catch (e) {
             return true;
         }
