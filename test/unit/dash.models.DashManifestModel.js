@@ -130,6 +130,62 @@ describe('DashManifestModel', function () {
             expect(rolesArray).to.be.empty;
         });
 
+        it('should return an empty array when getEssentialPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Object);
+            expect(suppPropArray).to.be.empty;
+        });
+
+        it('should return an empty array when getEssentialPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Array);
+            expect(suppPropArray).to.be.empty;
+        });
+
+        it('should return correct array of DescriptorType when getEssentialPropertiesForAdaptation is called', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForAdaptation({
+                EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
+                    schemeIdUri: 'test.scheme',
+                    value: 'test2Val'
+                }]
+            });
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray.length).to.equal(2);
+            expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
+            expect(essPropArray[0].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[0].value).equals('testVal');
+            expect(essPropArray[1].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[1].value).equals('test2Val');
+        });
+
+        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+
+            expect(essPropArray).to.be.instanceOf(Object);
+            expect(essPropArray).to.be.empty;
+        });
+
+        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray).to.be.empty;
+        });
+
+        it('should return correct array of DescriptorType when getEssentialPropertiesForRepresentation is called', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation({
+                EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
+            });
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
+            expect(essPropArray[0].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[0].value).equals('testVal');
+        });
+
         it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
 

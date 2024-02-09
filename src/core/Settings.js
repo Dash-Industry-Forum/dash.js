@@ -72,6 +72,7 @@ import Events from './events/Events.js';
  *            enableManifestTimescaleMismatchFix: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
+ *               supportedEssentialProperties: [],
  *               useMediaCapabilitiesApi: false
  *            },
  *            timeShiftBuffer: {
@@ -628,6 +629,8 @@ import Events from './events/Events.js';
  * @typedef {Object} Capabilities
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {Array.<string>} [supportedEssentialProperties=[]]
+ * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
  */
@@ -1005,6 +1008,7 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
+                supportedEssentialProperties: [],
                 useMediaCapabilitiesApi: false
             },
             timeShiftBuffer: {
