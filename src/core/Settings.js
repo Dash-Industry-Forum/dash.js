@@ -1063,7 +1063,7 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+                enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
                 includeInRequests: ['mpd', 'segment']
             },
             cmsd: {

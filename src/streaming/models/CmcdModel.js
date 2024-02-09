@@ -228,33 +228,61 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
-        
+        return canBeEnabled(cmcdParameters) && checkIncludeInRequests(cmcdParameters) && checkAvailableKeys(cmcdParameters);
+    }
+
+    function canBeEnabled(cmcdParameters) {
         if (Object.keys(cmcdParameters).length) {
             if(!cmcdParameters.version){
-                logger.error(`[CMCD] version parameter must be defined.`);
+                logger.error(`version parameter must be defined.`);
                 return false;
             }
-
             if(!cmcdParameters.keys){
-                logger.error(`[CMCD] keys parameter must be defined.`);
+                logger.error(`keys parameter must be defined.`);
                 return false;
             }
+        }
+        return cmcdParameters.version || (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled);
+    }
 
-            const defaultSettings = settings.get().streaming.cmcd.enabledKeys;
-            const enabledCMCDKeys = cmcdParameters.keys;
-            const invalidKeys = enabledCMCDKeys.filter(k => !defaultSettings.includes(k))
-            
-            if(invalidKeys.length == enabledCMCDKeys.length){
-                logger.error(`[CMCD] all the keys parameters are not implemented.`);
-                return false;
-            }
+    function checkIncludeInRequests(cmcdParameters){
+        let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
-            invalidKeys.map((k) => {
-                logger.warning(`[CMCD] key parameter ${k} is not implemented.`);
-            });
+        if(cmcdParameters.version){
+            if(!cmcdParameters.includeInRequests)
+                return true
+            enabledRequests = cmcdParameters.includeInRequests;
         }
 
-        return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
+        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
+        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+
+        if(invalidRequests.length == enabledRequests.length){
+            logger.error(`all the requests type are not supported.`);
+            return false;
+        }
+
+        invalidRequests.map((k) => {
+            logger.warning(`request type ${k} is not supported.`);
+        });
+        
+        return true;
+    }
+
+    function checkAvailableKeys(cmcdParameters){
+        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
+        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys : settings.get().streaming.cmcd.enabledKeys;
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
+
+        if(invalidKeys.length == enabledCMCDKeys.length){
+            logger.error(`all the keys are not implemented.`);
+            return false;
+        }
+        invalidKeys.map((k) => {
+            logger.warning(`key parameter ${k} is not implemented.`);
+        });
+
+        return true;
     }
 
     function getCmcdParametersFromManifest() {
