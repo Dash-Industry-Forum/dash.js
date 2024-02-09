@@ -242,7 +242,7 @@ function CmcdModel() {
                 return false;
             }
         }
-        return cmcdParameters.version || (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled);
+        return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
     function checkIncludeInRequests(cmcdParameters){
