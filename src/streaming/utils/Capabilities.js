@@ -189,7 +189,7 @@ function Capabilities() {
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
         supportedEssentialProps.push(...THUMBNAILS_SCHEME_ID_URIS);
-         try {
+        try {
             return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
         } catch (e) {
             return true;
