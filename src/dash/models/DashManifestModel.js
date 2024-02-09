@@ -566,14 +566,20 @@ function DashManifestModel() {
         }
     }
 
+    function getEssentialPropertiesForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) return [];
+        return adaptation.EssentialProperty.map( supp => {
+            const s = new DescriptorType();
+            return s.init(supp);
+        });
+    }
+
     function getEssentialPropertiesForRepresentation(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return [];
 
         return realRepresentation.EssentialProperty.map((prop) => {
-            return {
-                schemeIdUri: prop.schemeIdUri,
-                value: prop.value
-            };
+            const s = new DescriptorType();
+            return s.init(prop);
         });
     }
 
@@ -1399,6 +1405,7 @@ function DashManifestModel() {
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
+        getEssentialPropertiesForAdaptation,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,

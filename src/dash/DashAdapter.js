@@ -989,6 +989,16 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
+        if ((!mediaInfo.essentialProperties || mediaInfo.essentialProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
+            let arr = realAdaptation.Representation.map(repr => {
+                return dashManifestModel.getEssentialPropertiesForRepresentation(repr);
+            });
+            if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
+                // only output Representation.essentialProperties to mediaInfo, if they are present on all Representations
+                mediaInfo.essentialProperties = arr[0];
+            }
+        }
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
         if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
             mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation);
