@@ -281,14 +281,14 @@ class Constants {
          *  @memberof Constants#
          *  @static
          */
-        this.CMCD_AVAILABLE_KEYS= ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'];
+        this.CMCD_AVAILABLE_KEYS = ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'];
 
         /**
          *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CDCD metrics.
          *  @memberof Constants#
          *  @static
          */
-        this.CMCD_AVAILABLE_REQUESTS= ['segment','mpd','xlink','steering'];
+        this.CMCD_AVAILABLE_REQUESTS = ['segment','mpd','xlink','steering'];
 
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';

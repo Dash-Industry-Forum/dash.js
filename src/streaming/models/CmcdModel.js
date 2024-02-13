@@ -258,7 +258,7 @@ function CmcdModel() {
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
 
         if(invalidRequests.length == enabledRequests.length){
-            logger.error(`all the requests type are not supported.`);
+            logger.error(`None of the request types are supported.`);
             return false;
         }
 
@@ -275,7 +275,7 @@ function CmcdModel() {
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
         if(invalidKeys.length == enabledCMCDKeys.length){
-            logger.error(`all the keys are not implemented.`);
+            logger.error(`None of the keys are implemented.`);
             return false;
         }
         invalidKeys.map((k) => {
