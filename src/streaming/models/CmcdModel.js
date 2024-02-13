@@ -173,7 +173,7 @@ function CmcdModel() {
     function _applyWhitelist(cmcdData) {
         try {
             const cmcdParameters = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys : settings.get().streaming.cmcd.enabledKeys;
+            const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
 
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
@@ -302,7 +302,7 @@ function CmcdModel() {
 
     function _applyWhitelistByKeys(keys) {
         const cmcdParameters = getCmcdParametersFromManifest();
-        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys : settings.get().streaming.cmcd.enabledKeys;
+        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
         return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
