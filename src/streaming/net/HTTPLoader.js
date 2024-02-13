@@ -309,9 +309,10 @@ function HTTPLoader(cfg) {
 
         let headers = null;
         let modifiedUrl = requestModifier.modifyRequestURL ? requestModifier.modifyRequestURL(request.url) : request.url;
-        const currentServiceLocation = request?.serviceLocation;
+        
+        const currentServiceLocation = request?.serviceLocation; 
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
-        const isIncludedFilters = clientDataReportingModel.serviceLocationIncluded(currentServiceLocation) && clientDataReportingModel.adaptationSetIncluded(currentAdaptationSetId);
+        const isIncludedFilters = clientDataReportingModel.serviceLocationIncluded(request.type, currentServiceLocation) && clientDataReportingModel.adaptationSetIncluded(currentAdaptationSetId);
         if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
