@@ -213,6 +213,10 @@ function ABRRulesCollection(config) {
         const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 
+        if (shouldAbandon) {
+            shouldAbandon.reason.forceAbandon = true
+        }
+
         return shouldAbandon || SwitchRequest(context).create();
     }
 

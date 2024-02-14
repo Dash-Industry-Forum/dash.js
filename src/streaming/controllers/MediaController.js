@@ -67,6 +67,11 @@ function MediaController() {
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
+            if (settings) {
+                // If the settings are defined locally, do not take codec into account or it'll be too strict.
+                // eg: An audio track should not be selected by codec but merely by lang.
+                delete settings.codec;
+            }
             setInitialSettings(type, settings);
         }
 
@@ -83,6 +88,7 @@ function MediaController() {
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsCodec, settings);
         }
 
         if (tracks.length === 0) {
@@ -311,7 +317,8 @@ function MediaController() {
             viewpoint: mediaInfo.viewpoint,
             roles: mediaInfo.roles,
             accessibility: mediaInfo.accessibility,
-            audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+            audioChannelConfiguration: mediaInfo.audioChannelConfiguration,
+            codec: mediaInfo.codec
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
             (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
@@ -333,10 +340,14 @@ function MediaController() {
     }
 
     function matchSettingsLang(settings, track) {
-        return !settings.lang ||
-        (settings.lang instanceof RegExp) ?
-            (track.lang.match(settings.lang)) : track.lang !== '' ?
-                (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        try {
+            return !settings.lang ||
+            (settings.lang instanceof RegExp) ?
+                (track.lang.match(settings.lang)) : track.lang !== '' ?
+                    (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        } catch (e) {
+            return false
+        }
     }
 
     function matchSettingsIndex(settings, track) {
@@ -376,6 +387,10 @@ function MediaController() {
         })[0];
 
         return matchAudioChannelConfiguration;
+    }
+
+    function matchSettingsCodec(settings, track) {
+        return !settings.codec || (settings.codec === track.codec);
     }
 
     function matchSettings(settings, track, isTrackActive = false) {

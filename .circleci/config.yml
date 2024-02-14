@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-    browser-tools: circleci/browser-tools@1.4.2
+    browser-tools: circleci/browser-tools@1.4.6
 
 executors:
     dashjs-executor:
@@ -49,7 +49,7 @@ commands:
 
     build_unit_test_steps:
         steps:
-            - browser-tools/install-browser-tools
+            -   browser-tools/install-browser-tools
             -   run:
                     name: Build and run unit tests
                     command: |
