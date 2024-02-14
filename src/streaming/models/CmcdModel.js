@@ -73,6 +73,7 @@ function CmcdModel() {
         playbackController,
         serviceDescriptionController,
         streamProcessors,
+        lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone;
@@ -228,7 +229,10 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
-        return canBeEnabled(cmcdParameters) && checkIncludeInRequests(cmcdParameters) && checkAvailableKeys(cmcdParameters);
+        const isEnabled = canBeEnabled(cmcdParameters) && checkIncludeInRequests(cmcdParameters) && checkAvailableKeys(cmcdParameters);
+        if(!isEnabled)
+            lastMediaTypeRequest = undefined;
+        return isEnabled;
     }
 
     function canBeEnabled(cmcdParameters) {
@@ -333,13 +337,17 @@ function CmcdModel() {
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
+            
+            if(request.mediaType == Constants.VIDEO || request.mediaType == Constants.AUDIO){
+                if(!lastMediaTypeRequest || lastMediaTypeRequest == Constants.AUDIO)
+                    lastMediaTypeRequest = request.mediaType;
+            }
 
             if(_isIncludedInRequestFilter(request.type)) {
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     return _getCmcdDataForMpd(request);
                 } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _getCmcdDataForMediaSegment(request);
+                    return _getCmcdDataForMediaSegment(request, request.mediaType);
                 } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                     return _getCmcdDataForInitSegment(request);
                 } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
@@ -357,41 +365,8 @@ function CmcdModel() {
     }
 
     function _getCmcdDataForSteering(request) {
-        const data = _getGenericCmcdData();
-        const mtp = _getMeasuredThroughputByType(Constants.VIDEO);
-        const dl = _getDeadlineByType(Constants.VIDEO);
-        const bl = _getBufferLevelByType(Constants.VIDEO);
-        const tb = _getTopBitrateByType(Constants.VIDEO);
-        let rtp = settings.get().streaming.cmcd.rtp;
-
-        const nextRequest = _probeNextRequest(Constants.VIDEO);
-
+        const data = !lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, lastMediaTypeRequest);
         data.ot = OBJECT_TYPES.OTHER;
-
-        if (nextRequest) {
-            if (request.url !== nextRequest.url) {
-                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
-            } else if (nextRequest.range) {
-                data.nrr = nextRequest.range;
-            }
-        }
-
-        if (!isNaN(rtp)) {
-            data.rtp = rtp;
-        }
-        if (!isNaN(mtp)) {
-            data.mtp = mtp;
-        }
-        if (!isNaN(dl)) {
-            data.dl = dl;
-        }
-        if (!isNaN(bl)) {
-            data.bl = bl;
-        }
-        if (!isNaN(tb)) {
-            data.tb = tb;
-        }
-
         return data;
     }
 
@@ -411,22 +386,23 @@ function CmcdModel() {
         return data;
     }
 
-    function _getCmcdDataForMediaSegment(request) {
+    function _getCmcdDataForMediaSegment(request, mediaType) {
+        _initForMediaType(mediaType);
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const mtp = _getMeasuredThroughputByType(request.mediaType);
-        const dl = _getDeadlineByType(request.mediaType);
-        const bl = _getBufferLevelByType(request.mediaType);
-        const tb = _getTopBitrateByType(request.mediaType);
+        const mtp = _getMeasuredThroughputByType(mediaType);
+        const dl = _getDeadlineByType(mediaType);
+        const bl = _getBufferLevelByType(mediaType);
+        const tb = _getTopBitrateByType(mediaType);
         const pr = internalData.pr;
 
-        const nextRequest = _probeNextRequest(request.mediaType);
+        const nextRequest = _probeNextRequest(mediaType);
 
         let ot;
-        if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
-        if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
-        if (request.mediaType === Constants.TEXT) {
+        if (mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
+        if (mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
+        if (mediaType === Constants.TEXT) {
             if (request.mediaInfo.mimeType === 'application/mp4') {
                 ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
             } else {
@@ -453,7 +429,7 @@ function CmcdModel() {
         if (encodedBitrate) {
             data.br = encodedBitrate;
         }
-
+        
         if (ot) {
             data.ot = ot;
         }
@@ -482,15 +458,15 @@ function CmcdModel() {
             data.pr = pr;
         }
 
-        if (_bufferLevelStarved[request.mediaType]) {
+        if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
-            _bufferLevelStarved[request.mediaType] = false;
+            _bufferLevelStarved[mediaType] = false;
         }
 
-        if (_isStartup[request.mediaType] || !_initialMediaRequestsDone[request.mediaType]) {
+        if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
             data.su = true;
-            _isStartup[request.mediaType] = false;
-            _initialMediaRequestsDone[request.mediaType] = true;
+            _isStartup[mediaType] = false;
+            _initialMediaRequestsDone[mediaType] = true;
         }
 
         return data;
