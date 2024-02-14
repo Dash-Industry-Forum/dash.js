@@ -429,7 +429,7 @@ function CmcdModel() {
         if (encodedBitrate) {
             data.br = encodedBitrate;
         }
-        
+
         if (ot) {
             data.ot = ot;
         }
