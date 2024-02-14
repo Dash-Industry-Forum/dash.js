@@ -28,18 +28,46 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-class ClientDataReporting {
-    constructor() {
-        this.CMCDParameters = null;
-        this.serviceLocations = null;
-        this.serviceLocationsArray = [];
-        this.adaptationSets = null;
-        this.adaptationSetsArray = [];
+import FactoryMaker from '../../core/FactoryMaker';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+
+function ClientDataReportingModel() {
+
+    let instance,
+        serviceDescriptionController;
+
+    function setConfig(config) {
+        if (!config) return;
+    
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
+        }
     }
+
+    function serviceLocationIncluded(requestType, serviceLocation){
+
+        if(requestType == HTTPRequest.CONTENT_STEERING_TYPE)
+            return true;
+
+        const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isServiceLocationIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
+        return isServiceLocationIncluded;
+    }
+
+    function adaptationSetIncluded(adaptationSet){
+        const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isAdaptationsIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
+        return isAdaptationsIncluded;
+    }
+
+    instance = {
+        setConfig:setConfig,
+        adaptationSetIncluded: adaptationSetIncluded,
+        serviceLocationIncluded: serviceLocationIncluded,
+    };
+
+    return instance;
 }
 
-export default ClientDataReporting;
+ClientDataReportingModel.__dashjs_factory_name = 'ClientDataReportingModel';
+export default FactoryMaker.getSingletonFactory(ClientDataReportingModel);

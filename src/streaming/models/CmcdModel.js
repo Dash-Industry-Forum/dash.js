@@ -33,6 +33,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Settings from '../../core/Settings';
+import Debug from '../../core/Debug';
 import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -40,7 +41,7 @@ import Utils from '../../core/Utils';
 
 const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
-const CMCD_ALL_KEYS = '*';
+const CMCD_ALL_REQUESTS = '*';
 const OBJECT_TYPES = {
     MANIFEST: 'm',
     AUDIO: 'a',
@@ -65,6 +66,7 @@ function CmcdModel() {
 
     let dashManifestModel,
         instance,
+        logger,
         internalData,
         abrController,
         dashMetrics,
@@ -78,10 +80,11 @@ function CmcdModel() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
+    let debug = Debug(context).getInstance();
 
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
-
+        logger = debug.getLogger(instance);
         _resetInitialSettings();
     }
 
@@ -170,22 +173,12 @@ function CmcdModel() {
     function _applyWhitelist(cmcdData) {
         try {
             const cmcdParameters = getCmcdParametersFromManifest();
-            let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
-
-            if (cmcdParameters.version) {
-                enabledCMCDKeys = cmcdParameters.keys;
-                enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
-
-                if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
-                    return cmcdData;
-                }
-            }
+            const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
 
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
                     obj[key] = cmcdData[key];
-
                     return obj;
                 }, {});
         } catch (e) {
@@ -235,59 +228,128 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
+        return canBeEnabled(cmcdParameters) && checkIncludeInRequests(cmcdParameters) && checkAvailableKeys(cmcdParameters);
+    }
+
+    function canBeEnabled(cmcdParameters) {
+        if (Object.keys(cmcdParameters).length) {
+            if(!cmcdParameters.version){
+                logger.error(`version parameter must be defined.`);
+                return false;
+            }
+            if(!cmcdParameters.keys){
+                logger.error(`keys parameter must be defined.`);
+                return false;
+            }
+        }
         return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
-    function getCmcdParametersFromManifest() {
-        const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
-        let cmcdParameters = {};
+    function checkIncludeInRequests(cmcdParameters){
+        let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
-        if (
-            settings.get().streaming.applyCMCDParameters &&
-            serviceDescription.clientDataReporting && 
-            serviceDescription.clientDataReporting.CMCDParameters
-        ) {
-            cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+        if(cmcdParameters.version){
+            if(!cmcdParameters.includeInRequests)
+                return true
+            enabledRequests = cmcdParameters.includeInRequests.split(' ');
         }
 
+        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
+        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+
+        if(invalidRequests.length == enabledRequests.length){
+            logger.error(`None of the request types are supported.`);
+            return false;
+        }
+
+        invalidRequests.map((k) => {
+            logger.warn(`request type ${k} is not supported.`);
+        });
+        
+        return true;
+    }
+
+    function checkAvailableKeys(cmcdParameters){
+        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
+        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
+
+        if(invalidKeys.length == enabledCMCDKeys.length){
+            logger.error(`None of the keys are implemented.`);
+            return false;
+        }
+        invalidKeys.map((k) => {
+            logger.warn(`key parameter ${k} is not implemented.`);
+        });
+
+        return true;
+    }
+
+    function getCmcdParametersFromManifest() {
+        let cmcdParameters = {};
+        if (serviceDescriptionController) {
+            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+            if (
+                settings.get().streaming.applyCMCDParameters &&
+                serviceDescription.clientDataReporting && 
+                serviceDescription.clientDataReporting.CMCDParameters
+            ) {
+                cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+            }
+        }
         return cmcdParameters;
     }
 
     function _applyWhitelistByKeys(keys) {
         const cmcdParameters = getCmcdParametersFromManifest();
-        let enabledCMCDKeys = settings.get().streaming.cmcd.enabledKeys;
+        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
+        return keys.filter(key => enabledCMCDKeys.includes(key));
+    }
+
+    function _isIncludedInRequestFilter(type){
+        const cmcdParameters = getCmcdParametersFromManifest();
+        let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
 
         if (cmcdParameters.version) {
-            enabledCMCDKeys = cmcdParameters.keys;
-            enabledCMCDKeys = enabledCMCDKeys ? enabledCMCDKeys.split(' ') : [CMCD_ALL_KEYS];
-
-            if (enabledCMCDKeys.length === 1 && enabledCMCDKeys[0] === CMCD_ALL_KEYS) {
-                return keys;
-            }
+            const includeInRequests = cmcdParameters.includeInRequests;
+            includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_REQUESTS];
         }
 
-        return keys.filter(key => enabledCMCDKeys.includes(key));
+        if(includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS)){
+            return true;
+        }
+
+        const filtersTypes = {
+            [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
+            [HTTPRequest.MPD_TYPE]: 'mpd',
+            [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+        };
+
+        return includeInRequestsArray.some(t => filtersTypes[type] === t);
     }
 
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
 
-            if (request.type === HTTPRequest.MPD_TYPE) {
-                return _getCmcdDataForMpd(request);
-            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                _initForMediaType(request.mediaType);
-                return _getCmcdDataForMediaSegment(request);
-            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                return _getCmcdDataForInitSegment(request);
-            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                return _getCmcdDataForOther(request);
-            } else if (request.type === HTTPRequest.LICENSE) {
-                return _getCmcdDataForLicense(request);
-            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                return _getCmcdDataForSteering(request);
+            if(_isIncludedInRequestFilter(request.type)) {
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    return _getCmcdDataForMpd(request);
+                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    _initForMediaType(request.mediaType);
+                    return _getCmcdDataForMediaSegment(request);
+                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                    return _getCmcdDataForInitSegment(request);
+                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                    return _getCmcdDataForOther(request);
+                } else if (request.type === HTTPRequest.LICENSE) {
+                    return _getCmcdDataForLicense(request);
+                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                    return _getCmcdDataForSteering(request);
+                }
             }
-
             return cmcdData;
         } catch (e) {
             return null;
