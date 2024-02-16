@@ -229,19 +229,16 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
-        const isEnabled = canBeEnabled(cmcdParameters) && checkIncludeInRequests(cmcdParameters) && checkAvailableKeys(cmcdParameters);
-        if(!isEnabled)
-            lastMediaTypeRequest = undefined;
-        return isEnabled;
+        return _canBeEnabled(cmcdParameters) && _checkIncludeInRequests(cmcdParameters) && _checkAvailableKeys(cmcdParameters);        
     }
 
-    function canBeEnabled(cmcdParameters) {
+    function _canBeEnabled(cmcdParameters) {
         if (Object.keys(cmcdParameters).length) {
-            if(!cmcdParameters.version){
+            if(!cmcdParameters.version) {
                 logger.error(`version parameter must be defined.`);
                 return false;
             }
-            if(!cmcdParameters.keys){
+            if(!cmcdParameters.keys) {
                 logger.error(`keys parameter must be defined.`);
                 return false;
             }
@@ -249,10 +246,10 @@ function CmcdModel() {
         return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
-    function checkIncludeInRequests(cmcdParameters){
+    function _checkIncludeInRequests(cmcdParameters) {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
-        if(cmcdParameters.version){
+        if(cmcdParameters.version) {
             if(!cmcdParameters.includeInRequests)
                 return true
             enabledRequests = cmcdParameters.includeInRequests.split(' ');
@@ -261,7 +258,7 @@ function CmcdModel() {
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
 
-        if(invalidRequests.length == enabledRequests.length){
+        if(invalidRequests.length == enabledRequests.length) {
             logger.error(`None of the request types are supported.`);
             return false;
         }
@@ -273,12 +270,12 @@ function CmcdModel() {
         return true;
     }
 
-    function checkAvailableKeys(cmcdParameters){
+    function _checkAvailableKeys(cmcdParameters) {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
         const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
-        if(invalidKeys.length == enabledCMCDKeys.length){
+        if(invalidKeys.length == enabledCMCDKeys.length) {
             logger.error(`None of the keys are implemented.`);
             return false;
         }
@@ -310,7 +307,7 @@ function CmcdModel() {
         return keys.filter(key => enabledCMCDKeys.includes(key));
     }
 
-    function _isIncludedInRequestFilter(type){
+    function _isIncludedInRequestFilter(type) {
         const cmcdParameters = getCmcdParametersFromManifest();
         let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
 
@@ -319,7 +316,7 @@ function CmcdModel() {
             includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_REQUESTS];
         }
 
-        if(includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS)){
+        if(includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS)) {
             return true;
         }
 
@@ -338,10 +335,7 @@ function CmcdModel() {
         try {
             let cmcdData = null;
             
-            if(request.mediaType == Constants.VIDEO || request.mediaType == Constants.AUDIO){
-                if(!lastMediaTypeRequest || lastMediaTypeRequest == Constants.AUDIO)
-                    lastMediaTypeRequest = request.mediaType;
-            }
+            _updateLastMediaTypeRequest(request.type, request.mediaType);
 
             if(_isIncludedInRequestFilter(request.type)) {
                 if (request.type === HTTPRequest.MPD_TYPE) {
@@ -364,9 +358,22 @@ function CmcdModel() {
         }
     }
 
+    function _updateLastMediaTypeRequest(type, mediatype) {
+        // Video > Audio > None
+        if(mediatype == Constants.VIDEO || mediatype == Constants.AUDIO) {
+            if(!lastMediaTypeRequest || lastMediaTypeRequest == Constants.AUDIO)
+                lastMediaTypeRequest = request.mediaType;
+        }
+        // Reset on new MPD request
+        if(type === HTTPRequest.MPD_TYPE)
+            lastMediaTypeRequest = undefined;
+    }
+
     function _getCmcdDataForSteering(request) {
         const data = !lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, lastMediaTypeRequest);
+        
         data.ot = OBJECT_TYPES.OTHER;
+
         return data;
     }
 
