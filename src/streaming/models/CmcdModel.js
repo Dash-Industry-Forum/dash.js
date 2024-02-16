@@ -229,7 +229,7 @@ function CmcdModel() {
 
     function isCmcdEnabled() {
         const cmcdParameters = getCmcdParametersFromManifest();
-        return _canBeEnabled(cmcdParameters) && _checkIncludeInRequests(cmcdParameters) && _checkAvailableKeys(cmcdParameters);        
+        return _canBeEnabled(cmcdParameters) && _checkIncludeInRequests(cmcdParameters) && _checkAvailableKeys(cmcdParameters);
     }
 
     function _canBeEnabled(cmcdParameters) {
@@ -362,7 +362,7 @@ function CmcdModel() {
         // Video > Audio > None
         if(mediatype == Constants.VIDEO || mediatype == Constants.AUDIO) {
             if(!lastMediaTypeRequest || lastMediaTypeRequest == Constants.AUDIO)
-                lastMediaTypeRequest = request.mediaType;
+                lastMediaTypeRequest = mediatype;
         }
         // Reset on new MPD request
         if(type === HTTPRequest.MPD_TYPE)
