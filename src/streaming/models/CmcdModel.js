@@ -73,7 +73,7 @@ function CmcdModel() {
         playbackController,
         serviceDescriptionController,
         streamProcessors,
-        lastMediaTypeRequest,
+        _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone;
@@ -129,6 +129,7 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
+        _lastMediaTypeRequest = undefined;
         _updateStreamProcessors();
     }
 
@@ -361,16 +362,13 @@ function CmcdModel() {
     function _updateLastMediaTypeRequest(type, mediatype) {
         // Video > Audio > None
         if(mediatype == Constants.VIDEO || mediatype == Constants.AUDIO) {
-            if(!lastMediaTypeRequest || lastMediaTypeRequest == Constants.AUDIO)
-                lastMediaTypeRequest = mediatype;
+            if(!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO)
+                _lastMediaTypeRequest = mediatype;
         }
-        // Reset on new MPD request
-        if(type === HTTPRequest.MPD_TYPE)
-            lastMediaTypeRequest = undefined;
     }
 
     function _getCmcdDataForSteering(request) {
-        const data = !lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, lastMediaTypeRequest);
+        const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
         
         data.ot = OBJECT_TYPES.OTHER;
 
