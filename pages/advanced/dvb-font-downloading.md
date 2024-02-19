@@ -16,16 +16,16 @@ parent: Advanced Features
 # DVB Font Downloading
 
 Dash.js supports the mechanism described in the DVB DASH profile (ETSI TS 103 285 Section 7.2 Downloadable Fonts) for signalling downloadable fonts using descriptors within an MPD.
-This is intended for use with EBU-TT-D (compatible with IMSC1 text) subtitles.
+This is intended for use with [EBU-TT-D](https://tech.ebu.ch/publications/tech3380) (compatible with [IMSC1](https://www.w3.org/TR/ttml-imsc1.0.1/) Text Profile) subtitles.
 The key details of the mechanism and how to use it are covered here.
 
 ## Usage
 
-As a content provider, you may choose to specify a font within your TTML subtitles that the subtitles should be rendered with.
+As a content provider, you may choose to specify fonts within your TTML subtitles that the subtitles should be rendered with.
 This could be for accessibility, language, or stylistic reasons.
-However this will only work if the specified font is available on the device or browser where the dash player is being used, which may not always be under the control of the content provider.
+However this will only work if the specified fonts are available on the device or browser where the dash player is being used, which may not always be under the control of the content provider.
 
-To assist with this, the DVB font download mechanism allows you to signal a font for download in an MPD.
+To assist with this, the DVB font download mechanism allows you to signal font resources for download in an MPD, and associate them with specific font family names used within the TTML.
 This is achieved by including Supplemental or Essential Property descriptors with the specified scheme in the MPD.
 
 Reference media which signals fonts for download can be found in the [dash.js reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/).
@@ -54,7 +54,7 @@ The table below details the attributes themselves.
 | Name             | Type   | Description                                                                            |
 |:---------------- |:-------|:---------------------------------------------------------------------------------------|
 | `dvb:url`        | URI    | The URL of the font to download. Can be absolute or can make use of relative BaseURLs. |
-| `dvb:fontFamily` | String | The font family used in EBU-TT-D documents.                                            |
+| `dvb:fontFamily` | String | The font family used in EBU-TT-D documents, within the [`tts:fontFamily`](https://www.w3.org/TR/ttml1/#style-attribute-fontFamily) style attribute.                                            |
 | `dvb:mimeType`   | String | The mimeType of the font available from the URL.                                       |
 
 ### Property Descriptor Example
@@ -95,7 +95,7 @@ What this looks like on a client is described in a later section.
 ### TTML Font Family Attribute
 
 The EBU-TT-D subtitles need to indicate that they want to use the downloaded font.
-To do this, they must use the same `fontFamily` name as described by the `dvb:fontFamily` attribute in the MPD.
+To do this, they must include the font family name within the comma-separated list of fonts in the [`tts:fontFamily`](https://www.w3.org/TR/ttml1/#style-attribute-fontFamily) attribute, and the name must match the value of the `dvb:fontFamily` attribute in the MPD.
 
 So, for example, if we have this attribute in an MPD,
 
@@ -132,4 +132,4 @@ For a `<SupplementalProperty>` descriptor, the displayed subtitles can appear in
 This causes, in effect, a flash of unstyled text ([FOUT](https://fonts.google.com/knowledge/glossary/fout)).
 The subtitles, handled as a [TextTrack](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack) can retain a [mode property](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack/mode) of `"showing"` throughout the process.
 
-For an `<EssentialProperty>` descriptor, the subtitles will not appear unless the 'SubtitleDisplay' font downloads. Whilst this has not downloaded, the mode property of the TextTrack handling these subtitles is set to `"disabled"`. This is done to best replicate what is expected by the DVB DASH specification, and also given there is no method to delete a TextTrack from a TextTrackList if the tracks are not linked to DOM elements. Once 'SubtitleDisplay' has downloaded the text track mode can be set to `"showing"`.
+For an `<EssentialProperty>` descriptor, the subtitles will not appear unless the 'SubtitleDisplay' font downloads. Until this has downloaded, the mode property of the TextTrack handling these subtitles is set to `"disabled"`. This is done to best replicate what is expected by the DVB DASH specification, and also given there is no method to delete a TextTrack from a TextTrackList if the tracks are not linked to DOM elements. Once 'SubtitleDisplay' has downloaded the text track mode can be set to `"showing"`.
