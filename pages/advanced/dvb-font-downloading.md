@@ -114,7 +114,7 @@ we would need to ensure this is present in the subtitle TTML documents to put th
 ```
 
 Note that fallback fonts can still be specified.
-In this case we have "Arial" specified as an expected system font, and "default" which is interpreted by [imsc](https://www.w3.org/TR/ttml-imsc1.1/) as the default monospace serif font provided by the browser/device in use.
+In this case we have "Arial" specified as an expected system font, and "default" which is interpreted by [IMSC1](https://www.w3.org/TR/ttml-imsc1.0.1/) as the default monospace serif font provided by the browser/device in use.
 
 ### Download Process
 
