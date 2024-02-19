@@ -575,6 +575,9 @@ function TextTracks(config) {
             if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
                 _triggerCueExit(currentCaptionEventCue);
             }
+            // We need to delete the type attribute to be able to dispatch via th event bus
+            delete cue.type;
+
             currentCaptionEventCue = cue;
             _triggerCueEnter(cue);
         }
