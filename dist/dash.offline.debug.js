@@ -1351,6 +1351,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
+ *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
@@ -1431,7 +1432,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            text: {
  *                defaultEnabled: true,
+ *                dispatchForManualRendering: false,
  *                extendSegmentedCues: true,
+ *                imsc: {
+ *                    displayForcedOnlyMode: false,
+ *                    enableRollUp: true
+ *                },
  *                webvtt: {
  *                    customRenderingEnabled: false
  *                }
@@ -1767,9 +1773,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @typedef {Object} Text
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {boolean} [dispatchForManualRendering=false]
+ * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
- * @property {object} [webvtt={customRenderingEnabled=false}]
+ * @property {boolean} [imsc.displayForcedOnlyMode=false]
+ * Enable/disable forced only mode in IMSC captions.
+ * When true, only those captions where itts:forcedDisplay="true" will be displayed.
+ * @property {boolean} [imsc.enableRollUp=true]
+ * Enable/disable rollUp style display of IMSC captions.
+ * @property {object} [webvtt.customRenderingEnabled=false]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
@@ -2021,6 +2034,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
+ * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
+ * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
@@ -2152,6 +2167,7 @@ function Settings() {
       abandonLoadTimeout: 10000,
       wallclockTimeUpdateInterval: 100,
       manifestUpdateRetryInterval: 100,
+      liveUpdateTimeThresholdInMilliseconds: 0,
       cacheInitSegments: false,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
@@ -2232,7 +2248,12 @@ function Settings() {
       },
       text: {
         defaultEnabled: true,
+        dispatchForManualRendering: false,
         extendSegmentedCues: true,
+        imsc: {
+          displayForcedOnlyMode: false,
+          enableRollUp: true
+        },
         webvtt: {
           customRenderingEnabled: false
         }
@@ -3778,6 +3799,7 @@ var DashConstants = /*#__PURE__*/function () {
       this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
       this.CONTENT_PROTECTION = 'ContentProtection';
       this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+      this.ESSENTIAL_PROPERTY_ASARRAY = 'EssentialProperty_asArray';
       this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
       this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
       this.INBAND_EVENT_STREAM = 'InbandEventStream';
@@ -3823,6 +3845,9 @@ var DashConstants = /*#__PURE__*/function () {
       this.CENC_DEFAULT_KID = 'cenc:default_KID';
       this.DVB_PRIORITY = 'dvb:priority';
       this.DVB_WEIGHT = 'dvb:weight';
+      this.DVB_URL = 'dvb:url';
+      this.DVB_MIMETYPE = 'dvb:mimeType';
+      this.DVB_FONTFAMILY = 'dvb:fontFamily';
       this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
       this.SERVICE_DESCRIPTION = 'ServiceDescription';
       this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
@@ -4388,6 +4413,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
 /* harmony import */ var _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../vo/MpdLocation */ "./src/dash/vo/MpdLocation.js");
 /* harmony import */ var _vo_PatchLocation__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../vo/PatchLocation */ "./src/dash/vo/PatchLocation.js");
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -5539,11 +5570,11 @@ function DashManifestModel() {
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY)) {
-          baseUrl.dvb_priority = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY];
+          baseUrl.dvbPriority = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY];
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT)) {
-          baseUrl.dvb_weight = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT];
+          baseUrl.dvbWeight = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT];
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_OFFSET)) {
@@ -5717,8 +5748,9 @@ function DashManifestModel() {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var sp = _step2.value;
 
-          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
-            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
+          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, sp);
           }
         }
       } catch (err) {
@@ -5750,8 +5782,9 @@ function DashManifestModel() {
         for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
           var sp = _step3.value;
 
-          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
-            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
+          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, sp);
           }
         }
       } catch (err) {
@@ -5769,6 +5802,40 @@ function DashManifestModel() {
     return representation.SupplementalProperty_asArray.map(function (supp) {
       var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
       return s.init(supp);
+    });
+  }
+
+  function getEssentialPropertiesForAdaptation(adaptation) {
+    var essentialProperties = {};
+
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY_ASARRAY)) {
+      var _iterator4 = _createForOfIteratorHelper(adaptation.EssentialProperty_asArray),
+          _step4;
+
+      try {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var ep = _step4.value;
+
+          if (ep.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single EssentialProperty descriptor with this SchemeIdUri
+            essentialProperties[ep[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, ep);
+          }
+        }
+      } catch (err) {
+        _iterator4.e(err);
+      } finally {
+        _iterator4.f();
+      }
+    }
+
+    return essentialProperties;
+  }
+
+  function getEssentialPropertiesAsArrayForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY_ASARRAY) || !adaptation.EssentialProperty_asArray.length) return [];
+    return adaptation.EssentialProperty_asArray.map(function (ep) {
+      var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return s.init(ep);
     });
   }
 
@@ -5822,6 +5889,8 @@ function DashManifestModel() {
     getRegularPeriods: getRegularPeriods,
     getMpd: getMpd,
     getEventsForPeriod: getEventsForPeriod,
+    getEssentialPropertiesForAdaptation: getEssentialPropertiesForAdaptation,
+    getEssentialPropertiesAsArrayForAdaptation: getEssentialPropertiesAsArrayForAdaptation,
     getEssentialPropertiesForRepresentation: getEssentialPropertiesForRepresentation,
     getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
     getEventStreamForRepresentation: getEventStreamForRepresentation,
@@ -8077,8 +8146,8 @@ var BaseURL = function BaseURL(url, serviceLocation, priority, weight) {
   this.url = url || '';
   this.serviceLocation = serviceLocation || url || ''; // DVB extensions
 
-  this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
-  this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
+  this.dvbPriority = priority || DEFAULT_DVB_PRIORITY;
+  this.dvbWeight = weight || DEFAULT_DVB_WEIGHT;
   this.availabilityTimeOffset = 0;
   this.availabilityTimeComplete = true;
   this.queryParams = {}; // This is an attribute that might be set when synthesizing BaseURLs with content steering
@@ -8161,6 +8230,7 @@ var ContentSteering = function ContentSteering() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -8202,6 +8272,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * @class
  * @ignore
  */
+
+
 var DescriptorType = /*#__PURE__*/function () {
   function DescriptorType() {
     _classCallCheck(this, DescriptorType);
@@ -8217,7 +8289,19 @@ var DescriptorType = /*#__PURE__*/function () {
       if (data) {
         this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
         this.value = data.value ? data.value : null;
-        this.id = data.id ? data.id : null;
+        this.id = data.id ? data.id : null; // Only add the DVB extensions if they exist
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL]) {
+          this.dvbUrl = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL];
+        }
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE]) {
+          this.dvbMimeType = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE];
+        }
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY]) {
+          this.dvbFontFamily = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY];
+        }
       }
 
       return this;
@@ -12716,6 +12800,24 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
     /**
+     * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+    /**
+     * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+     */
+
+    _this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+    /**
+     * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
+    /**
      * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
      * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
      */
@@ -12877,6 +12979,18 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a text track should be shown
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_ENTER = 'cueEnter';
+    /**
+     * Triggered when a text track should be hidden
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_EXIT = 'cueExit';
     /**
      * Triggered when a throughput measurement based on the last segment request has been stored
      * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
@@ -13399,6 +13513,7 @@ var Constants = /*#__PURE__*/function () {
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
+      this.TEXT_DISABLED = 'disabled';
       this.CC1 = 'CC1';
       this.CC3 = 'CC3';
       this.UTF8 = 'utf-8';
@@ -13406,10 +13521,13 @@ var Constants = /*#__PURE__*/function () {
       this.START_TIME = 'starttime';
       this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
       this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+      this.FONT_DOWNLOAD_DVB_SCHEME = 'urn:dvb:dash:fontdownload:2014';
       this.XML = 'XML';
       this.ARRAY_BUFFER = 'ArrayBuffer';
       this.DVB_REPORTING_URL = 'dvb:reportingUrl';
       this.DVB_PROBABILITY = 'dvb:probability';
+      this.OFF_MIMETYPE = 'application/font-sfnt';
+      this.WOFF_MIMETYPE = 'application/font-woff';
       this.VIDEO_ELEMENT_READY_STATES = {
         HAVE_NOTHING: 0,
         HAVE_METADATA: 1,
@@ -21645,7 +21763,8 @@ function modifyRequest(httpRequest, requestModifier) {
     url: httpRequest.url,
     method: httpRequest.method,
     headers: Object.assign({}, httpRequest.headers),
-    credentials: httpRequest.withCredentials ? 'include' : undefined
+    credentials: httpRequest.withCredentials ? 'include' : undefined,
+    range: httpRequest.request.range
   };
   return Promise.resolve(requestModifier.modifyRequest(request)).then(function () {
     return Object.assign(httpRequest, request, {
@@ -28751,7 +28870,7 @@ module.exports = posix;
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
-/* UAParser.js v1.0.2
+/* UAParser.js v1.0.37
    Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
    MIT License *//*
    Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
@@ -28769,7 +28888,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
     /////////////
 
 
-    var LIBVERSION  = '1.0.2',
+    var LIBVERSION  = '1.0.37',
         EMPTY       = '',
         UNKNOWN     = '?',
         FUNC_TYPE   = 'function',
@@ -28789,7 +28908,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         SMARTTV     = 'smarttv',
         WEARABLE    = 'wearable',
         EMBEDDED    = 'embedded',
-        UA_MAX_LENGTH = 255;
+        UA_MAX_LENGTH = 500;
 
     var AMAZON  = 'Amazon',
         APPLE   = 'Apple',
@@ -28806,10 +28925,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         MOTOROLA  = 'Motorola',
         OPERA   = 'Opera',
         SAMSUNG = 'Samsung',
+        SHARP   = 'Sharp',
         SONY    = 'Sony',
         XIAOMI  = 'Xiaomi',
         ZEBRA   = 'Zebra',
-        FACEBOOK   = 'Facebook';
+        FACEBOOK    = 'Facebook',
+        CHROMIUM_OS = 'Chromium OS',
+        MAC_OS  = 'Mac OS';
 
     ///////////
     // Helper
@@ -28844,7 +28966,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         },
         trim = function (str, len) {
             if (typeof(str) === STR_TYPE) {
-                str = str.replace(/^\s\s*/, EMPTY).replace(/\s\s*$/, EMPTY);
+                str = str.replace(/^\s\s*/, EMPTY);
                 return typeof(len) === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
             }
     };
@@ -28867,6 +28989,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
                 // try matching uastring with regexes
                 while (j < regex.length && !matches) {
 
+                    if (!regex[j]) { break; }
                     matches = regex[j++].exec(ua);
 
                     if (!!matches) {
@@ -28975,30 +29098,34 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [VERSION, [NAME, OPERA]], [
 
             // Mixed
+            /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i            // Baidu
+            ], [VERSION, [NAME, 'Baidu']], [
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
             /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,      // Lunascape/Maxthon/Netfront/Jasmine/Blazer
             // Trident based
-            /(avant |iemobile|slim)(?:browser)?[\/ ]?([\w\.]*)/i,               // Avant/IEMobile/SlimBrowser
-            /(ba?idubrowser)[\/ ]?([\w\.]+)/i,                                  // Baidu Browser
+            /(avant|iemobile|slim)\s?(?:browser)?[\/ ]?([\w\.]*)/i,             // Avant/IEMobile/SlimBrowser
             /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
 
             // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
-            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale|qqbrowserlite|qq)\/([-\w\.]+)/i,
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|qq|duckduckgo)\/([-\w\.]+)/i,
                                                                                 // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
+            /(heytap|ovi)browser\/([\d\.]+)/i,                                  // Heytap/Ovi
             /(weibo)__([\d\.]+)/i                                               // Weibo
             ], [NAME, VERSION], [
             /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
             ], [VERSION, [NAME, 'UC'+BROWSER]], [
-            /\bqbcore\/([\w\.]+)/i                                              // WeChat Desktop for Windows Built-in Browser
-            ], [VERSION, [NAME, 'WeChat(Win) Desktop']], [
+            /microm.+\bqbcore\/([\w\.]+)/i,                                     // WeChat Desktop for Windows Built-in Browser
+            /\bqbcore\/([\w\.]+).+microm/i,
             /micromessenger\/([\w\.]+)/i                                        // WeChat
             ], [VERSION, [NAME, 'WeChat']], [
             /konqueror\/([\w\.]+)/i                                             // Konqueror
             ], [VERSION, [NAME, 'Konqueror']], [
             /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i                       // IE11
             ], [VERSION, [NAME, 'IE']], [
-            /yabrowser\/([\w\.]+)/i                                             // Yandex
+            /ya(?:search)?browser\/([\w\.]+)/i                                  // Yandex
             ], [VERSION, [NAME, 'Yandex']], [
+            /slbrowser\/([\w\.]+)/i                                             // Smart Lenovo Browser
+            ], [VERSION, [NAME, 'Smart Lenovo '+BROWSER]], [
             /(avast|avg)\/([\w\.]+)/i                                           // Avast/AVG Secure Browser
             ], [[NAME, /(.+)/, '$1 Secure '+BROWSER], VERSION], [
             /\bfocus\/([\w\.]+)/i                                               // Firefox Focus
@@ -29016,28 +29143,40 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /fxios\/([-\w\.]+)/i                                                // Firefox for iOS
             ], [VERSION, [NAME, FIREFOX]], [
             /\bqihu|(qi?ho?o?|360)browser/i                                     // 360
-            ], [[NAME, '360 '+BROWSER]], [
-            /(oculus|samsung|sailfish)browser\/([\w\.]+)/i
-            ], [[NAME, /(.+)/, '$1 '+BROWSER], VERSION], [                      // Oculus/Samsung/Sailfish Browser
+            ], [[NAME, '360 ' + BROWSER]], [
+            /(oculus|sailfish|huawei|vivo)browser\/([\w\.]+)/i
+            ], [[NAME, /(.+)/, '$1 ' + BROWSER], VERSION], [                    // Oculus/Sailfish/HuaweiBrowser/VivoBrowser
+            /samsungbrowser\/([\w\.]+)/i                                        // Samsung Internet
+            ], [VERSION, [NAME, SAMSUNG + ' Internet']], [
             /(comodo_dragon)\/([\w\.]+)/i                                       // Comodo Dragon
             ], [[NAME, /_/g, ' '], VERSION], [
+            /metasr[\/ ]?([\d\.]+)/i                                            // Sogou Explorer
+            ], [VERSION, [NAME, 'Sogou Explorer']], [
+            /(sogou)mo\w+\/([\d\.]+)/i                                          // Sogou Mobile
+            ], [[NAME, 'Sogou Mobile'], VERSION], [
             /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
             /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,                   // Tesla
-            /m?(qqbrowser|baiduboxapp|2345Explorer)[\/ ]?([\w\.]+)/i            // QQBrowser/Baidu App/2345 Browser
+            /m?(qqbrowser|2345Explorer)[\/ ]?([\w\.]+)/i                        // QQBrowser/2345 Browser
             ], [NAME, VERSION], [
-            /(metasr)[\/ ]?([\w\.]+)/i,                                         // SouGouBrowser
-            /(lbbrowser)/i                                                      // LieBao Browser
+            /(lbbrowser)/i,                                                     // LieBao Browser
+            /\[(linkedin)app\]/i                                                // LinkedIn App for iOS & Android
             ], [NAME], [
 
             // WebView
             /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i       // Facebook App for iOS & Android
             ], [[NAME, FACEBOOK], VERSION], [
+            /(Klarna)\/([\w\.]+)/i,                                             // Klarna Shopping Browser for iOS & Android
+            /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,                             // Kakao App
+            /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,                                  // Naver InApp
             /safari (line)\/([\w\.]+)/i,                                        // Line App for iOS
             /\b(line)\/([\w\.]+)\/iab/i,                                        // Line App for Android
-            /(chromium|instagram)[\/ ]([-\w\.]+)/i                              // Chromium/Instagram
+            /(alipay)client\/([\w\.]+)/i,                                       // Alipay
+            /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i                     // Chromium/Instagram/Snapchat
             ], [NAME, VERSION], [
             /\bgsa\/([\w\.]+) .*safari\//i                                      // Google Search Appliance on iOS
             ], [VERSION, [NAME, 'GSA']], [
+            /musical_ly(?:.+app_?version\/|_)([\w\.]+)/i                        // TikTok
+            ], [VERSION, [NAME, 'TikTok']], [
 
             /headlesschrome(?:\/([\w\.]+)| )/i                                  // Chrome Headless
             ], [VERSION, [NAME, CHROME+' Headless']], [
@@ -29051,9 +29190,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i       // Chrome/OmniWeb/Arora/Tizen/Nokia
             ], [NAME, VERSION], [
 
-            /version\/([\w\.]+) .*mobile\/\w+ (safari)/i                        // Mobile Safari
+            /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i                      // Mobile Safari
             ], [VERSION, [NAME, 'Mobile Safari']], [
-            /version\/([\w\.]+) .*(mobile ?safari|safari)/i                     // Safari & Safari Mobile
+            /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i                // Safari & Safari Mobile
             ], [VERSION, NAME], [
             /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i                      // Safari < 3.0
             ], [NAME, [VERSION, strMapper, oldSafariMap]], [
@@ -29078,8 +29217,12 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             // Other
             /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir|obigo|mosaic|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
                                                                                 // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir/Obigo/Mosaic/Go/ICE/UP.Browser
-            /(links) \(([\w\.]+)/i                                              // Links
-            ], [NAME, VERSION]
+            /(links) \(([\w\.]+)/i,                                             // Links
+            /panasonic;(viera)/i                                                // Panasonic Viera
+            ], [NAME, VERSION], [
+            
+            /(cobalt)\/([\w\.]+)/i                                              // Cobalt
+            ], [NAME, [VERSION, /master.|lts./, ""]]
         ],
 
         cpu : [[
@@ -29118,39 +29261,46 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             //////////////////////////
             // MOBILES & TABLETS
-            // Ordered by popularity
             /////////////////////////
 
             // Samsung
-            /\b(sch-i[89]0\d|shw-m380s|sm-[pt]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+            /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
             ], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [
-            /\b((?:s[cgp]h|gt|sm)-\w+|galaxy nexus)/i,
+            /\b((?:s[cgp]h|gt|sm)-\w+|sc[g-]?[\d]+a?|galaxy nexus)/i,
             /samsung[- ]([-\w]+)/i,
             /sec-(sgh\w+)/i
             ], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
 
             // Apple
-            /\((ip(?:hone|od)[\w ]*);/i                                         // iPod/iPhone
+            /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i                          // iPod/iPhone
             ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [
             /\((ipad);[-\w\),; ]+apple/i,                                       // iPad
             /applecoremedia\/[\w\.]+ \((ipad)/i,
             /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
             ], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [
+            /(macintosh);/i
+            ], [MODEL, [VENDOR, APPLE]], [
+
+            // Sharp
+            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+            ], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
 
             // Huawei
             /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [
             /(?:huawei|honor)([-\w ]+)[;\)]/i,
-            /\b(nexus 6p|\w{2,4}-[atu]?[ln][01259x][012359][an]?)\b(?!.+d\/s)/i
+            /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
 
             // Xiaomi
-            /\b(poco[\w ]+)(?: bui|\))/i,                                       // Xiaomi POCO
+            /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,                  // Xiaomi POCO
             /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
             /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
             /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
-            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
+            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,        // Xiaomi Redmi 'numeric' models
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
             ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
+            /oid[^\)]+; (2\d{4}(283|rpbf)[cgl])( bui|\))/i,                     // Redmi Pad
             /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i                        // Mi Pad tablets
             ],[[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
 
@@ -29165,7 +29315,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
 
             // Realme
-            /\b(rmx[12]\d{3})(?: bui|;|\))/i
+            /\b(rmx[1-3]\d{3})(?: bui|;|\))/i
             ], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
 
             // Motorola
@@ -29201,7 +29351,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
 
             // Sony
-            /droid.+ ([c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+            /droid.+ (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
             ], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [
             /sony tablet [ps]/i,
             /\b(?:sony)?sgp\w+(?: bui|\))/i
@@ -29214,7 +29364,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // Amazon
             /(alexa)webm/i,
-            /(kf[a-z]{2}wi)( bui|\))/i,                                         // Kindle Fire without Silk
+            /(kf[a-z]{2}wi|aeo[c-r]{2})( bui|\))/i,                             // Kindle Fire without Silk / Echo Show
             /(kf[a-z]+)( bui|\)).+silk\//i                                      // Kindle Fire HD
             ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [
             /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i                     // Fire Phone
@@ -29240,7 +29390,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // ZTE
             /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
-            /(alcatel|geeksphone|nexian|panasonic|sony)[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+            /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
             ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
 
             // Acer
@@ -29251,13 +29401,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /droid.+; (m[1-5] note) bui/i,
             /\bmz-([-\w]{2,})/i
             ], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
-
-            // Sharp
-            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, MOBILE]], [
+                
+            // Ulefone
+            /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i
+            ], [MODEL, [VENDOR, 'Ulefone'], [TYPE, MOBILE]], [
 
             // MIXED
-            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[-_ ]?([-\w]*)/i,
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron|infinix|tecno)[-_ ]?([-\w]*)/i,
                                                                                 // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
             /(hp) ([\w ]+\w)/i,                                                 // HP iPAQ
             /(asus)-?(\w+)/i,                                                   // Asus
@@ -29267,6 +29417,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(oppo) ?([\w ]+) bui/i                                             // OPPO
             ], [VENDOR, MODEL, [TYPE, MOBILE]], [
 
+            /(kobo)\s(ereader|touch)/i,                                         // Kobo
             /(archos) (gamepad2?)/i,                                            // Archos
             /(hp).+(touchpad(?!.+tablet)|tablet)/i,                             // HP TouchPad
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
@@ -29337,6 +29488,37 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
 
             ///////////////////
+            // SMARTTVS
+            ///////////////////
+
+            /smart-tv.+(samsung)/i                                              // Samsung
+            ], [VENDOR, [TYPE, SMARTTV]], [
+            /hbbtv.+maple;(\d+)/i
+            ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
+            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i        // LG SmartTV
+            ], [[VENDOR, LG], [TYPE, SMARTTV]], [
+            /(apple) ?tv/i                                                      // Apple TV
+            ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
+            /crkey/i                                                            // Google Chromecast
+            ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+            /droid.+aft(\w+)( bui|\))/i                                         // Fire TV
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
+            /\(dtv[\);].+(aquos)/i,
+            /(aquos-tv[\w ]+)\)/i                                               // Sharp
+            ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]],[
+            /(bravia[\w ]+)( bui|\))/i                                              // Sony
+            ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [
+            /(mitv-\w{5}) bui/i                                                 // Xiaomi
+            ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [
+            /Hbbtv.*(technisat) (.*);/i                                         // TechniSAT
+            ], [VENDOR, MODEL, [TYPE, SMARTTV]], [
+            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
+            /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i         // HbbTV devices
+            ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
+            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i                   // SmartTV from Unidentified Vendors
+            ], [[TYPE, SMARTTV]], [
+
+            ///////////////////
             // CONSOLES
             ///////////////////
 
@@ -29351,40 +29533,18 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
 
             ///////////////////
-            // SMARTTVS
-            ///////////////////
-
-            /smart-tv.+(samsung)/i                                              // Samsung
-            ], [VENDOR, [TYPE, SMARTTV]], [
-            /hbbtv.+maple;(\d+)/i
-            ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
-            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i        // LG SmartTV
-            ], [[VENDOR, LG], [TYPE, SMARTTV]], [
-            /(apple) ?tv/i                                                      // Apple TV
-            ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
-            /crkey/i                                                            // Google Chromecast
-            ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
-            /droid.+aft(\w)( bui|\))/i                                          // Fire TV
-            ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
-            /\(dtv[\);].+(aquos)/i                                              // Sharp
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, SMARTTV]], [
-            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
-            /hbbtv\/\d+\.\d+\.\d+ +\([\w ]*; *(\w[^;]*);([^;]*)/i               // HbbTV devices
-            ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
-            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i                   // SmartTV from Unidentified Vendors
-            ], [[TYPE, SMARTTV]], [
-
-            ///////////////////
             // WEARABLES
             ///////////////////
 
             /((pebble))app/i                                                    // Pebble
             ], [VENDOR, MODEL, [TYPE, WEARABLE]], [
+            /(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i                              // Apple Watch
+            ], [MODEL, [VENDOR, APPLE], [TYPE, WEARABLE]], [
             /droid.+; (glass) \d/i                                              // Google Glass
             ], [MODEL, [VENDOR, GOOGLE], [TYPE, WEARABLE]], [
             /droid.+; (wt63?0{2,3})\)/i
             ], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [
-            /(quest( 2)?)/i                                                     // Oculus Quest
+            /(quest( 2| pro)?)/i                                                // Oculus Quest
             ], [MODEL, [VENDOR, FACEBOOK], [TYPE, WEARABLE]], [
 
             ///////////////////
@@ -29393,18 +29553,20 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i                              // Tesla
             ], [VENDOR, [TYPE, EMBEDDED]], [
+            /(aeobc)\b/i                                                        // Echo Dot
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, EMBEDDED]], [
 
             ////////////////////
             // MIXED (GENERIC)
             ///////////////////
 
-            /droid .+?; ([^;]+?)(?: bui|\) applew).+? mobile safari/i           // Android Phones from Unidentified Vendors
+            /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i    // Android Phones from Unidentified Vendors
             ], [MODEL, [TYPE, MOBILE]], [
             /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i       // Android Tablets from Unidentified Vendors
             ], [MODEL, [TYPE, TABLET]], [
             /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i                      // Unidentifiable Tablet
             ], [[TYPE, TABLET]], [
-            /(phone|mobile(?:[;\/]| safari)|pda(?=.+windows ce))/i              // Unidentifiable Mobile
+            /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i    // Unidentifiable Mobile
             ], [[TYPE, MOBILE]], [
             /(android[-\w\. ]{0,9});.+buil/i                                    // Generic Android Device
             ], [MODEL, [VENDOR, 'Generic']]
@@ -29422,7 +29584,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i, // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna
             /ekioh(flow)\/([\w\.]+)/i,                                          // Flow
             /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,                           // KHTML/Tasman/Links
-            /(icab)[\/ ]([23]\.[\d\.]+)/i                                       // iCab
+            /(icab)[\/ ]([23]\.[\d\.]+)/i,                                      // iCab
+            /\b(libweb)/i
             ], [NAME, VERSION], [
 
             /rv\:([\w\.]{1,9})\b.+(gecko)/i                                     // Gecko
@@ -29434,23 +29597,24 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             // Windows
             /microsoft (windows) (vista|xp)/i                                   // Windows (iTunes)
             ], [NAME, VERSION], [
-            /(windows) nt 6\.2; (arm)/i,                                        // Windows RT
-            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i,            // Windows Phone
-            /(windows)[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i
+            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i             // Windows Phone
             ], [NAME, [VERSION, strMapper, windowsVersionMap]], [
-            /(win(?=3|9|n)|win 9x )([nt\d\.]+)/i
-            ], [[NAME, 'Windows'], [VERSION, strMapper, windowsVersionMap]], [
+            /windows nt 6\.2; (arm)/i,                                        // Windows RT
+            /windows[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i,
+            /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+            ], [[VERSION, strMapper, windowsVersionMap], [NAME, 'Windows']], [
 
             // iOS/macOS
             /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,              // iOS
+            /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i,
             /cfnetwork\/.+darwin/i
             ], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [
             /(mac os x) ?([\w\. ]*)/i,
             /(macintosh|mac_powerpc\b)(?!.+haiku)/i                             // Mac OS
-            ], [[NAME, 'Mac OS'], [VERSION, /_/g, '.']], [
+            ], [[NAME, MAC_OS], [VERSION, /_/g, '.']], [
 
             // Mobile OSes
-            /droid ([\w\.]+)\b.+(android[- ]x86)/i                              // Android-x86
+            /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i                    // Android-x86/HarmonyOS
             ], [VERSION, NAME], [                                               // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
             /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i,
             /(blackberry)\w*\/([\w\.]*)/i,                                      // Blackberry
@@ -29466,12 +29630,19 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /web0s;.+rt(tv)/i,
             /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i                              // WebOS
             ], [VERSION, [NAME, 'webOS']], [
+            /watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i                              // watchOS
+            ], [VERSION, [NAME, 'watchOS']], [
 
             // Google Chromecast
             /crkey\/([\d\.]+)/i                                                 // Google Chromecast
             ], [VERSION, [NAME, CHROME+'cast']], [
-            /(cros) [\w]+ ([\w\.]+\w)/i                                         // Chromium OS
-            ], [[NAME, 'Chromium OS'], VERSION],[
+            /(cros) [\w]+(?:\)| ([\w\.]+)\b)/i                                  // Chromium OS
+            ], [[NAME, CHROMIUM_OS], VERSION],[
+
+            // Smart TVs
+            /panasonic;(viera)/i,                                               // Panasonic Viera
+            /(netrange)mmh/i,                                                   // Netrange
+            /(nettv)\/(\d+\.[\w\.]+)/i,                                         // NetTV
 
             // Console
             /(nintendo|playstation) ([wids345portablevuch]+)/i,                 // Nintendo/Playstation
@@ -29492,7 +29663,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [[NAME, 'Solaris'], VERSION], [
             /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,                              // Solaris
             /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,                                  // AIX
-            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux)/i,            // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX
+            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i, // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX/SerenityOS
             /(unix) ?([\w\.]*)/i                                                // UNIX
             ], [NAME, VERSION]
         ]
@@ -29513,15 +29684,22 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             return new UAParser(ua, extensions).getResult();
         }
 
-        var _ua = ua || ((typeof window !== UNDEF_TYPE && window.navigator && window.navigator.userAgent) ? window.navigator.userAgent : EMPTY);
+        var _navigator = (typeof window !== UNDEF_TYPE && window.navigator) ? window.navigator : undefined;
+        var _ua = ua || ((_navigator && _navigator.userAgent) ? _navigator.userAgent : EMPTY);
+        var _uach = (_navigator && _navigator.userAgentData) ? _navigator.userAgentData : undefined;
         var _rgxmap = extensions ? extend(regexes, extensions) : regexes;
+        var _isSelfNav = _navigator && _navigator.userAgent == _ua;
 
         this.getBrowser = function () {
             var _browser = {};
             _browser[NAME] = undefined;
             _browser[VERSION] = undefined;
             rgxMapper.call(_browser, _ua, _rgxmap.browser);
-            _browser.major = majorize(_browser.version);
+            _browser[MAJOR] = majorize(_browser[VERSION]);
+            // Brave-specific detection
+            if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
+                _browser[NAME] = 'Brave';
+            }
             return _browser;
         };
         this.getCPU = function () {
@@ -29536,6 +29714,14 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             _device[MODEL] = undefined;
             _device[TYPE] = undefined;
             rgxMapper.call(_device, _ua, _rgxmap.device);
+            if (_isSelfNav && !_device[TYPE] && _uach && _uach.mobile) {
+                _device[TYPE] = MOBILE;
+            }
+            // iPadOS-specific detection: identified as Mac, but has some iOS-only properties
+            if (_isSelfNav && _device[MODEL] == 'Macintosh' && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
+                _device[MODEL] = 'iPad';
+                _device[TYPE] = TABLET;
+            }
             return _device;
         };
         this.getEngine = function () {
@@ -29550,6 +29736,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             _os[NAME] = undefined;
             _os[VERSION] = undefined;
             rgxMapper.call(_os, _ua, _rgxmap.os);
+            if (_isSelfNav && !_os[NAME] && _uach && _uach.platform != 'Unknown') {
+                _os[NAME] = _uach.platform  
+                                    .replace(/chrome os/i, CHROMIUM_OS)
+                                    .replace(/macos/i, MAC_OS);           // backward compatibility
+            }
             return _os;
         };
         this.getResult = function () {

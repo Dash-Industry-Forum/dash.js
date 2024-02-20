@@ -3011,6 +3011,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
+ *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
@@ -3091,7 +3092,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            },
  *            text: {
  *                defaultEnabled: true,
+ *                dispatchForManualRendering: false,
  *                extendSegmentedCues: true,
+ *                imsc: {
+ *                    displayForcedOnlyMode: false,
+ *                    enableRollUp: true
+ *                },
  *                webvtt: {
  *                    customRenderingEnabled: false
  *                }
@@ -3427,9 +3433,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @typedef {Object} Text
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {boolean} [dispatchForManualRendering=false]
+ * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
- * @property {object} [webvtt={customRenderingEnabled=false}]
+ * @property {boolean} [imsc.displayForcedOnlyMode=false]
+ * Enable/disable forced only mode in IMSC captions.
+ * When true, only those captions where itts:forcedDisplay="true" will be displayed.
+ * @property {boolean} [imsc.enableRollUp=true]
+ * Enable/disable rollUp style display of IMSC captions.
+ * @property {object} [webvtt.customRenderingEnabled=false]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
@@ -3681,6 +3694,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
+ * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
+ * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
@@ -3812,6 +3827,7 @@ function Settings() {
       abandonLoadTimeout: 10000,
       wallclockTimeUpdateInterval: 100,
       manifestUpdateRetryInterval: 100,
+      liveUpdateTimeThresholdInMilliseconds: 0,
       cacheInitSegments: false,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
@@ -3892,7 +3908,12 @@ function Settings() {
       },
       text: {
         defaultEnabled: true,
+        dispatchForManualRendering: false,
         extendSegmentedCues: true,
+        imsc: {
+          displayForcedOnlyMode: false,
+          enableRollUp: true
+        },
         webvtt: {
           customRenderingEnabled: false
         }
@@ -4336,7 +4357,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "getVersionString": function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-var VERSION = '4.7.3';
+var VERSION = '4.7.4';
 function getVersionString() {
   return VERSION;
 }
@@ -6095,6 +6116,8 @@ function DashAdapter() {
       }
     }
 
+    mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
+    mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
     mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
     mediaInfo.isEmbedded = false;
     return mediaInfo;
@@ -8133,6 +8156,7 @@ var DashConstants = /*#__PURE__*/function () {
       this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
       this.CONTENT_PROTECTION = 'ContentProtection';
       this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+      this.ESSENTIAL_PROPERTY_ASARRAY = 'EssentialProperty_asArray';
       this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
       this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
       this.INBAND_EVENT_STREAM = 'InbandEventStream';
@@ -8178,6 +8202,9 @@ var DashConstants = /*#__PURE__*/function () {
       this.CENC_DEFAULT_KID = 'cenc:default_KID';
       this.DVB_PRIORITY = 'dvb:priority';
       this.DVB_WEIGHT = 'dvb:weight';
+      this.DVB_URL = 'dvb:url';
+      this.DVB_MIMETYPE = 'dvb:mimeType';
+      this.DVB_FONTFAMILY = 'dvb:fontFamily';
       this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
       this.SERVICE_DESCRIPTION = 'ServiceDescription';
       this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
@@ -8693,8 +8720,8 @@ function ContentSteeringController() {
       return synthesizedElements.map(function (element) {
         var synthesizedBaseUrl = new _vo_BaseURL__WEBPACK_IMPORTED_MODULE_9__["default"](element.synthesizedUrl, element.serviceLocation);
         synthesizedBaseUrl.queryParams = element.queryParams;
-        synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
-        synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
+        synthesizedBaseUrl.dvbPriority = element.reference.dvbPriority;
+        synthesizedBaseUrl.dvbWeight = element.reference.dvbWeight;
         synthesizedBaseUrl.availabilityTimeOffset = element.reference.availabilityTimeOffset;
         synthesizedBaseUrl.availabilityTimeComplete = element.reference.availabilityTimeComplete;
         return synthesizedBaseUrl;
@@ -9962,6 +9989,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../streaming/thumbnail/ThumbnailTracks */ "./src/streaming/thumbnail/ThumbnailTracks.js");
 /* harmony import */ var _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../vo/MpdLocation */ "./src/dash/vo/MpdLocation.js");
 /* harmony import */ var _vo_PatchLocation__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../vo/PatchLocation */ "./src/dash/vo/PatchLocation.js");
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -11113,11 +11146,11 @@ function DashManifestModel() {
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY)) {
-          baseUrl.dvb_priority = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY];
+          baseUrl.dvbPriority = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_PRIORITY];
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT)) {
-          baseUrl.dvb_weight = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT];
+          baseUrl.dvbWeight = entry[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].DVB_WEIGHT];
         }
 
         if (entry.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_TIME_OFFSET)) {
@@ -11291,8 +11324,9 @@ function DashManifestModel() {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var sp = _step2.value;
 
-          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
-            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
+          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, sp);
           }
         }
       } catch (err) {
@@ -11324,8 +11358,9 @@ function DashManifestModel() {
         for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
           var sp = _step3.value;
 
-          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI) && sp.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE)) {
-            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = sp[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE];
+          if (sp.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+            supplementalProperties[sp[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, sp);
           }
         }
       } catch (err) {
@@ -11343,6 +11378,40 @@ function DashManifestModel() {
     return representation.SupplementalProperty_asArray.map(function (supp) {
       var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
       return s.init(supp);
+    });
+  }
+
+  function getEssentialPropertiesForAdaptation(adaptation) {
+    var essentialProperties = {};
+
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY_ASARRAY)) {
+      var _iterator4 = _createForOfIteratorHelper(adaptation.EssentialProperty_asArray),
+          _step4;
+
+      try {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var ep = _step4.value;
+
+          if (ep.hasOwnProperty(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI)) {
+            // N.B this will only work where there is a single EssentialProperty descriptor with this SchemeIdUri
+            essentialProperties[ep[_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SCHEME_ID_URI]] = _objectSpread({}, ep);
+          }
+        }
+      } catch (err) {
+        _iterator4.e(err);
+      } finally {
+        _iterator4.f();
+      }
+    }
+
+    return essentialProperties;
+  }
+
+  function getEssentialPropertiesAsArrayForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY_ASARRAY) || !adaptation.EssentialProperty_asArray.length) return [];
+    return adaptation.EssentialProperty_asArray.map(function (ep) {
+      var s = new _vo_DescriptorType__WEBPACK_IMPORTED_MODULE_12__["default"]();
+      return s.init(ep);
     });
   }
 
@@ -11396,6 +11465,8 @@ function DashManifestModel() {
     getRegularPeriods: getRegularPeriods,
     getMpd: getMpd,
     getEventsForPeriod: getEventsForPeriod,
+    getEssentialPropertiesForAdaptation: getEssentialPropertiesForAdaptation,
+    getEssentialPropertiesAsArrayForAdaptation: getEssentialPropertiesAsArrayForAdaptation,
     getEssentialPropertiesForRepresentation: getEssentialPropertiesForRepresentation,
     getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
     getEventStreamForRepresentation: getEventStreamForRepresentation,
@@ -14345,8 +14416,8 @@ var BaseURL = function BaseURL(url, serviceLocation, priority, weight) {
   this.url = url || '';
   this.serviceLocation = serviceLocation || url || ''; // DVB extensions
 
-  this.dvb_priority = priority || DEFAULT_DVB_PRIORITY;
-  this.dvb_weight = weight || DEFAULT_DVB_WEIGHT;
+  this.dvbPriority = priority || DEFAULT_DVB_PRIORITY;
+  this.dvbWeight = weight || DEFAULT_DVB_WEIGHT;
   this.availabilityTimeOffset = 0;
   this.availabilityTimeComplete = true;
   this.queryParams = {}; // This is an attribute that might be set when synthesizing BaseURLs with content steering
@@ -14548,6 +14619,7 @@ var ContentSteeringResponse = function ContentSteeringResponse() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -14589,6 +14661,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
  * @class
  * @ignore
  */
+
+
 var DescriptorType = /*#__PURE__*/function () {
   function DescriptorType() {
     _classCallCheck(this, DescriptorType);
@@ -14604,7 +14678,19 @@ var DescriptorType = /*#__PURE__*/function () {
       if (data) {
         this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
         this.value = data.value ? data.value : null;
-        this.id = data.id ? data.id : null;
+        this.id = data.id ? data.id : null; // Only add the DVB extensions if they exist
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL]) {
+          this.dvbUrl = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL];
+        }
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE]) {
+          this.dvbMimeType = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE];
+        }
+
+        if (data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY]) {
+          this.dvbFontFamily = data[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY];
+        }
       }
 
       return this;
@@ -14877,6 +14963,8 @@ var MediaInfo = function MediaInfo() {
   this.selectionPriority = 1;
   this.supplementalProperties = {};
   this.supplementalPropertiesAsArray = [];
+  this.essentialProperties = {};
+  this.essentialPropertiesAsArray = [];
   this.segmentAlignment = false;
   this.subSegmentAlignment = false;
 };
@@ -18638,6 +18726,43 @@ function MediaPlayer() {
     }
   }
   /**
+   *  Reload the manifest that the player is currently using.
+   *
+   *  @memberof module:MediaPlayer
+   *  @param {function} callback - A Callback function provided when retrieving manifests
+   *  @instance
+   */
+
+
+  function refreshManifest(callback) {
+    if (!mediaPlayerInitialized) {
+      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+
+    if (!isReady()) {
+      return callback(null, SOURCE_NOT_ATTACHED_ERROR);
+    }
+
+    var self = this;
+
+    if (typeof callback === 'function') {
+      var handler = function handler(e) {
+        eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_29__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+
+        if (e.error) {
+          callback(null, e.error);
+          return;
+        }
+
+        callback(e.manifest);
+      };
+
+      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_29__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+    }
+
+    streamController.refreshManifest();
+  }
+  /**
    * Get the current settings object being used on the player.
    * @returns {PlayerSettings} The settings object being used.
    *
@@ -18885,6 +19010,7 @@ function MediaPlayer() {
         manifestModel: manifestModel,
         adapter: adapter,
         mediaController: mediaController,
+        baseURLController: baseURLController,
         videoModel: videoModel,
         settings: settings
       });
@@ -19200,6 +19326,7 @@ function MediaPlayer() {
     extend: extend,
     attachView: attachView,
     attachSource: attachSource,
+    refreshManifest: refreshManifest,
     isReady: isReady,
     preload: preload,
     play: play,
@@ -19423,6 +19550,24 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
     /**
+     * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+    /**
+     * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+     */
+
+    _this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+    /**
+     * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
+    /**
      * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
      * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
      */
@@ -19584,6 +19729,18 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a text track should be shown
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_ENTER = 'cueEnter';
+    /**
+     * Triggered when a text track should be hidden
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_EXIT = 'cueExit';
     /**
      * Triggered when a throughput measurement based on the last segment request has been stored
      * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
@@ -22300,7 +22457,7 @@ function StreamProcessor(config) {
 
   function prepareQualityChange(e) {
     if (pendingSwitchToRepresentationInfo) {
-      logger.warning("Canceling queued representation switch to ".concat(pendingSwitchToRepresentationInfo.quality, " for ").concat(type));
+      logger.warn("Canceling queued representation switch to ".concat(pendingSwitchToRepresentationInfo.quality, " for ").concat(type));
     }
 
     logger.debug("Preparing quality switch for type ".concat(type));
@@ -23508,6 +23665,7 @@ var Constants = /*#__PURE__*/function () {
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
+      this.TEXT_DISABLED = 'disabled';
       this.CC1 = 'CC1';
       this.CC3 = 'CC3';
       this.UTF8 = 'utf-8';
@@ -23515,10 +23673,13 @@ var Constants = /*#__PURE__*/function () {
       this.START_TIME = 'starttime';
       this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
       this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+      this.FONT_DOWNLOAD_DVB_SCHEME = 'urn:dvb:dash:fontdownload:2014';
       this.XML = 'XML';
       this.ARRAY_BUFFER = 'ArrayBuffer';
       this.DVB_REPORTING_URL = 'dvb:reportingUrl';
       this.DVB_PROBABILITY = 'dvb:probability';
+      this.OFF_MIMETYPE = 'application/font-sfnt';
+      this.WOFF_MIMETYPE = 'application/font-woff';
       this.VIDEO_ELEMENT_READY_STATES = {
         HAVE_NOTHING: 0,
         HAVE_METADATA: 1,
@@ -28285,7 +28446,11 @@ function MediaController() {
   }
 
   function matchSettingsLang(settings, track) {
-    return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_6__.extendedFilter)(track.lang, bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5___default()(settings.lang)).length > 0 : false;
+    try {
+      return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_6__.extendedFilter)(track.lang, bcp_47_normalize__WEBPACK_IMPORTED_MODULE_5___default()(settings.lang)).length > 0 : false;
+    } catch (e) {
+      return false;
+    }
   }
 
   function matchSettingsIndex(settings, track) {
@@ -28849,7 +29014,7 @@ var LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 function PlaybackController() {
   var context = this.context;
   var eventBus = (0,_core_EventBus__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
-  var instance, logger, streamController, serviceDescriptionController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, originalLiveDelay, streamInfo, isDynamic, playOnceInitialized, lastLivePlaybackTime, availabilityStartTime, availabilityTimeComplete, lowLatencyModeEnabled, seekTarget, internalSeek, playbackStalled, manifestUpdateInProgress, initialCatchupModeActivated, settings;
+  var instance, logger, streamController, serviceDescriptionController, dashMetrics, adapter, videoModel, timelineConverter, wallclockTimeIntervalId, liveDelay, originalLiveDelay, streamInfo, isDynamic, playOnceInitialized, lastLivePlaybackTime, lastLiveUpdateTime, availabilityStartTime, availabilityTimeComplete, lowLatencyModeEnabled, seekTarget, internalSeek, playbackStalled, manifestUpdateInProgress, initialCatchupModeActivated, settings;
 
   function setup() {
     logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance().getLogger(instance);
@@ -28871,6 +29036,7 @@ function PlaybackController() {
     lowLatencyModeEnabled = false;
     initialCatchupModeActivated = false;
     seekTarget = NaN;
+    lastLiveUpdateTime = NaN;
 
     if (videoModel) {
       eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_2__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
@@ -29554,12 +29720,18 @@ function PlaybackController() {
     // (video element doesn't call timeupdate when the playback is paused)
 
     if (getIsDynamic()) {
-      streamController.addDVRMetric();
+      var now = Date.now();
 
-      if (isPaused()) {
-        _updateLivePlaybackTime();
-      } else {
-        updateCurrentTime();
+      if (isNaN(lastLiveUpdateTime) || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) {
+        streamController.addDVRMetric();
+
+        if (isPaused()) {
+          _updateLivePlaybackTime();
+        } else {
+          updateCurrentTime();
+        }
+
+        lastLiveUpdateTime = now;
       }
     }
   }
@@ -29677,7 +29849,7 @@ function PlaybackController() {
   }
 
   function _checkEnableLowLatency(mediaInfo) {
-    if (mediaInfo && mediaInfo.supplementalProperties && mediaInfo.supplementalProperties[_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] === 'true') {
+    if (mediaInfo && mediaInfo.supplementalProperties && mediaInfo.supplementalProperties[_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] && mediaInfo.supplementalProperties[_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME].value === 'true') {
       logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
       lowLatencyModeEnabled = true;
     }
@@ -31923,6 +32095,10 @@ function StreamController() {
     if (config.segmentBaseController) {
       segmentBaseController = config.segmentBaseController;
     }
+
+    if (config.manifestUpdater) {
+      manifestUpdater = config.manifestUpdater;
+    }
   }
 
   function setProtectionData(protData) {
@@ -32015,6 +32191,12 @@ function StreamController() {
     }
   }
 
+  function refreshManifest() {
+    if (!manifestUpdater.getIsUpdating()) {
+      manifestUpdater.refreshManifest();
+    }
+  }
+
   function getStreams() {
     return streams;
   }
@@ -32040,6 +32222,7 @@ function StreamController() {
     getActiveStream: getActiveStream,
     getInitialPlayback: getInitialPlayback,
     getAutoPlay: getAutoPlay,
+    refreshManifest: refreshManifest,
     reset: reset
   };
   setup();
@@ -35947,7 +36130,7 @@ function MetricsModel(config) {
     // provided in the MPD) will appear as the actualurl of the next
     // entry with the same url value.
 
-    if (actualurl && actualurl !== url) {
+    if (actualurl !== null && actualurl !== undefined && actualurl !== url) {
       // given the above, add an entry for the original request
       addHttpRequest(mediaType, null, type, url, quality, null, null, range, trequest, null, // unknown
       null, // unknown
@@ -42176,6 +42359,304 @@ var QoeInfo = function QoeInfo() {
 
 /***/ }),
 
+/***/ "./src/streaming/text/DVBFonts.js":
+/*!****************************************!*\
+  !*** ./src/streaming/text/DVBFonts.js ***!
+  \****************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_Constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/Constants */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _utils_URLUtils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/EventBus */ "./src/core/EventBus.js");
+/* harmony import */ var _MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, BBC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of BBC nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+function DVBFonts(config) {
+  var context = this.context;
+  var eventBus = (0,_core_EventBus__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance();
+  var urlUtils = (0,_utils_URLUtils__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
+  var adapter = config.adapter;
+  var baseURLController = config.baseURLController;
+  var FONT_DOWNLOAD_STATUS = {
+    ERROR: 'error',
+    LOADED: 'loaded',
+    UNLOADED: 'unloaded'
+  };
+  var instance, logger, dvbFontList;
+
+  function setup() {
+    logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
+    resetInitialSettings();
+  }
+  /**
+   * Add any dvb fonts from a single track to the dvbFontList
+   * @param {object} track - A text track
+   * @param {string} streamId - Id of current stream
+   * @private
+   */
+
+
+  function _addFontFromTrack(track, streamId) {
+    var asBaseUrl;
+    var isEssential = false;
+    var dvbFontProps; // If there is a baseurl in the manifest resolve against a representation inside the current adaptation set
+
+    if (baseURLController.resolve()) {
+      var reps = adapter.getVoRepresentations(track);
+
+      if (reps && reps.length > 0) {
+        asBaseUrl = baseURLController.resolve(reps[0].path).url;
+      }
+    }
+
+    var essentialTags = track.essentialPropertiesAsArray.filter(function (tag) {
+      return tag.schemeIdUri && tag.schemeIdUri === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].FONT_DOWNLOAD_DVB_SCHEME;
+    });
+    var supplementalTags = track.supplementalPropertiesAsArray.filter(function (tag) {
+      return tag.schemeIdUri && tag.schemeIdUri === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].FONT_DOWNLOAD_DVB_SCHEME;
+    }); // When it comes to the property descriptors it's Essential OR Supplementary, with Essential taking preference
+
+    if (essentialTags.length > 0) {
+      isEssential = true;
+      dvbFontProps = essentialTags;
+    } else {
+      dvbFontProps = supplementalTags;
+    }
+
+    dvbFontProps.forEach(function (attrs) {
+      if (_hasMandatoryDvbFontAttributes(attrs)) {
+        var resolvedUrl = _resolveFontUrl(attrs.dvbUrl, asBaseUrl);
+
+        dvbFontList.push({
+          fontFamily: attrs.dvbFontFamily,
+          url: resolvedUrl,
+          mimeType: attrs.dvbMimeType,
+          trackId: track.id,
+          streamId: streamId,
+          isEssential: isEssential,
+          status: FONT_DOWNLOAD_STATUS.UNLOADED,
+          fontFace: new FontFace(attrs.dvbFontFamily, "url(".concat(resolvedUrl, ")"), {
+            display: 'swap'
+          })
+        });
+      }
+    });
+  }
+  /**
+   * Clean up dvb font downloads
+   * @private
+   */
+
+
+  function _cleanUpDvbCustomFonts() {
+    var _iterator = _createForOfIteratorHelper(dvbFontList),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var font = _step.value;
+        var deleted = document.fonts["delete"](font.fontFace);
+        logger.debug("Removal of fontFamily: ".concat(font.fontFamily, " was ").concat(deleted ? 'successful' : 'unsuccessful'));
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+  }
+  /**
+   * Check the attributes of a supplemental or essential property descriptor to establish if
+   * it has the mandatory values for a dvb font download
+   * @param {object} attrs - property descriptor attributes
+   * @returns {boolean} true if mandatory attributes present
+   * @private
+   */
+
+
+  function _hasMandatoryDvbFontAttributes(attrs) {
+    return !!(attrs.value && attrs.value === '1' && attrs.dvbUrl && attrs.dvbUrl.length > 0 && attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0 && attrs.dvbMimeType && (attrs.dvbMimeType === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].OFF_MIMETYPE || attrs.dvbMimeType === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].WOFF_MIMETYPE));
+  }
+  /**
+   * Resolves a given font download URL.
+   * @param {string} fontUrl - URL as in the 'dvb:url' property
+   * @param {string} baseUrl - BaseURL for Adaptation Set
+   * @returns {string} resolved URL
+   * @private
+   */
+
+
+  function _resolveFontUrl(fontUrl, baseUrl) {
+    if (urlUtils.isPathAbsolute(fontUrl)) {
+      return fontUrl;
+    } else if (urlUtils.isRelative(fontUrl)) {
+      if (baseUrl) {
+        return urlUtils.resolve(fontUrl, baseUrl);
+      } else {
+        return urlUtils.resolve(fontUrl);
+      }
+    } else {
+      return fontUrl;
+    }
+  }
+  /**
+   * Updates the status of a given dvb font relative to whether it is loaded in the browser
+   * or if the download has failed
+   * @param {number} index - Index of font in dvbFontList
+   * @param {string} newStatus - Status value to update. Property of FONT_DOWNLOAD_STATUS
+   * @private
+   */
+
+
+  function _updateFontStatus(index, newStatus) {
+    var font = dvbFontList[index];
+    dvbFontList[index] = _objectSpread(_objectSpread({}, font), {}, {
+      status: newStatus
+    });
+  }
+  /**
+   * Adds all fonts to the dvb font list from all tracks
+   * @param {array} tracks - All text tracks
+   * @param {string} streamId - Id of the stream
+   */
+
+
+  function addFontsFromTracks(tracks, streamId) {
+    if (tracks && Array.isArray(tracks) && streamId) {
+      for (var i = 0; i < tracks.length; i++) {
+        var track = tracks[i];
+
+        _addFontFromTrack(track, streamId);
+      }
+    }
+  }
+  /**
+   * Initiate the download of a dvb custom font.
+   * The browser will neatly handle duplicate fonts
+   */
+
+
+  function downloadFonts() {
+    var _loop = function _loop(i) {
+      var font = dvbFontList[i];
+      document.fonts.add(font.fontFace);
+      eventBus.trigger(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].DVB_FONT_DOWNLOAD_ADDED, font);
+      font.fontFace.load().then(function () {
+        _updateFontStatus(i, FONT_DOWNLOAD_STATUS.LOADED);
+
+        eventBus.trigger(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].DVB_FONT_DOWNLOAD_COMPLETE, font);
+      }, function (err) {
+        _updateFontStatus(i, FONT_DOWNLOAD_STATUS.ERROR);
+
+        logger.debug('Font download error: ', err);
+        eventBus.trigger(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].DVB_FONT_DOWNLOAD_FAILED, font);
+      });
+    };
+
+    for (var i = 0; i < dvbFontList.length; i++) {
+      _loop(i);
+    }
+  }
+  /**
+   * Returns current list of all known DVB Fonts
+   * @returns {array} dvbFontList
+   */
+
+
+  function getFonts() {
+    return dvbFontList;
+  }
+  /**
+   * Returns dvbFonts relative to a track given a trackId
+   * @param {number} - TrackId
+   * @returns {array} filtered DVBFontList
+   */
+
+
+  function getFontsForTrackId(trackId) {
+    return dvbFontList.filter(function (font) {
+      return font.trackId && font.trackId === trackId;
+    });
+  }
+
+  function resetInitialSettings() {
+    dvbFontList = [];
+  }
+  /** Reset DVBFonts instance */
+
+
+  function reset() {
+    _cleanUpDvbCustomFonts();
+
+    resetInitialSettings();
+  }
+
+  instance = {
+    addFontsFromTracks: addFontsFromTracks,
+    downloadFonts: downloadFonts,
+    getFonts: getFonts,
+    getFontsForTrackId: getFontsForTrackId,
+    reset: reset
+  };
+  setup();
+  return instance;
+}
+
+DVBFonts.__dashjs_factory_name = 'DVBFonts';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(DVBFonts));
+
+/***/ }),
+
 /***/ "./src/streaming/text/EmbeddedTextHtmlRender.js":
 /*!******************************************************!*\
   !*** ./src/streaming/text/EmbeddedTextHtmlRender.js ***!
@@ -42833,10 +43314,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_VTTParser__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/VTTParser */ "./src/streaming/utils/VTTParser.js");
 /* harmony import */ var _utils_VttCustomRenderingParser__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/VttCustomRenderingParser */ "./src/streaming/utils/VttCustomRenderingParser.js");
 /* harmony import */ var _utils_TTMLParser__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/TTMLParser */ "./src/streaming/utils/TTMLParser.js");
-/* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/EventBus */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/events/Events */ "./src/core/events/Events.js");
-/* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _core_Debug__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Debug */ "./src/core/Debug.js");
+/* harmony import */ var _core_EventBus__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/EventBus */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/events/Events */ "./src/core/events/Events.js");
+/* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../utils/SupervisorTools */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _DVBFonts__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./DVBFonts */ "./src/streaming/text/DVBFonts.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -42879,15 +43362,18 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 function TextController(config) {
   var context = this.context;
   var adapter = config.adapter;
   var errHandler = config.errHandler;
   var manifestModel = config.manifestModel;
   var mediaController = config.mediaController;
+  var baseURLController = config.baseURLController;
   var videoModel = config.videoModel;
   var settings = config.settings;
-  var instance, streamData, textSourceBuffers, textTracks, vttParser, vttCustomRenderingParser, ttmlParser, eventBus, allTracksAreDisabled, forceTextStreaming, textTracksAdded, disableTextBeforeTextTracksAdded;
+  var instance, streamData, textSourceBuffers, textTracks, vttParser, vttCustomRenderingParser, ttmlParser, eventBus, allTracksAreDisabled, forceTextStreaming, textTracksAdded, disableTextBeforeTextTracksAdded, dvbFonts, logger;
 
   function setup() {
     forceTextStreaming = false;
@@ -42896,16 +43382,23 @@ function TextController(config) {
     vttParser = (0,_utils_VTTParser__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
     vttCustomRenderingParser = (0,_utils_VttCustomRenderingParser__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
     ttmlParser = (0,_utils_TTMLParser__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
-    eventBus = (0,_core_EventBus__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+    eventBus = (0,_core_EventBus__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+    logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
   }
 
   function initialize() {
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+    dvbFonts = (0,_DVBFonts__WEBPACK_IMPORTED_MODULE_12__["default"])(context).create({
+      adapter: adapter,
+      baseURLController: baseURLController
+    });
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
 
     if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
-      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     }
   }
 
@@ -42921,6 +43414,7 @@ function TextController(config) {
     var textSourceBuffer = (0,_TextSourceBuffer__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
       errHandler: errHandler,
       adapter: adapter,
+      dvbFonts: dvbFonts,
       manifestModel: manifestModel,
       mediaController: mediaController,
       videoModel: videoModel,
@@ -42992,6 +43486,42 @@ function TextController(config) {
 
     textSourceBuffers[streamId].addEmbeddedTrack(mediaInfo);
   }
+  /**
+   * Event that is triggered if a font download of a font described in an essential property descriptor
+   * tag fails.
+   * @param {FontInfo} font - font information
+   * @private
+   */
+
+
+  function _onFontDownloadFailure(font) {
+    logger.error("Could not download ".concat(font.isEssential ? 'an essential' : 'a', " font - fontFamily: ").concat(font.fontFamily, ", url: ").concat(font.url));
+
+    if (font.isEssential) {
+      var idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+      textTracks[font.streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED);
+    }
+  }
+
+  ;
+  /**
+   * Set a font with an essential property
+   * @private
+   */
+
+  function _onFontDownloadSuccess(font) {
+    logger.debug("Successfully downloaded ".concat(font.isEssential ? 'an essential' : 'a', " font - fontFamily: ").concat(font.fontFamily, ", url: ").concat(font.url));
+
+    if (font.isEssential) {
+      var idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+
+      if (idx === textTracks[font.streamId].getCurrentTrackIdx()) {
+        textTracks[font.streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING);
+      } else {
+        textTracks[font.streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN);
+      }
+    }
+  }
 
   function _onTextTracksAdded(e) {
     var tracks = e.tracks;
@@ -43027,13 +43557,22 @@ function TextController(config) {
     }
 
     streamData[streamId].lastEnabledIndex = index;
-    eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_9__["default"].TEXT_TRACKS_ADDED, {
+    eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_10__["default"].TEXT_TRACKS_ADDED, {
       enabled: isTextEnabled(),
       index: index,
       tracks: tracks,
       streamId: streamId
     });
     textTracksAdded = true;
+    dvbFonts.addFontsFromTracks(tracks, streamId); // Initially disable any tracks with essential property font downloads
+
+    dvbFonts.getFonts().forEach(function (font) {
+      if (font.isEssential) {
+        var idx = textTracks[font.streamId].getTrackIdxForId(font.trackId);
+        textTracks[font.streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED);
+      }
+    });
+    dvbFonts.downloadFonts();
   }
 
   function _onPlaybackTimeUpdated(e) {
@@ -43061,7 +43600,7 @@ function TextController(config) {
   }
 
   function enableText(streamId, enable) {
-    (0,_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_10__.checkParameterType)(enable, 'boolean');
+    (0,_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
 
     if (isTextEnabled() !== enable) {
       // change track selection
@@ -43097,7 +43636,7 @@ function TextController(config) {
 
 
   function enableForcedTextStreaming(enable) {
-    (0,_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_10__.checkParameterType)(enable, 'boolean');
+    (0,_utils_SupervisorTools__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
     forceTextStreaming = enable;
     return true;
   }
@@ -43118,10 +43657,20 @@ function TextController(config) {
     }
 
     textTracks[streamId].disableManualTracks();
-    textTracks[streamId].setModeForTrackIdx(oldTrackIdx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN);
-    textTracks[streamId].setCurrentTrackIdx(idx);
-    textTracks[streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING);
     var currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+    var currentNativeTrackInfo = currentTrackInfo ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null; // Don't change disabled tracks - dvb font download for essential property failed or not complete
+
+    if (currentNativeTrackInfo && currentNativeTrackInfo.mode !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED) {
+      textTracks[streamId].setModeForTrackIdx(oldTrackIdx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN);
+    }
+
+    textTracks[streamId].setCurrentTrackIdx(idx);
+    currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+    var dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
+
+    if (currentTrackInfo && !dispatchForManualRendering && currentTrackInfo.mode !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED) {
+      textTracks[streamId].setModeForTrackIdx(idx, _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING);
+    }
 
     if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
       _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx);
@@ -43153,7 +43702,7 @@ function TextController(config) {
           // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
           // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
           // For that reason we reactivate the StreamProcessor and the ScheduleController
-          eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
+          eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
             streamId: streamId,
             mediaType: _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT
           });
@@ -43163,7 +43712,7 @@ function TextController(config) {
   }
 
   function _setNonFragmentedTextTrack(streamId, currentTrackInfo) {
-    eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].SET_NON_FRAGMENTED_TEXT, {
+    eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].SET_NON_FRAGMENTED_TEXT, {
       currentTrackInfo: currentTrackInfo
     }, {
       streamId: streamId,
@@ -43201,12 +43750,15 @@ function TextController(config) {
   }
 
   function reset() {
+    dvbFonts.reset();
     resetInitialSettings();
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
+    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
 
     if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
-      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_8__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
     }
 
     Object.keys(textSourceBuffers).forEach(function (key) {
@@ -43571,7 +44123,7 @@ function TextSourceBuffer(config) {
       }
 
       try {
-        var manifest = manifestModel.getValue(); // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+        var manifest = manifestModel.getValue(); // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
 
         var offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
         var result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
@@ -43980,7 +44532,7 @@ function TextTracks(config) {
   var videoModel = config.videoModel;
   var streamInfo = config.streamInfo;
   var settings = config.settings;
-  var instance, logger, Cue, textTrackQueue, nativeTrackElementArr, currentTrackIdx, actualVideoLeft, actualVideoTop, actualVideoWidth, actualVideoHeight, captionContainer, vttCaptionContainer, videoSizeCheckInterval, fullscreenAttribute, displayCCOnTop, previousISDState, topZIndex, resizeObserver;
+  var instance, logger, Cue, textTrackQueue, nativeTrackElementArr, currentTrackIdx, actualVideoLeft, actualVideoTop, actualVideoWidth, actualVideoHeight, captionContainer, vttCaptionContainer, videoSizeCheckInterval, fullscreenAttribute, displayCCOnTop, previousISDState, topZIndex, resizeObserver, hasRequestAnimationFrame, currentCaptionEventCue;
 
   function setup() {
     logger = (0,_core_Debug__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
@@ -44005,6 +44557,7 @@ function TextTracks(config) {
     displayCCOnTop = false;
     topZIndex = 2147483647;
     previousISDState = null;
+    hasRequestAnimationFrame = 'requestAnimationFrame' in window;
 
     if (document.fullscreenElement !== undefined) {
       fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
@@ -44038,7 +44591,8 @@ function TextTracks(config) {
   }
 
   function createTracks() {
-    //Sort in same order as in manifest
+    var dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering; //Sort in same order as in manifest
+
     textTrackQueue.sort(function (a, b) {
       return a.index - b.index;
     });
@@ -44099,7 +44653,7 @@ function TextTracks(config) {
         var videoTextTrack = getTrackByIdx(idx);
 
         if (videoTextTrack) {
-          videoTextTrack.mode = idx === defaultIndex ? _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING : _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN;
+          videoTextTrack.mode = idx === defaultIndex && !dispatchForManualRendering ? _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING : _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN;
           videoTextTrack.manualMode = idx === defaultIndex ? _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING : _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_HIDDEN;
         }
       }
@@ -44324,41 +44878,39 @@ function TextTracks(config) {
 
   function _renderCaption(cue) {
     if (captionContainer) {
+      clearCaptionContainer.call(this);
       var finalCue = document.createElement('div');
       captionContainer.appendChild(finalCue);
       previousISDState = (0,imsc__WEBPACK_IMPORTED_MODULE_6__.renderHTML)(cue.isd, finalCue, function (src) {
         return _resolveImageSrc(cue, src);
-      }, captionContainer.clientHeight, captionContainer.clientWidth, false
-      /*displayForcedOnlyMode*/
-      , function (err) {
-        logger.info('renderCaption :', err); //TODO add ErrorHandler management
-      }, previousISDState, true
-      /*enableRollUp*/
-      );
+      }, captionContainer.clientHeight, captionContainer.clientWidth, settings.get().streaming.text.imsc.displayForcedOnlyMode, function (err) {
+        logger.info('renderCaption :', err);
+        /*TODO: add ErrorHandler management*/
+      }, previousISDState, settings.get().streaming.text.imsc.enableRollUp);
       finalCue.id = cue.cueID;
       eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].CAPTION_RENDERED, {
         captionDiv: finalCue,
         currentTrackIdx: currentTrackIdx
       });
     }
-  }
+  } // Check that a new cue immediately follows the previous cue
 
-  function _extendLastCue(cue, track) {
+
+  function _areCuesAdjacent(cue, prevCue) {
+    if (!prevCue) {
+      return false;
+    } // Check previous cue endTime with current cue startTime
+    // (should we consider an epsilon margin? for example to get around rounding issues)
+
+
+    return prevCue.endTime >= cue.startTime;
+  } // Check if cue content is identical. If it is, extend the previous cue.
+
+
+  function _extendLastCue(cue, prevCue) {
     if (!settings.get().streaming.text.extendSegmentedCues) {
       return false;
     }
-
-    if (!track.cues || track.cues.length === 0) {
-      return false;
-    }
-
-    var prevCue = track.cues[track.cues.length - 1]; // Check previous cue endTime with current cue startTime
-    // (should we consider an epsilon margin? for example to get around rounding issues)
-
-    if (prevCue.endTime < cue.startTime) {
-      return false;
-    } // Compare cues content
-
 
     if (!_cuesContentAreEqual(prevCue, cue, CUE_PROPS_TO_COMPARE)) {
       return false;
@@ -44400,6 +44952,7 @@ function TextTracks(config) {
 
   function addCaptions(trackIdx, timeOffset, captionData) {
     var track = getTrackByIdx(trackIdx);
+    var dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
 
     if (!track) {
       return;
@@ -44410,13 +44963,19 @@ function TextTracks(config) {
     }
 
     for (var item = 0; item < captionData.length; item++) {
-      var cue = void 0;
+      var cue = null;
       var currentItem = captionData[item];
       track.cellResolution = currentItem.cellResolution;
       track.isFromCEA608 = currentItem.isFromCEA608;
 
       if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
-        cue = currentItem.type === 'html' && captionContainer ? _handleHtmlCaption(currentItem, timeOffset, track) : currentItem.data ? _handleNonHtmlCaption(currentItem, timeOffset, track) : null;
+        if (dispatchForManualRendering) {
+          cue = _handleCaptionEvents(currentItem, timeOffset);
+        } else if (_isHTMLCue(currentItem) && captionContainer) {
+          cue = _handleHtmlCaption(currentItem, timeOffset, track);
+        } else if (currentItem.data) {
+          cue = _handleNonHtmlCaption(currentItem, timeOffset, track);
+        }
       }
 
       try {
@@ -44429,8 +44988,32 @@ function TextTracks(config) {
 
               track.manualCueList.push(cue);
             } else {
-              if (!_extendLastCue(cue, track)) {
-                track.addCue(cue);
+              // Handle adjacent cues
+              var prevCue = void 0;
+
+              if (track.cues && track.cues.length !== 0) {
+                prevCue = track.cues[track.cues.length - 1];
+              }
+
+              if (_areCuesAdjacent(cue, prevCue)) {
+                if (!_extendLastCue(cue, prevCue)) {
+                  /* If cues are adjacent but not identical (extended), let the render function of the next cue
+                   * clear up the captionsContainer so removal and appending are instantaneous.
+                   * Only do this for imsc subs (where isd is present).
+                   */
+                  if (prevCue.isd) {
+                    prevCue.onexit = function () {};
+                  } // If cues are added when the track is disabled they can still persist in memory
+
+
+                  if (track.mode !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED) {
+                    track.addCue(cue);
+                  }
+                }
+              } else {
+                if (track.mode !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_DISABLED) {
+                  track.addCue(cue);
+                }
               }
             }
           } // Remove old cues
@@ -44454,33 +45037,65 @@ function TextTracks(config) {
     }
   }
 
+  function _handleCaptionEvents(currentItem, timeOffset) {
+    var cue = _getCueInformation(currentItem, timeOffset);
+
+    cue.onenter = function () {
+      // HTML Tracks don't trigger the onexit event when a new cue is entered,
+      // we need to manually trigger it
+      if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
+        _triggerCueExit(currentCaptionEventCue);
+      } // We need to delete the type attribute to be able to dispatch via th event bus
+
+
+      delete cue.type;
+      currentCaptionEventCue = cue;
+
+      _triggerCueEnter(cue);
+    };
+
+    cue.onexit = function () {
+      _triggerCueExit(cue);
+
+      currentCaptionEventCue = null;
+    };
+
+    return cue;
+  }
+
+  function _triggerCueEnter(cue) {
+    eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].CUE_ENTER, cue);
+  }
+
+  function _triggerCueExit(cue) {
+    eventBus.trigger(_streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_3__["default"].CUE_EXIT, {
+      cueID: cue.cueID
+    });
+  }
+
   function _handleHtmlCaption(currentItem, timeOffset, track) {
     var self = this;
-    var cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
-    cue.cueHTMLElement = currentItem.cueHTMLElement;
-    cue.isd = currentItem.isd;
-    cue.images = currentItem.images;
-    cue.embeddedImages = currentItem.embeddedImages;
-    cue.cueID = currentItem.cueID;
-    cue.scaleCue = _scaleCue.bind(self); //useful parameters for cea608 subtitles, not for TTML one.
 
-    cue.cellResolution = currentItem.cellResolution;
-    cue.lineHeight = currentItem.lineHeight;
-    cue.linePadding = currentItem.linePadding;
-    cue.fontSize = currentItem.fontSize;
+    var cue = _getCueInformation(currentItem, timeOffset);
+
     captionContainer.style.left = actualVideoLeft + 'px';
     captionContainer.style.top = actualVideoTop + 'px';
     captionContainer.style.width = actualVideoWidth + 'px';
-    captionContainer.style.height = actualVideoHeight + 'px'; // Resolve images sources
-
-    if (cue.isd) {
-      _resolveImagesInContents(cue, cue.isd.contents);
-    }
+    captionContainer.style.height = actualVideoHeight + 'px';
 
     cue.onenter = function () {
+      var _this = this;
+
       if (track.mode === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT_SHOWING) {
         if (this.isd) {
-          _renderCaption(this);
+          if (hasRequestAnimationFrame) {
+            // Ensure everything in _renderCaption happens in the same frame
+            requestAnimationFrame(function () {
+              return _renderCaption(_this);
+            });
+          } else {
+            _renderCaption(this);
+          }
 
           logger.debug('Cue enter id:' + this.cueID);
         } else {
@@ -44494,7 +45109,8 @@ function TextTracks(config) {
           });
         }
       }
-    };
+    }; // For imsc subs, this could be reassigned to not do anything if there is a cue that immediately follows this one
+
 
     cue.onexit = function () {
       if (captionContainer) {
@@ -44514,8 +45130,8 @@ function TextTracks(config) {
   }
 
   function _handleNonHtmlCaption(currentItem, timeOffset, track) {
-    var cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-    cue.cueID = "".concat(cue.startTime, "_").concat(cue.endTime);
+    var cue = _getCueInformation(currentItem, timeOffset);
+
     cue.isActive = false;
 
     if (currentItem.styles) {
@@ -44555,6 +45171,45 @@ function TextTracks(config) {
     return cue;
   }
 
+  function _isHTMLCue(cue) {
+    return cue.type === 'html';
+  }
+
+  function _getCueInformation(currentItem, timeOffset) {
+    if (_isHTMLCue(currentItem)) {
+      return _getCueInformationForHtml(currentItem, timeOffset);
+    }
+
+    return _getCueInformationForNonHtml(currentItem, timeOffset);
+  }
+
+  function _getCueInformationForHtml(currentItem, timeOffset) {
+    var cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
+    cue.cueHTMLElement = currentItem.cueHTMLElement;
+    cue.isd = currentItem.isd;
+    cue.images = currentItem.images;
+    cue.embeddedImages = currentItem.embeddedImages;
+    cue.cueID = currentItem.cueID;
+    cue.scaleCue = _scaleCue.bind(self); //useful parameters for cea608 subtitles, not for TTML one.
+
+    cue.cellResolution = currentItem.cellResolution;
+    cue.lineHeight = currentItem.lineHeight;
+    cue.linePadding = currentItem.linePadding;
+    cue.fontSize = currentItem.fontSize; // Resolve images sources
+
+    if (cue.isd) {
+      _resolveImagesInContents(cue, cue.isd.contents);
+    }
+
+    return cue;
+  }
+
+  function _getCueInformationForNonHtml(currentItem, timeOffset) {
+    var cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+    cue.cueID = "".concat(cue.startTime, "_").concat(cue.endTime);
+    return cue;
+  }
+
   function manualCueProcessing(time) {
     var activeTracks = _getManualActiveTracks();
 
@@ -44566,13 +45221,22 @@ function TextTracks(config) {
         cues.forEach(function (cue) {
           // Render cue if target time is reached and not in active state
           if (cue.startTime <= time && cue.endTime >= time && !cue.isActive) {
-            cue.isActive = true; // eslint-disable-next-line no-undef
+            cue.isActive = true;
 
-            WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
+            if (settings.get().streaming.text.dispatchForManualRendering) {
+              _triggerCueEnter(cue);
+            } else {
+              // eslint-disable-next-line no-undef
+              WebVTT.processCues(window, [cue], vttCaptionContainer, cue.cueID);
+            }
           } else if (cue.isActive && (cue.startTime > time || cue.endTime < time)) {
             cue.isActive = false;
 
-            _removeManualCue(cue);
+            if (settings.get().streaming.text.dispatchForManualRendering) {
+              _triggerCueExit(cue);
+            } else {
+              _removeManualCue(cue);
+            }
           }
         });
       }
@@ -44604,7 +45268,9 @@ function TextTracks(config) {
           if (cue.isActive) {
             cue.isActive = false;
 
-            if (vttCaptionContainer) {
+            if (settings.get().streaming.text.dispatchForManualRendering) {
+              _triggerCueExit(cue);
+            } else if (vttCaptionContainer) {
               var divs = vttCaptionContainer.childNodes;
 
               for (var i = 0; i < divs.length; ++i) {
@@ -44666,7 +45332,7 @@ function TextTracks(config) {
   }
 
   function setCurrentTrackIdx(idx) {
-    var _this = this;
+    var _this2 = this;
 
     if (idx === currentTrackIdx) {
       return;
@@ -44686,7 +45352,7 @@ function TextTracks(config) {
 
       if (window.ResizeObserver) {
         resizeObserver = new window.ResizeObserver(function () {
-          checkVideoSize.call(_this, track, true);
+          checkVideoSize.call(_this2, track, true);
         });
         resizeObserver.observe(videoModel.getElement());
       } else {
@@ -44831,11 +45497,6 @@ function TextTracks(config) {
     currentTrackIdx = -1;
     clearCaptionContainer.call(this);
   }
-
-  function deleteTextTrack(idx) {
-    videoModel.removeChild(nativeTrackElementArr[idx]);
-    nativeTrackElementArr.splice(idx, 1);
-  }
   /* Set native cue style to transparent background to avoid it being displayed. */
 
 
@@ -44914,7 +45575,6 @@ function TextTracks(config) {
     setModeForTrackIdx: setModeForTrackIdx,
     deleteCuesFromTrackIdx: deleteCuesFromTrackIdx,
     deleteAllTextTracks: deleteAllTextTracks,
-    deleteTextTrack: deleteTextTrack,
     manualCueProcessing: manualCueProcessing,
     disableManualTracks: disableManualTracks
   };
@@ -46127,7 +46787,7 @@ function Capabilities() {
 
   function supportsEssentialProperty(ep) {
     try {
-      return _thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_1__.THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+      return _thumbnail_ThumbnailTracks__WEBPACK_IMPORTED_MODULE_1__.THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1 || _constants_Constants__WEBPACK_IMPORTED_MODULE_2__["default"].FONT_DOWNLOAD_DVB_SCHEME === ep.schemeIdUri;
     } catch (e) {
       return true;
     }
@@ -48057,7 +48717,8 @@ function modifyRequest(httpRequest, requestModifier) {
     url: httpRequest.url,
     method: httpRequest.method,
     headers: Object.assign({}, httpRequest.headers),
-    credentials: httpRequest.withCredentials ? 'include' : undefined
+    credentials: httpRequest.withCredentials ? 'include' : undefined,
+    range: httpRequest.request.range
   };
   return Promise.resolve(requestModifier.modifyRequest(request)).then(function () {
     return Object.assign(httpRequest, request, {
@@ -48303,7 +48964,8 @@ function TTMLParser() {
    * @param {number} offsetTime - offset time to apply to cue time
    * @param {integer} startTimeSegment - startTime for the current segment
    * @param {integer} endTimeSegment - endTime for the current segment
-   * @param {Array} images - images array referenced by subs MP4 box
+   * @param {array} images - images array referenced by subs MP4 box
+   * @returns {array} captionArray
    */
 
 
@@ -49273,7 +49935,7 @@ function DVBSelector(config) {
 
     var samePrioritiesFilter = function samePrioritiesFilter(el) {
       if (removedPriorities.length) {
-        if (el.dvb_priority && removedPriorities.indexOf(el.dvb_priority) !== -1) {
+        if (el.dvbPriority && removedPriorities.indexOf(el.dvbPriority) !== -1) {
           return false;
         }
       }
@@ -49286,8 +49948,8 @@ function DVBSelector(config) {
         // whenever a BaseURL is removed from the available list of
         // BaseURLs, any other BaseURL with the same @priority
         // value as the BaseURL being removed shall also be removed
-        if (baseUrl.dvb_priority) {
-          removedPriorities.push(baseUrl.dvb_priority);
+        if (baseUrl.dvbPriority) {
+          removedPriorities.push(baseUrl.dvbPriority);
         } // all URLs in the list which have a @serviceLocation
         // attribute matching an entry in the blacklist shall be
         // removed from the available list of BaseURLs
@@ -49304,12 +49966,12 @@ function DVBSelector(config) {
 
   function selectByWeight(availableUrls) {
     var prioritySorter = function prioritySorter(a, b) {
-      var diff = a.dvb_priority - b.dvb_priority;
+      var diff = a.dvbPriority - b.dvbPriority;
       return isNaN(diff) ? 0 : diff;
     };
 
     var topPriorityFilter = function topPriorityFilter(baseUrl, idx, arr) {
-      return !idx || arr[0].dvb_priority && baseUrl.dvb_priority && arr[0].dvb_priority === baseUrl.dvb_priority;
+      return !idx || arr[0].dvbPriority && baseUrl.dvbPriority && arr[0].dvbPriority === baseUrl.dvbPriority;
     };
 
     var totalWeight = 0;
@@ -49330,7 +49992,7 @@ function DVBSelector(config) {
         // algorithms which achieve the same effect.
         // add all the weights together, storing the accumulated weight per entry
         urls.forEach(function (baseUrl) {
-          totalWeight += baseUrl.dvb_weight;
+          totalWeight += baseUrl.dvbWeight;
           cumulWeights.push(totalWeight);
         }); // pick a random number between zero and totalWeight
 
@@ -62293,6 +62955,7 @@ exports.renderHTML = __webpack_require__(/*! ./html */ "./node_modules/imsc/src/
                 var rslt = [];
 
                 for (var i = 0; i < ffs.length; i++) {
+                    ffs[i] = ffs[i].trim();
 
                     if (ffs[i].charAt(0) !== "'" && ffs[i].charAt(0) !== '"') {
 
@@ -69724,7 +70387,7 @@ function simpleEnd(buf) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
-/* UAParser.js v1.0.2
+/* UAParser.js v1.0.37
    Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
    MIT License *//*
    Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
@@ -69742,7 +70405,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
     /////////////
 
 
-    var LIBVERSION  = '1.0.2',
+    var LIBVERSION  = '1.0.37',
         EMPTY       = '',
         UNKNOWN     = '?',
         FUNC_TYPE   = 'function',
@@ -69762,7 +70425,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         SMARTTV     = 'smarttv',
         WEARABLE    = 'wearable',
         EMBEDDED    = 'embedded',
-        UA_MAX_LENGTH = 255;
+        UA_MAX_LENGTH = 500;
 
     var AMAZON  = 'Amazon',
         APPLE   = 'Apple',
@@ -69779,10 +70442,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         MOTOROLA  = 'Motorola',
         OPERA   = 'Opera',
         SAMSUNG = 'Samsung',
+        SHARP   = 'Sharp',
         SONY    = 'Sony',
         XIAOMI  = 'Xiaomi',
         ZEBRA   = 'Zebra',
-        FACEBOOK   = 'Facebook';
+        FACEBOOK    = 'Facebook',
+        CHROMIUM_OS = 'Chromium OS',
+        MAC_OS  = 'Mac OS';
 
     ///////////
     // Helper
@@ -69817,7 +70483,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
         },
         trim = function (str, len) {
             if (typeof(str) === STR_TYPE) {
-                str = str.replace(/^\s\s*/, EMPTY).replace(/\s\s*$/, EMPTY);
+                str = str.replace(/^\s\s*/, EMPTY);
                 return typeof(len) === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
             }
     };
@@ -69840,6 +70506,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
                 // try matching uastring with regexes
                 while (j < regex.length && !matches) {
 
+                    if (!regex[j]) { break; }
                     matches = regex[j++].exec(ua);
 
                     if (!!matches) {
@@ -69948,30 +70615,34 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [VERSION, [NAME, OPERA]], [
 
             // Mixed
+            /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i            // Baidu
+            ], [VERSION, [NAME, 'Baidu']], [
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
             /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,      // Lunascape/Maxthon/Netfront/Jasmine/Blazer
             // Trident based
-            /(avant |iemobile|slim)(?:browser)?[\/ ]?([\w\.]*)/i,               // Avant/IEMobile/SlimBrowser
-            /(ba?idubrowser)[\/ ]?([\w\.]+)/i,                                  // Baidu Browser
+            /(avant|iemobile|slim)\s?(?:browser)?[\/ ]?([\w\.]*)/i,             // Avant/IEMobile/SlimBrowser
             /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
 
             // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
-            /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale|qqbrowserlite|qq)\/([-\w\.]+)/i,
+            /(flock|rockmelt|midori|epiphany|silk|skyfire|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|qq|duckduckgo)\/([-\w\.]+)/i,
                                                                                 // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
+            /(heytap|ovi)browser\/([\d\.]+)/i,                                  // Heytap/Ovi
             /(weibo)__([\d\.]+)/i                                               // Weibo
             ], [NAME, VERSION], [
             /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
             ], [VERSION, [NAME, 'UC'+BROWSER]], [
-            /\bqbcore\/([\w\.]+)/i                                              // WeChat Desktop for Windows Built-in Browser
-            ], [VERSION, [NAME, 'WeChat(Win) Desktop']], [
+            /microm.+\bqbcore\/([\w\.]+)/i,                                     // WeChat Desktop for Windows Built-in Browser
+            /\bqbcore\/([\w\.]+).+microm/i,
             /micromessenger\/([\w\.]+)/i                                        // WeChat
             ], [VERSION, [NAME, 'WeChat']], [
             /konqueror\/([\w\.]+)/i                                             // Konqueror
             ], [VERSION, [NAME, 'Konqueror']], [
             /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i                       // IE11
             ], [VERSION, [NAME, 'IE']], [
-            /yabrowser\/([\w\.]+)/i                                             // Yandex
+            /ya(?:search)?browser\/([\w\.]+)/i                                  // Yandex
             ], [VERSION, [NAME, 'Yandex']], [
+            /slbrowser\/([\w\.]+)/i                                             // Smart Lenovo Browser
+            ], [VERSION, [NAME, 'Smart Lenovo '+BROWSER]], [
             /(avast|avg)\/([\w\.]+)/i                                           // Avast/AVG Secure Browser
             ], [[NAME, /(.+)/, '$1 Secure '+BROWSER], VERSION], [
             /\bfocus\/([\w\.]+)/i                                               // Firefox Focus
@@ -69989,28 +70660,40 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /fxios\/([-\w\.]+)/i                                                // Firefox for iOS
             ], [VERSION, [NAME, FIREFOX]], [
             /\bqihu|(qi?ho?o?|360)browser/i                                     // 360
-            ], [[NAME, '360 '+BROWSER]], [
-            /(oculus|samsung|sailfish)browser\/([\w\.]+)/i
-            ], [[NAME, /(.+)/, '$1 '+BROWSER], VERSION], [                      // Oculus/Samsung/Sailfish Browser
+            ], [[NAME, '360 ' + BROWSER]], [
+            /(oculus|sailfish|huawei|vivo)browser\/([\w\.]+)/i
+            ], [[NAME, /(.+)/, '$1 ' + BROWSER], VERSION], [                    // Oculus/Sailfish/HuaweiBrowser/VivoBrowser
+            /samsungbrowser\/([\w\.]+)/i                                        // Samsung Internet
+            ], [VERSION, [NAME, SAMSUNG + ' Internet']], [
             /(comodo_dragon)\/([\w\.]+)/i                                       // Comodo Dragon
             ], [[NAME, /_/g, ' '], VERSION], [
+            /metasr[\/ ]?([\d\.]+)/i                                            // Sogou Explorer
+            ], [VERSION, [NAME, 'Sogou Explorer']], [
+            /(sogou)mo\w+\/([\d\.]+)/i                                          // Sogou Mobile
+            ], [[NAME, 'Sogou Mobile'], VERSION], [
             /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
             /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,                   // Tesla
-            /m?(qqbrowser|baiduboxapp|2345Explorer)[\/ ]?([\w\.]+)/i            // QQBrowser/Baidu App/2345 Browser
+            /m?(qqbrowser|2345Explorer)[\/ ]?([\w\.]+)/i                        // QQBrowser/2345 Browser
             ], [NAME, VERSION], [
-            /(metasr)[\/ ]?([\w\.]+)/i,                                         // SouGouBrowser
-            /(lbbrowser)/i                                                      // LieBao Browser
+            /(lbbrowser)/i,                                                     // LieBao Browser
+            /\[(linkedin)app\]/i                                                // LinkedIn App for iOS & Android
             ], [NAME], [
 
             // WebView
             /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i       // Facebook App for iOS & Android
             ], [[NAME, FACEBOOK], VERSION], [
+            /(Klarna)\/([\w\.]+)/i,                                             // Klarna Shopping Browser for iOS & Android
+            /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,                             // Kakao App
+            /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,                                  // Naver InApp
             /safari (line)\/([\w\.]+)/i,                                        // Line App for iOS
             /\b(line)\/([\w\.]+)\/iab/i,                                        // Line App for Android
-            /(chromium|instagram)[\/ ]([-\w\.]+)/i                              // Chromium/Instagram
+            /(alipay)client\/([\w\.]+)/i,                                       // Alipay
+            /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i                     // Chromium/Instagram/Snapchat
             ], [NAME, VERSION], [
             /\bgsa\/([\w\.]+) .*safari\//i                                      // Google Search Appliance on iOS
             ], [VERSION, [NAME, 'GSA']], [
+            /musical_ly(?:.+app_?version\/|_)([\w\.]+)/i                        // TikTok
+            ], [VERSION, [NAME, 'TikTok']], [
 
             /headlesschrome(?:\/([\w\.]+)| )/i                                  // Chrome Headless
             ], [VERSION, [NAME, CHROME+' Headless']], [
@@ -70024,9 +70707,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i       // Chrome/OmniWeb/Arora/Tizen/Nokia
             ], [NAME, VERSION], [
 
-            /version\/([\w\.]+) .*mobile\/\w+ (safari)/i                        // Mobile Safari
+            /version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i                      // Mobile Safari
             ], [VERSION, [NAME, 'Mobile Safari']], [
-            /version\/([\w\.]+) .*(mobile ?safari|safari)/i                     // Safari & Safari Mobile
+            /version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i                // Safari & Safari Mobile
             ], [VERSION, NAME], [
             /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i                      // Safari < 3.0
             ], [NAME, [VERSION, strMapper, oldSafariMap]], [
@@ -70051,8 +70734,12 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             // Other
             /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir|obigo|mosaic|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
                                                                                 // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir/Obigo/Mosaic/Go/ICE/UP.Browser
-            /(links) \(([\w\.]+)/i                                              // Links
-            ], [NAME, VERSION]
+            /(links) \(([\w\.]+)/i,                                             // Links
+            /panasonic;(viera)/i                                                // Panasonic Viera
+            ], [NAME, VERSION], [
+            
+            /(cobalt)\/([\w\.]+)/i                                              // Cobalt
+            ], [NAME, [VERSION, /master.|lts./, ""]]
         ],
 
         cpu : [[
@@ -70091,39 +70778,46 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             //////////////////////////
             // MOBILES & TABLETS
-            // Ordered by popularity
             /////////////////////////
 
             // Samsung
-            /\b(sch-i[89]0\d|shw-m380s|sm-[pt]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+            /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
             ], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [
-            /\b((?:s[cgp]h|gt|sm)-\w+|galaxy nexus)/i,
+            /\b((?:s[cgp]h|gt|sm)-\w+|sc[g-]?[\d]+a?|galaxy nexus)/i,
             /samsung[- ]([-\w]+)/i,
             /sec-(sgh\w+)/i
             ], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
 
             // Apple
-            /\((ip(?:hone|od)[\w ]*);/i                                         // iPod/iPhone
+            /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i                          // iPod/iPhone
             ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [
             /\((ipad);[-\w\),; ]+apple/i,                                       // iPad
             /applecoremedia\/[\w\.]+ \((ipad)/i,
             /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
             ], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [
+            /(macintosh);/i
+            ], [MODEL, [VENDOR, APPLE]], [
+
+            // Sharp
+            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+            ], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
 
             // Huawei
             /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [
             /(?:huawei|honor)([-\w ]+)[;\)]/i,
-            /\b(nexus 6p|\w{2,4}-[atu]?[ln][01259x][012359][an]?)\b(?!.+d\/s)/i
+            /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
             ], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
 
             // Xiaomi
-            /\b(poco[\w ]+)(?: bui|\))/i,                                       // Xiaomi POCO
+            /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,                  // Xiaomi POCO
             /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
             /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
             /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
-            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
+            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,        // Xiaomi Redmi 'numeric' models
+            /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
             ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
+            /oid[^\)]+; (2\d{4}(283|rpbf)[cgl])( bui|\))/i,                     // Redmi Pad
             /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i                        // Mi Pad tablets
             ],[[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
 
@@ -70138,7 +70832,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
 
             // Realme
-            /\b(rmx[12]\d{3})(?: bui|;|\))/i
+            /\b(rmx[1-3]\d{3})(?: bui|;|\))/i
             ], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
 
             // Motorola
@@ -70174,7 +70868,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
 
             // Sony
-            /droid.+ ([c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+            /droid.+ (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
             ], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [
             /sony tablet [ps]/i,
             /\b(?:sony)?sgp\w+(?: bui|\))/i
@@ -70187,7 +70881,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // Amazon
             /(alexa)webm/i,
-            /(kf[a-z]{2}wi)( bui|\))/i,                                         // Kindle Fire without Silk
+            /(kf[a-z]{2}wi|aeo[c-r]{2})( bui|\))/i,                             // Kindle Fire without Silk / Echo Show
             /(kf[a-z]+)( bui|\)).+silk\//i                                      // Kindle Fire HD
             ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [
             /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i                     // Fire Phone
@@ -70213,7 +70907,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             // ZTE
             /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
-            /(alcatel|geeksphone|nexian|panasonic|sony)[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+            /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
             ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
 
             // Acer
@@ -70224,13 +70918,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /droid.+; (m[1-5] note) bui/i,
             /\bmz-([-\w]{2,})/i
             ], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
-
-            // Sharp
-            /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, MOBILE]], [
+                
+            // Ulefone
+            /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i
+            ], [MODEL, [VENDOR, 'Ulefone'], [TYPE, MOBILE]], [
 
             // MIXED
-            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron)[-_ ]?([-\w]*)/i,
+            /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron|infinix|tecno)[-_ ]?([-\w]*)/i,
                                                                                 // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
             /(hp) ([\w ]+\w)/i,                                                 // HP iPAQ
             /(asus)-?(\w+)/i,                                                   // Asus
@@ -70240,6 +70934,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(oppo) ?([\w ]+) bui/i                                             // OPPO
             ], [VENDOR, MODEL, [TYPE, MOBILE]], [
 
+            /(kobo)\s(ereader|touch)/i,                                         // Kobo
             /(archos) (gamepad2?)/i,                                            // Archos
             /(hp).+(touchpad(?!.+tablet)|tablet)/i,                             // HP TouchPad
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
@@ -70310,6 +71005,37 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
 
             ///////////////////
+            // SMARTTVS
+            ///////////////////
+
+            /smart-tv.+(samsung)/i                                              // Samsung
+            ], [VENDOR, [TYPE, SMARTTV]], [
+            /hbbtv.+maple;(\d+)/i
+            ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
+            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i        // LG SmartTV
+            ], [[VENDOR, LG], [TYPE, SMARTTV]], [
+            /(apple) ?tv/i                                                      // Apple TV
+            ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
+            /crkey/i                                                            // Google Chromecast
+            ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+            /droid.+aft(\w+)( bui|\))/i                                         // Fire TV
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
+            /\(dtv[\);].+(aquos)/i,
+            /(aquos-tv[\w ]+)\)/i                                               // Sharp
+            ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]],[
+            /(bravia[\w ]+)( bui|\))/i                                              // Sony
+            ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [
+            /(mitv-\w{5}) bui/i                                                 // Xiaomi
+            ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [
+            /Hbbtv.*(technisat) (.*);/i                                         // TechniSAT
+            ], [VENDOR, MODEL, [TYPE, SMARTTV]], [
+            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
+            /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i         // HbbTV devices
+            ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
+            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i                   // SmartTV from Unidentified Vendors
+            ], [[TYPE, SMARTTV]], [
+
+            ///////////////////
             // CONSOLES
             ///////////////////
 
@@ -70324,40 +71050,18 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
 
             ///////////////////
-            // SMARTTVS
-            ///////////////////
-
-            /smart-tv.+(samsung)/i                                              // Samsung
-            ], [VENDOR, [TYPE, SMARTTV]], [
-            /hbbtv.+maple;(\d+)/i
-            ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
-            /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i        // LG SmartTV
-            ], [[VENDOR, LG], [TYPE, SMARTTV]], [
-            /(apple) ?tv/i                                                      // Apple TV
-            ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
-            /crkey/i                                                            // Google Chromecast
-            ], [[MODEL, CHROME+'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
-            /droid.+aft(\w)( bui|\))/i                                          // Fire TV
-            ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
-            /\(dtv[\);].+(aquos)/i                                              // Sharp
-            ], [MODEL, [VENDOR, 'Sharp'], [TYPE, SMARTTV]], [
-            /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
-            /hbbtv\/\d+\.\d+\.\d+ +\([\w ]*; *(\w[^;]*);([^;]*)/i               // HbbTV devices
-            ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [
-            /\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i                   // SmartTV from Unidentified Vendors
-            ], [[TYPE, SMARTTV]], [
-
-            ///////////////////
             // WEARABLES
             ///////////////////
 
             /((pebble))app/i                                                    // Pebble
             ], [VENDOR, MODEL, [TYPE, WEARABLE]], [
+            /(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i                              // Apple Watch
+            ], [MODEL, [VENDOR, APPLE], [TYPE, WEARABLE]], [
             /droid.+; (glass) \d/i                                              // Google Glass
             ], [MODEL, [VENDOR, GOOGLE], [TYPE, WEARABLE]], [
             /droid.+; (wt63?0{2,3})\)/i
             ], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [
-            /(quest( 2)?)/i                                                     // Oculus Quest
+            /(quest( 2| pro)?)/i                                                // Oculus Quest
             ], [MODEL, [VENDOR, FACEBOOK], [TYPE, WEARABLE]], [
 
             ///////////////////
@@ -70366,18 +71070,20 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
 
             /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i                              // Tesla
             ], [VENDOR, [TYPE, EMBEDDED]], [
+            /(aeobc)\b/i                                                        // Echo Dot
+            ], [MODEL, [VENDOR, AMAZON], [TYPE, EMBEDDED]], [
 
             ////////////////////
             // MIXED (GENERIC)
             ///////////////////
 
-            /droid .+?; ([^;]+?)(?: bui|\) applew).+? mobile safari/i           // Android Phones from Unidentified Vendors
+            /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i    // Android Phones from Unidentified Vendors
             ], [MODEL, [TYPE, MOBILE]], [
             /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i       // Android Tablets from Unidentified Vendors
             ], [MODEL, [TYPE, TABLET]], [
             /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i                      // Unidentifiable Tablet
             ], [[TYPE, TABLET]], [
-            /(phone|mobile(?:[;\/]| safari)|pda(?=.+windows ce))/i              // Unidentifiable Mobile
+            /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i    // Unidentifiable Mobile
             ], [[TYPE, MOBILE]], [
             /(android[-\w\. ]{0,9});.+buil/i                                    // Generic Android Device
             ], [MODEL, [VENDOR, 'Generic']]
@@ -70395,7 +71101,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i, // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna
             /ekioh(flow)\/([\w\.]+)/i,                                          // Flow
             /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,                           // KHTML/Tasman/Links
-            /(icab)[\/ ]([23]\.[\d\.]+)/i                                       // iCab
+            /(icab)[\/ ]([23]\.[\d\.]+)/i,                                      // iCab
+            /\b(libweb)/i
             ], [NAME, VERSION], [
 
             /rv\:([\w\.]{1,9})\b.+(gecko)/i                                     // Gecko
@@ -70407,23 +71114,24 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             // Windows
             /microsoft (windows) (vista|xp)/i                                   // Windows (iTunes)
             ], [NAME, VERSION], [
-            /(windows) nt 6\.2; (arm)/i,                                        // Windows RT
-            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i,            // Windows Phone
-            /(windows)[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i
+            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i             // Windows Phone
             ], [NAME, [VERSION, strMapper, windowsVersionMap]], [
-            /(win(?=3|9|n)|win 9x )([nt\d\.]+)/i
-            ], [[NAME, 'Windows'], [VERSION, strMapper, windowsVersionMap]], [
+            /windows nt 6\.2; (arm)/i,                                        // Windows RT
+            /windows[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i,
+            /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+            ], [[VERSION, strMapper, windowsVersionMap], [NAME, 'Windows']], [
 
             // iOS/macOS
             /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,              // iOS
+            /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i,
             /cfnetwork\/.+darwin/i
             ], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [
             /(mac os x) ?([\w\. ]*)/i,
             /(macintosh|mac_powerpc\b)(?!.+haiku)/i                             // Mac OS
-            ], [[NAME, 'Mac OS'], [VERSION, /_/g, '.']], [
+            ], [[NAME, MAC_OS], [VERSION, /_/g, '.']], [
 
             // Mobile OSes
-            /droid ([\w\.]+)\b.+(android[- ]x86)/i                              // Android-x86
+            /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i                    // Android-x86/HarmonyOS
             ], [VERSION, NAME], [                                               // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
             /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i,
             /(blackberry)\w*\/([\w\.]*)/i,                                      // Blackberry
@@ -70439,12 +71147,19 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             /web0s;.+rt(tv)/i,
             /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i                              // WebOS
             ], [VERSION, [NAME, 'webOS']], [
+            /watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i                              // watchOS
+            ], [VERSION, [NAME, 'watchOS']], [
 
             // Google Chromecast
             /crkey\/([\d\.]+)/i                                                 // Google Chromecast
             ], [VERSION, [NAME, CHROME+'cast']], [
-            /(cros) [\w]+ ([\w\.]+\w)/i                                         // Chromium OS
-            ], [[NAME, 'Chromium OS'], VERSION],[
+            /(cros) [\w]+(?:\)| ([\w\.]+)\b)/i                                  // Chromium OS
+            ], [[NAME, CHROMIUM_OS], VERSION],[
+
+            // Smart TVs
+            /panasonic;(viera)/i,                                               // Panasonic Viera
+            /(netrange)mmh/i,                                                   // Netrange
+            /(nettv)\/(\d+\.[\w\.]+)/i,                                         // NetTV
 
             // Console
             /(nintendo|playstation) ([wids345portablevuch]+)/i,                 // Nintendo/Playstation
@@ -70465,7 +71180,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             ], [[NAME, 'Solaris'], VERSION], [
             /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,                              // Solaris
             /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,                                  // AIX
-            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux)/i,            // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX
+            /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i, // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX/SerenityOS
             /(unix) ?([\w\.]*)/i                                                // UNIX
             ], [NAME, VERSION]
         ]
@@ -70486,15 +71201,22 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             return new UAParser(ua, extensions).getResult();
         }
 
-        var _ua = ua || ((typeof window !== UNDEF_TYPE && window.navigator && window.navigator.userAgent) ? window.navigator.userAgent : EMPTY);
+        var _navigator = (typeof window !== UNDEF_TYPE && window.navigator) ? window.navigator : undefined;
+        var _ua = ua || ((_navigator && _navigator.userAgent) ? _navigator.userAgent : EMPTY);
+        var _uach = (_navigator && _navigator.userAgentData) ? _navigator.userAgentData : undefined;
         var _rgxmap = extensions ? extend(regexes, extensions) : regexes;
+        var _isSelfNav = _navigator && _navigator.userAgent == _ua;
 
         this.getBrowser = function () {
             var _browser = {};
             _browser[NAME] = undefined;
             _browser[VERSION] = undefined;
             rgxMapper.call(_browser, _ua, _rgxmap.browser);
-            _browser.major = majorize(_browser.version);
+            _browser[MAJOR] = majorize(_browser[VERSION]);
+            // Brave-specific detection
+            if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
+                _browser[NAME] = 'Brave';
+            }
             return _browser;
         };
         this.getCPU = function () {
@@ -70509,6 +71231,14 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             _device[MODEL] = undefined;
             _device[TYPE] = undefined;
             rgxMapper.call(_device, _ua, _rgxmap.device);
+            if (_isSelfNav && !_device[TYPE] && _uach && _uach.mobile) {
+                _device[TYPE] = MOBILE;
+            }
+            // iPadOS-specific detection: identified as Mac, but has some iOS-only properties
+            if (_isSelfNav && _device[MODEL] == 'Macintosh' && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
+                _device[MODEL] = 'iPad';
+                _device[TYPE] = TABLET;
+            }
             return _device;
         };
         this.getEngine = function () {
@@ -70523,6 +71253,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
             _os[NAME] = undefined;
             _os[VERSION] = undefined;
             rgxMapper.call(_os, _ua, _rgxmap.os);
+            if (_isSelfNav && !_os[NAME] && _uach && _uach.platform != 'Unknown') {
+                _os[NAME] = _uach.platform  
+                                    .replace(/chrome os/i, CHROMIUM_OS)
+                                    .replace(/macos/i, MAC_OS);           // backward compatibility
+            }
             return _os;
         };
         this.getResult = function () {
