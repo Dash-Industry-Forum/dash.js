@@ -426,8 +426,8 @@ function ContentSteeringController() {
             return synthesizedElements.map((element) => {
                 const synthesizedBaseUrl = new BaseURL(element.synthesizedUrl, element.serviceLocation)
                 synthesizedBaseUrl.queryParams = element.queryParams;
-                synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
-                synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
+                synthesizedBaseUrl.dvbPriority = element.reference.dvbPriority;
+                synthesizedBaseUrl.dvbWeight = element.reference.dvbWeight;
                 synthesizedBaseUrl.availabilityTimeOffset = element.reference.availabilityTimeOffset;
                 synthesizedBaseUrl.availabilityTimeComplete = element.reference.availabilityTimeComplete;
 

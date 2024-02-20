@@ -62,6 +62,7 @@ import Events from './events/Events';
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
+ *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
@@ -142,7 +143,12 @@ import Events from './events/Events';
  *            },
  *            text: {
  *                defaultEnabled: true,
+ *                dispatchForManualRendering: false,
  *                extendSegmentedCues: true,
+ *                imsc: {
+ *                    displayForcedOnlyMode: false,
+ *                    enableRollUp: true
+ *                },
  *                webvtt: {
  *                    customRenderingEnabled: false
  *                }
@@ -478,9 +484,16 @@ import Events from './events/Events';
  * @typedef {Object} Text
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {boolean} [dispatchForManualRendering=false]
+ * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
- * @property {object} [webvtt={customRenderingEnabled=false}]
+ * @property {boolean} [imsc.displayForcedOnlyMode=false]
+ * Enable/disable forced only mode in IMSC captions.
+ * When true, only those captions where itts:forcedDisplay="true" will be displayed.
+ * @property {boolean} [imsc.enableRollUp=true]
+ * Enable/disable rollUp style display of IMSC captions.
+ * @property {object} [webvtt.customRenderingEnabled=false]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
@@ -732,6 +745,8 @@ import Events from './events/Events';
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
+ * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
+ * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
@@ -862,6 +877,7 @@ function Settings() {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
+            liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
@@ -942,7 +958,12 @@ function Settings() {
             },
             text: {
                 defaultEnabled: true,
+                dispatchForManualRendering: false,
                 extendSegmentedCues: true,
+                imsc: {
+                    displayForcedOnlyMode: false,
+                    enableRollUp: true
+                },
                 webvtt: {
                     customRenderingEnabled: false
                 }

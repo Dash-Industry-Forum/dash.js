@@ -37,6 +37,7 @@ export function modifyRequest(httpRequest, requestModifier) {
         method: httpRequest.method,
         headers: Object.assign({}, httpRequest.headers),
         credentials: httpRequest.withCredentials ? 'include' : undefined,
+        range: httpRequest.request.range,
     };
 
     return Promise.resolve(requestModifier.modifyRequest(request))

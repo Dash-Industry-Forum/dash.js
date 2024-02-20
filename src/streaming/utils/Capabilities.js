@@ -198,7 +198,7 @@ function Capabilities() {
      */
     function supportsEssentialProperty(ep) {
         try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+            return (THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1) || (Constants.FONT_DOWNLOAD_DVB_SCHEME === ep.schemeIdUri);
         } catch (e) {
             return true;
         }

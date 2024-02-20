@@ -141,11 +141,12 @@ describe('DashManifestModel', function () {
             expect(rolesArray).to.be.empty;
         });
 
-        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+        // Handling Supplemental Property Descriptors
+        it('should return an empty object when getSupplementalPropertiesForAdaptation', () => {
+            const suppProps = dashManifestModel.getSupplementalPropertiesForAdaptation();
 
-            expect(suppPropArray).to.be.instanceOf(Object);
-            expect(suppPropArray).to.be.empty;
+            expect(suppProps).to.be.instanceOf(Object);
+            expect(suppProps).to.be.empty;
         });
 
         it('should return an empty array when getSupplementalPropertiesAsArrayForAdaptation', () => {
@@ -157,22 +158,29 @@ describe('DashManifestModel', function () {
 
         it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForAdaptation is called', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation({
-                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'},{schemeIdUri: 'test.scheme', value: 'test2Val'}]
+                SupplementalProperty_asArray: [
+                    {schemeIdUri: 'test.scheme0', value: 'testVal'},
+                    {schemeIdUri: 'test.scheme1', value: 'test2Val', 'dvb:mimeType': 'extVal'}, // e.g. dvb extensions
+                    {schemeIdUri: 'test.scheme2'} // value not always required
+                ]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);
-            expect(suppPropArray[0].schemeIdUri).equals('test.scheme');
+            expect(suppPropArray[0].schemeIdUri).equals('test.scheme0');
             expect(suppPropArray[0].value).equals('testVal');
-            expect(suppPropArray[1].schemeIdUri).equals('test.scheme');
+            expect(suppPropArray[1].schemeIdUri).equals('test.scheme1');
             expect(suppPropArray[1].value).equals('test2Val');
+            expect(suppPropArray[1].dvbMimeType).equals('extVal');
+            expect(suppPropArray[2].schemeIdUri).equals('test.scheme2');
+            expect(suppPropArray[2].value).to.be.null;
         });
 
-        it('should return an empty array when getSupplementalPropertiesForRepresentation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation();
+        it('should return an empty object when getSupplementalPropertiesForRepresentation', () => {
+            const suppProps = dashManifestModel.getSupplementalPropertiesForRepresentation();
 
-            expect(suppPropArray).to.be.instanceOf(Object);
-            expect(suppPropArray).to.be.empty;
+            expect(suppProps).to.be.instanceOf(Object);
+            expect(suppProps).to.be.empty;
         });
 
         it('should return an empty array when getSupplementalPropertiesAsArrayForRepresentation', () => {
@@ -191,6 +199,46 @@ describe('DashManifestModel', function () {
             expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);
             expect(suppPropArray[0].schemeIdUri).equals('test.scheme');
             expect(suppPropArray[0].value).equals('testVal');
+        });
+
+        // Handling Essential Property Descriptors
+        it('should return an empty object when getEssentialPropertiesForAdaptation', () => {
+            const essProps = dashManifestModel.getEssentialPropertiesForAdaptation();
+
+            expect(essProps).to.be.instanceOf(Object);
+            expect(essProps).to.be.empty;
+        });
+
+        it('should return an empty array when getEssentialPropertiesAsArrayForAdaptation', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation();
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray).to.be.empty;
+        });
+
+        it('should return correct array of DescriptorType when getEssentialPropertiesAsArrayForAdaptation is called', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation({
+                EssentialProperty_asArray: [
+                    {schemeIdUri: 'test.scheme0', value: 'testVal'},
+                    {schemeIdUri: 'test.scheme1', value: 'test2Val', 'dvb:mimeType': 'extVal'}, // e.g. dvb extensions
+                    {schemeIdUri: 'test.scheme2'} // value not always required
+                ]
+            });
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
+            expect(essPropArray[0].schemeIdUri).equals('test.scheme0');
+            expect(essPropArray[0].value).equals('testVal');
+            expect(essPropArray[1].schemeIdUri).equals('test.scheme1');
+            expect(essPropArray[1].value).equals('test2Val');
+            expect(essPropArray[1].dvbMimeType).equals('extVal');
+            expect(essPropArray[2].schemeIdUri).equals('test.scheme2');
+            expect(essPropArray[2].value).to.be.null;
+        });
+
+        // Works differently to the supplementalProperties counterpart
+        it('should return null when getEssentialPropertiesForRepresentation', () => {
+            expect(dashManifestModel.getEssentialPropertiesForRepresentation()).to.be.null;
         });
 
         it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {
@@ -1081,8 +1129,8 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] having correct priority and weight for DVB extensions when specified', () => {
@@ -1100,8 +1148,8 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(TEST_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(TEST_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(TEST_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(TEST_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is specified and the input url is relative', () => {

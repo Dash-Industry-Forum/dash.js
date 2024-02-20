@@ -216,6 +216,10 @@ declare namespace dashjs {
 
         getSelectionPriority(realAdaptation: object): number;
 
+        getEssentialPropertiesForAdaptation(adaptation: object): object;
+
+        getEssentialPropertiesAsArrayForAdaptation(adaptation: object): any[];
+
         getEssentialPropertiesForRepresentation(realRepresentation: object): {schemeIdUri: string, value: string}
 
         getRepresentationFor(index: number, adaptation: object): object;
@@ -254,9 +258,19 @@ declare namespace dashjs {
 
         getServiceDescriptions(manifest: object): serviceDescriptions;
 
-        getSupplementalProperties(adaptation: object): object;
         getSegmentAlignment(adaptation: object): boolean;
+
         getSubSegmentAlignment(adaptation: object): boolean;
+
+        getSupplementalPropertiesForAdaptation(adaptation: object): object;
+
+        getSupplementalPropertiesAsArrayForAdaptation(adaptation: object): any[];
+        
+        getSupplementalPropertiesForRepresentation(representation: Representation): object;
+
+        getSupplementalPropertiesAsArrayForRepresentation(representation: Representation): any[];
+
+        setConfig(config: object): void;
     }
 
     export interface PatchManifestModel {
@@ -394,8 +408,8 @@ declare namespace dashjs {
     export interface BaseURL {
         url: string;
         serviceLocation: string;
-        dvb_priority: number;
-        dvb_weight: number;
+        dvbPriority: number;
+        dvbWeight: number;
         availabilityTimeOffset: number;
         availabilityTimeComplete: boolean;
         queryParams: object;
@@ -472,6 +486,9 @@ declare namespace dashjs {
         isEmbedded: any | null;
         selectionPriority: number;
         supplementalProperties: object;
+        supplementalPropertiesAsArray: any[];
+        essentialProperties: object;
+        essentialPropertiesAsArray: any[];
         segmentAlignment: boolean;
         subSegmentAlignment: boolean;
     }
@@ -582,6 +599,9 @@ declare namespace dashjs {
         schemeIdUri: string;
         value: string;
         id: string;
+        dvbUrl?: string;
+        dvbMimeType?: string;
+        dvbFontFamily?: string;
     }
 
     export class ContentSteeringResponse {
@@ -943,6 +963,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             manifestUpdateRetryInterval?: number,
+            liveUpdateTimeThresholdInMilliseconds?: number,
             applyServiceDescription?: boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
@@ -1023,7 +1044,12 @@ declare namespace dashjs {
             },
             text?: {
                 defaultEnabled?: boolean,
+                dispatchForManualRendering?: boolean,
                 extendSegmentedCues?: boolean,
+                imsc?: {
+                    displayForcedOnlyMode?: boolean,
+                    enableRollUp?: boolean
+                },
                 webvtt?: {
                     customRenderingEnabled?: number
                 }
@@ -1253,6 +1279,8 @@ declare namespace dashjs {
         attachView(element: HTMLElement): void;
 
         attachSource(urlOrManifest: string | object, startTime?: number | string): void;
+
+        refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
 
         isReady(): boolean;
 
@@ -1506,7 +1534,12 @@ declare namespace dashjs {
         CAN_PLAY_THROUGH: 'canPlayThrough';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
-        CONFORMANCE_VIOLATION: 'conformanceViolation'
+        CONFORMANCE_VIOLATION: 'conformanceViolation';
+        CUE_ENTER: 'cueEnter';
+        CUE_EXIT: 'cueExit';
+        DVB_FONT_DOWNLOAD_ADDED: 'dvbFontDownloadAdded';
+        DVB_FONT_DOWNLOAD_COMPLETE: 'dvbFontDownloadComplete';
+        DVB_FONT_DOWNLOAD_FAILED: 'dvbFontDownloadFailed';
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
@@ -1553,6 +1586,7 @@ declare namespace dashjs {
         PLAYBACK_PLAYING: 'playbackPlaying';
         PLAYBACK_PROGRESS: 'playbackProgress';
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
+        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
@@ -1715,6 +1749,20 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
     }
 
+    export interface dvbFontDownloadAdded extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
+        font: FontInfo;
+    }
+
+    export interface dvbFontDownloadComplete extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
+        font: FontInfo;
+    }
+
+    export interface dvbFontDownloadFailed extends Event {
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
+        font: FontInfo;
+    }
     export interface DynamicToStaticEvent extends Event {
         type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
     }
@@ -1839,7 +1887,7 @@ declare namespace dashjs {
 
     export interface PlaybackErrorEvent extends Event {
         type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
+        error: MediaError;
     }
 
     export interface PlaybackPausedEvent extends Event {
@@ -1938,14 +1986,22 @@ declare namespace dashjs {
         content: object;
     }
 
+    export interface CueEnterEvent extends Event {
+        type: MediaPlayerEvents['CUE_ENTER'];
+        id: string,
+        text: string,
+        start: number,
+        end: number
+    }
+
+    export interface CueExitEvent extends Event {
+        type: MediaPlayerEvents['CUE_EXIT'];
+        id: string,
+    }
+
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends Event {
         type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
         adaptationSet: object;
-    }
-
-    export interface PlaybackErrorEvent extends Event {
-        type: MediaPlayerEvents['PLAYBACK_ERROR'];
-        error: string;
     }
 
     export interface MediaSettings {
@@ -2496,8 +2552,8 @@ declare namespace dashjs {
 
         schemeIdUri: string;
         value: string;
-        dvb_reportingUrl: string;
-        dvb_probability: number;
+        dvbReportingUrl: string;
+        dvbProbability: number;
     }
 
     /**
@@ -3502,7 +3558,32 @@ declare namespace dashjs {
      * Streaming - Text
      **/
 
-     export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+    export type TextTrackType = 'subtitles' | 'caption' | 'descriptions' | 'chapters' | 'metadata';
+
+    export type FontDownloadStatus = 'unloaded' | 'loaded' | 'error';
+
+    export interface FontInfo {
+        fontFamily: string;
+        url: string;
+        mimeType: string;
+        trackId: number;
+        streamId: string;
+        isEssential: boolean;
+        status: FontDownloadStatus;
+        fontFace: FontFace;
+    }
+
+    export interface DVBFonts {
+        addFontsFromTracks(tracks: TextTrackInfo, streamId: string): void;
+
+        downloadFonts(): void;
+
+        getFonts(): FontInfo[];
+
+        getFontsForTrackId(trackId: number): FontInfo[];
+        
+        reset(): void;
+    }
 
     export interface EmbeddedTextHtmlRender {
         createHTMLCaptionsFromScreen(videoElement: HTMLVideoElement, startTime: number, endTime: number, captionScreen: any): any[];
@@ -3642,8 +3723,6 @@ declare namespace dashjs {
         deleteCuesFromTrackIdx(trackIdx: number, start: number, end: number): void;
 
         deleteAllTextTracks(): void;
-
-        deleteTextTrack(idx: number): void;
     }
 
     /**
@@ -4220,84 +4299,6 @@ declare namespace dashjs {
         export const errors: MediaPlayerErrors;
     }
 
-    interface MediaPlayerEvents {
-        AST_IN_FUTURE: 'astInFuture';
-        BUFFER_EMPTY: 'bufferStalled';
-        BUFFER_LOADED: 'bufferLoaded';
-        BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
-        BUFFER_LEVEL_UPDATED: 'bufferLevelUpdated';
-        CAN_PLAY: 'canPlay';
-        CAN_PLAY_THROUGH: 'canPlayThrough';
-        CAPTION_RENDERED: 'captionRendered';
-        CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
-        CONFORMANCE_VIOLATION: 'conformanceViolation'
-        DYNAMIC_TO_STATIC: 'dynamicToStatic';
-        ERROR: 'error';
-        EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
-        EVENT_MODE_ON_START: 'eventModeOnStart';
-        FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
-        FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
-        FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
-        FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
-        KEY_ADDED: 'public_keyAdded';
-        KEY_ERROR: 'public_keyError';
-        KEY_MESSAGE: 'public_keyMessage';
-        KEY_SESSION_CLOSED: 'public_keySessionClosed';
-        KEY_SESSION_CREATED: 'public_keySessionCreated';
-        KEY_SESSION_REMOVED: 'public_keySessionRemoved';
-        KEY_STATUSES_CHANGED: 'public_keyStatusesChanged';
-        KEY_SYSTEM_SELECTED: 'public_keySystemSelected';
-        KEY_SYSTEM_ACCESS_COMPLETE: 'public_keySystemAccessComplete';
-        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
-        LICENSE_REQUEST_COMPLETE: 'public_licenseRequestComplete';
-        LICENSE_REQUEST_SENDING: 'public_licenseRequestSending';
-        LOG: 'log';
-        MANIFEST_LOADED: 'manifestLoaded';
-        MANIFEST_VALIDITY_CHANGED: 'manifestValidityChanged';
-        METRICS_CHANGED: 'metricsChanged';
-        METRIC_ADDED: 'metricAdded';
-        METRIC_CHANGED: 'metricChanged';
-        METRIC_UPDATED: 'metricUpdated';
-        OFFLINE_RECORD_FINISHED: 'public_offlineRecordFinished';
-        OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
-        OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
-        OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
-        PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
-        PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
-        PLAYBACK_ENDED: 'playbackEnded';
-        PLAYBACK_ERROR: 'playbackError';
-        PLAYBACK_LOADED_DATA: 'playbackLoadedData';
-        PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';
-        PLAYBACK_NOT_ALLOWED: 'playbackNotAllowed';
-        PLAYBACK_PAUSED: 'playbackPaused';
-        PLAYBACK_PLAYING: 'playbackPlaying';
-        PLAYBACK_PROGRESS: 'playbackProgress';
-        PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
-        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
-        PLAYBACK_SEEKED: 'playbackSeeked';
-        PLAYBACK_SEEKING: 'playbackSeeking';
-        PLAYBACK_STALLED: 'playbackStalled';
-        PLAYBACK_STARTED: 'playbackStarted';
-        PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
-        PLAYBACK_WAITING: 'playbackWaiting';
-        PROTECTION_CREATED: 'public_protectioncreated';
-        PROTECTION_DESTROYED: 'public_protectiondestroyed';
-        REPRESENTATION_SWITCH: 'representationSwitch';
-        TRACK_CHANGE_RENDERED: 'trackChangeRendered';
-        QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
-        QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
-        STREAM_ACTIVATED: 'streamActivated'
-        STREAM_DEACTIVATED: 'streamDeactivated';
-        STREAM_INITIALIZED: 'streamInitialized';
-        STREAM_INITIALIZING: 'streamInitializing';
-        STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
-        STREAM_UPDATED: 'streamUpdated';
-        TEXT_TRACKS_ADDED: 'allTextTracksAdded';
-        TEXT_TRACK_ADDED: 'textTrackAdded';
-        TTML_PARSED: 'ttmlParsed';
-        TTML_TO_PARSE: 'ttmlToParse';
-    }
-
     export interface MediaPlayerFactory {
         create(): MediaPlayerClass;
     }
@@ -4537,5 +4538,4 @@ declare namespace dashjs {
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
     export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 }
-
 
