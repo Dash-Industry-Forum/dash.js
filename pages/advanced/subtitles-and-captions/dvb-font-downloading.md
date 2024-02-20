@@ -1,7 +1,8 @@
 ---
 layout: default
 title: DVB Font Downloading
-parent: Advanced Features
+parent: Subtitles & Captions
+grand_parent: Advanced Features
 ---
 
 <details  markdown="block">
@@ -15,7 +16,7 @@ parent: Advanced Features
 
 # DVB Font Downloading
 
-Dash.js supports the mechanism described in the DVB DASH profile (ETSI TS 103 285 Section 7.2 Downloadable Fonts) for signalling downloadable fonts using descriptors within an MPD.
+dash.js supports the mechanism described in the DVB DASH profile ([ETSI TS 103 285](https://www.etsi.org/deliver/etsi_ts/103200_103299/103285/01.03.01_60/ts_103285v010301p.pdf) Section 7.2 Downloadable Fonts) for signalling downloadable fonts using descriptors within an MPD.
 This is intended for use with [EBU-TT-D](https://tech.ebu.ch/publications/tech3380) (compatible with [IMSC1](https://www.w3.org/TR/ttml-imsc1.0.1/) Text Profile) subtitles.
 The key details of the mechanism and how to use it are covered here.
 
@@ -25,7 +26,7 @@ As a content provider, you may choose to specify fonts within your TTML subtitle
 This could be for accessibility, language, or stylistic reasons.
 However this will only work if the specified fonts are available on the device or browser where the dash player is being used, which may not always be under the control of the content provider.
 
-To assist with this, the DVB font download mechanism allows you to signal font resources for download in an MPD, and associate them with specific font family names used within the TTML.
+To assist with this, the DVB font download mechanism allows you to [signal font resources for download in an MPD](#signalling-downloadable-fonts), and associate them with specific font family names used within the TTML.
 This is achieved by including Supplemental or Essential Property descriptors with the specified scheme in the MPD.
 
 Reference media which signals fonts for download can be found in the [dash.js reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/).
@@ -88,7 +89,7 @@ If a `<SupplementalProperty>` descriptor was used and download fails, then the `
 
 If an `<EssentialProperty>` descriptor was used and download fails, then the `<AdaptationSet>` containing the descriptor is not be presented at all.
 
-What this looks like on a client is described in a later section.
+What this looks like on a client is [described in a later section](#download-process).
 
 ## Using the Downloaded Fonts
 
@@ -122,7 +123,7 @@ Download of fonts happens alongside other media, as to not impede the start of p
 If the download is successful then the font is added to the `document` interface.
 When the player is reset, or a new source is added, any added fonts are then removed from the `document`.
 
-The download status of a font, and the type of property descriptor used to describe the font, has an effect on display of the `<AdaptationSet>` it is related to.
+The download status of a font and the type of property descriptor used to describe the font have an effect on display of the `<AdaptationSet>` it is related to.
 Consider a situation where subtitles are set to display on load, and we have the correct entries in our MPD and TTML documents to use our hypothetical 'SubtitleDisplay' font.
 The process followed for the different property descriptors is described below.
 
