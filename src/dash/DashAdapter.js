@@ -40,6 +40,7 @@ import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
+import Constants from '../streaming/constants/Constants.js';
 
 /**
  * @module DashAdapter
@@ -458,7 +459,6 @@ function DashAdapter() {
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
-            event.type = schemeIdUri;
             event.eventStream = eventStream;
             event.eventStream.value = value;
             event.eventStream.timescale = timescale;
@@ -467,7 +467,7 @@ function DashAdapter() {
             event.calculatedPresentationTime = calculatedPresentationTime;
             event.messageData = messageData;
             event.presentationTimeDelta = presentationTimeDelta;
-            event.value = (schemeIdUri === 'https://aomedia.org/emsg/ID3') ? getId3Frames(messageData) : null;;
+            event.parsedMessageData = (schemeIdUri === Constants.ID3_SCHEME_ID_URI) ? getId3Frames(messageData) : null;
 
             return event;
         } catch (e) {

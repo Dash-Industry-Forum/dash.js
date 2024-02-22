@@ -274,6 +274,13 @@ export default {
     },
     ABANDON_FRAGMENT_RULES: {
         ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
-    }
+    },
+
+    /**
+     *  @constant {string} ID3_SCHEME_ID_URI specifies scheme ID URI for ID3 timed metadata
+     *  @memberof Constants#
+     *  @static
+     */
+    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3'
 }
 

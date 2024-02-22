@@ -41,7 +41,7 @@ class Event {
         this.messageData = '';
         this.eventStream = null;
         this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
-        this.value = null; // Parsed value of the event message
+        this.parsedMessageData = null; // Parsed value of the event message
     }
 }
 
