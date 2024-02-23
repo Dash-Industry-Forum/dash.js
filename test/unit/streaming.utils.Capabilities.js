@@ -41,21 +41,27 @@ describe('CapabilitiesFilter', function () {
         });
 
         it('should return false if EssentialProperty value is not known when new values are registered in settings', function () {
-            settings.update({ streaming: { capabilities: { supportedEssentialProperties: [EssentialPropertyOwn.schemeIdUri] }} });
+            let props = settings.get().streaming.capabilities.supportedEssentialProperties;
+            props.push(...[EssentialPropertyOwn.schemeIdUri]);
+            settings.update({ streaming: { capabilities: { supportedEssentialProperties: props }} });
             
             let res = capabilities.supportsEssentialProperty(EssentialPropertyOwnSecond);
             expect(res).to.be.false;
         });
 
         it('should return true if EssentialProperty value is registered in settings', function () {
-            settings.update({ streaming: { capabilities: { supportedEssentialProperties: [EssentialPropertyOwn.schemeIdUri] }} });
+            let props = settings.get().streaming.capabilities.supportedEssentialProperties;
+            props.push(...[EssentialPropertyOwn.schemeIdUri]);
+            settings.update({ streaming: { capabilities: { supportedEssentialProperties: props }} });
 
             let res = capabilities.supportsEssentialProperty(EssentialPropertyOwn);
             expect(res).to.be.true;
         });
 
-        it('should return true for internally known EssentialPropertiesy when new values are registered in settings', function () {
-            settings.update({ streaming: { capabilities: { supportedEssentialProperties: [EssentialPropertyOwn.schemeIdUri] }} });
+        it('should return true for internally known EssentialProperties when new values are registered in settings', function () {
+            let props = settings.get().streaming.capabilities.supportedEssentialProperties;
+            props.push(...[EssentialPropertyOwn.schemeIdUri]);
+            settings.update({ streaming: { capabilities: { supportedEssentialProperties: props }} });
 
             let res = capabilities.supportsEssentialProperty(EssentialPropertyThumbNail);
             expect(res).to.be.true;
