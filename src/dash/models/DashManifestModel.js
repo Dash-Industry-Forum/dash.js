@@ -568,18 +568,20 @@ function DashManifestModel() {
 
     function getEssentialPropertiesForAdaptation(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) return [];
-        return adaptation.EssentialProperty.map( supp => {
+        return adaptation.EssentialProperty.map( essentialProperty => {
             const s = new DescriptorType();
-            return s.init(supp);
+            s.init(essentialProperty);
+            return s
         });
     }
 
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return [];
 
-        return realRepresentation.EssentialProperty.map((prop) => {
+        return realRepresentation.EssentialProperty.map((essentialProperty) => {
             const s = new DescriptorType();
-            return s.init(prop);
+            s.init(essentialProperty);
+            return s
         });
     }
 
