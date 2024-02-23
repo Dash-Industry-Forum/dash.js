@@ -39,6 +39,8 @@ import DashManifestModel from './models/DashManifestModel.js';
 import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
+import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
+import Constants from '../streaming/constants/Constants.js';
 
 /**
  * @module DashAdapter
@@ -465,6 +467,7 @@ function DashAdapter() {
             event.calculatedPresentationTime = calculatedPresentationTime;
             event.messageData = messageData;
             event.presentationTimeDelta = presentationTimeDelta;
+            event.parsedMessageData = (schemeIdUri === Constants.ID3_SCHEME_ID_URI) ? getId3Frames(messageData) : null;
 
             return event;
         } catch (e) {
