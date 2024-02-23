@@ -47,7 +47,6 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import DashJSError from '../../streaming/vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
-import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks.js';
 import MpdLocation from '../vo/MpdLocation.js';
 import PatchLocation from '../vo/PatchLocation.js';
 import ContentProtection from '../vo/ContentProtection.js';
@@ -83,7 +82,7 @@ function DashManifestModel() {
         // Check for thumbnail images
         if (adaptation.Representation && adaptation.Representation.length) {
             const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
-            if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+            if (essentialProperties && essentialProperties.length > 0 && Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
                 return (type === Constants.IMAGE);
             }
         }
@@ -566,14 +565,22 @@ function DashManifestModel() {
         }
     }
 
-    function getEssentialPropertiesForRepresentation(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
+    function getEssentialPropertiesForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) return [];
+        return adaptation.EssentialProperty.map( essentialProperty => {
+            const s = new DescriptorType();
+            s.init(essentialProperty);
+            return s
+        });
+    }
 
-        return realRepresentation.EssentialProperty.map((prop) => {
-            return {
-                schemeIdUri: prop.schemeIdUri,
-                value: prop.value
-            };
+    function getEssentialPropertiesForRepresentation(realRepresentation) {
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return [];
+
+        return realRepresentation.EssentialProperty.map((essentialProperty) => {
+            const s = new DescriptorType();
+            s.init(essentialProperty);
+            return s
         });
     }
 
@@ -1399,6 +1406,7 @@ function DashManifestModel() {
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
+        getEssentialPropertiesForAdaptation,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,

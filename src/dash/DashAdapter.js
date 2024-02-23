@@ -992,6 +992,10 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
+        if ((!mediaInfo.essentialProperties || mediaInfo.essentialProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
+            mediaInfo.essentialProperties = _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation);
+        }
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
         if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
             mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation);
@@ -1042,6 +1046,19 @@ function DashAdapter() {
             }
             return contentProtectionElement
         })
+    }
+
+    function _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation) {
+        let arr = realAdaptation.Representation.map(repr => {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(repr);
+        });
+
+        if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
+            // only output Representation.essentialProperties to mediaInfo, if they are present on all Representations
+            return arr[0];
+        }
+
+        return []
     }
 
     function _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation) {

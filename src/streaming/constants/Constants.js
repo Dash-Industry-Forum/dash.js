@@ -225,6 +225,7 @@ export default {
     START_TIME: 'starttime',
     SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
     SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
+    THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     XML: 'XML',
     ARRAY_BUFFER: 'ArrayBuffer',
     DVB_REPORTING_URL: 'dvb:reportingUrl',

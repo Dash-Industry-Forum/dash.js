@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-import {THUMBNAILS_SCHEME_ID_URIS} from '../thumbnail/ThumbnailTracks.js';
 import Constants from '../constants/Constants.js';
 
 export function supportsMediaSource() {
@@ -187,8 +186,9 @@ function Capabilities() {
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
+        let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
         try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+            return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
         } catch (e) {
             return true;
         }

@@ -39,9 +39,6 @@ import XHRLoader from '../../streaming/net/XHRLoader.js';
 import DashHandler from '../../dash/DashHandler.js';
 import SegmentsController from '../../dash/controllers/SegmentsController.js';
 
-export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
-    'http://dashif.org/guidelines/thumbnail_tile'];
-
 function ThumbnailTracks(config) {
     const context = this.context;
     const adapter = config.adapter;
@@ -142,7 +139,7 @@ function ThumbnailTracks(config) {
 
         if (representation.essentialProperties) {
             representation.essentialProperties.forEach((p) => {
-                if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
+                if (Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
                     const vars = p.value.split('x');
                     if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
                         track.tilesHor = parseInt(vars[0], 10);
