@@ -196,7 +196,7 @@
     };
 
     PenState.prototype = {
-        
+
         reset : function() {
             this.foreground = "white";
             this.underline = false;
@@ -204,7 +204,7 @@
             this.background = "black";
             this.flash = false;
         },
-        
+
         setStyles : function(styles) {
             var attribs = ["foreground", "underline", "italics", "background", "flash"];
             for (var i = 0 ; i < attribs.length; i++) {
@@ -214,14 +214,14 @@
                 }
             }
         },
-        
+
         isDefault : function() {
-            return (this.foreground === "white" && !this.underline && !this.italics && 
+            return (this.foreground === "white" && !this.underline && !this.italics &&
                     this.background === "black" && !this.flash);
         },
 
         equals : function(other) {
-            return ( (this.foreground === other.foreground) && 
+            return ( (this.foreground === other.foreground) &&
                      (this.underline === other.underline) &&
                      (this.italics === other.italics) &&
                      (this.background === other.background) &&
@@ -235,7 +235,7 @@
             this.background = newPenState.background;
             this.flash = newPenState.flash;
         },
-        
+
         toString: function() {
             return ("color=" + this.foreground + ", underline=" + this.underline + ", italics=" + this.italics +
                 ", background=" + this.background + ", flash=" + this.flash);
@@ -252,30 +252,30 @@
     };
 
     StyledUnicodeChar.prototype = {
-        
+
         reset: function() {
             this.uchar = ' ';
             this.penState.reset();
         },
-        
+
         setChar: function(uchar, newPenState) {
             this.uchar = uchar;
             this.penState.copy(newPenState);
         },
-        
+
         setPenState: function(newPenState) {
             this.penState.copy(newPenState);
         },
-        
+
         equals: function(other) {
             return this.uchar === other.uchar && this.penState.equals(other.penState);
         },
-        
+
         copy: function(newChar) {
             this.uchar = newChar.uchar;
             this.penState.copy(newChar.penState);
         },
-        
+
         isEmpty : function() {
             return this.uchar === ' ' && this.penState.isDefault();
         }
@@ -295,7 +295,7 @@
     };
 
     Row.prototype = {
-        
+
         equals: function(other) {
             var equal = true;
             for (var i = 0 ; i < NR_COLS; i ++) {
@@ -306,13 +306,13 @@
             }
             return equal;
         },
-        
+
         copy: function(other) {
             for (var i = 0 ; i < NR_COLS; i ++) {
                 this.chars[i].copy(other.chars[i]);
             }
         },
-        
+
         isEmpty : function() {
             var empty = true;
             for (var i = 0 ; i < NR_COLS; i ++) {
@@ -340,7 +340,7 @@
             }
         },
 
-        /** 
+        /**
          * Move the cursor relative to current position.
          */
         moveCursor : function(relPos) {
@@ -367,7 +367,7 @@
             }
             var char = getCharForByte(byte);
             if (this.pos >= NR_COLS) {
-                logger.log("ERROR", "Cannot insert " + byte.toString(16) +  
+                logger.log("ERROR", "Cannot insert " + byte.toString(16) +
                             " (" + char + ") at position " + this.pos + ". Skipping it!");
                 return;
             }
@@ -469,7 +469,7 @@
         },
 
         backSpace : function() {
-            var row = this.rows[this.currRow]; 
+            var row = this.rows[this.currRow];
             row.backSpace();
         },
 
@@ -493,7 +493,7 @@
 
         moveCursor : function(relPos) {
             var row = this.rows[this.currRow];
-            row.moveCursor(relPos); 
+            row.moveCursor(relPos);
         },
 
         setCursor : function(absPos) {
@@ -550,8 +550,8 @@
         },
 
        /**
-        * Get all non-empty rows with as unicode text. 
-        */        
+        * Get all non-empty rows with as unicode text.
+        */
         getDisplayText : function(asOneRow) {
             asOneRow = asOneRow || false;
             var displayText = [];
@@ -605,9 +605,9 @@
     };
 
     Cea608Channel.prototype = {
-        
+
         modes : ["MODE_ROLL-UP", "MODE_POP-ON", "MODE_PAINT-ON", "MODE_TEXT"],
-        
+
         reset : function() {
             this.mode = null;
             this.displayedMemory.reset();
@@ -770,7 +770,7 @@
                 if (this.cueStartTime === null && !this.displayedMemory.isEmpty()) { // Start of a new cue
                     this.cueStartTime = t;
                 } else {
-                    if (!this.displayedMemory.equals(this.lastOutputScreen)) { 
+                    if (!this.displayedMemory.equals(this.lastOutputScreen)) {
                         if (this.outputFilter.newCue) {
                             this.outputFilter.newCue(this.cueStartTime, t, this.lastOutputScreen);
                         }
@@ -814,11 +814,11 @@
     };
 
     Cea608Parser.prototype = {
-        
+
         getHandler : function(index) {
             return this.channels[index].getHandler();
         },
-        
+
         setHandler : function(index, newHandler) {
             this.channels[index].setHandler(newHandler);
         },
@@ -827,9 +827,9 @@
          * Add data for time t in forms of list of bytes (unsigned ints). The bytes are treated as pairs.
          */
         addData : function(t, byteList) {
-            var cmdFound, a, b, 
+            var cmdFound, a, b,
             charsFound = false;
-            
+
             this.lastTime = t;
             logger.setTime(t);
 
@@ -895,7 +895,7 @@
             if (!(cond1 || cond2)) {
                 return false;
             }
-                 
+
             if (a === 0x14 || a === 0x15 || a === 0x17) {
                 chNr = 1;
             } else {
@@ -953,7 +953,7 @@
          */
         parseMidrow : function(a, b) {
             var chNr = null;
-                
+
             if ( ((a === 0x11) || (a === 0x19)) && 0x20 <= b && b <= 0x2f) {
                 if (a === 0x11) {
                     chNr = 1;
@@ -983,7 +983,7 @@
 
            var chNr = null;
            var row = null;
-            
+
             var case1 = ((0x11 <= a  && a <= 0x17) || (0x19 <= a && a <= 0x1F)) && (0x40 <= b && b <= 0x7F);
             var case2 = (a === 0x10 || a === 0x18) && (0x40 <= b && b <= 0x5F);
             if (! (case1 || case2)) {
@@ -1013,7 +1013,7 @@
         interpretPAC : function (row, byte) {
             var pacIndex = byte;
             var pacData = {color : null, italics : false, indent : null, underline : false, row : row};
-            
+
             if (byte > 0x5F) {
                 pacIndex = byte - 0x60;
             } else {
@@ -1074,7 +1074,7 @@
             }
             return charCodes;
         },
-        
+
         /**
         * Parse extended background attributes as well as new foreground color black.
         * @returns{Boolean} Tells if background attributes are found
@@ -1138,100 +1138,122 @@
         },
     };
 
-    /**
-     * Find ranges corresponding to SEA CEA-608 NALUS in sizeprepended NALU array.
-     * @param {raw} dataView of binary data
-     * @param {startPos} start position in raw
-     * @param {size} total size of data in raw to consider
-     * @returns 
-     */
-    var findCea608Nalus = function(raw, startPos, size) {
-        var nalSize = 0,
-            cursor = startPos,
-            nalType = 0,
-            cea608NaluRanges = [],
-            // Check SEI data according to ANSI-SCTE 128
-            isCEA608SEI = function (payloadType, payloadSize, raw, pos) {
-                if (payloadType !== 4 || payloadSize < 8) {
-                    return null;
+    var getSeiData = function(raw, startPos, endPos) {
+        var data = [];
+
+        // Remove Emulation Prevention bytes
+        for (var cursor = startPos; cursor < endPos; cursor++) {
+            if (cursor + 2 < endPos && raw.getUint8(cursor) === 0x00 && raw.getUint8(cursor + 1) === 0x00 && raw.getUint8(cursor + 2) === 0x03) {
+                data.push(0x00);
+                data.push(0x00);
+                cursor += 2;
+            } else {
+                data.push(raw.getUint8(cursor));
+            }
+        }
+
+        return new DataView(new Uint8Array(data).buffer);
+    }
+
+    var isCea608Sei = function (payloadType, payloadSize, sei, pos) {
+        if (payloadType !== 4 || payloadSize < 8) {
+            return false;
+        }
+
+        var countryCode = sei.getUint8(pos);
+        if (countryCode !== 0xB5) {
+            return false;
+        }
+
+        var providerCode = sei.getUint16(pos + 1);
+        if (providerCode !== 0x0031) {
+            return false;
+        }
+
+        var userIdentifier = sei.getUint32(pos + 3);
+        if (userIdentifier !== 0x47413934) {
+            return false;
+        }
+
+        var userDataTypeCode = sei.getUint8(pos + 7);
+        if (userDataTypeCode !== 0x03) {
+            return false;
+        }
+
+        return true;
+    }
+
+    var isCCType = function(type) {
+        return type === 0 || type === 1;
+    }
+
+    var isNonEmptyCCData = function (ccData1, ccData2) {
+        return (ccData1 & 0x7F) > 0 || (ccData2 & 0x7F) > 0;
+    }
+
+    var isSeiNalUnitType = function (unitType) {
+        return unitType === 0x06;
+    }
+
+    var parseCea608DataFromSei = function (sei, fieldData) {
+        var cursor = 0;
+        while (cursor < sei.byteLength) {
+            var payloadType = 0;
+            var payloadSize = 0;
+            var now;
+
+            do {
+                payloadType += now = sei.getUint8(cursor++);
+            } while (now === 0xFF);
+            do {
+                payloadSize += now = sei.getUint8(cursor++);
+            } while (now === 0xFF);
+
+            if (isCea608Sei(payloadType, payloadSize, sei, cursor)) {
+                var pos = cursor + 10;
+                var ccCount = pos + (sei.getUint8(pos - 2) & 0x1F) * 3;
+                for (var i = pos; i < ccCount; i += 3) {
+                    var byte = sei.getUint8(i);
+                    if (byte & 0x04) {
+                        var ccType = byte & 0x03;
+                        if (isCCType(ccType)) {
+                            var ccData1 = sei.getUint8(i + 1);
+                            var ccData2 = sei.getUint8(i + 2);
+                            if (isNonEmptyCCData(ccData1, ccData2)) {
+                                fieldData[ccType].push(ccData1, ccData2);
+                            }
+                        }
+                    }
                 }
-                var countryCode = raw.getUint8(pos);
-                var providerCode = raw.getUint16(pos + 1);
-                var userIdentifier = raw.getUint32(pos + 3);
-                var userDataTypeCode = raw.getUint8(pos + 7);
-                return countryCode == 0xB5 && providerCode == 0x31 && userIdentifier == 0x47413934 && userDataTypeCode == 0x3;
-            };
-        while (cursor < startPos + size) {
+            }
+            cursor += payloadSize;
+        }
+    }
+
+    var extractCea608DataFromSample = function (raw, startPos, sampleSize) {
+        var nalSize = 0;
+        var nalType = 0;
+        var fieldData = [[], []];
+        for (var cursor = startPos; cursor < startPos + sampleSize - 5; cursor++) {
             nalSize = raw.getUint32(cursor);
             nalType = raw.getUint8(cursor + 4) & 0x1F;
-            //console.log(time + "  NAL " + nalType);
-            if (nalType === 6) {
-                // SEI NAL Unit. The NAL header is the first byte
-                //console.log("SEI NALU of size " + nalSize + " at time " + time);
-                var pos = cursor + 5;
-                var payloadType = -1;
-                while (pos < cursor + 4 + nalSize - 1) { // The last byte should be rbsp_trailing_bits
-                    payloadType = 0;
-                    var b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadType += b;
-                        pos++;
-                    }
-                    var payloadSize = 0;
-                    b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadSize += b;
-                        pos++;
-                    }
-                    if (isCEA608SEI(payloadType, payloadSize, raw, pos)) {
-                        //console.log("CEA608 SEI " + time + " " + payloadSize);
-                        cea608NaluRanges.push([pos, payloadSize]);
-                    }
-                    pos += payloadSize;
-                }
-            }
-            cursor += nalSize + 4;
-        }
-        return cea608NaluRanges;
-    };
-    
-    var extractCea608DataFromRange = function(raw, cea608Range) {
-        var pos = cea608Range[0];
-        var fieldData = [[], []];
 
-        pos += 8; // Skip the identifier up to userDataTypeCode
-        var ccCount = raw.getUint8(pos) & 0x1f;
-        pos += 2; // Advance 1 and skip reserved byte
-          
-        for (var i = 0; i < ccCount; i++) {
-            var byte = raw.getUint8(pos);
-            var ccValid = byte & 0x4;
-            var ccType = byte & 0x3;
-            pos++;
-            var ccData1 = raw.getUint8(pos); // Keep parity bit
-            pos++;
-            var ccData2 = raw.getUint8(pos); // Keep parity bit
-            pos++;
-            if (ccValid && ((ccData1 & 0x7f) + (ccData2 & 0x7f) !== 0)) { //Check validity and non-empty data
-                if (ccType === 0) {
-                    fieldData[0].push(ccData1);
-                    fieldData[0].push(ccData2);
-                } else if (ccType === 1) {
-                    fieldData[1].push(ccData1);
-                    fieldData[1].push(ccData2);
-                }
+            // Only process Supplemental Enhancement Information (SEI) NAL units
+            if (isSeiNalUnitType(nalType)) {
+                var seiData = getSeiData(raw, cursor + 5, cursor + nalSize + 3);
+                parseCea608DataFromSei(seiData, fieldData);
             }
+
+            // Jump to the next NAL unit
+            cursor += nalSize + 3;
         }
         return fieldData;
-    };
+    }
 
     exports.logger = logger;
     exports.PenState = PenState;
-    exports.CaptionScreen = CaptionScreen;  
+    exports.CaptionScreen = CaptionScreen;
     exports.Cea608Parser = Cea608Parser;
-    exports.findCea608Nalus = findCea608Nalus;
-    exports.extractCea608DataFromRange = extractCea608DataFromRange;
+    exports.extractCea608DataFromSample = extractCea608DataFromSample;
 
 }(typeof exports === 'undefined' ? this.cea608parser = {} : exports));
