@@ -1,5 +1,3 @@
-import Constants from '../helper/Constants';
-
 const NETWORK_CODE = '51636543';
 const CUSTOM_ASSET_KEY = 'dash-pod-serving-manifest-1';
 const SCHEME_ID_URI = 'https://developer.apple.com/streaming/emsg-id3';
