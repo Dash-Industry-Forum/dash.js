@@ -55,7 +55,6 @@ describe('DashConstants', function () {
         expect(DashConstants.AUDIO_CHANNEL_CONFIGURATION).to.equal('AudioChannelConfiguration');
         expect(DashConstants.CONTENT_PROTECTION).to.equal('ContentProtection');
         expect(DashConstants.ESSENTIAL_PROPERTY).to.equal('EssentialProperty');
-        expect(DashConstants.ESSENTIAL_PROPERTY_ASARRAY).to.equal('EssentialProperty_asArray');
         expect(DashConstants.SUPPLEMENTAL_PROPERTY).to.equal('SupplementalProperty');
         expect(DashConstants.INBAND_EVENT_STREAM).to.equal('InbandEventStream');
         expect(DashConstants.PRODUCER_REFERENCE_TIME).to.equal('ProducerReferenceTime');

@@ -15,21 +15,18 @@ import Settings from '../../src/core/Settings.js';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
 import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-const sinon = require('sinon');
+import sinon from 'sinon';
 import {expect} from 'chai';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
 
 describe('MediaPlayer', function () {
-
-    before(function () {
-        window.dashjs = {};
-    });
-    after(function () {
-        delete window.dashjs;
-    });
 
     const context = {};
     const specHelper = new SpecHelper();
@@ -945,7 +942,11 @@ describe('MediaPlayer', function () {
                 expect(initialSettings).to.be.instanceOf(Object);
                 expect(initialSettings).to.deep.equal({});
 
-                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption', accessibility: {schemeIdUri:'urn:mpeg:dash:role:2011', value:''} });
+                player.setInitialMediaSettingsFor('text', {
+                    lang: 'en',
+                    role: 'caption',
+                    accessibility: { schemeIdUri: 'urn:mpeg:dash:role:2011', value: '' }
+                });
                 initialSettings = player.getInitialMediaSettingsFor('text');
                 expect(initialSettings).to.be.instanceOf(Object);
 
@@ -966,7 +967,12 @@ describe('MediaPlayer', function () {
             });
 
             it('should assume default schemeIdUri strings for initial media settings, if not provided', function () {
-                player.setInitialMediaSettingsFor('audio', { role: 'val1', accessibility: 'val2', viewpoint: 'val3', audioChannelConfiguration: 'val4'});
+                player.setInitialMediaSettingsFor('audio', {
+                    role: 'val1',
+                    accessibility: 'val2',
+                    viewpoint: 'val3',
+                    audioChannelConfiguration: 'val4'
+                });
                 let initialSettings = player.getInitialMediaSettingsFor('audio');
                 expect(initialSettings).to.be.instanceOf(Object);
                 expect(initialSettings).to.have.property('role');
@@ -989,10 +995,10 @@ describe('MediaPlayer', function () {
 
             it('should take schemeIdUri strings for initial media settings, if provided', function () {
                 player.setInitialMediaSettingsFor('audio', {
-                    role: {schemeIdUri: 'test.scheme.1', value: 'val1'},
-                    accessibility: {schemeIdUri: 'test.scheme.2', value: 'val2'},
-                    viewpoint:  {schemeIdUri: 'test.scheme.3', value: 'val3'},
-                    audioChannelConfiguration: {schemeIdUri: 'test.scheme.4', value: 'val4'}
+                    role: { schemeIdUri: 'test.scheme.1', value: 'val1' },
+                    accessibility: { schemeIdUri: 'test.scheme.2', value: 'val2' },
+                    viewpoint: { schemeIdUri: 'test.scheme.3', value: 'val3' },
+                    audioChannelConfiguration: { schemeIdUri: 'test.scheme.4', value: 'val4' }
                 });
                 let initialSettings = player.getInitialMediaSettingsFor('audio');
                 expect(initialSettings).to.be.instanceOf(Object);
@@ -1105,7 +1111,6 @@ describe('MediaPlayer with context injected', () => {
         player = null;
         settings?.reset();
         settings = null;
-        global.dashjs = {};
 
         // init
         const context = {};

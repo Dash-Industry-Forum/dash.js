@@ -1,5 +1,5 @@
 import TTMLParser from '../../src/streaming/utils/TTMLParser.js';
-import FileLoader from './helpers/FileLoader';
+import FileLoader from './helpers/FileLoader.js';
 import {expect} from 'chai';
 
 const context = {};

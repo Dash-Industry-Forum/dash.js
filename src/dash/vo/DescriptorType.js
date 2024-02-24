@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-import DashConstants from '../constants/DashConstants'
+import DashConstants from '../constants/DashConstants.js'
 
 class DescriptorType {
     constructor() {

@@ -3,14 +3,12 @@ import VoHelper from './helpers/VOHelper.js';
 import Constants from '../../src/streaming/constants/Constants.js';
 import VideoModelMock from './mocks/VideoModelMock.js';
 import MediaControllerMock from './mocks/MediaControllerMock.js';
-import BaseURLControllerMock from './mocks/BaseURLControllerMock';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock.js';
 import AdapterMock from './mocks/AdapterMock.js';
 import Settings from '../../src/core/Settings.js';
 
-
 import {expect} from 'chai';
 const context = {};
-
 
 describe('TextController', function () {
 

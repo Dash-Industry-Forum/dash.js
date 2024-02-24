@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import URLUtils from '../utils/URLUtils';
-import EventBus from '../../core/EventBus';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import Debug from '../../core/Debug';
+import Constants from '../constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import URLUtils from '../utils/URLUtils.js';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import Debug from '../../core/Debug.js';
 
 function DVBFonts(config) {
 
@@ -77,10 +77,10 @@ function DVBFonts(config) {
             }
         }
 
-        const essentialTags = track.essentialPropertiesAsArray.filter(tag =>
+        const essentialTags = track.essentialProperties.filter(tag =>
             (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME)
         );
-        const supplementalTags = track.supplementalPropertiesAsArray.filter(tag =>
+        const supplementalTags = track.supplementalProperties.filter(tag =>
             (tag.schemeIdUri && tag.schemeIdUri === Constants.FONT_DOWNLOAD_DVB_SCHEME)
         );
 

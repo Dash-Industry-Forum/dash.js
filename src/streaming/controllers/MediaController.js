@@ -143,7 +143,7 @@ function MediaController() {
             }
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, settings);
-            filteredTracks = filterTracksBySettings(tracks, matchSettingsCodec, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, settings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 

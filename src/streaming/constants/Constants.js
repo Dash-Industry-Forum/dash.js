@@ -217,6 +217,7 @@ export default {
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
+    TEXT_DISABLED: 'disabled',
     ACCESSIBILITY_CEA608_SCHEME: 'urn:scte:dash:cc:cea-608:2015',
     CC1: 'CC1',
     CC3: 'CC3',
@@ -231,6 +232,8 @@ export default {
     ARRAY_BUFFER: 'ArrayBuffer',
     DVB_REPORTING_URL: 'dvb:reportingUrl',
     DVB_PROBABILITY: 'dvb:probability',
+    OFF_MIMETYPE: 'application/font-sfnt',
+    WOFF_MIMETYPE: 'application/font-woff',
     VIDEO_ELEMENT_READY_STATES: {
         HAVE_NOTHING: 0,
         HAVE_METADATA: 1,

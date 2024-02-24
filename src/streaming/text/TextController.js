@@ -36,7 +36,7 @@ import VTTParser from '../utils/VTTParser.js';
 import VttCustomRenderingParser from '../utils/VttCustomRenderingParser.js';
 import TTMLParser from '../utils/TTMLParser.js';
 import EventBus from '../../core/EventBus.js';
-import Debug from '../../core/Debug';
+import Debug from '../../core/Debug.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';

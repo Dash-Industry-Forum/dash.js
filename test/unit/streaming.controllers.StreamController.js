@@ -18,6 +18,7 @@ import URIFragmentModelMock from './mocks/URIFragmentModelMock.js';
 import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock.js';
 import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock.js';
 import TextControllerMock from './mocks/TextControllerMock.js';
+import ManifestUpdaterMock from './mocks/ManifestUpdaterMock.js';
 import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
 import chai from 'chai';
