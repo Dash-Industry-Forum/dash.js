@@ -523,6 +523,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Subtitle Event Handling",
+                "description": "Example showing how to consume subtitle events raised by dash.js. This way you can render the subtitles yourself.",
+                "href": "captioning/events.html",
+                "image": "lib/img/sintel-1.jpg",
+                "labels": [
+                    "VoD",
+                    "External caption",
+                    "Video",
+                    "Audio",
+                    "Events"
+                ]
             }
         ]
     },

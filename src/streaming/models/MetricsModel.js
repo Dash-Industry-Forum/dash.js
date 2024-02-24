@@ -188,7 +188,7 @@ function MetricsModel(config) {
         vo._responseHeaders = '';
         for (const key in response.headers) {
             vo._responseHeaders += key + ': ' + response.headers[key] + '\r\n';
-        } 
+        }
         vo._serviceLocation = request.serviceLocation || null;
         vo._fileLoaderType = request.fileLoaderType;
         vo._resourceTimingValues = request.resourceTimingValues;

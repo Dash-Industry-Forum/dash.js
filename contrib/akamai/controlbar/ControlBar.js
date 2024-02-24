@@ -65,6 +65,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         seekbarPlay,
         seekbarBuffer,
         muteBtn,
+        nativeTextTracks,
         volumebar,
         fullscreenBtn,
         timeDisplay,
@@ -372,7 +373,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 durationDisplay.onclick = seekLive;
                 durationDisplay.classList.add('live-icon');
             }
-        } else if (!isNaN(value)) {
+        } else if (!isNaN(value) && isFinite(value)) {
             durationDisplay.textContent = displayUTCTimeCodes ? self.player.formatUTC(value) : self.player.convertToTimeCode(value);
             durationDisplay.classList.remove('live-icon');
         }
@@ -595,6 +596,34 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
+    // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
+    var _matchTrackWithNativeTrack = function(track, nativeTrack) {
+        let label = track.id !== undefined ? track.id.toString() : track.lang;
+
+        return !!(
+            (track.kind === nativeTrack.kind) &&
+            (track.lang === nativeTrack.language) &&
+            (track.isTTML === nativeTrack.isTTML) &&
+            (track.isEmbedded === nativeTrack.isEmbedded) &&
+            (label === nativeTrack.label)
+        );
+    }
+
+    // Compare track information against native video element tracks to get the current track mode
+    var _getNativeVideoTrackMode = function (track) {
+        const nativeTracks = video.textTracks;
+        let trackMode;
+        for (let i = 0; i < nativeTracks.length; i++) {
+            const nativeTrack = nativeTracks[i];
+            if (_matchTrackWithNativeTrack(track, nativeTrack)) {
+                trackMode = nativeTrack.mode;
+                break;
+            }
+        };
+
+        return (trackMode === undefined) ? 'showing' : trackMode;
+    };
+
     var createCaptionSwitchMenu = function (streamId) {
         // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
         var activeStreamInfo = player.getActiveStream().getStreamInfo();
@@ -607,15 +636,24 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             var tracks = textTrackList[streamId] || [];
             var contentFunc = function (element, index) {
                 if (isNaN(index)) {
-                    return 'OFF';
+                    return {
+                        mode: 'showing',
+                        text: 'OFF'
+                    };
                 }
 
                 var label = getLabelForLocale(element.labels);
+                var trackText;
                 if (label) {
-                    return label + ' : ' + element.type;
+                    trackText = label + ' : ' + element.type;
+                } else {
+                    trackText = element.lang + ' : ' + element.kind;
                 }
 
-                return element.lang + ' : ' + element.kind;
+                return {
+                    mode: _getNativeVideoTrackMode(element),
+                    text: trackText
+                }
             };
             captionMenu = createMenu({ menuType: 'caption', arr: tracks }, contentFunc);
 
@@ -630,6 +668,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     };
 
+    var _onTracksChanged = function () {
+        var activeStreamInfo = player.getActiveStream().getStreamInfo();
+        createCaptionSwitchMenu(activeStreamInfo.id);
+    }
+
     var _onTracksAdded = function (e) {
         // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
         if (!textTrackList[e.streamId]) {
@@ -637,6 +680,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
 
         textTrackList[e.streamId] = textTrackList[e.streamId].concat(e.tracks);
+
+        nativeTextTracks = video.textTracks;
+        nativeTextTracks.addEventListener('change', _onTracksChanged);
+
         createCaptionSwitchMenu(e.streamId);
     };
 
@@ -783,8 +830,15 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             item.mediaType = mediaType;
             item.name = name;
             item.selected = false;
-            item.textContent = arr[i];
-
+            if (isObject(arr[i])) {
+                // text tracks need extra properties
+                item.mode = arr[i].mode;
+                item.textContent = arr[i].text;
+            } else {
+                // Other tracks will just have their text
+                item.textContent = arr[i];
+            }
+            
             item.onmouseover = function (/*e*/) {
                 if (this.selected !== true) {
                     this.classList.add('menu-item-over');
@@ -802,7 +856,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 el = menu.querySelector('.' + mediaType + '-menu-content');
             }
 
-            el.appendChild(item);
+            if (mediaType === 'caption') {
+                if (item.mode !== 'disabled') {
+                    el.appendChild(item);
+                }
+            } else {
+                el.appendChild(item);
+            }
         }
 
         return menu;
@@ -953,6 +1013,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     //************************************************************************************
+    //Utilities
+    //************************************************************************************
+
+    var isObject = function (obj) {
+        return typeof obj === 'object' && !Array.isArray(obj) && obj !== null;
+    }
+
+    //************************************************************************************
     // PUBLIC API
     //************************************************************************************
 
@@ -1035,6 +1103,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
             if (menuHandlersList.caption) {
                 captionBtn.removeEventListener('click', menuHandlersList.caption);
+                nativeTextTracks.removeEventListener('change', _onTracksChanged);
             }
             if (captionMenu) {
                 this.removeMenu(captionMenu, captionBtn);

@@ -59,7 +59,7 @@ class LangMatcher extends BaseMatcher {
             },
             str => {
                 let lang = bcp47Normalize(str);
-                if (lang !== undefined) {
+                if (lang) {
                     return lang;
                 }
                 return String(str);

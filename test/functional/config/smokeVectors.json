@@ -19,7 +19,7 @@
                     "description": "Segment Timeline, time based"
                 },
                 {
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd",
                     "name": "TTML Segmented Subtitles VoD",
                     "description": "TTML Segmented Subtitles VoD"
                 },                
@@ -74,17 +74,17 @@
             "name": "Live content",
             "submenu": [
                 {
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
                     "name": "Segment Template without manifest updates",
                     "description": "Segment Template without manifest updates"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
                     "name": "Segment Timeline",
                     "description": "Segment Timeline"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
                     "name": "Multiperiod Segment Template",
                     "description": "Multiperiod Segment Template"
                 }

@@ -194,6 +194,20 @@ const manifest_with_supplemental_properties_on_only_one_repr = {
         }]
     }]
 };
+const manifest_with_essential_properties = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0,
+            mimeType: Constants.VIDEO,
+            EssentialProperty_asArray: [
+                { schemeIdUri: 'test:scheme', value: 'value1'},
+                { schemeIdUri: 'test:scheme', value: 'value2' }
+            ]
+        }]
+    }]
+};
 const manifest_with_audioChanCfg = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,

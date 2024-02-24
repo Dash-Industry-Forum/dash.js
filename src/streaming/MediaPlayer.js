@@ -1711,7 +1711,7 @@ function MediaPlayer() {
      * @param {function} interceptor - the request interceptor callback
      * @memberof module:MediaPlayer
      * @instance
-     */    
+     */
     function removeRequestInterceptor(interceptor) {
         customParametersModel.removeRequestInterceptor(interceptor);
     }
@@ -1733,7 +1733,7 @@ function MediaPlayer() {
      * @param {function} interceptor - the request interceptor
      * @memberof module:MediaPlayer
      * @instance
-     */    
+     */
     function removeResponseInterceptor(interceptor) {
         customParametersModel.removeResponseInterceptor(interceptor);
     }
@@ -1975,6 +1975,42 @@ function MediaPlayer() {
     }
 
     /**
+     *  Reload the manifest that the player is currently using.
+     *
+     *  @memberof module:MediaPlayer
+     *  @param {function} callback - A Callback function provided when retrieving manifests
+     *  @instance
+     */
+    function refreshManifest(callback) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!isReady()) {
+            return callback(null, SOURCE_NOT_ATTACHED_ERROR);
+        }
+
+        let self = this;
+
+        if (typeof callback === 'function') {
+            const handler = function (e) {
+                eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+
+                if (e.error) {
+                    callback(null, e.error);
+                    return;
+                }
+
+                callback(e.manifest);
+            };
+
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        }
+
+        streamController.refreshManifest();
+    }
+
+    /**
      * Get the current settings object being used on the player.
      * @returns {PlayerSettings} The settings object being used.
      *
@@ -2210,6 +2246,7 @@ function MediaPlayer() {
                 manifestModel,
                 adapter,
                 mediaController,
+                baseURLController,
                 videoModel,
                 settings
             });
@@ -2624,6 +2661,7 @@ function MediaPlayer() {
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
+        refreshManifest,
         reset,
         resetCustomInitialTrackSelectionFunction,
         resetSettings,

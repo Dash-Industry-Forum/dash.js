@@ -1198,11 +1198,11 @@ function DashManifestModel() {
                 }
 
                 if (entry.hasOwnProperty(DashConstants.DVB_PRIORITY)) {
-                    baseUrl.dvb_priority = entry[DashConstants.DVB_PRIORITY];
+                    baseUrl.dvbPriority = entry[DashConstants.DVB_PRIORITY];
                 }
 
                 if (entry.hasOwnProperty(DashConstants.DVB_WEIGHT)) {
-                    baseUrl.dvb_weight = entry[DashConstants.DVB_WEIGHT];
+                    baseUrl.dvbWeight = entry[DashConstants.DVB_WEIGHT];
                 }
 
                 if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
