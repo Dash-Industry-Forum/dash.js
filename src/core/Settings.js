@@ -1032,7 +1032,7 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
-                supportedEssentialProperties: Constants.THUMBNAILS_SCHEME_ID_URIS,
+                supportedEssentialProperties: [Constants.FONT_DOWNLOAD_DVB_SCHEME, ...Constants.THUMBNAILS_SCHEME_ID_URIS],
                 useMediaCapabilitiesApi: false
             },
             timeShiftBuffer: {

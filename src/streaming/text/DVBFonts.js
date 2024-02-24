@@ -132,7 +132,7 @@ function DVBFonts(config) {
      * @private
      */
     function _hasMandatoryDvbFontAttributes(attrs) {
-        return !!((attrs.value && attrs.value === '1') &&
+        return !!((attrs.value && parseInt(attrs.value) === 1) &&
             (attrs.dvbUrl && attrs.dvbUrl.length > 0) &&
             (attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0) &&
             (attrs.dvbMimeType && (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
