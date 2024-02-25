@@ -233,6 +233,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.drmToday = false;
 
+    $scope.imscEnableRollUp = true;
+    $scope.imscdisplayForcedOnlyMode = false;
+
     $scope.isDynamic = false;
 
     $scope.conformanceViolations = [];
@@ -302,6 +305,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
     $scope.reuseExistingSourceBuffersSelected = true;
+    $scope.mediaSourceDurationInfinitySelected = true;
+    $scope.resetSourceBuffersForTrackSwitch = false;
     $scope.saveLastMediaSettingsSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
@@ -635,6 +640,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.toggleMediaSourceDurationInfinity = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    mediaSourceDurationInfinity: $scope.mediaSourceDurationInfinitySelected
+                }
+            }
+        });
+    };
+
+    $scope.toggleResetSourceBuffersForTrackSwitch = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    resetSourceBuffersForTrackSwitch: $scope.resetSourceBuffersForTrackSwitch
+                }
+            }
+        })
+    };
+
     $scope.toggleSaveLastMediaSettings = function () {
         $scope.player.updateSettings({
             'streaming': {
@@ -762,6 +787,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleForcedTextStreaming = function () {
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
+    }
+
+    $scope.toggleImscEnableRollUp = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
+    }
+
+    $scope.toggleImscdisplayForcedOnlyMode = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -1751,6 +1784,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'muted':
                     $scope.muted = this.parseBoolean(value);
                     $scope.toggleMuted();
+                    if ($scope.muted === true){
+                        document.getElementById('muteBtn')?.click();    
+                    } 
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
@@ -2104,6 +2140,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.scheduleWhilePausedSelected = currentConfig.streaming.scheduling.scheduleWhilePaused;
         $scope.calcSegmentAvailabilityRangeFromTimelineSelected = currentConfig.streaming.timeShiftBuffer.calcFromSegmentTimeline;
         $scope.reuseExistingSourceBuffersSelected = currentConfig.streaming.buffer.reuseExistingSourceBuffers;
+        $scope.mediaSourceDurationInfinitySelected = currentConfig.streaming.buffer.mediaSourceDurationInfinity;
+        $scope.resetSourceBuffersForTrackSwitch = currentConfig.streaming.buffer.resetSourceBuffersForTrackSwitch;
         $scope.saveLastMediaSettingsSelected = currentConfig.streaming.saveLastMediaSettingsForCurrentStreamingSession;
         $scope.localStorageSelected = currentConfig.streaming.lastBitrateCachingInfo.enabled;
         $scope.jumpGapsSelected = currentConfig.streaming.gaps.jumpGaps;
@@ -2119,6 +2157,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
+    }
+
+    function setTextOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.imscEnableRollUp = currentConfig.streaming.text.imsc.enableRollUp;
+        $scope.imscdisplayForcedOnlyMode = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
     }
 
     function setLiveDelayOptions() {
@@ -2276,6 +2320,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
             setDrmOptions();
+            setTextOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();

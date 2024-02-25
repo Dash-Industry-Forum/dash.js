@@ -840,8 +840,8 @@ function DashAdapter() {
 
                 let { name, target, leaf } = result;
 
-                // short circuit for attribute selectors
-                if (operation.xpath.findsAttribute()) {
+                // short circuit for attribute selectors and text replacement
+                if (operation.xpath.findsAttribute() || name === '__text') {
                     switch (operation.action) {
                         case 'add':
                         case 'replace':

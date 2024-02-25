@@ -90,6 +90,9 @@ describe('DashConstants', function () {
         expect(DashConstants.CENC_DEFAULT_KID).to.equal('cenc:default_KID');
         expect(DashConstants.DVB_PRIORITY).to.equal('dvb:priority');
         expect(DashConstants.DVB_WEIGHT).to.equal('dvb:weight');
+        expect(DashConstants.DVB_URL).to.equal('dvb:url');
+        expect(DashConstants.DVB_MIMETYPE).to.equal('dvb:mimeType');
+        expect(DashConstants.DVB_FONTFAMILY).to.equal('dvb:fontFamily');
         expect(DashConstants.SUGGESTED_PRESENTATION_DELAY).to.equal('suggestedPresentationDelay');
         expect(DashConstants.WALL_CLOCK_TIME).to.equal('wallClockTime');
         expect(DashConstants.PRESENTATION_TIME).to.equal('presentationTime');

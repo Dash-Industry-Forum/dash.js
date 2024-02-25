@@ -66,7 +66,8 @@ function TTMLParser() {
      * @param {number} offsetTime - offset time to apply to cue time
      * @param {integer} startTimeSegment - startTime for the current segment
      * @param {integer} endTimeSegment - endTime for the current segment
-     * @param {Array} images - images array referenced by subs MP4 box
+     * @param {array} images - images array referenced by subs MP4 box
+     * @returns {array} captionArray
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
         let errorMsg = '';
@@ -127,7 +128,7 @@ function TTMLParser() {
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
 
-        const imsc1doc = fromXML(content.data, function (msg) {
+        let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
 

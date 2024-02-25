@@ -18,6 +18,7 @@ import URIFragmentModelMock from './mocks/URIFragmentModelMock.js';
 import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock.js';
 import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock.js';
 import TextControllerMock from './mocks/TextControllerMock.js';
+import ManifestUpdaterMock from './mocks/ManifestUpdaterMock.js';
 import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
 import chai from 'chai';
@@ -47,6 +48,7 @@ const uriFragmentModelMock = new URIFragmentModelMock();
 const capabilitiesFilterMock = new CapabilitiesFilterMock();
 const textControllerMock = new TextControllerMock();
 const contentSteeringControllerMock = new ContentSteeringControllerMock();
+const manifestUpdaterMock = new ManifestUpdaterMock();
 
 Events.extend(ProtectionEvents);
 
@@ -477,5 +479,36 @@ describe('StreamController', function () {
                 });
             });
         });
+    });
+
+    describe('refreshManifest', function () {
+        beforeEach(function () {
+            streamController.setConfig({
+                manifestUpdater: manifestUpdaterMock
+            });
+            sinon.spy(manifestUpdaterMock, 'refreshManifest');
+            sinon.stub(manifestUpdaterMock, 'getIsUpdating');
+        });
+
+
+        afterEach(function () {
+            manifestUpdaterMock.refreshManifest.restore();
+            manifestUpdaterMock.getIsUpdating.restore();
+        });
+
+
+        it('calls refreshManifest on ManifestUpdater', function () {
+            streamController.refreshManifest();
+
+            expect(manifestUpdaterMock.refreshManifest.calledOnce).to.be.true;
+        });
+
+        it('does not call refreshManifest on ManifrstUpdater if it is already updating', function () {
+            manifestUpdaterMock.getIsUpdating.returns(true)
+
+            streamController.refreshManifest();
+
+            expect(manifestUpdaterMock.refreshManifest.notCalled).to.be.true;
+        })
     });
 });

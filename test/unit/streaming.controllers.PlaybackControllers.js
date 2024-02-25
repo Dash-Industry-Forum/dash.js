@@ -401,12 +401,12 @@ describe('PlaybackController', function () {
                 let onError = function (e) {
                     eventBus.off(Events.PLAYBACK_ERROR, onError);
 
-                    expect(e.error).to.equal('error');
+                    expect(e.error.message).to.equal('error');
                     done();
                 };
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
-                videoModelMock.fireEvent('error', [{ target: { error: 'error' } }]);
+                videoModelMock.fireEvent('error', [{ target: { error: { code: 3, message: 'error' } } }]);
             });
 
             it('should handle stalled event', function (done) {

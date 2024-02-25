@@ -229,6 +229,20 @@ describe('CapabilitiesFilter', function () {
                                     }]
                                 }
                             ]
+                        },
+                        {
+                            mimeType: 'application/mp4',
+                            Representation_asArray: [
+                                {
+                                    mimeType: 'application/mp4',
+                                    codecs: 'stpp.ttml.etd1|im1t',
+                                    EssentialProperty_asArray: [{
+                                        schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
+                                        value: '1',
+                                        // dvb extension properties...
+                                    }]
+                                }
+                            ]
                         }]
                     }]
                 };

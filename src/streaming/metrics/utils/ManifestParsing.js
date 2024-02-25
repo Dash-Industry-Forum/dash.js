@@ -93,11 +93,11 @@ function ManifestParsing (config) {
                         }
 
                         if (reporting.hasOwnProperty(constants.DVB_REPORTING_URL)) {
-                            reportingEntry.dvb_reportingUrl = reporting[constants.DVB_REPORTING_URL];
+                            reportingEntry.dvbReportingUrl = reporting[constants.DVB_REPORTING_URL];
                         }
 
                         if (reporting.hasOwnProperty(constants.DVB_PROBABILITY)) {
-                            reportingEntry.dvb_probability = reporting[constants.DVB_PROBABILITY];
+                            reportingEntry.dvbProbability = reporting[constants.DVB_PROBABILITY];
                         }
 
                         metricEntry.Reporting.push(reportingEntry);

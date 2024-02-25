@@ -58,6 +58,7 @@ function PlaybackController() {
         isDynamic,
         playOnceInitialized,
         lastLivePlaybackTime,
+        lastLiveUpdateTime,
         availabilityStartTime,
         availabilityTimeComplete,
         lowLatencyModeEnabled,
@@ -88,6 +89,7 @@ function PlaybackController() {
         lowLatencyModeEnabled = false;
         initialCatchupModeActivated = false;
         seekTarget = NaN;
+        lastLiveUpdateTime = NaN;
 
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
@@ -138,6 +140,7 @@ function PlaybackController() {
         eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
         eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -720,13 +723,21 @@ function PlaybackController() {
         // Updates playback time for paused dynamic streams
         // (video element doesn't call timeupdate when the playback is paused)
         if (getIsDynamic()) {
-            streamController.addDVRMetric();
-            if (isPaused()) {
-                _updateLivePlaybackTime();
-            } else {
-                updateCurrentTime();
+            const now = Date.now();
+            if (isNaN(lastLiveUpdateTime) || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) {
+                streamController.addDVRMetric();
+                if (isPaused()) {
+                    _updateLivePlaybackTime();
+                } else {
+                    updateCurrentTime();
+                }
+                lastLiveUpdateTime = now;
             }
         }
+    }
+
+    function _onDynamicToStatic() {
+        isDynamic = false;
     }
 
     function _updateLivePlaybackTime() {

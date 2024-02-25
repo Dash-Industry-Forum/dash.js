@@ -8,6 +8,10 @@ class ManifestUpdaterMock {
     getManifestLoader() {
         return this.manifestLoader;
     }
+
+    refreshManifest() {}
+
+    getIsUpdating() {}
 }
 
 export default ManifestUpdaterMock;

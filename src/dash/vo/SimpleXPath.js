@@ -89,6 +89,10 @@ class SimpleXPath {
         return this.path[this.path.length - 1].name.startsWith('@');
     }
 
+    findsTextReplace() {
+        return this.path[this.path.length - 1].name === 'text()';
+    }
+
     getMpdTarget(root, isSiblingOperation) {
         let parent = null;
         let leaf = root;
@@ -105,7 +109,7 @@ class SimpleXPath {
             name = component.name;
 
             // stop one early if this is the last element and an attribute
-            if (level !== this.path.length - 1 || !name.startsWith('@')) {
+            if (level !== this.path.length - 1 || (!name.startsWith('@') && name !== 'text()')) {
                 let children = parent[name] || [];
                 if (children.length === 0 && parent[name]) {
                     children.push(parent[name]);
@@ -134,6 +138,15 @@ class SimpleXPath {
         if (name.startsWith('@')) {
             return {
                 name: name.substring(1),
+                leaf: leaf,
+                target: leaf
+            };
+        }
+
+        // for replacing a text node the target is the leaf node, the name is __text
+        else if (name === 'text()') {
+            return {
+                name: '__text',
                 leaf: leaf,
                 target: leaf
             };

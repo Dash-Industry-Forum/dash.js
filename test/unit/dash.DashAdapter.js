@@ -194,6 +194,7 @@ const manifest_with_supplemental_properties_on_only_one_repr = {
         }]
     }]
 };
+
 const manifest_with_audioChanCfg = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
