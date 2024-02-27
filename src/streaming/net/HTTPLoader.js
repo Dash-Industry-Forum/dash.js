@@ -355,7 +355,10 @@ function HTTPLoader(cfg) {
             loader.load(httpRequest);
         } else {
             // delay
-            let delayedRequest = { httpRequest: httpRequest };
+            let delayedRequest = {
+                httpRequest: httpRequest,
+                config: config
+            };
             delayedRequests.push(delayedRequest);
             delayedRequest.delayTimeout = setTimeout(function () {
                 if (delayedRequests.indexOf(delayedRequest) === -1) {
@@ -426,7 +429,13 @@ function HTTPLoader(cfg) {
         });
         retryRequests = [];
 
-        delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
+        delayedRequests.forEach(x => {
+            clearTimeout(x.delayTimeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (x.config.request && x.config.abort) {
+                x.config.abort(x.config.request);
+            }
+        });
         delayedRequests = [];
 
         requests.forEach(x => {
