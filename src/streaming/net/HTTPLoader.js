@@ -298,7 +298,7 @@ function HTTPLoader(cfg) {
 
                     httpRequest.customData.onload = _onload;
                     httpRequest.customData.onloadend = _onloadend;
-                    httpRequest.customData.onerror = _onloadend;
+                    httpRequest.customData.onerror = _onerror;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
                     httpRequest.customData.ontimeout = _ontimeout;
