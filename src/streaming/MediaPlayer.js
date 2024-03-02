@@ -2583,6 +2583,7 @@ function MediaPlayer() {
 
         if (!playbackInitialized && isReady()) {
             playbackInitialized = true;
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_INITIALIZED)
             logger.info('Playback Initialized');
         }
     }
