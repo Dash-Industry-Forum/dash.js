@@ -120,19 +120,12 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _internalLoad(config, remainingAttempts) {
+
         /**
-         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
+         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort, timeout or error).
          */
         const _onloadend = function () {
-            // Remove the request from our list of requests
-            if (httpRequests.indexOf(httpRequest) !== -1) {
-                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
-            }
-
-            if (progressTimeout) {
-                clearTimeout(progressTimeout);
-                progressTimeout = null;
-            }
+            _onRequestEnd();
         };
 
         /**
@@ -195,29 +188,56 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const _oncomplete = function() {
-            // Update request timing info
-            requestObject.startDate = requestStartTime;
-            requestObject.endDate = new Date();
-            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
-
-            // If enabled the ResourceTimingApi we add the corresponding information to the request object.
-            // These values are more accurate and can be used by the ThroughputController later
-            _addResourceTimingValues(httpRequest, httpResponse);
-        }
+        /**
+         * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
+         */
+        const _onabort = function () {
+            _onRequestEnd(true)
+        };
 
         /**
-         * Fired when an XMLHttpRequest transaction completes.
-         * This includes status codes such as 404. We handle errors in the _onError function.
+         * Fired when progress is terminated due to preset time expiring.
+         * @param event
          */
-        const _onload = function () {
-            _oncomplete();
+        const _ontimeout = function (event) {
+            let timeoutMessage;
+            // We know how much we already downloaded by looking at the timeout event
+            if (event.lengthComputable) {
+                let percentageComplete = (event.loaded / event.total) * 100;
+                timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
+            } else {
+                timeoutMessage = 'Request timeout: non-computable download size';
+            }
+            logger.warn(timeoutMessage);
+
+            _onRequestEnd();
+        };
+
+        const _onRequestEnd = function (aborted = false) {
+            // Remove the request from our list of requests
+            if (httpRequests.indexOf(httpRequest) !== -1) {
+                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
+            }
+
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
+
+            _updateResourceTimingInfo();
 
             _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
                 httpResponse = _httpResponse;
 
                 _addHttpRequestMetric(httpRequest, httpResponse, traces);
+
+                // Ignore aborted requests
+                if (aborted) {
+                    if (config.abort) {
+                        config.abort(requestObject);
+                    }        
+                    return;
+                }
 
                 if (requestObject.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(requestObject);
@@ -233,62 +253,32 @@ function HTTPLoader(cfg) {
                         config.complete(requestObject, httpResponse.statusText);
                     }
                 } else {
-                    _onerror();
+                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+                    try {
+                        if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                            // Only trigger a sync if the loading failed for the first time
+                            const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                            if (initialNumberOfAttempts === remainingAttempts) {
+                                eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
+                            }
+                        }
+                    } catch (e) {}
+
+                    _retriggerRequest();
                 }
             });
+
         };
 
-        /**
-         * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
-         */
-        const _onabort = function () {
-            _oncomplete();
-            _addHttpRequestMetric(httpRequest, httpResponse, traces);
-            if (progressTimeout) {
-                clearTimeout(progressTimeout);
-                progressTimeout = null;
-            }
-            if (config.abort) {
-                config.abort(requestObject);
-            }
-        };
+        const _updateResourceTimingInfo = function() {
+            requestObject.startDate = requestStartTime;
+            requestObject.endDate = new Date();
+            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
 
-        /**
-         * Fired when progress is terminated due to preset time expiring.
-         * @param event
-         */
-        const _ontimeout = function (event) {
-            _oncomplete();
-
-            let timeoutMessage;
-            // We know how much we already downloaded by looking at the timeout event
-            if (event.lengthComputable) {
-                let percentageComplete = (event.loaded / event.total) * 100;
-                timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
-            } else {
-                timeoutMessage = 'Request timeout: non-computable download size';
-            }
-            logger.warn(timeoutMessage);
-            _addHttpRequestMetric(httpRequest, httpResponse, traces);
-            _retriggerRequest();
-        };
-
-        /**
-         * Fired when the request encountered an error.
-         */
-        const _onerror = function () {
-            // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
-            try {
-                if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    // Only trigger a sync if the loading failed for the first time
-                    const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
-                    if (initialNumberOfAttempts === remainingAttempts) {
-                        eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
-                    }
-                }
-            } catch (e) {}
-
-            _retriggerRequest();
+            // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+            // These values are more accurate and can be used by the ThroughputController later
+            _addResourceTimingValues(httpRequest, httpResponse);
         }
 
         const _loadRequest = function(loader, httpRequest, httpResponse) {
@@ -296,9 +286,7 @@ function HTTPLoader(cfg) {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
 
-                    httpRequest.customData.onload = _onload;
                     httpRequest.customData.onloadend = _onloadend;
-                    httpRequest.customData.onerror = _onerror;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
                     httpRequest.customData.ontimeout = _ontimeout;
@@ -309,7 +297,7 @@ function HTTPLoader(cfg) {
                 });
             });
         }
-
+        
         /**
          * Retriggers the request in case we did not exceed the number of retry attempts
          * @private
@@ -397,7 +385,8 @@ function HTTPLoader(cfg) {
             resourceTiming: {
                 startTime: Date.now(),
                 encodedBodySize: 0
-            }
+            },
+            status: 0
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
