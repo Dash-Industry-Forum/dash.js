@@ -329,6 +329,13 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_ERROR = 'playbackError';
 
         /**
+         * This event is fired once the playback has been initialized by MediaPlayer.js.
+         * After that event methods such as setTextTrack() can be used.
+         * @event MediaPlayerEvents#PLAYBACK_INITIALIZED
+         */
+        this.PLAYBACK_INITIALIZED = 'playbackInitialized';
+
+        /**
          * Sent when playback is not allowed (for example if user gesture is needed).
          * @event MediaPlayerEvents#PLAYBACK_NOT_ALLOWED
          */
