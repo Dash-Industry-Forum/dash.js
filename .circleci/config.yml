@@ -167,7 +167,7 @@ jobs:
                     command:
                         node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
             - process_test_results
-    
+
     functional-tests-VOD_LIVE:
         executor: dashjs-executor
         steps:
@@ -221,7 +221,7 @@ workflows:
                     filters:
                         branches:
                             ignore:
-                                - v5.0.0 # skiping redundant job if already on development
+                                - development # skiping redundant job if already on development
             -   functional-tests-smoke:
                     filters:
                         branches:
