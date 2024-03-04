@@ -15,5 +15,5 @@ bugfixes and releases of version 4. Here are all the important links:
 
 * Hosted `development` branch: [V5 Nightly](https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html)
 * Hosted `main` branch (v5 after the official release): [V5 Latest](https://reference.dashif.org/dash.js/latest/samples/dash-if-reference-player/index.html)
-* Hosted `v4_development` branch: [V4 Nightly](https://reference.dashif.org/dash.js/v4_development/samples/dash-if-reference-player/index.html)
+* Hosted `v4_development` branch: [V4 Nightly](https://reference.dashif.org/dash.js/v4_nightly/samples/dash-if-reference-player/index.html)
 * Hosted `v4_main` branch: [V4 Latest](https://reference.dashif.org/dash.js/v4_latest/samples/dash-if-reference-player/index.html)
