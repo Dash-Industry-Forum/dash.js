@@ -45,6 +45,7 @@ import ProtectionErrors from '../errors/ProtectionErrors.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ProtectionModel_3Feb2014(config) {
 
@@ -400,4 +401,4 @@ function ProtectionModel_3Feb2014(config) {
 }
 
 ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
-export default dashjs.FactoryMaker.getClassFactory(ProtectionModel_3Feb2014); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014); /* jshint ignore:line */

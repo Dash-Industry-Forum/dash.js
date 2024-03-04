@@ -13,9 +13,8 @@
         "lint": "eslint \"src/**/*.js\" test/unit/mocks/*.js test/unit/*.js ",
         "build": "tsc && rimraf dist && webpack --config build/webpack.prod.cjs",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
-        "test": "karma start karma.unit.conf.cjs",
+        "test": "karma start test/unit/config/karma.unit.conf.cjs",
         "test-browserunit": "karma start build/karma.conf.cjs",
-        "test-functional": "node test/functional/runTests.cjs --selenium=remote --app=remote",
         "test-functional-mocha": "karma start karma.functional.conf.cjs --testsuite=content.js",
         "prepare": "node githook.cjs",
         "prepack": "npm run build"

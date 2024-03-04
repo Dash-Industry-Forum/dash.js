@@ -37,6 +37,7 @@
  */
 import CommonEncryption from '../CommonEncryption.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;
@@ -305,4 +306,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */
