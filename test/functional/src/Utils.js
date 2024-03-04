@@ -5,14 +5,22 @@ import smokeConfig from '../config/test-configurations/smoke.conf.js'
 
 class Utils {
 
-    static getTestvectorsForTestcase(testcase) {
-        const content = Utils.getContent();
-        return content.filter((item) => {
-            return Utils._filterNonIncluded(item, testcase)
+    static getTestvectorsForTestcase(testcaseCategory, testcase) {
+        if (!testcaseCategory || !testcase) {
+            throw new Error('Wrong input data provided for getTestvectorsForTestcase, testcaseCategory or testcase missing')
+        }
+
+        if (testcase.indexOf(testcaseCategory) === -1) {
+            throw new Error(`Probably wrong testcase category defined for testcase ${testcase}`)
+        }
+
+        const content = Utils.getTestConfig();
+        return content.filter((testConfig) => {
+            return Utils._filterNonIncluded(testConfig, testcaseCategory, testcase)
         })
     }
 
-    static getContent() {
+    static getTestConfig() {
         const settings = window.__karma__.config.settings
 
         if (!settings || !settings.testconfig) {
@@ -31,7 +39,7 @@ class Utils {
         }
     }
 
-    static _filterNonIncluded(item, testcase) {
+    static _filterNonIncluded(item, testcaseCategory, testcase) {
         if (!item.testcases) {
             return false;
         }
@@ -49,7 +57,7 @@ class Utils {
         }
 
         return Object.values(Constants.TESTCASES.CATEGORIES).some((category) => {
-            if (item.testcases && item.testcases.indexOf(category) !== -1 && testcase.includes(category)) {
+            if (item.testcases && item.testcases.indexOf(category) !== -1 && testcaseCategory === category && testcase.includes(category)) {
                 return true
             }
         });

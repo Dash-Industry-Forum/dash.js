@@ -4,9 +4,10 @@ import Utils from '../../src/Utils.js';
 import GoogleAdManagerAdapter from '../../adapter/GoogleAdManagerAdapter.js';
 import {expect} from 'chai'
 
+const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.VENDOR;
 const TESTCASE = Constants.TESTCASES.VENDOR.GOOGLE_AD_MANAGER_EMSG;
 
-Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {

@@ -3,9 +3,10 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.PLAYBACK.ATTACH_AT_NON_ZERO;
+const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.PLAYBACK_ADVANCED;
+const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.ATTACH_AT_NON_ZERO;
 
-Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {

@@ -16,6 +16,7 @@
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
     "test-functional": "npm run webpack-build && karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"full\\\"}\"",
     "test-functional-no-build": "karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"full\\\"}\"",
+    "test-functional-no-build-smoke": "karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"single\\\"}\"",
     "prepare": "node githook.cjs",
     "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
   },

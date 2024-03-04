@@ -3,9 +3,10 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
+const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.FEATURE_SUPPORT
 const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED;
 
-Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, function () {
