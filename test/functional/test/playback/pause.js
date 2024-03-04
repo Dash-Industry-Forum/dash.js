@@ -1,6 +1,6 @@
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
-import Constants from '../../helper/Constants.js';
-import Utils from '../../helper/Utils.js';
+import Constants from '../../src/Constants.js';
+import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
 const TESTCASE = Constants.TESTCASES.SIMPLE.PAUSE;

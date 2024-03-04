@@ -11,13 +11,13 @@
         "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
         "start": "webpack serve --config build/webpack.dev.cjs",
         "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/test/**/*.js",
-        "build": "tsc && npm run test && npm run lint && rimraf dist && webpack --config build/webpack.prod.cjs",
+        "build": "tsc && npm run test && npm run lint && npm run webpack-build",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
         "test": "karma start test/unit/config/karma.unit.conf.cjs",
-        "test-browserunit": "karma start build/karma.conf.cjs",
-        "test-functional-mocha": "karma start karma.functional.conf.cjs --testsuite=content.js",
+        "test-functional": "npm run webpack-build && karma start test/functional/config/karma.functional.conf.cjs",
+        "test-functional-no-build": "karma start test/functional/config/karma.functional.conf.cjs",
         "prepare": "node githook.cjs",
-        "prepack": "npm run build"
+        "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
     },
     "devDependencies": {
         "@babel/core": "^7.13.8",

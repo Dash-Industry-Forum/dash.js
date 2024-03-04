@@ -20,7 +20,7 @@ The source files are placed in multiple folders:
 # Configuration
 The main configuration for the test execution is defined in `karma.functional.conf.js`. To adjust the list of
 testvectors or the testcases the existing `config/content.js` can be adjusted. As an alternative, include a different
-configuration file in `helper/Utils.js`. Future additions to the test framework should allow definition of the testfile
+configuration file in `src/Utils.js`. Future additions to the test framework should allow definition of the testfile
 to be used directly via command line parameters.
 
 # Test Execution

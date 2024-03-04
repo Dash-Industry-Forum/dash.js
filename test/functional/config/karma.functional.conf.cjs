@@ -2,7 +2,7 @@ module.exports = function (config) {
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
-        basePath: 'test/functional-karma',
+        basePath: '../../../',
 
 
         // frameworks to use
@@ -25,16 +25,16 @@ module.exports = function (config) {
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
             { pattern: 'https://imasdk.googleapis.com/js/sdkloader/ima3_dai.js', watched: false, nocache: true },
-            { pattern: '../../dist/dash.all.debug.js', watched: false, nocache: true },
-            { pattern: '../../dist/dash.mss.min.js', watched: false, nocache: true },
-            { pattern: 'test/**/*.js', watched: false },
-            { pattern: 'content/**/*.mpd', watched: false, included: false, served: true }
+            { pattern: 'dist/dash.all.debug.js', watched: false, nocache: true },
+            { pattern: 'dist/dash.mss.min.js', watched: false, nocache: true },
+            { pattern: 'test/functional/test/**/*.js', watched: false },
+            { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
         ],
 
         // list of files / patterns to exclude
         // exclude: ['test/vendor/*.js'],
 
-        customContextFile: 'view/index.html',
+        customContextFile: 'test/functional/view/index.html',
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -45,11 +45,13 @@ module.exports = function (config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             // add webpack as preprocessor
-            'test/**/*.js': ['webpack']
+            'test/functional/test/**/*.js': ['webpack'],
+            'dist/dash.all.debug.js': ['coverage'],
+            'dist/dash.mss.min.js': ['coverage'],
         },
 
         junitReporter: {
-            outputDir: 'results/karma/junit', // results will be saved as $outputDir/$browserName.xml
+            outputDir: 'test/functional/results/test/karma/junit', // results will be saved as $outputDir/$browserName.xml
             outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
             suite: '', // suite will become the package name attribute in xml testsuite element
             useBrowserName: true, // add browser name to report and classes names
@@ -60,15 +62,19 @@ module.exports = function (config) {
         },
 
         htmlReporter: {
-            outputFile: 'results/karma/htmlreporter/out.html',
-
-            // Optional
+            outputFile: 'test/functional/results/test/karma/htmlreporter/out.html',
             pageTitle: 'dash.js',
             subPageTitle: 'Functional Tests',
             groupSuites: true,
             useCompactStyle: true,
             useLegacyStyle: true,
             showOnlyFailed: false
+        },
+
+        // optionally, configure the reporter
+        coverageReporter: {
+            type: 'html',
+            dir: 'test/functional/results/coverage/'
         },
 
         webpack: {},

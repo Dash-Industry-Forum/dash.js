@@ -1,4 +1,4 @@
-import Constants from '../helper/Constants.js';
+import Constants from '../../src/Constants.js';
 
 export default [
     {
