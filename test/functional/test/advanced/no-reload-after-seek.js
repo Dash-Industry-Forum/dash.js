@@ -8,7 +8,7 @@ const TESTCASE = Constants.TESTCASES.ADVANCED.NO_RELOAD_AFTER_SEEK;
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Advanced - No reload after seek - ${item.name} -${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} -${mpd}`, () => {
 
         let playerAdapter;
 

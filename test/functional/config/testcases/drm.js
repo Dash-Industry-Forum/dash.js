@@ -21,7 +21,7 @@ export default [
                 'httpTimeout': 5000
             }
         },
-        testcases: [Constants.TESTCASES.GENERIC.ALL]
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL]
     },
     {
         name: '1080p with W3C Clear Key, single key',
@@ -34,13 +34,13 @@ export default [
                 }
             }
         },
-        testcases: [Constants.TESTCASES.GENERIC.ALL]
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL]
     },
     {
         name: 'Shaka Demo Assets: Angel-One Widevine',
         type: 'vod',
         url: 'https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd',
-        testcases: [Constants.TESTCASES.GENERIC.ALL],
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL],
         drm: {
             'com.widevine.alpha': {
                 serverURL: 'https://cwip-shaka-proxy.appspot.com/no_auth'

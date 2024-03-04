@@ -12,7 +12,7 @@ export default [
                 maximumNumberOfPeriodSwitches: 15,
             }
         },
-        testcases: [Constants.TESTCASES.GENERIC.ALL],
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL],
         excludedTestcases: [Constants.TESTCASES.ADVANCED.NO_RELOAD_AFTER_SEEK]
     },
 
@@ -41,7 +41,7 @@ export default [
                 maximumNumberOfPeriodSwitches: 15,
             }
         },
-        testcases: [Constants.TESTCASES.GENERIC.ALL],
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL],
         excludedTestcases: [Constants.TESTCASES.ADVANCED.NO_RELOAD_AFTER_SEEK],
     },
     {
@@ -55,7 +55,7 @@ export default [
                 maximumNumberOfPeriodSwitches: 2,
             }
         },
-        testcases: [Constants.TESTCASES.GENERIC.ALL],
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL],
         excludedTestcases: [Constants.TESTCASES.ADVANCED.NO_RELOAD_AFTER_SEEK],
     }
 ]

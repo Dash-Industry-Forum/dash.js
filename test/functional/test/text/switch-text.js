@@ -3,12 +3,12 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.SIMPLE.SWITCH_TEXT;
+const TESTCASE = Constants.TESTCASES.TEXT.SWITCH;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Switch text - ${item.name} - ${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
 

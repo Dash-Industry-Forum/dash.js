@@ -8,7 +8,7 @@ const TESTCASE = Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Advanced - Seek in gaps - ${item.name} -${mpd}`, function () {
+    describe(`${TESTCASE} - ${item.name} -${mpd}`, function () {
 
         let playerAdapter;
 

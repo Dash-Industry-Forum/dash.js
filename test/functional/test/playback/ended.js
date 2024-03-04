@@ -3,12 +3,12 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.SIMPLE.ENDED;
+const TESTCASE = Constants.TESTCASES.PLAYBACK.ENDED;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Ended - ${item.name} - ${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
 

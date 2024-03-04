@@ -5,6 +5,6 @@ export default [
         name: 'MSS',
         type: 'vod',
         url: 'https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest',
-        testcases: [Constants.TESTCASES.GENERIC.ALL]
+        testcases: [Constants.TESTCASES.CATEGORIES.ALL]
     }
 ]

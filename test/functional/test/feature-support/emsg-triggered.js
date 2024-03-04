@@ -3,12 +3,12 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.SIMPLE.EMSG_TRIGGERED;
+const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Check if emsg events are dispatched - ${item.name} - ${mpd}`, function () {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, function () {
 
         let playerAdapter
 

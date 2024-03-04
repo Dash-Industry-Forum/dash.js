@@ -3,12 +3,12 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.SIMPLE.MULTIPERIOD_PLAYBACK;
+const TESTCASE = Constants.TESTCASES.PLAYBACK.MULTIPERIOD_PLAYBACK;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Multiperiod Playback with period transition - ${item.name} - ${mpd}`, function () {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, function () {
 
         let playerAdapter
 

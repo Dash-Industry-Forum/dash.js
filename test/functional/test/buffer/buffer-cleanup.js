@@ -3,12 +3,12 @@ import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 
-const TESTCASE = Constants.TESTCASES.SIMPLE.BUFFER_CLEANUP;
+const TESTCASE = Constants.TESTCASES.BUFFER.CLEANUP;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Simple - Buffer Cleanup - ${item.name} - ${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
 

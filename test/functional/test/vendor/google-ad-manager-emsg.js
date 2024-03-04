@@ -9,7 +9,7 @@ const TESTCASE = Constants.TESTCASES.VENDOR.GOOGLE_AD_MANAGER_EMSG;
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`Vendor - Google Ad Manager EMSG - ${item.name} - ${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
         let googleAdManagerAdapter;
