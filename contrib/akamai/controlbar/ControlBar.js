@@ -529,13 +529,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             destroyMenu(bitrateListMenu, bitrateListBtn, menuHandlersList.bitrate);
             bitrateListMenu = null;
             var availableBitrates = { menuType: 'bitrate' };
-            availableBitrates.audio = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('audio') || [];
-            availableBitrates.video = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('video') || [];
-            availableBitrates.images = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('image') || [];
+            availableBitrates.audio = self.player.getRepresentationsByType && self.player.getRepresentationsByType('audio') || [];
+            availableBitrates.video = self.player.getRepresentationsByType && self.player.getRepresentationsByType('video') || [];
+            availableBitrates.images = self.player.getRepresentationsByType && self.player.getRepresentationsByType('image') || [];
 
             if (availableBitrates.audio.length >= 1 || availableBitrates.video.length >= 1 || availableBitrates.images.length >= 1) {
                 contentFunc = function (element, index) {
-                    var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
+                    var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrateInKbit) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
                     return result;
                 };
@@ -576,7 +576,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     }
 
                     if (element.roles[0]) {
-                        info += '- Role: ' + element.roles[0] + ' ';
+                        info += '- Role: ' + element.roles[0].value + ' ';
                     }
 
                     if (element.codec) {
@@ -912,14 +912,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             if (item.index > 0) {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
                                 self.player.updateSettings(cfg);
-                                self.player.setQualityFor(item.mediaType, item.index - 1, forceQuality);
+                                self.player.setRepresentationForTypeByIndex(item.mediaType, item.index - 1, forceQuality);
                             } else {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
                                 self.player.updateSettings(cfg);
                             }
                             break;
                         case 'image-bitrate-list':
-                            player.setQualityFor(item.mediaType, item.index);
+                            player.setRepresentationForTypeByIndex(item.mediaType, item.index);
                             break;
                         case 'caption-list':
                             self.player.setTextTrack(item.index - 1);

@@ -29,59 +29,126 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import SwitchRequest from './SwitchRequest';
-
-const SWITCH_REQUEST_HISTORY_DEPTH = 8; // must be > SwitchHistoryRule SAMPLE_SIZE to enable rule
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
 
 function SwitchRequestHistory() {
-    let switchRequests = []; // running total
-    let srHistory = []; // history of each switch
+    let switchRequests = {};
+    let switchRequestHistory = {};
+    const context = this.context;
+    const settings = Settings(context).getInstance();
 
     function push(switchRequest) {
-        if (switchRequest.newValue === SwitchRequest.NO_CHANGE) {
-            switchRequest.newValue = switchRequest.oldValue;
+        const currentRepresentation = switchRequest.currentRepresentation;
+        const newRepresentation = switchRequest.newRepresentation;
+
+        // Don`t compare quality switches between different periods
+        if (currentRepresentation.mediaInfo.streamInfo.id !== newRepresentation.mediaInfo.streamInfo.id) {
+            return;
         }
-        if (!switchRequests[switchRequest.oldValue]) {
-            switchRequests[switchRequest.oldValue] = {noDrops: 0, drops: 0, dropSize: 0};
+
+        const streamId = currentRepresentation.mediaInfo.streamInfo.id;
+        if (!switchRequests[streamId]) {
+            _initializeForStream(streamId)
+        }
+
+        const mediaType = currentRepresentation.mediaInfo.type;
+        if (!switchRequests[streamId][mediaType]) {
+            _initializeForMediaType(streamId, mediaType);
+        }
+
+        const currentRepresentationId = switchRequest.currentRepresentation.id
+        if (!switchRequests[streamId][mediaType][currentRepresentationId]) {
+            _initializeForRepresentation(streamId, mediaType, currentRepresentationId);
         }
 
         // Set switch details
-        let indexDiff = switchRequest.newValue - switchRequest.oldValue;
+        let indexDiff = switchRequest.newRepresentation.absoluteIndex - switchRequest.currentRepresentation.absoluteIndex;
         let drop = (indexDiff < 0) ? 1 : 0;
         let dropSize = drop ? -indexDiff : 0;
         let noDrop = drop ? 0 : 1;
 
         // Update running totals
-        switchRequests[switchRequest.oldValue].drops += drop;
-        switchRequests[switchRequest.oldValue].dropSize += dropSize;
-        switchRequests[switchRequest.oldValue].noDrops += noDrop;
+        switchRequests[streamId][mediaType][switchRequest.currentRepresentation.id].drops += drop;
+        switchRequests[streamId][mediaType][switchRequest.currentRepresentation.id].dropSize += dropSize;
+        switchRequests[streamId][mediaType][switchRequest.currentRepresentation.id].noDrops += noDrop;
 
         // Save to history
-        srHistory.push({idx: switchRequest.oldValue, noDrop: noDrop, drop: drop, dropSize: dropSize});
+        switchRequestHistory[streamId][mediaType].push({
+            id: switchRequest.currentRepresentation.id,
+            noDrop: noDrop,
+            drop: drop,
+            dropSize: dropSize
+        });
 
-        // Shift earliest switch off srHistory and readjust to keep depth of running totals constant
-        if ( srHistory.length > SWITCH_REQUEST_HISTORY_DEPTH ) {
-            let srHistoryFirst = srHistory.shift();
-            switchRequests[srHistoryFirst.idx].drops -= srHistoryFirst.drop;
-            switchRequests[srHistoryFirst.idx].dropSize -= srHistoryFirst.dropSize;
-            switchRequests[srHistoryFirst.idx].noDrops -= srHistoryFirst.noDrop;
+        // Remove outdated entries from history
+        const removedHistorySample = _adjustSwitchRequestHistory(streamId, mediaType);
+
+        // Adjust current values based on the removed sample
+        if (removedHistorySample) {
+            _adjustSwitchRequestDrops(streamId, mediaType, removedHistorySample)
         }
+
     }
 
-    function getSwitchRequests() {
-        return switchRequests;
+    function _initializeForStream(streamId) {
+        switchRequests[streamId] = {};
+        switchRequestHistory[streamId] = {};
+    }
+
+    function _initializeForMediaType(streamId, mediaType) {
+        switchRequests[streamId][mediaType] = {};
+        switchRequestHistory[streamId][mediaType] = [];
+    }
+
+    function _initializeForRepresentation(streamId, mediaType, representationId) {
+        switchRequests[streamId][mediaType][representationId] = {
+            noDrops: 0,
+            drops: 0,
+            dropSize: 0
+        };
+    }
+
+    function _adjustSwitchRequestHistory(streamId, mediaType) {
+        // Shift the earliest switch off srHistory and readjust to keep depth of running totals constant
+        if (switchRequestHistory[streamId][mediaType].length > settings.get().streaming.abr.rules.switchHistoryRule.parameters.sampleSize) {
+            return switchRequestHistory[streamId][mediaType].shift();
+        }
+
+        return null
+    }
+
+    function _adjustSwitchRequestDrops(streamId, mediaType, removedHistorySample) {
+        switchRequests[streamId][mediaType][removedHistorySample.id].drops -= removedHistorySample.drop;
+        switchRequests[streamId][mediaType][removedHistorySample.id].dropSize -= removedHistorySample.dropSize;
+        switchRequests[streamId][mediaType][removedHistorySample.id].noDrops -= removedHistorySample.noDrop;
+    }
+
+    function getSwitchRequests(streamId, mediaType) {
+        if (streamId === null || typeof streamId === 'undefined'
+            || mediaType === null || typeof mediaType === 'undefined'
+            || !switchRequests[streamId] || !switchRequests[streamId][mediaType]) {
+            return {}
+        }
+
+        return switchRequests[streamId][mediaType];
+    }
+
+    function clearForStream(streamId) {
+        delete switchRequests[streamId];
+        delete switchRequestHistory[streamId];
     }
 
     function reset() {
-        switchRequests = [];
-        srHistory = [];
+        switchRequests = {};
+        switchRequestHistory = {};
     }
 
     return {
-        push: push,
-        getSwitchRequests: getSwitchRequests,
-        reset: reset
+        clearForStream,
+        getSwitchRequests,
+        push,
+        reset
     };
 }
 

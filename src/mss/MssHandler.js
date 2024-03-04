@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DataChunk from '../streaming/vo/DataChunk';
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import MssFragmentInfoController from './MssFragmentInfoController';
-import MssFragmentProcessor from './MssFragmentProcessor';
-import MssParser from './parser/MssParser';
-import MssErrors from './errors/MssErrors';
-import DashJSError from '../streaming/vo/DashJSError';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import DataChunk from '../streaming/vo/DataChunk.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import MssFragmentInfoController from './MssFragmentInfoController.js';
+import MssFragmentProcessor from './MssFragmentProcessor.js';
+import MssParser from './parser/MssParser.js';
+import MssErrors from './errors/MssErrors.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 
 function MssHandler(config) {
 
@@ -77,14 +77,13 @@ function MssHandler(config) {
         const chunk = new DataChunk();
 
         chunk.streamId = streamId;
-        chunk.mediaInfo = request.mediaInfo;
         chunk.segmentType = request.type;
         chunk.start = request.startTime;
         chunk.duration = request.duration;
         chunk.end = chunk.start + chunk.duration;
         chunk.index = request.index;
-        chunk.quality = request.quality;
-        chunk.representationId = request.representationId;
+        chunk.bandwidth = request.bandwidth;
+        chunk.representation = request.representation;
         chunk.endFragment = endFragment;
 
         return chunk;
@@ -134,9 +133,8 @@ function MssHandler(config) {
         request.mediaType = representation.adaptation.type;
         request.type = initSegmentType;
         request.range = representation.range;
-        request.quality = representation.index;
-        request.mediaInfo = mediaInfo;
-        request.representationId = representation.id;
+        request.bandwidth = representation.bandwidth;
+        request.representation = representation;
 
         const chunk = createDataChunk(request, mediaInfo.streamInfo.id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
@@ -175,7 +173,7 @@ function MssHandler(config) {
         }
 
         // Start MssFragmentInfoControllers in case of start-over streams
-        let manifestInfo = e.request.mediaInfo.streamInfo.manifestInfo;
+        let manifestInfo = e.request.representation.mediaInfo.streamInfo.manifestInfo;
         if (!manifestInfo.isDynamic && manifestInfo.dvrWindowSize !== Infinity) {
             startFragmentInfoControllers();
         }

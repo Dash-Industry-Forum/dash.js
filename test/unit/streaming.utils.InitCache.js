@@ -1,6 +1,6 @@
-import InitCache from '../../src/streaming/utils/InitCache';
+import InitCache from '../../src/streaming/utils/InitCache.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const initCache = InitCache(context).getInstance();
@@ -30,7 +30,7 @@ describe('InitCache', function () {
 
         it('should return when extract is called and representationId is undefined', () => {
 
-            initCache.save({streamId: 'defauldId', representationId: 'video_880k', dataTest: 'videoSegment'});
+            initCache.save({ streamId: 'defauldId', representation: { id: 'video_880k' }, dataTest: 'videoSegment' });
             const streamId = 'defauldId';
             const representationId = 'video_880k';
 

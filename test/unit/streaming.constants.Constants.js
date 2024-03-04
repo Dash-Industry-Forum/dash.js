@@ -1,6 +1,5 @@
-import Constants from '../../src/streaming/constants/Constants';
-
-const expect = require('chai').expect;
+import Constants from '../../src/streaming/constants/Constants.js';
+import {expect} from 'chai';
 
 describe('Constants', function () {
     it('Constants should exist', () => {

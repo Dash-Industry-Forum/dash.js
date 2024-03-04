@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ReportingFactory from '../reporting/ReportingFactory';
+import ReportingFactory from '../reporting/ReportingFactory.js';
 
 function ReportingController(config) {
 

@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DVBErrorsTranslator from './utils/DVBErrorsTranslator';
-import MetricsReportingEvents from './MetricsReportingEvents';
-import MetricsCollectionController from './controllers/MetricsCollectionController';
-import MetricsHandlerFactory from './metrics/MetricsHandlerFactory';
-import ReportingFactory from './reporting/ReportingFactory';
+import DVBErrorsTranslator from './utils/DVBErrorsTranslator.js';
+import MetricsReportingEvents from './MetricsReportingEvents.js';
+import MetricsCollectionController from './controllers/MetricsCollectionController.js';
+import MetricsHandlerFactory from './metrics/MetricsHandlerFactory.js';
+import ReportingFactory from './reporting/ReportingFactory.js';
 
 function MetricsReporting() {
 

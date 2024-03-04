@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Events from '../../core/events/Events';
-import EventBus from '../../core/EventBus';
-import Constants from '../constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Events from '../../core/events/Events.js';
+import EventBus from '../../core/EventBus.js';
+import Constants from '../constants/Constants.js';
 
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 10;

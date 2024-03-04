@@ -160,3 +160,5 @@ if (typeof exports !== 'undefined') {
     exports.encode = BASE64.encode;
     exports.encodeASCII = BASE64.encodeASCII;
 }
+
+export default BASE64

@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import IndexDBStore from '../storage/IndexDBStore';
-import OfflineErrors from '../errors/OfflineErrors';
+import IndexDBStore from '../storage/IndexDBStore.js';
+import OfflineErrors from '../errors/OfflineErrors.js';
 
 /**
  * @class OfflineStoreController

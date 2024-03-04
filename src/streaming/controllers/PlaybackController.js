@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import MetricsConstants from '../constants/MetricsConstants';
+import Constants from '../constants/Constants.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 
@@ -93,7 +93,6 @@ function PlaybackController() {
 
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
-            eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
             eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
             eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
             eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
@@ -135,7 +134,6 @@ function PlaybackController() {
         internalSeek = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
-        eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
@@ -575,8 +573,8 @@ function PlaybackController() {
     }
 
     function _onDataUpdateCompleted(e) {
-        const representationInfo = adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation);
-        const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
+        const voRepresentation = e.currentRepresentation;
+        const info = voRepresentation ? voRepresentation.mediaInfo.streamInfo : null;
 
         if (info === null || streamInfo.id !== info.id) return;
         streamInfo = info;
@@ -779,19 +777,6 @@ function PlaybackController() {
         return lowLatencyModeEnabled
     }
 
-
-    function _onFragmentLoadProgress(e) {
-        // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
-        if (e.stream === false && lowLatencyModeEnabled && !isNaN(e.request.duration)) {
-            const minDelay = 1.2 * e.request.duration;
-            if (minDelay > liveDelay) {
-                logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                liveDelay = minDelay;
-                originalLiveDelay = minDelay;
-            }
-        }
-    }
-
     function onPlaybackStalled(e) {
         eventBus.trigger(Events.PLAYBACK_STALLED, { e: e });
     }
@@ -842,8 +827,7 @@ function PlaybackController() {
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&
-            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME] &&
-            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME].value === 'true') {
+            mediaInfo.supplementalProperties.find(item => item.schemeIdUri === Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME)) {
             logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
             lowLatencyModeEnabled = true;
         }

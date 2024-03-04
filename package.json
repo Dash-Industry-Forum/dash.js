@@ -1,23 +1,23 @@
 {
     "name": "dashjs",
-    "version": "4.7.4",
+    "version": "5.0.0",
     "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
     "author": "Dash Industry Forum",
     "license": "BSD-3-Clause",
-    "main": "dist/dash.all.min.js",
+    "exports": "./dist/dash.all.min.js",
+    "type": "module",
     "types": "index.d.ts",
     "scripts": {
-        "dev": "tsc && webpack --config build/webpack.dev.js --mode development --watch --progress",
-        "start": "webpack serve --config build/webpack.dev.js",
-        "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
-        "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
-        "postbuild": "cp index.d.ts dash.d.ts",
+        "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
+        "start": "webpack serve --config build/webpack.dev.cjs",
+        "lint": "eslint \"src/**/*.js\" test/unit/mocks/*.js test/unit/*.js ",
+        "build": "tsc && rimraf dist && webpack --config build/webpack.prod.cjs",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
-        "test": "karma start karma.unit.conf.js",
-        "test-browserunit": "karma start build/karma.conf.js",
-        "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
-        "test-functional-mocha": "karma start karma.functional.conf.js --testsuite=content.js",
-        "prepare": "node githook.js",
+        "test": "karma start karma.unit.conf.cjs",
+        "test-browserunit": "karma start build/karma.conf.cjs",
+        "test-functional": "node test/functional/runTests.cjs --selenium=remote --app=remote",
+        "test-functional-mocha": "karma start karma.functional.conf.cjs --testsuite=content.js",
+        "prepare": "node githook.cjs",
         "prepack": "npm run build"
     },
     "devDependencies": {
@@ -61,8 +61,9 @@
         "yargs": "16.0.3"
     },
     "dependencies": {
-        "bcp-47-match": "^1.0.3",
-        "bcp-47-normalize": "^1.1.1",
+        "@svta/common-media-library": "^0.6.2",
+        "bcp-47-match": "^2.0.3",
+        "bcp-47-normalize": "^2.3.0",
         "codem-isoboxer": "0.3.9",
         "es6-promise": "^4.2.8",
         "fast-deep-equal": "2.0.1",
@@ -77,7 +78,7 @@
         "url": "https://github.com/Dash-Industry-Forum/dash.js.git"
     },
     "files": [
-        "githook.js",
+        "githook.cjs",
         "index.d.ts",
         "dist",
         "docs/jsdoc",

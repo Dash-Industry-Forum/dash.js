@@ -29,11 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../constants/Constants.js';
+import Settings from '../../core/Settings.js';
 
 
 const READY_STATES_TO_EVENT_NAMES = new Map([
@@ -59,6 +60,7 @@ function VideoModel() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
     const stalledStreams = [];
 
     function setup() {
@@ -464,6 +466,18 @@ function VideoModel() {
         return { func, event }
     }
 
+    function getVideoElementSize() {
+        const hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        const elementWidth = getClientWidth() * pixelRatio;
+        const elementHeight = getClientHeight() * pixelRatio;
+
+        return {
+            elementWidth,
+            elementHeight
+        }
+    }
+
     instance = {
         addEventListener,
         addTextTrack,
@@ -482,6 +496,7 @@ function VideoModel() {
         getTextTrack,
         getTextTracks,
         getTime,
+        getVideoElementSize,
         getVideoHeight,
         getVideoRelativeOffsetLeft,
         getVideoRelativeOffsetTop,
@@ -497,6 +512,7 @@ function VideoModel() {
         removeEventListener,
         reset,
         setCurrentTime,
+        setDisableRemotePlayback,
         setElement,
         setPlaybackRate,
         setSource,
@@ -504,7 +520,6 @@ function VideoModel() {
         setTTMLRenderingDiv,
         setVttRenderingDiv,
         waitForReadyState,
-        setDisableRemotePlayback,
     };
 
     setup();

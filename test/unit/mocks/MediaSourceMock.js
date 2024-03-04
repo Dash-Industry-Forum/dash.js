@@ -1,4 +1,4 @@
-import MediaSourceBufferMock from './MediaSourceBufferMock';
+import MediaSourceBufferMock from './MediaSourceBufferMock.js';
 
 class MediaSourceMock {
     constructor() {

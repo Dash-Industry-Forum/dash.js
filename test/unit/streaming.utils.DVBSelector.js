@@ -1,10 +1,9 @@
-import DVBSelector from '../../src/streaming/utils/baseUrlResolution/DVBSelector';
+import DVBSelector from '../../src/streaming/utils/baseUrlResolution/DVBSelector.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
-const sinon = require('sinon');
+import sinon from 'sinon';
 
 const context = {};
 const objectsHelper = new ObjectsHelper();

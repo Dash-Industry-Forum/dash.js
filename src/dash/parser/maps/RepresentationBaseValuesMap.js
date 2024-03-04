@@ -31,13 +31,32 @@
 /**
  * @classdesc a RepresentationBaseValuesMap type for input to objectiron
  */
-import MapNode from './MapNode';
-import DashConstants from '../../constants/DashConstants';
+import MapNode from './MapNode.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 class RepresentationBaseValuesMap extends MapNode {
     constructor() {
         const commonProperties = [
-            DashConstants.PROFILES, DashConstants.WIDTH, DashConstants.HEIGHT, DashConstants.SAR, DashConstants.FRAMERATE, DashConstants.AUDIO_SAMPLING_RATE, DashConstants.MIME_TYPE, DashConstants.SEGMENT_PROFILES, DashConstants.CODECS, DashConstants.MAXIMUM_SAP_PERIOD, DashConstants.START_WITH_SAP, DashConstants.MAX_PLAYOUT_RATE, DashConstants.CODING_DEPENDENCY, DashConstants.SCAN_TYPE, DashConstants.FRAME_PACKING, DashConstants.AUDIO_CHANNEL_CONFIGURATION, DashConstants.CONTENT_PROTECTION, DashConstants.ESSENTIAL_PROPERTY, DashConstants.ESSENTIAL_PROPERTY+'_asArray', DashConstants.SUPPLEMENTAL_PROPERTY, DashConstants.INBAND_EVENT_STREAM
+            DashConstants.PROFILES,
+            DashConstants.WIDTH,
+            DashConstants.HEIGHT,
+            DashConstants.SAR,
+            DashConstants.FRAMERATE,
+            DashConstants.AUDIO_SAMPLING_RATE,
+            DashConstants.MIME_TYPE,
+            DashConstants.SEGMENT_PROFILES,
+            DashConstants.CODECS,
+            DashConstants.MAXIMUM_SAP_PERIOD,
+            DashConstants.START_WITH_SAP,
+            DashConstants.MAX_PLAYOUT_RATE,
+            DashConstants.CODING_DEPENDENCY,
+            DashConstants.SCAN_TYPE,
+            DashConstants.FRAME_PACKING,
+            DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+            DashConstants.CONTENT_PROTECTION,
+            DashConstants.ESSENTIAL_PROPERTY,
+            DashConstants.SUPPLEMENTAL_PROPERTY,
+            DashConstants.INBAND_EVENT_STREAM
         ];
 
         super(DashConstants.ADAPTATION_SET, commonProperties, [

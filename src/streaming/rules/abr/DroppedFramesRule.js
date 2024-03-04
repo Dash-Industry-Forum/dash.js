@@ -1,65 +1,66 @@
-import FactoryMaker from '../../../core/FactoryMaker';
-import SwitchRequest from '../SwitchRequest';
-import Debug from '../../../core/Debug';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
+import Settings from '../../../core/Settings.js';
 
 function DroppedFramesRule() {
 
     const context = this.context;
-    let instance,
-        logger;
+    const settings = Settings(context).getInstance();
+    let instance;
 
-    const DROPPED_PERCENTAGE_FORBID = 0.15;
-    const GOOD_SAMPLE_SIZE = 375; //Don't apply the rule until this many frames have been rendered(and counted under those indices).
-
-    function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
-    }
-
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
             return switchRequest;
         }
 
         const droppedFramesHistory = rulesContext.getDroppedFramesHistory();
+        if (!droppedFramesHistory) {
+            return switchRequest
+        }
         const streamId = rulesContext.getStreamInfo().id;
+        const mediaInfo = rulesContext.getMediaInfo();
+        const abrController = rulesContext.getAbrController();
+        const droppedFramesHistoryData = droppedFramesHistory.getFrameHistory(streamId);
 
-        if (droppedFramesHistory) {
-            const dfh = droppedFramesHistory.getFrameHistory(streamId);
+        if (!droppedFramesHistoryData || Object.keys(droppedFramesHistoryData).length === 0) {
+            return switchRequest;
+        }
 
-            if (!dfh || dfh.length === 0) {
-                return switchRequest;
-            }
+        let droppedFrames = 0;
+        let totalFrames = 0;
+        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+        let newRepresentation = null;
 
-            let droppedFrames = 0;
-            let totalFrames = 0;
-            let maxIndex = SwitchRequest.NO_CHANGE;
+        //No point in measuring dropped frames for the first index.
+        for (let i = 1; i < representations.length; i++) {
+            const currentRepresentation = representations[i];
+            if (currentRepresentation && droppedFramesHistoryData[currentRepresentation.id]) {
+                droppedFrames = droppedFramesHistoryData[currentRepresentation.id].droppedVideoFrames;
+                totalFrames = droppedFramesHistoryData[currentRepresentation.id].totalVideoFrames;
 
-            //No point in measuring dropped frames for the zeroeth index.
-            for (let i = 1; i < dfh.length; i++) {
-                if (dfh[i]) {
-                    droppedFrames = dfh[i].droppedVideoFrames;
-                    totalFrames = dfh[i].totalVideoFrames;
-
-                    if (totalFrames > GOOD_SAMPLE_SIZE && droppedFrames / totalFrames > DROPPED_PERCENTAGE_FORBID) {
-                        maxIndex = i - 1;
-                        logger.debug('index: ' + maxIndex + ' Dropped Frames: ' + droppedFrames + ' Total Frames: ' + totalFrames);
-                        break;
-                    }
+                if (totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.minimumSampleSize && droppedFrames / totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.droppedFramesPercentageThreshold) {
+                    newRepresentation = representations[i - 1];
+                    break;
                 }
             }
-            return SwitchRequest(context).create(maxIndex, { droppedFrames: droppedFrames });
+        }
+        if (newRepresentation) {
+            switchRequest.representation = newRepresentation;
+            switchRequest.reason = {
+                droppedFrames,
+                message: `[DroppedFramesRule]: Switching to index ${newRepresentation.absoluteIndex}. Dropped Frames: ${droppedFrames}, Total Frames: ${totalFrames}`
+            };
         }
 
         return switchRequest;
     }
 
     instance = {
-        getMaxIndex
+        getSwitchRequest
     };
-
-    setup();
 
     return instance;
 }

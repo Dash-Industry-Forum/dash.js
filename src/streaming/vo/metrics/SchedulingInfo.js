@@ -70,10 +70,10 @@ class SchedulingInfo {
          */
         this.duration = null;
         /**
-         * Bit Rate Quality of fragment
+         * Bandwidth of fragment
          * @public
          */
-        this.quality = null;
+        this.bandwidth = null;
         /**
          * Range of fragment
          * @public

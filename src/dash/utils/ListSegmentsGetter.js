@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../../streaming/constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../../streaming/constants/Constants.js';
 
-import {getIndexBasedSegment} from './SegmentsUtils';
+import {getIndexBasedSegment} from './SegmentsUtils.js';
 
 function ListSegmentsGetter(config, isDynamic) {
 
@@ -54,11 +54,11 @@ function ListSegmentsGetter(config, isDynamic) {
             return mediaFinishedInformation;
         }
 
-        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const list = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
         const offset = Math.max(startNumber - 1, 0);
 
-        mediaFinishedInformation.numberOfSegments = offset + list.SegmentURL_asArray.length;
+        mediaFinishedInformation.numberOfSegments = offset + list.SegmentURL.length;
 
         return mediaFinishedInformation
     }
@@ -70,8 +70,8 @@ function ListSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        const len = list.SegmentURL_asArray.length;
+        const list = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        const len = list.SegmentURL.length;
 
         const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
         const offsetToSubtract = Math.max(startNumber - 1, 0);
@@ -80,7 +80,7 @@ function ListSegmentsGetter(config, isDynamic) {
 
         let segment = null;
         if (relativeIndex < len) {
-            const s = list.SegmentURL_asArray[relativeIndex];
+            const s = list.SegmentURL[relativeIndex];
 
             segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
             if (segment) {

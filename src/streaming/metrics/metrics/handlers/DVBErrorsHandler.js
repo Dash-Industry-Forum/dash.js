@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsReportingEvents from '../../MetricsReportingEvents';
+import MetricsReportingEvents from '../../MetricsReportingEvents.js';
 
 function DVBErrorsHandler(config) {
 

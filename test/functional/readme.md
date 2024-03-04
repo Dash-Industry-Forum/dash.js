@@ -17,22 +17,22 @@ By default, the web application https://reference.dashif.org/dash.js/nightly/sam
 
 ## Tests scripts
 The folder ```/test/functional``` contains the different functional tests suites for testing each playback functionality/scenario.
-For example the suite in file ```tests/play.js``` is used to test the ability to play a stream.
+For example the suite in file ```tests/play.cjs``` is used to test the ability to play a stream.
 
 When writing a functional test, instead of executing application code directly, we do use the Leadfoot Command object, provided by the Intern framework, to automate interactions to test the application (see https://theintern.github.io/leadfoot/module-leadfoot_Command.html).
 All the tests can therefore execute script source code within the test web application and then interact with the MediaPlayer and/or HTML video element instantiated in the web application.
 
-The file ```tests/scripts/player.js``` provide a set of script functions to interact with the dahs.js MediaPlayer.
-The file ```tests/scripts/video.js``` provide a set of script functions to interact with the HTML video element.
+The file ```tests/scripts/player.cjs``` provide a set of script functions to interact with the dahs.js MediaPlayer.
+The file ```tests/scripts/video.cjs``` provide a set of script functions to interact with the HTML video element.
 
 Also in order to automate and check the tests results we do use the Chai Assertion Library (http://chaijs.com/) which is also bundled with Intern.
 
 ## Selenium and tests environment/configuration
-In ```config``` folder, you will find configurations files that are used by the ```runTests.js``` script to configure tests execution environment:
+In ```config``` folder, you will find configurations files that are used by the ```runTests.cjs``` script to configure tests execution environment:
 - ```browsers.json``` provides the configuration for available browsers and CDMs for each platform (Windows and Mac)
 - ```applications.json``` provides the configuration for some web application that can be used to execute the tests
 
-The script ```runTests.js``` is used to complete the intern and tests environment and configuration, and to run the tests.
+The script ```runTests.cjs``` is used to complete the intern and tests environment and configuration, and to run the tests.
 
 ## Running test on local desktop
 
@@ -83,17 +83,17 @@ When using driver for Edge version <=17 you need to adjust the "Dwebdriver.edge.
 
 To execute the tests you need to launch the intern runner. Open a new terminal at project root folder and launch the command:
 ```sh
-> node test/functional/runTests.js
+> node test/functional/runTests.cjs
 ```
 
 For the list fo available options run:
 ```sh
-> node test/functional/runTests.js --help
+> node test/functional/runTests.cjs --help
 ```
 
 The available options for running the tests are:
 ```sh
-runTests.js [options]
+runTests.cjs [options]
 
 Options:
       --selenium    The selenium configuration preset name
@@ -129,12 +129,12 @@ As an example, to execute tests:
 
 Windows example command:
 ```sh
-> node .\test\functional\runTests.js --selenium=remote --os=windows --browsers=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
+> node .\test\functional\runTests.cjs --selenium=remote --os=windows --browsers=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
 ```
 
 Mac example command:
 ```
-node test/functional/runTests.js --selenium=local --os=mac --browsers=chrome --app=local --protocol=http --reporters=junit --testSuites="textSwitch" --mpd="https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd"
+node test/functional/runTests.cjs --selenium=local --os=mac --browsers=chrome --app=local --protocol=http --reporters=junit --testSuites="textSwitch" --mpd="https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"
 ```
 
 #### Troubleshooting

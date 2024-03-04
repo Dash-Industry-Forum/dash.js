@@ -1,16 +1,13 @@
-import SegmentBaseLoader from '../../src/dash/SegmentBaseLoader';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import Errors from '../../src/core/errors/Errors';
-import RequestModifier from '../../src/streaming/utils/RequestModifier';
-
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import BaseURLControllerMock from './mocks/BaseURLControllerMock';
-import DebugMock from './mocks/DebugMock';
-
-const expect = require('chai').expect;
+import SegmentBaseLoader from '../../src/dash/SegmentBaseLoader.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import Errors from '../../src/core/errors/Errors.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock.js';
+import DebugMock from './mocks/DebugMock.js';
+import {expect} from 'chai';
 
 const context = {};
 let segmentBaseLoader;
@@ -29,8 +26,7 @@ describe('SegmentBaseLoader', function () {
                 debug: new DebugMock(),
                 eventBus: eventBus,
                 events: Events,
-                errors: Errors,
-                requestModifier: RequestModifier(context).getInstance()
+                errors: Errors
             });
             segmentBaseLoader.initialize();
         });

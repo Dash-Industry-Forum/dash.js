@@ -1,9 +1,7 @@
-/* jshint expr: true */
-
-import KeySystemW3CClearKey from '../../src/streaming/protection/drm/KeySystemW3CClearKey';
-import BASE64 from '../../externals/base64';
-import DebugMock from './mocks/DebugMock';
-const chai = require('chai');
+import KeySystemW3CClearKey from '../../src/streaming/protection/drm/KeySystemW3CClearKey.js';
+import BASE64 from '../../externals/base64.js';
+import DebugMock from './mocks/DebugMock.js';
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('KeySystemW3CClearKey', function () {

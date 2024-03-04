@@ -1,37 +1,32 @@
-import SpecHelper from './helpers/SpecHelper';
-import VideoElementMock from './mocks/VideoElementMock';
-import StreamControllerMock from './mocks/StreamControllerMock';
-import CapabilitiesMock from './mocks/CapabilitiesMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-import MediaPlayer from './../../src/streaming/MediaPlayer';
-import VideoModel from './../../src/streaming/models/VideoModel';
-import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
-import MediaControllerMock from './mocks/MediaControllerMock';
-import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
-import Constants from '../../src/streaming/constants/Constants';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus'
-import Settings from '../../src/core/Settings';
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
+import SpecHelper from './helpers/SpecHelper.js';
+import VideoElementMock from './mocks/VideoElementMock.js';
+import StreamControllerMock from './mocks/StreamControllerMock.js';
+import CapabilitiesMock from './mocks/CapabilitiesMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import MediaPlayer from './../../src/streaming/MediaPlayer.js';
+import VideoModel from './../../src/streaming/models/VideoModel.js';
+import MediaPlayerModelMock from './mocks//MediaPlayerModelMock.js';
+import MediaControllerMock from './mocks/MediaControllerMock.js';
+import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
+import ObjectUtils from './../../src/streaming/utils/ObjectUtils.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Settings from '../../src/core/Settings.js';
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
 
-const sinon = require('sinon');
-const expect = require('chai').expect;
+import sinon from 'sinon';
+import {expect} from 'chai';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
-const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
 const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
 const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
 
 describe('MediaPlayer', function () {
-
-    before(function () {
-        global.dashjs = {};
-    });
-    after(function () {
-        delete global.dashjs;
-    });
 
     const context = {};
     const specHelper = new SpecHelper();
@@ -42,6 +37,7 @@ describe('MediaPlayer', function () {
     const capaMock = new CapabilitiesMock();
     const streamControllerMock = new StreamControllerMock();
     const abrControllerMock = new AbrControllerMock();
+    const throughputControllerMock = new ThroughputControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const mediaPlayerModel = new MediaPlayerModelMock();
     const mediaControllerMock = new MediaControllerMock();
@@ -61,6 +57,7 @@ describe('MediaPlayer', function () {
             streamController: streamControllerMock,
             capabilities: capaMock,
             playbackController: playbackControllerMock,
+            throughputController: throughputControllerMock,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrControllerMock,
             mediaController: mediaControllerMock,
@@ -424,44 +421,6 @@ describe('MediaPlayer', function () {
             expect(minAllowedBitrateFor).to.equal(5);
         });
 
-        it('should configure MaxAllowedRepresentationRatioFor', function () {
-            let maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
-            expect(maxAllowedRepresentationRatioFor).to.equal(1);
-
-            player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'maxRepresentationRatio': {
-                            'audio': 5
-                        }
-                    }
-                }
-            });
-
-            maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
-            expect(maxAllowedRepresentationRatioFor).to.equal(5);
-        });
-
-        it('should update portal size', function () {
-            let elementHeight = abrControllerMock.getElementHeight();
-            let elementWidth = abrControllerMock.getElementWidth();
-            let windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
-
-            expect(elementHeight).to.be.undefined; // jshint ignore:line
-            expect(elementWidth).to.be.undefined; // jshint ignore:line
-            expect(windowResizeEventCalled).to.be.false; // jshint ignore:line
-
-            player.updatePortalSize();
-
-            elementHeight = abrControllerMock.getElementHeight();
-            elementWidth = abrControllerMock.getElementWidth();
-            windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
-
-            expect(elementHeight).to.equal(10);
-            expect(elementWidth).to.equal(10);
-            expect(windowResizeEventCalled).to.be.true; // jshint ignore:line
-        });
-
         it('should configure bitrate according to playback area size', function () {
             let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
             expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
@@ -494,23 +453,6 @@ describe('MediaPlayer', function () {
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
         });
 
-        it('should configure initialRepresentationRatioFor', function () {
-            let initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
-            expect(initialRepresentationRatioFor).to.equal(-1); // jshint ignore:line
-
-            player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'initialRepresentationRatio': {
-                            'video': 10
-                        }
-                    }
-                }
-            });
-
-            initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
-            expect(initialRepresentationRatioFor).to.equal(10);
-        });
 
         it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
             let autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
@@ -531,60 +473,19 @@ describe('MediaPlayer', function () {
             expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
         });
 
-        it('Method getAverageThroughput should return 0 when throughputHistory is not set up', function () {
-            const averageThroughput = player.getAverageThroughput(Constants.VIDEO);
-            expect(averageThroughput).to.equal(0);
-        });
-
-        it('Method getAverageThroughput should value computed from ThroughputHistory', function () {
+        it('Method getAverageThroughput should value computed from ThroughputController', function () {
             const AVERAGE_THROUGHPUT = 2000;
-            abrControllerMock.throughputHistory = {
-                getAverageThroughput: function () {
-                    return AVERAGE_THROUGHPUT;
-                }
-            };
             const averageThroughput = player.getAverageThroughput(Constants.VIDEO);
             expect(averageThroughput).to.equal(AVERAGE_THROUGHPUT);
         });
 
         describe('When it is not initialized', function () {
             it('Method getQualityFor should throw an exception', function () {
-                expect(player.getQualityFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
+                expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
 
             it('Method setQualityFor should throw an exception', function () {
-                expect(player.setQualityFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
-            });
-        });
-
-        describe('When it is initialized', function () {
-            beforeEach(function () {
-                player.initialize(videoElementMock, dummyUrl, false);
-            });
-
-            it('should configure quality for type', function () {
-                let qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'DUMMY_STREAM-01'
-                });
-                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
-
-                qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
-
-                player.setQualityFor('video', 10);
-
-                qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'DUMMY_STREAM-01'
-                });
-                expect(qualityFor).to.equal(10);
-
-                qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(10);
-            });
-
-            it('Method getTopBitrateInfoFor should return null when type is undefined', function () {
-                const topBitrateInfo = player.getTopBitrateInfoFor();
-                expect(topBitrateInfo).to.be.null; // jshint ignore:line
+                expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
         });
     });
@@ -655,17 +556,6 @@ describe('MediaPlayer', function () {
 
             fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
-        });
-
-        it('should configure useDefaultABRRules', function () {
-            let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.true; // jshint ignore:line
-
-            player.updateSettings({ 'streaming': { 'abr': { 'useDefaultABRRules': false } } });
-
-
-            useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.false; // jshint ignore:line
         });
 
         it('Method addABRCustomRule should throw an exception', function () {
@@ -756,9 +646,9 @@ describe('MediaPlayer', function () {
             expect(BufferPruningInterval).to.equal(50);
         });
 
-        it('should configure StableBufferTime', function () {
-            let StableBufferTime = player.getSettings().streaming.buffer.stableBufferTime;
-            expect(StableBufferTime).to.equal(12);
+        it('should configure bufferTimeDefault', function () {
+            let bufferTimeDefault = player.getSettings().streaming.buffer.bufferTimeDefault;
+            expect(bufferTimeDefault).to.equal(18);
         });
 
         it('should configure BufferTimeAtTopQuality', function () {
@@ -846,18 +736,18 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure BandwidthSafetyFactor', function () {
-            let bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            let bandwidthSafetyFactor = player.getSettings().streaming.abr.throughput.bandwidthSafetyFactor;
             expect(bandwidthSafetyFactor).to.equal(0.9);
 
             player.updateSettings({
                 'streaming': {
                     'abr': {
-                        'bandwidthSafetyFactor': 0.1
+                        'throughput': { 'bandwidthSafetyFactor': 0.1 }
                     }
                 }
             });
 
-            bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            bandwidthSafetyFactor = player.getSettings().streaming.abr.throughput.bandwidthSafetyFactor;
             expect(bandwidthSafetyFactor).to.equal(0.1);
         });
 
@@ -984,7 +874,7 @@ describe('MediaPlayer', function () {
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
             it('Method getBitrateInfoListFor should throw an exception', function () {
-                expect(player.getBitrateInfoListFor).to.throw('You must first call initialize() and set a source before calling this method');
+                expect(player.getCurrentRepresentationForType).to.throw('You must first call initialize() and set a source before calling this method');
             });
 
             it('Method getStreamsFromManifest should throw an exception', function () {
@@ -1022,8 +912,6 @@ describe('MediaPlayer', function () {
     });
 
     describe('Stream and Track Management Functions', function () {
-        describe('When it is not initialized', function () {
-        });
 
         describe('When it is initialized', function () {
             beforeEach(function () {
@@ -1032,11 +920,6 @@ describe('MediaPlayer', function () {
                 mediaControllerMock.addTrack('track1');
                 mediaControllerMock.addTrack('track2');
                 mediaControllerMock.setTrack('track1');
-            });
-
-            it('Method getBitrateInfoListFor should return bitrate info list', function () {
-                const bitrateList = player.getBitrateInfoListFor();
-                expect(bitrateList.length).to.equal(2);
             });
 
             it('Method getTracksFor should return tracks', function () {
@@ -1056,14 +939,89 @@ describe('MediaPlayer', function () {
                 player.setInitialMediaSettingsFor('audio', 'settings');
 
                 initialSettings = player.getInitialMediaSettingsFor('audio');
-                expect(initialSettings).to.equal('settings');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.deep.equal({});
 
-                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption' });
+                player.setInitialMediaSettingsFor('text', {
+                    lang: 'en',
+                    role: 'caption',
+                    accessibility: { schemeIdUri: 'urn:mpeg:dash:role:2011', value: '' }
+                });
                 initialSettings = player.getInitialMediaSettingsFor('text');
-                expect(initialSettings).to.exist; // jshint ignore:line
-                expect(initialSettings.lang).to.equal('en');
-                expect(initialSettings.role).to.equal('caption');
+                expect(initialSettings).to.be.instanceOf(Object);
 
+                expect(initialSettings).to.have.property('lang');
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).not.to.have.property('audioChannelConfiguration');
+                expect(initialSettings).not.to.have.property('viewpoint');
+
+                expect(initialSettings.lang).to.equal('en');
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role).to.have.property('value');
+                // dash.js asumes the MPEG role scheme as default, if not provided
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.role.value).to.equal('caption');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(initialSettings.accessibility.value).to.equal('');
+            });
+
+            it('should assume default schemeIdUri strings for initial media settings, if not provided', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    role: 'val1',
+                    accessibility: 'val2',
+                    viewpoint: 'val3',
+                    audioChannelConfiguration: 'val4'
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('urn:mpeg:mpegB:cicp:ChannelConfiguration');
+            });
+
+            it('should take schemeIdUri strings for initial media settings, if provided', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    role: { schemeIdUri: 'test.scheme.1', value: 'val1' },
+                    accessibility: { schemeIdUri: 'test.scheme.2', value: 'val2' },
+                    viewpoint: { schemeIdUri: 'test.scheme.3', value: 'val3' },
+                    audioChannelConfiguration: { schemeIdUri: 'test.scheme.4', value: 'val4' }
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('role');
+                expect(initialSettings).to.have.property('accessibility');
+                expect(initialSettings).to.have.property('viewpoint');
+                expect(initialSettings).to.have.property('audioChannelConfiguration');
+
+                expect(initialSettings.role).to.have.property('schemeIdUri');
+                expect(initialSettings.role.schemeIdUri).to.equal('test.scheme.1');
+                expect(initialSettings.role.value).to.equal('val1');
+
+                expect(initialSettings.accessibility).to.have.property('schemeIdUri');
+                expect(initialSettings.accessibility.schemeIdUri).to.equal('test.scheme.2');
+                expect(initialSettings.accessibility.value).to.equal('val2');
+
+                expect(initialSettings.viewpoint).to.have.property('schemeIdUri');
+                expect(initialSettings.viewpoint.schemeIdUri).to.equal('test.scheme.3');
+                expect(initialSettings.viewpoint.value).to.equal('val3');
+
+                expect(initialSettings.audioChannelConfiguration).to.have.property('schemeIdUri');
+                expect(initialSettings.audioChannelConfiguration.schemeIdUri).to.equal('test.scheme.4');
+                expect(initialSettings.audioChannelConfiguration.value).to.equal('val4');
             });
 
             it('should set current track', function () {
@@ -1153,7 +1111,6 @@ describe('MediaPlayer with context injected', () => {
         player = null;
         settings?.reset();
         settings = null;
-        global.dashjs = {};
 
         // init
         const context = {};

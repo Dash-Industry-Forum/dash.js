@@ -12,6 +12,10 @@ class MediaControllerMock {
         this.tracks = [];
     }
 
+    initialize() {
+
+    }
+
     checkInitialMediaSettingsForType() {
     }
 
@@ -89,7 +93,7 @@ class MediaControllerMock {
         return (type === 'audio' || type === 'video' || type === 'text');
     }
 
-    isTracksEqual(currentTrack, mediaInfoForType) {
+    areTracksEqual(currentTrack, mediaInfoForType) {
         return (mediaInfoForType.lang === 'deu');
     }
 

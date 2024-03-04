@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsController from './MetricsController';
-import ManifestParsing from '../utils/ManifestParsing';
-import MetricsReportingEvents from '../MetricsReportingEvents';
+import MetricsController from './MetricsController.js';
+import ManifestParsing from '../utils/ManifestParsing.js';
+import MetricsReportingEvents from '../MetricsReportingEvents.js';
 
 function MetricsCollectionController(config) {
 

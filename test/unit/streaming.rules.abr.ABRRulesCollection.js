@@ -1,32 +1,56 @@
-import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
-import Settings from '../../src/core/Settings';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-import Constants from '../../src/streaming/constants/Constants';
-
-import DashMetricsMock from './mocks/DashMetricsMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import CustomParametersModel from '../../src/streaming/models/CustomParametersModel';
-
-const expect = require('chai').expect;
+import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection.js';
+import Settings from '../../src/core/Settings.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import CustomParametersModel from '../../src/streaming/models/CustomParametersModel.js';
+import {expect} from 'chai';
 
 const context = {};
 let abrRulesCollection;
 
 describe('ABRRulesCollection', function () {
 
+    let settings = Settings(context).getInstance();
+    let customParametersModel = CustomParametersModel(context).getInstance();
+
+    beforeEach(() => {
+        settings.reset();
+    });
+
+
     describe('should initialize correctly', function () {
-        let settings = Settings(context).getInstance();
-        let customParametersModel = CustomParametersModel(context).getInstance();
-
-        beforeEach(() => {
-            settings.reset();
-        });
-
-        it('should only contain L2A rule if ABR strategy is set to ABR_STRATEGY_L2A', function () {
+        it('should contain all quality switch rules that are enabled', function () {
             settings.update({
                 streaming: {
                     abr: {
-                        ABRStrategy: Constants.ABR_STRATEGY_L2A
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: true
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
                     }
                 }
             });
@@ -38,12 +62,107 @@ describe('ABRRulesCollection', function () {
                 customParametersModel
             });
             abrRulesCollection.initialize();
+
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules).to.have.lengthOf(1);
+            expect(qualitySwitchRules).to.have.lengthOf(5);
+
+            const expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE,
+                Constants.QUALITY_SWITCH_RULES.INSUFFICIENT_BUFFER_RULE,
+                Constants.QUALITY_SWITCH_RULES.SWITCH_HISTORY_RULE,
+                Constants.QUALITY_SWITCH_RULES.DROPPED_FRAMES_RULE]
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+        });
+
+        it('should contain all abandon fragment rules that are enabled', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: true
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings: Settings(context).getInstance(),
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            const abandonFragmentRules = abrRulesCollection.getAbandonFragmentRules();
+            expect(abandonFragmentRules).to.have.lengthOf(1);
+
+            const expectedRules = [
+                Constants.ABANDON_FRAGMENT_RULES.ABANDON_REQUEST_RULE]
+            abandonFragmentRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
 
         });
 
-        it('should contain multiple rules if ABR strategy is set to ABR_STRATEGY_DYNAMIC', function () {
+        it('should contain BOLA and Throughput rule if no rules are selected', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: false
+                            },
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
             abrRulesCollection = ABRRulesCollection(context).create({
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
@@ -52,11 +171,207 @@ describe('ABRRulesCollection', function () {
             });
             abrRulesCollection.initialize();
             const qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
-            expect(qualitySwitchRules.length).to.be.above(1);
+            const expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE]
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
 
         });
 
     });
+
+    describe('should update the rules ones settings object is changed', function () {
+
+        it('should update quality switch rules once settings object is changed', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: false
+                            },
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: true
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings,
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            let qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
+            let expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.INSUFFICIENT_BUFFER_RULE,
+                Constants.QUALITY_SWITCH_RULES.SWITCH_HISTORY_RULE]
+
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            qualitySwitchRules = abrRulesCollection.getQualitySwitchRules();
+            expect(qualitySwitchRules).to.have.lengthOf(2);
+            expectedRules = [
+                Constants.QUALITY_SWITCH_RULES.BOLA_RULE,
+                Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE]
+
+            qualitySwitchRules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+
+        });
+
+        it('should update abandon fragment rules once settings object is changed', function () {
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            abrRulesCollection = ABRRulesCollection(context).create({
+                dashMetrics: new DashMetricsMock(),
+                mediaPlayerModel: new MediaPlayerModelMock(),
+                settings,
+                customParametersModel
+            });
+            abrRulesCollection.initialize();
+
+            let rules = abrRulesCollection.getAbandonFragmentRules();
+            expect(rules).to.have.lengthOf(0);
+
+            settings.update({
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            },
+                            bolaRule: {
+                                active: true
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: true
+                            },
+                            l2ARule: {
+                                active: false
+                            },
+                            loLPRule: {
+                                active: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            rules = abrRulesCollection.getAbandonFragmentRules();
+            expect(rules).to.have.lengthOf(1);
+            const expectedRules = [
+                Constants.ABANDON_FRAGMENT_RULES.ABANDON_REQUEST_RULE]
+
+            rules.forEach((rule) => {
+                expect(rule.getClassName()).to.be.oneOf(expectedRules)
+            })
+
+
+        });
+    })
+
 
     describe('should return correct switch requests', function () {
         let customParametersModel = CustomParametersModel(context).getInstance();
@@ -76,18 +391,18 @@ describe('ABRRulesCollection', function () {
         });
 
         it('should return an empty SwitchRequest when getMaxQuality function is called and rulesContext is undefined', function () {
-            const maxQuality = abrRulesCollection.getMaxQuality();
+            const maxQuality = abrRulesCollection.getBestPossibleSwitchRequest();
 
-            expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+            expect(maxQuality.representation).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
         it('should return an empty SwitchRequest when shouldAbandonFragment function is called and rulesContext is undefined', function () {
             const shouldAbandonFragment = abrRulesCollection.shouldAbandonFragment();
 
-            expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+            expect(shouldAbandonFragment.representation).to.be.equal(SwitchRequest.NO_CHANGE);
         });
 
-        it('should return correct switch request in getMinSwitchRequest for a single item', () => {
+        it('should return correct switch request for a single item', () => {
             const srArray = [{
                 quality: 5,
                 priority: SwitchRequest.PRIORITY.WEAK,
@@ -106,6 +421,7 @@ describe('ABRRulesCollection', function () {
             const srArray = [
                 {
                     quality: 6,
+                    representation: { bitrateInKbit: 60 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 60
@@ -113,6 +429,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 4,
+                    representation: { bitrateInKbit: 40 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 40
@@ -120,6 +437,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 5,
+                    representation: { bitrateInKbit: 50 },
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 50
@@ -168,6 +486,7 @@ describe('ABRRulesCollection', function () {
             const srArray = [
                 {
                     quality: 6,
+                    representation: { bitrateInKbit: 60 },
                     priority: SwitchRequest.PRIORITY.DEFAULT,
                     reason: {
                         throughput: 60
@@ -175,6 +494,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 5,
+                    representation: { bitrateInKbit: 50 },
                     priority: SwitchRequest.PRIORITY.STRONG,
                     reason: {
                         throughput: 50
@@ -182,6 +502,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 4,
+                    representation: { bitrateInKbit: 40 },
                     priority: SwitchRequest.PRIORITY.STRONG,
                     reason: {
                         throughput: 40
@@ -189,6 +510,7 @@ describe('ABRRulesCollection', function () {
                 },
                 {
                     quality: 7,
+                    representation: { bitrateInKbit: 70},
                     priority: SwitchRequest.PRIORITY.WEAK,
                     reason: {
                         throughput: 70
@@ -202,17 +524,7 @@ describe('ABRRulesCollection', function () {
             expect(sr.reason.throughput).to.be.equal(40);
         });
 
-        it('should return correct switch request in getMinSwitchRequest for a single item without reason', () => {
-            const srArray = [{
-                quality: 5,
-                priority: SwitchRequest.PRIORITY.WEAK
-            }];
-
-            const sr = abrRulesCollection.getMinSwitchRequest(srArray);
-
-            expect(sr.quality).to.be.equal(5);
-            expect(sr.reason).to.be.null;
-        });
-
     });
+
+
 });

@@ -1,6 +1,6 @@
-import DescriptorType from '../../src/dash/vo/DescriptorType';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('DescriptorType', () => {
 

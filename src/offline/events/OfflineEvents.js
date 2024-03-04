@@ -1,4 +1,4 @@
-import EventsBase from './../../core/events/EventsBase';
+import EventsBase from './../../core/events/EventsBase.js';
 /**
  * These are offline events that should be sent to the player level.
  * @class

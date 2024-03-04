@@ -1,7 +1,7 @@
-import CustomTimeRanges from '../../src/streaming/utils/CustomTimeRanges';
-import Constants from '../../src/streaming/constants/Constants';
+import CustomTimeRanges from '../../src/streaming/utils/CustomTimeRanges.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const customTimeRanges = CustomTimeRanges(context).create();

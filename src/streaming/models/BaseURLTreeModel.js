@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ObjectUtils from '../utils/ObjectUtils';
-import FactoryMaker from '../../core/FactoryMaker';
+import ObjectUtils from '../utils/ObjectUtils.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_INDEX = NaN;
 
@@ -95,16 +95,16 @@ function BaseURLTreeModel() {
             root.data.selectedIdx = DEFAULT_INDEX;
         }
 
-        if (manifest && manifest.Period_asArray) {
-            manifest.Period_asArray.forEach((p, pi) => {
+        if (manifest && manifest.Period) {
+            manifest.Period.forEach((p, pi) => {
                 updateChildData(root.children, pi, p);
 
-                if (p.AdaptationSet_asArray) {
-                    p.AdaptationSet_asArray.forEach((a, ai) => {
+                if (p.AdaptationSet) {
+                    p.AdaptationSet.forEach((a, ai) => {
                         updateChildData(root.children[pi].children, ai, a);
 
-                        if (a.Representation_asArray) {
-                            a.Representation_asArray.sort(
+                        if (a.Representation) {
+                            a.Representation.sort(
                                 adapter.getRepresentationSortFunction()
                             ).forEach((r, ri) => {
                                 updateChildData(

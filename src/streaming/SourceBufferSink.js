@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../core/Debug';
-import DashJSError from './vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
-import Errors from '../core/errors/Errors';
-import Settings from '../core/Settings';
-import constants from './constants/Constants';
-import {HTTPRequest} from './vo/metrics/HTTPRequest';
-import Events from '../core/events/Events';
+import Debug from '../core/Debug.js';
+import DashJSError from './vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Errors from '../core/errors/Errors.js';
+import Settings from '../core/Settings.js';
+import constants from './constants/Constants.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import Events from '../core/events/Events.js';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -71,10 +71,13 @@ function SourceBufferSink(config) {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
+    function _getCodecStringForRepresentation(representation) {
+        return representation.mimeType + ';codecs="' + representation.codecs + '"';
+    }
+
     function initializeForStreamSwitch(mInfo, selectedRepresentation, oldSourceBufferSink) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
-        const codec = mediaInfo.codec;
 
         _copyPreviousSinkData(oldSourceBufferSink);
         _addEventListeners();
@@ -85,20 +88,22 @@ function SourceBufferSink(config) {
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
 
         if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            promises.push(changeType(codec));
+            promises.push(changeType(selectedRepresentation));
         }
 
-        if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-            promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+        if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
+            promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
         }
 
         return Promise.all(promises);
     }
 
-    function changeType(codec) {
+    function changeType(representation) {
+        const codec = _getCodecStringForRepresentation(representation);
         return new Promise((resolve) => {
             _waitForUpdateEnd(() => {
                 if (buffer.changeType) {
+                    logger.debug(`Changing SourceBuffer codec to ${codec}`);
                     buffer.changeType(codec);
                 }
                 resolve();
@@ -113,7 +118,7 @@ function SourceBufferSink(config) {
     function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
-        const codec = mediaInfo.codec;
+        const codec = selectedRepresentation ? _getCodecStringForRepresentation(selectedRepresentation) : mInfo.codec;
         try {
             // Safari claims to support anything starting 'application/mp4'.
             // it definitely doesn't understand 'application/mp4;codecs="stpp"'
@@ -131,8 +136,8 @@ function SourceBufferSink(config) {
 
             promises.push(updateAppendWindow(mediaInfo.streamInfo));
 
-            if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-                promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+            if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
+                promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
             }
 
             return Promise.all(promises);
@@ -225,7 +230,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function updateTimestampOffset(MSETimeOffset) {
+    function updateTimestampOffset(mseTimeOffset) {
         return new Promise((resolve) => {
 
             if (!buffer) {
@@ -235,9 +240,9 @@ function SourceBufferSink(config) {
 
             _waitForUpdateEnd(() => {
                 try {
-                    if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-                        buffer.timestampOffset = MSETimeOffset;
-                        logger.debug(`Set MSE timestamp offset to ${MSETimeOffset}`);
+                    if (buffer.timestampOffset !== mseTimeOffset && !isNaN(mseTimeOffset)) {
+                        buffer.timestampOffset = mseTimeOffset;
+                        logger.debug(`Set MSE timestamp offset to ${mseTimeOffset}`);
                     }
                     resolve();
                 } catch (e) {
@@ -467,18 +472,18 @@ function SourceBufferSink(config) {
     }
 
     instance = {
-        getType,
+        abort,
+        append,
+        changeType,
         getAllBufferRanges,
         getBuffer,
-        append,
-        remove,
-        abort,
-        reset,
-        updateTimestampOffset,
-        initializeForStreamSwitch,
+        getType,
         initializeForFirstUse,
+        initializeForStreamSwitch,
+        remove,
+        reset,
         updateAppendWindow,
-        changeType
+        updateTimestampOffset,
     };
 
     setup();

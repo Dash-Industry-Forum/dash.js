@@ -32,8 +32,8 @@
 /**
  * @ignore
  */
-const localforage = require('localforage');
-const entities = require('html-entities').XmlEntities;
+import localforage from 'localforage';
+import {XmlEntities as entities} from 'html-entities';
 
 function IndexDBStore() {
 

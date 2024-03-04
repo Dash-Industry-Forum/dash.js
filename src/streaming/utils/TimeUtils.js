@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
  * @module TimeUtils
@@ -50,7 +50,7 @@ function TimeUtils() {
     function ntpToUTC(ntpTimeStamp) {
         const start = new Date(Date.UTC(1900, 0, 1, 0, 0, 0));
         return new Date(start.getTime() + ntpTimeStamp).getTime();
-    }    
+    }
 
     instance = {
         ntpToUTC

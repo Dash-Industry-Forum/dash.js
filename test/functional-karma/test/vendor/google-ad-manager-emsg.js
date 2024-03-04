@@ -1,7 +1,7 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter';
-import Constants from '../../helper/Constants';
-import Utils from '../../helper/Utils';
-import GoogleAdManagerAdapter from '../../adapter/GoogleAdManagerAdapter';
+import DashJsAdapter from '../../adapter/DashJsAdapter.js';
+import Constants from '../../helper/Constants.js';
+import Utils from '../../helper/Utils.js';
+import GoogleAdManagerAdapter from '../../adapter/GoogleAdManagerAdapter.js';
 import {expect} from 'chai'
 
 const TESTCASE = Constants.TESTCASES.VENDOR.GOOGLE_AD_MANAGER_EMSG;

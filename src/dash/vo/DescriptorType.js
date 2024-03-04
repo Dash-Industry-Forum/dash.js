@@ -32,7 +32,7 @@
  * @class
  * @ignore
  */
-import DashConstants from '../constants/DashConstants'
+import DashConstants from '../constants/DashConstants.js'
 
 class DescriptorType {
     constructor() {
@@ -57,7 +57,6 @@ class DescriptorType {
                 this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
             }
         }
-        return this;
     }
 }
 

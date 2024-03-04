@@ -1,14 +1,13 @@
-import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
-import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Debug from '../../src/core/Debug';
+import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController.js';
+import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Debug from '../../src/core/Debug.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import AdapterMock from './mocks/AdapterMock.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-import AdapterMock from './mocks/AdapterMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 const streamInfo = {
@@ -21,9 +20,9 @@ const sampleAdaptation = {
         index: 0,
         mpd: {
             manifest: {
-                Period_asArray: [{
-                    AdaptationSet_asArray: [{
-                        Representation_asArray: [{
+                Period: [{
+                    AdaptationSet: [{
+                        Representation: [{
                             SegmentTemplate: {}
                         }]
                     }]
@@ -48,7 +47,10 @@ const sampleRepresentation = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x1'
-    }]
+    }],
+    mediaInfo: {
+        type: 'image'
+    }
 };
 
 const sampleRepresentation2 = {
@@ -66,7 +68,10 @@ const sampleRepresentation2 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x20'
-    }]
+    }],
+    mediaInfo: {
+        type: 'image'
+    }
 };
 
 const sampleRepresentation3 = {
@@ -84,10 +89,13 @@ const sampleRepresentation3 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/thumbnail_tile',
         value: '50x10'
-    }]
+    }],
+    mediaInfo: {
+        type: 'image'
+    }
 };
 
-describe('Thumbnails', function () {
+describe('ThumbnailController', function () {
     describe('ThumbnailController not initializeed', function () {
         const objectsHelper = new ObjectsHelper();
         const adapter = new AdapterMock();
@@ -115,7 +123,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail).to.be.null; // jshint ignore:line
             });
 
-            expect(thumbnailController.getBitrateList()).to.be.empty; // jshint ignore:line
+            expect(thumbnailController.getPossibleVoRepresentations()).to.be.empty; // jshint ignore:line
         });
     });
 
@@ -183,11 +191,11 @@ describe('Thumbnails', function () {
             });
         });
 
-        it('should return list of available bitrates', function () {
-            const bitrates = thumbnailController.getBitrateList();
-            expect(bitrates).to.have.lengthOf(1);
-            expect(bitrates[0].mediaType).to.equal('image');
-            expect(bitrates[0].bitrate).to.equal(2000);
+        it('should return list of available representations', function () {
+            const possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
+            expect(possibleVoRepresentations).to.have.lengthOf(1);
+            expect(possibleVoRepresentations[0].mediaInfo.type).to.equal('image');
+            expect(possibleVoRepresentations[0].bandwidth).to.equal(2000);
         });
 
         it('tracks selection', function () {

@@ -1,4 +1,4 @@
-import Utils from '../../src/core/Utils'
+import Utils from '../../src/core/Utils.js'
 import {expect} from 'chai';
 
 describe('Utils', () => {

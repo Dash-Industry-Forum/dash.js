@@ -1,13 +1,11 @@
-import MssParser from '../../src/mss/parser/MssParser';
-import BASE64 from '../../externals/base64';
-import Constants from '../../src/streaming/constants/Constants';
-
-import DebugMock from './mocks/DebugMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import MssParser from '../../src/mss/parser/MssParser.js';
+import BASE64 from '../../externals/base64.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DebugMock from './mocks/DebugMock.js';
+import ManifestModelMock from './mocks/ManifestModelMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 describe('MssParser', function () {
 
@@ -30,17 +28,17 @@ describe('MssParser', function () {
         let manifest = mssParser.parse(xml);
         expect(manifest).to.exist; // jshint ignore:line
         expect(manifest.protocol).to.equal('MSS');
-        expect(manifest.Period.AdaptationSet_asArray).to.be.an.instanceof(Array);
+        expect(manifest.Period[0].AdaptationSet).to.be.an.instanceof(Array);
 
         let adaptation;
-        for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
-            adaptation = manifest.Period.AdaptationSet_asArray[i];
+        for (let i = 0; i < manifest.Period[0].AdaptationSet.length; i++) {
+            adaptation = manifest.Period[0].AdaptationSet[i];
             expect(adaptation.id).to.exist; // jshint ignore:line
             expect(adaptation.id).not.to.be.empty; // jshint ignore:line
-            expect(adaptation.Representation_asArray).to.exist; // jshint ignore:line
+            expect(adaptation.Representation).to.exist; // jshint ignore:line
 
-            for (let j = 0; j < adaptation.Representation_asArray.length; j++) {
-                let representation = adaptation.Representation_asArray[j];
+            for (let j = 0; j < adaptation.Representation.length; j++) {
+                let representation = adaptation.Representation[j];
 
                 // representation.id should be "type_index", because there is no name in StreamIndex node
                 expect(representation.id).to.exist; // jshint ignore:line
@@ -52,7 +50,7 @@ describe('MssParser', function () {
     it('should skip video adaptations if fourCC attribute is not found', async () => {
         let xml = await FileLoader.loadTextFile('/data/mss/manifestFourCCError.xml');
         let manifest = mssParser.parse(xml);
-        let adaptations = manifest.Period.AdaptationSet_asArray;
+        let adaptations = manifest.Period[0].AdaptationSet;
         expect(manifest).to.exist; // jshint ignore:line
         expect(manifest.protocol).to.equal('MSS');
         expect(adaptations).to.be.an.instanceof(Array);
@@ -69,15 +67,17 @@ describe('MssParser', function () {
         let manifest = mssParser.parse(xml);
         expect(manifest).to.exist; // jshint ignore:line
         expect(manifest.protocol).to.equal('MSS');
-        expect(manifest.Period.AdaptationSet_asArray).to.be.an.instanceof(Array);
+        expect(manifest.Period[0].AdaptationSet).to.be.an.instanceof(Array);
 
         let adaptation;
-        for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
-            adaptation = manifest.Period.AdaptationSet_asArray[i];
+        for (let i = 0; i < manifest.Period[0].AdaptationSet.length; i++) {
+            adaptation = manifest.Period[0].AdaptationSet[i];
             if (adaptation.subType === 'CAPT') {
                 expect(adaptation.Role).to.exist; // jshint ignore:line
-                expect(adaptation.Role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
-                expect(adaptation.Role.value).to.equal('main');
+                expect(adaptation.Role).to.be.an.instanceof(Array);
+                expect(adaptation.Role).to.have.lengthOf(1);
+                expect(adaptation.Role[0].schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
+                expect(adaptation.Role[0].value).to.equal('main');
             }
         }
     });

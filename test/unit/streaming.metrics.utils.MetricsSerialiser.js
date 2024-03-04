@@ -1,6 +1,6 @@
 import MetricSerialiser from '../../src/streaming/metrics/utils/MetricSerialiser.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const metricSerialiser = MetricSerialiser(context).getInstance();

@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashConstants from '../constants/DashConstants';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import SimpleXPath from '../vo/SimpleXPath';
-import PatchOperation from '../vo/PatchOperation';
+import DashConstants from '../constants/DashConstants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import SimpleXPath from '../vo/SimpleXPath.js';
+import PatchOperation from '../vo/PatchOperation.js';
 
 function PatchManifestModel() {
     let instance,

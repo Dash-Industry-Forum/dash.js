@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../src/core/FactoryMaker';
+import FactoryMaker from '../../src/core/FactoryMaker.js';
 
 
 // Shove both of these into the global scope

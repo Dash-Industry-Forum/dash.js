@@ -1,37 +1,14 @@
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import ListSegmentsGetter from '../../src/dash/utils/ListSegmentsGetter';
-import Constants from '../../src/streaming/constants/Constants';
-import VoHelper from './helpers/VOHelper';
-
-const expect = require('chai').expect;
+import TimelineConverter from '../../src/dash/utils/TimelineConverter.js';
+import ListSegmentsGetter from '../../src/dash/utils/ListSegmentsGetter.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import VoHelper from './helpers/VOHelper.js';
+import {expect} from 'chai';
 
 const segmentsList = {
     'Initialization': {
         'sourceURL': 'init.m4s'
     },
-    'Initialization_asArray': [
-        {
-            'sourceURL': 'init.m4s'
-        }
-    ],
     'SegmentURL': [
-        {
-            'media': 'media1.m4s'
-        },
-        {
-            'media': 'media2.m4s'
-        },
-        {
-            'media': 'media3.m4s'
-        },
-        {
-            'media': 'media4.m4s'
-        },
-        {
-            'media': 'media5.m4s'
-        }
-    ],
-    'SegmentURL_asArray': [
         {
             'media': 'media1.m4s'
         },
@@ -58,7 +35,7 @@ function createRepresentationMock() {
     const voHelper = new VoHelper();
     const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
     representation.SegmentList = segmentsList;
-    representation.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].Representation_asArray[0] = representation;
+    representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
     representation.segmentDuration = 10;
 
     return representation;

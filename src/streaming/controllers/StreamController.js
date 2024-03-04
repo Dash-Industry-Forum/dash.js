@@ -28,25 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import MetricsConstants from '../constants/MetricsConstants';
-import Stream from '../Stream';
-import ManifestUpdater from '../ManifestUpdater';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import {
-    PlayList, PlayListTrace
-} from '../vo/metrics/PlayList';
-import Debug from '../../core/Debug';
-import InitCache from '../utils/InitCache';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import TimeSyncController from './TimeSyncController';
-import MediaSourceController from './MediaSourceController';
-import DashJSError from '../vo/DashJSError';
-import Errors from '../../core/errors/Errors';
-import EventController from './EventController';
-import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import Constants from '../constants/Constants.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import Stream from '../Stream.js';
+import ManifestUpdater from '../ManifestUpdater.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import {PlayList, PlayListTrace} from '../vo/metrics/PlayList.js';
+import Debug from '../../core/Debug.js';
+import InitCache from '../utils/InitCache.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import TimeSyncController from './TimeSyncController.js';
+import MediaSourceController from './MediaSourceController.js';
+import DashJSError from '../vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
+import EventController from './EventController.js';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -58,7 +56,8 @@ function StreamController() {
 
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
-        segmentBaseController, uriFragmentModel, abrController, mediaController, eventController, initCache,
+        segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
+        initCache,
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
@@ -207,7 +206,7 @@ function StreamController() {
      * @private
      */
     function _onTimeSyncCompleted( /*e*/) {
-        _composeStreams();
+        _composePeriods();
     }
 
     /**
@@ -222,7 +221,7 @@ function StreamController() {
      * Setup the stream objects after the stream start and each MPD reload. This function is called after the UTC sync has been done (TIME_SYNCHRONIZATION_COMPLETED)
      * @private
      */
-    function _composeStreams() {
+    function _composePeriods() {
         try {
             const streamsInfo = adapter.getStreamsInfo();
 
@@ -303,6 +302,7 @@ function StreamController() {
                 textController,
                 abrController,
                 playbackController,
+                throughputController,
                 eventController,
                 mediaController,
                 protectionController,
@@ -589,7 +589,6 @@ function StreamController() {
     /**
      * Handle an inner period seek. Prepare all StreamProcessors for the seek.
      * @param {object} e
-     * @param {number} oldTime
      * @private
      */
     function _handleInnerPeriodSeek(e) {
@@ -662,8 +661,10 @@ function StreamController() {
         try {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
-            // - AND changeType method implemented by browser or periods use the same codec.
-            return (settings.get().streaming.buffer.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream) || firstLicenseIsFetched) && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch || previousStream.isMediaCodecCompatible(nextStream, previousStream)));
+            // - AND changeType method is implemented
+            return (settings.get().streaming.buffer.reuseExistingSourceBuffers
+                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
+                && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));
         } catch (e) {
             return false;
         }
@@ -766,7 +767,7 @@ function StreamController() {
     }
 
     /**
-     * When the quality is changed in the currently active stream and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
+     * When the quality is changed in the currently active stream, and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
      * Otherwise preloading can go on.
      * @param e
      * @private
@@ -1190,9 +1191,7 @@ function StreamController() {
         const period = adapter.getRegularPeriods()[0];
         const targetString = targetValue.toString();
         const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
-        let startTime = (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
-
-        return startTime;
+        return (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
     }
 
     /**
@@ -1231,56 +1230,14 @@ function StreamController() {
      */
     function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
         try {
-            let fragmentDuration = NaN;
+            let segmentDuration = NaN;
 
             //  We use the maxFragmentDuration attribute if present
             if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
                 return manifestInfo.maxFragmentDuration;
             }
 
-            // For single period manifests we can iterate over all AS and use the maximum segment length
-            if (streamInfos && streamInfos.length === 1) {
-                const streamInfo = streamInfos[0];
-                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
-
-
-                const fragmentDurations = mediaTypes
-                    .reduce((acc, mediaType) => {
-                        const mediaInfo = adapter.getMediaInfoForType(streamInfo, mediaType);
-
-                        if (mediaInfo && mediaInfo.isFragmented !== false) {
-                            acc.push(mediaInfo);
-                        }
-
-                        return acc;
-                    }, [])
-                    .reduce((acc, mediaInfo) => {
-                        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-
-                        if (voRepresentations && voRepresentations.length > 0) {
-                            voRepresentations.forEach((voRepresentation) => {
-                                if (voRepresentation) {
-                                    acc.push(voRepresentation);
-                                }
-                            });
-                        }
-
-                        return acc;
-                    }, [])
-                    .reduce((acc, voRepresentation) => {
-                        const representation = adapter.convertRepresentationToRepresentationInfo(voRepresentation);
-
-                        if (representation && representation.fragmentDuration && !isNaN(representation.fragmentDuration)) {
-                            acc.push(representation.fragmentDuration);
-                        }
-
-                        return acc;
-                    }, []);
-
-                fragmentDuration = Math.max(...fragmentDurations);
-            }
-
-            return isFinite(fragmentDuration) ? fragmentDuration : NaN;
+            return isFinite(segmentDuration) ? segmentDuration : NaN;
         } catch (e) {
             return NaN;
         }
@@ -1288,33 +1245,33 @@ function StreamController() {
 
     /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
-     * Finally attempt UTC sync
+     * Finally, attempt UTC sync
      * @param {object} e
      * @private
      */
     function _onManifestUpdated(e) {
         if (!e.error) {
             logger.info('Manifest updated... updating data system wide.');
+
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
 
-            let manifestUTCTimingSources = adapter.getUTCTimingSources();
-
-            if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
-                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
-                    level: ConformanceViolationConstants.LEVELS.WARNING,
-                    event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
-                });
-            }
-
-            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
-
             // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
+
+                    let manifestUTCTimingSources = adapter.getUTCTimingSources();
+                    if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                        eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                            level: ConformanceViolationConstants.LEVELS.WARNING,
+                            event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
+                        });
+                    }
+
+                    let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
                 });
         } else {
@@ -1363,7 +1320,7 @@ function StreamController() {
     function _onPlaybackError(e) {
         if (!e.error) return;
 
-        let msg = '';
+        let msg;
 
         switch (e.error.code) {
             case 1:
@@ -1495,6 +1452,9 @@ function StreamController() {
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
+        }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }
@@ -1621,28 +1581,28 @@ function StreamController() {
     }
 
     instance = {
-        initialize,
-        getActiveStreamInfo,
         addDVRMetric,
-        hasVideoTrack,
-        hasAudioTrack,
+        getActiveStream,
+        getActiveStreamInfo,
+        getActiveStreamProcessors,
+        getAutoPlay,
+        getHasMediaOrInitialisationError,
+        getInitialPlayback,
+        getIsStreamSwitchInProgress,
         getStreamById,
         getStreamForTime,
+        getStreams,
         getTimeRelativeToStreamId,
+        hasAudioTrack,
+        hasVideoTrack,
+        initialize,
         load,
         loadWithManifest,
-        getActiveStreamProcessors,
+        refreshManifest,
+        reset,
         setConfig,
         setProtectionData,
-        getIsStreamSwitchInProgress,
         switchToVideoElement,
-        getHasMediaOrInitialisationError,
-        getStreams,
-        getActiveStream,
-        getInitialPlayback,
-        getAutoPlay,
-        refreshManifest,
-        reset
     };
 
     setup();

@@ -31,14 +31,17 @@
 /**
  * @classdesc Matches and converts xs:numeric to float
  */
-import BaseMatcher from './BaseMatcher';
+import BaseMatcher from './BaseMatcher.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
+
+const StringAttributeList = [ DashConstants.ID ]
 
 class NumericMatcher extends BaseMatcher {
     constructor() {
         super(
-            attr => numericRegex.test(attr.value),
+            (tagName, attrName, value) => numericRegex.test(value) && StringAttributeList.indexOf(attrName) === -1,
             str => parseFloat(str)
         );
     }

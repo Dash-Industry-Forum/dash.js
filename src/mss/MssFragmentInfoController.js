@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 
 function MssFragmentInfoController(config) {
 
@@ -96,8 +96,8 @@ function MssFragmentInfoController(config) {
         // Get last segment from SegmentTimeline
         const representation = getCurrentRepresentation();
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
-        const segments = adaptation.SegmentTemplate.SegmentTimeline.S_asArray;
+        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
+        const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         const segment = segments[segments.length - 1];
 
         // logger.debug('Last fragment time: ' + (segment.t / adaptation.SegmentTemplate.timescale));
@@ -122,11 +122,10 @@ function MssFragmentInfoController(config) {
         // request.availabilityStartTime = segment.availabilityStartTime;
         // request.availabilityEndTime = segment.availabilityEndTime;
         // request.wallStartTime = segment.wallStartTime;
-        request.quality = representation.index;
+        request.bandwidth = representation.bandwidth;
         request.index = index++;
-        request.mediaInfo = streamProcessor.getMediaInfo();
         request.adaptationIndex = representation.adaptation.index;
-        request.representationId = representation.id;
+        request.representation = representation;
         request.url = baseURLController.resolve(representation.path).url + adaptation.SegmentTemplate.media;
         request.url = request.url.replace('$Bandwidth$', representation.bandwidth);
         request.url = request.url.replace('$Time$', segment.tManifest ? segment.tManifest : segment.t);

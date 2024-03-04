@@ -1,11 +1,10 @@
-import PatchManifestModel from '../../src/dash/models/PatchManifestModel';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import PatchOperation from '../../src/dash/vo/PatchOperation';
-import SimpleXPath from '../../src/dash/vo/SimpleXPath';
+import PatchManifestModel from '../../src/dash/models/PatchManifestModel.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import PatchOperation from '../../src/dash/vo/PatchOperation.js';
+import SimpleXPath from '../../src/dash/vo/SimpleXPath.js';
+import PatchHelper from './helpers/PatchHelper.js';
 
-import PatchHelper from './helpers/PatchHelper';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const patchManifestModel = PatchManifestModel(context).getInstance();

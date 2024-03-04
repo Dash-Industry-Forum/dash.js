@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import OfflineController from './controllers/OfflineController';
+import OfflineController from './controllers/OfflineController.js';
 
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;

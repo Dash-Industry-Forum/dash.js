@@ -32,7 +32,7 @@
 /**
  * @ignore
  */
-const Entities = require('html-entities').XmlEntities;
+import {XmlEntities as Entities} from 'html-entities';
 const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
 function OfflineIndexDBManifestParser(config) {

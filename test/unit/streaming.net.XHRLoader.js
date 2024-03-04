@@ -1,31 +1,25 @@
-import XHRLoader from '../../src/streaming/net/XHRLoader';
-import RequestModifier from '../../src/streaming/utils/RequestModifier';
+import XHRLoader from '../../src/streaming/net/XHRLoader.js';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
+import {expect} from 'chai';
+import sinon from 'sinon';
 
 const context = {};
 
-let requestModifier;
 let xhrLoader;
 
 describe('XHRLoader', function () {
 
     beforeEach(function () {
-        requestModifier = RequestModifier(context).getInstance();
-    });
-
-    beforeEach(function () {
-        global.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
 
         this.requests = [];
-        global.XMLHttpRequest.onCreate = function (xhr) {
+        window.XMLHttpRequest.onCreate = function (xhr) {
             this.requests.push(xhr);
         }.bind(this);
     });
 
     afterEach(function () {
-        global.XMLHttpRequest.restore();
+        window.XMLHttpRequest.restore();
     });
 
     afterEach(function () {
@@ -38,17 +32,17 @@ describe('XHRLoader', function () {
         const callbackError = sinon.spy();
         const callbackAbort = sinon.spy();
 
-        xhrLoader = XHRLoader(context).create({
-            requestModifier: requestModifier
-        });
+        xhrLoader = XHRLoader(context).create({});
         const request = {
             request: {},
-            onload: callbackSucceeded,
-            onend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
-        xhrLoader.load(request);
+        xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
         sinon.assert.notCalled(callbackError);
@@ -64,17 +58,16 @@ describe('XHRLoader', function () {
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
         const callbackAbort = sinon.spy();
-        xhrLoader = XHRLoader(context).create({
-            requestModifier: requestModifier
-        });
+        xhrLoader = XHRLoader(context).create({});
         const request = {
-            request: {},
-            onload: callbackSucceeded,
-            onend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
-        xhrLoader.load(request);
+        xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(404);
         sinon.assert.notCalled(callbackError);
@@ -90,19 +83,18 @@ describe('XHRLoader', function () {
         const callbackError = sinon.spy();
         const callbackAbort = sinon.spy();
 
-        xhrLoader = XHRLoader(context).create({
-            requestModifier: requestModifier
-        });
+        xhrLoader = XHRLoader(context).create({});
 
         const request = {
-            request: {},
-            onload: callbackSucceeded,
-            onend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
-        xhrLoader.load(request);
-        xhrLoader.abort(request);
+        xhrLoader.load(request, {});
+        xhrLoader.abort();
 
         sinon.assert.notCalled(callbackError);
         sinon.assert.notCalled(callbackSucceeded);
@@ -111,23 +103,22 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackAbort);
     });
 
-    it('should call onerror and onend when load is called and there is a network error', () => {
+    it('should call onerror and onloadend when load is called and there is a network error', () => {
         const self = this.ctx;
         const callbackSucceeded = sinon.spy();
         const callbackCompleted = sinon.spy();
         const callbackError = sinon.spy();
         const callbackAbort = sinon.spy();
-        xhrLoader = XHRLoader(context).create({
-            requestModifier: requestModifier
-        });
+        xhrLoader = XHRLoader(context).create({});
         const request = {
-            request: {},
-            onload: callbackSucceeded,
-            onend: callbackCompleted,
-            onerror: callbackError,
-            onabort: callbackAbort
+            customData: {
+                onload: callbackSucceeded,
+                onloadend: callbackCompleted,
+                onerror: callbackError,
+                onabort: callbackAbort    
+            }
         };
-        xhrLoader.load(request);
+        xhrLoader.load(request, {});
         expect(self.requests.length).to.equal(1);
         self.requests[0].error();
         sinon.assert.calledOnce(callbackError);
@@ -138,14 +129,13 @@ describe('XHRLoader', function () {
     });
 
     it('should set timeout on the sending XHR request', () => {
-        xhrLoader = XHRLoader(context).create({
-            requestModifier: requestModifier
-        });
+        xhrLoader = XHRLoader(context).create({});
         const request = {
-            request: {},
-            timeout: 100
+            timeout: 100,
+            customData: {
+            }
         };
-        xhrLoader.load(request);
-        expect(request.response.timeout).to.be.equal(100);
+        xhrLoader.load(request, {});
+        expect(xhrLoader.getXhr().timeout).to.be.equal(100);
     });
 });

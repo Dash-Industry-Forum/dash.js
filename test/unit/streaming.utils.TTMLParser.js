@@ -1,7 +1,6 @@
-import TTMLParser from '../../src/streaming/utils/TTMLParser';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import TTMLParser from '../../src/streaming/utils/TTMLParser.js';
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 const context = {};
 const ttmlParser = TTMLParser(context).getInstance();
@@ -18,7 +17,7 @@ describe('TTMLParser', function () {
         it('should return an empty array when parse is called and parameters are undefined', () => {
             expect(ttmlParser.parse.bind(ttmlParser)).to.throw('no ttml data to parse');
         });
-    
+
         // An amount of the following will come under the testing for IMSCjs
         it('should return the correct captions array', () => {
             const captionsArray = ttmlParser.parse(ttml_file, 0, 0, 10, [], []);
@@ -27,5 +26,4 @@ describe('TTMLParser', function () {
             expect(captionsArray[0].end).to.equal(5);
         });
     });
-
 });

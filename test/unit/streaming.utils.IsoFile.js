@@ -1,8 +1,8 @@
-import IsoFile from '../../src/streaming/utils/IsoFile';
+import IsoFile from '../../src/streaming/utils/IsoFile.js';
 import ISOBoxer from 'codem-isoboxer';
-import FileLoader from './helpers/FileLoader';
+import FileLoader from './helpers/FileLoader.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const isoFile = IsoFile(context).create();

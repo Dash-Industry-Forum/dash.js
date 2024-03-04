@@ -37,13 +37,13 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionKeyController from '../controllers/ProtectionKeyController';
-import NeedKey from '../vo/NeedKey';
-import DashJSError from '../../vo/DashJSError';
-import KeyMessage from '../vo/KeyMessage';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration';
-import KeySystemAccess from '../vo/KeySystemAccess';
-import ProtectionErrors from '../errors/ProtectionErrors';
+import ProtectionKeyController from '../controllers/ProtectionKeyController.js';
+import NeedKey from '../vo/NeedKey.js';
+import DashJSError from '../../vo/DashJSError.js';
+import KeyMessage from '../vo/KeyMessage.js';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
+import KeySystemAccess from '../vo/KeySystemAccess.js';
+import ProtectionErrors from '../errors/ProtectionErrors.js';
 
 function ProtectionModel_01b(config) {
 

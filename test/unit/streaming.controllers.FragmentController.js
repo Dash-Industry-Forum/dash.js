@@ -1,12 +1,11 @@
-import Events from '../../src/core/events/Events';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import FragmentController from '../../src/streaming/controllers/FragmentController';
-import EventBus from '../../src/core/EventBus';
-import Settings from '../../src/core/Settings';
+import Events from '../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import FragmentController from '../../src/streaming/controllers/FragmentController.js';
+import EventBus from '../../src/core/EventBus.js';
+import Settings from '../../src/core/Settings.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
 
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('FragmentController', function () {
@@ -52,7 +51,7 @@ describe('FragmentController', function () {
                 mediaType: 'video',
                 isInitializationRequest() { return true; },
                 type: 'InitializationSegment',
-                mediaInfo: {streamInfo: {}}
+                representation: {mediaInfo: {streamInfo: {}}}
             },
             sender: videoFragmentModel});
     });
@@ -64,6 +63,6 @@ describe('FragmentController', function () {
         };
 
         eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, onInitFragmentLoadedWithError, this);
-        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', representation: {mediaInfo: {streamInfo: {}}}}, sender: videoFragmentModel});
     });
 });

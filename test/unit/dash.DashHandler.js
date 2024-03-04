@@ -1,18 +1,18 @@
-import DashHandler from '../../src/dash/DashHandler';
-import Constants from '../../src/streaming/constants/Constants';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Debug from '../../src/core/Debug';
-import URLUtils from '../../src/streaming/utils/URLUtils';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import DashHandler from '../../src/dash/DashHandler.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Debug from '../../src/core/Debug.js';
+import URLUtils from '../../src/streaming/utils/URLUtils.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-import VoHelper from './helpers/VOHelper';
-import DashMetricsMock from './mocks/DashMetricsMock';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
 
-const sinon = require('sinon');
-const expect = require('chai').expect;
+import sinon from 'sinon';
+import {expect} from 'chai';
 
 const SEGMENT_START_TIME_DELTA = 0.001;
 
@@ -119,11 +119,11 @@ describe('DashHandler', function () {
                     period: {
                         mpd: {
                             manifest: {
-                                Period_asArray: [
+                                Period: [
                                     {
-                                        AdaptationSet_asArray: [
+                                        AdaptationSet: [
                                             {
-                                                Representation_asArray: [
+                                                Representation: [
                                                     {
                                                         bandwidth: 3000
                                                     }

@@ -1,8 +1,7 @@
-import MediaSourceController from '../../src/streaming/controllers/MediaSourceController';
+import MediaSourceController from '../../src/streaming/controllers/MediaSourceController.js';
+import VideoModelMock from './mocks/VideoModelMock.js';
 
-import VideoModelMock from './mocks/VideoModelMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 
 describe('MediaSourceController', function () {

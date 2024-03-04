@@ -1,9 +1,7 @@
-import RulesContext from '../../src/streaming/rules/RulesContext';
-
-import StreamProcessorMock from './mocks/StreamProcessorMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-
-const expect = require('chai').expect;
+import RulesContext from '../../src/streaming/rules/RulesContext.js';
+import StreamProcessorMock from './mocks/StreamProcessorMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import {expect} from 'chai';
 
 const context = {};
 const testType = 'video';
@@ -23,11 +21,9 @@ describe('RulesContext', function () {
             currentValue: 0,
             switchHistory: null,
             droppedFramesHistory: null,
-            useBufferOccupancyABR: true
         });
 
         expect(rulesContext.getMediaType()).to.equal('video');
         expect(rulesContext.getStreamInfo().id).to.equal('id');
-        expect(rulesContext.useBufferOccupancyABR()).to.be.true; // jshint ignore:line
     });
 });

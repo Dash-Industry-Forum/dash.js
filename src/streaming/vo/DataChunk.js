@@ -37,7 +37,6 @@ class DataChunk {
     //Represents a data structure that keep all the necessary info about a single init/media segment
     constructor() {
         this.streamId = null;
-        this.mediaInfo = null;
         this.segmentType = null;
         this.quality = NaN;
         this.index = NaN;
@@ -45,7 +44,7 @@ class DataChunk {
         this.start = NaN;
         this.end = NaN;
         this.duration = NaN;
-        this.representationId = null;
+        this.representation = null;
         this.endFragment = null;
     }
 }

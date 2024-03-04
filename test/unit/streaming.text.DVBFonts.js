@@ -1,13 +1,14 @@
-import DVBFonts from '../../src/streaming/text/DVBFonts';
-import BaseURLControllerMock from './mocks/BaseURLControllerMock';
-import AdapterMock from './mocks/AdapterMock';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import EventBus from '../../src/core/EventBus';
+import DVBFonts from '../../src/streaming/text/DVBFonts.js';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import EventBus from '../../src/core/EventBus.js';
 
-const chai = require('chai');
-const spies = require('chai-spies');
+import {expect} from 'chai';
+import chai from 'chai';
+import spies from 'chai-spies';
+
 chai.use(spies);
-const expect = chai.expect;
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
@@ -17,25 +18,25 @@ const mockNoFontsTracks = [{
     codec: 'application/mp4;codecs="stpp.ttml.etd1|im1t"',
     id: 888,
     index: 5,
-    supplementalPropertiesAsArray: [],
-    essentialPropertiesAsArray: []
+    supplementalProperties: [],
+    essentialProperties: []
 }];
 const mockSupplementalDownloadTracks = [
     {
         codec: 'application/mp4;codecs="stpp.ttml.etd1|im1t"',
         id: 888,
         index: 5,
-        supplementalPropertiesAsArray: [
+        supplementalProperties: [
             {
                 dvbFontFamily: 'UnitTestFont',
                 dvbMimeType: 'application/font-sfnt',
                 dvbUrl: 'https://notARealUrl/fonts/unitTestFont.otf',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
-                value: '1'  
+                value: '1'
             },
         ],
-        essentialPropertiesAsArray: [],
+        essentialProperties: [],
     }
 ];
 const mockEssentialDownloadTracks = [
@@ -43,15 +44,15 @@ const mockEssentialDownloadTracks = [
         codec: 'application/mp4;codecs="stpp.ttml.etd1|im1t"',
         id: 887,
         index: 10,
-        supplementalPropertiesAsArray: [],
-        essentialPropertiesAsArray: [
+        supplementalProperties: [],
+        essentialProperties: [
             {
                 dvbFontFamily: 'UnitTestFont2',
                 dvbMimeType: 'application/font-woff',
                 dvbUrl: 'https://notARealUrl/fonts/unitTestFont2.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
-                value: '1'  
+                value: '1'
             }
         ]
     }
@@ -61,24 +62,24 @@ const mockBothDownloadTracks = [
         codec: 'application/mp4;codecs="stpp.ttml.etd1|im1t"',
         id: 888,
         index: 5,
-        supplementalPropertiesAsArray: [
+        supplementalProperties: [
             {
                 dvbFontFamily: 'UnitTestFont',
                 dvbMimeType: 'application/font-woff',
                 dvbUrl: 'https://notARealUrl/fonts/unitTestFont.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
-                value: '1'  
+                value: '1'
             }
         ],
-        essentialPropertiesAsArray: [
+        essentialProperties: [
             {
                 dvbFontFamily: 'UnitTestFont2',
                 dvbMimeType: 'application/font-woff',
                 dvbUrl: 'https://notARealUrl/fonts/unitTestFont2.woff',
                 id: null,
                 schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
-                value: '1'  
+                value: '1'
             }
         ]
     }
@@ -134,7 +135,7 @@ describe('DVBFonts', function () {
             expect(currentFonts.length).to.equal(1);
             expect(currentFonts[0].trackId).to.equal(887);
         });
-        
+
         it('should prioritise essential property descriptors', () => {
             dvbFonts.addFontsFromTracks(mockBothDownloadTracks, 'id');
             const currentFonts = dvbFonts.getFonts();
@@ -160,7 +161,7 @@ describe('DVBFonts', function () {
     });
 
     describe('getFonts()', () => {
-       
+
         it('should return entire font list', () => {
             dvbFonts.addFontsFromTracks(combinedTracks, 'id');
             const currentFonts = dvbFonts.getFonts();

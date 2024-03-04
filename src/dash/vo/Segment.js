@@ -46,7 +46,7 @@ class Segment {
         this.replacementNumber = NaN;
         // This is supposed to match the time encoded in the media Segment
         this.mediaStartTime = NaN;
-        // When the source buffer timeOffset is set to MSETimeOffset this is the
+        // When the source buffer timeOffset is set to mseTimeOffset this is the
         // time that will match the seekTarget and video.currentTime
         this.presentationStartTime = NaN;
         // Do not schedule this segment until

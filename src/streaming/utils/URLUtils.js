@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import DefaultURLUtils from './DefaultURLUtils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DefaultURLUtils from './DefaultURLUtils.js';
 
 /**
  * @module URLUtils
