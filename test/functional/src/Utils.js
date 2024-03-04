@@ -1,13 +1,34 @@
 import Constants from '../src/Constants.js';
+import fullConfig from '../config/test-configurations/full.conf.js'
+import singleConfig from '../config/test-configurations/single.conf.js'
+import smokeConfig from '../config/test-configurations/smoke.conf.js'
 
 class Utils {
 
     static getTestvectorsForTestcase(testcase) {
-        console.log(window.__karma__.config.metadata)
-        const content = [];
+        const content = Utils.getContent();
         return content.filter((item) => {
             return Utils._filterNonIncluded(item, testcase)
         })
+    }
+
+    static getContent() {
+        const settings = window.__karma__.config.settings
+
+        if (!settings || !settings.testconfig) {
+            return []
+        }
+
+        switch (settings.testconfig) {
+            case 'full':
+                return fullConfig()
+            case 'single':
+                return singleConfig()
+            case 'smoke':
+                return smokeConfig()
+            default:
+                return []
+        }
     }
 
     static _filterNonIncluded(item, testcase) {

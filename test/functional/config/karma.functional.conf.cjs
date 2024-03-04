@@ -1,4 +1,6 @@
 module.exports = function (config) {
+    // Find the settings JSON object in the command arguments
+    const settings = getSettings()
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -84,9 +86,7 @@ module.exports = function (config) {
             mocha: {
                 timeout: 180000
             },
-            metadata: {
-                testsuites: ['test1', 'test2']
-            }
+            settings
         },
 
         // web server port
@@ -130,4 +130,11 @@ module.exports = function (config) {
         // how many browser should be started simultaneous
         concurrency: 1
     })
+}
+
+function getSettings() {
+    const args = process.argv;
+    const settingsIndex = args.indexOf('--settings');
+
+    return settingsIndex >= 0 ? JSON.parse(args[settingsIndex + 1]) : {}
 }
