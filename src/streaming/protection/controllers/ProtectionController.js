@@ -328,7 +328,7 @@ function ProtectionController(config) {
     function createKeySession(keySystemInfo) {
 
         // Check for duplicate key id
-        if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
+        if (keySystemInfo && _isKeyIdDuplicate(keySystemInfo.keyId)) {
             return;
         }
 
