@@ -3,11 +3,31 @@ import Constants from '../../src/Constants.js';
 export default function getConfig() {
     return [
         {
-            name: 'Segment Base',
+            name: 'Segment Timeline with missing audio segment in MPD for time 0',
             type: 'vod',
-            url: 'https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd',
-            testcases: [Constants.TESTCASES.CATEGORIES.PLAYBACK]
-        }
+            url: '/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd',
+            testcases: [Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS],
+            testdata: {
+                gaps: [
+                    {
+                        start: 0,
+                        end: 5.97
+                    }]
+            }
+        },
+        {
+            name: 'Segment Timeline with missing video segment in MPD for time 0',
+            type: 'vod',
+            url: '/base/test/functional/content/gap/video_gap_at_start_timeline.mpd',
+            testcases: [Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS],
+            testdata: {
+                gaps: [
+                    {
+                        start: 0,
+                        end: 6
+                    }]
+            }
+        },
     ]
 }
 

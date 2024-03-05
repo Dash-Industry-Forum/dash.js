@@ -47,14 +47,13 @@ commands:
                     command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                     background: true
 
-    build_unit_test_steps:
+    run_testbuild:
         steps:
             - browser-tools/install-browser-tools
             -   run:
                     name: Build and run unit tests
                     command: |
                         npm run build
-                        npm run test
 
     process_test_results: # CircleCI can not handle NaN values so we replace them with 0
         steps:
@@ -79,7 +78,7 @@ commands:
             - functional_precondition
             - checkout
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - functional_test_setup
 
     run_test_suite:
@@ -122,7 +121,7 @@ jobs:
         steps:
             - checkout
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - build_samples
 
     merge-build-and-unit-test:
@@ -137,7 +136,7 @@ jobs:
                         git checkout v5.0.0
                         git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
 
     functional-tests-smoke:
         executor: dashjs-executor
@@ -156,7 +155,7 @@ jobs:
                             git merge --no-edit --no-ff $CIRCLE_BRANCH
                         fi
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - functional_test_setup
             -   run:
                     name: Run functional tests for one vector (chrome / https)
