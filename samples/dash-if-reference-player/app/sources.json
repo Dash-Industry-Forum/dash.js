@@ -289,7 +289,7 @@
                     "name": "LiveSIM Caminandes 02, Gran Dillama (25fps, 25gop, 2sec, multi MOOF/MDAT, 1080p, KID=1236) v2",
                     "url": "http://refapp.hbbtv.org/livesim2/02_llamav2/manifest.mpd",
                     "provider": "hbbtv"
-                }, 
+                },
                 {
                     "name": "Live Testcard - Multiple Languages, AVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd",
@@ -452,7 +452,7 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                } 
+                }
             ]
         },
         {
@@ -1068,6 +1068,16 @@
                             "httpTimeout": 5000
                         }
                     }
+                },
+                {
+                    "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
+                    "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "Livesim 2 ECCP with CENC encryption and dashif:Laurl",
+                    "url": "https://livesim2.dashif.org/livesim2/eccp_cenc/testpic_2s/Manifest.mpd",
+                    "provider": "dashif"
                 },
                 {
                     "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",

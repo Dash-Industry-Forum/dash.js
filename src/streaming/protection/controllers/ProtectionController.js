@@ -326,14 +326,15 @@ function ProtectionController(config) {
      * @ignore
      */
     function createKeySession(keySystemInfo) {
+
+        // Check for duplicate key id
+        if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
+            return;
+        }
+
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
 
         if (initDataForKS) {
-
-            // Check for duplicate key id
-            if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
-                return;
-            }
 
             // Check for duplicate initData
             if (_isInitDataDuplicate(initDataForKS)) {
