@@ -43,10 +43,14 @@ class ContentProtection extends DescriptorType {
         this.refId = null;
         this.robustness = null;
         this.keyId = null;
+        this.pssh = null;
+        this.pro = null;
+        this.laUrl = null;
     }
 
     init(data) {
         super.init(data);
+
         if (data) {
             this.ref = data.hasOwnProperty(DashConstants.REF) ? data[DashConstants.REF] : null;
             this.refId = data.hasOwnProperty(DashConstants.REF_ID) ? data[DashConstants.REF_ID] : null;
@@ -54,31 +58,17 @@ class ContentProtection extends DescriptorType {
             this.cencDefaultKid = data.hasOwnProperty(DashConstants.CENC_DEFAULT_KID) ? data[DashConstants.CENC_DEFAULT_KID] : null;
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
+            this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : null;
         }
     }
 
     mergeAttributesFromReference(reference) {
-        if (this.schemeIdUri === null) {
-            this.schemeIdUri = reference.schemeIdUri
-        }
-        if (this.value === null) {
-            this.value = reference.value
-        }
-        if (this.id === null) {
-            this.id = reference.id
-        }
-        if (this.robustness === null) {
-            this.robustness = reference.robustness;
-        }
-        if (this.cencDefaultKid === null) {
-            this.cencDefaultKid = reference.cencDefaultKid;
-        }
-        if (this.pro === null) {
-            this.pro = reference.pro;
-        }
-        if (this.pssh === null) {
-            this.pssh = reference.pssh;
-        }
+        let attributesToBeMerged = ['schemeIdUri', 'value', 'id', 'robustness', 'cencDefaultKid', 'pro', 'pssh', 'laUrl']
+        attributesToBeMerged.forEach((attribute) => {
+            if (this[attribute] === null) {
+                this[attribute] = reference[attribute]
+            }
+        })
     }
 }
 
