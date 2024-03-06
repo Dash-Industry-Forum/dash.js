@@ -47,6 +47,11 @@ export default [
             }
         }
     },
+    {
+        name: '"Livesim 2 ECCP with CBCS encryption and dashif:Laurl',
+        type: 'live',
+        url: 'https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd'
+    },
 ]
 
 
