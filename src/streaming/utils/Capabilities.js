@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
+import DescriptorType from '../../dash/vo/DescriptorType.js';
 import Constants from '../constants/Constants.js';
 
 export function supportsMediaSource() {
@@ -187,13 +188,16 @@ function Capabilities() {
 
     /**
      * Check if a specific EssentialProperty is supported
-     * @param {object} ep
+     * @param {DescriptorType} ep
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
+
         try {
-            return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
+            let descriptor = new DescriptorType();
+            descriptor.init(ep);
+            return descriptor.inArray(supportedEssentialProps);
         } catch (e) {
             return true;
         }
