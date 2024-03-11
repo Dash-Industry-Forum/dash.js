@@ -62,41 +62,17 @@ function AdapterMock() {
     };
 
     this.getAdaptationForType = function () {
+        const representation = [
+            { width: 500, bandwidth: 1000000 },
+            { width: 750, bandwidth: 2000000 },
+            { width: 900, bandwidth: 3000000 },
+            { width: 900, bandwidth: 4000000 },
+            { width: 900, bandwidth: 5000000 }
+        ]
+
         return {
-            Representation: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                }
-            ],
-            Representation_asArray: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                }
-            ]
+            Representation: [...representation],
+            Representation_asArray: [...representation]
         };
     };
 
