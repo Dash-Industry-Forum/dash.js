@@ -1,16 +1,16 @@
-name: deploy
+name: deploy_v4_latest
 
 on:
     push:
         branches:
-            - 'master'
+            - 'v4_main'
 
 jobs:
     deploy_staging:
         if: github.repository == 'Dash-Industry-Forum/dash.js'
         uses: ./.github/workflows/deploy.yml
         with:
-            envname: latest
+            envname: v4_latest
             deploy_path: '/377335/dash.js'
         secrets:
             host: ${{secrets.HOST}}
