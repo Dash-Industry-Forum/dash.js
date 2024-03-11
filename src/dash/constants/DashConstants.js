@@ -94,6 +94,7 @@ export default {
     INDEX_RANGE: 'indexRange',
     INITIALIZATION: 'Initialization',
     INITIALIZATION_MINUS: 'initialization',
+    LA_URL: 'Laurl',
     LABEL: 'Label',
     LANG: 'lang',
     LOCATION: 'Location',
