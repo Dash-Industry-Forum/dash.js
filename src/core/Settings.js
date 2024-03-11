@@ -73,7 +73,13 @@ import Events from './events/Events.js';
  *            enableManifestTimescaleMismatchFix: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
- *               supportedEssentialProperties: Constants.ESSENTIAL_PROP_SCHEME,
+ *               supportedEssentialProperties: [
+                    { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
+                    { schemeIdUri: Constants.COLOURPRIMARIES_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.MATRIXCOEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.TRANSFERCHARACTERISTICS_SCHEME_ID_URI, value: '6' },
+                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+                ],
  *               useMediaCapabilitiesApi: false
  *            },
  *            timeShiftBuffer: {
@@ -650,7 +656,7 @@ import Events from './events/Events.js';
  * @typedef {Object} Capabilities
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
- * @property {Array.<string>} [supportedEssentialProperties=Constants.ESSENTIAL_PROP_SCHEME]
+ * @property {Array.<string>} [supportedEssentialProperties]
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
@@ -1032,7 +1038,13 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
-                supportedEssentialProperties: [...Constants.ESSENTIAL_PROP_SCHEME],
+                supportedEssentialProperties: [
+                    { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
+                    { schemeIdUri: Constants.COLOURPRIMARIES_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.MATRIXCOEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.TRANSFERCHARACTERISTICS_SCHEME_ID_URI, value: '6' },
+                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+                ],
                 useMediaCapabilitiesApi: false
             },
             timeShiftBuffer: {

@@ -84,7 +84,7 @@ describe('Capabilities', function () {
 
         it('should return false if EssentialProperty value is not known when new values are registered in settings', function () {
             let props = settings.get().streaming.capabilities.supportedEssentialProperties;
-            props.push(...[EssentialPropertyOwn.schemeIdUri]);
+            props.push(...[EssentialPropertyOwn]);
             settings.update({ streaming: { capabilities: { supportedEssentialProperties: props } } });
 
             let res = capabilities.supportsEssentialProperty(EssentialPropertyOwnSecond);

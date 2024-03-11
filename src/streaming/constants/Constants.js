@@ -228,14 +228,9 @@ export default {
     SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
     THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
-    ESSENTIAL_PROP_SCHEME: [
-        {schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries', value: /5|6/ },
-        {schemeIdUri: 'urn:mpeg:mpegB:cicp:MatrixCoefficients', value: /5|6/ },
-        {schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics', value: '6' },
-        {schemeIdUri: 'urn:dvb:dash:fontdownload:2014'},
-        {schemeIdUri: 'http://dashif.org/thumbnail_tile'},
-        {schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile'}
-    ],
+    COLOURPRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+    MATRIXCOEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
+    TRANSFERCHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     XML: 'XML',
     ARRAY_BUFFER: 'ArrayBuffer',
     DVB_REPORTING_URL: 'dvb:reportingUrl',
