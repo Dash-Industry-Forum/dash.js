@@ -2,44 +2,61 @@ import Capabilities from '../../src/streaming/utils/Capabilities.js';
 import Settings from '../../src/core/Settings.js';
 
 import { expect } from 'chai';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
 
 let settings;
 let capabilities;
 
-const EssentialPropertyThumbNail = {
+let EssentialPropertyThumbNail = new DescriptorType;
+EssentialPropertyThumbNail.init({
     schemeIdUri: 'http://dashif.org/thumbnail_tile',
     value: 'myvalue'
-};
+});
+
 const EssentialPropertyThumbNailnoVal = {
     schemeIdUri: 'http://dashif.org/thumbnail_tile'
 };
-const EssentialPropertyThumbNailemptyVal = {
+
+let EssentialPropertyThumbNailemptyVal = new DescriptorType;
+EssentialPropertyThumbNailemptyVal.init({
     schemeIdUri: 'http://dashif.org/thumbnail_tile',
     value: ''
-};
-const EssentialPropertyOwn = {
+});
+
+let EssentialPropertyOwn = new DescriptorType;
+EssentialPropertyOwn.init({
     schemeIdUri: 'tag:dashif.org:myOwnFeature',
     value: 'somevalue'
-};
-const EssentialPropertyOwnSecond = {
+});
+
+let EssentialPropertyOwnSecond = new DescriptorType;
+EssentialPropertyOwnSecond.init({
     schemeIdUri: 'tag:dashif.org:mySecondOwnFeature',
     value: 'somevalue'
-};
-const EssentialPropertySDR = {
+});
+
+let EssentialPropertySDR = new DescriptorType;
+EssentialPropertySDR.init({
     schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
     value: '5'
-};
-const EssentialPropertynoVal = {
+});
+
+let EssentialPropertynoVal = new DescriptorType;
+EssentialPropertynoVal.init({
     schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries'
-};
-const EssentialPropertyemptyVal = {
+});
+
+let EssentialPropertyemptyVal = new DescriptorType;
+EssentialPropertyemptyVal.init({
     schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
     value: ''
-};
-const EssentialPropertyHDR = {
+});
+
+let EssentialPropertyHDR = new DescriptorType;
+EssentialPropertyHDR.init({
     schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
     value: '9'
-};
+});
 
 describe('Capabilities', function () {
     beforeEach(function () {
