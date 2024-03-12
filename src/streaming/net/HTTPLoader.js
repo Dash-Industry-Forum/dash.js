@@ -224,6 +224,7 @@ function HTTPLoader(cfg) {
                 progressTimeout = null;
             }
 
+            _updateRequestTimingInfo();
             _updateResourceTimingInfo();
 
             _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
@@ -270,11 +271,14 @@ function HTTPLoader(cfg) {
 
         };
 
-        const _updateResourceTimingInfo = function() {
+        const _updateRequestTimingInfo = function() {
             requestObject.startDate = requestStartTime;
             requestObject.endDate = new Date();
             requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
+        }
+
+        const _updateResourceTimingInfo = function() {
+            httpResponse.resourceTiming.responseEnd = Date.now();
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
             // These values are more accurate and can be used by the ThroughputController later
