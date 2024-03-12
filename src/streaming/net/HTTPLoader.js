@@ -244,7 +244,7 @@ function HTTPLoader(cfg) {
                     eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
                 }
 
-                if (httpResponse.status >= 200 && httpResponse.status <= 299) {
+                if (httpResponse.status >= 200 && httpResponse.status <= 299 && httpResponse.data) {
                     if (config.success) {
                         config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
                     }

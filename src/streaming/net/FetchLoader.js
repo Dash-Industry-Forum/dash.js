@@ -339,11 +339,8 @@ function FetchLoader() {
     function _read(httpRequest, httpResponse, processResult) {
         httpRequest.customData.reader.read()
             .then(processResult)
-            .catch(function (e) {
-                if (httpRequest.customData.onerror && httpResponse.status === 200) {
-                    // Error, but response code is 200, trigger error
-                    httpRequest.customData.onerror(e);
-                }
+            .catch(function () {
+                httpRequest.customData.onloadend();
             });
     }
 
