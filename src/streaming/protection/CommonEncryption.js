@@ -31,8 +31,7 @@
 import DashConstants from '../../dash/constants/DashConstants.js';
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
-    attributes: ['Laurl', 'laurl'],
-    prefixes: ['clearkey', 'dashif']
+    prefixes: ['clearkey', 'dashif', 'ck']
 };
 
 /**
@@ -218,40 +217,33 @@ class CommonEncryption {
         return pssh;
     }
 
-    static getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri) {
+    static getLicenseServerUrlFromMediaInfo(mediaInfoArr, schemeIdUri) {
         try {
 
-            if (!mediaInfo || mediaInfo.length === 0) {
+            if (!mediaInfoArr || mediaInfoArr.length === 0) {
                 return null;
             }
 
             let i = 0;
             let licenseServer = null;
 
-            while (i < mediaInfo.length && !licenseServer) {
-                const info = mediaInfo[i];
+            while (i < mediaInfoArr.length && !licenseServer) {
+                const mediaInfo = mediaInfoArr[i];
 
-                if (info && info.contentProtection && info.contentProtection.length > 0) {
-                    const targetProtectionData = info.contentProtection.filter((cp) => {
+                if (mediaInfo && mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
+                    const targetProtectionData = mediaInfo.contentProtection.filter((cp) => {
                         return cp.schemeIdUri && cp.schemeIdUri === schemeIdUri;
                     });
 
                     if (targetProtectionData && targetProtectionData.length > 0) {
                         let j = 0;
                         while (j < targetProtectionData.length && !licenseServer) {
-                            const ckData = targetProtectionData[j];
-                            let k = 0;
-                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
-                                let l = 0;
-                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
-                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
-                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
-                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
-                                        licenseServer = ckData[attribute].__text;
-                                    }
-                                    l += 1;
-                                }
-                                k += 1;
+                            const contentProtection = targetProtectionData[j];
+                            if (contentProtection.laUrl
+                                && contentProtection.laUrl.__prefix
+                                && LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.includes(contentProtection.laUrl.__prefix)
+                                && contentProtection.laUrl.__text) {
+                                licenseServer = contentProtection.laUrl.__text;
                             }
                             j += 1;
                         }
