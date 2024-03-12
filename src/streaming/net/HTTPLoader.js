@@ -209,8 +209,6 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
-
-            _onRequestEnd();
         };
 
         const _onRequestEnd = function (aborted = false) {
