@@ -414,7 +414,7 @@ function HTTPLoader(cfg) {
                     httpRequests.push(delayedRequest.httpRequest);
                     _loadRequest(loader, delayedRequest.httpRequest, delayedRequest.httpResponse);
                 } catch (e) {
-                    delayedRequest.httpRequest.onerror();
+                    delayedRequest.httpRequest.onloadend();
                 }
             }, (requestObject.delayLoadingTime - now));
 
@@ -623,7 +623,7 @@ function HTTPLoader(cfg) {
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            reqData.onloadend = reqData.onerror = reqData.onprogress = undefined;
+            reqData.onloadend = reqData.onprogress = undefined;
             if (reqData.abort) {
                 reqData.abort();
             }

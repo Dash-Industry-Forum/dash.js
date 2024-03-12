@@ -72,12 +72,8 @@ function XHRLoader() {
             httpResponse.statusText = this.statusText;
             httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
             httpResponse.data = this.response;
-            if (httpRequest.customData.onload) {
-                httpRequest.customData.onload();
-            }
         }
         xhr.onloadend = httpRequest.customData.onloadend;
-        xhr.onerror = httpRequest.customData.onerror;
         xhr.onprogress = httpRequest.customData.onprogress;
         xhr.onabort = httpRequest.customData.onabort;
         xhr.ontimeout = httpRequest.customData.ontimeout;

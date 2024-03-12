@@ -111,7 +111,7 @@ function FetchLoader() {
                         httpResponse.url = response.url;
 
                         if (!response.ok) {
-                            httpRequest.customData.onerror();
+                            httpRequest.customData.onloadend();
                         }
 
                         const responseHeaders = {};
@@ -270,9 +270,7 @@ function FetchLoader() {
                         _read(httpRequest, httpResponse, _processResult);
                     })
                     .catch(function (e) {
-                        if (httpRequest.customData.onloadend) {
-                            httpRequest.customData.onloadend(e);
-                        }
+                        httpRequest.customData.onloadend(e);
                     });
             });
     }
