@@ -2,6 +2,7 @@ import CommonEncryption from '../../src/streaming/protection/CommonEncryption.js
 import Base64 from '../../externals/base64.js';
 
 import {expect} from 'chai';
+
 let cpData;
 
 describe('CommonEncryption', () => {
@@ -74,7 +75,7 @@ describe('CommonEncryption', () => {
                 contentProtection: [
                     {
                         schemeIdUri: schemeIdUri,
-                        laurl: {
+                        laUrl: {
                             __prefix: 'dashif',
                             __text: 'license-server-url'
                         }
@@ -83,6 +84,10 @@ describe('CommonEncryption', () => {
             }]
         });
 
+        afterEach(() => {
+            mediaInfo = null;
+        })
+
         it('should return null in case the schemeIdUri does not match', () => {
             const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, 'nomatch');
 
@@ -90,21 +95,21 @@ describe('CommonEncryption', () => {
         });
 
         it('should return null if license server url is empty', () => {
-            mediaInfo[0].contentProtection[0].laurl.__text = '';
+            mediaInfo[0].contentProtection[0].laUrl.__text = '';
             const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri);
 
             expect(result).to.be.null;
         })
 
         it('should return null if wrong prefix', () => {
-            mediaInfo[0].contentProtection[0].laurl.__prefix = 'wrongprefix';
+            mediaInfo[0].contentProtection[0].laUrl.__prefix = 'wrongprefix';
             const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri);
 
             expect(result).to.be.null;
         })
 
         it('should return null if wrong attribute', () => {
-            delete mediaInfo[0].contentProtection[0].laurl;
+            delete mediaInfo[0].contentProtection[0].laUrl;
             const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri);
 
             expect(result).to.be.null;
@@ -116,12 +121,19 @@ describe('CommonEncryption', () => {
             expect(result).to.be.equal('license-server-url');
         })
 
-        it('should return valid license server for dashif:Laurl', () => {
-            delete mediaInfo[0].contentProtection[0].laurl;
-            mediaInfo[0].contentProtection[0].Laurl = { __prefix: 'dashif', __text: 'license-server-url' };
+        it('should return valid license server for clearkey:laurl', () => {
+            mediaInfo[0].contentProtection[0].__prefix = 'clearkey'
             const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri);
 
             expect(result).to.be.equal('license-server-url');
         })
+
+        it('should return valid license server for ck:laurl', () => {
+            mediaInfo[0].contentProtection[0].__prefix = 'ck'
+            const result = CommonEncryption.getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri);
+
+            expect(result).to.be.equal('license-server-url');
+        })
+
     });
 })
