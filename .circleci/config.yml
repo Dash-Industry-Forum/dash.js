@@ -46,9 +46,6 @@ commands:
                     name: Run browserstack with provided access key
                     command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                     background: true
-            -   run:
-                    name: Install Karma CLI
-                    command: npm install -g karma-cli
 
     run_testbuild:
         steps:
@@ -96,7 +93,7 @@ commands:
             -   run:
                     name: Run functional tests <<parameters.browsers>> <<parameters.testconfig>>
                     command:
-                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"<<parameters.testconfig>>\", \"browsers\":\"<<parameters.browsers>>\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"<<parameters.testconfig>>\", \"browsers\":\"<<parameters.browsers>>\"}"
     build_samples:
         # parameters:
         #     samples:
@@ -160,11 +157,11 @@ jobs:
             -   run:
                     name: Run functional tests for one vector (chrome / http)
                     command:
-                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"single\", \"browsers\":\"chrome_custom\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"single\", \"browsers\":\"chrome_custom\"}"
             -   run:
                     name: Run functional tests for smoke vectors (chrome / http)
                     command:
-                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"smoke\", \"browsers\":\"chrome_custom\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"smoke\", \"browsers\":\"chrome_custom\"}"
             - process_test_results
 
     functional-tests-full-part-1:
