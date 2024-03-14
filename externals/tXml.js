@@ -39,7 +39,8 @@
  */
 
 /**
- * Entities that are used in XML
+ * Predefined general entities used in XML
+ * See https://www.w3.org/TR/xml/#sec-predefined-ent
  */
 export const XML_ENTITIES = {
     '&amp;': '&',
@@ -62,9 +63,9 @@ function translateEntities(entitiesList, str) {
     }
 
     for (let i = 1; i < entitySplit.length; i += 2) {
-        const entity = entitySplit[i];
-        if (entitiesList.hasOwnProperty(entity)) {
-            entitySplit[i] = entitiesList[entity];
+        const entityReference = entitySplit[i];
+        if (entitiesList.hasOwnProperty(entityReference)) {
+            entitySplit[i] = entitiesList[entityReference];
         }
     }
 
