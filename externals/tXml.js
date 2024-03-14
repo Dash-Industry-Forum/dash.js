@@ -51,21 +51,44 @@ export const XML_ENTITIES = {
 };
 
 /**
- * Translates XML entities to their respective characters.
+ * Translates XML entities and character references to their respective characters.
  * @param {Object} entitiesList 
  * @param {String} str 
  * @returns {String}
  */
-function translateEntities(entitiesList, str) {
-    const entitySplit = str.split(/(&[a-zA-Z0-9]+;)/);
+function translateEntitiesAndCharacterReferences(entitiesList, str) {
+    const entitySplit = str.split(/(&[#a-zA-Z0-9]+;)/);
     if (entitySplit.length <= 1) { // No entities. Skip the rest of the function.
         return str;
     }
 
     for (let i = 1; i < entitySplit.length; i += 2) {
-        const entityReference = entitySplit[i];
-        if (entitiesList.hasOwnProperty(entityReference)) {
-            entitySplit[i] = entitiesList[entityReference];
+        const reference = entitySplit[i];
+        
+        /*
+         * Check if it is a character reference of the form
+         * /&#[0-9]+;/ - Encoded in decimal, or
+         * /&#x[0-9a-fA-F]+;/ - Encoded in hexadecimal
+         * See https://www.w3.org/TR/xml/#sec-references
+         */
+        if (reference.charAt(1) === '#') {
+            let code;
+            if (reference.charAt(2) === 'x') { // Hexadecimal
+                code = parseInt(reference.substring(3, reference.length - 1), 16);
+            } else { // Decimal
+                code = parseInt(reference.substring(2, reference.length - 1), 10);
+            }
+
+            // Translate into string according to ISO/IEC 10646
+            if (!isNaN(code) && code >= 0 && code <= 0x10FFFF) {
+                entitySplit[i] = String.fromCodePoint(code);
+            }
+        } 
+        /*
+         * Translate entity references using a dictionary.
+         */
+        else if (entitiesList.hasOwnProperty(reference)) {
+            entitySplit[i] = entitiesList[reference];
         }
     }
 
@@ -225,7 +248,7 @@ function translateEntities(entitiesList, str) {
             return parseInt(value);
         }
 
-        let attrValue = translateEntities(XML_ENTITIES, value);
+        let attrValue = translateEntitiesAndCharacterReferences(XML_ENTITIES, value);
         attrMatchers.forEach(matcher => {
             if (matcher.test(tagName, attrName, value)) {
                 attrValue = matcher.converter(value);
@@ -243,7 +266,7 @@ function translateEntities(entitiesList, str) {
         pos = S.indexOf(openBracket, pos) - 1;
         if (pos === -2)
             pos = S.length;
-        return translateEntities(XML_ENTITIES, S.slice(start, pos + 1));
+        return translateEntitiesAndCharacterReferences(XML_ENTITIES, S.slice(start, pos + 1));
     }
     /**
      *    returns text until the first nonAlphabetic letter
