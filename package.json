@@ -17,6 +17,8 @@
     "test-functional": "npm run webpack-build && karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"full\\\"}\"",
     "test-functional-no-build": "karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"full\\\"}\"",
     "test-functional-no-build-smoke": "karma start test/functional/config/karma.functional.conf.cjs --settings \"{\\\"testconfig\\\":\\\"smoke\\\"}\"",
+    "test-functional-selenium": "npm run webpack-build && karma start test/functional/config/karma.functional.seleniumgrid.conf.cjs.js --settings \"{\\\"testconfig\\\":\\\"single\\\"}\"",
+    "test-functional-selenium-no-build": "karma start test/functional/config/karma.functional.seleniumgrid.conf.cjs --settings \"{\\\"testconfig\\\":\\\"single\\\"}\"",
     "prepare": "node githook.cjs",
     "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
   },
@@ -45,6 +47,7 @@
     "karma-junit-reporter": "^2.0.1",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
+    "karma-webdriver-launcher": "^1.0.8",
     "karma-webpack": "^5.0.0",
     "mocha": "^10.1.0",
     "replace-in-file": "^6.2.0",

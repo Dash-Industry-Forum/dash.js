@@ -26,7 +26,7 @@ class DashJsAdapter {
         this.player = dashjs.MediaPlayer().create();
         this.player.updateSettings({
             debug: {
-                logLevel: 3,
+                logLevel: 5,
                 dispatchEvent: true
             }
         })

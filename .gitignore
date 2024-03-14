@@ -193,3 +193,4 @@ build/typings/
 test/unit/results
 # Karma Functional tests
 test/functional/results
+test/functional/config/selenium/jars

@@ -3,30 +3,10 @@ import Constants from '../../src/Constants.js';
 export default function getConfig() {
     return [
         {
-            name: 'Segment Timeline with missing audio segment in MPD for time 0',
-            type: 'vod',
-            url: '/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd',
-            testcases: [Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS],
-            testdata: {
-                gaps: [
-                    {
-                        start: 0,
-                        end: 5.97
-                    }]
-            }
-        },
-        {
-            name: 'Segment Timeline with missing video segment in MPD for time 0',
-            type: 'vod',
-            url: '/base/test/functional/content/gap/video_gap_at_start_timeline.mpd',
-            testcases: [Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS],
-            testdata: {
-                gaps: [
-                    {
-                        start: 0,
-                        end: 6
-                    }]
-            }
+            name: 'DASH-IF Live Sim - Segment Template without manifest updates',
+            type: 'live',
+            url: 'https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd',
+            testcases: [Constants.TESTCASES.CATEGORIES.ALL]
         },
     ]
 }

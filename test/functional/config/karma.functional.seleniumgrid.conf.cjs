@@ -1,6 +1,33 @@
+const yaml = require('js-yaml');
+const fs = require('fs');
+
 module.exports = function (config) {
-    // Find the settings JSON object in the command arguments
+
+    const seleniumConfig =
+        yaml.load(fs.readFileSync('test/functional/selenium/config/grid.conf.yaml', 'utf8'));
+    const browsers = [];
+    const customLaunchers = {};
+    const gridConfig = seleniumConfig.general.gridConfig;
+
     const settings = getSettings()
+    for (const [key, value] of Object.entries(seleniumConfig.browsers)) {
+        if (value.included) {
+            browsers.push(key);
+            customLaunchers[key] = {};
+            customLaunchers[key].base = 'WebDriver';
+            customLaunchers[key].config = gridConfig;
+            customLaunchers[key].browserName = value.browser;
+            customLaunchers[key].platform = value.os;
+            if (value.parameters) {
+                Object.assign(customLaunchers[key], value.parameters);
+            }
+            if (value.version) {
+                customLaunchers[key].version = value.version;
+            }
+        }
+    }
+
+
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -12,15 +39,8 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai', 'webpack'],
 
         plugins: [
-            'karma-webpack',
-            'karma-mocha',
-            'karma-chai',
-            'karma-coverage',
-            'karma-mocha-reporter',
-            'karma-junit-reporter',
-            'karma-chrome-launcher',
-            'karma-firefox-launcher',
-            'karma-htmlfile-reporter'
+            'karma-*',  // default plugins
+            '@*/karma-*', // default scoped plugins
         ],
 
         // list of files / patterns to load in the browser
@@ -33,27 +53,27 @@ module.exports = function (config) {
             { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
         ],
 
+
         // list of files / patterns to exclude
-        // exclude: ['test/vendor/*.js'],
+        exclude: ['test/functional/test/vendor/*.js'],
 
         customContextFile: 'test/functional/view/index.html',
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'html', 'progress', 'junit', 'coverage'],
+        reporters: ['mocha', 'html', 'progress', 'junit'],
+
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             // add webpack as preprocessor
-            'test/functional/test/**/*.js': ['webpack'],
-            'dist/dash.all.debug.js': ['coverage'],
-            'dist/dash.mss.min.js': ['coverage'],
+            'test/functional/test/**/*.js': ['webpack']
         },
 
         junitReporter: {
-            outputDir: 'test/functional/results/test/karma/junit', // results will be saved as $outputDir/$browserName.xml
+            outputDir: 'test/functional/results/test/selenium/junit', // results will be saved as $outputDir/$browserName.xml
             outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
             suite: '', // suite will become the package name attribute in xml testsuite element
             useBrowserName: true, // add browser name to report and classes names
@@ -64,7 +84,7 @@ module.exports = function (config) {
         },
 
         htmlReporter: {
-            outputFile: 'test/functional/results/test/karma/htmlreporter/out.html',
+            outputFile: 'test/functional/results/test/selenium/htmlreporter/out.html',
             pageTitle: 'dash.js',
             subPageTitle: 'Functional Tests',
             groupSuites: true,
@@ -73,18 +93,12 @@ module.exports = function (config) {
             showOnlyFailed: false
         },
 
-        // optionally, configure the reporter
-        coverageReporter: {
-            type: 'html',
-            dir: 'test/functional/results/karma/coverage/'
-        },
-
         webpack: {},
 
         client: {
             useIframe: false,
             mocha: {
-                timeout: 180000
+                timeout: 90000
             },
             settings
         },
@@ -92,15 +106,18 @@ module.exports = function (config) {
         // web server port
         port: 9876,
 
+        protocol: 'http',
+
+        //hostname: '194.95.174.67',
+        //hostname: '10.147.67.104',
+        hostname: gridConfig.hostname,
 
         // enable / disable colors in the output (reporters and logs)
         colors: true,
 
-
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
-
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
@@ -109,18 +126,9 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['chrome_custom'],
+        browsers,
 
-        customLaunchers: {
-            chrome_custom: {
-                base: 'Chrome',
-                flags: ['--disable-web-security', '--autoplay-policy=no-user-gesture-required', '--disable-popup-blocking']
-            },
-            firefox_custom: {
-                base: 'Firefox',
-                prefs: {}
-            }
-        },
+        customLaunchers,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
@@ -128,7 +136,7 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 1
+        concurrency: 20
     })
 }
 
