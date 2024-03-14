@@ -8,7 +8,7 @@ import AbrControllerMock from './mocks/AbrControllerMock.js';
 import DashMetricsMock from './mocks/DashMetricsMock.js';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from './mocks/ThroughputControllerMock.js';
-import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock';
+import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock.js';
 import {decodeCmcd} from '@svta/common-media-library';
 
 import {expect} from 'chai';
@@ -28,8 +28,8 @@ describe('CmcdModel', function () {
     let abrControllerMock;
     let dashMetricsMock = new DashMetricsMock();
     let playbackControllerMock = new PlaybackControllerMock();
-    let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
     const throughputControllerMock = new ThroughputControllerMock();
+    let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
 
     let settings = Settings(context).getInstance();
 
@@ -53,8 +53,8 @@ describe('CmcdModel', function () {
                 abrController: abrControllerMock,
                 dashMetrics: dashMetricsMock,
                 playbackController: playbackControllerMock,
-                serviceDescriptionController: serviceDescriptionControllerMock,
                 throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
             });
         });
 
@@ -471,7 +471,6 @@ describe('CmcdModel', function () {
                     let headers = cmcdModel.getHeaderParameters(request);
                     expect(headers).to.have.property(OBJECT_HEADER_NAME);
                     expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                    expect(headers).to.have.property(STATUS_HEADER_NAME);
                     expect(headers).to.have.property(SESSION_HEADER_NAME);
                 });
     
@@ -488,7 +487,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': { }
+                                CMCDParameters: { 
+                                    version: 1,
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                }
                             }
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
@@ -496,7 +498,6 @@ describe('CmcdModel', function () {
                         let headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
                     
@@ -510,8 +511,10 @@ describe('CmcdModel', function () {
                         
                         serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': '*'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: '*',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -523,7 +526,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
     
                         request = {
@@ -532,7 +534,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
     
                         request = {
@@ -541,7 +542,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
     
                         request = {
@@ -550,7 +550,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
     
                         request = {
@@ -559,7 +558,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
                     });
@@ -574,14 +572,19 @@ describe('CmcdModel', function () {
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
                                 'CMCDParameters': {
-                                    'includeInRequests': 'mdp xlink steering'
+                                    version: 1,
+                                    includeInRequests: 'mdp xlink steering',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
                     
                         let headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.equals(null);
+                        expect(headers[OBJECT_HEADER_NAME]).to.be.empty;
+                        expect(headers[REQUEST_HEADER_NAME]).to.be.empty;
+                        expect(headers[STATUS_HEADER_NAME]).to.be.empty;
+                        expect(headers[SESSION_HEADER_NAME]).to.be.empty;
                     });
     
                     it('should return cmcd data if includeInRequests include segment and type is segment', function () {
@@ -593,7 +596,9 @@ describe('CmcdModel', function () {
                         serviceDescriptionSettings = {
                             clientDataReporting: {
                                 'CMCDParameters': {
-                                    'includeInRequests': 'segment'
+                                    version: 1,
+                                    includeInRequests: 'segment',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -606,7 +611,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
     
                         request = {
@@ -616,7 +620,6 @@ describe('CmcdModel', function () {
                         headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
     
@@ -632,7 +635,9 @@ describe('CmcdModel', function () {
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
                                 'CMCDParameters': {
-                                    'includeInRequests': 'mpd'
+                                    version: 1,
+                                    includeInRequests: 'mpd',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -640,8 +645,6 @@ describe('CmcdModel', function () {
                     
                         let headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
-                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
     
@@ -657,7 +660,9 @@ describe('CmcdModel', function () {
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
                                 'CMCDParameters': {
-                                    'includeInRequests': 'xlink'
+                                    version: 1,
+                                    includeInRequests: 'xlink',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -665,11 +670,8 @@ describe('CmcdModel', function () {
                     
                         let headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
-                        expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
-    
                     it('should return cmcd data if includeInRequests include steering and type is steering', function () {
                         const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
                         const MEDIA_TYPE = 'video';
@@ -681,8 +683,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': 'steering'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: 'steering',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -691,10 +695,8 @@ describe('CmcdModel', function () {
                         let headers = cmcdModel.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
-                        expect(headers).to.have.property(STATUS_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
-
                 });
 
             })
@@ -1153,7 +1155,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': { }
+                                CMCDParameters: { 
+                                    version: 1,
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                }
                             }
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
@@ -1173,8 +1178,10 @@ describe('CmcdModel', function () {
                         
                         serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': '*'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: '*',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1225,8 +1232,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': 'mdp xlink steering'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: 'mdp xlink steering',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1235,7 +1244,7 @@ describe('CmcdModel', function () {
                         let parameters = cmcdModel.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
-                        expect(parameters.value).to.equals(null);
+                        expect(parameters.value).to.be.empty;
                     });
     
                     it('should return cmcd data if includeInRequests include segment and type is segment', function () {
@@ -1246,8 +1255,11 @@ describe('CmcdModel', function () {
                     
                         serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': 'segment'
+
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: 'segment',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1284,7 +1296,9 @@ describe('CmcdModel', function () {
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
                                 'CMCDParameters': {
-                                    'includeInRequests': 'mpd'
+                                    version: 1,
+                                    includeInRequests: 'mpd',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1307,8 +1321,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': 'xlink'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: 'xlink',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1319,7 +1335,7 @@ describe('CmcdModel', function () {
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
                     });
-    
+
                     it('should return cmcd data if includeInRequests include steering and type is steering', function () {
                         const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
                         const MEDIA_TYPE = 'video';
@@ -1331,8 +1347,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
-                                    'includeInRequests': 'steering'
+                                CMCDParameters: {
+                                    version: 1,
+                                    includeInRequests: 'steering',
+                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
                                 }
                             }
                         }
@@ -1343,14 +1361,13 @@ describe('CmcdModel', function () {
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
                     });
-    
                 })
             });
         });
 
         describe('applyCMCDParameters', () => {
             it('should ignore service description cmcd configuration when applyCMCDParameters is false', function () {
-                const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
+                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
                     
                 let request = {
@@ -1388,7 +1405,7 @@ describe('CmcdModel', function () {
             });
 
             it('should ignore player cmcd configuration when applyCMCDParameters is true', function () {
-                const REQUEST_TYPE = HTTPRequest.CONTENT_STEERING_TYPE;
+                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
                     
                 let request = {

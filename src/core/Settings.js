@@ -848,7 +848,7 @@ import Events from './events/Events.js';
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  * 
- * If not specified this value defaults to ['mpd', 'segment'].
+ * If not specified this value defaults to ['mpd', 'segment', 'other'].
  */
 
 /**
@@ -1274,7 +1274,7 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
-                includeInRequests: ['mpd', 'segment']
+                includeInRequests: ['mpd', 'segment', 'other']
             },
             cmsd: {
                 enabled: false,

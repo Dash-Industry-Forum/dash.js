@@ -3,11 +3,11 @@ import Errors from '../../src/core/errors/Errors.js';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler.js';
 import DashMetrics from '../../src/dash/DashMetrics.js';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
-import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock';
+import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock.js';
 import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest.js';
 import Settings from '../../src/core/Settings.js';
-import ClientDataReportingModel from '../../src/streaming/models/ClientDataReportingModel';
-import CmcdModel from '../../src/streaming/models/CmcdModel';
+import ClientDataReportingModel from '../../src/streaming/models/ClientDataReportingModel.js';
+import CmcdModel from '../../src/streaming/models/CmcdModel.js';
 
 
 import {expect} from 'chai';

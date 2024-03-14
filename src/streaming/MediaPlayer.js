@@ -52,7 +52,7 @@ import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
 import VideoModel from './models/VideoModel.js';
 import CmcdModel from './models/CmcdModel.js';
 import CmsdModel from './models/CmsdModel.js';
-import ClientDataReportingModel from './models/ClientDataReportingModel';
+import ClientDataReportingModel from './models/ClientDataReportingModel.js';
 import DOMStorage from './utils/DOMStorage.js';
 import Debug from './../core/Debug.js';
 import Errors from './../core/errors/Errors.js';

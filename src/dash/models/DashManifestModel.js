@@ -50,7 +50,7 @@ import Errors from '../../core/errors/Errors.js';
 import MpdLocation from '../vo/MpdLocation.js';
 import PatchLocation from '../vo/PatchLocation.js';
 import ContentProtection from '../vo/ContentProtection.js';
-import ClientDataReporting from '../vo/ClientDataReporting';
+import ClientDataReporting from '../vo/ClientDataReporting.js';
 
 function DashManifestModel() {
     let instance,

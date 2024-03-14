@@ -1,7 +1,9 @@
-import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock';
-import ClientDataReportingModel from '../../src/streaming/models/ClientDataReportingModel';
+import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock.js';
+import ClientDataReportingModel from '../../src/streaming/models/ClientDataReportingModel.js';
+import { HTTPRequest } from '../../src/streaming/vo/metrics/HTTPRequest.js';
 
-const expect = require('chai').expect;
+import { expect } from 'chai';
+
 const context = {};
 
 describe('ClientDataReportingModel', function () {
@@ -20,7 +22,7 @@ describe('ClientDataReportingModel', function () {
         it('serviceLocationIncluded returns true when the filter is not present in manifest', function () {
             const serviceLocation='test-location';
 
-            const result = clientDataReportingModel.serviceLocationIncluded(serviceLocation);
+            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -28,7 +30,7 @@ describe('ClientDataReportingModel', function () {
         it('adaptationSetIncluded returns true when the filter is not present in manifest', function () {
             const adaptationId='1';
 
-            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+            const result = clientDataReportingModel.adaptationSetIncluded(HTTPRequest.MPD_TYPE, adaptationId);
 
             expect(result).to.equal(true);
         });
@@ -46,7 +48,7 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(serviceLocation);
+            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -77,7 +79,7 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(serviceLocation);
+            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(false);
         });

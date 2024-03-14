@@ -1513,7 +1513,7 @@ describe('DashManifestModel', function () {
 
             it('should return client data reporting from manifest', () => {
                 const manifestData = {
-                    ServiceDescription:{
+                    ServiceDescription:[{
                         'ClientDataReporting':{
                             'CMCDParameters': {
 
@@ -1521,17 +1521,7 @@ describe('DashManifestModel', function () {
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
                         },
-                    },
-                    ServiceDescription_asArray:
-                        [{
-                            'ClientDataReporting':{
-                                'CMCDParameters': {
-
-                                },
-                                'serviceLocations': 'cdn-a cdn-b',
-                                'adaptationSets': 'test1 test2'
-                            },
-                        }],
+                    }],
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
                 const clientDataReporting = data[0].clientDataReporting;
@@ -1546,7 +1536,7 @@ describe('DashManifestModel', function () {
                 const mode = 'query';
                 const sessionID = 2;
                 const manifestData = {
-                    ServiceDescription:{
+                    ServiceDescription:[{
                         'ClientDataReporting':{
                             'CMCDParameters': {
                                 'contentID':contentID,
@@ -1558,21 +1548,7 @@ describe('DashManifestModel', function () {
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
                         },
-                    },
-                    ServiceDescription_asArray:
-                        [{
-                            'ClientDataReporting':{
-                                'CMCDParameters': {
-                                    'contentID':contentID,
-                                    'includeInRequests':includeInRequests,
-                                    'keys':keys,
-                                    'mode':mode,
-                                    'sessionID':sessionID,
-                                },
-                                'serviceLocations': 'cdn-a cdn-b',
-                                'adaptationSets': 'test1 test2'
-                            },
-                        }],
+                    }],
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
                 const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
@@ -1592,7 +1568,7 @@ describe('DashManifestModel', function () {
                 const serviceLocations = 'cdn-a cdn-b';
                 const adaptationSets = 'test1 test2';
                 const manifestData = {
-                    ServiceDescription:{
+                    ServiceDescription:[{
                         'ClientDataReporting':{
                             'CMCDParameters': {
                                 'contentID':contentID,
@@ -1604,21 +1580,7 @@ describe('DashManifestModel', function () {
                             'serviceLocations': serviceLocations,
                             'adaptationSets': adaptationSets
                         },
-                    },
-                    ServiceDescription_asArray:
-                        [{
-                            'ClientDataReporting':{
-                                'CMCDParameters': {
-                                    'contentID':contentID,
-                                    'includeInRequests':includeInRequests,
-                                    'keys':keys,
-                                    'mode':mode,
-                                    'sessionID':sessionID,
-                                },
-                                'serviceLocations': serviceLocations,
-                                'adaptationSets': adaptationSets
-                            },
-                        }],
+                    }],
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
                 const CMCDParameters = data[0].clientDataReporting.CMCDParameters;

@@ -235,9 +235,10 @@ function CmcdModel() {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
         if (cmcdParameters.version) {
-            if (!cmcdParameters.includeInRequests)
+            enabledRequests = cmcdParameters.includeInRequests?.split(' ') ?? [CMCD_ALL_REQUESTS];
+            if (!enabledRequests || enabledRequests.some(k => k === CMCD_ALL_REQUESTS)) {
                 return true
-            enabledRequests = cmcdParameters.includeInRequests.split(' ');
+            }
         }
 
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
@@ -255,12 +256,12 @@ function CmcdModel() {
         return true;
     }
 
-    function _checkAvailableKeys(cmcdParameters) {
+    function _checkAvailableKeys(cmcdParameters){
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
         const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
-        if (invalidKeys.length == enabledCMCDKeys.length) {
+        if (invalidKeys.length == enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
             logger.error(`None of the keys are implemented.`);
             return false;
         }
@@ -305,6 +306,7 @@ function CmcdModel() {
             [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
             [HTTPRequest.MPD_TYPE]: 'mpd',
             [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+            [HTTPRequest.OTHER_TYPE]: 'other',
         };
 
         return includeInRequestsArray.some(t => filtersTypes[type] === t);
