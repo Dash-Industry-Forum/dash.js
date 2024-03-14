@@ -1,11 +1,11 @@
-import EventController from '../../src/streaming/controllers/EventController';
-import EventBus from '../../src/core/EventBus';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
-import Settings from '../../src/core/Settings';
+import EventController from '../../src/streaming/controllers/EventController.js';
+import EventBus from '../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import ManifestUpdaterMock from './mocks/ManifestUpdaterMock.js';
+import Settings from '../../src/core/Settings.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 

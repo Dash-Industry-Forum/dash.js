@@ -1,29 +1,29 @@
-import StreamController from '../../src/streaming/controllers/StreamController';
-import Events from '../../src/core/events/Events';
-import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
-import EventBus from '../../src/core/EventBus';
-import Settings from '../../src/core/Settings';
-import Constants from '../../src/streaming/constants/Constants';
+import StreamController from '../../src/streaming/controllers/StreamController.js';
+import Events from '../../src/core/events/Events.js';
+import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents.js';
+import EventBus from '../../src/core/EventBus.js';
+import Settings from '../../src/core/Settings.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock.js';
+import ManifestLoaderMock from './mocks/ManifestLoaderMock.js';
+import ManifestModelMock from './mocks/ManifestModelMock.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import ProtectionControllerMock from './mocks/ProtectionControllerMock.js';
+import VideoModelMock from './mocks/VideoModelMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import URIFragmentModelMock from './mocks/URIFragmentModelMock.js';
+import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock.js';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock.js';
+import TextControllerMock from './mocks/TextControllerMock.js';
+import ManifestUpdaterMock from './mocks/ManifestUpdaterMock.js';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-import AdapterMock from './mocks/AdapterMock';
-import BaseURLControllerMock from './mocks/BaseURLControllerMock';
-import ManifestLoaderMock from './mocks/ManifestLoaderMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import ProtectionControllerMock from './mocks/ProtectionControllerMock';
-import VideoModelMock from './mocks/VideoModelMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import URIFragmentModelMock from './mocks/URIFragmentModelMock';
-import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
-import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
-import TextControllerMock from './mocks/TextControllerMock';
-import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
-
-const chai = require('chai');
-const spies = require('chai-spies');
-const sinon = require('sinon');
+import chai from 'chai';
+import spies from 'chai-spies';
+import sinon from 'sinon';
 
 chai.use(spies);
 const expect = chai.expect;
@@ -48,6 +48,7 @@ const uriFragmentModelMock = new URIFragmentModelMock();
 const capabilitiesFilterMock = new CapabilitiesFilterMock();
 const textControllerMock = new TextControllerMock();
 const contentSteeringControllerMock = new ContentSteeringControllerMock();
+const manifestUpdaterMock = new ManifestUpdaterMock();
 
 Events.extend(ProtectionEvents);
 
@@ -478,5 +479,36 @@ describe('StreamController', function () {
                 });
             });
         });
+    });
+
+    describe('refreshManifest', function () {
+        beforeEach(function () {
+            streamController.setConfig({
+                manifestUpdater: manifestUpdaterMock
+            });
+            sinon.spy(manifestUpdaterMock, 'refreshManifest');
+            sinon.stub(manifestUpdaterMock, 'getIsUpdating');
+        });
+
+
+        afterEach(function () {
+            manifestUpdaterMock.refreshManifest.restore();
+            manifestUpdaterMock.getIsUpdating.restore();
+        });
+
+
+        it('calls refreshManifest on ManifestUpdater', function () {
+            streamController.refreshManifest();
+
+            expect(manifestUpdaterMock.refreshManifest.calledOnce).to.be.true;
+        });
+
+        it('does not call refreshManifest on ManifrstUpdater if it is already updating', function () {
+            manifestUpdaterMock.getIsUpdating.returns(true)
+
+            streamController.refreshManifest();
+
+            expect(manifestUpdaterMock.refreshManifest.notCalled).to.be.true;
+        })
     });
 });

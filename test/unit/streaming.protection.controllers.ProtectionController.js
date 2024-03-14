@@ -1,15 +1,13 @@
-import ProtectionController from '../../src/streaming/protection/controllers/ProtectionController';
-import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
-import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
-import Constants from '../../src/streaming/constants/Constants';
+import ProtectionController from '../../src/streaming/protection/controllers/ProtectionController.js';
+import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents.js';
+import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import EventBus from '../../src/core/EventBus.js';
+import DebugMock from './mocks/DebugMock.js';
+import ProtectionKeyControllerMock from './mocks/ProtectionKeyControllerMock.js';
+import ProtectionModelMock from './mocks/ProtectionModelMock.js';
 
-import EventBus from '../../src/core/EventBus';
-import DebugMock from './mocks/DebugMock';
-
-import ProtectionKeyControllerMock from './mocks/ProtectionKeyControllerMock';
-import ProtectionModelMock from './mocks/ProtectionModelMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 let protectionController;

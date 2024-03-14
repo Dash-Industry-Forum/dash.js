@@ -1,8 +1,7 @@
-import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector';
+import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 const objectsHelper = new ObjectsHelper();

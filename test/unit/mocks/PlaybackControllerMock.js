@@ -1,4 +1,4 @@
-import StreamControllerMock from './StreamControllerMock';
+import StreamControllerMock from './StreamControllerMock.js';
 
 class PlaybackControllerMock {
 

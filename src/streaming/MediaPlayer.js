@@ -28,63 +28,63 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import cea608parser from '../../externals/cea608-parser';
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import MetricsConstants from './constants/MetricsConstants';
-import PlaybackController from './controllers/PlaybackController';
-import StreamController from './controllers/StreamController';
-import GapController from './controllers/GapController';
-import CatchupController from './controllers/CatchupController';
-import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController';
-import ContentSteeringController from '../dash/controllers/ContentSteeringController';
-import MediaController from './controllers/MediaController';
-import BaseURLController from './controllers/BaseURLController';
-import ManifestLoader from './ManifestLoader';
-import ErrorHandler from './utils/ErrorHandler';
-import Capabilities from './utils/Capabilities';
-import CapabilitiesFilter from './utils/CapabilitiesFilter';
-import RequestModifier from './utils/RequestModifier';
-import URIFragmentModel from './models/URIFragmentModel';
-import ManifestModel from './models/ManifestModel';
-import MediaPlayerModel from './models/MediaPlayerModel';
-import AbrController from './controllers/AbrController';
-import SchemeLoaderFactory from './net/SchemeLoaderFactory';
-import VideoModel from './models/VideoModel';
-import CmcdModel from './models/CmcdModel';
-import CmsdModel from './models/CmsdModel';
+import cea608parser from '../../externals/cea608-parser.js';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import StreamController from './controllers/StreamController.js';
+import GapController from './controllers/GapController.js';
+import CatchupController from './controllers/CatchupController.js';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
+import MediaController from './controllers/MediaController.js';
+import BaseURLController from './controllers/BaseURLController.js';
+import ManifestLoader from './ManifestLoader.js';
+import ErrorHandler from './utils/ErrorHandler.js';
+import Capabilities from './utils/Capabilities.js';
+import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
+import URIFragmentModel from './models/URIFragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import AbrController from './controllers/AbrController.js';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
+import VideoModel from './models/VideoModel.js';
+import CmcdModel from './models/CmcdModel.js';
+import CmsdModel from './models/CmsdModel.js';
 import ClientDataReportingModel from './models/ClientDataReportingModel';
-import DOMStorage from './utils/DOMStorage';
-import Debug from './../core/Debug';
-import Errors from './../core/errors/Errors';
-import EventBus from './../core/EventBus';
-import Events from './../core/events/Events';
-import MediaPlayerEvents from './MediaPlayerEvents';
-import FactoryMaker from '../core/FactoryMaker';
-import Settings from '../core/Settings';
-import {getVersionString} from '../core/Version';
+import DOMStorage from './utils/DOMStorage.js';
+import Debug from './../core/Debug.js';
+import Errors from './../core/errors/Errors.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Settings from '../core/Settings.js';
+import {getVersionString} from '../core/Version.js';
 
 //Dash
-import SegmentBaseController from '../dash/controllers/SegmentBaseController';
-import DashAdapter from '../dash/DashAdapter';
-import DashMetrics from '../dash/DashMetrics';
-import TimelineConverter from '../dash/utils/TimelineConverter';
+import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
+import DashAdapter from '../dash/DashAdapter.js';
+import DashMetrics from '../dash/DashMetrics.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import {
     HTTPRequest
-} from './vo/metrics/HTTPRequest';
-import BASE64 from '../../externals/base64';
+} from './vo/metrics/HTTPRequest.js';
+import BASE64 from '../../externals/base64.js';
 import ISOBoxer from 'codem-isoboxer';
-import DashJSError from './vo/DashJSError';
-import {checkParameterType} from './utils/SupervisorTools';
-import ManifestUpdater from './ManifestUpdater';
-import URLUtils from '../streaming/utils/URLUtils';
-import BoxParser from './utils/BoxParser';
-import TextController from './text/TextController';
-import CustomParametersModel from './models/CustomParametersModel';
+import DashJSError from './vo/DashJSError.js';
+import {checkParameterType} from './utils/SupervisorTools.js';
+import ManifestUpdater from './ManifestUpdater.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import BoxParser from './utils/BoxParser.js';
+import TextController from './text/TextController.js';
+import CustomParametersModel from './models/CustomParametersModel.js';
+import ThroughputController from './controllers/ThroughputController.js';
 
 /**
  * The media types
- * @typedef {("video" | "audio" | "text" | "image")} MediaType
+ * @typedef {('video' | 'audio' | 'text' | 'image')} MediaType
  */
 
 /**
@@ -119,6 +119,11 @@ function MediaPlayer() {
      * @inner
      */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    /**
+     * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
+     * @inner
+     */
+    const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -135,6 +140,7 @@ function MediaPlayer() {
         autoPlay,
         providedStartTime,
         abrController,
+        throughputController,
         schemeLoaderFactory,
         timelineConverter,
         mediaController,
@@ -218,6 +224,9 @@ function MediaPlayer() {
         if (config.gapController) {
             gapController = config.gapController;
         }
+        if (config.throughputController) {
+            throughputController = config.throughputController
+        }
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
@@ -292,11 +301,11 @@ function MediaPlayer() {
 
             // init some controllers and models
             timelineConverter = TimelineConverter(context).getInstance();
+            if (!throughputController) {
+                throughputController = ThroughputController(context).getInstance();
+            }
             if (!abrController) {
                 abrController = AbrController(context).getInstance();
-                abrController.setConfig({
-                    settings: settings
-                });
             }
 
             if (!schemeLoaderFactory) {
@@ -383,7 +392,6 @@ function MediaPlayer() {
                     eventBus: eventBus,
                     debug: debug,
                     boxParser: BoxParser(context).getInstance(),
-                    requestModifier: RequestModifier(context).getInstance(),
                     errors: Errors
                 });
             }
@@ -392,7 +400,9 @@ function MediaPlayer() {
             mediaController.setConfig({
                 domStorage,
                 settings,
-                customParametersModel
+                mediaPlayerModel,
+                customParametersModel,
+                videoModel
             });
 
             mediaPlayerModel.setConfig({
@@ -407,8 +417,8 @@ function MediaPlayer() {
                 mediaPlayerModel,
                 manifestModel,
                 serviceDescriptionController,
-                eventBus,
-                requestModifier: RequestModifier(context).getInstance()
+                throughputController,
+                eventBus
             })
 
             restoreDefaultUTCTimingSources();
@@ -947,100 +957,6 @@ function MediaPlayer() {
         return _getAsUTC(duration());
     }
 
-    /*
-    ---------------------------------------------------------------------------
-
-        AUTO BITRATE
-
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     * It calls getMaxAllowedIndexFor internally
-     *
-     * @param {MediaType} type - 'video' or 'audio'
-     * @memberof module:MediaPlayer
-     * @returns {BitrateInfo | null}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getTopBitrateInfoFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        return abrController.getTopBitrateInfoFor(type);
-    }
-
-    /**
-     * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
-     * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
-     * type, thumbnails, there is no ABR algorithm and quality is set manually.
-     *
-     * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
-     * @returns {number} the quality index, 0 corresponding to the lowest bitrate
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getQualityFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        if (type === Constants.IMAGE) {
-            const activeStream = getActiveStream();
-            if (!activeStream) {
-                return -1;
-            }
-            const thumbnailController = activeStream.getThumbnailController();
-
-            return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
-        }
-        return abrController.getQualityFor(type);
-    }
-
-    /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
-     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
-     *
-     * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
-     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function setQualityFor(type, value, forceReplace = false) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR;
-        }
-        if (type === Constants.IMAGE) {
-            const activeStream = getActiveStream();
-            if (!activeStream) {
-                return;
-            }
-            const thumbnailController = activeStream.getThumbnailController();
-            if (thumbnailController) {
-                thumbnailController.setTrackByIndex(value);
-            }
-        }
-        abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { forceReplace });
-    }
-
-    /**
-     * Update the video element size variables
-     * Should be called on window resize (or any other time player is resized). Fullscreen does trigger a window resize event.
-     *
-     * Once windowResizeEventCalled = true, abrController.checkPortalSize() will use element size variables rather than querying clientWidth every time.
-     *
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function updatePortalSize() {
-        abrController.setElementSize();
-        abrController.setWindowResizeEventCalled(true);
-    }
 
     /*
     ---------------------------------------------------------------------------
@@ -1215,18 +1131,17 @@ function MediaPlayer() {
     }
 
     /**
-     * Returns the average throughput computed in the ABR logic
+     * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
      * @return {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type) {
-        const throughputHistory = abrController.getThroughputHistory();
-        const isDynamic = playbackController.getIsDynamic();
-
-        return throughputHistory ? throughputHistory.getAverageThroughput(type, isDynamic) : 0;
+    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
     }
 
     /**
@@ -1480,23 +1395,129 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
-        STREAM AND TRACK MANAGEMENT
+        QUALITY AND TRACK MANAGEMENT
 
     ---------------------------------------------------------------------------
     */
+
+    /**
+     * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
+     * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
+     * type, thumbnails, there is no ABR algorithm and quality is set manually.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
+     * @returns {Representation | null} the quality index, 0 corresponding to the lowest bitrate
+     * @memberof module:MediaPlayer
+     * @see {@link module:MediaPlayer#getCurrentRepresentationForType getCurrentRepresentationForType()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function getCurrentRepresentationForType(type) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return null;
+        }
+
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return null;
+        }
+
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            return !thumbnailController ? -1 : thumbnailController.getCurrentTrack();
+        }
+
+        return activeStream.getCurrentRepresentationForType(type);
+    }
+
+    /**
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image'
+     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
+     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function setRepresentationForTypeById(type, id, forceReplace = false) {
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return;
+        }
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return;
+        }
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            if (thumbnailController) {
+                thumbnailController.setTrackById(id);
+            }
+        } else {
+            const representation = activeStream.getRepresentationForTypeById(type, id);
+            if (representation) {
+                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+            }
+        }
+    }
+
+    /**
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     *
+     * @param {MediaType} type - 'video', 'audio' or 'image'
+     * @param {number} value - the quality index, 0 corresponding to the lowest absolute index
+     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function setRepresentationForTypeByIndex(type, index, forceReplace = false) {
+        if (type !== Constants.IMAGE && type !== Constants.VIDEO && type !== Constants.AUDIO) {
+            return;
+        }
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+        const activeStream = getActiveStream();
+        if (!activeStream) {
+            return;
+        }
+        if (type === Constants.IMAGE) {
+            const thumbnailController = activeStream.getThumbnailController();
+            if (thumbnailController) {
+                thumbnailController.setTrackByIndex(index);
+            }
+        } else {
+            const representation = activeStream.getRepresentationForTypeByIndex(type, index);
+            if (representation) {
+                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+            }
+        }
+    }
+
     /**
      * @param {MediaType} type
+     * @param {string} streamId
      * @returns {Array}
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function getBitrateInfoListFor(type) {
+    function getRepresentationsByType(type, streamId = null) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        let stream = getActiveStream();
-        return stream ? stream.getBitrateListFor(type) : [];
+        let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
+        return stream ? stream.getRepresentationsByType(type) : [];
     }
 
     /**
@@ -1576,10 +1597,11 @@ function MediaPlayer() {
      * is following: <br />
      * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
      *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
+     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
+     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
+     * }
      *
      * @param {MediaType} type
      * @param {Object} value
@@ -1591,7 +1613,8 @@ function MediaPlayer() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setInitialSettings(type, value);
+        let sanitizedValue = _sanitizeSettings(value);
+        mediaController.setInitialSettings(type, sanitizedValue);
     }
 
     /**
@@ -1673,6 +1696,50 @@ function MediaPlayer() {
     function resetCustomInitialTrackSelectionFunction() {
         customParametersModel.resetCustomInitialTrackSelectionFunction(null);
 
+    }
+
+    /**
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the request interceptor callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addRequestInterceptor(interceptor) {
+        customParametersModel.addRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Removes a request interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeRequestInterceptor(interceptor) {
+        customParametersModel.removeRequestInterceptor(interceptor);
+    }
+
+    /**
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the response interceptor
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addResponseInterceptor(interceptor) {
+        customParametersModel.addResponseInterceptor(interceptor);
+    }
+
+    /**
+     * Removes a response interceptor.
+     * @param {function} interceptor - the request interceptor
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function removeResponseInterceptor(interceptor) {
+        customParametersModel.removeResponseInterceptor(interceptor);
     }
 
     /**
@@ -1912,6 +1979,42 @@ function MediaPlayer() {
     }
 
     /**
+     *  Reload the manifest that the player is currently using.
+     *
+     *  @memberof module:MediaPlayer
+     *  @param {function} callback - A Callback function provided when retrieving manifests
+     *  @instance
+     */
+    function refreshManifest(callback) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!isReady()) {
+            return callback(null, SOURCE_NOT_ATTACHED_ERROR);
+        }
+
+        let self = this;
+
+        if (typeof callback === 'function') {
+            const handler = function (e) {
+                eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+
+                if (e.error) {
+                    callback(null, e.error);
+                    return;
+                }
+
+                callback(e.manifest);
+            };
+
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        }
+
+        streamController.refreshManifest();
+    }
+
+    /**
      * Get the current settings object being used on the player.
      * @returns {PlayerSettings} The settings object being used.
      *
@@ -2116,6 +2219,7 @@ function MediaPlayer() {
         serviceDescriptionController.reset();
         contentSteeringController.reset();
         abrController.reset();
+        throughputController.reset();
         mediaController.reset();
         segmentBaseController.reset();
         if (protectionController) {
@@ -2146,6 +2250,7 @@ function MediaPlayer() {
                 manifestModel,
                 adapter,
                 mediaController,
+                baseURLController,
                 videoModel,
                 settings
             });
@@ -2178,6 +2283,7 @@ function MediaPlayer() {
             serviceDescriptionController,
             contentSteeringController,
             abrController,
+            throughputController,
             mediaController,
             settings,
             baseURLController,
@@ -2212,11 +2318,17 @@ function MediaPlayer() {
             settings
         })
 
+        throughputController.setConfig({
+            settings,
+            playbackController
+        })
+
         abrController.setConfig({
             streamController,
             domStorage,
             mediaPlayerModel,
             customParametersModel,
+            throughputController,
             cmsdModel,
             dashMetrics,
             adapter,
@@ -2229,6 +2341,7 @@ function MediaPlayer() {
             dashMetrics,
             playbackController,
             serviceDescriptionController,
+            throughputController,
         });
 
         clientDataReportingModel.setConfig({
@@ -2238,6 +2351,8 @@ function MediaPlayer() {
         cmsdModel.setConfig({});
 
         // initializes controller
+        mediaController.initialize();
+        throughputController.initialize();
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         textController.initialize();
@@ -2255,7 +2370,6 @@ function MediaPlayer() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler,
             settings: settings
         });
@@ -2422,6 +2536,38 @@ function MediaPlayer() {
         return utcValue;
     }
 
+    function _sanitizeSettings(value) {
+        const defaults = settings.get().streaming.defaultSchemeIdUri;
+        let output = {};
+
+        function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
+            let out = {};
+            if (val) {
+                if (val instanceof Array) {
+                    throw ARRAY_NOT_SUPPORTED_ERROR;
+                } else if (val instanceof Object) {
+                    out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
+                    out.value = val.value ? val.value : '';
+                } else {
+                    out.schemeIdUri = defaultSchemeIdUri;
+                    out.value = val;
+                    logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
+                }
+                return out;
+            }
+            return null;
+        }
+
+        if (value.lang) output.lang = value.lang;
+        if (value.index) output.index = value.index;
+        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+
+        return output;
+    }
+
     /**
      *
      * @private
@@ -2446,109 +2592,114 @@ function MediaPlayer() {
 
         if (!playbackInitialized && isReady()) {
             playbackInitialized = true;
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_INITIALIZED)
             logger.info('Playback Initialized');
         }
     }
 
     instance = {
-        initialize,
-        setConfig,
-        on,
-        off,
-        extend,
-        attachView,
+        addABRCustomRule,
+        addRequestInterceptor,
+        addResponseInterceptor,
+        addUTCTimingSource,
+        attachProtectionController,
         attachSource,
-        isReady,
-        preload,
-        play,
-        isPaused,
-        pause,
-        isSeeking,
-        isDynamic,
-        getLowLatencyModeEnabled,
-        seek,
-        seekToOriginalLive,
-        setPlaybackRate,
-        getPlaybackRate,
-        setMute,
-        isMuted,
-        setVolume,
-        getVolume,
-        time,
+        attachTTMLRenderingDiv,
+        attachView,
+        attachVttRenderingDiv,
+        clearDefaultUTCTimingSources,
+        convertToTimeCode,
+        destroy,
         duration,
-        timeAsUTC,
         durationAsUTC,
+        enableForcedTextStreaming,
+        enableText,
+        extend,
+        formatUTC,
+        getABRCustomRules,
         getActiveStream,
-        getDVRWindowSize,
-        getDVRSeekOffset,
+        getAutoPlay,
         getAvailableBaseUrls,
         getAvailableLocations,
-        getTargetLiveDelay,
-        convertToTimeCode,
-        formatUTC,
-        getVersion,
-        getDebug,
+        getAverageThroughput,
         getBufferLength,
-        getTTMLRenderingDiv,
-        getVideoElement,
-        getSource,
-        updateSource,
         getCurrentLiveLatency,
-        getTopBitrateInfoFor,
-        setAutoPlay,
-        getAutoPlay,
+        getCurrentSteeringResponseData,
+        getCurrentTextTrackIndex,
+        getCurrentTrackFor,
+        getDVRSeekOffset,
+        getDVRWindowSize,
+        getDashAdapter,
         getDashMetrics,
-        getQualityFor,
-        setQualityFor,
-        updatePortalSize,
-        enableText,
-        enableForcedTextStreaming,
-        isTextEnabled,
-        setTextTrack,
-        getBitrateInfoListFor,
+        getDebug,
+        getInitialMediaSettingsFor,
+        getLowLatencyModeEnabled,
+        getOfflineController,
+        getPlaybackRate,
+        getProtectionController,
+        getCurrentRepresentationForType,
+        getRepresentationsByType,
+        getSettings,
+        getSource,
         getStreamsFromManifest,
+        getTTMLRenderingDiv,
+        getTargetLiveDelay,
         getTracksFor,
         getTracksForTypeFromManifest,
-        getCurrentTrackFor,
-        setInitialMediaSettingsFor,
-        getInitialMediaSettingsFor,
-        setCurrentTrack,
-        addABRCustomRule,
-        removeABRCustomRule,
-        removeAllABRCustomRule,
-        getABRCustomRules,
-        getAverageThroughput,
-        retrieveManifest,
-        addUTCTimingSource,
-        removeUTCTimingSource,
-        clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType,
+        getVersion,
+        getVideoElement,
+        getVolume,
         getXHRWithCredentialsForType,
-        getProtectionController,
-        attachProtectionController,
-        setProtectionData,
+        initialize,
+        isDynamic,
+        isMuted,
+        isPaused,
+        isReady,
+        isSeeking,
+        isTextEnabled,
+        off,
+        on,
+        pause,
+        play,
+        preload,
+        provideThumbnail,
+        registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
+        removeABRCustomRule,
+        removeAllABRCustomRule,
+        removeRequestInterceptor,
+        removeResponseInterceptor,
+        removeUTCTimingSource,
+        refreshManifest,
+        reset,
+        resetCustomInitialTrackSelectionFunction,
+        resetSettings,
+        restoreDefaultUTCTimingSources,
+        retrieveManifest,
+        seek,
+        seekToOriginalLive,
+        setAutoPlay,
+        setConfig,
+        setCurrentTrack,
+        setCustomInitialTrackSelectionFunction,
+        setInitialMediaSettingsFor,
+        setMute,
+        setPlaybackRate,
+        setProtectionData,
+        setRepresentationForTypeByIndex,
+        setRepresentationForTypeById,
+        setTextTrack,
+        setVolume,
+        setXHRWithCredentialsForType,
+        time,
+        timeAsUTC,
+        triggerSteeringRequest,
+        unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
-        registerCustomCapabilitiesFilter,
-        unregisterCustomCapabilitiesFilter,
-        setCustomInitialTrackSelectionFunction,
-        resetCustomInitialTrackSelectionFunction,
-        attachTTMLRenderingDiv,
-        attachVttRenderingDiv,
-        getCurrentTextTrackIndex,
-        provideThumbnail,
-        getDashAdapter,
-        getOfflineController,
-        triggerSteeringRequest,
-        getCurrentSteeringResponseData,
-        getSettings,
         updateSettings,
-        resetSettings,
-        reset,
-        destroy
+        updateSource,
     };
 
     setup();

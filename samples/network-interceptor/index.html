@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+    <title>Dash.js Network Interceptor sample</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="dist/app.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <script class="code" type="text/typescript">
+        
+        import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
+        import { CmcdObjectType } from '@svta/common-media-library/cmcd'
+        import * as dashjs from 'dashjs'
+
+        declare global {
+            interface Window {
+                player?: dashjs.MediaPlayerClass
+            }
+        }
+
+        export class App {
+
+            player: dashjs.MediaPlayerClass | null = null
+
+            mpd: string = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+
+            constructor() {
+            }
+            
+            public init(): void {
+                this.player = dashjs.MediaPlayer().create()
+                this.player.initialize(document.querySelector('video') as HTMLMediaElement, this.mpd, true)
+
+                /* Add request plugin to override request url for video segment requests only */
+                this.addRequestInterceptor()
+
+                /* Add response plugin to add response header */
+                this.addResponseInterceptor()
+
+                window.player = this.player
+            }
+
+            private addRequestInterceptor() {
+                if (!this.player) {
+                    return
+                }
+                const interceptor: RequestInterceptor = (request: CommonMediaRequest) => {
+                    if (request.cmcd?.ot === CmcdObjectType.VIDEO) {
+                        request.url += (request.url.includes('?') ? '&' : '?') + 'request-interceptor=true'
+                        console.log(request.url)
+                    }
+                    return Promise.resolve(request)
+                }
+                this.player.addRequestInterceptor(interceptor)
+            }
+
+            private addResponseInterceptor() {
+                if (!this.player) {
+                    return
+                }
+                const interceptor: ResponseInterceptor = (response: CommonMediaResponse) => {
+                    if (!response.headers) {
+                        response.headers = {}
+                    }
+                    response.headers['response-interceptor'] = 'true'
+                    return Promise.resolve(response)
+                }
+                this.player.addResponseInterceptor(interceptor)
+            }
+        }
+</script>
+</head>
+
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                  src="../lib/img/dashjs-logo.png"
+                  width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Network interceptors</h3>
+                    <p>This sample shows how to apply network request and response interceptor based on CommonMediaLibray API.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-md-6">
+              <video controls="true"></video>
+          </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    myApp = new app.App();
+    myApp.init();
+  });
+</script>
+<script src="../highlighter.js"></script>
+
+</body>
+
+</html>

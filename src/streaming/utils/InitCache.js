@@ -33,7 +33,7 @@
  * Represents data structure to keep and drive {DataChunk}
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function InitCache() {
 
@@ -41,7 +41,7 @@ function InitCache() {
 
     function save (chunk) {
         const id = chunk.streamId;
-        const representationId = chunk.representationId;
+        const representationId = chunk.representation.id;
 
         data[id] = data[id] || {};
         data[id][representationId] = chunk;

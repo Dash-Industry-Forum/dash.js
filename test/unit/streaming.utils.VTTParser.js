@@ -1,7 +1,7 @@
-import VTTParser from '../../src/streaming/utils/VTTParser';
-import FileLoader from './helpers/FileLoader';
+import VTTParser from '../../src/streaming/utils/VTTParser.js';
+import FileLoader from './helpers/FileLoader.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const vttParser = VTTParser(context).getInstance();

@@ -29,17 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import CommonEncryption from '../CommonEncryption';
-import MediaCapability from '../vo/MediaCapability';
-import KeySystemConfiguration from '../vo/KeySystemConfiguration';
-import ProtectionErrors from '../errors/ProtectionErrors';
-import DashJSError from '../../vo/DashJSError';
-import LicenseRequest from '../vo/LicenseRequest';
-import LicenseResponse from '../vo/LicenseResponse';
-import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
-import Utils from '../../../core/Utils';
-import Constants from '../../constants/Constants';
-import FactoryMaker from '../../../core/FactoryMaker';
+import CommonEncryption from '../CommonEncryption.js';
+import MediaCapability from '../vo/MediaCapability.js';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
+import ProtectionErrors from '../errors/ProtectionErrors.js';
+import DashJSError from '../../vo/DashJSError.js';
+import LicenseRequest from '../vo/LicenseRequest.js';
+import LicenseResponse from '../vo/LicenseResponse.js';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
+import Utils from '../../../core/Utils.js';
+import Constants from '../../constants/Constants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -326,14 +326,15 @@ function ProtectionController(config) {
      * @ignore
      */
     function createKeySession(keySystemInfo) {
+
+        // Check for duplicate key id
+        if (keySystemInfo && _isKeyIdDuplicate(keySystemInfo.keyId)) {
+            return;
+        }
+
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemInfo ? keySystemInfo.initData : null);
 
         if (initDataForKS) {
-
-            // Check for duplicate key id
-            if (_isKeyIdDuplicate(keySystemInfo.keyId)) {
-                return;
-            }
 
             // Check for duplicate initData
             if (_isInitDataDuplicate(initDataForKS)) {

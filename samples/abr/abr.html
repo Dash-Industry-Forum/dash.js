@@ -16,7 +16,7 @@
             height: 360px;
         }
     </style>
-    
+
     <script class="code">
         function init() {
             var video,
@@ -25,23 +25,34 @@
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
-            
+
             player.updateSettings({
                 streaming: {
                     abr: {
-                        useDefaultABRRules: true,
-                        ABRStrategy: 'abrThroughput',
-                        additionalAbrRules: {
-                            insufficientBufferRule: true,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: false
+                        rules: {
+                            throughputRule: {
+                                active: true
+                            } ,
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: true
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            }
                         }
-                        
                     }
                 }
             });
-            
+
 
             player.initialize(video, url, true);
         }
@@ -60,7 +71,14 @@
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>Configuration of ABR Rules</h3>
-                    <p>Example showing how to define the target ABR rules in dash.js. In this demo we enable the throughput based ABR decision logic. In addition, the InsufficientBufferRule is enabled.</p>
+                    <p>Example showing how to define the target ABR rules in dash.js. In this demo we enable the
+                        throughput based ABR decision logic. In addition, the InsufficientBufferRule is enabled.
+                    </p>
+                    <p><b>Note:</b> If both the BOLA and the ThroughputRule are enabled we automatically switch to a
+                        <i>dynamic mode</i>. In this case we start with the ThroughputRule at the beginning and switch to BOLA
+                        rule once we reached our buffer target. If we fall below a certain buffer level we switch back
+                        to the ThroughputRule. The reason for that is that buffer based rules do not perform well for
+                        low buffer levels.</p>
                 </div>
             </div>
             <div class="col-md-8">

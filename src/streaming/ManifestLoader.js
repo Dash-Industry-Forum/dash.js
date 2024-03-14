@@ -28,19 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
-import XlinkController from './controllers/XlinkController';
-import URLLoader from './net/URLLoader';
-import URLUtils from './utils/URLUtils';
-import TextRequest from './vo/TextRequest';
-import DashJSError from './vo/DashJSError';
-import {HTTPRequest} from './vo/metrics/HTTPRequest';
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import Errors from '../core/errors/Errors';
-import FactoryMaker from '../core/FactoryMaker';
-import DashParser from '../dash/parser/DashParser';
+import Constants from './constants/Constants.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import XlinkController from './controllers/XlinkController.js';
+import URLLoader from './net/URLLoader.js';
+import URLUtils from './utils/URLUtils.js';
+import TextRequest from './vo/TextRequest.js';
+import DashJSError from './vo/DashJSError.js';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import Errors from '../core/errors/Errors.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashParser from '../dash/parser/DashParser.js';
 
 function ManifestLoader(config) {
 
@@ -68,7 +68,6 @@ function ManifestLoader(config) {
             errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             urlUtils: urlUtils,
             constants: Constants,
             dashConstants: DashConstants,
@@ -80,7 +79,6 @@ function ManifestLoader(config) {
             errHandler: errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             settings: config.settings
         });
 
@@ -122,8 +120,8 @@ function ManifestLoader(config) {
             request.queryParams = queryParams;
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartDate;
+        if (!request.startDate) {
+            request.startDate = requestStartDate;
         }
 
         eventBus.trigger(
@@ -184,9 +182,8 @@ function ManifestLoader(config) {
                     return;
                 }
 
-                // init xlinkcontroller with matchers and iron object from created parser
-                xlinkController.setMatchers(parser.getMatchers());
-                xlinkController.setIron(parser.getIron());
+                // init xlinkcontroller with created parser
+                xlinkController.setParser(parser);
 
                 try {
                     manifest = parser.parse(data);
@@ -215,8 +212,8 @@ function ManifestLoader(config) {
                     if (settings &&
                         settings.get().streaming.enableManifestDurationMismatchFix &&
                         manifest.mediaPresentationDuration &&
-                        manifest.Period_asArray.length > 1) {
-                        const sumPeriodDurations = manifest.Period_asArray.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+                        manifest.Period.length > 1) {
+                        const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
                         if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
                             manifest.mediaPresentationDuration = sumPeriodDurations;

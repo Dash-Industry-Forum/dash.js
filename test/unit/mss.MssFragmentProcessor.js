@@ -1,17 +1,15 @@
-import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor';
-import PlaybackController from '../../src/streaming/controllers/PlaybackController';
-import EventBus from '../../src/core/EventBus';
-import MssErrors from '../../src/mss/errors/MssErrors';
-import Constants from '../../src/streaming/constants/Constants';
-
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import StreamProcessorMock from './mocks/StreamProcessorMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import DebugMock from './mocks/DebugMock';
+import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor.js';
+import PlaybackController from '../../src/streaming/controllers/PlaybackController.js';
+import EventBus from '../../src/core/EventBus.js';
+import MssErrors from '../../src/mss/errors/MssErrors.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import StreamProcessorMock from './mocks/StreamProcessorMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import DebugMock from './mocks/DebugMock.js';
 import ISOBoxer from 'codem-isoboxer';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 const context = {};
 const playbackController = PlaybackController(context).getInstance();
@@ -51,9 +49,12 @@ describe('MssFragmentProcessor', function () {
         expect(mssFragmentProcessor.processFragment.bind(mssFragmentProcessor, { request: { type: 'MediaSegment' } })).to.throw('e parameter is missing or malformed');
     });
 
-    it('should throw an error when attempting to call processFragment for mp4 media live segment without tfrf box', async() => {
+    it('should throw an error when attempting to call processFragment for mp4 media live segment without tfrf box', async () => {
         const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof_tfdt.mp4');
-        const e = { request: { type: 'MediaSegment', mediaInfo: { index: 0 } }, response: arrayBuffer };
+        const e = {
+            request: { type: 'MediaSegment', representation: { mediaInfo: { index: 0 } } },
+            response: arrayBuffer
+        };
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
@@ -61,7 +62,10 @@ describe('MssFragmentProcessor', function () {
 
     it('should not throw an error when attempting to call processFragment for mp4 media live segment with tfrf box', async () => {
         const arrayBuffer = await FileLoader.loadArrayBufferFile('/data/mss/mss_moof.mp4');
-        const e = { request: { type: 'MediaSegment', mediaInfo: { index: 0 } }, response: arrayBuffer };
+        const e = {
+            request: { type: 'MediaSegment', representation: { mediaInfo: { index: 0 } } },
+            response: arrayBuffer
+        };
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).not.to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).not.to.equal(MssErrors.MSS_NO_TFRF_CODE);
@@ -86,9 +90,11 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
-                }, index: 0, type: 'audio'
+                },
+                index: 0,
+                type: 'audio'
             }
         };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
@@ -117,7 +123,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'audio'
             }
@@ -148,7 +154,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period_: [{ AdaptationSet_: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'video'
             }
@@ -179,7 +185,7 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_asArray: [{ AdaptationSet_asArray: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
                 }, index: 0, type: 'video'
             }

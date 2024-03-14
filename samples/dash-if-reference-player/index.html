@@ -276,58 +276,43 @@
                            ng-change="toggleForceQualitySwitch()" ng-checked="forceQualitySwitchSelected">
                     Force Quality Switch
                 </label>
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="ABR - Use custom ABR rules">
-                    <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected"
-                           ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
-                    Use Custom ABR Rules
-                </label>
                 <div class="sub-options-item">
                     <div class="sub-options-item-title">Standard</div>
                     <div class="sub-options-item-body">
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Dynamically switch between BOLA and Throughput strategies.">
-                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked"
-                                   ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrDynamic')" value="abrDynamic">
-                            ABR Strategy: Dynamic
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable ThroughputRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="throughputRule"
+                                   ng-model="activeAbrRules.throughputRule">
+                            ThroughputRule
                         </label>
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Choose bitrate based on buffer level.">
-                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy"
-                                   ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrBola')" value="abrBola">
-                            ABR Strategy: BOLA
-                        </label>
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Choose bitrate based on recent throughput.">
-                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy"
-                                   ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrThroughput')" value="abrThroughput">
-                            ABR Strategy: Throughput
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable BolaRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="bolaRule"
+                                   ng-model="activeAbrRules.bolaRule">
+                            BolaRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable InsufficientBufferRule">
                             <input type="checkbox" ng-change="toggleBufferRule()" id="insufficientBufferRule"
-                                   ng-model="additionalAbrRules.insufficientBufferRule">
+                                   ng-model="activeAbrRules.insufficientBufferRule">
                             InsufficientBufferRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable SwitchHistoryRule">
                             <input type="checkbox" ng-change="toggleBufferRule()" id="switchHistoryRule"
-                                   ng-model="additionalAbrRules.switchHistoryRule">
+                                   ng-model="activeAbrRules.switchHistoryRule">
                             SwitchHistoryRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable DroppedFramesRule">
                             <input type="checkbox" ng-change="toggleBufferRule()" id="droppedFramesRule"
-                                   ng-model="additionalAbrRules.droppedFramesRule">
+                                   ng-model="activeAbrRules.droppedFramesRule">
                             DroppedFramesRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable AbandonRequestsRule">
                             <input type="checkbox" ng-change="toggleBufferRule()" id="abandonRequestsRule"
-                                   ng-model="additionalAbrRules.abandonRequestsRule">
+                                   ng-model="activeAbrRules.abandonRequestsRule">
                             AbandonRequestsRule
                         </label>
                     </div>
@@ -336,50 +321,17 @@
                 <div class="sub-options-item">
                     <div class="sub-options-item-title">Low-Latency</div>
                     <div class="sub-options-item-body">
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Choose bitrate using the L2A algorithm.">
-                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy"
-                                   ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrL2A')" value="abrL2A">
-                            ABR Strategy: L2A-LL
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable L2A Rule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="l2ARule"
+                                   ng-model="activeAbrRules.l2ARule">
+                            L2ARule
                         </label>
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Choose bitrate using the LoL+ algorithm.">
-                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy"
-                                   ng-model="ABRStrategy"
-                                   ng-click="changeABRStrategy('abrLoLP')" value="abrLoLP">
-                            ABR Strategy: LoL+
-                        </label>
-                    </div>
-                </div>
-                <div class="sub-options-item">
-                    <div class="sub-options-item-title">LL throughput calculation</div>
-                    <div class="sub-options-item-body">
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Default fetch throughput calculation for low latency streaming based on downloaded data chunks.">
-                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off"
-                                   ng-model="abrThroughputCalculationMode"
-                                   name="abrFetchThroughputCalculation"
-                                   value="abrFetchThroughputCalculationDownloadedData"
-                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationDownloadedData')">
-                            Data chunks
-                        </label>
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="LoL+ fetch throughput calculation for low latency streaming based on moof parsing.">
-                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off"
-                                   ng-model="abrThroughputCalculationMode"
-                                   checked="checked" name="abrFetchThroughputCalculation"
-                                   value="abrFetchThroughputCalculationMoofParsing"
-                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing')">
-                            moof parsing
-                        </label>
-                        <label data-toggle="tooltip" data-placement="right"
-                               title="Further approach for measurement and estimation (FAME) for fetch throughput calculation for low latency streaming based on AAST decisioning / availability of chunk and optimistic estimation.">
-                            <input type="radio" id="abrFetchThroughputCalculationAAST" autocomplete="off"
-                                   ng-model="abrThroughputCalculationMode"
-                                   name="abrFetchThroughputCalculation" value="abrFetchThroughputCalculationAAST"
-                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationAAST')">
-                            AST decisioning
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable LoL Plus">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="loLPRule"
+                                   ng-model="activeAbrRules.loLPRule">
+                            LoLPRule
                         </label>
                     </div>
                 </div>
@@ -696,6 +648,30 @@
                            ng-change="toggleUseSuggestedPresentationDelay()" ng-checked="useSuggestedPresentationDelay">
                     Use SuggestedPresentationDelay
                 </label>
+            </div>
+        </div>
+        <div class="options-item">
+            <div class="options-item-title">Text</div>
+            <div class="options-item-body">
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">IMSC</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Enable Roll-up mode">
+                            <input type="checkbox" id="imscEnableRollUp" ng-model="imscEnableRollUp" autocomplete="off" ng-checked="imscEnableRollUp"
+                                   ng-change="toggleImscEnableRollUp()" name="inputMode">
+                            Enable Roll-up
+                        </label>
+                    </div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Forced Only Mode">
+                            <input type="checkbox" id="imscdisplayForcedOnlyMode" ng-model="imscdisplayForcedOnlyMode" ng-checked="imscdisplayForcedOnlyMode" autocomplete="off"
+                                   ng-change="toggleImscdisplayForcedOnlyMode()" name="inputMode">
+                            Forced Only
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="options-item">

@@ -1,6 +1,5 @@
-import Round10 from '../../src/dash/utils/Round10';
-
-const expect = require('chai').expect;
+import Round10 from '../../src/dash/utils/Round10.js';
+import {expect} from 'chai';
 
 describe('Round10', () => {
     it('should round numbers as expected', () => {

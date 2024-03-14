@@ -1,11 +1,11 @@
-import StreamInfo from '../../../src/dash/vo/StreamInfo';
-import MediaInfo from '../../../src/dash/vo/MediaInfo';
-import MpdHelper from './MPDHelper';
-import SpecHelper from './SpecHelper';
-import Representation from '../../../src/dash/vo/Representation';
-import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
-import DashConstants from '../../../src/dash/constants/DashConstants';
+import StreamInfo from '../../../src/dash/vo/StreamInfo.js';
+import MediaInfo from '../../../src/dash/vo/MediaInfo.js';
+import MpdHelper from './MPDHelper.js';
+import SpecHelper from './SpecHelper.js';
+import Representation from '../../../src/dash/vo/Representation.js';
+import FragmentRequest from '../../../src/streaming/vo/FragmentRequest.js';
+import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest.js';
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
 
 class VoHelper {
     constructor() {
@@ -60,7 +60,7 @@ class VoHelper {
     createRepresentation(type, index) {
         var rep = new Representation();
 
-        rep.id = null;
+        rep.id = index;
         rep.index = index || 0;
         rep.adaptation = this.createAdaptation(type);
         rep.fragmentInfoType = null;
@@ -71,11 +71,14 @@ class VoHelper {
         rep.indexRange = null;
         rep.range = null;
         rep.presentationTimeOffset = 10;
+        rep.bandwidth = 1000000;
+        rep.bitrateInKbit = 1000;
         rep.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
         // Set the source buffer timeOffset to this
-        rep.MSETimeOffset = NaN;
+        rep.mseTimeOffset = NaN;
         rep.segmentAvailabilityWindow = null;
         rep.availableSegmentsNumber = 0;
+        rep.mediaInfo = this.getDummyMediaInfo(type);
 
         return rep;
     }
@@ -83,12 +86,14 @@ class VoHelper {
     createTimelineRepresentation(type, index) {
         var rep = new Representation();
 
-        rep.id = null;
+        rep.id = index;
         rep.index = index || 0;
         rep.adaptation = this.createAdaptation(type, 1);
         rep.fragmentInfoType = null;
         rep.initialization = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/Header.m4s';
         rep.segmentDuration = 1;
+        rep.bandwidth = 1000000;
+        rep.bitrateInKbit = 1000;
         rep.timescale = 1;
         rep.startNumber = 1;
         rep.indexRange = null;
@@ -96,7 +101,7 @@ class VoHelper {
         rep.presentationTimeOffset = 10;
         rep.segmentInfoType = DashConstants.SEGMENT_TIMELINE;
         // Set the source buffer timeOffset to this
-        rep.MSETimeOffset = NaN;
+        rep.mseTimeOffset = NaN;
         rep.segmentAvailabilityWindow = null;
         rep.availableSegmentsNumber = 0;
 

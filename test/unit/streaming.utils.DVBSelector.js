@@ -1,10 +1,9 @@
-import DVBSelector from '../../src/streaming/utils/baseUrlResolution/DVBSelector';
+import DVBSelector from '../../src/streaming/utils/baseUrlResolution/DVBSelector.js';
+import ObjectsHelper from './helpers/ObjectsHelper.js';
 
-import ObjectsHelper from './helpers/ObjectsHelper';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
-const sinon = require('sinon');
+import sinon from 'sinon';
 
 const context = {};
 const objectsHelper = new ObjectsHelper();
@@ -106,13 +105,13 @@ describe('BaseURLResolution/DVBSelector', function () {
 
     it('should select baseUrls as defined in the example in DVB A168 10.8.2.4', () => {
         const baseUrls = [
-            { dvb_priority: 1, dvb_weight: 10, serviceLocation: 'A' },
-            { dvb_priority: 1, dvb_weight: 30, serviceLocation: 'B' },
-            { dvb_priority: 1, dvb_weight: 60, serviceLocation: 'C' },
-            { dvb_priority: 3, dvb_weight: 1, serviceLocation: 'C' },
-            { dvb_priority: 4, dvb_weight: 1, serviceLocation: 'B' },
-            { dvb_priority: 5, dvb_weight: 1, serviceLocation: 'D' },
-            { dvb_priority: 5, dvb_weight: 1, serviceLocation: 'E' }
+            { dvbPriority: 1, dvbWeight: 10, serviceLocation: 'A' },
+            { dvbPriority: 1, dvbWeight: 30, serviceLocation: 'B' },
+            { dvbPriority: 1, dvbWeight: 60, serviceLocation: 'C' },
+            { dvbPriority: 3, dvbWeight: 1, serviceLocation: 'C' },
+            { dvbPriority: 4, dvbWeight: 1, serviceLocation: 'B' },
+            { dvbPriority: 5, dvbWeight: 1, serviceLocation: 'D' },
+            { dvbPriority: 5, dvbWeight: 1, serviceLocation: 'E' }
         ];
 
         // we need Math.random to be completely unrandom
@@ -133,13 +132,13 @@ describe('BaseURLResolution/DVBSelector', function () {
         stub.returns(0.3);
 
         const firstSelection = dvbSelector.select(baseUrls);
-        expect(firstSelection.dvb_priority).to.equal(1);
+        expect(firstSelection.dvbPriority).to.equal(1);
         expect(firstSelection.serviceLocation).to.equal('B');
 
         blacklist.push(firstSelection.serviceLocation);
 
         const secondSelection = dvbSelector.select(baseUrls);
-        expect(secondSelection.dvb_priority).to.equal(3);
+        expect(secondSelection.dvbPriority).to.equal(3);
         expect(secondSelection.serviceLocation).to.equal('C');
 
         // Math.random (called in select()) will return 1
@@ -148,7 +147,7 @@ describe('BaseURLResolution/DVBSelector', function () {
         blacklist.push(secondSelection.serviceLocation);
 
         const thirdSelection = dvbSelector.select(baseUrls);
-        expect(thirdSelection.dvb_priority).to.equal(5);
+        expect(thirdSelection.dvbPriority).to.equal(5);
         expect(thirdSelection.serviceLocation).to.equal('E');
 
         blacklist.push(thirdSelection.serviceLocation);
@@ -159,8 +158,8 @@ describe('BaseURLResolution/DVBSelector', function () {
 
     it('should not select baseUrls with invalid priority when there is another option', () => {
         const baseUrls = [
-            { serviceLocation: 'A', dvb_priority: 1, dvb_weight: 1 },
-            { serviceLocation: 'B', dvb_priority: 'STRING', dvb_weight: 100000000 }
+            { serviceLocation: 'A', dvbPriority: 1, dvbWeight: 1 },
+            { serviceLocation: 'B', dvbPriority: 'STRING', dvbWeight: 100000000 }
         ];
 
         const dvbSelector = DVBSelector(context).create(defaultConfig);
@@ -171,7 +170,7 @@ describe('BaseURLResolution/DVBSelector', function () {
 
     it('should select baseUrls with invalid priority if there is no other option', () => {
         const baseUrls = [
-            { serviceLocation: 'B', dvb_priority: 'STRING', dvb_weight: 1 }
+            { serviceLocation: 'B', dvbPriority: 'STRING', dvbWeight: 1 }
         ];
 
         const dvbSelector = DVBSelector(context).create(defaultConfig);

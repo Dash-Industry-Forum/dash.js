@@ -1,11 +1,10 @@
-import DashParser from '../../src/dash/parser/DashParser';
-import DebugMock from './mocks/DebugMock';
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import FileLoader from './helpers/FileLoader';
+import DashParser from '../../src/dash/parser/DashParser.js';
+import DebugMock from './mocks/DebugMock.js';
+import DashManifestModel from '../../src/dash/models/DashManifestModel.js';
+import FileLoader from './helpers/FileLoader.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 
@@ -16,12 +15,12 @@ const dashManifestModel = DashManifestModel(context).getInstance();
 describe('DashParser', function () {
 
     it('should throw an error when parse is called without data and config object has been set properly', function () {
-        expect(dashParser.parse.bind('')).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind('')).to.be.throw('failed to parse the manifest');
     });
 
     it('should throw an error when parse is called with invalid data', async () => {
         let manifest = await FileLoader.loadTextFile('/data/dash/manifest_error.xml');
-        expect(dashParser.parse.bind(manifest)).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind(manifest)).to.be.throw('failed to parse the manifest');
     });
 
     it('should return an Object when parse is called with correct data', async () => {

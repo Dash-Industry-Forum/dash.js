@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import HandlerHelpers from '../../utils/HandlerHelpers';
+import HandlerHelpers from '../../utils/HandlerHelpers.js';
 
 function BufferLevelHandler(config) {
 

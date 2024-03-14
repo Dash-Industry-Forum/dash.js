@@ -1,9 +1,8 @@
-import Constants from '../../src/streaming/constants/Constants';
-import Settings from '../../src/core/Settings';
-
-import FetchLoader from '../../src/streaming/net/FetchLoader';
-import LowLatencyThroughputModel from '../../src/streaming/models/LowLatencyThroughputModel';
-import BoxParser from '../../src/streaming/utils/BoxParser';
+import Constants from '../../src/streaming/constants/Constants.js';
+import Settings from '../../src/core/Settings.js';
+import {expect} from 'chai';
+import FetchLoader from '../../src/streaming/net/FetchLoader.js';
+import BoxParser from '../../src/streaming/utils/BoxParser.js';
 
 const patterns = {
     pattern0: {
@@ -92,10 +91,10 @@ const patterns = {
 describe('FetchLoader implementation', () => {
 
     // throughput calculation tests
-    [Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA,
-    Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
-    Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST].forEach(calculationMode => {
-        ['pattern0', 'pattern1', 'pattern2', 'pattern3', 'pattern4', 'pattern5', 'pattern6', 'pattern7', 'pattern8'].forEach((pname)=>{
+    [Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA,
+        Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
+        Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.AAST].forEach(calculationMode => {
+        ['pattern0', 'pattern1', 'pattern2', 'pattern3', 'pattern4', 'pattern5', 'pattern6', 'pattern7', 'pattern8'].forEach((pname) => {
             let pattern = patterns[pname];
 
             it(`should calculate the proper download time if near life edge, mode: ${calculationMode} and ${pname} (${pattern.text})`, (done) => {
@@ -108,19 +107,20 @@ describe('FetchLoader implementation', () => {
                 settings.update({
                     streaming: {
                         abr: {
-                            fetchThroughputCalculationMode: calculationMode
+                            throughput: {
+                                lowLatencyDownloadTimeCalculationMode: calculationMode
+                            }
                         }
                     }
                 });
-                const lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
-                const fetchLoader = FetchLoader(context).create({
-                    lowLatencyThroughputModel,
-                    boxParser: BoxParser(context).getInstance()
-                });
-                fetchLoader.setup({
+                const fetchLoader = FetchLoader(context).create({});
+                fetchLoader.setConfig({
                     dashMetrics: {
-                        getCurrentBufferLevel: function () { return 1; }
-                    }
+                        getCurrentBufferLevel: function () {
+                            return 1;
+                        }
+                    },
+                    boxParser: BoxParser(context).getInstance()
                 });
 
                 let lastEmittedDownloadtime = 0;
@@ -138,7 +138,11 @@ describe('FetchLoader implementation', () => {
                             done();
                         }
                     },
-                    onerror: (e) => { console.error(e); isDone = true; done(e) },
+                    onerror: (e) => {
+                        console.error(e);
+                        isDone = true;
+                        done(e)
+                    },
                     progress: (p) => {
                         if (p.loaded && p.loaded === p.total) {
                             if (p.throughput) {

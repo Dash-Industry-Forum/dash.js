@@ -1,8 +1,7 @@
 import KeySystemPlayReady from '../../src/streaming/protection/drm/KeySystemPlayReady.js';
-import BASE64 from '../../externals/base64';
-import Settings from '../../src/core/Settings';
-
-const expect = require('chai').expect;
+import BASE64 from '../../externals/base64.js';
+import Settings from '../../src/core/Settings.js';
+import {expect} from 'chai';
 
 describe('KeySystemPlayready', function () {
 

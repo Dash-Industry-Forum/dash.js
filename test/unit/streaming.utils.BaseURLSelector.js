@@ -1,7 +1,7 @@
-import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector';
-import Constants from '../../src/streaming/constants/Constants';
+import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector.js';
+import Constants from '../../src/streaming/constants/Constants.js';
 
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 const context = {};
 const baseURLSelector = BaseURLSelector(context).create();

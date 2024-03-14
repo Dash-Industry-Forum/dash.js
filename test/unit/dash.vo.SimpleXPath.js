@@ -1,8 +1,7 @@
-import SimpleXPath from '../../src/dash/vo/SimpleXPath';
+import SimpleXPath from '../../src/dash/vo/SimpleXPath.js';
+import PatchHelper from './helpers/PatchHelper.js';
 
-import PatchHelper from './helpers/PatchHelper';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 
 describe('SimpleXPath', function () {
     describe('construction', function () {
@@ -106,70 +105,70 @@ describe('SimpleXPath', function () {
             let xpath = new SimpleXPath('/MPD/Period[1]/BaseURL');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('BaseURL');
-            expect(result.leaf).to.equal(mpd.Period.BaseURL);
+            expect(result.leaf).to.equal(mpd.Period[0].BaseURL[0]);
         });
 
         it('should find node when using implicit position search with one child', function () {
             let xpath = new SimpleXPath('/MPD/Period/BaseURL');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('BaseURL');
-            expect(result.leaf).to.equal(mpd.Period.BaseURL);
+            expect(result.leaf).to.equal(mpd.Period[0].BaseURL[0]);
         });
 
         it('should find node when using position search with multiple children', function () {
             let xpath = new SimpleXPath('/MPD/Period/AdaptationSet[2]/SegmentTemplate');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('SegmentTemplate');
-            expect(result.leaf).to.equal(mpd.Period.AdaptationSet[1].SegmentTemplate);
+            expect(result.leaf).to.equal(mpd.Period[0].AdaptationSet[1].SegmentTemplate);
         });
 
         it('should find node when ending with positional search of one child', function () {
             let xpath = new SimpleXPath('/MPD/Period[1]');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('Period');
-            expect(result.leaf).to.equal(mpd.Period);
+            expect(result.leaf).to.equal(mpd.Period[0]);
         });
 
         it('should find node when ending with positional search of multiple children', function () {
             let xpath = new SimpleXPath('/MPD/Period/AdaptationSet[2]');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('AdaptationSet');
-            expect(result.leaf).to.equal(mpd.Period.AdaptationSet[1]);
+            expect(result.leaf).to.equal(mpd.Period[0].AdaptationSet[1]);
         });
 
         it('should find node when attribute search used for one child', function () {
             let xpath = new SimpleXPath('/MPD/Period[@id="foo"]/BaseURL');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('BaseURL');
-            expect(result.leaf).to.equal(mpd.Period.BaseURL);
+            expect(result.leaf).to.equal(mpd.Period[0].BaseURL[0]);
         });
 
         it('should find node when attribute search used for multiple children', function () {
             let xpath = new SimpleXPath('/MPD/Period/AdaptationSet[@id=20]/SegmentTemplate');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('SegmentTemplate');
-            expect(result.leaf).to.equal(mpd.Period.AdaptationSet[1].SegmentTemplate);
+            expect(result.leaf).to.equal(mpd.Period[0].AdaptationSet[1].SegmentTemplate);
         });
 
         it('should find node when path ends in attributes search with one child', function () {
             let xpath = new SimpleXPath('/MPD/Period[@id="foo"]');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('Period');
-            expect(result.leaf).to.equal(mpd.Period);
+            expect(result.leaf).to.equal(mpd.Period[0]);
         });
 
         it('should find node when path ends in attributes search with multiple children', function () {
             let xpath = new SimpleXPath('/MPD/Period/AdaptationSet[@id=20]');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('AdaptationSet');
-            expect(result.leaf).to.equal(mpd.Period.AdaptationSet[1]);
+            expect(result.leaf).to.equal(mpd.Period[0].AdaptationSet[1]);
         });
 
         it('should find node when path targets attribute', function () {
             let xpath = new SimpleXPath('/MPD/BaseURL/@serviceLocation');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('serviceLocation');
-            expect(result.leaf).to.equal(mpd.BaseURL);
+            expect(result.leaf).to.equal(mpd.BaseURL[0]);
         });
 
         it('should fail to find positional search that does not exist', function () {
@@ -200,7 +199,7 @@ describe('SimpleXPath', function () {
             let xpath = new SimpleXPath('/MPD/Period[@id="foo"]/AdaptationSet[@id="20"]/SegmentTemplate/SegmentTimeline');
             let result = xpath.getMpdTarget(mpd);
             expect(result.name).to.equal('SegmentTimeline');
-            expect(result.leaf).to.equal(mpd.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline);
+            expect(result.leaf).to.equal(mpd.Period[0].AdaptationSet[1].SegmentTemplate.SegmentTimeline);
         });
     });
 });

@@ -1,4 +1,4 @@
-import Constants from '../helper/Constants';
+import Constants from '../helper/Constants.js';
 
 export default [
     {
@@ -87,6 +87,38 @@ export default [
         'moreInfo': 'https://rdmedia.bbc.co.uk/elephants_dream/',
         'provider': 'bbc',
         type: 'vod',
+        testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
+    },
+    {
+        'name': 'On-demand Testcard - WOFF Font Download signalled with supplemental property descriptor',
+        'url': 'https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-sfdt-woff.mpd',
+        'moreInfo': 'https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles',
+        'provider': 'bbc',
+        type: 'live',
+        testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
+    },
+    {
+        'name': 'On-demand Testcard - WOFF Font Download signalled with essential property descriptor',
+        'url': 'https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-efdt-woff.mpd',
+        'moreInfo': 'https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles',
+        'provider': 'bbc',
+        type: 'live',
+        testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
+    },
+    {
+        'name': 'Live Testcard - WOFF Font Download signalled with supplemental property descriptor',
+        'url': 'https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-sfdt-woff.mpd',
+        'moreInfo': 'https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles',
+        'provider': 'bbc',
+        type: 'live',
+        testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
+    },
+    {
+        'name': 'Live Testcard - WOFF Font Download signalled with essential property descriptor',
+        'url': 'https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-efdt-woff.mpd',
+        'moreInfo': 'https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles',
+        'provider': 'bbc',
+        type: 'live',
         testcases: [Constants.TESTCASES.SIMPLE.SWITCH_TEXT],
     },
     {

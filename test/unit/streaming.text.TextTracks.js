@@ -1,12 +1,12 @@
-import TextTracks from '../../src/streaming/text/TextTracks';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import VoHelper from './helpers/VOHelper';
-import VideoModelMock from './mocks/VideoModelMock';
-import Settings from '../../src/core/Settings';
+import TextTracks from '../../src/streaming/text/TextTracks.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import VoHelper from './helpers/VOHelper.js';
+import VideoModelMock from './mocks/VideoModelMock.js';
+import Settings from '../../src/core/Settings.js';
 
 const SUBTITLE_DATA = 'subtitle lign 1';
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();

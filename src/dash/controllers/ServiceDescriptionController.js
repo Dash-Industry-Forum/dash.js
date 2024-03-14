@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Constants from '../../streaming/constants/Constants';
-import DashConstants from '../constants/DashConstants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../../streaming/constants/Constants.js';
+import DashConstants from '../constants/DashConstants.js';
 
 const SUPPORTED_SCHEMES = [Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME];
 const MEDIA_TYPES = {
@@ -130,7 +130,7 @@ function ServiceDescriptionController() {
             _applyServiceDescriptionContentSteering(sd);
         }
 
-        if(sd.clientDataReporting){
+        if (sd.clientDataReporting) {
             _applyServiceDescriptionClientDataReporting(sd);
         }
     }

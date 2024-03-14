@@ -1,15 +1,12 @@
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import DashConstants from '../../src/dash/constants/DashConstants';
-import Constants from '../../src/streaming/constants/Constants';
-import BaseURL from '../../src/dash/vo/BaseURL';
-
-import MpdHelper from './helpers/MPDHelper';
-import VoHelper from './helpers/VOHelper';
-
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DescriptorType from '../../src/dash/vo/DescriptorType';
-
-const expect = require('chai').expect;
+import DashManifestModel from '../../src/dash/models/DashManifestModel.js';
+import DashConstants from '../../src/dash/constants/DashConstants.js';
+import Constants from '../../src/streaming/constants/Constants.js';
+import BaseURL from '../../src/dash/vo/BaseURL.js';
+import MpdHelper from './helpers/MPDHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DescriptorType from '../../src/dash/vo/DescriptorType.js';
+import {expect} from 'chai';
 
 const context = {};
 const errorHandlerMock = new ErrorHandlerMock();
@@ -23,14 +20,6 @@ const EMPTY_STRING = '';
 const mpd_sample = {
     'manifest': {
         'Period': [
-            {
-                'id': '153199'
-            },
-            {
-                'id': '153202'
-            }
-        ],
-        'Period_asArray': [
             {
                 'id': '153199'
             },
@@ -141,6 +130,62 @@ describe('DashManifestModel', function () {
             expect(rolesArray).to.be.empty;
         });
 
+        it('should return an empty array when getEssentialPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Object);
+            expect(suppPropArray).to.be.empty;
+        });
+
+        it('should return an empty array when getEssentialPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptation();
+
+            expect(suppPropArray).to.be.instanceOf(Array);
+            expect(suppPropArray).to.be.empty;
+        });
+
+        it('should return correct array of DescriptorType when getEssentialPropertiesForAdaptation is called', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForAdaptation({
+                EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
+                    schemeIdUri: 'test.scheme',
+                    value: 'test2Val'
+                }]
+            });
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray.length).to.equal(2);
+            expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
+            expect(essPropArray[0].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[0].value).equals('testVal');
+            expect(essPropArray[1].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[1].value).equals('test2Val');
+        });
+
+        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+
+            expect(essPropArray).to.be.instanceOf(Object);
+            expect(essPropArray).to.be.empty;
+        });
+
+        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray).to.be.empty;
+        });
+
+        it('should return correct array of DescriptorType when getEssentialPropertiesForRepresentation is called', () => {
+            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation({
+                EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
+            });
+
+            expect(essPropArray).to.be.instanceOf(Array);
+            expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
+            expect(essPropArray[0].schemeIdUri).equals('test.scheme');
+            expect(essPropArray[0].value).equals('testVal');
+        });
+
         it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
             const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
 
@@ -148,16 +193,19 @@ describe('DashManifestModel', function () {
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getSupplementalPropertiesAsArrayForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation();
+        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForAdaptation is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation({
-                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'},{schemeIdUri: 'test.scheme', value: 'test2Val'}]
+        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptation is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation({
+                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
+                    schemeIdUri: 'test.scheme',
+                    value: 'test2Val'
+                }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -175,16 +223,16 @@ describe('DashManifestModel', function () {
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getSupplementalPropertiesAsArrayForRepresentation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation();
+        it('should return an empty array when getSupplementalPropertiesForRepresentation', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation();
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getSupplementalPropertiesAsArrayForRepresentation is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation({
-                SupplementalProperty_asArray: [{schemeIdUri: 'test.scheme', value: 'testVal'}]
+        it('should return correct array of DescriptorType when getSupplementalPropertiesForRepresentation is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation({
+                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
             });
 
             expect(suppPropArray).to.be.instanceOf(Array);
@@ -200,28 +248,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForId is called and id and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return null when getAdaptationForId is called and id is undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return null when getAdaptationForId is called and id is undefined and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = { Period: [{ AdaptationSet: [{ id: 0 }] }] };
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return valid value when getAdaptationForId is called and id is 0 and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = { Period: [{ AdaptationSet: [{ id: 0 }] }] };
             const adaptation = dashManifestModel.getAdaptationForId(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0);
@@ -234,28 +282,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForIndex is called and id and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = { Period: [{ AdaptationSet: [{ id: 0 }] }] };
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;
         });
 
         it('should return valid value when getAdaptationForIndex is called and id is 0 and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = { Period: [{ AdaptationSet: [{ id: 0 }] }] };
             const adaptation = dashManifestModel.getAdaptationForIndex(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0);
@@ -268,7 +316,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return -1 when getIndexForAdaptation is called and manifest and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             var adaptation = mpdHelper.composeAdaptation('video');
             const index = dashManifestModel.getIndexForAdaptation(adaptation, manifest, undefined);
 
@@ -290,7 +338,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and periodIndex and type are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = { Period: [] };
             const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, undefined, undefined);
 
             expect(adaptationsArray).to.be.instanceOf(Array);
@@ -298,7 +346,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = { Period: [{ AdaptationSet: [{ id: 0 }] }] };
 
             expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw('type is not defined');
         });
@@ -309,27 +357,27 @@ describe('DashManifestModel', function () {
             expect(codec).to.be.null;
         });
 
-        it('should return null when getCodec is called and adaptation.Representation_asArray is undefined', () => {
+        it('should return null when getCodec is called and adaptation.Representation is undefined', () => {
             const codec = dashManifestModel.getCodec({});
 
             expect(codec).to.be.null;
         });
 
-        it('should return null when getCodec is called and adaptation.Representation_asArray.length is -1', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: { length: -1 } });
+        it('should return null when getCodec is called and adaptation.Representation.length is -1', () => {
+            const codec = dashManifestModel.getCodec({ Representation: { length: -1 } });
 
             expect(codec).to.be.null;
         });
 
         it('should return null when getCodec is called and representationId is not an integer', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: { length: 1 } }, true);
+            const codec = dashManifestModel.getCodec({ Representation: { length: 1 } }, true);
 
             expect(codec).to.be.null;
         });
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is true', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -342,7 +390,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -355,7 +403,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec without a correct mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4 profiles="cmfc,cfhd"',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -368,7 +416,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec without an invalid mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4 profiles="cmfc,cf',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -385,28 +433,16 @@ describe('DashManifestModel', function () {
             expect(mimeType).to.be.null;
         });
 
-        it('should return null when getMimeType is called and adaptation.Representation_asArray is undefined', () => {
+        it('should return null when getMimeType is called and adaptation.Representation is undefined', () => {
             const mimeType = dashManifestModel.getMimeType({});
 
             expect(mimeType).to.be.null;
         });
 
-        it('should return null when getMimeType is called and adaptation.Representation_asArray.length is -1', () => {
-            const mimeType = dashManifestModel.getMimeType({ Representation_asArray: { length: -1 } });
+        it('should return null when getMimeType is called and adaptation.Representation.length is -1', () => {
+            const mimeType = dashManifestModel.getMimeType({ Representation: { length: -1 } });
 
             expect(mimeType).to.be.null;
-        });
-
-        it('should return null when getKID is called and adaptation is undefined', () => {
-            const kid = dashManifestModel.getKID();
-
-            expect(kid).to.be.null;
-        });
-
-        it('should return kid value when getKID is called and adaptation is well defined', () => {
-            const kid = dashManifestModel.getKID({ 'cenc:default_KID': 'testKid' });
-
-            expect(kid).to.equal('testKid');
         });
 
         it('should return empty array when getLabelsForAdaptation is called and adaptation is undefined', () => {
@@ -424,22 +460,22 @@ describe('DashManifestModel', function () {
         });
 
         it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
-            const labels = dashManifestModel.getLabelsForAdaptation({ Label_asArray: true });
+            const labels = dashManifestModel.getLabelsForAdaptation({ Label: true });
 
             expect(labels).to.be.instanceOf(Array);
             expect(labels).to.be.empty;
         });
 
-        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label_asArray', () => {
-            const labels = dashManifestModel.getLabelsForAdaptation({ Label_asArray: [] });
+        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label', () => {
+            const labels = dashManifestModel.getLabelsForAdaptation({ Label: [] });
 
             expect(labels).to.be.instanceOf(Array);
             expect(labels).to.be.empty;
         });
 
-        it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
+        it('should return correct array when getLabelsForAdaptation() is called and adaptation is well defined', () => {
             const labels = dashManifestModel.getLabelsForAdaptation({
-                Label_asArray: [{
+                Label: [{
                     lang: 'fre',
                     __text: 'french'
                 }, { lang: 'eng', __text: 'english' }]
@@ -450,17 +486,143 @@ describe('DashManifestModel', function () {
             expect(labels[0].lang).to.equal('fre');
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is undefined', () => {
-            const contentProtection = dashManifestModel.getContentProtectionData();
+        it('should return an empty array when getContentProtectionByAdaptation() is called and adaptation is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByAdaptation();
 
-            expect(contentProtection).to.be.null;
+            expect(contentProtection).to.be.empty;
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection_asArray is an empty array', () => {
-            const adaptation = { ContentProtection_asArray: [] };
-            const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
+        it('should return an empty array when getContentProtectionByAdaptation() is called and adaptation is defined, but ContentProtection is an empty array', () => {
+            const adaptation = { ContentProtection: [] };
+            const contentProtection = dashManifestModel.getContentProtectionByAdaptation(adaptation);
 
-            expect(contentProtection).to.be.null;
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByManifest() is called and manifest is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByManifest();
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByManifest() is called and manifest is defined, but ContentProtection is an empty array', () => {
+            const manifest = { ContentProtection: [] };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return all content protection elements when getContentProtectionByManifest() is called and manifest is defined', () => {
+            const manifest = {
+                ContentProtection: [{
+                    'value': 'manifest_value',
+                    'schemeIdUri': 'manifest_scheme'
+                }],
+                Period: [{
+                    ContentProtection: [{
+                        'value': 'period_value',
+                        'schemeIdUri': 'period_scheme'
+                    }, {
+                        'value': 'period_value_2',
+                        'schemeIdUri': 'period_scheme_2'
+                    }],
+                    AdaptationSet: [{
+                        ContentProtection: [{
+                            'value': 'as_value',
+                            'schemeIdUri': 'as_scheme'
+                        }, {
+                            'value': 'as_value_2',
+                            'schemeIdUri': 'as_scheme_2'
+                        }]
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(manifest);
+
+            expect(contentProtection).to.have.lengthOf(5);
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is undefined', () => {
+            const contentProtection = dashManifestModel.getContentProtectionByPeriod();
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is defined, but ContentProtection is an empty array', () => {
+            const period = { ContentProtection: [] };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(period);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return an empty array when getContentProtectionByPeriod() is called and period is defined, but ContentProtection in all child entities is an empty array', () => {
+            const period = { ContentProtection: [], AdaptationSet: { ContentProtection: [] } };
+            const contentProtection = dashManifestModel.getContentProtectionByManifest(period);
+
+            expect(contentProtection).to.be.empty;
+        });
+
+        it('should return all content protection elements when getContentProtectionByPeriod() is called and period is defined', () => {
+            const period = {
+                ContentProtection: [{
+                    'value': 'period_value',
+                    'schemeIdUri': 'period_scheme'
+                }],
+                AdaptationSet: [{
+                    ContentProtection: [{
+                        'value': 'as_value',
+                        'schemeIdUri': 'as_scheme'
+                    }, {
+                        'value': 'as_value_2',
+                        'schemeIdUri': 'as_scheme_2'
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.getContentProtectionByPeriod(period);
+
+            expect(contentProtection).to.have.lengthOf(3);
+        });
+
+        it('should return true when isPeriodEncrypted() is called and content protection is defined', () => {
+            const period = {
+                ContentProtection: [{
+                    'value': 'period_value',
+                    'schemeIdUri': 'period_scheme'
+                }],
+                AdaptationSet: [{
+                    ContentProtection: [{
+                        'value': 'as_value',
+                        'schemeIdUri': 'as_scheme'
+                    }, {
+                        'value': 'as_value_2',
+                        'schemeIdUri': 'as_scheme_2'
+                    }]
+                }]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.true
+        });
+
+        it('should return false when isPeriodEncrypted() is called and content protection is empty', () => {
+            const period = {
+                ContentProtection: [],
+                AdaptationSet: [{
+                    ContentProtection: []
+                }]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.false
+        });
+
+        it('should return false when isPeriodEncrypted() is called and content protection is not defined', () => {
+            const period = {
+                AdaptationSet: [{}]
+            };
+            const contentProtection = dashManifestModel.isPeriodEncrypted(period);
+
+            expect(contentProtection).to.be.false
         });
 
         it('should return false when getIsDynamic is called and manifest is undefined', () => {
@@ -513,7 +675,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should not return empty array when getBitrateListForAdaptation is called and adaptation is defined', () => {
-            const realAdaptation = { Representation_asArray: [{}] };
+            const realAdaptation = { Representation: [{}] };
 
             const bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
 
@@ -527,7 +689,7 @@ describe('DashManifestModel', function () {
             expect(representation).to.be.null;
         });
 
-        it('should return null when getRepresentationFor is called and index and andadaptation.Representation_asArray are undefined', () => {
+        it('should return null when getRepresentationFor is called and index and andadaptation.Representation are undefined', () => {
             const adaptation = {};
             const representation = dashManifestModel.getRepresentationFor(undefined, adaptation);
 
@@ -561,7 +723,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
-            const location = dashManifestModel.getLocation({ Location: '', Location_asArray: ['location_1'] });
+            const location = dashManifestModel.getLocation({ Location: ['location_1'] });
 
             expect(location[0].url).to.be.equal('location_1');
         });
@@ -585,7 +747,7 @@ describe('DashManifestModel', function () {
             };
             const manifest = {
                 [DashConstants.PATCH_LOCATION]: patchLocation,
-                PatchLocation_asArray: [patchLocation]
+                PatchLocation: [patchLocation]
             };
 
             const location = dashManifestModel.getPatchLocation(manifest);
@@ -618,16 +780,6 @@ describe('DashManifestModel', function () {
                     {
                         'id': '153202',
                         AdaptationSet: [{ Representation: [{ InbandEventStream: [] }] }]
-                    }
-                ],
-                Period_asArray: [
-                    {
-                        'id': '153199',
-                        AdaptationSet_asArray: [{ Representation_asArray: [{ InbandEventStream_asArray: [] }] }]
-                    },
-                    {
-                        'id': '153202',
-                        AdaptationSet_asArray: [{ Representation_asArray: [{ InbandEventStream_asArray: [] }] }]
                     }
                 ],
                 'type': 'static'
@@ -690,14 +842,6 @@ describe('DashManifestModel', function () {
                             'id': '153202'
                         }
                     ],
-                    'Period_asArray': [
-                        {
-                            'id': '153199'
-                        },
-                        {
-                            'id': '153202'
-                        }
-                    ],
                     'type': 'static',
                     'mediaPresentationDuration': 300.0
                 },
@@ -717,19 +861,6 @@ describe('DashManifestModel', function () {
             const manifest = {
                 'manifest': {
                     'Period': [
-                        {
-                            'id': '153199',
-                            'duration': 100
-                        },
-                        {
-                            'id': '153200',
-                            'duration': 50
-                        },
-                        {
-                            'id': '153201'
-                        }
-                    ],
-                    'Period_asArray': [
                         {
                             'id': '153199',
                             'duration': 100
@@ -767,19 +898,6 @@ describe('DashManifestModel', function () {
             const manifest = {
                 'manifest': {
                     'Period': [
-                        {
-                            'id': '153199'
-                        },
-                        {
-                            'id': '153200',
-                            'start': 80
-                        },
-                        {
-                            'id': '153201',
-                            'start': 120
-                        }
-                    ],
-                    'Period_asArray': [
                         {
                             'id': '153199'
                         },
@@ -842,12 +960,12 @@ describe('DashManifestModel', function () {
                     index: 0,
                     mpd: {
                         manifest: {
-                            Period_asArray: [{
-                                AdaptationSet_asArray: [{
-                                    Representation_asArray: [{
+                            Period: [{
+                                AdaptationSet: [{
+                                    Representation: [{
                                         SegmentTemplate: {
                                             SegmentTimeline: {
-                                                S_asArray: [{
+                                                S: [{
                                                     d: 2,
                                                     r: 2
                                                 }]
@@ -997,7 +1115,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] serviceLocation set to URL when no serviceLocation was specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };
@@ -1013,7 +1131,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with length 1 when multiple relative BaseUrls were specified', () => {
                 const node = {
-                    BaseURL_asArray: [
+                    BaseURL: [
                         {
                             __text: RELATIVE_TEST_URL + '0'
                         },
@@ -1033,7 +1151,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs when multiple BaseUrls were specified', () => {
                 const node = {
-                    BaseURL_asArray: [
+                    BaseURL: [
                         {
                             __text: TEST_URL + '0'
                         },
@@ -1055,7 +1173,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] serviceLocation set when serviceLocation was specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL,
                         serviceLocation: SERVICE_LOCATION
                     }]
@@ -1072,7 +1190,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] having correct defaults for DVB extensions when not specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };
@@ -1081,15 +1199,15 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(BaseURL.DEFAULT_DVB_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(BaseURL.DEFAULT_DVB_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] having correct priority and weight for DVB extensions when specified', () => {
                 const TEST_PRIORITY = 3;
                 const TEST_WEIGHT = 2;
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL,
                         'dvb:priority': TEST_PRIORITY,
                         'dvb:weight': TEST_WEIGHT
@@ -1100,14 +1218,14 @@ describe('DashManifestModel', function () {
 
                 expect(obj).to.be.instanceOf(Array);
                 expect(obj).to.have.lengthOf(1);
-                expect(obj[0].dvb_priority).to.equal(TEST_PRIORITY);
-                expect(obj[0].dvb_weight).to.equal(TEST_WEIGHT);
+                expect(obj[0].dvbPriority).to.equal(TEST_PRIORITY);
+                expect(obj[0].dvbWeight).to.equal(TEST_WEIGHT);
             });
 
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is specified and the input url is relative', () => {
                 const node = {
                     baseUri: TEST_URL,
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: RELATIVE_TEST_URL
                     }]
                 };
@@ -1122,7 +1240,7 @@ describe('DashManifestModel', function () {
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is the mpd and the input url is relative', () => {
                 const node = {
                     baseUri: TEST_URL + 'example.mpd',
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: RELATIVE_TEST_URL
                     }]
                 };
@@ -1137,7 +1255,7 @@ describe('DashManifestModel', function () {
             it('returns an Array of BaseURLs with BaseURL[0] ignoring the document base uri when the base uri is specified and the input url is absolute', () => {
                 const node = {
                     baseUri: TEST_URL,
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };
@@ -1174,7 +1292,7 @@ describe('DashManifestModel', function () {
 
             it('returns an empty Array where a single ProducerReferenceTime element on a node has missing mandatory attributes', () => {
                 const node = {
-                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                    [DashConstants.PRODUCER_REFERENCE_TIME]: [
                         {
                             [DashConstants.ID]: 4,
                             [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:00Z'
@@ -1191,7 +1309,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of ProducerReferenceTime elements with mandatory attributes', () => {
                 const node = {
-                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                    [DashConstants.PRODUCER_REFERENCE_TIME]: [
                         {
                             [DashConstants.ID]: 4,
                             [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
@@ -1220,7 +1338,7 @@ describe('DashManifestModel', function () {
 
             it('returns ProducerReferenceTimes with correct default attribute values', () => {
                 const node = {
-                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                    [DashConstants.PRODUCER_REFERENCE_TIME]: [
                         {
                             [DashConstants.ID]: 4,
                             [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:04Z',
@@ -1237,9 +1355,9 @@ describe('DashManifestModel', function () {
 
             it('returns ProducerReferenceTimes within representations', () => {
                 const node = {
-                    [DashConstants.REPRESENTATION_ASARRAY]: [
+                    [DashConstants.REPRESENTATION]: [
                         {
-                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                            [DashConstants.PRODUCER_REFERENCE_TIME]: [
                                 {
                                     [DashConstants.ID]: 1,
                                     [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
@@ -1248,7 +1366,7 @@ describe('DashManifestModel', function () {
                             ]
                         },
                         {
-                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                            [DashConstants.PRODUCER_REFERENCE_TIME]: [
                                 {
                                     [DashConstants.ID]: 2,
                                     [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
@@ -1274,16 +1392,16 @@ describe('DashManifestModel', function () {
 
             it('returns ProducerReferenceTimes at both AdaptationSet and Representation level', () => {
                 const node = {
-                    [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                    [DashConstants.PRODUCER_REFERENCE_TIME]: [
                         {
                             [DashConstants.ID]: 1,
                             [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:01Z',
                             [DashConstants.PRESENTATION_TIME]: 1
                         }
                     ],
-                    [DashConstants.REPRESENTATION_ASARRAY]: [
+                    [DashConstants.REPRESENTATION]: [
                         {
-                            [DashConstants.PRODUCERREFERENCETIME_ASARRAY]: [
+                            [DashConstants.PRODUCER_REFERENCE_TIME]: [
                                 {
                                     [DashConstants.ID]: 2,
                                     [DashConstants.WALL_CLOCK_TIME]: '1970-01-01T00:00:02Z',
@@ -1348,7 +1466,7 @@ describe('DashManifestModel', function () {
 
             it('should return content steering data from manifest', () => {
                 const manifestData = {
-                    ContentSteering_asArray: [
+                    ContentSteering: [
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',
@@ -1367,7 +1485,7 @@ describe('DashManifestModel', function () {
 
             it('should return first content steering element from manifest if multiple elements are present', () => {
                 const manifestData = {
-                    ContentSteering_asArray: [
+                    ContentSteering: [
                         {
                             'defaultServiceLocation': 'beta',
                             'queryBeforeStart': 'true',

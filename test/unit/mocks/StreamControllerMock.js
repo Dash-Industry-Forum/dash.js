@@ -1,4 +1,4 @@
-import StreamMock from './StreamMock';
+import StreamMock from './StreamMock.js';
 
 class StreamControllerMock {
 
@@ -13,6 +13,8 @@ class StreamControllerMock {
     initialize(streams) {
         this.streams = streams;
     }
+
+    refreshManifest() {}
 
     getStreams() {
         return this.streams;

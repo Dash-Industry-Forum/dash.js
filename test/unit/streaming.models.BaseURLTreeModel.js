@@ -1,12 +1,11 @@
-import BaseURLTreeModel from '../../src/streaming/models/BaseURLTreeModel';
-import DashParser from '../../src/dash/parser/DashParser';
+import BaseURLTreeModel from '../../src/streaming/models/BaseURLTreeModel.js';
+import DashParser from '../../src/dash/parser/DashParser.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock.js';
+import DebugMock from './mocks/DebugMock.js';
+import FileLoader from './helpers/FileLoader.js';
 
-import AdapterMock from './mocks/AdapterMock';
-import ContentSteeringControllerMock from './mocks/ContentSteeringControllerMock';
-import DebugMock from './mocks/DebugMock';
-import FileLoader from './helpers/FileLoader';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 describe('BaseURLTreeModel', function () {

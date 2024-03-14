@@ -28,20 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import {THUMBNAILS_SCHEME_ID_URIS} from '../thumbnail/ThumbnailTracks';
-import Constants from '../constants/Constants';
-
-const codecCompatibilityTable = [
-    {
-        'codec': 'avc1',
-        'compatibleCodecs': ['avc3']
-    },
-    {
-        'codec': 'avc3',
-        'compatibleCodecs': ['avc1']
-    }
-];
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
 
 export function supportsMediaSource() {
     let hasManagedMediaSource = ('ManagedMediaSource' in window)
@@ -69,6 +57,13 @@ function Capabilities() {
         if (config.settings) {
             settings = config.settings;
         }
+    }
+
+    function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
+        if (!newStreamInfo) {
+            return true;
+        }
+        return !(!previousStreamInfo.isEncrypted && newStreamInfo.isEncrypted);
     }
 
     /**
@@ -116,7 +111,6 @@ function Capabilities() {
      * @private
      */
     function _canUseMediaCapabilitiesApi(config, type) {
-
         return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
     }
 
@@ -197,43 +191,22 @@ function Capabilities() {
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
+        let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
         try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+            return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
         } catch (e) {
             return true;
         }
     }
 
-    /**
-     * Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
-     * @param {string} codec1
-     * @param {string} codec2
-     * @return {boolean}
-     */
-    function codecRootCompatibleWithCodec(codec1, codec2) {
-        const codecRoot = codec1.split('.')[0];
-        const rootCompatible = codec2.indexOf(codecRoot) === 0;
-        let compatTableCodec;
-        for (let i = 0; i < codecCompatibilityTable.length; i++) {
-            if (codecCompatibilityTable[i].codec === codecRoot) {
-                compatTableCodec = codecCompatibilityTable[i];
-                break;
-            }
-        }
-        if (compatTableCodec) {
-            return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
-        }
-        return rootCompatible;
-    }
-
     instance = {
+        isProtectionCompatible,
         setConfig,
-        supportsMediaSource,
-        supportsEncryptedMedia,
-        supportsCodec,
         setEncryptedMediaSupported,
+        supportsCodec,
+        supportsEncryptedMedia,
         supportsEssentialProperty,
-        codecRootCompatibleWithCodec
+        supportsMediaSource,
     };
 
     setup();

@@ -1,4 +1,4 @@
-import DashConstants from '../../../src/dash/constants/DashConstants';
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
 
 function staticSElements() {
     return [[0,10], [10,5], [15,10]].map(([t, d]) => {
@@ -14,7 +14,6 @@ function staticSegmentTimeline() {
     let sElements = staticSElements();
     return {
         S: sElements,
-        S_asArray: sElements.slice(),
         __children: sElements.map((element) => {
             return {
                 S: element
@@ -26,7 +25,7 @@ function staticSegmentTimeline() {
 function staticSegmentTemplate() {
     let timeline = staticSegmentTimeline();
     return {
-        SegmentTimeline: timeline, // purposely omit the _asArray to ensure single node case captured
+        SegmentTimeline: timeline,
         __children: [{
             SegmentTimeline: timeline
         }]
@@ -36,7 +35,7 @@ function staticSegmentTemplate() {
 function staticAdaptationSet(id) {
     let template = staticSegmentTemplate();
     return {
-        SegmentTemplate: template, // purposely omit the _asArray to ensure single node case captured
+        SegmentTemplate: template,
         __children: [{
             SegmentTemplate: template
         }],
@@ -63,10 +62,8 @@ function staticPeriod(id) {
     let baseUrl = staticBaseUrl(`period-${id}/`);
     let adaptationSets = [staticAdaptationSet(10), staticAdaptationSet(20)];
     return {
-        BaseURL: baseUrl,
-        BaseURL_asArray: [baseUrl],
+        BaseURL: [baseUrl],
         AdaptationSet: adaptationSets,
-        AdaptationSet_asArray: adaptationSets.slice(),
         __children: [
             { BaseURL: baseUrl },
             { AdaptationSet: adaptationSets[0] },
@@ -116,12 +113,9 @@ class PatchHelper {
         let utcTiming = 'timetime';
         let period = staticPeriod('foo');
         return {
-            UTCTiming: utcTiming,
-            UTCTiming_asArray: [utcTiming],
-            BaseURL: baseUrl,
-            BaseURL_asArray: [baseUrl],
-            Period: period,
-            Period_asArray: [period],
+            UTCTiming: [utcTiming],
+            BaseURL: [baseUrl],
+            Period: [period],
             __children: [
                 { UTCTiming: utcTiming },
                 { BaseURL: baseUrl },

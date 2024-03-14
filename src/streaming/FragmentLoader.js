@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from './constants/Constants';
-import URLLoader from './net/URLLoader';
-import HeadRequest from './vo/HeadRequest';
-import DashJSError from './vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
+import Constants from './constants/Constants.js';
+import URLLoader from './net/URLLoader.js';
+import HeadRequest from './vo/HeadRequest.js';
+import DashJSError from './vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function FragmentLoader(config) {
 
@@ -53,7 +53,6 @@ function FragmentLoader(config) {
             errors: errors,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier,
             urlUtils: urlUtils,
             constants: Constants,
             boxParser: config.boxParser,
@@ -103,6 +102,8 @@ function FragmentLoader(config) {
                         stream: event.stream,
                         streamId
                     });
+
+                    // Only in case of FetchAPI and low latency streaming. XHR does not have data attribute.
                     if (event.data) {
                         eventBus.trigger(events.LOADING_DATA_PROGRESS, {
                             request: request,
@@ -160,10 +161,10 @@ function FragmentLoader(config) {
     }
 
     instance = {
-        checkForExistence: checkForExistence,
-        load: load,
-        abort: abort,
-        reset: reset
+        checkForExistence,
+        load,
+        abort,
+        reset
     };
 
     setup();

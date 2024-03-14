@@ -1,17 +1,14 @@
-import BaseURLController from '../../src/streaming/controllers/BaseURLController';
-import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector';
-import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector';
-import BaseURL from '../../src/dash/vo/BaseURL';
-import ContentSteeringSelectorMock from './mocks/ContentSteeringSelectorMock';
+import BaseURLController from '../../src/streaming/controllers/BaseURLController.js';
+import BasicSelector from '../../src/streaming/utils/baseUrlResolution/BasicSelector.js';
+import BaseURLSelector from '../../src/streaming/utils/BaseURLSelector.js';
+import BaseURL from '../../src/dash/vo/BaseURL.js';
+import ContentSteeringSelectorMock from './mocks/ContentSteeringSelectorMock.js';
+import chai from 'chai';
 
-const chai = require('chai');
 const expect = chai.expect;
-
 const context = {};
-
 const SERVICE_LOCATION_A = 'a';
 const SERVICE_LOCATION_B = 'b';
-
 const contentSteeringSelectorMock = new ContentSteeringSelectorMock();
 
 const dummyBaseURLTreeModel = {

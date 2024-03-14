@@ -29,12 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from './src/streaming/MediaPlayer';
-import FactoryMaker from './src/core/FactoryMaker';
-import Debug from './src/core/Debug';
-import { getVersionString } from './src/core/Version';
+import MediaPlayer from './src/streaming/MediaPlayer.js';
+import FactoryMaker from './src/core/FactoryMaker.js';
+import Debug from './src/core/Debug.js';
+import { getVersionString } from './src/core/Version.js';
 
-import { } from 'es6-promise/auto';
+import { } from 'es6-promise/auto.js';
 
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;

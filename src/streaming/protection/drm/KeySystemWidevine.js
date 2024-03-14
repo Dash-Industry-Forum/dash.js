@@ -36,8 +36,8 @@
  * @implements MediaPlayer.dependencies.protection.KeySystem
  */
 
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
 const systemString = ProtectionConstants.WIDEVINE_KEYSTEM_STRING;

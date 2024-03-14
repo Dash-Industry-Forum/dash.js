@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './FactoryMaker';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
+import FactoryMaker from './FactoryMaker.js';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
 
 const EVENT_PRIORITY_LOW = 0;
 const EVENT_PRIORITY_HIGH = 5000;

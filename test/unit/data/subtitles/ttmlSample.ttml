@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" 
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xml:lang="en" xml:space="default"
+    ttp:timeBase="media" ttp:cellResolution="40 24">
+
+    <head>
+        <styling>
+            <style xml:id="S0" tts:wrapOption="wrap" tts:fontFamily="UnitTestFont,Arial,Roboto,proportionalSansSerif, default" tts:textAlign="center" tts:fontSize="80%" />
+        </styling>
+        <layout>
+            <region xml:id="R1" tts:origin="12.5% 75%" tts:extent="75% 20%" tts:overflow="hidden" tts:displayAlign="before"/>
+            <region xml:id="R2" tts:origin="5% 60%" tts:extent="20% 20%" tts:overflow="hidden" tts:displayAlign="after"/>
+        </layout>
+    </head>
+    <body style="S0">
+        <div region="R1">
+            <p xml:id="p1-1-0" begin="00:00:00" end="00:00:10">
+                Dash.js unit tests:<br/>
+            </p>
+        </div>
+        <div region="R2">
+            <p xml:id="p2-1-0" begin="00:00:05" end="00:00:10">
+                TTML Sample
+            </p>
+        </div>
+    </body>
+</tt>

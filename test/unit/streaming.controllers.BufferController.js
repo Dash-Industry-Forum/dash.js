@@ -1,23 +1,23 @@
-import BufferController from '../../src/streaming/controllers/BufferController';
-import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
-import InitCache from '../../src/streaming/utils/InitCache';
-import Settings from '../../src/core/Settings';
+import BufferController from '../../src/streaming/controllers/BufferController.js';
+import EventBus from '../../src/core/EventBus.js';
+import Events from '../../src/core/events/Events.js';
+import InitCache from '../../src/streaming/utils/InitCache.js';
+import Settings from '../../src/core/Settings.js';
 
-import StreamControllerMock from './mocks/StreamControllerMock';
-import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import AdapterMock from './mocks/AdapterMock';
-import MediaSourceMock from './mocks/MediaSourceMock';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import MediaControllerMock from './mocks/MediaControllerMock';
-import AbrControllerMock from './mocks/AbrControllerMock';
-import TextControllerMock from './mocks/TextControllerMock';
-import RepresentationControllerMock from './mocks/RepresentationControllerMock';
+import StreamControllerMock from './mocks/StreamControllerMock.js';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import MediaSourceMock from './mocks/MediaSourceMock.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import MediaControllerMock from './mocks/MediaControllerMock.js';
+import AbrControllerMock from './mocks/AbrControllerMock.js';
+import TextControllerMock from './mocks/TextControllerMock.js';
+import RepresentationControllerMock from './mocks/RepresentationControllerMock.js';
 
-const chai = require('chai');
-const sinon = require('sinon');
+import chai from 'chai';
+
 const expect = chai.expect;
 
 const context = {};
@@ -130,11 +130,13 @@ describe('BufferController', function () {
             const chunk = {
                 bytes: 'initData',
                 quality: 2,
-                mediaInfo: {
-                    type: 'video'
-                },
                 streamId: streamInfo.id,
-                representationId: 'representationId'
+                representation: {
+                    id: 'representationId',
+                    mediaInfo: {
+                        type: 'video'
+                    },
+                }
             };
 
             initCache.save(chunk);
@@ -184,12 +186,14 @@ describe('BufferController', function () {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,
-                    mediaInfo: {
-                        type: 'video'
-                    },
                     bytes: 'initData',
                     quality: 2,
-                    representationId: 'representationId'
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
+                    }
                 }
             };
             const onInitDataLoaded = function () {
@@ -207,12 +211,14 @@ describe('BufferController', function () {
         it('should save init data into cache', function (done) {
             const chunk = {
                 streamId: streamInfo.id,
-                mediaInfo: {
-                    type: 'video'
-                },
                 bytes: 'initData',
                 quality: 2,
-                representationId: 'representationId'
+                representation: {
+                    id: 'representationId',
+                    mediaInfo: {
+                        type: 'video'
+                    },
+                }
             };
             const event = {
                 chunk: chunk
@@ -221,12 +227,12 @@ describe('BufferController', function () {
             settings.update({ streaming: { cacheInitSegments: true } });
 
             initCache.reset();
-            let cache = initCache.extract(chunk.streamId, chunk.representationId);
+            let cache = initCache.extract(chunk.streamId, chunk.representation.id);
             const onInitDataLoaded = function () {
                 eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
 
                 // check initCache
-                cache = initCache.extract(chunk.streamId, chunk.representationId);
+                cache = initCache.extract(chunk.streamId, chunk.representation.id);
                 expect(cache.bytes).to.equal(chunk.bytes);
                 done();
             };
@@ -253,11 +259,14 @@ describe('BufferController', function () {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,
-                    mediaInfo: {
-                        type: 'video'
-                    },
                     bytes: 'data',
-                    quality: 2
+                    quality: 2,
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
+                    }
                 }
             };
             const onMediaFragmentLoaded = function () {
@@ -278,8 +287,11 @@ describe('BufferController', function () {
                     streamId: streamInfo.id,
                     bytes: 'data',
                     quality: 2,
-                    mediaInfo: {
-                        type: 'video'
+                    representation: {
+                        id: 'representationId',
+                        mediaInfo: {
+                            type: 'video'
+                        },
                     }
                 }
             };
@@ -295,7 +307,6 @@ describe('BufferController', function () {
     });
 
     describe('Method updateBufferTimestampOffset', function () {
-        let adapterStub;
 
         beforeEach(function (done) {
             bufferController.initialize(mediaSourceMock);
@@ -307,15 +318,9 @@ describe('BufferController', function () {
                     done(e);
                 });
 
-            adapterStub = sinon.stub(adapterMock, 'convertRepresentationToRepresentationInfo');
         });
 
-        afterEach(function () {
-            adapterStub.restore();
-            adapterStub = null;
-        });
-
-        it('should not update buffer timestamp offset if no representationInfo is provided', function (done) {
+        it('should not update buffer timestamp offset if no voRepresentation is provided', function (done) {
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
             // send event
@@ -330,12 +335,12 @@ describe('BufferController', function () {
 
         });
 
-        it('should  update buffer timestamp offset if  representationInfo is provided', function (done) {
+        it('should  update buffer timestamp offset if  voRepresentation is provided', function (done) {
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
-            const representationInfo = { MSETimeOffset: 2 };
+            const representation = { mseTimeOffset: 2 };
             // send event
-            bufferController.updateBufferTimestampOffset(representationInfo)
+            bufferController.updateBufferTimestampOffset(representation)
                 .then(() => {
                     expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(2);
                     done();

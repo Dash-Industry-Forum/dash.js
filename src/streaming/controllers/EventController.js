@@ -29,11 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import XHRLoader from '../net/XHRLoader';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import XHRLoader from '../net/XHRLoader.js';
 
 function EventController() {
 

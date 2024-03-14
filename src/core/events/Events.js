@@ -32,8 +32,10 @@
  * @class
  * @ignore
  */
-import CoreEvents from './CoreEvents';
+import CoreEvents from './CoreEvents.js';
+
 class Events extends CoreEvents {
 }
+
 let events = new Events();
 export default events;

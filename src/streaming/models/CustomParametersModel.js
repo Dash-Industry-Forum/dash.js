@@ -28,12 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import UTCTiming from '../../dash/vo/UTCTiming';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import {checkParameterType} from '../utils/SupervisorTools';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import Constants from '../constants/Constants';
+import UTCTiming from '../../dash/vo/UTCTiming.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import {checkParameterType} from '../utils/SupervisorTools.js';
+import Constants from '../constants/Constants.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -42,6 +41,8 @@ function CustomParametersModel() {
     let instance,
         utcTimingSources,
         xhrWithCredentials,
+        requestInterceptors,
+        responseInterceptors,
         licenseRequestFilters,
         licenseResponseFilters,
         customCapabilitiesFilters,
@@ -59,6 +60,8 @@ function CustomParametersModel() {
     }
 
     function _resetInitialSettings() {
+        requestInterceptors = [];
+        responseInterceptors = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
@@ -220,7 +223,7 @@ function CustomParametersModel() {
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      */
     function addAbrCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+        if (typeof type !== 'string' || (type !== Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES && type !== Constants.RULES_TYPES.QUALITY_SWITCH_RULES) ||
             typeof rulename !== 'string') {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
@@ -273,6 +276,57 @@ function CustomParametersModel() {
         return customAbrRules;
     }
 
+    /**
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the request interceptor callback
+     */
+    function addRequestInterceptor(interceptor) {
+        requestInterceptors.push(interceptor);
+    }
+
+    /**
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the response interceptor callback
+     */
+    function addResponseInterceptor(interceptor) {
+        responseInterceptors.push(interceptor);
+    }
+
+    /**
+     * Unregisters a request interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     */ 
+    function removeRequestInterceptor(interceptor) {
+        _unregisterFilter(requestInterceptors, interceptor);
+    }
+
+    /**
+     * Unregisters a response interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     */    
+    function removeResponseInterceptor(interceptor) {
+        _unregisterFilter(responseInterceptors, interceptor);
+    }
+
+    /**
+     * Returns all request interceptors
+     * @return {array}
+     */
+    function getRequestInterceptors() {
+        return requestInterceptors;
+    }
+
+    /**
+     * Returns all response interceptors
+     * @return {array}
+     */
+    function getResponseInterceptors() {
+        return responseInterceptors;
+    }
 
     /**
      * Add a UTC timing source at the top of the list
@@ -358,6 +412,12 @@ function CustomParametersModel() {
         removeAllAbrCustomRule,
         removeAbrCustomRule,
         getAbrCustomRules,
+        addRequestInterceptor,
+        addResponseInterceptor,
+        removeRequestInterceptor,
+        removeResponseInterceptor,
+        getRequestInterceptors,
+        getResponseInterceptors,
         addUTCTimingSource,
         removeUTCTimingSource,
         getUTCTimingSources,

@@ -1,11 +1,10 @@
-import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import RulesContextMock from './mocks/RulesContextMock';
-import Settings from '../../src/core/Settings';
-
-const expect = require('chai').expect;
+import AbandonRequestsRule from '../../src/streaming/rules/abr/AbandonRequestsRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import RulesContextMock from './mocks/RulesContextMock.js';
+import Settings from '../../src/core/Settings.js';
+import {expect} from 'chai';
 
 const context = {};
 
@@ -16,7 +15,7 @@ describe('AbandonRequestsRule', function () {
         const abandonRequestsRule = AbandonRequestsRule(context).create({});
         const abandonRequest = abandonRequestsRule.shouldAbandon();
 
-        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(abandonRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty switchRequest when shouldAbandon function is called with a mock parameter', function () {
@@ -32,6 +31,6 @@ describe('AbandonRequestsRule', function () {
 
         const abandonRequest = abandonRequestsRule.shouldAbandon(rulesContextMock);
 
-        expect(abandonRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(abandonRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 });

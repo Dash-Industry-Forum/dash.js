@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CommonEncryption from './../CommonEncryption';
-import KeySystemClearKey from './../drm/KeySystemClearKey';
-import KeySystemW3CClearKey from './../drm/KeySystemW3CClearKey';
-import KeySystemWidevine from './../drm/KeySystemWidevine';
-import KeySystemPlayReady from './../drm/KeySystemPlayReady';
-import DRMToday from './../servers/DRMToday';
-import PlayReady from './../servers/PlayReady';
-import Widevine from './../servers/Widevine';
-import ClearKey from './../servers/ClearKey';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import CommonEncryption from './../CommonEncryption.js';
+import KeySystemClearKey from './../drm/KeySystemClearKey.js';
+import KeySystemW3CClearKey from './../drm/KeySystemW3CClearKey.js';
+import KeySystemWidevine from './../drm/KeySystemWidevine.js';
+import KeySystemPlayReady from './../drm/KeySystemPlayReady.js';
+import DRMToday from './../servers/DRMToday.js';
+import PlayReady from './../servers/PlayReady.js';
+import Widevine from './../servers/Widevine.js';
+import ClearKey from './../servers/ClearKey.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 /**
  * @module ProtectionKeyController
@@ -69,7 +69,7 @@ function ProtectionKeyController() {
             BASE64 = config.BASE64;
         }
 
-        if(config.settings) {
+        if (config.settings) {
             settings = config.settings
         }
     }
@@ -80,20 +80,20 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
+        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64, settings: settings });
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, debug: debug});
+        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -194,48 +194,50 @@ function ProtectionKeyController() {
      * key systems that are supported by this player will be returned.
      * Key systems are returned in priority order (highest first).
      *
-     * @param {Array.<Object>} cps - array of content protection elements parsed
+     * @param {Array.<Object>} contentProtectionElements - array of content protection elements parsed
      * from the manifest
-     * @param {ProtectionData} protDataSet user specified protection data - license server url etc
+     * @param {ProtectionData} applicationSpecifiedProtectionData user specified protection data - license server url etc
      * supported by the content
-     * @param {string} default session type
+     * @param {string} sessionType session type
      * @returns {Array.<Object>} array of objects indicating which supported key
-     * systems were found.  Empty array is returned if no
-     * supported key systems were found
+     * systems were found.  Empty array is returned if no supported key systems were found
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType) {
+    function getSupportedKeySystemsFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
         let cp, ks, ksIdx, cpIdx;
         let supportedKS = [];
 
-        if (cps) {
-            const cencContentProtection = CommonEncryption.findCencContentProtection(cps);
-            for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-                ks = keySystems[ksIdx];
+        if (!contentProtectionElements || !contentProtectionElements.length) {
+            return supportedKS
+        }
 
-                // Get protection data that applies for current key system
-                const protData = _getProtDataForKeySystem(ks.systemString, protDataSet);
+        const mp4ProtectionElement = CommonEncryption.findMp4ProtectionElement(contentProtectionElements);
+        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+            ks = keySystems[ksIdx];
 
-                for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
-                    cp = cps[cpIdx];
-                    if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
-                        // Look for DRM-specific ContentProtection
-                        let initData = ks.getInitData(cp, cencContentProtection);
+            // Get protection data that applies for current key system
+            const protData = _getProtDataForKeySystem(ks.systemString, applicationSpecifiedProtectionData);
 
-                        supportedKS.push({
-                            ks: keySystems[ksIdx],
-                            keyId: cp.keyId,
-                            initData: initData,
-                            protData: protData,
-                            cdmData: ks.getCDMData(protData ? protData.cdmData : null),
-                            sessionId: _getSessionId(protData, cp),
-                            sessionType: _getSessionType(protData, sessionType)
-                        });
-                    }
+            for (cpIdx = 0; cpIdx < contentProtectionElements.length; ++cpIdx) {
+                cp = contentProtectionElements[cpIdx];
+                if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
+                    // Look for DRM-specific ContentProtection
+                    let initData = ks.getInitData(cp, mp4ProtectionElement);
+
+                    supportedKS.push({
+                        ks: keySystems[ksIdx],
+                        keyId: cp.keyId,
+                        initData: initData,
+                        protData: protData,
+                        cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+                        sessionId: _getSessionId(protData, cp),
+                        sessionType: _getSessionType(protData, sessionType)
+                    });
                 }
             }
         }
+
         return supportedKS;
     }
 
@@ -308,7 +310,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
+            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {
@@ -359,7 +361,9 @@ function ProtectionKeyController() {
     }
 
     function _getProtDataForKeySystem(systemString, protDataSet) {
-        if (!protDataSet) return null;
+        if (!protDataSet) {
+            return null;
+        }
         return (systemString in protDataSet) ? protDataSet[systemString] : null;
     }
 

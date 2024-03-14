@@ -45,7 +45,7 @@ function LowestBitrateRuleClass() {
     }
 
     // Always use lowest bitrate
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
@@ -74,7 +74,7 @@ function LowestBitrateRuleClass() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

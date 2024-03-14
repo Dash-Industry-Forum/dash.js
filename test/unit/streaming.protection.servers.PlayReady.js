@@ -1,7 +1,6 @@
-import PlayReady from '../../src/streaming/protection/servers/PlayReady';
-import FileLoader from './helpers/FileLoader';
-
-const expect = require('chai').expect;
+import PlayReady from '../../src/streaming/protection/servers/PlayReady.js';
+import FileLoader from './helpers/FileLoader.js';
+import {expect} from 'chai';
 
 describe('PlayReady', function () {
 

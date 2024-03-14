@@ -1,19 +1,18 @@
-import PlaybackController from '../../src/streaming/controllers/PlaybackController';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
-import Settings from '../../src/core/Settings';
+import PlaybackController from '../../src/streaming/controllers/PlaybackController.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import Settings from '../../src/core/Settings.js';
+import VideoModelMock from './mocks/VideoModelMock.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import StreamControllerMock from './mocks/StreamControllerMock.js';
+import StreamMock from './mocks/StreamMock.js';
+import URIFragmentModelMock from './mocks/URIFragmentModelMock.js';
+import AdapterMock from './mocks/AdapterMock.js';
+import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController.js';
 
-import VideoModelMock from './mocks/VideoModelMock';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import StreamControllerMock from './mocks/StreamControllerMock';
-import StreamMock from './mocks/StreamMock';
-import URIFragmentModelMock from './mocks/URIFragmentModelMock';
-import AdapterMock from './mocks/AdapterMock';
-import ServiceDescriptionController from '../../src/dash/controllers/ServiceDescriptionController';
-
-const expect = require('chai').expect;
+import {expect} from 'chai';
 const context = {};
-const sinon = require('sinon');
+import sinon from 'sinon';
 
 const eventBus = EventBus(context).getInstance();
 
@@ -402,12 +401,12 @@ describe('PlaybackController', function () {
                 let onError = function (e) {
                     eventBus.off(Events.PLAYBACK_ERROR, onError);
 
-                    expect(e.error).to.equal('error');
+                    expect(e.error.message).to.equal('error');
                     done();
                 };
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
-                videoModelMock.fireEvent('error', [{ target: { error: 'error' } }]);
+                videoModelMock.fireEvent('error', [{ target: { error: { code: 3, message: 'error' } } }]);
             });
 
             it('should handle stalled event', function (done) {

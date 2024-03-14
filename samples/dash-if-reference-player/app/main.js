@@ -180,7 +180,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         textEnabled: true,
         forceTextStreaming: false
     };
-    $scope.additionalAbrRules = {};
+    $scope.activeAbrRules = {};
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
     $scope.updateMetricsInterval = 1000;
@@ -232,6 +232,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.protData = {};
 
     $scope.drmToday = false;
+
+    $scope.imscEnableRollUp = true;
+    $scope.imscdisplayForcedOnlyMode = false;
 
     $scope.isDynamic = false;
 
@@ -314,7 +317,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoAutoSwitchSelected = true;
     $scope.forceQualitySwitchSelected = false;
     $scope.videoQualities = [];
-    $scope.ABRStrategy = 'abrDynamic';
 
     $scope.liveCatchupMode = 'liveCatchupModeDefault';
     $scope.abrThroughputCalculationMode = 'abrFetchThroughputCalculationMoofParsing';
@@ -425,9 +427,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
         var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+        var availableRepresentations = $scope.player.getRepresentationsByType(e.mediaType)
+        var maxIndex = availableRepresentations ? availableRepresentations.length : 0;
 
-        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.index + 1;
-        $scope[e.mediaType + 'PendingMaxIndex'] = e.numberOfRepresentations;
+        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.absoluteIndex + 1;
+        $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
@@ -439,14 +443,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + 'Index'] = e.newQuality + 1;
+        $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndex + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
-        $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
+        $scope.videoQualities = $scope.player.getRepresentationsByType('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');
@@ -508,16 +512,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.setMute($scope.muted)
     }
 
-    $scope.changeFetchThroughputCalculation = function (mode) {
-        $scope.player.updateSettings({
-            streaming: {
-                abr: {
-                    fetchThroughputCalculationMode: mode
-                }
-            }
-        });
-    };
-
     $scope.changeLiveCatchupMode = function (mode) {
         $scope.player.updateSettings({
             streaming: {
@@ -527,52 +521,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             }
         });
 
-    };
-
-    $scope.changeABRStrategy = function (strategy) {
-        $scope.player.updateSettings({
-            streaming: {
-                buffer: {
-                    stallThreshold: 0.5
-                },
-                abr: {
-                    ABRStrategy: strategy
-                }
-            }
-        });
-
-        if (strategy === 'abrLoLP') {
-            $scope.player.updateSettings({
-                streaming: {
-                    buffer: {
-                        stallThreshold: 0.05
-                    }
-                }
-            });
-            $scope.changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing');
-            document.getElementById('abrFetchThroughputCalculationMoofParsing').checked = true;
-
-            $scope.changeLiveCatchupMode('liveCatchupModeLoLP');
-            document.getElementById('liveCatchupModeLoLP').checked = true;
-        }
-    };
-
-    $scope.toggleUseCustomABRRules = function () {
-        $scope.player.updateSettings({
-            'streaming': {
-                'abr': {
-                    'useDefaultABRRules': !$scope.customABRRulesSelected
-                }
-            }
-        });
-
-        if ($scope.customABRRulesSelected) {
-            $scope.player.addABRCustomRule('qualitySwitchRules', 'DownloadRatioRule', DownloadRatioRule); /* jshint ignore:line */
-            $scope.player.addABRCustomRule('qualitySwitchRules', 'ThroughputRule', CustomThroughputRule); /* jshint ignore:line */
-        } else {
-            $scope.player.removeABRCustomRule('DownloadRatioRule');
-            $scope.player.removeABRCustomRule('ThroughputRule');
-        }
     };
 
     $scope.toggleFastSwitch = function () {
@@ -631,11 +579,31 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             streaming: {
                 abr: {
-                    additionalAbrRules: {
-                        insufficientBufferRule: $scope.additionalAbrRules.insufficientBufferRule,
-                        switchHistoryRule: $scope.additionalAbrRules.switchHistoryRule,
-                        droppedFramesRule: $scope.additionalAbrRules.droppedFramesRule,
-                        abandonRequestsRule: $scope.additionalAbrRules.abandonRequestsRule,
+                    rules: {
+                        throughputRule: {
+                            active: $scope.activeAbrRules.throughputRule
+                        },
+                        bolaRule: {
+                            active: $scope.activeAbrRules.bolaRule
+                        },
+                        insufficientBufferRule: {
+                            active: $scope.activeAbrRules.insufficientBufferRule,
+                        },
+                        switchHistoryRule: {
+                            active: $scope.activeAbrRules.switchHistoryRule
+                        },
+                        droppedFramesRule: {
+                            active: $scope.activeAbrRules.droppedFramesRule
+                        },
+                        abandonRequestsRule: {
+                            active: $scope.activeAbrRules.abandonRequestsRule
+                        },
+                        l2ARule: {
+                            active: $scope.activeAbrRules.l2ARule
+                        },
+                        loLPRule: {
+                            active: $scope.activeAbrRules.loLPRule
+                        }
                     }
                 }
             }
@@ -644,9 +612,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleScheduleWhilePaused = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'scheduling': {
-                    'scheduleWhilePaused': $scope.scheduleWhilePausedSelected
+            streaming: {
+                scheduling: {
+                    scheduleWhilePaused: $scope.scheduleWhilePausedSelected
                 }
             }
         });
@@ -819,6 +787,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleForcedTextStreaming = function () {
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
+    }
+
+    $scope.toggleImscEnableRollUp = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
+    }
+
+    $scope.toggleImscdisplayForcedOnlyMode = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -1004,7 +980,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var config = {
             streaming: {
                 buffer: {
-                    stableBufferTime: $scope.defaultStableBufferDelay,
+                    bufferTimeDefault: $scope.defaultStableBufferDelay,
                     bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
                     bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
                 },
@@ -1023,8 +999,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 config.streaming.delay.liveDelay = selectedConfig.liveDelay;
             }
 
-            if (selectedConfig.stableBufferTime) {
-                config.streaming.buffer.stableBufferTime = selectedConfig.stableBufferTime;
+            if (selectedConfig.bufferTimeDefault) {
+                config.streaming.buffer.bufferTimeDefault = selectedConfig.bufferTimeDefault;
             }
 
             if (selectedConfig.bufferTimeAtTopQuality) {
@@ -2055,10 +2031,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var period = dashAdapter.getPeriodById($scope.currentStreamInfo.id);
             var periodIdx = period ? period.index : $scope.currentStreamInfo.index;
 
-            var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
+            var representations = $scope.player.getRepresentationsByType(type);
+            var maxIndex = representations ? representations.length : 1;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            var index = $scope.player.getQualityFor(type);
+            if ($scope.player.getCurrentRepresentationForType(type)) {
+                var index = $scope.player.getCurrentRepresentationForType(type).absoluteIndex + 1;
+            }
 
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
             var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
@@ -2135,7 +2114,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         // get buffer default value
         var currentConfig = $scope.player.getSettings();
         $scope.defaultLiveDelay = currentConfig.streaming.delay.liveDelay;
-        $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.stableBufferTime;
+        $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.bufferTimeDefault;
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
@@ -2144,12 +2123,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAbrRules() {
         var currentConfig = $scope.player.getSettings();
-        $scope.additionalAbrRules.insufficientBufferRule = currentConfig.streaming.abr.additionalAbrRules.insufficientBufferRule;
-        $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.additionalAbrRules.switchHistoryRule;
-        $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
-        $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
-        $scope.ABRStrategy = currentConfig.streaming.abr.ABRStrategy;
-        $scope.abrThroughputCalculationMode = currentConfig.streaming.abr.fetchThroughputCalculationMode;
+        $scope.activeAbrRules.throughputRule = currentConfig.streaming.abr.rules.throughputRule.active;
+        $scope.activeAbrRules.bolaRule = currentConfig.streaming.abr.rules.bolaRule.active;
+        $scope.activeAbrRules.insufficientBufferRule = currentConfig.streaming.abr.rules.insufficientBufferRule.active;
+        $scope.activeAbrRules.switchHistoryRule = currentConfig.streaming.abr.rules.switchHistoryRule.active;
+        $scope.activeAbrRules.droppedFramesRule = currentConfig.streaming.abr.rules.droppedFramesRule.active;
+        $scope.activeAbrRules.abandonRequestsRule = currentConfig.streaming.abr.rules.abandonRequestsRule.active;
+        $scope.activeAbrRules.loLPRule = currentConfig.streaming.abr.rules.loLPRule.active;
+        $scope.activeAbrRules.l2ARule = currentConfig.streaming.abr.rules.l2ARule.active;
     }
 
     function setAdditionalPlaybackOptions() {
@@ -2170,14 +2151,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var currentConfig = $scope.player.getSettings();
         $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
         $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
-        $scope.customABRRulesSelected = !currentConfig.streaming.abr.useDefaultABRRules;
     }
 
     function setDrmOptions() {
-        var currentConfig = $scope.player.getSettings();
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
+    }
+
+    function setTextOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.imscEnableRollUp = currentConfig.streaming.text.imsc.enableRollUp;
+        $scope.imscdisplayForcedOnlyMode = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
     }
 
     function setLiveDelayOptions() {
@@ -2335,6 +2320,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
             setDrmOptions();
+            setTextOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();

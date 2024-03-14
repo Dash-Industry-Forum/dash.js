@@ -1,12 +1,10 @@
-import InsufficientBufferRule from '../../src/streaming/rules/abr/InsufficientBufferRule';
-import SwitchRequest from '../../src/streaming/rules/SwitchRequest';
-import Constants from '../../src/streaming/constants/Constants';
+import InsufficientBufferRule from '../../src/streaming/rules/abr/InsufficientBufferRule.js';
+import SwitchRequest from '../../src/streaming/rules/SwitchRequest.js';
 import EventBus from '../../src/core/EventBus.js';
-import Events from '../../src/core/events/Events';
-import DashMetricsMock from './mocks/DashMetricsMock';
-import Settings from '../../src/core/Settings';
-
-const expect = require('chai').expect;
+import Events from '../../src/core/events/Events.js';
+import DashMetricsMock from './mocks/DashMetricsMock.js';
+import Settings from '../../src/core/Settings.js';
+import {expect} from 'chai';
 
 const context = {};
 let insufficientBufferRule;
@@ -21,21 +19,18 @@ describe('InsufficientBufferRule', function () {
         });
     });
 
-    it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
-        const maxIndexRequest = insufficientBufferRule.getMaxIndex();
+    it('should return an empty switchRequest when getSwitchRequest function is called with an empty parameter', function () {
+        const maxIndexRequest = insufficientBufferRule.getSwitchRequest();
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
-    it('should return an empty switchRequest when getMaxIndex function is called with an malformed parameter', function () {
-        const maxIndexRequest = insufficientBufferRule.getMaxIndex({});
+    it('should return an empty switchRequest when getSwitchRequest function is called with an malformed parameter', function () {
+        const maxIndexRequest = insufficientBufferRule.getSwitchRequest({});
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
-    it('should throw an exception when attempting to call getMaxIndex While the config attribute has not been set properly', function () {
-        expect(insufficientBufferRule.getMaxIndex.bind(insufficientBufferRule, { getMediaType: {} })).to.throw(Constants.MISSING_CONFIG_ERROR);
-    });
 
     it('should return an empty switch request when bufferState is empty', function () {
         const dashMetricsMock = new DashMetricsMock();
@@ -52,7 +47,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getRepresentation: function () {
                 return { fragmentDuration: 4 };
             },
             getScheduleController: function () {
@@ -72,8 +67,8 @@ describe('InsufficientBufferRule', function () {
             settings
         });
 
-        const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        const maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty switch request when first call is done with a buffer in state bufferStalled', function () {
@@ -94,7 +89,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getRepresentation: function () {
                 return { fragmentDuration: 4 };
             },
             getScheduleController: function () {
@@ -114,8 +109,8 @@ describe('InsufficientBufferRule', function () {
             settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
-        let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        let maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty switch request with a buffer in state bufferLoaded and fragmentDuration is NaN', function () {
@@ -136,7 +131,7 @@ describe('InsufficientBufferRule', function () {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
+            getRepresentation: function () {
                 return { fragmentDuration: NaN };
             },
             getScheduleController: function () {
@@ -156,15 +151,15 @@ describe('InsufficientBufferRule', function () {
             settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
-        const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
+        const maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return index 0 after two fragments appended with a buffer in state bufferLoaded and fragmentDuration is NaN and then bufferStalled with fragmentDuration > 0', function () {
         let bufferState = {
             state: 'bufferLoaded'
         };
-        let representationInfo = { fragmentDuration: NaN };
+        let voRepresentation = { fragmentDuration: NaN, id: 1 };
         const dashMetricsMock = new DashMetricsMock();
         const rulesContextMock = {
             getMediaInfo: function () {
@@ -173,14 +168,19 @@ describe('InsufficientBufferRule', function () {
                 return 'video';
             },
             getAbrController: function () {
+                return {
+                    getOptimalRepresentationForBitrate: function () {
+                        return voRepresentation
+                    }
+                }
             },
             getStreamInfo: function () {
                 return {
                     id: 'DUMMY_STREAM-01'
                 };
             },
-            getRepresentationInfo: function () {
-                return representationInfo;
+            getRepresentation: function () {
+                return voRepresentation;
             },
             getScheduleController: function () {
                 return {
@@ -210,16 +210,16 @@ describe('InsufficientBufferRule', function () {
 
         bufferState.state = 'bufferStalled';
         dashMetricsMock.addBufferState('video', bufferState);
-        representationInfo.fragmentDuration = 4;
-        const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(0);
+        voRepresentation.fragmentDuration = 4;
+        const maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation.id).to.be.equal(1);
     });
 
     it('should return index -1 for zero and one fragments appended after a seek, then index 0 afterwards when bufferStalled', function () {
         const bufferState = {
             state: 'bufferStalled'
         };
-        const representationInfo = { fragmentDuration: 4 };
+        const voRepresentation = { fragmentDuration: 4, id: 1 };
         const dashMetricsMock = new DashMetricsMock();
         dashMetricsMock.addBufferState('video', bufferState);
 
@@ -230,9 +230,14 @@ describe('InsufficientBufferRule', function () {
                 return 'video';
             },
             getAbrController: function () {
+                return {
+                    getOptimalRepresentationForBitrate: function () {
+                        return voRepresentation
+                    }
+                }
             },
-            getRepresentationInfo: function () {
-                return representationInfo;
+            getRepresentation: function () {
+                return voRepresentation;
             },
             getStreamInfo: function () {
                 return {
@@ -257,17 +262,17 @@ describe('InsufficientBufferRule', function () {
             settings
         });
 
-        let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(-1);
+        let maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
 
         let e = { mediaType: 'video', startTime: 0 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
-        maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(-1);
+        maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation).to.be.equal(SwitchRequest.NO_CHANGE);
 
         e = { mediaType: 'video', startTime: 4 };
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
-        maxIndexRequest = rule.getMaxIndex(rulesContextMock);
-        expect(maxIndexRequest.quality).to.be.equal(0);
+        maxIndexRequest = rule.getSwitchRequest(rulesContextMock);
+        expect(maxIndexRequest.representation.id).to.be.equal(1);
     });
 });

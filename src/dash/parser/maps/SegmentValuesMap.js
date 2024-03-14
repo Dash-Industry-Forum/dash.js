@@ -31,8 +31,8 @@
 /**
  * @classdesc a SegmentValuesMap type for input to objectiron
  */
-import MapNode from './MapNode';
-import DashConstants from '../../constants/DashConstants';
+import MapNode from './MapNode.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 class SegmentValuesMap extends MapNode {
     constructor() {

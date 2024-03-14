@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ObjectIron(mappers) {
 
@@ -72,7 +72,7 @@ function ObjectIron(mappers) {
         for (let i = 0, len = item.children.length; i < len; ++i) {
             const childItem = item.children[i];
 
-            const array = node[childItem.name + '_asArray'];
+            const array = node[childItem.name];
             if (array) {
                 for (let v = 0, len2 = array.length; v < len2; ++v) {
                     const childNode = array[v];
@@ -89,15 +89,15 @@ function ObjectIron(mappers) {
             return source;
         }
 
-        if (source.Period_asArray && 'period' in mappers) {
+        if (source.Period && 'period' in mappers) {
             const periodMapper = mappers.period;
-            const periods = source.Period_asArray;
+            const periods = source.Period;
             for (let i = 0, len = periods.length; i < len; ++i) {
                 const period = periods[i];
                 mapItem(periodMapper, period);
 
                 if ('adaptationset' in mappers) {
-                    const adaptationSets = period.AdaptationSet_asArray;
+                    const adaptationSets = period.AdaptationSet;
                     if (adaptationSets) {
                         const adaptationSetMapper = mappers.adaptationset;
                         for (let i = 0, len = adaptationSets.length; i < len; ++i) {

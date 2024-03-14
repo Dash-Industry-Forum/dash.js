@@ -35,8 +35,8 @@
  * @class
  * @implements KeySystem
  */
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
 const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;
@@ -197,14 +197,14 @@ function KeySystemPlayReady(config) {
             return null;
         }
         // Handle common encryption PSSH
-        if ('pssh' in cpData) {
+        if ('pssh' in cpData && cpData.pssh) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
         }
         // Handle native MS PlayReady ContentProtection elements
-        if ('pro' in cpData) {
+        if ('pro' in cpData && cpData.pro) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
         }
-        else if ('prheader' in cpData) {
+        else if ('prheader' in cpData && cpData.prheader) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.prheader.__text);
         }
         else {

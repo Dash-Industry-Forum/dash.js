@@ -1,11 +1,10 @@
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import SpecHelper from './helpers/SpecHelper';
-import VoHelper from './helpers/VOHelper';
-import Settings from '../../src/core/Settings';
-import StreamMock from './mocks/StreamMock';
-
-const expect = require('chai').expect;
-const sinon = require('sinon');
+import TimelineConverter from '../../src/dash/utils/TimelineConverter.js';
+import SpecHelper from './helpers/SpecHelper.js';
+import VoHelper from './helpers/VOHelper.js';
+import Settings from '../../src/core/Settings.js';
+import StreamMock from './mocks/StreamMock.js';
+import {expect} from 'chai';
+import sinon from 'sinon';
 
 describe('TimelineConverter', function () {
     const context = {};
@@ -52,7 +51,7 @@ describe('TimelineConverter', function () {
                         timeShiftBuffer: {
                             calcFromSegmentTimeline: false
                         }
-                    } 
+                    }
                 });
             });
 
@@ -114,7 +113,7 @@ describe('TimelineConverter', function () {
 
             beforeEach(function () {
                 representation.adaptation.period.mpd.manifest.type = 'dynamic';
-            }); 
+            });
 
 
             describe('SegmentTemplate and ', function () {
@@ -861,8 +860,8 @@ describe('TimelineConverter', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     const tsbd = 30;
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
-                  
-                    dummyRep.adaptation.period.start = 0;   
+
+                    dummyRep.adaptation.period.start = 0;
                     dummyRep.adaptation.period.duration = 300;
                     streamOneMock.setRepresentation(dummyRep);
 
@@ -996,12 +995,12 @@ describe('TimelineConverter', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     const tsbd = 30;
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
-                    
+
                     // Remove t attribute(s) from segments
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline_asArray.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate.SegmentTimeline.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline_asArray.S_asArray[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].SegmentTemplate_asArray.SegmentTimeline.S_asArray[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
 
                     dummyRep.adaptation.period.start = 0;
                     dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;;
@@ -1018,7 +1017,7 @@ describe('TimelineConverter', function () {
                         }
                     }]);
                     streams.push(streamOneMock);
-                    
+
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
                     expect(range.end).to.be.equal(30);

@@ -35,7 +35,7 @@
  */
 
 import path from 'path-browserify'
-import { UAParser } from 'ua-parser-js'
+import {UAParser} from 'ua-parser-js'
 
 class Utils {
     static mixin(dest, source, copy) {
@@ -182,8 +182,7 @@ class Utils {
             const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
 
             return UAParser(uaString);
-        }
-        catch(e) {
+        } catch (e) {
             return {};
         }
     }

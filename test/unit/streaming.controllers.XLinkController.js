@@ -1,14 +1,13 @@
-import DashParser from '../../src/dash/parser/DashParser';
-import URLUtils from '../../src/streaming/utils/URLUtils';
-import XlinkController from '../../src/streaming/controllers/XlinkController';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
+import DashParser from '../../src/dash/parser/DashParser.js';
+import URLUtils from '../../src/streaming/utils/URLUtils.js';
+import XlinkController from '../../src/streaming/controllers/XlinkController.js';
+import Events from '../../src/core/events/Events.js';
+import EventBus from '../../src/core/EventBus.js';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock.js';
+import DebugMock from './mocks/DebugMock.js';
+import FileLoader from './helpers/FileLoader.js';
 
-import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import DebugMock from './mocks/DebugMock';
-import FileLoader from './helpers/FileLoader';
-
-const chai = require('chai');
+import chai from 'chai';
 const expect = chai.expect;
 
 const context = {};
