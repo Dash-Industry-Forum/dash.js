@@ -46,6 +46,9 @@ commands:
                     name: Run browserstack with provided access key
                     command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                     background: true
+            -   run:
+                    name: Install Karma CLI
+                    command: npm install -g karma-cli
 
     run_testbuild:
         steps:
@@ -78,9 +81,6 @@ commands:
             - functional_precondition
             - checkout
             - dependencies_setup
-            - run:
-                  name: Install Karma CLI
-                  command: npm install -g karma-cli
             - run_testbuild
             - functional_test_setup
 
