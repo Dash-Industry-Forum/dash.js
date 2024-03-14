@@ -37,6 +37,7 @@
  */
 
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function DRMToday(config) {
 
@@ -104,4 +105,4 @@ function DRMToday(config) {
 }
 
 DRMToday.__dashjs_factory_name = 'DRMToday';
-export default dashjs.FactoryMaker.getSingletonFactory(DRMToday); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(DRMToday); /* jshint ignore:line */

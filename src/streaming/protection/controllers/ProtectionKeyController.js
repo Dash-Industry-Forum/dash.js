@@ -38,6 +38,7 @@ import PlayReady from './../servers/PlayReady.js';
 import Widevine from './../servers/Widevine.js';
 import ClearKey from './../servers/ClearKey.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 /**
  * @module ProtectionKeyController
@@ -400,4 +401,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */

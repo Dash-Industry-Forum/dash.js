@@ -1,6 +1,7 @@
 import Metrics from '../vo/Metrics.js';
 import Range from '../vo/Range.js';
 import Reporting from '../vo/Reporting.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ManifestParsing (config) {
     config = config || {};
@@ -122,4 +123,4 @@ function ManifestParsing (config) {
 }
 
 ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
-export default dashjs.FactoryMaker.getSingletonFactory(ManifestParsing); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(ManifestParsing); /* jshint ignore:line */

@@ -33,6 +33,7 @@ import KeyPair from '../vo/KeyPair.js';
 import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 import CommonEncryption from '../CommonEncryption.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
 const systemString = ProtectionConstants.CLEARKEY_KEYSTEM_STRING;
@@ -140,4 +141,4 @@ function KeySystemClearKey(config) {
 }
 
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemClearKey); /* jshint ignore:line */

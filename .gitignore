@@ -189,6 +189,8 @@ build/typings/
 # Vim
 .vimrc
 
-#Karma Functional tests
-test/functional-karma/coverage
-test/functional-karma/results
+# Karma Unit Tets
+test/unit/results
+# Karma Functional tests
+test/functional/results
+test/functional/config/selenium/jars

@@ -31,6 +31,7 @@
 
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function MssFragmentInfoController(config) {
 
@@ -207,4 +208,4 @@ function MssFragmentInfoController(config) {
 }
 
 MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentInfoController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentInfoController); /* jshint ignore:line */

@@ -30,6 +30,7 @@
  */
 
 import MetricsReportingEvents from '../../MetricsReportingEvents.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
 
 function DVBErrorsHandler(config) {
 
@@ -87,4 +88,4 @@ function DVBErrorsHandler(config) {
     return instance;
 }
 
-export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */

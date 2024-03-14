@@ -36,6 +36,7 @@
  */
 
 import BigInt from '../../../externals/BigInteger.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function MssParser(config) {
     config = config || {};
@@ -873,4 +874,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default dashjs.FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */

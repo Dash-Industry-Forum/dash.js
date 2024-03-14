@@ -34,6 +34,7 @@
  */
 import localforage from 'localforage';
 import {XmlEntities as entities} from 'html-entities';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function IndexDBStore() {
 
@@ -441,4 +442,4 @@ function IndexDBStore() {
 }
 
 IndexDBStore.__dashjs_factory_name = 'IndexDBStore';
-export default dashjs.FactoryMaker.getSingletonFactory(IndexDBStore); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(IndexDBStore); /* jshint ignore:line */

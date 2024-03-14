@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import OfflineStreamProcessor from './OfflineStreamProcessor.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * Initialize and Manage Offline Stream for each type
@@ -338,4 +339,4 @@ function OfflineStream(config) {
 }
 
 OfflineStream.__dashjs_factory_name = 'OfflineStream';
-export default dashjs.FactoryMaker.getClassFactory(OfflineStream); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineStream); /* jshint ignore:line */

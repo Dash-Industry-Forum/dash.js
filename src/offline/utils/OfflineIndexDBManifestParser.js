@@ -33,6 +33,7 @@
  * @ignore
  */
 import {XmlEntities as Entities} from 'html-entities';
+import FactoryMaker from '../../core/FactoryMaker.js';
 const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
 function OfflineIndexDBManifestParser(config) {
@@ -488,4 +489,4 @@ function OfflineIndexDBManifestParser(config) {
     return instance;
 }
 OfflineIndexDBManifestParser.__dashjs_factory_name = 'OfflineIndexDBManifestParser';
-export default dashjs.FactoryMaker.getClassFactory(OfflineIndexDBManifestParser); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineIndexDBManifestParser); /* jshint ignore:line */

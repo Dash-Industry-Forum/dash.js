@@ -44,6 +44,7 @@ import DashJSError from '../../vo/DashJSError.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const SYSTEM_STRING_PRIORITY = {};
 SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
@@ -578,4 +579,4 @@ function ProtectionModel_21Jan2015(config) {
 }
 
 ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-export default dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015); /* jshint ignore:line */
