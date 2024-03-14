@@ -62,6 +62,9 @@ class Utils {
         if (!src || typeof src !== 'object') {
             return src; // anything
         }
+        if (src instanceof RegExp) {
+            return new RegExp(src);
+        }
         let r;
         if (src instanceof Array) {
             // array
