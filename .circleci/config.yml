@@ -78,6 +78,9 @@ commands:
             - functional_precondition
             - checkout
             - dependencies_setup
+            - run:
+                  name: Install Karma CLI
+                  command: npm install -g karma-cli
             - run_testbuild
             - functional_test_setup
 
