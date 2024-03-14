@@ -340,7 +340,9 @@ function FetchLoader() {
         httpRequest.customData.reader.read()
             .then(processResult)
             .catch(function () {
-                httpRequest.customData.onloadend();
+                if (httpRequest.customData.onloadend) {
+                    httpRequest.customData.onloadend();
+                }
             });
     }
 
