@@ -1,8 +1,8 @@
 import Capabilities from '../../../../src/streaming/utils/Capabilities.js';
 import Settings from '../../../../src/core/Settings.js';
+import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import { expect } from 'chai';
-import DescriptorType from '../../src/dash/vo/DescriptorType.js';
 
 let settings;
 let capabilities;
