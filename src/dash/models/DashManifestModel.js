@@ -1360,7 +1360,9 @@ function DashManifestModel() {
                                 target: parseInt(sd[prop].target)
                             }
                         } else if (prop === DashConstants.CONTENT_STEERING) {
-                            contentSteering = _createContentSteeringInstance(sd[prop])
+                            let element = sd[prop];
+                            element = Array.isArray(element) ? element.at(element.length - 1) : element;
+                            contentSteering = _createContentSteeringInstance(element);
                         } else if (prop === DashConstants.CLIENT_DATA_REPORTING) {
                             clientDataReporting = _createClientDataResportingInstance(sd[prop]);
                         }
