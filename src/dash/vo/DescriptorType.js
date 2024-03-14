@@ -58,6 +58,21 @@ class DescriptorType {
             }
         }
     }
+
+    inArray(arr) {
+        if (arr) {
+            return arr.some((entry) => {
+                return (
+                    this.schemeIdUri === entry.schemeIdUri && (
+                        this.value ?
+                            (this.value.match(entry.value)) : // check if provided value matches RegExp
+                            (''.match(entry.value)) // check if RegExp allows absent value   
+                    )
+                );
+            })
+        }
+        return false;
+    }
 }
 
 export default DescriptorType;
