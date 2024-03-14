@@ -2,6 +2,9 @@ import Constants from '../src/Constants.js';
 import fullConfig from '../config/test-configurations/full.conf.js'
 import singleConfig from '../config/test-configurations/single.conf.js'
 import smokeConfig from '../config/test-configurations/smoke.conf.js'
+import fullConfigPartOne from '../config/test-configurations/full_part_1.conf.js'
+import fullConfigPartTwo from '../config/test-configurations/full_part_2.conf.js'
+import fullConfigPartThree from '../config/test-configurations/full_part_3.conf.js'
 
 class Utils {
 
@@ -34,6 +37,12 @@ class Utils {
                 return singleConfig()
             case 'smoke':
                 return smokeConfig()
+            case 'full_part_1':
+                return fullConfigPartOne()
+            case 'full_part_2':
+                return fullConfigPartTwo()
+            case 'full_part_3':
+                return fullConfigPartThree()
             default:
                 return []
         }

@@ -63,15 +63,15 @@ commands:
             -   run:
                     name: Modify XML files recursively and copy to another folder
                     command: |
-                        mkdir test/functional/reports/junit/adjusted
-                        cd test/functional/reports/junit
+                        mkdir test/functional/results/test/karma/junit/adjusted
+                        cd test/functional/results/test/karma/junit
                         for file in *.xml; do
                         [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
                         cp "$file" adjusted/$file
                         done
             -   store_test_results:
-                    path: test/functional/reports/junit/adjusted
+                    path: test/functional/results/test/karma/junit/adjusted
 
     functional_steps:
         steps:
@@ -83,20 +83,17 @@ commands:
 
     run_test_suite:
         parameters:
-            browser:
-                default: "chrome"
+            browsers:
+                default: "chrome_custom"
                 type: string
-            protocol:
-                default: "https"
-                type: string
-            groupname:
+            testconfig:
                 default: ""
                 type: string
         steps:
             -   run:
-                    name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
+                    name: Run functional tests <<parameters.browsers>> <<parameters.testconfig>>
                     command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"<<parameters.testconfig>>\", \"browsers\":\"<<parameters.browsers>>\"}"
     build_samples:
         # parameters:
         #     samples:
@@ -158,57 +155,37 @@ jobs:
             - run_testbuild
             - functional_test_setup
             -   run:
-                    name: Run functional tests for one vector (chrome / https)
+                    name: Run functional tests for one vector (chrome / http)
                     command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"single\", \"browsers\":\"chrome_custom\"}"
             -   run:
-                    name: Run functional tests for smoke vectors (chrome / https)
+                    name: Run functional tests for smoke vectors (chrome / http)
                     command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+                        karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"smoke\", \"browsers\":\"chrome_custom\"}"
             - process_test_results
 
-    functional-tests-VOD_LIVE:
+    functional-tests-full-part-1:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: VOD (Static MPD)
-            -   run_test_suite:
-                    groupname: LIVE (Dynamic MPD)
-            -   run_test_suite:
-                    groupname: Live Low Latency
+                    testconfig: full_part_1
             - process_test_results
 
-    functional-tests-DRM:
+    functional-tests-full-part-2:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: DRM (modern)
-            -   run_test_suite:
-                    groupname: DRM Content (conservative/legacy)
+                    testconfig: full_part_2
             - process_test_results
 
-    functional-tests-Subtitles_Thumbnails_Audio_Smooth:
+    functional-tests-full-part-3:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: Subtitles and Captions
-            -   run_test_suite:
-                    groupname: Thumbnails
-            -   run_test_suite:
-                    groupname: Audio-only
-            -   run_test_suite:
-                    groupname: Smooth Streaming
-            - process_test_results
-
-    functional-tests-only-http:
-        executor: dashjs-executor
-        steps:
-            - functional_steps
-            -   run_test_suite:
-                    protocol: http
+                    testconfig: full_part_3
             - process_test_results
 
 workflows:
@@ -236,8 +213,7 @@ workflows:
                             only:
                                 - development
         jobs:
-            - functional-tests-VOD_LIVE
-            - functional-tests-DRM
-            - functional-tests-Subtitles_Thumbnails_Audio_Smooth
-            - functional-tests-only-http
+            - functional-tests-full-part-1
+            - functional-tests-full-part-2
+            - functional-tests-full-part-3
 

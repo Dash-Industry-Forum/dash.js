@@ -53,10 +53,10 @@ module.exports = function (config) {
         },
 
         junitReporter: {
-            outputDir: 'test/functional/results/test/karma/junit', // results will be saved as $outputDir/$browserName.xml
-            outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
+            outputDir: `test/functional/results/test/karma/junit`, // results will be saved as $outputDir/$browserName.xml
+            outputFile: `${Date.now()}.xml`, // if included, results will be saved as $outputDir/$browserName/$outputFile
             suite: '', // suite will become the package name attribute in xml testsuite element
-            useBrowserName: true, // add browser name to report and classes names
+            useBrowserName: false, // add browser name to report and classes names
             nameFormatter: undefined, // function (browser, result) to customize the name attribute in xml testcase element
             classNameFormatter: undefined, // function (browser, result) to customize the classname attribute in xml testcase element
             properties: {}, // key value pair of properties to add to the <properties> section of the report
@@ -109,7 +109,7 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['chrome_custom'],
+        browsers: settings && settings.browsers ? settings.browsers.split(',') : ['chrome_custom', 'firefox_custom'],
 
         customLaunchers: {
             chrome_custom: {
@@ -128,7 +128,7 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 1
+        concurrency: 2
     })
 }
 

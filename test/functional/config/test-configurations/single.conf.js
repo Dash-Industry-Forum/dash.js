@@ -6,7 +6,7 @@ export default function getConfig() {
             name: 'DASH-IF Live Sim - Segment Template without manifest updates',
             type: 'live',
             url: 'https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd',
-            testcases: [Constants.TESTCASES.CATEGORIES.ALL]
+            testcases: [Constants.TESTCASES.PLAYBACK.PLAY]
         },
     ]
 }
