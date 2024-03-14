@@ -39,6 +39,39 @@
  */
 
 /**
+ * Entities that are used in XML
+ */
+export const XML_ENTITIES = {
+    '&amp;': '&',
+    '&gt;': '>',
+    '&lt;': '<',
+    '&quot;': '"',
+    '&apos;': "'"
+};
+
+/**
+ * Translates XML entities to their respective characters.
+ * @param {Object} entitiesList 
+ * @param {String} str 
+ * @returns {String}
+ */
+function translateEntities(entitiesList, str) {
+    const entitySplit = str.split(/(&[a-zA-Z0-9]+;)/);
+    if (entitySplit.length <= 1) { // No entities. Skip the rest of the function.
+        return str;
+    }
+
+    for (let i = 1; i < entitySplit.length; i += 2) {
+        const entity = entitySplit[i];
+        if (entitiesList.hasOwnProperty(entity)) {
+            entitySplit[i] = entitiesList[entity];
+        }
+    }
+
+    return entitySplit.join('');
+};
+
+/**
  * parseXML / html into a DOM Object. with no validation and some failur tolerance
  * @param {string} S your XML to parse
  * @param {TParseOptions} [options]  all other options:
@@ -191,7 +224,7 @@
             return parseInt(value);
         }
 
-        let attrValue = value;
+        let attrValue = translateEntities(XML_ENTITIES, value);
         attrMatchers.forEach(matcher => {
             if (matcher.test(tagName, attrName, value)) {
                 attrValue = matcher.converter(value);
@@ -209,7 +242,7 @@
         pos = S.indexOf(openBracket, pos) - 1;
         if (pos === -2)
             pos = S.length;
-        return S.slice(start, pos + 1);
+        return translateEntities(XML_ENTITIES, S.slice(start, pos + 1));
     }
     /**
      *    returns text until the first nonAlphabetic letter
