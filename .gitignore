@@ -192,5 +192,4 @@ build/typings/
 # Karma Unit Tets
 test/unit/results
 # Karma Functional tests
-test/functional-karma/coverage
-test/functional-karma/results
+test/functional/results
