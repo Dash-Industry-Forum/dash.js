@@ -9,6 +9,9 @@ on:
             deploy_path:
                 required: true
                 type: string
+            samples:
+                required: true
+                type: string
         secrets:
             host:
                 required: true
@@ -18,9 +21,19 @@ on:
                 required: true
 
 jobs:
+    setup:
+        runs-on: ubuntu-latest
+        outputs:
+            matrix: ${{ steps.setVariables.outputs.matrix }}
+        steps:
+            -   id: setVariables
+                run: |
+                    echo "::set-output name=matrix::$input"
+                env:
+                    input: ${{ inputs.samples }}
     deploy:
         runs-on: ubuntu-latest
-        
+
         steps:
             -   uses: actions/checkout@v4
             -   name: Use Node.js
@@ -42,7 +55,7 @@ jobs:
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir ${{inputs.envname}}
-                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}} 
+                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
                 with:
