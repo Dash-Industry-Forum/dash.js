@@ -269,8 +269,10 @@ function FetchLoader() {
 
                         _read(httpRequest, httpResponse, _processResult);
                     })
-                    .catch(function (e) {
-                        httpRequest.customData.onloadend(e);
+                    .catch(function () {
+                        if (httpRequest.customData.onloadend) {
+                            httpRequest.customData.onloadend();
+                        }
                     });
             });
     }
