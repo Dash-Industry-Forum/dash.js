@@ -187,13 +187,14 @@ function Capabilities() {
 
     /**
      * Check if a specific EssentialProperty is supported
-     * @param {object} ep
+     * @param {DescriptorType} ep
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
+
         try {
-            return supportedEssentialProps.indexOf(ep.schemeIdUri) !== -1;
+            return ep.inArray(supportedEssentialProps);
         } catch (e) {
             return true;
         }
