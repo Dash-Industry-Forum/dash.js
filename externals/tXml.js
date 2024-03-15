@@ -51,7 +51,7 @@ export const XML_ENTITIES = {
 };
 
 /**
- * Translates XML entities and character references to their respective characters.
+ * Translates XML predefined entities and character references to their respective characters.
  * @param {Object} entitiesList 
  * @param {String} str 
  * @returns {String}
