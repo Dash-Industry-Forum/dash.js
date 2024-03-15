@@ -717,14 +717,12 @@ function StreamProcessor(config) {
         // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
 
-        // Informing ScheduleController about AS switch
-        scheduleController.setSwitchTrack(true);
-
         const newMediaInfo = newRepresentation.mediaInfo;
         currentMediaInfo = newMediaInfo;
 
         selectMediaInfo(newMediaInfo, newRepresentation)
             .then(() => {
+                prepareTrackSwitch();
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
     }
