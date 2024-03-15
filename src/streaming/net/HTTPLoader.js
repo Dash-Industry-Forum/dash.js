@@ -42,6 +42,7 @@ import Events from '../../core/events/Events.js';
 import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
+import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
 
 /**
  * @module HTTPLoader
@@ -73,6 +74,7 @@ function HTTPLoader(cfg) {
         xhrLoader,
         fetchLoader,
         customParametersModel,
+        commonAccessTokenController,
         logger;
 
     function setup() {
@@ -83,6 +85,7 @@ function HTTPLoader(cfg) {
         cmcdModel = CmcdModel(context).getInstance();
         cmsdModel = CmsdModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
+        commonAccessTokenController = CommonAccessTokenController(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -93,6 +96,16 @@ function HTTPLoader(cfg) {
             [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
             [HTTPRequest.OTHER_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
+    }
+
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.commonAccessTokenController) {
+            commonAccessTokenController = config.commonAccessTokenController
+        }
     }
 
     /**
@@ -195,12 +208,14 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const _oncomplete = function() {
+        const _oncomplete = function () {
             // Update request timing info
             requestObject.startDate = requestStartTime;
             requestObject.endDate = new Date();
             requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
             httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
+
+            commonAccessTokenController.processResponseHeaders(httpResponse)
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
             // These values are more accurate and can be used by the ThroughputController later
@@ -286,12 +301,13 @@ function HTTPLoader(cfg) {
                         eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+            }
 
             _retriggerRequest();
         }
 
-        const _loadRequest = function(loader, httpRequest, httpResponse) {
+        const _loadRequest = function (loader, httpRequest, httpResponse) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
@@ -580,6 +596,12 @@ function HTTPLoader(cfg) {
             })
             request.url = Utils.addAditionalQueryParameterToUrl(request.url, queryParams);
         }
+
+        // Add headers from CommonAccessToken
+        const commonAccessToken = commonAccessTokenController.getCommonAccessTokenForUrl(request.url)
+        if (commonAccessToken) {
+            request.headers[Constants.COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken
+        }
     }
 
     /**
@@ -644,7 +666,8 @@ function HTTPLoader(cfg) {
 
     instance = {
         load,
-        abort
+        abort,
+        setConfig
     };
 
     setup();
