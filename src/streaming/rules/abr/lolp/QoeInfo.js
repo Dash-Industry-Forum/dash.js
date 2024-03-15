@@ -51,11 +51,11 @@ class QoeInfo {
         this.weights.playbackSpeedPenalty = null;
 
         // Weighted Sum for each Qoe factor
-        this.bitrateWSum = 0;           // kbps
-        this.bitrateSwitchWSum = 0;     // kbps
-        this.rebufferWSum = 0;          // seconds
-        this.latencyWSum = 0;           // seconds
-        this.playbackSpeedWSum = 0;     // e.g. 0.95, 1.0, 1.05
+        this.bitrateWSum = 0;// kbps
+        this.bitrateSwitchWSum = 0;// kbps
+        this.rebufferWSum = 0;// seconds
+        this.latencyWSum = 0;// seconds
+        this.playbackSpeedWSum = 0;// e.g. 0.95, 1.0, 1.05
 
         // Store total Qoe value based on current Weighted Sum values
         this.totalQoe = 0;

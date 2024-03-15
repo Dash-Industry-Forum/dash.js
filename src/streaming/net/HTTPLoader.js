@@ -113,27 +113,30 @@ function HTTPLoader(cfg) {
             throw new Error('config object is not correct or missing');
         }
 
-        const handleLoaded = function (success) {
-            needFailureReport = false;
-
+        const addHttpRequestMetric = function(success) {
             request.requestStartDate = requestStartTime;
             request.requestEndDate = new Date();
             request.firstByteDate = request.firstByteDate || requestStartTime;
             request.fileLoaderType = fileLoaderType;
 
-            if (!request.checkExistenceOnly) {
-                const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
-                const responseStatus = httpRequest.response ? httpRequest.response.status : null;
-                const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                    httpRequest.response ? httpRequest.response.responseHeaders : null;
+            const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+            const responseStatus = httpRequest.response ? httpRequest.response.status : null;
+            const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                httpRequest.response ? httpRequest.response.responseHeaders : null;
+    
+            const cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+    
+            dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+        }
+    
+        const handleLoaded = function (success) {
+            needFailureReport = false;
 
-                const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+            addHttpRequestMetric(success);
 
-                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
-
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(request);
-                }
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                dashMetrics.addManifestUpdate(request);
+                eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { request });
             }
         };
 
@@ -188,7 +191,7 @@ function HTTPLoader(cfg) {
                     }));
 
                     if (config.error) {
-                        config.error(request, 'error', httpRequest.response.statusText);
+                        config.error(request, 'error', httpRequest.response.statusText, httpRequest.response);
                     }
 
                     if (config.complete) {
@@ -260,6 +263,8 @@ function HTTPLoader(cfg) {
         };
 
         const onabort = function () {
+            addHttpRequestMetric(true);
+
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
@@ -310,14 +315,25 @@ function HTTPLoader(cfg) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }
-        request.url = modifiedUrl;
-        const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
+
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type);
 
+        // Add queryParams that came from pathway cloning
+        if (request.queryParams) {
+            const queryParams = Object.keys(request.queryParams).map((key) => {
+                return {
+                    key,
+                    value: request.queryParams[key]
+                }
+            })
+            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, queryParams);
+        }
+
+        request.url = modifiedUrl;
 
         httpRequest = {
             url: modifiedUrl,
-            method: verb,
+            method: HTTPRequest.GET,
             withCredentials: withCredentials,
             request: request,
             onload: onload,

@@ -42,9 +42,13 @@ class MediaInfo {
         this.labels = null;
         this.lang = null;
         this.viewpoint = null;
+        this.viewpointsWithSchemeIdUri = null;
         this.accessibility = null;
+        this.accessibilitiesWithSchemeIdUri = null;
         this.audioChannelConfiguration = null;
+        this.audioChannelConfigurationsWithSchemeIdUri = null;
         this.roles = null;
+        this.rolesWithSchemeIdUri = null;
         this.codec = null;
         this.mimeType = null;
         this.contentProtection = null;
@@ -55,6 +59,11 @@ class MediaInfo {
         this.isEmbedded = null;
         this.selectionPriority = 1;
         this.supplementalProperties = {};
+        this.supplementalPropertiesAsArray = [];
+        this.essentialProperties = {};
+        this.essentialPropertiesAsArray = [];
+        this.segmentAlignment = false;
+        this.subSegmentAlignment = false;
         this.adaptationSetSwitchingCompatibleIds = []
     }
 

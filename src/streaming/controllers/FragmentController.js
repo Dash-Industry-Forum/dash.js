@@ -144,7 +144,7 @@ function FragmentController(config) {
         if (e.error) {
             if (request.mediaType === Constants.AUDIO || request.mediaType === Constants.VIDEO || (request.mediaType === Constants.TEXT && request.mediaInfo.isFragmented)) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
-                eventBus.trigger(Events.SERVICE_LOCATION_BLACKLIST_ADD, { entry: e.request.serviceLocation });
+                eventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD, { entry: e.request.serviceLocation });
             }
         }
 

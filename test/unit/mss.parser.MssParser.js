@@ -49,7 +49,7 @@ describe('MssParser', function () {
             }
         }
     });
-    it('should skip video adaptations if fourCC attribute is not found',  async () => {
+    it('should skip video adaptations if fourCC attribute is not found', async () => {
         let xml = await FileLoader.loadTextFile('/data/mss/manifestFourCCError.xml');
         let manifest = mssParser.parse(xml);
         let adaptations = manifest.Period.AdaptationSet_asArray;

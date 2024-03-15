@@ -88,7 +88,9 @@ class DashConstants {
         this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
         this.CONTENT_PROTECTION = 'ContentProtection';
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+        this.ESSENTIAL_PROPERTY_ASARRAY = 'EssentialProperty_asArray';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
+        this.SUPPLEMENTAL_PROPERTY_ASARRAY = 'SupplementalProperty_asArray';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.PRODUCER_REFERENCE_TIME = 'ProducerReferenceTime';
         this.INBAND = 'inband';
@@ -100,6 +102,7 @@ class DashConstants {
         this.SUBSET = 'Subset';
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
+        this.VIEWPOINT_ASARRAY = 'Viewpoint_asArray';
         this.ROLE_ASARRAY = 'Role_asArray';
         this.REPRESENTATION_ASARRAY = 'Representation_asArray';
         this.PRODUCERREFERENCETIME_ASARRAY = 'ProducerReferenceTime_asArray';
@@ -131,6 +134,9 @@ class DashConstants {
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
+        this.DVB_URL = 'dvb:url';
+        this.DVB_MIMETYPE = 'dvb:mimeType';
+        this.DVB_FONTFAMILY = 'dvb:fontFamily';
         this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.SERVICE_DESCRIPTION = 'ServiceDescription';
         this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
@@ -139,6 +145,9 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
         this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
         this.PATCH_LOCATION = 'PatchLocation';
+        this.PATCH_LOCATION_AS_ARRAY = 'PatchLocation_asArray';
+        this.LOCATION = 'Location';
+        this.LOCATION_AS_ARRAY = 'Location_asArray';
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
         this.ORIGINAL_MPD_ID = 'mpdId';
@@ -150,18 +159,27 @@ class DashConstants {
         this.CONTENT_STEERING_AS_ARRAY = 'ContentSteering_asArray';
         this.DEFAULT_SERVICE_LOCATION = 'defaultServiceLocation';
         this.QUERY_BEFORE_START = 'queryBeforeStart';
-        this.PROXY_SERVER_URL = 'proxyServerURL';
+        this.CLIENT_REQUIREMENT = 'clientRequirement';
+        this.TTL = 'ttl';
         this.CONTENT_STEERING_RESPONSE = {
             VERSION: 'VERSION',
             TTL: 'TTL',
             RELOAD_URI: 'RELOAD-URI',
-            SERVICE_LOCATION_PRIORITY : 'SERVICE-LOCATION-PRIORITY'
+            PATHWAY_PRIORITY : 'PATHWAY-PRIORITY',
+            PATHWAY_CLONES : 'PATHWAY-CLONES',
+            BASE_ID: 'BASE-ID',
+            ID: 'ID',
+            URI_REPLACEMENT: 'URI-REPLACEMENT',
+            HOST: 'HOST',
+            PARAMS: 'PARAMS'
         };
         this.PRODUCER_REFERENCE_TIME_TYPE = {
             ENCODER: 'encoder',
             CAPTURED: 'captured',
             APPLICATION: 'application'
-        };
+        }
+        this.SEGMENT_ALIGNMENT = 'segmentAlignment';
+        this.SUB_SEGMENT_ALIGNMENT = 'subsegmentAlignment'
         this.ADAPTATION_SET_SWITCHING = 'urn:mpeg:dash:adaptation-set-switching:2016';
     }
 

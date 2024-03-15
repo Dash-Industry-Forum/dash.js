@@ -8,11 +8,12 @@ class MediaControllerMock {
         this.initialSettings = {};
         this.switchMode = {};
         this.selectionMode = undefined;
-        this.track  = undefined;
+        this.track = undefined;
         this.tracks = [];
     }
 
-    checkInitialMediaSettingsForType() {}
+    checkInitialMediaSettingsForType() {
+    }
 
     addTrack(track) {
         this.tracks.push(track);
@@ -99,13 +100,16 @@ class MediaControllerMock {
         return settings.lang === track.lang && matchRole;
     }
 
-    setConfig() {}
+    setConfig() {
+    }
 
-    saveTextSettingsDisabled() {}
+    saveTextSettingsDisabled() {
+    }
 
     reset() {
         this.setup();
     }
 
 }
+
 export default MediaControllerMock;

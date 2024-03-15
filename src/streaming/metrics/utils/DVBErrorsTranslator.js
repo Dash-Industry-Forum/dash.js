@@ -89,10 +89,10 @@ function DVBErrorsTranslator(config) {
     }
 
     function handleHttpMetric(vo) {
-        if ((vo.responsecode === 0) ||      // connection failure - unknown
+        if ((vo.responsecode === 0) || // connection failure - unknown
             (vo.responsecode == null) || // Generated on .catch() and when uninitialized
             (vo.responsecode >= 400) || // HTTP error status code
-            (vo.responsecode < 100) ||  // unknown status codes
+            (vo.responsecode < 100) || // unknown status codes
             (vo.responsecode >= 600)) { // unknown status codes
             report({
                 errorcode: vo.responsecode || DVBErrors.CONNECTION_ERROR,
@@ -136,7 +136,7 @@ function DVBErrorsTranslator(config) {
     function initialize() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
         eventBus.on(
-            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED,
             onServiceLocationChanged,
             instance
         );
@@ -153,7 +153,7 @@ function DVBErrorsTranslator(config) {
     function reset() {
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdate, instance);
         eventBus.off(
-            Events.SERVICE_LOCATION_BLACKLIST_CHANGED,
+            Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED,
             onServiceLocationChanged,
             instance
         );

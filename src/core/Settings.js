@@ -62,7 +62,8 @@ import Events from './events/Events';
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
- *            cacheInitSegments: true,
+ *            liveUpdateTimeThresholdInMilliseconds: 0,
+ *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -92,7 +93,7 @@ import Events from './events/Events';
  *                detectPlayreadyMessageFormat: true,
  *            },
  *            buffer: {
- *                enableSeekDecorrelationFix: true,
+ *                enableSeekDecorrelationFix: false,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -103,11 +104,13 @@ import Events from './events/Events';
  *                initialBufferLevel: NaN,
  *                stableBufferTime: 12,
  *                longFormContentDurationThreshold: 600,
- *                stallThreshold: 0.5,
+ *                stallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true
+ *                useChangeTypeForTrackSwitch: true,
+ *                mediaSourceDurationInfinity: true,
+ *                resetSourceBuffersForTrackSwitch: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -134,13 +137,18 @@ import Events from './events/Events';
  *                }
  *            },
  *            scheduling: {
- *                defaultTimeout: 300,
- *                lowLatencyTimeout: 100,
+ *                defaultTimeout: 500,
+ *                lowLatencyTimeout: 0,
  *                scheduleWhilePaused: true
  *            },
  *            text: {
  *                defaultEnabled: true,
+ *                dispatchForManualRendering: false,
  *                extendSegmentedCues: true,
+ *                imsc: {
+ *                    displayForcedOnlyMode: false,
+ *                    enableRollUp: true
+ *                },
  *                webvtt: {
  *                    customRenderingEnabled: false
  *                }
@@ -149,11 +157,12 @@ import Events from './events/Events';
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
- *                enabled: false,
+ *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+ *            saveLastMediaSettingsForCurrentStreamingSession: true,
  *            cacheLoadThresholds: { video: 50, audio: 5 },
  *            trackSwitchMode: {
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
@@ -191,11 +200,18 @@ import Events from './events/Events';
  *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
  *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
  *                additionalAbrRules: {
- *                   insufficientBufferRule: false,
+ *                   insufficientBufferRule: true,
  *                   switchHistoryRule: true,
  *                   droppedFramesRule: true,
- *                   abandonRequestsRule: false
+ *                   abandonRequestsRule: true
  *                },
+ *                abrRulesParameters: {
+ *                     abandonRequestsRule: {
+ *                         graceTimeThreshold: 500,
+ *                         abandonMultiplier: 1.8,
+ *                         minLengthToAverage: 5
+ *                     }
+ *                 },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
@@ -250,7 +266,7 @@ import Events from './events/Events';
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
- * @property {number} [liveDelay]
+ * @property {number} [liveDelay=NaN]
  * Equivalent in seconds of setLiveDelayFragmentCount.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
@@ -328,6 +344,12 @@ import Events from './events/Events';
  * @property {boolean} [useChangeTypeForTrackSwitch=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
  * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
+ * @property {boolean} [mediaSourceDurationInfinity=true]
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
+ * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
+ * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
+ * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
+ * that does not properly implement "changeType()", such as webOS 4.0 and before.
  */
 
 /**
@@ -450,9 +472,9 @@ import Events from './events/Events';
 
 /**
  * @typedef {Object} Scheduling
- * @property {number} [defaultTimeout=300]
+ * @property {number} [defaultTimeout=500]
  * Default timeout between two consecutive segment scheduling attempts
- * @property {number} [lowLatencyTimeout]
+ * @property {number} [lowLatencyTimeout=0]
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
@@ -460,11 +482,18 @@ import Events from './events/Events';
 
 /**
  * @typedef {Object} Text
- * @property {number} [defaultEnabled=true]
+ * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
+ * @property {boolean} [dispatchForManualRendering=false]
+ * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
- * @property {object} [webvtt={customRenderingEnabled=false}]
+ * @property {boolean} [imsc.displayForcedOnlyMode=false]
+ * Enable/disable forced only mode in IMSC captions.
+ * When true, only those captions where itts:forcedDisplay="true" will be displayed.
+ * @property {boolean} [imsc.enableRollUp=true]
+ * Enable/disable rollUp style display of IMSC captions.
+ * @property {object} [webvtt.customRenderingEnabled=false]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
@@ -495,11 +524,11 @@ import Events from './events/Events';
  * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackBufferMin=NaN]
+ * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  *
- * @property {boolean} [enabled=false]
+ * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
  *
  * @property {string} [mode="liveCatchupModeDefault"]
@@ -544,10 +573,10 @@ import Events from './events/Events';
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
- * @property {boolean} ignoreEmeEncryptedEvent
+ * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
- * @property {boolean} detectPlayreadyMessageFormat
+ * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  */
 
@@ -557,6 +586,22 @@ import Events from './events/Events';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ */
+
+/**
+ * @typedef {Object} AbrRulesParameters
+ * @property {module:Settings~AbandonRequestRuleParameters} abandonRequestRule
+ * Configuration parameters for the AbandonRequestRule
+ */
+
+/**
+ * @typedef {Object} AbandonRequestRuleParameters
+ * @property {number} [graceTimeThreshold=500]
+ * Minimum elapsed time in milliseconds that the segment download has to run before the rule considers abandoning the download.
+ * @property {number} [abandonMultiplier]
+ * This value is multiplied with the segment duration and compared to the estimated time of the download to decide the request should be abandoned.
+ * @property {number} [minLengthToAverage]
+ * Minimum number of throughput samples required to consider abandoning the download of the segment.
  */
 
 /**
@@ -584,8 +629,9 @@ import Events from './events/Events';
  * @property {string} [ABRStrategy="abrDynamic"]
  * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
  * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
- * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
+ * @property {object} [additionalAbrRules={insufficientBufferRule: true,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: true}]
  * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {module:Settings~AbrRulesParameters} abrRulesParameters Configuration options for the different ABR rules
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
@@ -655,11 +701,11 @@ import Events from './events/Events';
  * The requested maximum throughput that the client considers sufficient for delivery of the asset.
  *
  * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
- * @property {number} [rtpSafetyFactor]
+ * @property {number} [rtpSafetyFactor=5]
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode]
+ * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
  * If not specified this value defaults to 'query'.
@@ -695,11 +741,13 @@ import Events from './events/Events';
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [wallclockTimeUpdateInterval=50]
+ * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {boolean} [cacheInitSegments=true]
+ * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
+ * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
+ * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
@@ -732,6 +780,12 @@ import Events from './events/Events';
  * The default expiration is one hour, defined in milliseconds.
  *
  * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will be stored during that session.
+ * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
+ * Set to false if you would like to disable the last media settings from being stored to localStorage during playback and used to set the initial track for subsequent playback within the expiration window.
+ *
+ * The default expiration is one hour, defined in milliseconds.
+ * @property {boolean} [saveLastMediaSettingsForCurrentStreamingSession=true]
+ * Set to true if dash.js should save media settings from last selected track for incoming track selection during current streaming session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
  * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
@@ -745,7 +799,7 @@ import Events from './events/Events';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
- * @property {string} [selectionModeForInitialTrack="highestBitrate"]
+ * @property {string} [selectionModeForInitialTrack="highestSelectionPriority"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
@@ -823,6 +877,7 @@ function Settings() {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
+            liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
@@ -868,7 +923,9 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: true
+                useChangeTypeForTrackSwitch: true,
+                mediaSourceDurationInfinity: true,
+                resetSourceBuffersForTrackSwitch: false
             },
             gaps: {
                 jumpGaps: true,
@@ -901,7 +958,12 @@ function Settings() {
             },
             text: {
                 defaultEnabled: true,
+                dispatchForManualRendering: false,
                 extendSegmentedCues: true,
+                imsc: {
+                    displayForcedOnlyMode: false,
+                    enableRollUp: true
+                },
                 webvtt: {
                     customRenderingEnabled: false
                 }
@@ -924,6 +986,7 @@ function Settings() {
                 enabled: true,
                 ttl: 360000
             },
+            saveLastMediaSettingsForCurrentStreamingSession: true,
             cacheLoadThresholds: {
                 video: 50,
                 audio: 5
@@ -970,6 +1033,13 @@ function Settings() {
                     droppedFramesRule: true,
                     abandonRequestsRule: true
                 },
+                abrRulesParameters: {
+                    abandonRequestsRule: {
+                        graceTimeThreshold: 500,
+                        abandonMultiplier: 1.8,
+                        minLengthToAverage: 5
+                    }
+                },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
@@ -1008,7 +1078,7 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
             },
             cmsd: {
                 enabled: false,

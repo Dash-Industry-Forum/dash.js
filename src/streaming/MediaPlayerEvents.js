@@ -50,6 +50,12 @@ class MediaPlayerEvents extends EventsBase {
         this.AST_IN_FUTURE = 'astInFuture';
 
         /**
+         * Triggered when the BaseURLs have been updated.
+         * @event MediaPlayerEvents#BASE_URLS_UPDATED
+         */
+        this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
+
+        /**
          * Triggered when the video element's buffer state changes to stalled.
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
@@ -74,6 +80,24 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#BUFFER_LEVEL_UPDATED
          */
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+         */
+        this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+         */
+        this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+         */
+        this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
 
         /**
          * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
@@ -116,7 +140,19 @@ class MediaPlayerEvents extends EventsBase {
         this.LOG = 'log';
 
         /**
-         * Triggered when the manifest load is complete
+         * Triggered when the manifest load is started
+         * @event MediaPlayerEvents#MANIFEST_LOADING_STARTED
+         */
+        this.MANIFEST_LOADING_STARTED = 'manifestLoadingStarted';
+
+        /**
+         * Triggered when the manifest loading is finished, providing the request object information
+         * @event MediaPlayerEvents#MANIFEST_LOADING_FINISHED
+         */
+        this.MANIFEST_LOADING_FINISHED = 'manifestLoadingFinished';
+
+        /**
+         * Triggered when the manifest load is complete, providing the payload
          * @event MediaPlayerEvents#MANIFEST_LOADED
          */
         this.MANIFEST_LOADED = 'manifestLoaded';
@@ -228,6 +264,24 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#TEXT_TRACK_ADDED
          */
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
+
+        /**
+         * Triggered when a text track should be shown
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_ENTER = 'cueEnter'
+
+        /**
+         * Triggered when a text track should be hidden
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_EXIT = 'cueExit'
+
+        /**
+         * Triggered when a throughput measurement based on the last segment request has been stored
+         * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED
+         */
+        this.THROUGHPUT_MEASUREMENT_STORED = 'throughputMeasurementStored';
 
         /**
          * Triggered when a ttml chunk is parsed.
@@ -420,6 +474,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#INBAND_PRFT
          */
         this.INBAND_PRFT = 'inbandPrft';
+
+        /**
+         * The streaming attribute of the Managed Media Source is true
+         * @type {string}
+         */
+        this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+
+        /**
+         * The streaming attribute of the Managed Media Source is false
+         * @type {string}
+         */
+        this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     }
 }
 

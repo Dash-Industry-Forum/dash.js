@@ -108,15 +108,15 @@ function AbandonRequestsRule(config) {
                 storeLastRequestThroughputByType(mediaType, Math.round(fragmentInfo.bytesLoaded * 8 / fragmentInfo.elapsedTime));
             }
 
-            if (throughputArray[mediaType].length >= MIN_LENGTH_TO_AVERAGE &&
-                fragmentInfo.elapsedTime > GRACE_TIME_THRESHOLD &&
+            if (throughputArray[mediaType].length >= settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.minLengthToAverage &&
+                fragmentInfo.elapsedTime > settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.graceTimeThreshold &&
                 fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal) {
 
                 const totalSampledValue = throughputArray[mediaType].reduce((a, b) => a + b, 0);
                 fragmentInfo.measuredBandwidthInKbps = Math.round(totalSampledValue / throughputArray[mediaType].length);
                 fragmentInfo.estimatedTimeOfDownload = +((fragmentInfo.bytesTotal * 8 / fragmentInfo.measuredBandwidthInKbps) / 1000).toFixed(2);
 
-                if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * ABANDON_MULTIPLIER || rulesContext.getRepresentationInfo().quality === 0) {
+                if (fragmentInfo.estimatedTimeOfDownload < fragmentInfo.segmentDuration * settings.get().streaming.abr.abrRulesParameters.abandonRequestsRule.abandonMultiplier || rulesContext.getRepresentationInfo().quality === 0 ) {
                     return switchRequest;
                 } else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
 
@@ -130,6 +130,7 @@ function AbandonRequestsRule(config) {
                         switchRequest.bitrateInfo = bitrateInfo;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         switchRequest.reason.fragmentID = fragmentInfo.id;
+                        switchRequest.reason.rule = this.getClassName();
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         logger.debug('[' + mediaType + '] frag id', fragmentInfo.id, ' is asking to abandon and switch to quality to ', bitrateInfo.qualityIndex, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];

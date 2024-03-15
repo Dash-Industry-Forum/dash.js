@@ -14,6 +14,8 @@ class StreamControllerMock {
         this.streams = streams;
     }
 
+    refreshManifest() {}
+
     getStreams() {
         return this.streams;
     }

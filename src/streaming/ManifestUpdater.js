@@ -36,6 +36,7 @@ import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
 import DashConstants from '../dash/constants/DashConstants';
 import URLUtils from './utils/URLUtils';
+import LocationSelector from './utils/LocationSelector';
 
 function ManifestUpdater() {
 
@@ -52,12 +53,15 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
+        locationSelector,
         adapter,
         errHandler,
+        contentSteeringController,
         settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        locationSelector = LocationSelector(context).create();
     }
 
     function setConfig(config) {
@@ -75,8 +79,14 @@ function ManifestUpdater() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
+        if (config.locationSelector) {
+            locationSelector = config.locationSelector;
+        }
         if (config.settings) {
             settings = config.settings;
+        }
+        if (config.contentSteeringController) {
+            contentSteeringController = config.contentSteeringController;
         }
     }
 
@@ -143,12 +153,22 @@ function ManifestUpdater() {
         let url = manifest.url;
 
         // Check for PatchLocation and Location alternatives
-        const patchLocation = adapter.getPatchLocation(manifest);
-        const location = adapter.getLocation(manifest);
+        let serviceLocation = null;
+        const availablePatchLocations = adapter.getPatchLocation(manifest);
+        const patchLocation = locationSelector.select(availablePatchLocations);
+        let queryParams = null;
         if (patchLocation && !ignorePatch) {
-            url = patchLocation;
-        } else if (location) {
-            url = location;
+            url = patchLocation.url;
+            serviceLocation = patchLocation.serviceLocation;
+            queryParams = patchLocation.queryParams;
+        } else {
+            const availableMpdLocations = _getAvailableMpdLocations(manifest);
+            const mpdLocation = locationSelector.select(availableMpdLocations);
+            if (mpdLocation) {
+                url = mpdLocation.url;
+                serviceLocation = mpdLocation.serviceLocation;
+                queryParams = mpdLocation.queryParams;
+            }
         }
 
         // if one of the alternatives was relative, convert to absolute
@@ -156,7 +176,14 @@ function ManifestUpdater() {
             url = urlUtils.resolve(url, manifest.url);
         }
 
-        manifestLoader.load(url);
+        manifestLoader.load(url, serviceLocation, queryParams);
+    }
+
+    function _getAvailableMpdLocations(manifest) {
+        const manifestLocations = adapter.getLocation(manifest);
+        const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+
+        return manifestLocations.concat(synthesizedElements);
     }
 
     function update(manifest) {
@@ -246,7 +273,7 @@ function ManifestUpdater() {
         }
     }
 
-    function onPlaybackStarted (/*e*/) {
+    function onPlaybackStarted(/*e*/) {
         isPaused = false;
         startManifestRefreshTimer();
     }
@@ -280,5 +307,6 @@ function ManifestUpdater() {
     setup();
     return instance;
 }
+
 ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';
 export default FactoryMaker.getClassFactory(ManifestUpdater);

@@ -67,6 +67,11 @@ function MediaController() {
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
+            if (settings) {
+                // If the settings are defined locally, do not take codec into account or it'll be too strict.
+                // eg: An audio track should not be selected by codec but merely by lang.
+                delete settings.codec;
+            }
             setInitialSettings(type, settings);
         }
 
@@ -83,13 +88,14 @@ function MediaController() {
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsCodec, settings);
         }
 
         if (tracks.length === 0) {
             setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
+                setTrack(selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
@@ -266,13 +272,17 @@ function MediaController() {
 
         const sameId = t1.id === t2.id;
         const sameViewpoint = t1.viewpoint === t2.viewpoint;
+        const sameViewpointDescriptors = JSON.stringify(t1.viewpointsWithSchemeIdUri) === JSON.stringify(t2.viewpointsWithSchemeIdUri);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
         const sameRoles = t1.roles.toString() === t2.roles.toString();
+        const sameRoleDescriptors = JSON.stringify(t1.rolesWithSchemeIdUri) === JSON.stringify(t2.rolesWithSchemeIdUri);
         const sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
+        const sameAccessibilityDescriptors = JSON.stringify(t1.accessibilitiesWithSchemeIdUri) === JSON.stringify(t2.accessibilitiesWithSchemeIdUri);
         const sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
+        const sameAudioChannelConfigurationDescriptors = JSON.stringify(t1.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(t2.audioChannelConfigurationsWithSchemeIdUri);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameViewpointDescriptors && sameLang && sameRoles && sameRoleDescriptors && sameAccessibility && sameAccessibilityDescriptors && sameAudioChannelConfiguration && sameAudioChannelConfigurationDescriptors);
     }
 
     function setConfig(config) {
@@ -307,7 +317,8 @@ function MediaController() {
             viewpoint: mediaInfo.viewpoint,
             roles: mediaInfo.roles,
             accessibility: mediaInfo.accessibility,
-            audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+            audioChannelConfiguration: mediaInfo.audioChannelConfiguration,
+            codec: mediaInfo.codec
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
             (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
@@ -329,10 +340,14 @@ function MediaController() {
     }
 
     function matchSettingsLang(settings, track) {
-        return !settings.lang ||
-        (settings.lang instanceof RegExp) ?
-            (track.lang.match(settings.lang)) : track.lang !== '' ?
-                (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        try {
+            return !settings.lang ||
+            (settings.lang instanceof RegExp) ?
+                (track.lang.match(settings.lang)) : track.lang !== '' ?
+                    (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+        } catch (e) {
+            return false
+        }
     }
 
     function matchSettingsIndex(settings, track) {
@@ -372,6 +387,10 @@ function MediaController() {
         })[0];
 
         return matchAudioChannelConfiguration;
+    }
+
+    function matchSettingsCodec(settings, track) {
+        return !settings.codec || (settings.codec === track.codec);
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
@@ -597,25 +616,27 @@ function MediaController() {
 
 
     function createTrackInfo() {
+        const storeLastSettings = settings.get().streaming.saveLastMediaSettingsForCurrentStreamingSession;
+
         return {
             audio: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             video: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             text: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             },
             image: {
                 list: [],
-                storeLastSettings: true,
+                storeLastSettings,
                 current: null
             }
         };

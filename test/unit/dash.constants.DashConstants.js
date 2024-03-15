@@ -56,7 +56,9 @@ describe('DashConstants', function () {
         expect(DashConstants.AUDIO_CHANNEL_CONFIGURATION).to.equal('AudioChannelConfiguration');
         expect(DashConstants.CONTENT_PROTECTION).to.equal('ContentProtection');
         expect(DashConstants.ESSENTIAL_PROPERTY).to.equal('EssentialProperty');
+        expect(DashConstants.ESSENTIAL_PROPERTY_ASARRAY).to.equal('EssentialProperty_asArray');
         expect(DashConstants.SUPPLEMENTAL_PROPERTY).to.equal('SupplementalProperty');
+        expect(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY).to.equal('SupplementalProperty_asArray');
         expect(DashConstants.INBAND_EVENT_STREAM).to.equal('InbandEventStream');
         expect(DashConstants.PRODUCER_REFERENCE_TIME).to.equal('ProducerReferenceTime');
         expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
@@ -66,6 +68,7 @@ describe('DashConstants', function () {
         expect(DashConstants.SUBSET).to.equal('Subset');
         expect(DashConstants.LANG).to.equal('lang');
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
+        expect(DashConstants.VIEWPOINT_ASARRAY).to.equal('Viewpoint_asArray');
         expect(DashConstants.ROLE_ASARRAY).to.equal('Role_asArray');
         expect(DashConstants.REPRESENTATION_ASARRAY).to.equal('Representation_asArray');
         expect(DashConstants.PRODUCERREFERENCETIME_ASARRAY).to.equal('ProducerReferenceTime_asArray');
@@ -94,6 +97,9 @@ describe('DashConstants', function () {
         expect(DashConstants.CENC_DEFAULT_KID).to.equal('cenc:default_KID');
         expect(DashConstants.DVB_PRIORITY).to.equal('dvb:priority');
         expect(DashConstants.DVB_WEIGHT).to.equal('dvb:weight');
+        expect(DashConstants.DVB_URL).to.equal('dvb:url');
+        expect(DashConstants.DVB_MIMETYPE).to.equal('dvb:mimeType');
+        expect(DashConstants.DVB_FONTFAMILY).to.equal('dvb:fontFamily');
         expect(DashConstants.SUGGESTED_PRESENTATION_DELAY).to.equal('suggestedPresentationDelay');
         expect(DashConstants.WALL_CLOCK_TIME).to.equal('wallClockTime');
         expect(DashConstants.PRESENTATION_TIME).to.equal('presentationTime');

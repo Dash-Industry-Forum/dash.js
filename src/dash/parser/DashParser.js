@@ -58,18 +58,18 @@ function DashParser(config) {
             new DateTimeMatcher(),
             new NumericMatcher(),
             new LangMatcher(),
-            new StringMatcher()   // last in list to take precedence over NumericMatcher
+            new StringMatcher()// last in list to take precedence over NumericMatcher
         ];
 
         converter = new X2JS({
-            escapeMode:         false,
-            attributePrefix:    '',
-            arrayAccessForm:    'property',
-            emptyNodeForm:      'object',
-            stripWhitespaces:   false,
+            escapeMode: false,
+            attributePrefix: '',
+            arrayAccessForm: 'property',
+            emptyNodeForm: 'object',
+            stripWhitespaces: false,
             enableToStringFunc: true,
-            ignoreRoot:         false,
-            matchers:           matchers
+            ignoreRoot: false,
+            matchers: matchers
         });
 
         objectIron = ObjectIron(context).create({
