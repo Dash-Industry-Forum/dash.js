@@ -35,9 +35,6 @@ import Debug from '../../../core/Debug';
 function AbandonRequestsRule(config) {
 
     config = config || {};
-    const ABANDON_MULTIPLIER = 1.8;
-    const GRACE_TIME_THRESHOLD = 500;
-    const MIN_LENGTH_TO_AVERAGE = 5;
 
     const context = this.context;
     const mediaPlayerModel = config.mediaPlayerModel;
@@ -123,7 +120,7 @@ function AbandonRequestsRule(config) {
                     const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateInfo = abrController.getBitrateInfoByBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor, true, true);
-                    const currentBitrateInfo = abrController.getCurrentBitrateInfoFor(mediaType,  streamInfo.id);
+                    const currentBitrateInfo = abrController.getCurrentBitrateInfoFor(mediaType, streamInfo.id);
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateInfo.bitrate / currentBitrateInfo.bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {

@@ -103,6 +103,7 @@ function ScheduleController(config) {
     }
 
     function setCurrentRepresentation(representationInfo) {
+        // eslint-disable-next-line no-unused-vars
         currentRepresentationInfo = representationInfo;
     }
 
