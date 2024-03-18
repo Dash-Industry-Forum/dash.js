@@ -44,10 +44,11 @@ const codecCompatibilityTable = [
 ];
 
 export function supportsMediaSource() {
+    let hasManagedMediaSource = ('ManagedMediaSource' in window)
     let hasWebKit = ('WebKitMediaSource' in window);
     let hasMediaSource = ('MediaSource' in window);
 
-    return (hasWebKit || hasMediaSource);
+    return (hasManagedMediaSource || hasWebKit || hasMediaSource);
 }
 
 function Capabilities() {
@@ -137,7 +138,11 @@ function Capabilities() {
                 codec += ';width="' + config.width + '";height="' + config.height + '"';
             }
 
-            if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
+            // eslint-disable-next-line no-undef
+            if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(codec)) {
+                resolve(true);
+                return;
+            } else if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
                 resolve(true);
                 return;
             } else if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {
@@ -193,7 +198,7 @@ function Capabilities() {
      */
     function supportsEssentialProperty(ep) {
         try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
+            return (THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1) || (Constants.FONT_DOWNLOAD_DVB_SCHEME === ep.schemeIdUri);
         } catch (e) {
             return true;
         }

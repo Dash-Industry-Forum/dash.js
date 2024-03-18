@@ -103,11 +103,11 @@ function LoLPRule(config) {
             }
 
             // QoE parameters
-            let bitrateList = mediaInfo.bitrateList;  // [{bandwidth: 200000, width: 640, height: 360}, ...]
+            let bitrateList = mediaInfo.bitrateList; // [{bandwidth: 200000, width: 640, height: 360}, ...]
             let segmentDuration = rulesContext.getRepresentationInfo().fragmentDuration;
-            let minBitrateKbps = bitrateList[0].bandwidth / 1000.0;                         // min bitrate level
-            let maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0;    // max bitrate level
-            for (let i = 0; i < bitrateList.length; i++) {  // in case bitrateList is not sorted as expected
+            let minBitrateKbps = bitrateList[0].bandwidth / 1000.0; // min bitrate level
+            let maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0; // max bitrate level
+            for (let i = 0; i < bitrateList.length; i++) { // in case bitrateList is not sorted as expected
                 let b = bitrateList[i].bandwidth / 1000.0;
                 if (b > maxBitrateKbps)
                     maxBitrateKbps = b;
@@ -145,7 +145,7 @@ function LoLPRule(config) {
             scheduleController.setTimeToLoadDelay(0);
 
             if (switchRequest.quality !== currentQuality) {
-                console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
+                logger.debug('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
             }
 
             return switchRequest;

@@ -37,7 +37,8 @@ class ContentSteeringResponse {
         this.version = null;
         this.ttl = 300;
         this.reloadUri = null;
-        this.serviceLocationPriority = [];
+        this.pathwayPriority = [];
+        this.pathwayClones = [];
     }
 }
 

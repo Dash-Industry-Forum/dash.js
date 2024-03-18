@@ -5,7 +5,6 @@ import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
 
 import SpecHelper from './helpers/SpecHelper';
@@ -13,6 +12,7 @@ import SpecHelper from './helpers/SpecHelper';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import AdapterMock from './mocks/AdapterMock';
 import SegmentsControllerMock from './mocks/SegmentsControllerMock';
 
 const chai = require('chai');
@@ -43,6 +43,7 @@ describe('RepresentationController', function () {
     const abrControllerMock = new AbrControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const dashMetricsMock = new DashMetricsMock();
+    const adapterMock = new AdapterMock();
     const segmentsController = new SegmentsControllerMock();
 
     abrControllerMock.registerStreamType();
@@ -70,9 +71,6 @@ describe('RepresentationController', function () {
             expect(data).not.exist; // jshint ignore:line
         });
 
-        it('should throw an exception when attempting to call updateData while setConfig has not been called properly', function () {
-            expect(representationController.updateData.bind(representationController)).to.throw(Constants.MISSING_CONFIG_ERROR);
-        });
     });
 
     describe('Config correctly passed', function () {
@@ -87,7 +85,8 @@ describe('RepresentationController', function () {
                 type: testType,
                 events: Events,
                 eventBus: eventBus,
-                dashConstants: DashConstants
+                dashConstants: DashConstants,
+                adapter: adapterMock
             });
         });
 

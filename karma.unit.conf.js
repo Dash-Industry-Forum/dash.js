@@ -35,7 +35,8 @@ module.exports = function (config) {
         client: {
             useIframe: false,
             mocha: {
-                timeout: 90000
+                timeout: 90000,
+                grep: config.grep
             }
         },
 

@@ -42,7 +42,7 @@ function XlinkLoader(config) {
     config = config || {};
     const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
-    const context  = this.context;
+    const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
     let urlLoader = URLLoader(context).create({

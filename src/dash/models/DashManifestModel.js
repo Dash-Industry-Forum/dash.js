@@ -40,6 +40,7 @@ import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime';
 import ContentSteering from '../vo/ContentSteering';
+import DescriptorType from '../vo/DescriptorType';
 import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -47,6 +48,8 @@ import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
+import MpdLocation from '../vo/MpdLocation';
+import PatchLocation from '../vo/PatchLocation';
 
 function DashManifestModel() {
     let instance,
@@ -230,23 +233,43 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.VIEWPOINT) ? adaptation.Viewpoint : null;
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT_ASARRAY) || !adaptation[DashConstants.VIEWPOINT_ASARRAY].length) return [];
+        return adaptation[DashConstants.VIEWPOINT_ASARRAY].map( viewpoint => {
+            const vp = new DescriptorType();
+            return vp.init(viewpoint);
+        });
     }
 
     function getRolesForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) ? adaptation.Role_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE_ASARRAY) || !adaptation[DashConstants.ROLE_ASARRAY].length) return [];
+        return adaptation[DashConstants.ROLE_ASARRAY].map( role => {
+            const r = new DescriptorType();
+            return r.init(role);
+        });
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) ? adaptation.Accessibility_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY_ASARRAY) || !adaptation[DashConstants.ACCESSIBILITY_ASARRAY].length) return [];
+        return adaptation[DashConstants.ACCESSIBILITY_ASARRAY].map( accessibility => {
+            const a = new DescriptorType();
+            return a.init(accessibility);
+        });
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !adaptation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+        return adaptation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].map( audioChanCfg => {
+            const acc = new DescriptorType();
+            return acc.init(audioChanCfg);
+        });
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) || !representation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].length) return [];
+        return representation[DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY].map( audioChanCfg => {
+            const acc = new DescriptorType();
+            return acc.init(audioChanCfg);
+        });
     }
 
     function getRepresentationSortFunction() {
@@ -357,6 +380,22 @@ function DashManifestModel() {
 
     function getMimeType(adaptation) {
         return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0 ? adaptation.Representation_asArray[0].mimeType : null;
+    }
+
+    function getSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
+    }
+
+    function getSubSegmentAlignment(adaptation) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUB_SEGMENT_ALIGNMENT)) {
+            return adaptation[DashConstants.SUB_SEGMENT_ALIGNMENT] === 'true'
+        }
+
+        return false
     }
 
     function getKID(adaptation) {
@@ -720,19 +759,12 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period
-            // element contains a @duration attribute then then this new
-            // Period is also a regular Period. The start time of the new
-            // Period PeriodStart is the sum of the start time of the previous
-            // Period PeriodStart and the value of the attribute @duration
-            // of the previous Period.
+            // If the @start attribute is absent, but the previous Period element contains a @duration attribute then this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of the start time of the previous Period PeriodStart and the value of the attribute @duration of the previous Period.
             else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element
-            // is the first in the MPD, and (iii) the MPD@type is 'static',
-            // then the PeriodStart time shall be set to zero.
+            // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the MPD@type is 'static', then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
                 voPeriod.start = 0;
@@ -1098,11 +1130,11 @@ function DashManifestModel() {
                 }
 
                 if (entry.hasOwnProperty(DashConstants.DVB_PRIORITY)) {
-                    baseUrl.dvb_priority = entry[DashConstants.DVB_PRIORITY];
+                    baseUrl.dvbPriority = entry[DashConstants.DVB_PRIORITY];
                 }
 
                 if (entry.hasOwnProperty(DashConstants.DVB_WEIGHT)) {
-                    baseUrl.dvb_weight = entry[DashConstants.DVB_WEIGHT];
+                    baseUrl.dvbWeight = entry[DashConstants.DVB_WEIGHT];
                 }
 
                 if (entry.hasOwnProperty(DashConstants.AVAILABILITY_TIME_OFFSET)) {
@@ -1128,51 +1160,58 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.CONTENT_STEERING_AS_ARRAY)) {
             // Only one ContentSteering element is supported on MPD level
             const element = manifest[DashConstants.CONTENT_STEERING_AS_ARRAY][0];
-            const entry = new ContentSteering();
-
-            entry.serverUrl =  element.__text;
-
-            if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
-                entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
-            }
-
-            if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
-                entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
-            }
-
-            if (element.hasOwnProperty(DashConstants.PROXY_SERVER_URL)) {
-                entry.proxyServerUrl = element[DashConstants.PROXY_SERVER_URL];
-            }
-
-            return entry;
+            return _createContentSteeringInstance(element);
         }
 
         return undefined;
+    }
+
+    function _createContentSteeringInstance(element) {
+        const entry = new ContentSteering();
+
+        entry.serverUrl = element.__text;
+
+        if (element.hasOwnProperty(DashConstants.DEFAULT_SERVICE_LOCATION)) {
+            entry.defaultServiceLocation = element[DashConstants.DEFAULT_SERVICE_LOCATION];
+            entry.defaultServiceLocationArray = entry.defaultServiceLocation.split(' ');
+        }
+
+        if (element.hasOwnProperty(DashConstants.QUERY_BEFORE_START)) {
+            entry.queryBeforeStart = element[DashConstants.QUERY_BEFORE_START].toLowerCase() === 'true';
+        }
+
+        if (element.hasOwnProperty(DashConstants.CLIENT_REQUIREMENT)) {
+            entry.clientRequirement = element[DashConstants.CLIENT_REQUIREMENT].toLowerCase() !== 'false';
+        }
+
+        return entry;
     }
 
     function getLocation(manifest) {
-        if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
-            // for now, do not support multiple Locations -
-            // just set Location to the first Location.
-            manifest.Location = manifest.Location_asArray[0];
+        if (manifest && manifest.hasOwnProperty(DashConstants.LOCATION_AS_ARRAY)) {
+            return manifest[DashConstants.LOCATION_AS_ARRAY].map((entry) => {
+                const text = entry.__text || entry;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
 
-            return manifest.Location;
+                return new MpdLocation(text, serviceLocation)
+            })
         }
 
-        // may well be undefined
-        return undefined;
+        return [];
     }
 
     function getPatchLocation(manifest) {
-        if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
-            // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+        if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION_AS_ARRAY)) {
+            return manifest[DashConstants.PATCH_LOCATION_AS_ARRAY].map((entry) => {
+                const text = entry.__text || entry;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
+                let ttl = entry.hasOwnProperty(DashConstants.TTL) ? parseFloat(entry[DashConstants.TTL]) * 1000 : NaN;
 
-            return manifest.PatchLocation;
+                return new PatchLocation(text, serviceLocation, ttl)
+            })
         }
 
-        // no patch location provided
-        return undefined;
+        return [];
     }
 
     function getSuggestedPresentationDelay(mpd) {
@@ -1193,7 +1232,8 @@ function DashManifestModel() {
                     latency = null,
                     playbackRate = null,
                     operatingQuality = null,
-                    operatingBandwidth = null;
+                    operatingBandwidth = null,
+                    contentSteering = null;
 
                 for (const prop in sd) {
                     if (sd.hasOwnProperty(prop)) {
@@ -1229,6 +1269,8 @@ function DashManifestModel() {
                                 min: parseInt(sd[prop].min),
                                 target: parseInt(sd[prop].target)
                             }
+                        } else if (prop === DashConstants.CONTENT_STEERING) {
+                            contentSteering = _createContentSteeringInstance(sd[prop])
                         }
                     }
                 }
@@ -1239,7 +1281,8 @@ function DashManifestModel() {
                     latency,
                     playbackRate,
                     operatingQuality,
-                    operatingBandwidth
+                    operatingBandwidth,
+                    contentSteering
                 });
             }
         }
@@ -1247,17 +1290,70 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    function getSupplementalProperties(adaptation) {
+    function getSupplementalPropertiesForAdaptation(adaptation) {
         const supplementalProperties = {};
 
-        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
             for (const sp of adaptation.SupplementalProperty_asArray) {
-                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
-                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
                 }
             }
         }
         return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesAsArrayForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !adaptation.SupplementalProperty_asArray.length) return [];
+        return adaptation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType();
+            return s.init(supp);
+        });
+    }
+
+    function getSupplementalPropertiesForRepresentation(representation) {
+        const supplementalProperties = {};
+
+        if (representation && representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY)) {
+            for (const sp of representation.SupplementalProperty_asArray) {
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single SupplementalProperty descriptor with this SchemeIdUri
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = {...sp};
+                }
+            }
+        }
+        return supplementalProperties;
+    }
+
+    function getSupplementalPropertiesAsArrayForRepresentation(representation) {
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY_ASARRAY) || !representation.SupplementalProperty_asArray.length) return [];
+        return representation.SupplementalProperty_asArray.map( supp => {
+            const s = new DescriptorType();
+            return s.init(supp);
+        });
+    }
+
+    function getEssentialPropertiesForAdaptation(adaptation) {
+        const essentialProperties = {};
+
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY)) {
+            for (const ep of adaptation.EssentialProperty_asArray) {
+                if (ep.hasOwnProperty(Constants.SCHEME_ID_URI)) {
+                    // N.B this will only work where there is a single EssentialProperty descriptor with this SchemeIdUri
+                    essentialProperties[ep[Constants.SCHEME_ID_URI]] = {...ep};
+                }
+            }
+        }
+        return essentialProperties;
+    }
+
+    function getEssentialPropertiesAsArrayForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY_ASARRAY) || !adaptation.EssentialProperty_asArray.length) return [];
+        return adaptation.EssentialProperty_asArray.map( ep => {
+            const s = new DescriptorType();
+            return s.init(ep);
+        });
     }
 
     function setConfig(config) {
@@ -1310,6 +1406,8 @@ function DashManifestModel() {
         getRegularPeriods,
         getMpd,
         getEventsForPeriod,
+        getEssentialPropertiesForAdaptation,
+        getEssentialPropertiesAsArrayForAdaptation,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
@@ -1322,7 +1420,12 @@ function DashManifestModel() {
         getSuggestedPresentationDelay,
         getAvailabilityStartTime,
         getServiceDescriptions,
-        getSupplementalProperties,
+        getSegmentAlignment,
+        getSubSegmentAlignment,
+        getSupplementalPropertiesForAdaptation,
+        getSupplementalPropertiesAsArrayForAdaptation,
+        getSupplementalPropertiesForRepresentation,
+        getSupplementalPropertiesAsArrayForRepresentation,
         setConfig
     };
 

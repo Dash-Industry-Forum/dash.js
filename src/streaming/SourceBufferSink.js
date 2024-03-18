@@ -83,7 +83,10 @@ function SourceBufferSink(config) {
 
         promises.push(_abortBeforeAppend());
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
-        promises.push(changeType(codec));
+
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+            promises.push(changeType(codec));
+        }
 
         if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
             promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
@@ -136,7 +139,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.type == constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1)) {
+            if ((mediaInfo.type == constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);

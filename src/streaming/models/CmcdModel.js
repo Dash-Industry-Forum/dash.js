@@ -289,7 +289,9 @@ function CmcdModel() {
         if (!rtp) {
             rtp = _calculateRtp(request);
         }
-        data.rtp = rtp;
+        if (!isNaN(rtp)) {
+            data.rtp = rtp;
+        }
 
         if (nextRequest) {
             if (request.url !== nextRequest.url) {
@@ -429,7 +431,7 @@ function CmcdModel() {
 
     function _getObjectDurationByRequest(request) {
         try {
-            return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
+            return !isNaN(request.duration) ? Math.round(request.duration * 1000) : NaN;
         } catch (e) {
             return null;
         }
@@ -567,24 +569,32 @@ function CmcdModel() {
     }
 
     function _calculateRtp(request) {
-        // Get the values we need
-        let playbackRate = playbackController.getPlaybackRate();
-        if (!playbackRate) playbackRate = 1;
-        let { quality, mediaType, mediaInfo, duration } = request;
-        let currentBufferLevel = _getBufferLevelByType(mediaType);
-        if (currentBufferLevel === 0) currentBufferLevel = 500;
-        let bitrate = mediaInfo.bitrateList[quality].bandwidth;
+        try {
+            // Get the values we need
+            let playbackRate = playbackController.getPlaybackRate();
+            if (!playbackRate) playbackRate = 1;
+            let { quality, mediaType, mediaInfo, duration } = request;
 
-        // Calculate RTP
-        let segmentSize = (bitrate * duration) / 1000; // Calculate file size in kilobits
-        let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
-        let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-        let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
-        let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
+            if (!mediaInfo) {
+                return NaN;
+            }
+            let currentBufferLevel = _getBufferLevelByType(mediaType);
+            if (currentBufferLevel === 0) currentBufferLevel = 500;
+            let bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
-        let rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
+            // Calculate RTP
+            let segmentSize = (bitrate * duration) / 1000; // Calculate file size in kilobits
+            let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
+            let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
+            let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+            let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
-        return rtp;
+
+            // Round to the next multiple of 100
+            return (parseInt(maxBandwidth / 100) + 1) * 100;
+        } catch (e) {
+            return NaN;
+        }
     }
 
     function reset() {

@@ -73,6 +73,7 @@ function TextSourceBuffer(config) {
         embeddedTracks,
         embeddedTimescale,
         embeddedLastSequenceNumber,
+        lastChunkEnd,
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender;
 
@@ -186,6 +187,7 @@ function TextSourceBuffer(config) {
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
         embeddedLastSequenceNumber = null;
+        lastChunkEnd = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
 
@@ -203,6 +205,7 @@ function TextSourceBuffer(config) {
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
         embeddedLastSequenceNumber = null;
+        lastChunkEnd = null;
     }
 
     function addEmbeddedTrack(mediaInfo) {
@@ -287,6 +290,7 @@ function TextSourceBuffer(config) {
             if (sampleList.length > 0) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
+
             if (codecType.search(Constants.STPP) >= 0) {
                 _appendFragmentedSttp(bytes, sampleList, codecType);
             } else {
@@ -322,11 +326,11 @@ function TextSourceBuffer(config) {
             try {
                 const manifest = manifestModel.getValue();
 
-                // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+                // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
-
-                const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+            
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();
@@ -358,22 +362,33 @@ function TextSourceBuffer(config) {
                 }
                 if (box1.type === 'vttc') {
                     logger.debug('VTT vttc boxes.length = ' + box1.boxes.length);
+                    let entry = {
+                        styles: {}
+                    };
                     for (k = 0; k < box1.boxes.length; k++) {
                         const box2 = box1.boxes[k];
                         logger.debug('VTT box2: ' + box2.type);
+
+                        // Mandatory cue payload lines
                         if (box2.type === 'payl') {
-                            const cue_text = box2.cue_text;
-                            logger.debug('VTT cue_text = ' + cue_text);
-                            const start_time = sample.cts / timescale;
-                            const end_time = (sample.cts + sample.duration) / timescale;
-                            captionArray.push({
-                                start: start_time,
-                                end: end_time,
-                                data: cue_text,
-                                styles: {}
-                            });
-                            logger.debug('VTT ' + start_time + '-' + end_time + ' : ' + cue_text);
+                            entry.start = sample.cts / timescale;
+                            entry.end = (sample.cts + sample.duration) / timescale;
+                            entry.data = box2.cue_text;
                         }
+
+                        // The styling information
+                        else if (box2.type === 'sttg' && box2.settings && box2.settings !== '') {
+                            try {
+                                const stylings = box2.settings.split(' ');
+                                entry.styles = vttParser.getCaptionStyles(stylings);
+                            } catch (e) {
+
+                            }
+                        }
+                    }
+                    if (entry && entry.data) {
+                        captionArray.push(entry);
+                        logger.debug(`VTT  ${entry.start} - ${entry.end} :  ${entry.data}`);
                     }
                 }
             }
@@ -401,6 +416,18 @@ function TextSourceBuffer(config) {
         }
     }
 
+    function _isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, numSequences, lastChunkEnd, chunkStart) {
+        if (embeddedLastSequenceNumber === null || sequenceNumber === null || lastChunkEnd === null || chunkStart === null) {
+            return false
+        }
+        // Sequence number is always 1 for low latency streams
+        if (sequenceNumber === embeddedLastSequenceNumber) {
+            // time-based continuity check
+            return lastChunkEnd !== chunkStart
+        }
+        return sequenceNumber !== embeddedLastSequenceNumber + numSequences;
+    }
+
     function _appendEmbeddedText(bytes, chunk) {
         let i, samplesInfo;
 
@@ -422,12 +449,15 @@ function TextSourceBuffer(config) {
             samplesInfo = boxParser.getSamplesInfo(bytes);
 
             const sequenceNumber = samplesInfo.lastSequenceNumber;
+            const chunkStart = Math.trunc(chunk.start);
+            const chunkEnd = Math.trunc(chunk.end);
+
             if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                 _setupCeaParser();
             }
 
             if (embeddedTimescale) {
-                if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + samplesInfo.numSequences) {
+                if (_isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, samplesInfo.numSequences, lastChunkEnd, chunkStart)) {
                     for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                         if (embeddedCea608FieldParsers[i]) {
                             embeddedCea608FieldParsers[i].reset();
@@ -447,6 +477,7 @@ function TextSourceBuffer(config) {
                     }
                 }
                 embeddedLastSequenceNumber = sequenceNumber;
+                lastChunkEnd = chunkEnd;
             }
         }
     }

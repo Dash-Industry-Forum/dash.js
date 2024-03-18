@@ -68,7 +68,6 @@ describe('HTTPLoader', function () {
 
         httpLoader.load({
             request: {
-                checkExistenceOnly: true,
                 responseType: 'json',
                 type: HTTPRequest.MEDIA_SEGMENT_TYPE,
                 availabilityTimeComplete: false
@@ -93,7 +92,7 @@ describe('HTTPLoader', function () {
         });
 
         httpLoader.load({
-            request: {checkExistenceOnly: true},
+            request: {},
             success: callbackSucceeded,
             complete: callbackCompleted,
             error: callbackError
@@ -120,7 +119,7 @@ describe('HTTPLoader', function () {
         });
 
         httpLoader.load({
-            request: {checkExistenceOnly: true},
+            request: {},
             success: callbackSucceeded,
             complete: callbackCompleted,
             error: callbackError
@@ -149,7 +148,6 @@ describe('HTTPLoader', function () {
 
         httpLoader.load({
             request: {
-                checkExistenceOnly: true,
                 responseType: 'arraybuffer',
                 type: HTTPRequest.INIT_SEGMENT_TYPE,
                 availabilityTimeComplete: false

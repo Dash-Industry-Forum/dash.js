@@ -21,6 +21,7 @@
         "no-use-before-define": 0,
         "strict": 0,
         "no-loop-func": 0,
+        "no-multi-spaces": "error",
         "quotes": [
             "error",
             "single",

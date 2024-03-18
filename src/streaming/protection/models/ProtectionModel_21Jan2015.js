@@ -99,8 +99,8 @@ function ProtectionModel_21Jan2015(config) {
             for (let i = 0; i < numSessions; i++) {
                 session = sessions[i];
                 (function (s) {
-                    _closeKeySessionInternal(session);
-                    done(s)
+                    _closeKeySessionInternal(session)
+                    done(s);
                 })(session);
             }
         } else {
@@ -403,8 +403,8 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function _closeKeySessionInternal(sessionToken) {
-        if (!sessionToken) {
-            return
+        if (!sessionToken || !sessionToken.session) {
+            return Promise.resolve;
         }
         const session = sessionToken.session;
 

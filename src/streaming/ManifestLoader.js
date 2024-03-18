@@ -98,19 +98,39 @@ function ManifestLoader(config) {
             //do some business to transform it into a Dash Manifest
             if (mssHandler) {
                 parser = mssHandler.createMssParser();
+                mssHandler.createMssFragmentProcessor();
                 mssHandler.registerEvents();
             }
             return parser;
         } else if (data.indexOf('MPD') > -1 || data.indexOf('Patch') > -1) {
-            return DashParser(context).create({debug: debug});
+            return DashParser(context).create({ debug: debug });
         } else {
             return parser;
         }
     }
 
-    function load(url) {
+    function load(url, serviceLocation = null, queryParams = null) {
 
+        const requestStartDate = new Date();
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
+
+        if (serviceLocation) {
+            request.serviceLocation = serviceLocation;
+        }
+
+        if (queryParams) {
+            request.queryParams = queryParams;
+        }
+
+        if (!request.requestStartDate) {
+            request.requestStartDate = requestStartDate;
+        }
+
+        eventBus.trigger(
+            Events.MANIFEST_LOADING_STARTED, {
+                request
+            }
+        );
 
         urlLoader.load({
             request: request,
@@ -187,13 +207,6 @@ function ManifestLoader(config) {
                     // URL from which the MPD was originally retrieved (MPD updates will not change this value)
                     if (!manifest.originalUrl) {
                         manifest.originalUrl = manifest.url;
-                    }
-
-                    // In the following, we only use the first Location entry even if many are available
-                    // Compare with ManifestUpdater/DashManifestModel
-                    if (manifest.hasOwnProperty(Constants.LOCATION)) {
-                        baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
-                        logger.debug('BaseURI set by Location to: ' + baseUri);
                     }
 
                     // If there is a mismatch between the manifest's specified duration and the total duration of all periods,

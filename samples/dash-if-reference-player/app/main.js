@@ -233,6 +233,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.drmToday = false;
 
+    $scope.imscEnableRollUp = true;
+    $scope.imscdisplayForcedOnlyMode = false;
+
     $scope.isDynamic = false;
 
     $scope.conformanceViolations = [];
@@ -241,6 +244,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
         loop: true,
         autoPlay: true,
+        autoLoad: false,
+        muted: false,
         drmToday: false,
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
@@ -290,6 +295,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     // Starting Options
     $scope.autoPlaySelected = true;
+    $scope.autoLoadSelected = false;
+    $scope.muted = false;
     $scope.cmcdEnabled = false;
     $scope.cmsdEnabled = false;
     $scope.cmsdApplyMb = false;
@@ -298,6 +305,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
     $scope.reuseExistingSourceBuffersSelected = true;
+    $scope.mediaSourceDurationInfinitySelected = true;
+    $scope.resetSourceBuffersForTrackSwitch = false;
+    $scope.saveLastMediaSettingsSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
@@ -501,6 +511,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.setAutoPlay($scope.autoPlaySelected);
     };
 
+    $scope.toggleMuted = function () {
+        $scope.player.setMute($scope.muted)
+    }
+
     $scope.changeFetchThroughputCalculation = function (mode) {
         $scope.player.updateSettings({
             streaming: {
@@ -665,6 +679,34 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.toggleMediaSourceDurationInfinity = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    mediaSourceDurationInfinity: $scope.mediaSourceDurationInfinitySelected
+                }
+            }
+        });
+    };
+
+    $scope.toggleResetSourceBuffersForTrackSwitch = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    resetSourceBuffersForTrackSwitch: $scope.resetSourceBuffersForTrackSwitch
+                }
+            }
+        })
+    };
+
+    $scope.toggleSaveLastMediaSettings = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'saveLastMediaSettingsForCurrentStreamingSession': $scope.saveLastMediaSettingsSelected
+            }
+        });
+    };
+
     $scope.toggleLocalStorage = function () {
         $scope.player.updateSettings({
             'streaming': {
@@ -784,6 +826,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleForcedTextStreaming = function () {
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
+    }
+
+    $scope.toggleImscEnableRollUp = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
+    }
+
+    $scope.toggleImscdisplayForcedOnlyMode = function() {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -1499,6 +1549,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             mpd: encodeURIComponent(decodeURIComponent($scope.selectedItem.url)),
             loop: $scope.loopSelected,
             autoPlay: $scope.autoPlaySelected,
+            autoLoad: $scope.autoLoadSelected,
+            muted: $scope.muted,
             drmToday: $scope.drmToday,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
@@ -1764,6 +1816,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'autoPlay':
                     $scope.autoPlaySelected = this.parseBoolean(value);
                     $scope.toggleAutoPlay();
+                    break;
+                case 'autoLoad':
+                    $scope.autoLoadSelected = this.parseBoolean(value);
+                    break;
+                case 'muted':
+                    $scope.muted = this.parseBoolean(value);
+                    $scope.toggleMuted();
+                    if ($scope.muted === true){
+                        document.getElementById('muteBtn')?.click();    
+                    } 
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
@@ -2109,6 +2171,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.scheduleWhilePausedSelected = currentConfig.streaming.scheduling.scheduleWhilePaused;
         $scope.calcSegmentAvailabilityRangeFromTimelineSelected = currentConfig.streaming.timeShiftBuffer.calcFromSegmentTimeline;
         $scope.reuseExistingSourceBuffersSelected = currentConfig.streaming.buffer.reuseExistingSourceBuffers;
+        $scope.mediaSourceDurationInfinitySelected = currentConfig.streaming.buffer.mediaSourceDurationInfinity;
+        $scope.resetSourceBuffersForTrackSwitch = currentConfig.streaming.buffer.resetSourceBuffersForTrackSwitch;
+        $scope.saveLastMediaSettingsSelected = currentConfig.streaming.saveLastMediaSettingsForCurrentStreamingSession;
         $scope.localStorageSelected = currentConfig.streaming.lastBitrateCachingInfo.enabled;
         $scope.jumpGapsSelected = currentConfig.streaming.gaps.jumpGaps;
     }
@@ -2125,6 +2190,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmPlayready.priority = $scope.drmPlayready.priority.toString();
         $scope.drmWidevine.priority = $scope.drmWidevine.priority.toString();
         $scope.drmClearkey.priority = $scope.drmClearkey.priority.toString();
+    }
+
+    function setTextOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.imscEnableRollUp = currentConfig.streaming.text.imsc.enableRollUp;
+        $scope.imscdisplayForcedOnlyMode = currentConfig.streaming.text.imsc.displayForcedOnlyMode;
     }
 
     function setLiveDelayOptions() {
@@ -2282,6 +2353,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setAdditionalPlaybackOptions();
             setAdditionalAbrOptions();
             setDrmOptions();
+            setTextOptions();
             setLiveDelayOptions();
             setInitialSettings();
             setTrackSwitchModeSettings();
@@ -2293,18 +2365,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
             var vars = getUrlVars();
             var item = {};
-
-            if (vars && vars.hasOwnProperty('url')) {
-                item.url = vars.url;
-            }
-
-            // if (vars && vars.hasOwnProperty('mpd')) {
-            //     item.url = vars.mpd;
-            // }
-
-            if (vars && vars.hasOwnProperty('source')) {
-                item.url = vars.source;
-            }
 
             if (vars && vars.hasOwnProperty('stream')) {
                 try {
@@ -2325,18 +2385,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
 
-            if (item.url) {
-                var startPlayback = false;
-
-                $scope.selectedItem = item;
-
-                if (vars.hasOwnProperty('autoplay')) {
-                    startPlayback = (vars.autoplay === 'true');
-                }
-
-                if (startPlayback) {
-                    $scope.doLoad();
-                }
+            if ($scope.autoLoadSelected && $scope.selectedItem) {
+                $scope.doLoad();
             }
         }
 

@@ -48,11 +48,13 @@ function RepresentationController(config) {
     const streamInfo = config.streamInfo;
     const segmentsController = config.segmentsController;
     const isDynamic = config.isDynamic;
+    const adapter = config.adapter;
 
     let instance,
         realAdaptation,
         updating,
         voAvailableRepresentations,
+        currentRepresentationInfo,
         mediaInfo,
         currentVoRepresentation;
 
@@ -88,10 +90,15 @@ function RepresentationController(config) {
         return currentVoRepresentation;
     }
 
+    function getCurrentRepresentationInfo() {
+        return currentRepresentationInfo
+    }
+
     function resetInitialSettings() {
         realAdaptation = null;
         updating = true;
         voAvailableRepresentations = [];
+        currentRepresentationInfo = null;
     }
 
     function reset() {
@@ -102,14 +109,12 @@ function RepresentationController(config) {
 
     function updateData(newRealAdaptation, availableRepresentations, type, mInfo, bitrateInfo) {
         return new Promise((resolve, reject) => {
-            checkConfig();
             updating = true;
             mediaInfo = mInfo;
             voAvailableRepresentations = availableRepresentations;
-
+            realAdaptation = newRealAdaptation;
             const rep = bitrateInfo ? getRepresentationForId(bitrateInfo.representationId) : voAvailableRepresentations[0];
             _setCurrentVoRepresentation(rep);
-            realAdaptation = newRealAdaptation;
 
             if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !mInfo.isFragmented)) {
                 endDataUpdate();
@@ -174,7 +179,7 @@ function RepresentationController(config) {
                     resolve();
                 })
                 .catch((e) => {
-                    reject(e)
+                    reject(e);
                 })
         })
     }
@@ -329,6 +334,7 @@ function RepresentationController(config) {
 
     function _setCurrentVoRepresentation(value) {
         currentVoRepresentation = value;
+        currentRepresentationInfo = adapter.convertRepresentationToRepresentationInfo(currentVoRepresentation);
     }
 
     function setMediaInfo(mInfo) {
@@ -354,6 +360,7 @@ function RepresentationController(config) {
         updateDataAfterAdaptationSetQualitySwitch,
         getCurrentRepresentation,
         getRepresentationForId,
+        getCurrentRepresentationInfo,
         prepareQualityChange,
         setMediaInfo,
         reset

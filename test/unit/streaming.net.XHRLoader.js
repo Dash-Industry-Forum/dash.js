@@ -42,9 +42,7 @@ describe('XHRLoader', function () {
             requestModifier: requestModifier
         });
         const request = {
-            request: {
-                checkExistenceOnly: true
-            },
+            request: {},
             onload: callbackSucceeded,
             onend: callbackCompleted,
             onerror: callbackError,
@@ -70,9 +68,7 @@ describe('XHRLoader', function () {
             requestModifier: requestModifier
         });
         const request = {
-            request: {
-                checkExistenceOnly: true
-            },
+            request: {},
             onload: callbackSucceeded,
             onend: callbackCompleted,
             onerror: callbackError,
@@ -99,9 +95,7 @@ describe('XHRLoader', function () {
         });
 
         const request = {
-            request: {
-                checkExistenceOnly: true
-            },
+            request: {},
             onload: callbackSucceeded,
             onend: callbackCompleted,
             onerror: callbackError,
@@ -127,9 +121,7 @@ describe('XHRLoader', function () {
             requestModifier: requestModifier
         });
         const request = {
-            request: {
-                checkExistenceOnly: true
-            },
+            request: {},
             onload: callbackSucceeded,
             onend: callbackCompleted,
             onerror: callbackError,
@@ -150,9 +142,7 @@ describe('XHRLoader', function () {
             requestModifier: requestModifier
         });
         const request = {
-            request: {
-                checkExistenceOnly: true
-            },
+            request: {},
             timeout: 100
         };
         xhrLoader.load(request);

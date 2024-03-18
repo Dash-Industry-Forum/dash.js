@@ -228,6 +228,20 @@ describe('CapabilitiesFilter', function () {
                                     }]
                                 }
                             ]
+                        }, 
+                        {
+                            mimeType: 'application/mp4',
+                            Representation_asArray: [
+                                {
+                                    mimeType: 'application/mp4',
+                                    codecs: 'stpp.ttml.etd1|im1t',
+                                    EssentialProperty_asArray: [{
+                                        schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
+                                        value: '1',
+                                        // dvb extension properties...
+                                    }]
+                                }
+                            ]
                         }]
                     }]
                 };
@@ -239,8 +253,9 @@ describe('CapabilitiesFilter', function () {
 
                 capabilitiesFilter.filterUnsupportedFeatures(manifest)
                     .then(() => {
-                        expect(manifest.Period_asArray[0].AdaptationSet_asArray).to.have.lengthOf(1);
+                        expect(manifest.Period_asArray[0].AdaptationSet_asArray).to.have.lengthOf(2);
                         expect(manifest.Period_asArray[0].AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(2);
+                        expect(manifest.Period_asArray[0].AdaptationSet_asArray[1].Representation_asArray).to.have.lengthOf(1);
                         done();
                     })
                     .catch((e) => {

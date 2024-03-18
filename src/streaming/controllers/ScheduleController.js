@@ -50,6 +50,7 @@ function ScheduleController(config) {
     const textController = config.textController;
     const type = config.type;
     const bufferController = config.bufferController;
+    const representationController = config.representationController
     const settings = config.settings;
 
     let instance,
@@ -61,8 +62,10 @@ function ScheduleController(config) {
         hasVideoTrack,
         lastFragmentRequest,
         lastInitializedRepresentationId,
+        lastInitializedQuality,
         switchTrack,
         initSegmentRequired,
+        managedMediaSourceAllowsRequest,
         checkPlaybackQuality;
 
     function setup() {
@@ -79,6 +82,16 @@ function ScheduleController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
+    }
+
+    function _onManagedMediaSourceStartStreaming() {
+        managedMediaSourceAllowsRequest = true;
+    }
+
+    function _onManagedMediaSourceEndStreaming() {
+        managedMediaSourceAllowsRequest = false;
     }
 
     function getType() {
@@ -90,6 +103,7 @@ function ScheduleController(config) {
     }
 
     function setCurrentRepresentation(representationInfo) {
+        // eslint-disable-next-line no-unused-vars
         currentRepresentationInfo = representationInfo;
     }
 
@@ -147,6 +161,8 @@ function ScheduleController(config) {
      * @private
      */
     function _getNextFragment() {
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
+
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentationInfo.id !== lastInitializedRepresentationId || switchTrack) {
             if (switchTrack) {
@@ -196,6 +212,10 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
+            if (!managedMediaSourceAllowsRequest) {
+                return false;
+            }
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             return currentRepresentationInfo && (lastInitializedRepresentationId === null || switchTrack || _shouldBuffer());
         } catch (e) {
             return false;
@@ -208,6 +228,7 @@ function ScheduleController(config) {
      * @private
      */
     function _shouldBuffer() {
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
         if (!type || !currentRepresentationInfo) {
             return true;
         }
@@ -221,6 +242,7 @@ function ScheduleController(config) {
      */
     function getBufferTarget() {
         let bufferTarget = NaN;
+        const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
 
         if (!type || !currentRepresentationInfo) {
             return bufferTarget;
@@ -245,6 +267,7 @@ function ScheduleController(config) {
     function _getBufferTargetForFragmentedText() {
         try {
             if (textController.isTextEnabled()) {
+                const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
                 if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of currentRepresentationInfo is not defined,
                     // call metrics function to have data in the latest scheduling info...
                     // if no metric, returns 0. In this case, rule will return false.
@@ -269,6 +292,7 @@ function ScheduleController(config) {
     function _getBufferTargetForAudio() {
         try {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             // For multiperiod we need to consider that audio and video segments might have different durations.
             // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
             // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
@@ -290,6 +314,7 @@ function ScheduleController(config) {
      */
     function _getGenericBufferTarget() {
         try {
+            const currentRepresentationInfo = representationController.getCurrentRepresentationInfo();
             const streamInfo = currentRepresentationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
@@ -323,7 +348,7 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.id !== lastFragmentRequest.mediaInfo.id)) && trigger) {
+                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.index !== lastFragmentRequest.mediaInfo.index)) && trigger) {
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
                         mediaType: type,
                         oldMediaInfo: lastFragmentRequest.mediaInfo,
@@ -394,10 +419,15 @@ function ScheduleController(config) {
         initSegmentRequired = value;
     }
 
+    function setLastInitializedQuality(value) {
+        lastInitializedQuality = value;
+    }
+
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
         lastInitializedRepresentationId = null;
+        lastInitializedQuality = NaN; // eslint-disable-line no-unused-vars
         lastFragmentRequest = {
             mediaInfo: undefined,
             quality: NaN,
@@ -405,6 +435,7 @@ function ScheduleController(config) {
         };
         switchTrack = false;
         initSegmentRequired = false;
+        managedMediaSourceAllowsRequest = true;
     }
 
     function reset() {
@@ -413,6 +444,8 @@ function ScheduleController(config) {
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
 
         clearScheduleTimer();
         _completeQualityChange(false);
@@ -439,7 +472,8 @@ function ScheduleController(config) {
         getBufferTarget,
         getPlaybackController,
         setCheckPlaybackQuality,
-        setInitSegmentRequired
+        setInitSegmentRequired,
+        setLastInitializedQuality,
     };
 
     setup();

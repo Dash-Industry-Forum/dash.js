@@ -133,6 +133,7 @@ function MediaPlayer() {
         streamingInitialized,
         playbackInitialized,
         autoPlay,
+        providedStartTime,
         abrController,
         schemeLoaderFactory,
         timelineConverter,
@@ -177,6 +178,7 @@ function MediaPlayer() {
         playbackInitialized = false;
         streamingInitialized = false;
         autoPlay = true;
+        providedStartTime = NaN;
         protectionController = null;
         offlineController = null;
         protectionData = null;
@@ -360,7 +362,8 @@ function MediaPlayer() {
             }
 
             baseURLController.setConfig({
-                adapter
+                adapter,
+                contentSteeringController
             });
 
             serviceDescriptionController.setConfig({
@@ -400,7 +403,7 @@ function MediaPlayer() {
                 dashMetrics,
                 mediaPlayerModel,
                 manifestModel,
-                abrController,
+                serviceDescriptionController,
                 eventBus,
                 requestModifier: RequestModifier(context).getInstance()
             })
@@ -553,7 +556,7 @@ function MediaPlayer() {
             return;
         }
         if (source) {
-            _initializePlayback();
+            _initializePlayback(providedStartTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
         }
@@ -1474,7 +1477,7 @@ function MediaPlayer() {
             _detectMss();
 
             if (streamController) {
-                streamController.switchToVideoElement();
+                streamController.switchToVideoElement(providedStartTime);
             }
         }
 
@@ -1482,7 +1485,7 @@ function MediaPlayer() {
             _resetPlaybackControllers();
         }
 
-        _initializePlayback();
+        _initializePlayback(providedStartTime);
     }
 
     /**
@@ -1645,15 +1648,16 @@ function MediaPlayer() {
 
     /**
      * @param {MediaInfo} track - instance of {@link MediaInfo}
+     * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track selection
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function setCurrentTrack(track) {
+    function setCurrentTrack(track, noSettingsSave = false) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setTrack(track);
+        mediaController.setTrack(track, noSettingsSave);
     }
 
     /*
@@ -1840,9 +1844,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
-     * Allows application to retrieve a manifest.  Manifest loading is asynchro
-     * nous and
-     * requires the app-provided callback function
+     * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
      *
      * @param {string} url - url the manifest url
      * @param {function} callback - A Callback function provided when retrieving manifests
@@ -1927,6 +1929,7 @@ function MediaPlayer() {
             startTime = Math.max(0, startTime);
         }
 
+        providedStartTime = startTime;
         source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
@@ -1934,8 +1937,44 @@ function MediaPlayer() {
         }
 
         if (isReady()) {
-            _initializePlayback(startTime);
+            _initializePlayback(providedStartTime);
         }
+    }
+
+    /**
+     *  Reload the manifest that the player is currently using.
+     *
+     *  @memberof module:MediaPlayer
+     *  @param {function} callback - A Callback function provided when retrieving manifests
+     *  @instance
+     */
+    function refreshManifest(callback) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!isReady()) {
+            return callback(null, SOURCE_NOT_ATTACHED_ERROR);
+        }
+
+        let self = this;
+
+        if (typeof callback === 'function') {
+            const handler = function (e) {
+                eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+
+                if (e.error) {
+                    callback(null, e.error);
+                    return;
+                }
+
+                callback(e.manifest);
+            };
+
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        }
+
+        streamController.refreshManifest();
     }
 
     /**
@@ -2095,6 +2134,39 @@ function MediaPlayer() {
         }
     }
 
+
+    /**
+     * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
+     * @returns {BaseURL[]}
+     */
+    function getAvailableBaseUrls() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        return baseURLController.getBaseUrls(manifest);
+    }
+
+
+    /**
+     * Returns the available location elements including synthesized elements (e.g by content steering)
+     * @returns {MpdLocation[]}
+     */
+    function getAvailableLocations() {
+        const manifest = manifestModel.getValue();
+
+        if (!manifest) {
+            return [];
+        }
+
+        const manifestLocations = adapter.getLocation(manifest);
+        const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+
+        return manifestLocations.concat(synthesizedElements);
+    }
+
     //***********************************
     // PRIVATE METHODS
     //***********************************
@@ -2140,6 +2212,7 @@ function MediaPlayer() {
                 manifestModel,
                 adapter,
                 mediaController,
+                baseURLController,
                 videoModel,
                 settings
             });
@@ -2361,10 +2434,11 @@ function MediaPlayer() {
             const manifestUpdater = ManifestUpdater(context).create();
 
             manifestUpdater.setConfig({
-                manifestModel: manifestModel,
-                adapter: adapter,
-                manifestLoader: manifestLoader,
-                errHandler: errHandler
+                manifestModel,
+                adapter,
+                manifestLoader,
+                errHandler,
+                contentSteeringController
             });
 
             offlineController = OfflineController(context).create({
@@ -2446,6 +2520,7 @@ function MediaPlayer() {
         extend,
         attachView,
         attachSource,
+        refreshManifest,
         isReady,
         preload,
         play,
@@ -2469,6 +2544,8 @@ function MediaPlayer() {
         getActiveStream,
         getDVRWindowSize,
         getDVRSeekOffset,
+        getAvailableBaseUrls,
+        getAvailableLocations,
         getTargetLiveDelay,
         convertToTimeCode,
         formatUTC,

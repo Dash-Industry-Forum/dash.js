@@ -100,7 +100,7 @@ function CatchupController() {
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackProgression, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.off(Events.SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
         eventBus.off(Events.SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
@@ -179,10 +179,10 @@ function CatchupController() {
      */
     function _onPlaybackProgression() {
         if (
-            playbackController.getIsDynamic() && 
-            mediaPlayerModel.getCatchupModeEnabled() && 
-            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) && 
-            !playbackController.isPaused() && 
+            playbackController.getIsDynamic() &&
+            mediaPlayerModel.getCatchupModeEnabled() &&
+            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) &&
+            !playbackController.isPaused() &&
             !playbackController.isSeeking() && _shouldStartCatchUp()
         ) {
             _startPlaybackCatchUp();
@@ -234,7 +234,7 @@ function CatchupController() {
                 const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
                 // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
-                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) {  // non-null
+                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) { // non-null
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
                 }
@@ -382,7 +382,7 @@ function CatchupController() {
         if (bufferLevel < playbackBufferMin) {
             // Buffer in danger, slow down
             const cpr = Math.abs(liveCatchUpPlaybackRates.min); // Absolute value as negative delta value will be used.
-            const deltaBuffer = bufferLevel - playbackBufferMin;  // -ve value
+            const deltaBuffer = bufferLevel - playbackBufferMin; // -ve value
             const d = deltaBuffer * 5;
 
             // Playback rate must be between (1 - cpr) - (1 + cpr)
@@ -393,14 +393,14 @@ function CatchupController() {
             logger.debug('[LoL+ playback control_buffer-based] bufferLevel: ' + bufferLevel + ', newRate: ' + newRate);
         } else {
             // Hybrid: Latency-based
-            // Buffer is safe, vary playback rate based on latency
-            const cpr = liveCatchUpPlaybackRates.max;
             // Check if latency is within range of target latency
             const minDifference = 0.02;
             if (Math.abs(currentLiveLatency - liveDelay) <= (minDifference * liveDelay)) {
                 newRate = 1;
             } else {
                 const deltaLatency = currentLiveLatency - liveDelay;
+                // Buffer is safe, vary playback rate based on latency
+                const cpr = (deltaLatency < 0) ? Math.abs(liveCatchUpPlaybackRates.min) : liveCatchUpPlaybackRates.max;
                 const d = deltaLatency * 5;
 
                 // Playback rate must be between (1 - cpr) - (1 + cpr)
