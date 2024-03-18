@@ -49,3 +49,5 @@
 * @adripanico [Adrian Caballero, Epic Labs]
 * @ahfarmer [Andrew Farmer, Rhombus Systems]
 * @matvp91 [Matthias Van Parijs]
+* @matiasrb97 [Matías Rodriguez, Qualabs]
+* @N1Knight [Nicolás Caballero, Qualabs]
