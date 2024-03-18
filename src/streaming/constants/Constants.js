@@ -244,6 +244,9 @@ export default {
     SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
     THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
+    COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+    MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
+    TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     XML: 'XML',
     ARRAY_BUFFER: 'ArrayBuffer',
     DVB_REPORTING_URL: 'dvb:reportingUrl',
@@ -302,5 +305,6 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3'
+    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
+    COMMON_ACCESS_TOKEN_HEADER: 'common-access-token'
 }

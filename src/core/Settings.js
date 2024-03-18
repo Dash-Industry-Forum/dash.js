@@ -73,7 +73,13 @@ import Events from './events/Events.js';
  *            enableManifestTimescaleMismatchFix: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
- *               supportedEssentialProperties: Constants.THUMBNAILS_SCHEME_ID_URIS,
+ *               supportedEssentialProperties: [
+                    { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
+                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
+                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+                ],
  *               useMediaCapabilitiesApi: false
  *            },
  *            timeShiftBuffer: {
@@ -650,7 +656,7 @@ import Events from './events/Events.js';
  * @typedef {Object} Capabilities
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
- * @property {Array.<string>} [supportedEssentialProperties=Constants.THUMBNAILS_SCHEME_ID_URIS]
+ * @property {Array.<string>} [supportedEssentialProperties]
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
@@ -1039,7 +1045,13 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
-                supportedEssentialProperties: [Constants.FONT_DOWNLOAD_DVB_SCHEME, ...Constants.THUMBNAILS_SCHEME_ID_URIS],
+                supportedEssentialProperties: [
+                    { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
+                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
+                    { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
+                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+                ],
                 useMediaCapabilitiesApi: false
             },
             timeShiftBuffer: {
@@ -1305,7 +1317,7 @@ function Settings() {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
-                    if (typeof source[n] === 'object' && !(source[n] instanceof Array) && source[n] !== null) {
+                    if (typeof source[n] === 'object' && !(source[n] instanceof RegExp) && !(source[n] instanceof Array) && source[n] !== null) {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);

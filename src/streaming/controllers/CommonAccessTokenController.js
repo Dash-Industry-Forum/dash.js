@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2023, Dash Industry Forum.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,51 +28,56 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-import DashConstants from '../constants/DashConstants.js'
 
-class DescriptorType {
-    constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
-    }
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
+import Utils from '../../core/Utils.js';
 
-    init(data) {
-        if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value ? data.value : null;
-            this.id = data.id ? data.id : null;
-            // Only add the DVB extensions if they exist
-            if (data[DashConstants.DVB_URL]) {
-                this.dvbUrl = data[DashConstants.DVB_URL]
-            }
-            if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
-            }
-            if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
-            }
+function CommonAccessTokenController() {
+
+    let instance,
+        hostTokenMap;
+
+    function processResponseHeaders(httpResponse) {
+        if (!httpResponse || !httpResponse.headers || !httpResponse.request || !httpResponse.request.url) {
+            return
         }
+
+        const commonAccessTokenHeader = httpResponse.headers[Constants.COMMON_ACCESS_TOKEN_HEADER]
+        const host = Utils.getHostFromUrl(httpResponse.request.url)
+        hostTokenMap[host] = commonAccessTokenHeader
     }
 
-    inArray(arr) {
-        if (arr) {
-            return arr.some((entry) => {
-                return (
-                    this.schemeIdUri === entry.schemeIdUri && (
-                        this.value ?
-                            (this.value.match(entry.value)) : // check if provided value matches RegExp
-                            (''.match(entry.value)) // check if RegExp allows absent value   
-                    )
-                );
-            })
+    function getCommonAccessTokenForUrl(url) {
+        if (!url) {
+            return null
         }
-        return false;
+
+        const host = Utils.getHostFromUrl(url);
+        return hostTokenMap[host] ? hostTokenMap[host] : null;
     }
+
+    function setup() {
+        _resetInitialSettings();
+    }
+
+    function reset() {
+        _resetInitialSettings()
+    }
+
+    function _resetInitialSettings() {
+        hostTokenMap = {}
+    }
+
+    instance = {
+        reset,
+        processResponseHeaders,
+        getCommonAccessTokenForUrl
+    };
+
+    setup();
+    return instance;
 }
 
-export default DescriptorType;
+CommonAccessTokenController.__dashjs_factory_name = 'CommonAccessTokenController';
+export default FactoryMaker.getSingletonFactory(CommonAccessTokenController);

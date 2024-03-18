@@ -62,6 +62,9 @@ class Utils {
         if (!src || typeof src !== 'object') {
             return src; // anything
         }
+        if (src instanceof RegExp) {
+            return new RegExp(src);
+        }
         let r;
         if (src instanceof Array) {
             // array
@@ -175,6 +178,12 @@ class Utils {
         } catch (e) {
             return targetUrl
         }
+    }
+
+    static getHostFromUrl(urlString) {
+        const url = new URL(urlString);
+
+        return url.host
     }
 
     static parseUserAgent(ua = null) {
