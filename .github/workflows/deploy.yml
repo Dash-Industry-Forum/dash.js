@@ -44,7 +44,7 @@ jobs:
                     include: "samples/dash-if-reference-player/index.html"
             -   name: Build all samples
                 run: |
-                    for sample in ${{fromJson(inputs.samples)}}; do
+                    for sample in "network-interceptor"; do
                       echo "Building sample: $sample"
                       cd samples/$sample
                       npm install
