@@ -249,7 +249,7 @@ function HTTPLoader(cfg) {
                 if (aborted) {
                     if (config.abort) {
                         config.abort(requestObject);
-                    }        
+                    }
                     return;
                 }
 
@@ -285,13 +285,13 @@ function HTTPLoader(cfg) {
 
         };
 
-        const _updateRequestTimingInfo = function() {
+        const _updateRequestTimingInfo = function () {
             requestObject.startDate = requestStartTime;
             requestObject.endDate = new Date();
             requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
         }
 
-        const _updateResourceTimingInfo = function() {
+        const _updateResourceTimingInfo = function () {
             httpResponse.resourceTiming.responseEnd = Date.now();
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
@@ -315,7 +315,7 @@ function HTTPLoader(cfg) {
                 });
             });
         }
-        
+
         /**
          * Retriggers the request in case we did not exceed the number of retry attempts
          * @private
