@@ -109,4 +109,16 @@ describe('Utils', () => {
             expect(Utils.stringHasProtocol('dash.akamaized.net')).to.be.false;
         })
     })
+
+    describe('getHostFromUrl', () => {
+
+        it('Should return a valid host for an http URL', () => {
+            expect(Utils.getHostFromUrl('http://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
+        })
+
+        it('Should return a valid host for an http URL', () => {
+            expect(Utils.getHostFromUrl('https://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
+        })
+
+    })
 })

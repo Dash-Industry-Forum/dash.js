@@ -180,6 +180,12 @@ class Utils {
         }
     }
 
+    static getHostFromUrl(urlString) {
+        const url = new URL(urlString);
+
+        return url.host
+    }
+
     static parseUserAgent(ua = null) {
         try {
             const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';

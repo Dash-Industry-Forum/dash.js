@@ -431,7 +431,7 @@ function Stream(config) {
             return true;
         }
 
-        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
+        if (!!mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0 && !capabilities.supportsEncryptedMedia()) {
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
             return false;
         }
