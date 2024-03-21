@@ -1,6 +1,6 @@
 import {expect} from 'chai';
-import CommonAccessTokenController from '../../src/streaming/controllers/CommonAccessTokenController.js';
-import Constants from '../../src/streaming/constants/Constants.js'
+import CommonAccessTokenController from '../../../../src/streaming/controllers/CommonAccessTokenController.js';
+import Constants from '../../../../src/streaming/constants/Constants.js'
 
 describe('CommonAccessTokenController', () => {
 

@@ -1,6 +1,20 @@
+const fs = require('fs');
+
 module.exports = function (config) {
     // Find the settings JSON object in the command arguments
-    const settings = getSettings()
+    const configFileName = getConfigFileName()
+
+    if (!configFileName) {
+        return
+    }
+
+    try {
+        const testConfiguration = JSON.parse(fs.readFileSync(`test-configurations/${configFileName}.json`, 'utf-8'))
+        console.log(testConfiguration)
+    } catch (e) {
+        console.error(e);
+        return
+    }
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -86,7 +100,7 @@ module.exports = function (config) {
             mocha: {
                 timeout: 180000
             },
-            settings
+            settings: configFileName
         },
 
         // web server port
@@ -109,7 +123,7 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: settings && settings.browsers ? settings.browsers.split(',') : ['chrome_custom', 'firefox_custom'],
+        browsers: configFileName && configFileName.browsers ? configFileName.browsers.split(',') : ['chrome_custom', 'firefox_custom'],
 
         customLaunchers: {
             chrome_custom: {
@@ -132,9 +146,9 @@ module.exports = function (config) {
     })
 }
 
-function getSettings() {
+function getConfigFileName() {
     const args = process.argv;
-    const settingsIndex = args.indexOf('--settings');
+    const settingsIndex = args.indexOf('--configfile');
 
-    return settingsIndex >= 0 ? JSON.parse(args[settingsIndex + 1]) : {}
+    return settingsIndex >= 0 ? args[settingsIndex + 1] : 'default'
 }
