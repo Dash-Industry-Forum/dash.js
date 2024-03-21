@@ -66,16 +66,14 @@ function XHRLoader() {
         xhr.withCredentials = httpRequest.credentials === 'include';
         xhr.timeout = httpRequest.timeout;
 
-        xhr.onload = function(e) {
+        xhr.onload = function() {
             httpResponse.url = this.responseURL;
             httpResponse.status = this.status;
             httpResponse.statusText = this.statusText;
             httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
             httpResponse.data = this.response;
-            httpRequest.customData.onload(e);
         }
         xhr.onloadend = httpRequest.customData.onloadend;
-        xhr.onerror = httpRequest.customData.onerror;
         xhr.onprogress = httpRequest.customData.onprogress;
         xhr.onabort = httpRequest.customData.onabort;
         xhr.ontimeout = httpRequest.customData.ontimeout;

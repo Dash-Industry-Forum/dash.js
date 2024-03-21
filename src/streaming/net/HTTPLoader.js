@@ -133,19 +133,12 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _internalLoad(config, remainingAttempts) {
+
         /**
-         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort or error).
+         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort, timeout or error).
          */
         const _onloadend = function () {
-            // Remove the request from our list of requests
-            if (httpRequests.indexOf(httpRequest) !== -1) {
-                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
-            }
-
-            if (progressTimeout) {
-                clearTimeout(progressTimeout);
-                progressTimeout = null;
-            }
+            _onRequestEnd();
         };
 
         /**
@@ -208,64 +201,11 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const _oncomplete = function () {
-            // Update request timing info
-            requestObject.startDate = requestStartTime;
-            requestObject.endDate = new Date();
-            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
-            httpResponse.resourceTiming.responseEnd = requestObject.endDate.getTime();
-
-            commonAccessTokenController.processResponseHeaders(httpResponse)
-
-            // If enabled the ResourceTimingApi we add the corresponding information to the request object.
-            // These values are more accurate and can be used by the ThroughputController later
-            _addResourceTimingValues(httpRequest, httpResponse);
-        }
-
-        /**
-         * Fired when an XMLHttpRequest transaction completes.
-         * This includes status codes such as 404. We handle errors in the _onError function.
-         */
-        const _onload = function () {
-            _oncomplete();
-
-            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
-                httpResponse = _httpResponse;
-
-                _addHttpRequestMetric(httpRequest, httpResponse, traces);
-
-                if (requestObject.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(requestObject);
-                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
-                }
-
-                if (httpResponse.status >= 200 && httpResponse.status <= 299) {
-                    if (config.success) {
-                        config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
-                    }
-
-                    if (config.complete) {
-                        config.complete(requestObject, httpResponse.statusText);
-                    }
-                } else {
-                    _onerror();
-                }
-            });
-        };
-
         /**
          * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
          */
         const _onabort = function () {
-            _oncomplete();
-            _addHttpRequestMetric(httpRequest, httpResponse, traces);
-            if (progressTimeout) {
-                clearTimeout(progressTimeout);
-                progressTimeout = null;
-            }
-            if (config.abort) {
-                config.abort(requestObject);
-            }
+            _onRequestEnd(true)
         };
 
         /**
@@ -273,8 +213,6 @@ function HTTPLoader(cfg) {
          * @param event
          */
         const _ontimeout = function (event) {
-            _oncomplete();
-
             let timeoutMessage;
             // We know how much we already downloaded by looking at the timeout event
             if (event.lengthComputable) {
@@ -284,27 +222,81 @@ function HTTPLoader(cfg) {
                 timeoutMessage = 'Request timeout: non-computable download size';
             }
             logger.warn(timeoutMessage);
-            _addHttpRequestMetric(httpRequest, httpResponse, traces);
-            _retriggerRequest();
         };
 
-        /**
-         * Fired when the request encountered an error.
-         */
-        const _onerror = function () {
-            // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
-            try {
-                if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    // Only trigger a sync if the loading failed for the first time
-                    const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
-                    if (initialNumberOfAttempts === remainingAttempts) {
-                        eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
-                    }
-                }
-            } catch (e) {
+        const _onRequestEnd = function (aborted = false) {
+            // Remove the request from our list of requests
+            if (httpRequests.indexOf(httpRequest) !== -1) {
+                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
             }
 
-            _retriggerRequest();
+            if (progressTimeout) {
+                clearTimeout(progressTimeout);
+                progressTimeout = null;
+            }
+
+            commonAccessTokenController.processResponseHeaders(httpResponse);
+
+            _updateRequestTimingInfo();
+            _updateResourceTimingInfo();
+
+            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
+                httpResponse = _httpResponse;
+
+                _addHttpRequestMetric(httpRequest, httpResponse, traces);
+
+                // Ignore aborted requests
+                if (aborted) {
+                    if (config.abort) {
+                        config.abort(requestObject);
+                    }        
+                    return;
+                }
+
+                if (requestObject.type === HTTPRequest.MPD_TYPE) {
+                    dashMetrics.addManifestUpdate(requestObject);
+                    eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
+                }
+
+                if (httpResponse.status >= 200 && httpResponse.status <= 299 && httpResponse.data) {
+                    if (config.success) {
+                        config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
+                    }
+
+                    if (config.complete) {
+                        config.complete(requestObject, httpResponse.statusText);
+                    }
+                } else {
+                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+                    try {
+                        if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                            // Only trigger a sync if the loading failed for the first time
+                            const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                            if (initialNumberOfAttempts === remainingAttempts) {
+                                eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
+                            }
+                        }
+                    } catch (e) {
+                    }
+
+                    _retriggerRequest();
+                }
+            });
+
+        };
+
+        const _updateRequestTimingInfo = function() {
+            requestObject.startDate = requestStartTime;
+            requestObject.endDate = new Date();
+            requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+        }
+
+        const _updateResourceTimingInfo = function() {
+            httpResponse.resourceTiming.responseEnd = Date.now();
+
+            // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+            // These values are more accurate and can be used by the ThroughputController later
+            _addResourceTimingValues(httpRequest, httpResponse);
         }
 
         const _loadRequest = function (loader, httpRequest, httpResponse) {
@@ -312,9 +304,7 @@ function HTTPLoader(cfg) {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
 
-                    httpRequest.customData.onload = _onload;
                     httpRequest.customData.onloadend = _onloadend;
-                    httpRequest.customData.onerror = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
                     httpRequest.customData.ontimeout = _ontimeout;
@@ -325,7 +315,7 @@ function HTTPLoader(cfg) {
                 });
             });
         }
-
+        
         /**
          * Retriggers the request in case we did not exceed the number of retry attempts
          * @private
@@ -413,7 +403,8 @@ function HTTPLoader(cfg) {
             resourceTiming: {
                 startTime: Date.now(),
                 encodedBodySize: 0
-            }
+            },
+            status: 0
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -441,7 +432,7 @@ function HTTPLoader(cfg) {
                     httpRequests.push(delayedRequest.httpRequest);
                     _loadRequest(loader, delayedRequest.httpRequest, delayedRequest.httpResponse);
                 } catch (e) {
-                    delayedRequest.httpRequest.onerror();
+                    delayedRequest.httpRequest.onloadend();
                 }
             }, (requestObject.delayLoadingTime - now));
 
@@ -656,7 +647,7 @@ function HTTPLoader(cfg) {
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
-            reqData.onloadend = reqData.onerror = reqData.onprogress = undefined;
+            reqData.onloadend = reqData.onprogress = undefined;
             if (reqData.abort) {
                 reqData.abort();
             }
