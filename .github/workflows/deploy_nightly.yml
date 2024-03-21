@@ -12,7 +12,6 @@ jobs:
         with:
             envname: nightly
             deploy_path: '/377335/dash.js'
-            samples: '["network-interceptor"]'
         secrets:
             host: ${{secrets.HOST}}
             user: ${{secrets.USER}}

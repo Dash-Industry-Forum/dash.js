@@ -9,9 +9,6 @@ on:
             deploy_path:
                 required: true
                 type: string
-            samples:
-                required: true
-                type: string
         secrets:
             host:
                 required: true
