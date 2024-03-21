@@ -21,16 +21,6 @@ on:
                 required: true
 
 jobs:
-    setup:
-        runs-on: ubuntu-latest
-        outputs:
-            matrix: ${{ steps.setVariables.outputs.matrix }}
-        steps:
-            -   id: setVariables
-                run: |
-                    echo "::set-output name=matrix::$input"
-                env:
-                    input: ${{ inputs.samples }}
     deploy:
         runs-on: ubuntu-latest
 
@@ -52,6 +42,15 @@ jobs:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player/index.html"
+            -   name: Build all samples
+                run: |
+                    for sample in ${{fromJson(inputs.samples)}}; do
+                      echo "Building sample: $sample"
+                      cd samples/$sample
+                      npm install
+                      npm run build
+                      rm -rf node_modules
+                    done
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir ${{inputs.envname}}
