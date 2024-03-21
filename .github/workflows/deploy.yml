@@ -45,8 +45,8 @@ jobs:
             -   name: Build all samples
                 run: |
                     sudo apt-get install -y jq
-                    echo ${{inputs.samples}}
-                    samples=$(echo ${{fromJson(inputs.samples)}} | jq -r '.[]')
+                    echo ${{fromJson(inputs.samples)}}
+                    samples=echo ${{fromJson(inputs.samples)}} | jq -r '.[]'
                     for sample in $samples; do
                       echo "Building sample: $sample"
                       cd samples/$sample
