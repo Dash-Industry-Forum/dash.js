@@ -289,6 +289,7 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3'
+    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
+    COMMON_ACCESS_TOKEN_HEADER: 'common-access-token'
 }
 

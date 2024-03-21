@@ -28,81 +28,56 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
 import Utils from '../../core/Utils.js';
 
-/**
- * @module XHRLoader
- * @ignore
- * @description Manages download of resources via HTTP.
- */
-function XHRLoader() {
+function CommonAccessTokenController() {
 
-    let instance;
-    let xhr;
+    let instance,
+        hostTokenMap;
 
-    /**
-     * Load request
-     * @param {CommonMediaLibrary.request.CommonMediaRequest} httpRequest
-     * @param {CommonMediaLibrary.request.CommonMediaResponse} httpResponse
-     */
-    function load(httpRequest, httpResponse) {
-        xhr = new XMLHttpRequest();
-        xhr.open(httpRequest.method, httpRequest.url, true);
-
-        if (httpRequest.responseType) {
-            xhr.responseType = httpRequest.responseType;
+    function processResponseHeaders(httpResponse) {
+        if (!httpResponse || !httpResponse.headers || !httpResponse.request || !httpResponse.request.url) {
+            return
         }
 
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
-                if (value) {
-                    xhr.setRequestHeader(header, value);
-                }
-            }
-        }
-
-        xhr.withCredentials = httpRequest.credentials === 'include';
-        xhr.timeout = httpRequest.timeout;
-
-        xhr.onload = function() {
-            httpResponse.url = this.responseURL;
-            httpResponse.status = this.status;
-            httpResponse.statusText = this.statusText;
-            httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
-            httpResponse.data = this.response;
-        }
-        xhr.onloadend = httpRequest.customData.onloadend;
-        xhr.onprogress = httpRequest.customData.onprogress;
-        xhr.onabort = httpRequest.customData.onabort;
-        xhr.ontimeout = httpRequest.customData.ontimeout;
-
-        xhr.send();
-
-        httpRequest.customData.abort = abort.bind(this);
-        return true;
+        const commonAccessTokenHeader = httpResponse.headers[Constants.COMMON_ACCESS_TOKEN_HEADER]
+        const host = Utils.getHostFromUrl(httpResponse.request.url)
+        hostTokenMap[host] = commonAccessTokenHeader
     }
 
-    function abort() {
-        xhr.onloadend = xhr.onerror = xhr.onprogress = null; // Ignore events from aborted requests.
-        xhr.abort();
+    function getCommonAccessTokenForUrl(url) {
+        if (!url) {
+            return null
+        }
+
+        const host = Utils.getHostFromUrl(url);
+        return hostTokenMap[host] ? hostTokenMap[host] : null;
     }
 
-    function getXhr() {
-        return xhr
+    function setup() {
+        _resetInitialSettings();
+    }
+
+    function reset() {
+        _resetInitialSettings()
+    }
+
+    function _resetInitialSettings() {
+        hostTokenMap = {}
     }
 
     instance = {
-        load,
-        abort,
-        getXhr
+        reset,
+        processResponseHeaders,
+        getCommonAccessTokenForUrl
     };
 
+    setup();
     return instance;
 }
 
-XHRLoader.__dashjs_factory_name = 'XHRLoader';
-
-const factory = FactoryMaker.getClassFactory(XHRLoader);
-export default factory;
+CommonAccessTokenController.__dashjs_factory_name = 'CommonAccessTokenController';
+export default FactoryMaker.getSingletonFactory(CommonAccessTokenController);

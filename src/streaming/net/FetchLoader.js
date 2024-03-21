@@ -111,7 +111,7 @@ function FetchLoader() {
                         httpResponse.url = response.url;
 
                         if (!response.ok) {
-                            httpRequest.customData.onerror();
+                            httpRequest.customData.onloadend();
                         }
 
                         const responseHeaders = {};
@@ -187,7 +187,6 @@ function FetchLoader() {
 
                                 httpResponse.data = receivedData.buffer;
                             }
-                            httpRequest.customData.onload();
                             httpRequest.customData.onloadend();
                         }
 
@@ -270,9 +269,9 @@ function FetchLoader() {
 
                         _read(httpRequest, httpResponse, _processResult);
                     })
-                    .catch(function (e) {
-                        if (httpRequest.customData.onerror) {
-                            httpRequest.customData.onerror(e);
+                    .catch(function () {
+                        if (httpRequest.customData.onloadend) {
+                            httpRequest.customData.onloadend();
                         }
                     });
             });
@@ -342,10 +341,9 @@ function FetchLoader() {
     function _read(httpRequest, httpResponse, processResult) {
         httpRequest.customData.reader.read()
             .then(processResult)
-            .catch(function (e) {
-                if (httpRequest.customData.onerror && httpResponse.status === 200) {
-                    // Error, but response code is 200, trigger error
-                    httpRequest.customData.onerror(e);
+            .catch(function () {
+                if (httpRequest.customData.onloadend) {
+                    httpRequest.customData.onloadend();
                 }
             });
     }
