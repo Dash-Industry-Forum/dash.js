@@ -12,7 +12,6 @@ jobs:
         with:
             envname: v4_latest
             deploy_path: '/377335/dash.js'
-            samples: '[]'
         secrets:
             host: ${{secrets.HOST}}
             user: ${{secrets.USER}}
