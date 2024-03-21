@@ -44,10 +44,7 @@ jobs:
                     include: "samples/dash-if-reference-player/index.html"
             -   name: Build all samples
                 run: |
-                    sudo apt-get install -y jq
-                    echo ${{fromJson(inputs.samples)}}
-                    samples=echo ${{fromJson(inputs.samples)}} | jq -r '.[]'
-                    for sample in $samples; do
+                    for sample in ${{fromJson(inputs.samples)}}; do
                       echo "Building sample: $sample"
                       cd samples/$sample
                       npm install
