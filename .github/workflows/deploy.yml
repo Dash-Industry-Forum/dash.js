@@ -9,6 +9,9 @@ on:
             deploy_path:
                 required: true
                 type: string
+            samples:
+                required: true
+                type: string
         secrets:
             host:
                 required: true
@@ -20,7 +23,7 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-        
+
         steps:
             -   uses: actions/checkout@v4
             -   name: Use Node.js
@@ -39,10 +42,19 @@ jobs:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player/index.html"
+            -   name: Build all samples
+                run: |
+                    for sample in ${{fromJson(inputs.samples)}}; do
+                      echo "Building sample: $sample"
+                      cd samples/$sample
+                      npm install
+                      npm run build
+                      rm -rf node_modules
+                    done
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir ${{inputs.envname}}
-                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}} 
+                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
                 with:
