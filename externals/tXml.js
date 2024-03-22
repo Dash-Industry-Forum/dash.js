@@ -39,6 +39,63 @@
  */
 
 /**
+ * Predefined general entities used in XML
+ * See https://www.w3.org/TR/xml/#sec-predefined-ent
+ */
+export const XML_ENTITIES = {
+    '&amp;': '&',
+    '&gt;': '>',
+    '&lt;': '<',
+    '&quot;': '"',
+    '&apos;': "'"
+};
+
+/**
+ * Translates XML predefined entities and character references to their respective characters.
+ * @param {Object} entitiesList
+ * @param {String} str
+ * @returns {String}
+ */
+export function translateEntitiesAndCharacterReferences(entitiesList, str) {
+    const entitySplit = str.split(/(&[#a-zA-Z0-9]+;)/);
+    if (entitySplit.length <= 1) { // No entities. Skip the rest of the function.
+        return str;
+    }
+
+    for (let i = 1; i < entitySplit.length; i += 2) {
+        const reference = entitySplit[i];
+
+        /*
+         * Check if it is a character reference of the form
+         * /&#[0-9]+;/ - Encoded in decimal, or
+         * /&#x[0-9a-fA-F]+;/ - Encoded in hexadecimal
+         * See https://www.w3.org/TR/xml/#sec-references
+         */
+        if (reference.charAt(1) === '#') {
+            let code;
+            if (reference.charAt(2) === 'x') { // Hexadecimal
+                code = parseInt(reference.substring(3, reference.length - 1), 16);
+            } else { // Decimal
+                code = parseInt(reference.substring(2, reference.length - 1), 10);
+            }
+
+            // Translate into string according to ISO/IEC 10646
+            if (!isNaN(code) && code >= 0 && code <= 0x10FFFF) {
+                entitySplit[i] = String.fromCodePoint(code);
+            }
+        }
+        /*
+         * Translate entity references using a dictionary.
+         */
+        else if (entitiesList.hasOwnProperty(reference)) {
+            entitySplit[i] = entitiesList[reference];
+        }
+    }
+
+    return entitySplit.join('');
+};
+
+/**
  * parseXML / html into a DOM Object. with no validation and some failur tolerance
  * @param {string} S your XML to parse
  * @param {TParseOptions} [options]  all other options:
@@ -191,7 +248,7 @@
             return parseInt(value);
         }
 
-        let attrValue = value;
+        let attrValue = translateEntitiesAndCharacterReferences(XML_ENTITIES, value);
         attrMatchers.forEach(matcher => {
             if (matcher.test(tagName, attrName, value)) {
                 attrValue = matcher.converter(value);
@@ -209,7 +266,7 @@
         pos = S.indexOf(openBracket, pos) - 1;
         if (pos === -2)
             pos = S.length;
-        return S.slice(start, pos + 1);
+        return translateEntitiesAndCharacterReferences(XML_ENTITIES, S.slice(start, pos + 1));
     }
     /**
      *    returns text until the first nonAlphabetic letter

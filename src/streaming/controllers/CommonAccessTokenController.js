@@ -44,8 +44,12 @@ function CommonAccessTokenController() {
         }
 
         const commonAccessTokenHeader = httpResponse.headers[Constants.COMMON_ACCESS_TOKEN_HEADER]
-        const host = Utils.getHostFromUrl(httpResponse.request.url)
-        hostTokenMap[host] = commonAccessTokenHeader
+        if (commonAccessTokenHeader) {
+            const host = Utils.getHostFromUrl(httpResponse.request.url)
+            if (host) {
+                hostTokenMap[host] = commonAccessTokenHeader
+            }
+        }
     }
 
     function getCommonAccessTokenForUrl(url) {
