@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>CMSD Validator</title>
+
+	<script src="../../dist/dash.all.debug.js"></script>
+
+	<!-- Bootstrap core CSS -->
+	<link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+	<link href="../lib/main.css" rel="stylesheet">
+
+	<style>
+		#result::-webkit-scrollbar {
+			display: none;
+		}
+
+		#result {
+			-ms-overflow-style: none;
+			scrollbar-width: none;
+		}
+
+		#errors_count {
+			color: red;
+		}
+
+		#warning_count {
+			color: orange;
+		}
+
+		#valid_count {
+			color: green;
+		}
+
+		video {
+			display: none;
+		}
+
+		#trace {
+			height: 500px;
+			margin-top: 20px;
+			font-size: 10px;
+		}
+	</style>
+
+	<script class="code">
+		function validateKeyValue(key, value) {
+			console.log("key: " + key + ", value: " + value);
+
+			if (value == "") return "warningValue";
+			if (key.includes(" ")) return "warningSpace";
+			if (key == "du" || key == "su" && !key.includes("=")) return true;
+
+			switch (key) {
+				case "at":
+					/* Integer */
+					return !isNaN(value);
+
+				case "br":
+					/* Integer */
+					return !isNaN(value);
+
+				case "ht":
+					/* Integer */
+					return !isNaN(value);
+
+				case "n":
+					/* String */
+					return typeof value == "string";
+
+				case "nor":
+					/* Vertical line delimited string */
+					return typeof value == "string" && value.includes("|");
+
+				case "nrr":
+					/* Vertical line delimited string of ranges in the form "<range-start>-<range-end>" */
+					return validateNRR(value);
+
+				case "d":
+					/* Integer */
+					return !isNaN(value);
+
+				case "ot":
+					/* Token - one of [m,a,v,av,i,c,tt,k,o] */
+					if (value == "tt" && value.length == 2) return true;
+					else if (value == "av" && value.length == 2) return true;
+					else if (value.length > 1) return false;
+					return value == "m" ||
+						value == "a" ||
+						value == "v" ||
+						value == "i" ||
+						value == "c" ||
+						value == "k" ||
+						value == "o";
+
+				case "su":
+					/* Boolean */
+					return value == "true" || value == "false";
+
+				case "st":
+					/* Token - one of [v,l] */
+					if (value.length > 1) return false;
+					return value == "v" || value == "l";
+
+				case "sf":
+					/* Inner list of tokens - ([d h s o]) */
+					return validateStreamingFormat(value);
+
+				case "v":
+					/* Integer */
+					return !isNaN(value);
+
+				case "du":
+					/* Boolean */
+					return value == "true" || value == "false"
+
+				case "etp":
+					/* Integer */
+					return !isNaN(value);
+
+				case "mb":
+					/* Integer */
+					return !isNaN(value);
+
+				case "rd":
+					/* Integer */
+					return !isNaN(value);
+
+				case "rtt":
+					/* Integer */
+					return !isNaN(value);
+
+				default:
+					if (key.includes("-")) {
+						console.log("Custom cmsd-key: " + key + " found.");
+						return typeof value == "string";
+					}
+					console.log(key + " is not a cmsd-key! Type: " + typeof (key));
+					return "warningKey";
+			}
+		}
+
+		function validateStreamingFormat(format) {
+			const tokens = format.match(/\((.*?)\)/);
+			if (!tokens) {
+				/* No tokens found, format is invalid or unknown */
+				return false;
+			}
+			const expectedTokens = ["d", "h", "s"];
+			const extractedTokens = tokens[1].split(" ");
+			/* Check if all extracted tokens are valid */
+			return extractedTokens.every(
+				(token) => expectedTokens.includes(token) || token === "o"
+			);
+		}
+
+		function validateNRR(nrrValue) {
+			const rangeRegex = /(\d+)-(\d+)/;
+			const match = nrrValue.match(rangeRegex);
+			if (!match) {
+				/* Invalid range format */
+				return false;
+			}
+			const start = parseInt(match[1]);
+			const end = parseInt(match[2]);
+			if (isNaN(start) || isNaN(end)) {
+				/* Invalid start or end value */
+				return false;
+			}
+			return true;
+		}
+
+		function CMSDValidator(type, value) {
+			let headers;
+			let recurrenceCheck = [];
+			value = value.replace("\r", "")
+
+			if (type === "cmsd-dynamic") {
+				headers = value.split(";");
+				if (headers[0].includes("=")) {
+					console.log("No server Identifier found!");
+					content = `<div class="p-3 text-white bg-danger mb-2"> No server identifier found!</div>`;
+					document.getElementById("error").innerHTML = content;
+					headers[0] = headers[0].split(/\s/)[1];
+				}
+				else {
+					/* shift identifier out */
+					headers.shift();
+				}
+			}
+			else if (type === "cmsd-static") {
+				headers = value.split(",");
+				headers[0] = headers[0].split(/\s/)[1];
+			}
+			else {
+				return;
+			}
+
+			let orderCounter = 0;
+			headers.forEach((cmsdPair) => {
+				let cmsd = cmsdPair.split("=");
+				let content;
+				let key = cmsd[0];
+				let value = cmsd[1];
+				let result = validateKeyValue(key, value);
+
+				for (let i = 0; i <= recurrenceCheck.length; i++) {
+					if (recurrenceCheck[i] == key) {
+						console.log("\t key: " + key + "appears more than once.")
+						document.getElementById("warning_count").innerHTML++;
+						content = `<div class="p-3 text-white bg-warning mb-2"> CMSD-key: ${key} appears more than once.</div>`;
+						document.getElementById("result").innerHTML += content;
+					}
+				}
+				recurrenceCheck[recurrenceCheck.length] = key;
+
+				if (type == "cmsd-dynamic") {
+					if (dynamicHeaderOrder.length < headers.length) {
+						dynamicHeaderOrder[dynamicHeaderOrder.length] = key;
+					}
+					else {
+						if (dynamicHeaderOrder[orderCounter] != key) {
+							console.log("\tcmsd-dynamic key order Error")
+							document.getElementById("errors_count").innerHTML++;
+							content = `<div class="p-3 text-white bg-danger mb-2"> The Order of cmsd-dynamic-keys has changed!</div>`;
+							document.getElementById("result").innerHTML += content;
+						}
+					}
+				}
+				else {
+					if (staticHeaderOrder.length < headers.length) {
+						staticHeaderOrder[staticHeaderOrder.length] = key;
+					}
+					else {
+						if (staticHeaderOrder[orderCounter] != key) {
+							console.log("\tcmsd-static key order Error")
+							document.getElementById("errors_count").innerHTML++;
+							content = `<div class="p-3 text-white bg-danger mb-2"> The Order of cmsd-static-keys has changed!</div>`;
+							document.getElementById("result").innerHTML += content;
+						}
+					}
+				}
+				orderCounter++;
+
+				if (result === true) {
+					console.log("\tvalid");
+					document.getElementById("valid_count").innerHTML++;
+				}
+				else if (result === "warningValue") {
+					console.log("\twarning")
+					document.getElementById("warning_count").innerHTML++;
+					content = `<div class="p-3 text-white bg-warning mb-2"> CMSD-key: ${key} has empty value.</div>`;
+					document.getElementById("result").innerHTML += content;
+				}
+				else if (result === "warningSpace") {
+					console.log("\twarning")
+					document.getElementById("warning_count").innerHTML++;
+					content = `<div class="p-3 text-white bg-warning mb-2"> CMSD-key: ${key} is delimited by a space.</div>`;
+					document.getElementById("result").innerHTML += content;
+				}
+				else if (result === "warningKey") {
+					console.log("\twarning")
+					document.getElementById("warning_count").innerHTML++;
+					content = `<div class="p-3 text-white bg-warning mb-2"> CMSD-key: ${key} is not a cmsd-key.</div>`;
+					document.getElementById("result").innerHTML += content;
+				}
+				else {
+					console.log("\tinvalid")
+					document.getElementById("errors_count").innerHTML++;
+					content = `<div class="p-3 text-white bg-danger mb-2"> CMSD-key: ${key} with value: ${value} is not valid!</div>`;
+					document.getElementById("result").innerHTML += content;
+				}
+			});
+		}
+
+		let dynamicHeaderOrder = [];
+		let staticHeaderOrder = [];
+
+		function main() {
+			let player;
+			const submitButton = document.getElementById("submit");
+			const cancelButton = document.getElementById("cancel");
+
+			submitButton.onclick = () => {
+				document.getElementById("error").innerHTML = "";
+				document.getElementById("valid_count").innerHTML = 0;
+				document.getElementById("warning_count").innerHTML = 0;
+				document.getElementById("errors_count").innerHTML = 0;
+				document.getElementById("result").innerHTML = "";
+				dynamicHeaderOrder = [];
+				staticHeaderOrder = [];
+
+				toggleButtons(submitButton, cancelButton);
+				player = dashjs.MediaPlayer().create();
+				submitURL(player);
+			}
+
+			cancelButton.onclick = () => {
+				toggleButtons(submitButton, cancelButton);
+				player.destroy();
+			}
+		}
+
+		function toggleButtons(submitButton, cancelButton) {
+			submitButton.disabled = !submitButton.disabled;
+			cancelButton.disabled = !cancelButton.disabled;
+			if (submitButton.disabled) {
+				submitButton.innerHTML = "validating...";
+			}
+			else {
+				submitButton.innerHTML = "Start Validation";
+			}
+		}
+
+		function submitURL(player) {
+			const videoPlayer = document.querySelector("video");
+			let mpdURL = document.getElementById("videoUrl").value;
+
+			player.updateSettings({
+				streaming: {
+					abr: {
+						autoSwitchBitrate: {
+							video: false
+						},
+						initialBitrate: {
+							video: 100
+						}
+					},
+					buffer: {
+						bufferTimeAtTopQuality: 2000,
+						bufferTimeAtTopQualityLongForm: 2000,
+						longFormContentDurationThreshold: 5,
+						stableBufferTime: 2000
+					}
+				}
+			});
+
+			player.initialize(videoPlayer, mpdURL, true);
+
+			let cmsdDynamicHeaderMissing = false;
+			let cmsdStaticHeaderMissing = false;
+
+			player.on('fragmentLoadingCompleted', () => {
+				let metrics = player.getDashMetrics();
+				let headers = metrics.getHttpRequests("video");
+
+				if (!headers.length) return;
+
+				let headersString = JSON.stringify(headers[headers.length - 1]);
+				let headersObj = JSON.parse(headersString);
+				let _responseHeaders = headersObj._responseHeaders;
+
+				try {
+					let cmsdDynamic = _responseHeaders.split("cmsd-dynamic:")[1].split("\n")[0]
+					console.log("cmsd-dynamic: " + cmsdDynamic);
+					CMSDValidator("cmsd-dynamic", cmsdDynamic);
+				} catch (error) {
+					console.log("No cmsd-dynamic header found!");
+					cmsdDynamicHeaderMissing = true;
+				}
+				try {
+					let cmsdStatic = _responseHeaders.split("cmsd-static:")[1].split("\n")[0]
+					console.log("cmsd-static: " + cmsdStatic);
+					CMSDValidator("cmsd-static", cmsdStatic);
+				} catch (error) {
+					console.log("No cmsd-static header found!");
+					cmsdStaticHeaderMissing = true;
+				}
+
+				if (cmsdDynamicHeaderMissing && cmsdStaticHeaderMissing) {
+					content = `<div class="p-3 text-white bg-danger mb-2"> No cmsd-headers found! Please make sure to expose the cmsd-headers.</div>`;
+					document.getElementById("error").innerHTML = content;
+				}
+			})
+
+			bufferInterval = setInterval(() => {
+				const buffer = videoPlayer.buffered;
+				if (buffer.length) {
+					const end = buffer.end(0);
+					videoPlayer.currentTime = end;
+				}
+			}, 1000);
+
+			player.on("playbackEnded", () => {
+				const submitButton = document.getElementById("submit");
+				const cancelButton = document.getElementById("cancel");
+				clearInterval(bufferInterval);
+				toggleButtons(submitButton, cancelButton);
+				player.destroy();
+			});
+		}
+	</script>
+</head>
+
+<body>
+	<video id="videoPlayer" muted></video>
+	<main>
+		<div class="container py-4">
+			<header class="pb-3 mb-4 border-bottom">
+				<img class="" src="../lib/img/dashjs-logo.png" width="200">
+			</header>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="h-100 p-5 bg-light border rounded-3">
+						<h3>CMSD Validator</h3>
+						<p>A validator for Common Media Server Data (CMSD - CTA 5006) headers, using dash.js.</p>
+					</div>
+				</div>
+			</div>
+			<div class="container py-4">
+				<input type="text" class="form-control" id="videoUrl" placeholder="Enter Video URL">
+				<button id="submit" class="btn btn-primary mt-3">Start Validation</button>
+				<button id="cancel" class="btn btn-primary mt-3" disabled>Stop Validation</button>
+			</div>
+			<div class="container py-4">
+				<div id="error"></div>
+				<h4> Number of Invalid CMSD-key-value pairs: <span id="errors_count"></span></h4>
+				<h4> Number of warnings for CMSD-key-value pairs: <span id="warning_count"></span></h4>
+				<h4> Number of Valid CMSD-key-value pairs: <span id="valid_count"></span></h4>
+				<h4> Questionable CMSD-key-value pairs:</h4>
+				<div id="result" style="overflow-y: scroll; overflow-wrap: break-word; height: 500px;"></div>
+			</div>
+			<script>
+				document.getElementById("valid_count").innerHTML = 0;
+				document.getElementById("warning_count").innerHTML = 0;
+				document.getElementById("errors_count").innerHTML = 0;
+				main();
+			</script>
+			<div class="row">
+				<div class="col-md-12">
+					<div id="code-output"></div>
+				</div>
+			</div>
+			<footer class="pt-3 mt-4 text-muted border-top">
+				&copy; DASH-IF
+			</footer>
+		</div>
+	</main>
+	<script src="../highlighter.js"></script>
+</body>
+
+</html>
