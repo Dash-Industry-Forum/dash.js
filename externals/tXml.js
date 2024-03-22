@@ -52,11 +52,11 @@ export const XML_ENTITIES = {
 
 /**
  * Translates XML predefined entities and character references to their respective characters.
- * @param {Object} entitiesList 
- * @param {String} str 
+ * @param {Object} entitiesList
+ * @param {String} str
  * @returns {String}
  */
-function translateEntitiesAndCharacterReferences(entitiesList, str) {
+export function translateEntitiesAndCharacterReferences(entitiesList, str) {
     const entitySplit = str.split(/(&[#a-zA-Z0-9]+;)/);
     if (entitySplit.length <= 1) { // No entities. Skip the rest of the function.
         return str;
@@ -64,7 +64,7 @@ function translateEntitiesAndCharacterReferences(entitiesList, str) {
 
     for (let i = 1; i < entitySplit.length; i += 2) {
         const reference = entitySplit[i];
-        
+
         /*
          * Check if it is a character reference of the form
          * /&#[0-9]+;/ - Encoded in decimal, or
@@ -83,7 +83,7 @@ function translateEntitiesAndCharacterReferences(entitiesList, str) {
             if (!isNaN(code) && code >= 0 && code <= 0x10FFFF) {
                 entitySplit[i] = String.fromCodePoint(code);
             }
-        } 
+        }
         /*
          * Translate entity references using a dictionary.
          */
