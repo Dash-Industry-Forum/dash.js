@@ -1,20 +1,25 @@
 const fs = require('fs');
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
 
 module.exports = function (config) {
+
+    const argv = yargs(hideBin(process.argv)).parse()
     // Find the settings JSON object in the command arguments
-    const configFileName = getConfigFileName()
+    const configFileName = argv.configfile
 
     if (!configFileName) {
         return
     }
 
     try {
-        const testConfiguration = JSON.parse(fs.readFileSync(`test-configurations/${configFileName}.json`, 'utf-8'))
+        const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'))
         console.log(testConfiguration)
     } catch (e) {
         console.error(e);
         return
     }
+
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -123,7 +128,7 @@ module.exports = function (config) {
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: configFileName && configFileName.browsers ? configFileName.browsers.split(',') : ['chrome_custom', 'firefox_custom'],
+        browsers: testConfiguration.browsers,
 
         customLaunchers: {
             chrome_custom: {

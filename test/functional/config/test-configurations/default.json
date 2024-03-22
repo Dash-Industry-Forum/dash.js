@@ -1,3 +1,5 @@
 {
-  "browsers": ["chrome_custom"]
+  "browsers": ["chrome_custom"],
+  "testsuites": [],
+  "testvector-configurations":
 }
