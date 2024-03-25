@@ -1042,6 +1042,7 @@ declare namespace dashjs {
             liveUpdateTimeThresholdInMilliseconds?: number,
             cacheInitSegments?: boolean,
             applyServiceDescription?: boolean,
+            applyCMCDParameters?:boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
             eventControllerRefreshDelay?: number,

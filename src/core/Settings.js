@@ -851,6 +851,10 @@ import Events from './events/Events.js';
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
  * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
+ * @property {Array.<string>} [includeInRequests]
+ * Specifies which HTTP GET requests shall carry parameters.
+ * 
+ * If not specified this value defaults to ['mpd', 'segment', 'other'].
  */
 
 /**
@@ -894,6 +898,8 @@ import Events from './events/Events.js';
  * @property {boolean} [applyProducerReferenceTime=true]
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
+ * Set to true if dash.js should use the cmcd parameters defined in MDP or js elements.
+ * @property {boolean} [applyCMCDParameters=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
@@ -1032,6 +1038,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
+            applyCMCDParameters: true,
             eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
@@ -1278,7 +1285,8 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
+                includeInRequests: ['mpd', 'segment', 'other']
             },
             cmsd: {
                 enabled: false,

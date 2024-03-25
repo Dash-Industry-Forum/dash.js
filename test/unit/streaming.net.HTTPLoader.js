@@ -3,8 +3,12 @@ import Errors from '../../src/core/errors/Errors.js';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler.js';
 import DashMetrics from '../../src/dash/DashMetrics.js';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock.js';
+import ServiceDescriptionControllerMock from './mocks/ServiceDescriptionControllerMock.js';
 import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest.js';
 import Settings from '../../src/core/Settings.js';
+import ClientDataReportingModel from '../../src/streaming/models/ClientDataReportingModel.js';
+import CmcdModel from '../../src/streaming/models/CmcdModel.js';
+
 
 import {expect} from 'chai';
 import sinon from 'sinon';
@@ -18,6 +22,9 @@ let httpLoader;
 let settings = Settings(context).getInstance();
 
 describe('HTTPLoader', function () {
+    let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
+    let clientDataReportingModel,
+        cmcdModel;
 
 
     beforeEach(function () {
@@ -25,6 +32,16 @@ describe('HTTPLoader', function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         errHandler = ErrorHandler(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
+        clientDataReportingModel = ClientDataReportingModel(context).getInstance();
+        cmcdModel = CmcdModel(context).getInstance();
+
+        clientDataReportingModel.setConfig({
+            serviceDescriptionController: serviceDescriptionControllerMock,
+        });
+
+        cmcdModel.setConfig({
+            serviceDescriptionController: serviceDescriptionControllerMock,
+        });
     });
 
     beforeEach(function () {
@@ -37,6 +54,7 @@ describe('HTTPLoader', function () {
     });
 
     afterEach(function () {
+        serviceDescriptionControllerMock.reset();
         window.XMLHttpRequest.restore();
     });
 
