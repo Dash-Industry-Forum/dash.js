@@ -2,11 +2,11 @@ import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.BUFFER
 const TESTCASE = Constants.TESTCASES.BUFFER.CLEANUP;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
@@ -14,9 +14,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = new DashJsAdapter();
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
@@ -44,8 +42,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         });
 
         it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+            checkNoCriticalErrors(playerAdapter);
         })
     })
 })

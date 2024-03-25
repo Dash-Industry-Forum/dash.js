@@ -1,12 +1,16 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {
+    checkIsPlaying,
+    checkIsProgressing,
+    checkTimeWithinThreshold,
+    initializeDashJsAdapter
+} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.PLAYBACK_ADVANCED;
 const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.ATTACH_AT_NON_ZERO;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
@@ -14,52 +18,35 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = new DashJsAdapter();
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
             playerAdapter.destroy();
         })
 
-        it(`Attach null as starttime and expect content to play from start`, async () => {
+        it(`Attach null as start time and expect content to play from start`, async () => {
             playerAdapter.attachSource(mpd, null);
 
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsPlaying(playerAdapter, true);
+            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            await checkIsProgressing(playerAdapter);
         })
 
-        it(`Attach negative value as starttime and expect content to play from start`, async () => {
+        it(`Attach negative value as start time and expect content to play from start`, async () => {
             playerAdapter.attachSource(mpd, -10);
 
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsPlaying(playerAdapter, true);
+            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            await checkIsProgressing(playerAdapter);
         })
 
-        it(`Attach string as starttime and expect content to play`, async () => {
+        it(`Attach string as start time and expect content to play`, async () => {
             playerAdapter.attachSource(mpd, 'foobar');
 
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsPlaying(playerAdapter, true)
+            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            await checkIsProgressing(playerAdapter);
         })
 
         for (let i = 0; i < Constants.TEST_INPUTS.ATTACH_AT_NON_ZERO.NUMBER_OF_RANDOM_ATTACHES; i++) {
@@ -78,8 +65,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
                 expect(seeked).to.be.true;
 
                 const targetTime = playerAdapter.isDynamic() ? startTime - playerAdapter.getDvrSeekOffset(0) : startTime;
-                const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-                expect(timeIsWithinThreshold).to.be.true;
+                checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             });
         }
 

@@ -1,97 +1,81 @@
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
-import Constants from '../../src/Constants.js';
-import Utils from '../../src/Utils.js';
 import GoogleAdManagerAdapter from '../../adapter/GoogleAdManagerAdapter.js';
 import {expect} from 'chai'
+import {checkForEndedEvent, checkIsPlaying, checkIsProgressing, checkNoCriticalErrors} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.VENDOR;
-const TESTCASE = Constants.TESTCASES.VENDOR.GOOGLE_AD_MANAGER_EMSG;
+let playerAdapter;
+let googleAdManagerAdapter;
+let mpd;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
-    const mpd = item.url;
+before(() => {
+    playerAdapter = new DashJsAdapter();
+    googleAdManagerAdapter = new GoogleAdManagerAdapter(playerAdapter)
+    playerAdapter.init(true);
+    googleAdManagerAdapter.init()
+})
 
-    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
+after(() => {
+    mpd = null;
+    playerAdapter.destroy();
+    googleAdManagerAdapter.reset();
+})
 
-        let playerAdapter;
-        let googleAdManagerAdapter;
-        let mpd;
-
-        before(() => {
-            playerAdapter = new DashJsAdapter();
-            googleAdManagerAdapter = new GoogleAdManagerAdapter(playerAdapter)
-            playerAdapter.init(true);
-            googleAdManagerAdapter.init()
-        })
-
-        after(() => {
-            mpd = null;
-            playerAdapter.destroy();
-            googleAdManagerAdapter.reset();
-        })
-
-        it('Register DAI pod session', async () => {
-            await googleAdManagerAdapter.requestStream()
-        })
+it('Register DAI pod session', async () => {
+    await googleAdManagerAdapter.requestStream()
+})
 
 
-        it('Request Ad Manifest and start playback', () => {
-            mpd = googleAdManagerAdapter.getAdPodManifest();
-            expect(mpd).to.be.a('string');
-            expect(mpd).to.not.be.empty;
-        })
+it('Request Ad Manifest and start playback', () => {
+    mpd = googleAdManagerAdapter.getAdPodManifest();
+    expect(mpd).to.be.a('string');
+    expect(mpd).to.not.be.empty;
+})
 
-        it('Register for ID3 events', () => {
-            googleAdManagerAdapter.registerVastEventListener()
-        });
+it('Register for ID3 events', () => {
+    googleAdManagerAdapter.registerVastEventListener()
+});
 
-        it(' Wait for playback to be finished', async () => {
-            playerAdapter.attachSource(mpd);
-            console.log(`MPD URL ${mpd}`);
+it(' Wait for playback to be finished', async () => {
+    playerAdapter.attachSource(mpd);
 
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+    await checkIsPlaying(playerAdapter, true);
+    await checkIsProgressing(playerAdapter);
+    await checkForEndedEvent(playerAdapter);
+})
 
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
+it(`Expect all events to be triggered`, () => {
+    const adData = googleAdManagerAdapter.getAdData();
+    const vastEventsToVerify = googleAdManagerAdapter.getVastEventsToVerify();
+    const adIds = Object.keys(adData);
 
-            const isFinished = await playerAdapter.waitForEvent(playerAdapter.getDuration() * 1000 + Constants.TEST_TIMEOUT_THRESHOLDS.IS_FINISHED_OFFSET_TO_DURATION, dashjs.MediaPlayer.events.PLAYBACK_ENDED)
-            expect(isFinished).to.be.true;
-        })
-
-        it(`Expect all events to be triggered`, () => {
-            const adData = googleAdManagerAdapter.getAdData();
-            const vastEventsToVerify = googleAdManagerAdapter.getVastEventsToVerify();
-            const adIds = Object.keys(adData);
-
-            adIds.forEach((adId) => {
-                const entry = adData[adId];
-                const events = Object.keys(entry.events);
-                expect(Object.keys(vastEventsToVerify).every(v => events.includes(v))).to.be.true
-            })
-        })
-
-
-        it(`Expect all events to have the right order`, () => {
-            const adData = googleAdManagerAdapter.getAdData();
-            const vastEventsToVerify = googleAdManagerAdapter.getVastEventsToVerify();
-            const adIds = Object.keys(adData);
-
-            adIds.forEach((adId) => {
-                const entry = adData[adId];
-                const events = Object.keys(entry.events);
-
-                events.forEach((event) => {
-                    console.log(`event ${event} with position ${entry.events[event].position} should be at position ${vastEventsToVerify[event].position}`);
-                    expect(entry.events[event].position).to.be.equal(vastEventsToVerify[event].position)
-                })
-            })
-        })
-
-        it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
-        })
-
+    adIds.forEach((adId) => {
+        const entry = adData[adId];
+        const events = Object.keys(entry.events);
+        expect(Object.keys(vastEventsToVerify).every(v => events.includes(v))).to.be.true
     })
 })
+
+
+it(`Expect all events to have the right order`, () => {
+    const adData = googleAdManagerAdapter.getAdData();
+    const vastEventsToVerify = googleAdManagerAdapter.getVastEventsToVerify();
+    const adIds = Object.keys(adData);
+
+    adIds.forEach((adId) => {
+        const entry = adData[adId];
+        const events = Object.keys(entry.events);
+
+        events.forEach((event) => {
+            console.log(`event ${event} with position ${entry.events[event].position} should be at position ${vastEventsToVerify[event].position}`);
+            expect(entry.events[event].position).to.be.equal(vastEventsToVerify[event].position)
+        })
+    })
+})
+
+it(`Expect no critical errors to be thrown`, () => {
+    checkNoCriticalErrors(playerAdapter)
+})
+
+
+
 

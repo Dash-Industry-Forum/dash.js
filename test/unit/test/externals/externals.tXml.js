@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {translateEntitiesAndCharacterReferences, XML_ENTITIES} from '../../externals/tXml.js'
+import {translateEntitiesAndCharacterReferences, XML_ENTITIES} from '../../../../externals/tXml.js'
 
 describe('tXml', () => {
 

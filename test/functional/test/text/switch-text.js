@@ -1,12 +1,11 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {checkIsPlaying, checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.TEXT;
 const TESTCASE = Constants.TESTCASES.TEXT.SWITCH;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
@@ -14,10 +13,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = new DashJsAdapter();
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
-            playerAdapter.attachSource(mpd);
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
@@ -25,13 +21,11 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         })
 
         it(`Checking playing state`, async () => {
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
+            await checkIsPlaying(playerAdapter, true)
         })
 
         it(`Checking progressing state`, async () => {
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsProgressing(playerAdapter)
         });
 
         it(`Switch texttracks`, async () => {
@@ -45,8 +39,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
                 expect(currentTrack.lang).to.be.equal(track.lang);
                 expect(currentTrack.index).to.be.equal(track.index);
 
-                const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-                expect(isProgressing).to.be.true;
+                await checkIsProgressing(playerAdapter)
             }
         });
 
@@ -59,8 +52,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
                 let currentTrack = playerAdapter.getCurrentTrackFor(Constants.DASH_JS.MEDIA_TYPES.TEXT);
                 expect(currentTrack.lang).to.be.equal(targetTrack.lang);
                 expect(currentTrack.index).to.be.equal(targetTrack.index);
-                let isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-                expect(isProgressing).to.be.true;
+                await checkIsProgressing(playerAdapter)
 
                 playerAdapter.setTextTrack(-1);
                 const currentIndex = playerAdapter.getCurrentTextTrackIndex();
@@ -70,14 +62,12 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
                 currentTrack = playerAdapter.getCurrentTrackFor(Constants.DASH_JS.MEDIA_TYPES.TEXT);
                 expect(currentTrack.lang).to.be.equal(targetTrack.lang);
                 expect(currentTrack.index).to.be.equal(targetTrack.index);
-                isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-                expect(isProgressing).to.be.true;
+                await checkIsProgressing(playerAdapter)
             }
         });
 
         it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+            checkNoCriticalErrors(playerAdapter)
         })
     })
 })

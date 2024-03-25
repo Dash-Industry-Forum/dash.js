@@ -1,12 +1,17 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {
+    checkIsPlaying,
+    checkIsProgressing,
+    checkNoCriticalErrors,
+    checkTimeWithinThreshold,
+    initializeDashJsAdapter
+} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.PLAYBACK
 const TESTCASE = Constants.TESTCASES.PLAYBACK.SEEK;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
@@ -14,10 +19,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = new DashJsAdapter();
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
-            playerAdapter.attachSource(mpd);
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
@@ -25,72 +27,74 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         })
 
         it(`Checking playing state`, async () => {
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
+            await checkIsPlaying(playerAdapter, true)
         })
 
         it(`Checking progressing state`, async () => {
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsProgressing(playerAdapter)
         });
 
-        it(`Checking seek to 0`, async () => {
+        it(`Seek to 0`, async () => {
             playerAdapter.seek(0);
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
-
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
-        it(`Checking seek to negative value`, async () => {
+        it(`Checking playing state`, async () => {
+            await checkIsPlaying(playerAdapter, true)
+        })
+
+        it(`Checking progressing state`, async () => {
+            await checkIsProgressing(playerAdapter)
+        });
+
+        it(`Seek to negative value`, async () => {
             playerAdapter.pause();
             playerAdapter.seek(-10);
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
 
-            playerAdapter.play();
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
-        it(`Checking seek to high value`, async () => {
+        it(`Checking playing state`, async () => {
+            playerAdapter.play();
+            await checkIsPlaying(playerAdapter, true)
+        })
+
+        it(`Checking progressing state`, async () => {
+            await checkIsProgressing(playerAdapter)
+        });
+
+        it(`Seek to large value`, async () => {
             playerAdapter.pause();
             playerAdapter.seek(999999999999);
 
             // For live we expect to be playing close to the live edge, For VoD we are at the end of the stream.
             const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration();
             const allowedDifference = playerAdapter.isDynamic() ? Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE_LIVE_EDGE : Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE;
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(targetTime, allowedDifference);
-            expect(timeIsWithinThreshold).to.be.true;
+
+            checkTimeWithinThreshold(playerAdapter, targetTime, allowedDifference);
         });
 
         for (let i = 0; i < Constants.TEST_INPUTS.SEEK.NUMBER_OF_RANDOM_SEEKS; i++) {
-            it(`Checking seek to random time`, async () => {
+            it(`Seek to random time`, async () => {
                 const targetTime = playerAdapter.generateValidSeekPosition();
                 playerAdapter.pause();
                 playerAdapter.seek(targetTime);
-                const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-                expect(timeIsWithinThreshold).to.be.true;
 
+                checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            });
+
+            it(`Checking playing state`, async () => {
                 playerAdapter.play();
-                const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-                expect(isPlaying).to.be.true;
+                await checkIsPlaying(playerAdapter, true)
+            })
 
-                const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-                expect(isProgressing).to.be.true;
+            it(`Checking progressing state`, async () => {
+                await checkIsProgressing(playerAdapter)
             });
         }
 
         it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+            checkNoCriticalErrors(playerAdapter)
         })
     })
 })

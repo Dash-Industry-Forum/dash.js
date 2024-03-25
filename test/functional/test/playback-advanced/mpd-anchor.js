@@ -1,12 +1,17 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {
+    checkIsPlaying,
+    checkIsProgressing,
+    checkLiveDelay,
+    checkNoCriticalErrors, checkTimeWithinThreshold,
+    initializeDashJsAdapter
+} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.PLAYBACK_ADVANCED;
 const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.MPD_ANCHOR;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
@@ -14,9 +19,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(function () {
-            playerAdapter = new DashJsAdapter();
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
@@ -41,11 +44,10 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
             let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);
             expect(seeked).to.be.true;
 
-            const timeIsWithinThreshold = playerAdapter.timeIsWithinThreshold(startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
-            expect(timeIsWithinThreshold).to.be.true;
+            checkTimeWithinThreshold(playerAdapter, startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
-        it(`Attach with #posix and expect live delay to correspond`, async function (){
+        it(`Attach with #posix and expect live delay to correspond`, async function () {
             if (item.type === Constants.CONTENT_TYPES.VOD) {
                 this.skip();
             }
@@ -53,20 +55,13 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
             const starttime = new Date().getTime() / 1000 - Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_RANDOM_POSIX_DELAY;
             playerAdapter.attachSource(`${mpd}#t=posix:${starttime}`); /* start from UTC time */
 
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
-
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
-
-            const liveDelay = playerAdapter.getCurrentLiveLatency();
-            expect(liveDelay).to.be.at.least(Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_RANDOM_POSIX_DELAY - Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_TOLERANCE);
-            expect(liveDelay).to.be.below(Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_RANDOM_POSIX_DELAY + Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_TOLERANCE);
+            await checkIsPlaying(playerAdapter, true);
+            await checkIsProgressing(playerAdapter);
+            checkLiveDelay(playerAdapter, Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_RANDOM_POSIX_DELAY - Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_TOLERANCE, Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_RANDOM_POSIX_DELAY + Constants.TEST_INPUTS.MPD_ANCHOR.LIVE_TOLERANCE)
         })
 
         it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+            checkNoCriticalErrors(playerAdapter)
         })
     })
 })

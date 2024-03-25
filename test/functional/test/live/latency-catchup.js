@@ -2,11 +2,11 @@ import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {checkIsPlaying, checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.LIVE;
 const TESTCASE = Constants.TESTCASES.LIVE.CATCHUP;
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`Simple - Latency catchup - ${item.name} - ${mpd}`, () => {
@@ -14,7 +14,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(function () {
-            playerAdapter = new DashJsAdapter();
+            playerAdapter = initializeDashJsAdapter(item, mpd);
             if (item.type === Constants.CONTENT_TYPES.VOD) {
                 this.skip();
             }
@@ -42,13 +42,11 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         })
 
         it(`Checking playing state`, async () => {
-            const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-            expect(isPlaying).to.be.true;
+            await checkIsPlaying(playerAdapter, true);
         })
 
         it(`Checking progressing state`, async () => {
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsProgressing(playerAdapter);
         });
 
         it(`Check if playback rate is adjusted`, async () => {
@@ -62,8 +60,7 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
         });
 
         it(`Expect no critical errors to be thrown`, () => {
-            const logEvents = playerAdapter.getLogEvents();
-            expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+            checkNoCriticalErrors(playerAdapter);
         })
     })
 })

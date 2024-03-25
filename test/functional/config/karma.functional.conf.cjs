@@ -12,13 +12,10 @@ module.exports = function (config) {
         return
     }
 
-    try {
-        const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'))
-        console.log(testConfiguration)
-    } catch (e) {
-        console.error(e);
-        return
-    }
+    const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'))
+    const includedTestfiles = _getIncludedTestfiles(testConfiguration)
+    const excludedTestfiles = _getExcludedTestfiles(testConfiguration)
+    const testvectors = testConfiguration.testvectors
 
     config.set({
 
@@ -48,12 +45,12 @@ module.exports = function (config) {
             { pattern: 'https://imasdk.googleapis.com/js/sdkloader/ima3_dai.js', watched: false, nocache: true },
             { pattern: 'dist/dash.all.debug.js', watched: false, nocache: true },
             { pattern: 'dist/dash.mss.min.js', watched: false, nocache: true },
-            { pattern: 'test/functional/test/**/*.js', watched: false },
             { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
-        ],
+        ].concat(includedTestfiles),
+
 
         // list of files / patterns to exclude
-        // exclude: ['test/vendor/*.js'],
+        exclude: ['test/functional/test/common/*.js'].concat(excludedTestfiles),
 
         customContextFile: 'test/functional/view/index.html',
 
@@ -105,7 +102,7 @@ module.exports = function (config) {
             mocha: {
                 timeout: 180000
             },
-            settings: configFileName
+            testvectors
         },
 
         // web server port
@@ -151,9 +148,27 @@ module.exports = function (config) {
     })
 }
 
-function getConfigFileName() {
-    const args = process.argv;
-    const settingsIndex = args.indexOf('--configfile');
+function _getIncludedTestfiles(testConfiguration) {
 
-    return settingsIndex >= 0 ? args[settingsIndex + 1] : 'default'
+    if (!testConfiguration || !testConfiguration.testfiles) {
+        return []
+    }
+
+    if (!testConfiguration.testfiles.included || testConfiguration.testfiles.included.indexOf('all') >= 0) {
+        return { pattern: `test/functional/test/**/*.js`, watched: false }
+    }
+
+    return testConfiguration.testfiles.included.map((entry) => {
+        return { pattern: `test/functional/test/${entry}.js`, watched: false }
+    })
+}
+
+function _getExcludedTestfiles(testConfiguration) {
+    if (!testConfiguration || !testConfiguration.testfiles || !testConfiguration.testfiles.excluded) {
+        return []
+    }
+
+    return testConfiguration.testfiles.excluded.map((entry) => {
+        return `test/functional/test/${entry}.js`
+    })
 }

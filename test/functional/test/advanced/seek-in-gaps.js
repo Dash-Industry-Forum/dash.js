@@ -1,35 +1,27 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
+import {checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
-const TESTCASE_CATEGORY = Constants.TESTCASES.CATEGORIES.ADVANCED
 const TESTCASE = Constants.TESTCASES.ADVANCED.SEEK_IN_GAPS
 
-Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
+Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`${TESTCASE} - ${item.name} -${mpd}`, function () {
+    if (item && item.testdata && item.testdata.gaps && item.testdata.gaps.length > 0) {
+        describe(`${TESTCASE} - ${item.name} -${mpd}`, function () {
 
-        let playerAdapter;
+            let playerAdapter;
 
-        before(function () {
-            playerAdapter = new DashJsAdapter();
+            before(function () {
+                playerAdapter = initializeDashJsAdapter(item, mpd);
+            })
 
-            if (!item.testdata || !item.testdata.gaps) {
-                this.skip();
-            }
+            after(() => {
+                playerAdapter.destroy();
+            })
 
-            playerAdapter.init(true);
-            playerAdapter.setDrmData(item.drm);
-            playerAdapter.attachSource(mpd);
-        })
 
-        after(() => {
-            playerAdapter.destroy();
-        })
-
-        if (item && item.testdata && item.testdata.gaps && item.testdata.gaps.length > 0) {
             item.testdata.gaps.forEach((gap) => {
                 const midGap = (gap.end - gap.start) / 2;
                 it(`Seeking in the middle of the gap to ${midGap}`, async () => {
@@ -56,10 +48,9 @@ Utils.getTestvectorsForTestcase(TESTCASE_CATEGORY, TESTCASE).forEach((item) => {
                 });
 
                 it(`Expect no critical errors to be thrown`, () => {
-                    const logEvents = playerAdapter.getLogEvents();
-                    expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+                    checkNoCriticalErrors(playerAdapter)
                 })
             })
-        }
-    })
+        })
+    }
 })
