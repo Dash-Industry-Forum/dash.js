@@ -13,16 +13,17 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter
 
         before(function () {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
-
             if (!item.testdata || !item.testdata.periods || isNaN(item.testdata.periods.waitingTimeForPeriodSwitches)
                 || isNaN(item.testdata.periods.minimumNumberOfPeriodSwitches) || isNaN(item.testdata.periods.maximumNumberOfPeriodSwitches)) {
                 this.skip();
             }
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Checking playing state`, async () => {

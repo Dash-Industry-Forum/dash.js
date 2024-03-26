@@ -38,10 +38,11 @@ export function checkTimeWithinThreshold(playerAdapter, seekTime, allowedDiffere
     expect(timeIsWithinThreshold).to.be.true;
 }
 
-export function initializeDashJsAdapter(item, mpd) {
+export function initializeDashJsAdapter(item, mpd, settings = null) {
     let playerAdapter = new DashJsAdapter();
     playerAdapter.init(true);
     playerAdapter.setDrmData(item.drm);
+    playerAdapter.updateSettings(settings);
     playerAdapter.attachSource(mpd);
 
     return playerAdapter

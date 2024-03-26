@@ -15,6 +15,7 @@ module.exports = function (config) {
     const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'))
     const includedTestfiles = _getIncludedTestfiles(testConfiguration)
     const excludedTestfiles = _getExcludedTestfiles(testConfiguration)
+    const customContextFile = testConfiguration.customContextFile ? testConfiguration.customContextFile : 'test/functional/view/index.html';
     const testvectors = testConfiguration.testvectors
 
     config.set({
@@ -52,7 +53,7 @@ module.exports = function (config) {
         // list of files / patterns to exclude
         exclude: ['test/functional/test/common/*.js'].concat(excludedTestfiles),
 
-        customContextFile: 'test/functional/view/index.html',
+        customContextFile,
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -92,7 +93,7 @@ module.exports = function (config) {
         // optionally, configure the reporter
         coverageReporter: {
             type: 'html',
-            dir: 'test/functional/results/karma/coverage/'
+            dir: 'test/functional/results/coverage/karma'
         },
 
         webpack: {},

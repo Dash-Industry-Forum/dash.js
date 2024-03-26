@@ -14,26 +14,19 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
-        })
-
-        after(() => {
-            playerAdapter.destroy();
-        })
-
-        it(`Setting buffer cleanup values`, async () => {
-            playerAdapter.updateSettings({
+            const settings = {
                 streaming: {
                     buffer: {
                         bufferPruningInterval: Constants.TEST_INPUTS.BUFFER_CLEANUP.INTERVAL,
                         bufferToKeep: Constants.TEST_INPUTS.BUFFER_CLEANUP.TO_KEEP
                     }
                 }
-            })
+            }
+            playerAdapter = initializeDashJsAdapter(item, mpd, settings);
         })
 
-        it(`Attach source`, async () => {
-            playerAdapter.attachSource(mpd);
+        after(() => {
+            playerAdapter.destroy();
         })
 
         it(`Play for some time and expect buffer level to stay within tolerance`, async () => {

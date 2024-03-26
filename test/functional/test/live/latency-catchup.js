@@ -1,4 +1,3 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
@@ -14,12 +13,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(function () {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
             if (item.type === Constants.CONTENT_TYPES.VOD) {
                 this.skip();
             }
-            playerAdapter.init(true);
-            playerAdapter.updateSettings({
+            const settings = {
                 streaming: {
                     delay: {
                         liveDelay: Constants.TEST_INPUTS.LATENCY_CATCHUP.DELAY
@@ -28,12 +25,14 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         enabled: true
                     }
                 }
-            })
-            playerAdapter.setDrmData(item.drm);
+            };
+            playerAdapter = initializeDashJsAdapter(item, mpd, settings);
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
 

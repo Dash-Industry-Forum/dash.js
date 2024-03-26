@@ -2,7 +2,7 @@ import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
-import {checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
+import {checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
 const TESTCASE = Constants.TESTCASES.BUFFER.INITIAL_TARGET;
 
@@ -14,26 +14,16 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
+            const settings = { streaming: { buffer: { initialBufferLevel: Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE } } }
+            playerAdapter = initializeDashJsAdapter(item, mpd, settings);
         })
 
         after(() => {
             playerAdapter.destroy();
         })
 
-        it(`Setting initial buffer target to ${Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE} seconds`, async () => {
-            playerAdapter.updateSettings({ streaming: { buffer: { initialBufferLevel: Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE } } })
-            const settings = playerAdapter.getSettings();
-            expect(settings.streaming.buffer.initialBufferLevel).to.be.equal(Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE);
-        })
-
-        it(`Attach source`, async () => {
-            playerAdapter.attachSource(mpd);
-        })
-
         it(`Expect buffer level to be within the initial target or the live delay once progressing`, async () => {
-            const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-            expect(isProgressing).to.be.true;
+            await checkIsProgressing(playerAdapter);
             const videoBuffer = playerAdapter.getBufferLengthByType(Constants.DASH_JS.MEDIA_TYPES.VIDEO);
             const liveDelay = playerAdapter.getTargetLiveDelay();
             const minimumTarget = liveDelay > 0 ? Math.min(liveDelay - Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.TOLERANCE, Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE) : Constants.TEST_INPUTS.INITIAL_BUFFER_TARGET.VALUE;

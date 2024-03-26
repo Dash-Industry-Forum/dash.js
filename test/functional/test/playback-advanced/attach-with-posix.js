@@ -20,14 +20,16 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(function () {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
             if (item.type === Constants.CONTENT_TYPES.VOD) {
                 this.skip();
             }
+            playerAdapter = initializeDashJsAdapter(item, mpd);
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Attach with posix and expect live delay to correspond`, async () => {
