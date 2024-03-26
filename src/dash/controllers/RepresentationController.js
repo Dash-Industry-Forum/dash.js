@@ -109,52 +109,59 @@ function RepresentationController(config) {
     }
 
     function updateData(newRealAdaptation, availableRepresentations, type, mInfo, bitrateInfo) {
-        checkConfig();
+        return new Promise((resolve, reject) => {
+            checkConfig();
 
-        updating = true;
+            updating = true;
 
-        mediaInfo = mInfo;
+            mediaInfo = mInfo;
 
-        voAvailableRepresentations = availableRepresentations;
+            voAvailableRepresentations = availableRepresentations;
 
-        const rep = getRepresentationForQuality(bitrateInfo.qualityIndex)
-        _setCurrentVoRepresentation(rep);
-        realAdaptation = newRealAdaptation;
+            const rep = getRepresentationForQuality(bitrateInfo.qualityIndex)
+            _setCurrentVoRepresentation(rep);
+            realAdaptation = newRealAdaptation;
 
-        if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !mInfo.isFragmented)) {
-            endDataUpdate();
-            return Promise.resolve();
-        }
-
-        const promises = [];
-        for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            const currentRep = voAvailableRepresentations[i];
-            promises.push(_updateRepresentation(currentRep));
-        }
-
-        Promise.all(promises)
-            .then(() => {
-                let repSwitch;
-                const switchRequest = SwitchRequest(context).create();
-                switchRequest.bitrateInfo = new BitrateInfo();
-                switchRequest.bitrateInfo.qualityIndex = getQualityForRepresentation(currentVoRepresentation);
-                switchRequest.bitrateInfo.mediaInfo = mediaInfo;
-                switchRequest.reason = ''
-
-                abrController.setPlaybackQuality(switchRequest);
-                const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
-                if (dvrInfo) {
-                    dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
-                }
-
-                const currentRep = getCurrentRepresentation();
-                repSwitch = dashMetrics.getCurrentRepresentationSwitch(currentRep.adaptation.type);
-
-                if (!repSwitch) {
-                    _addRepresentationSwitch();
-                }
+            if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !mInfo.isFragmented)) {
                 endDataUpdate();
-            })
+                resolve();
+                return;
+            }
+
+            const promises = [];
+            for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
+                const currentRep = voAvailableRepresentations[i];
+                promises.push(_updateRepresentation(currentRep));
+            }
+
+            Promise.all(promises)
+                .then(() => {
+                    let repSwitch;
+                    const switchRequest = SwitchRequest(context).create();
+                    switchRequest.bitrateInfo = new BitrateInfo();
+                    switchRequest.bitrateInfo.qualityIndex = getQualityForRepresentation(currentVoRepresentation);
+                    switchRequest.bitrateInfo.mediaInfo = mediaInfo;
+                    switchRequest.reason = ''
+
+                    abrController.setPlaybackQuality(switchRequest);
+                    const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
+                    if (dvrInfo) {
+                        dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
+                    }
+
+                    const currentRep = getCurrentRepresentation();
+                    repSwitch = dashMetrics.getCurrentRepresentationSwitch(currentRep.adaptation.type);
+
+                    if (!repSwitch) {
+                        _addRepresentationSwitch();
+                    }
+                    endDataUpdate();
+                    resolve();
+                })
+                .catch((e) =>
+                    reject(e)
+                )
+        })
     }
 
     function _updateRepresentation(currentRep) {
