@@ -47,5 +47,5 @@ Examples:
 
 ## References
 
-1. Naming Thins by Tom Benner
-2. Clean Code: A handbook for agile Software craftsmanship by Robert C. Martin 
+1. [Naming Things](https://www.amazon.com/Naming-Things-Hardest-Software-Engineering/dp/B0BTLYZWRL) by Tom Benner
+2. [Clean Cod A handbook for agile Software craftsmanship](https://a.co/d/d4pJl9s) by Robert C. Martin 
