@@ -21,7 +21,7 @@ of a month.
 Monthly dash.js call
 Hosted by DASH-IF Administration
 
-* [https://dashif.my.webex.com/dashif.my/j.php?MTID=m7691b14ed9ebc9b90c68117b350d7e50](https://dashif.my.webex.com/dashif.my/j.php?MTID=m7691b14ed9ebc9b90c68117b350d7e50)
+* [https://dashif.my.webex.com/dashif.my/j.php?MTID=mc377a1ce36815009ebd7c688a66fcd60](https://dashif.my.webex.com/dashif.my/j.php?MTID=mc377a1ce36815009ebd7c688a66fcd60)
 * Meeting number: 2557 611 0549
 * Password: p6vXBcNx523
  
