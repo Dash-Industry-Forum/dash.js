@@ -1905,7 +1905,7 @@ declare namespace dashjs {
 
     export interface KeyErrorEvent extends Event {
         type: MediaPlayerEvents['KEY_ERROR'];
-        data: KeyError;
+        error: DashJSError;
     }
 
     export class KeyMessage {
@@ -1943,7 +1943,7 @@ declare namespace dashjs {
     export interface KeySystemSelectedEvent extends Event {
         type: MediaPlayerEvents['KEY_SYSTEM_SELECTED'];
         data: object | null;
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface LicenseRequestCompleteEvent extends Event {
@@ -4748,4 +4748,3 @@ declare namespace dashjs {
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
     export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 }
-
