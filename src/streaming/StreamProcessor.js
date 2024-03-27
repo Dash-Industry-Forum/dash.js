@@ -563,7 +563,6 @@ function StreamProcessor(config) {
 
     function _onDataUpdateCompleted() {
         const currentRepresentation = representationController.getCurrentRepresentation()
-        scheduleController.setCurrentRepresentation(adapter.convertRepresentationToRepresentationInfo(currentRepresentation));
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
