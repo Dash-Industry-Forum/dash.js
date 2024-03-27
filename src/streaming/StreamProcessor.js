@@ -687,7 +687,6 @@ function StreamProcessor(config) {
         selectMediaInfoAfterQualitySwitch(e.newBitrateInfo.mediaInfo, e.newBitrateInfo)
             .then(() => {
                 const representationInfo = getRepresentationInfo(e.newBitrateInfo.qualityIndex);
-                scheduleController.setCurrentRepresentation(representationInfo);
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
                 if (e.reason && e.reason.forceReplace) {
                     _prepareForForceReplacementQualitySwitch();
