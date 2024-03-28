@@ -3026,7 +3026,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
- *            cacheInitSegments: true,
+ *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -3056,7 +3056,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                detectPlayreadyMessageFormat: true,
  *            },
  *            buffer: {
- *                enableSeekDecorrelationFix: true,
+ *                enableSeekDecorrelationFix: false,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -3067,7 +3067,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                initialBufferLevel: NaN,
  *                stableBufferTime: 12,
  *                longFormContentDurationThreshold: 600,
- *                stallThreshold: 0.5,
+ *                stallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
@@ -3098,8 +3098,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                }
  *            },
  *            scheduling: {
- *                defaultTimeout: 300,
- *                lowLatencyTimeout: 100,
+ *                defaultTimeout: 500,
+ *                lowLatencyTimeout: 0,
  *                scheduleWhilePaused: true
  *            },
  *            text: {
@@ -3113,7 +3113,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
- *                enabled: false,
+ *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
@@ -3155,10 +3155,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
  *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
  *                additionalAbrRules: {
- *                   insufficientBufferRule: false,
+ *                   insufficientBufferRule: true,
  *                   switchHistoryRule: true,
  *                   droppedFramesRule: true,
- *                   abandonRequestsRule: false
+ *                   abandonRequestsRule: true
  *                },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
@@ -3214,7 +3214,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
- * @property {number} [liveDelay]
+ * @property {number} [liveDelay=NaN]
  * Equivalent in seconds of setLiveDelayFragmentCount.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
@@ -3414,9 +3414,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} Scheduling
- * @property {number} [defaultTimeout=300]
+ * @property {number} [defaultTimeout=500]
  * Default timeout between two consecutive segment scheduling attempts
- * @property {number} [lowLatencyTimeout]
+ * @property {number} [lowLatencyTimeout=0]
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
@@ -3424,7 +3424,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} Text
- * @property {number} [defaultEnabled=true]
+ * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
@@ -3459,11 +3459,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackBufferMin=NaN]
+ * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  *
- * @property {boolean} [enabled=false]
+ * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
  *
  * @property {string} [mode="liveCatchupModeDefault"]
@@ -3508,10 +3508,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
- * @property {boolean} ignoreEmeEncryptedEvent
+ * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
- * @property {boolean} detectPlayreadyMessageFormat
+ * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  */
 
@@ -3548,7 +3548,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {string} [ABRStrategy="abrDynamic"]
  * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
  * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
- * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
+ * @property {object} [additionalAbrRules={insufficientBufferRule: true,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: true}]
  * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
@@ -3619,11 +3619,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * The requested maximum throughput that the client considers sufficient for delivery of the asset.
  *
  * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
- * @property {number} [rtpSafetyFactor]
+ * @property {number} [rtpSafetyFactor=5]
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode]
+ * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
  * If not specified this value defaults to 'query'.
@@ -3659,11 +3659,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [wallclockTimeUpdateInterval=50]
+ * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {boolean} [cacheInitSegments=true]
+ * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
@@ -3709,7 +3709,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
- * @property {string} [selectionModeForInitialTrack="highestBitrate"]
+ * @property {string} [selectionModeForInitialTrack="highestSelectionPriority"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
@@ -4229,8 +4229,8 @@ var Utils = /*#__PURE__*/function () {
     }
     /**
      * Compares both urls and returns a relative url (target relative to original)
-     * @param {string} original
-     * @param {string} target
+     * @param {string} originalUrl
+     * @param {string} targetUrl
      * @return {string|*}
      */
 
@@ -4274,6 +4274,17 @@ var Utils = /*#__PURE__*/function () {
         return {};
       }
     }
+    /**
+     * Checks for existence of "http" or "https" in a string
+     * @param string
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "stringHasProtocol",
+    value: function stringHasProtocol(string) {
+      return /(http(s?)):\/\//i.test(string);
+    }
   }]);
 
   return Utils;
@@ -4294,7 +4305,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "getVersionString": () => (/* binding */ getVersionString)
 /* harmony export */ });
-var VERSION = '4.7.0';
+var VERSION = '4.7.1';
 function getVersionString() {
   return VERSION;
 }
@@ -8228,10 +8239,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_ContentSteeringResponse__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/ContentSteeringResponse */ "./src/dash/vo/ContentSteeringResponse.js");
 /* harmony import */ var _constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../constants/DashConstants */ "./src/dash/constants/DashConstants.js");
 /* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _core_Utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Utils */ "./src/core/Utils.js");
-/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _vo_BaseURL__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/BaseURL */ "./src/dash/vo/BaseURL.js");
-/* harmony import */ var _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/MpdLocation */ "./src/dash/vo/MpdLocation.js");
+/* harmony import */ var _streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../streaming/utils/URLUtils */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _vo_BaseURL__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../vo/BaseURL */ "./src/dash/vo/BaseURL.js");
+/* harmony import */ var _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/MpdLocation */ "./src/dash/vo/MpdLocation.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -8283,7 +8294,7 @@ var THROUGHPUT_SAMPLES = 4;
 
 function ContentSteeringController() {
   var context = this.context;
-  var urlUtils = (0,_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+  var urlUtils = (0,_streaming_utils_URLUtils__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
   var instance, logger, currentSteeringResponseData, serviceLocationList, throughputList, nextRequestTimer, urlLoader, errHandler, dashMetrics, mediaPlayerModel, manifestModel, requestModifier, serviceDescriptionController, eventBus, adapter;
 
   function setup() {
@@ -8590,7 +8601,7 @@ function ContentSteeringController() {
       });
     }
 
-    url = _core_Utils__WEBPACK_IMPORTED_MODULE_8__["default"].addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+    url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_11__["default"].addAditionalQueryParameterToUrl(url, additionalQueryParameter);
     return url;
   }
   /**
@@ -8671,7 +8682,7 @@ function ContentSteeringController() {
       var synthesizedElements = _getSynthesizedElements(referenceElements);
 
       return synthesizedElements.map(function (element) {
-        var synthesizedBaseUrl = new _vo_BaseURL__WEBPACK_IMPORTED_MODULE_10__["default"](element.synthesizedUrl, element.serviceLocation);
+        var synthesizedBaseUrl = new _vo_BaseURL__WEBPACK_IMPORTED_MODULE_9__["default"](element.synthesizedUrl, element.serviceLocation);
         synthesizedBaseUrl.queryParams = element.queryParams;
         synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
         synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
@@ -8696,7 +8707,7 @@ function ContentSteeringController() {
       var synthesizedElements = _getSynthesizedElements(referenceElements);
 
       return synthesizedElements.map(function (element) {
-        var synthesizedLocation = new _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_11__["default"](element.synthesizedUrl, element.serviceLocation);
+        var synthesizedLocation = new _vo_MpdLocation__WEBPACK_IMPORTED_MODULE_10__["default"](element.synthesizedUrl, element.serviceLocation);
         synthesizedLocation.queryParams = element.queryParams;
         return synthesizedLocation;
       });
@@ -8733,8 +8744,10 @@ function ContentSteeringController() {
 
         if (reference) {
           var referenceUrl = new URL(reference.url);
+          var host = pathwayClone[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.HOST];
+          host = _core_Utils_js__WEBPACK_IMPORTED_MODULE_11__["default"].stringHasProtocol(host) ? host : "".concat(referenceUrl.protocol, "//").concat(host);
           var synthesizedElement = {
-            synthesizedUrl: "".concat(pathwayClone[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.HOST]).concat(referenceUrl.pathname),
+            synthesizedUrl: "".concat(host).concat(referenceUrl.pathname),
             serviceLocation: pathwayClone[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.ID],
             queryParams: pathwayClone[_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][_constants_DashConstants__WEBPACK_IMPORTED_MODULE_6__["default"].CONTENT_STEERING_RESPONSE.PARAMS],
             reference: reference
@@ -8991,28 +9004,38 @@ function RepresentationController(config) {
   }
 
   function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
-    checkConfig();
-    updating = true;
-    voAvailableRepresentations = availableRepresentations;
-    var rep = getRepresentationForQuality(quality);
+    return new Promise(function (resolve, reject) {
+      updating = true;
+      voAvailableRepresentations = availableRepresentations;
+      realAdaptation = newRealAdaptation;
+      var rep = getRepresentationForQuality(quality);
 
-    _setCurrentVoRepresentation(rep);
+      _setCurrentVoRepresentation(rep);
 
-    realAdaptation = newRealAdaptation;
+      if (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
+        endDataUpdate();
+        resolve();
+        return;
+      }
 
-    if (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
-      endDataUpdate();
-      return Promise.resolve();
-    }
+      var promises = [];
 
-    var promises = [];
+      for (var i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
+        var currentRep = voAvailableRepresentations[i];
+        promises.push(_updateRepresentation(currentRep));
+      }
 
-    for (var i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-      var currentRep = voAvailableRepresentations[i];
-      promises.push(_updateRepresentation(currentRep));
-    }
+      Promise.all(promises).then(function () {
+        // Update the current representation again as we have now the reference to the segments
+        var rep = getRepresentationForQuality(quality);
 
-    return Promise.all(promises);
+        _setCurrentVoRepresentation(rep);
+
+        resolve();
+      })["catch"](function (e) {
+        reject(e);
+      });
+    });
   }
 
   function _updateRepresentation(currentRep) {
@@ -13924,8 +13947,9 @@ function TimelineConverter() {
   function _calcRangeForTimeline(voRepresentation) {
     var adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
     var representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
-    var timeline = representation.SegmentTemplate.SegmentTimeline;
-    var timescale = representation.SegmentTemplate.timescale;
+    var base = representation.SegmentTemplate || representation.SegmentList;
+    var timeline = base.SegmentTimeline;
+    var timescale = base.timescale;
     var segments = timeline.S_asArray;
     var range = {
       start: 0,
@@ -26391,7 +26415,7 @@ function CatchupController() {
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
-    eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_SEEKED, _onPlaybackProgression, instance);
+    eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_4__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_CATCHUP_ENABLED, _onCatchupSettingUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MIN, _checkPlaybackRates, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_PLAYBACK_RATE_MAX, _checkPlaybackRates, instance);
@@ -33680,7 +33704,9 @@ function CmcdModel() {
       rtp = _calculateRtp(request);
     }
 
-    data.rtp = rtp;
+    if (!isNaN(rtp)) {
+      data.rtp = rtp;
+    }
 
     if (nextRequest) {
       if (request.url !== nextRequest.url) {
@@ -33812,7 +33838,7 @@ function CmcdModel() {
 
   function _getObjectDurationByRequest(request) {
     try {
-      return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
+      return !isNaN(request.duration) ? Math.round(request.duration * 1000) : NaN;
     } catch (e) {
       return null;
     }
@@ -33957,31 +33983,38 @@ function CmcdModel() {
   }
 
   function _calculateRtp(request) {
-    // Get the values we need
-    var playbackRate = playbackController.getPlaybackRate();
-    if (!playbackRate) playbackRate = 1;
-    var quality = request.quality,
-        mediaType = request.mediaType,
-        mediaInfo = request.mediaInfo,
-        duration = request.duration;
+    try {
+      // Get the values we need
+      var playbackRate = playbackController.getPlaybackRate();
+      if (!playbackRate) playbackRate = 1;
+      var quality = request.quality,
+          mediaType = request.mediaType,
+          mediaInfo = request.mediaInfo,
+          duration = request.duration;
 
-    var currentBufferLevel = _getBufferLevelByType(mediaType);
+      if (!mediaInfo) {
+        return NaN;
+      }
 
-    if (currentBufferLevel === 0) currentBufferLevel = 500;
-    var bitrate = mediaInfo.bitrateList[quality].bandwidth; // Calculate RTP
+      var currentBufferLevel = _getBufferLevelByType(mediaType);
 
-    var segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
+      if (currentBufferLevel === 0) currentBufferLevel = 500;
+      var bitrate = mediaInfo.bitrateList[quality].bandwidth; // Calculate RTP
 
-    var timeToLoad = currentBufferLevel / playbackRate / 1000; // Calculate time available to load file in seconds
+      var segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
 
-    var minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
+      var timeToLoad = currentBufferLevel / playbackRate / 1000; // Calculate time available to load file in seconds
 
-    var rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
-    var maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
+      var minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
 
-    var rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
+      var rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+      var maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
+      // Round to the next multiple of 100
 
-    return rtp;
+      return (parseInt(maxBandwidth / 100) + 1) * 100;
+    } catch (e) {
+      return NaN;
+    }
   }
 
   function reset() {
@@ -37498,26 +37531,27 @@ function HTTPLoader(cfg) {
       throw new Error('config object is not correct or missing');
     }
 
-    var handleLoaded = function handleLoaded(success) {
-      needFailureReport = false;
+    var addHttpRequestMetric = function addHttpRequestMetric(success) {
       request.requestStartDate = requestStartTime;
       request.requestEndDate = new Date();
       request.firstByteDate = request.firstByteDate || requestStartTime;
       request.fileLoaderType = fileLoaderType;
+      var responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+      var responseStatus = httpRequest.response ? httpRequest.response.status : null;
+      var responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() : httpRequest.response ? httpRequest.response.responseHeaders : null;
+      var cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
+      dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+    };
 
-      if (!request.checkExistenceOnly) {
-        var responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
-        var responseStatus = httpRequest.response ? httpRequest.response.status : null;
-        var responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() : httpRequest.response ? httpRequest.response.responseHeaders : null;
-        var cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
-        dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
+    var handleLoaded = function handleLoaded(success) {
+      needFailureReport = false;
+      addHttpRequestMetric(success);
 
-        if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
-          dashMetrics.addManifestUpdate(request);
-          eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_10__["default"].MANIFEST_LOADING_FINISHED, {
-            request: request
-          });
-        }
+      if (request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
+        dashMetrics.addManifestUpdate(request);
+        eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_10__["default"].MANIFEST_LOADING_FINISHED, {
+          request: request
+        });
       }
     };
 
@@ -37645,6 +37679,8 @@ function HTTPLoader(cfg) {
     };
 
     var onabort = function onabort() {
+      addHttpRequestMetric(true);
+
       if (progressTimeout) {
         clearTimeout(progressTimeout);
         progressTimeout = null;
@@ -37702,7 +37738,6 @@ function HTTPLoader(cfg) {
       }
     }
 
-    var verb = request.checkExistenceOnly ? _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.HEAD : _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET;
     var withCredentials = customParametersModel.getXHRWithCredentialsForType(request.type); // Add queryParams that came from pathway cloning
 
     if (request.queryParams) {
@@ -37718,7 +37753,7 @@ function HTTPLoader(cfg) {
     request.url = modifiedUrl;
     httpRequest = {
       url: modifiedUrl,
-      method: verb,
+      method: _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET,
       withCredentials: withCredentials,
       request: request,
       onload: onload,
@@ -40318,6 +40353,7 @@ function L2ARule(config) {
     l2AState.lastSegmentDurationS = NaN;
     l2AState.lastSegmentRequestTimeMs = NaN;
     l2AState.lastSegmentFinishTimeMs = NaN;
+    l2AState.lastSegmentUrl = '';
   }
   /**
    * Returns the state object for a fiven media type. If the state object is not yet defined _getInitialL2AState is called
@@ -40617,55 +40653,67 @@ function L2ARule(config) {
         }, 0);
         var lastthroughput = Math.round(8 * downloadBytes / throughputMeasureTime); // bits/ms = kbits/s
 
+        var currentHttpRequest = dashMetrics.getCurrentHttpRequest(mediaType);
+
         if (lastthroughput < 1) {
           lastthroughput = 1;
         } //To avoid division with 0 (avoid infinity) in case of an absolute network outage
+        // Note that for SegmentBase addressing the request url does not change.
+        // As this is not relevant for low latency streaming at this point the check below is sufficient
 
 
-        var V = l2AState.lastSegmentDurationS;
-        var sign = 1; //Main adaptation logic of L2A-LL
+        if (currentHttpRequest.url === l2AState.lastSegmentUrl || currentHttpRequest.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_3__.HTTPRequest.INIT_SEGMENT_TYPE) {
+          // No change to inputs or init segment so use previously calculated quality
+          quality = l2AState.lastQuality;
+        } else {
+          // Recalculate Q
+          var V = l2AState.lastSegmentDurationS;
+          var sign = 1; //Main adaptation logic of L2A-LL
 
-        for (var _i = 0; _i < bitrateCount; ++_i) {
-          bitrates[_i] = bitrates[_i] / 1000; // Originally in bps, now in Kbps
+          for (var _i = 0; _i < bitrateCount; ++_i) {
+            bitrates[_i] = bitrates[_i] / 1000; // Originally in bps, now in Kbps
 
-          if (currentPlaybackRate * bitrates[_i] > lastthroughput) {
-            // In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
-            sign = -1;
-          } // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
-
-
-          l2AParameter.w[_i] = l2AParameter.prev_w[_i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[_i] / lastthroughput)); //Lagrangian descent
-        } // Apply euclidean projection on w to ensure w expresses a probability distribution
-
-
-        l2AParameter.w = euclideanProjection(l2AParameter.w);
-
-        for (var _i2 = 0; _i2 < bitrateCount; ++_i2) {
-          diff1[_i2] = l2AParameter.w[_i2] - l2AParameter.prev_w[_i2];
-          l2AParameter.prev_w[_i2] = l2AParameter.w[_i2];
-        } // Lagrangian multiplier Q calculation:
+            if (currentPlaybackRate * bitrates[_i] > lastthroughput) {
+              // In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
+              sign = -1;
+            } // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
 
 
-        l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput)); // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
-
-        var temp = [];
-
-        for (var _i3 = 0; _i3 < bitrateCount; ++_i3) {
-          temp[_i3] = Math.abs(bitrates[_i3] - _dotmultiplication(l2AParameter.w, bitrates));
-        } // Quality is calculated based on the probability distribution w (the output of L2A)
+            l2AParameter.w[_i] = l2AParameter.prev_w[_i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[_i] / lastthroughput)); //Lagrangian descent
+          } // Apply euclidean projection on w to ensure w expresses a probability distribution
 
 
-        quality = temp.indexOf(Math.min.apply(Math, temp)); // We employ a cautious -stepwise- ascent
+          l2AParameter.w = euclideanProjection(l2AParameter.w);
 
-        if (quality > l2AState.lastQuality) {
-          if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
-            quality = l2AState.lastQuality + 1;
+          for (var _i2 = 0; _i2 < bitrateCount; ++_i2) {
+            diff1[_i2] = l2AParameter.w[_i2] - l2AParameter.prev_w[_i2];
+            l2AParameter.prev_w[_i2] = l2AParameter.w[_i2];
+          } // Lagrangian multiplier Q calculation:
+
+
+          l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput)); // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
+
+          var temp = [];
+
+          for (var _i3 = 0; _i3 < bitrateCount; ++_i3) {
+            temp[_i3] = Math.abs(bitrates[_i3] - _dotmultiplication(l2AParameter.w, bitrates));
+          } // Quality is calculated based on the probability distribution w (the output of L2A)
+
+
+          quality = temp.indexOf(Math.min.apply(Math, temp)); // We employ a cautious -stepwise- ascent
+
+          if (quality > l2AState.lastQuality) {
+            if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
+              quality = l2AState.lastQuality + 1;
+            }
+          } // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
+
+
+          if (bitrates[quality] >= lastthroughput) {
+            l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
           }
-        } // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
 
-
-        if (bitrates[quality] >= lastthroughput) {
-          l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
+          l2AState.lastSegment.url = currentHttpRequest.url;
         }
 
         switchRequest.quality = quality;
@@ -41859,7 +41907,7 @@ function LoLPRule(config) {
       scheduleController.setTimeToLoadDelay(0);
 
       if (switchRequest.quality !== currentQuality) {
-        console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
+        logger.debug('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
       }
 
       return switchRequest;

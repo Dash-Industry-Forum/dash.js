@@ -802,7 +802,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
- *            cacheInitSegments: true,
+ *            cacheInitSegments: false,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -832,7 +832,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                detectPlayreadyMessageFormat: true,
  *            },
  *            buffer: {
- *                enableSeekDecorrelationFix: true,
+ *                enableSeekDecorrelationFix: false,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -843,7 +843,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                initialBufferLevel: NaN,
  *                stableBufferTime: 12,
  *                longFormContentDurationThreshold: 600,
- *                stallThreshold: 0.5,
+ *                stallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
@@ -874,8 +874,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                }
  *            },
  *            scheduling: {
- *                defaultTimeout: 300,
- *                lowLatencyTimeout: 100,
+ *                defaultTimeout: 500,
+ *                lowLatencyTimeout: 0,
  *                scheduleWhilePaused: true
  *            },
  *            text: {
@@ -889,7 +889,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
  *                playbackBufferMin: 0.5,
- *                enabled: false,
+ *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
@@ -931,10 +931,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
  *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
  *                additionalAbrRules: {
- *                   insufficientBufferRule: false,
+ *                   insufficientBufferRule: true,
  *                   switchHistoryRule: true,
  *                   droppedFramesRule: true,
- *                   abandonRequestsRule: false
+ *                   abandonRequestsRule: true
  *                },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
@@ -990,7 +990,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
- * @property {number} [liveDelay]
+ * @property {number} [liveDelay=NaN]
  * Equivalent in seconds of setLiveDelayFragmentCount.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
@@ -1190,9 +1190,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} Scheduling
- * @property {number} [defaultTimeout=300]
+ * @property {number} [defaultTimeout=500]
  * Default timeout between two consecutive segment scheduling attempts
- * @property {number} [lowLatencyTimeout]
+ * @property {number} [lowLatencyTimeout=0]
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
@@ -1200,7 +1200,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /**
  * @typedef {Object} Text
- * @property {number} [defaultEnabled=true]
+ * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
@@ -1235,11 +1235,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackBufferMin=NaN]
+ * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  *
- * @property {boolean} [enabled=false]
+ * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
  *
  * @property {string} [mode="liveCatchupModeDefault"]
@@ -1284,10 +1284,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
- * @property {boolean} ignoreEmeEncryptedEvent
+ * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
- * @property {boolean} detectPlayreadyMessageFormat
+ * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  */
 
@@ -1324,7 +1324,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {string} [ABRStrategy="abrDynamic"]
  * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
  * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
- * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
+ * @property {object} [additionalAbrRules={insufficientBufferRule: true,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: true}]
  * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
@@ -1395,11 +1395,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * The requested maximum throughput that the client considers sufficient for delivery of the asset.
  *
  * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
- * @property {number} [rtpSafetyFactor]
+ * @property {number} [rtpSafetyFactor=5]
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode]
+ * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
  * If not specified this value defaults to 'query'.
@@ -1435,11 +1435,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [wallclockTimeUpdateInterval=50]
+ * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {boolean} [cacheInitSegments=true]
+ * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
@@ -1485,7 +1485,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
- * @property {string} [selectionModeForInitialTrack="highestBitrate"]
+ * @property {string} [selectionModeForInitialTrack="highestSelectionPriority"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
@@ -2005,8 +2005,8 @@ var Utils = /*#__PURE__*/function () {
     }
     /**
      * Compares both urls and returns a relative url (target relative to original)
-     * @param {string} original
-     * @param {string} target
+     * @param {string} originalUrl
+     * @param {string} targetUrl
      * @return {string|*}
      */
 
@@ -2049,6 +2049,17 @@ var Utils = /*#__PURE__*/function () {
       } catch (e) {
         return {};
       }
+    }
+    /**
+     * Checks for existence of "http" or "https" in a string
+     * @param string
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "stringHasProtocol",
+    value: function stringHasProtocol(string) {
+      return /(http(s?)):\/\//i.test(string);
     }
   }]);
 
@@ -7594,6 +7605,7 @@ function L2ARule(config) {
     l2AState.lastSegmentDurationS = NaN;
     l2AState.lastSegmentRequestTimeMs = NaN;
     l2AState.lastSegmentFinishTimeMs = NaN;
+    l2AState.lastSegmentUrl = '';
   }
   /**
    * Returns the state object for a fiven media type. If the state object is not yet defined _getInitialL2AState is called
@@ -7893,55 +7905,67 @@ function L2ARule(config) {
         }, 0);
         var lastthroughput = Math.round(8 * downloadBytes / throughputMeasureTime); // bits/ms = kbits/s
 
+        var currentHttpRequest = dashMetrics.getCurrentHttpRequest(mediaType);
+
         if (lastthroughput < 1) {
           lastthroughput = 1;
         } //To avoid division with 0 (avoid infinity) in case of an absolute network outage
+        // Note that for SegmentBase addressing the request url does not change.
+        // As this is not relevant for low latency streaming at this point the check below is sufficient
 
 
-        var V = l2AState.lastSegmentDurationS;
-        var sign = 1; //Main adaptation logic of L2A-LL
+        if (currentHttpRequest.url === l2AState.lastSegmentUrl || currentHttpRequest.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_3__.HTTPRequest.INIT_SEGMENT_TYPE) {
+          // No change to inputs or init segment so use previously calculated quality
+          quality = l2AState.lastQuality;
+        } else {
+          // Recalculate Q
+          var V = l2AState.lastSegmentDurationS;
+          var sign = 1; //Main adaptation logic of L2A-LL
 
-        for (var _i = 0; _i < bitrateCount; ++_i) {
-          bitrates[_i] = bitrates[_i] / 1000; // Originally in bps, now in Kbps
+          for (var _i = 0; _i < bitrateCount; ++_i) {
+            bitrates[_i] = bitrates[_i] / 1000; // Originally in bps, now in Kbps
 
-          if (currentPlaybackRate * bitrates[_i] > lastthroughput) {
-            // In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
-            sign = -1;
-          } // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
-
-
-          l2AParameter.w[_i] = l2AParameter.prev_w[_i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[_i] / lastthroughput)); //Lagrangian descent
-        } // Apply euclidean projection on w to ensure w expresses a probability distribution
-
-
-        l2AParameter.w = euclideanProjection(l2AParameter.w);
-
-        for (var _i2 = 0; _i2 < bitrateCount; ++_i2) {
-          diff1[_i2] = l2AParameter.w[_i2] - l2AParameter.prev_w[_i2];
-          l2AParameter.prev_w[_i2] = l2AParameter.w[_i2];
-        } // Lagrangian multiplier Q calculation:
+            if (currentPlaybackRate * bitrates[_i] > lastthroughput) {
+              // In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
+              sign = -1;
+            } // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
 
 
-        l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput)); // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
-
-        var temp = [];
-
-        for (var _i3 = 0; _i3 < bitrateCount; ++_i3) {
-          temp[_i3] = Math.abs(bitrates[_i3] - _dotmultiplication(l2AParameter.w, bitrates));
-        } // Quality is calculated based on the probability distribution w (the output of L2A)
+            l2AParameter.w[_i] = l2AParameter.prev_w[_i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[_i] / lastthroughput)); //Lagrangian descent
+          } // Apply euclidean projection on w to ensure w expresses a probability distribution
 
 
-        quality = temp.indexOf(Math.min.apply(Math, temp)); // We employ a cautious -stepwise- ascent
+          l2AParameter.w = euclideanProjection(l2AParameter.w);
 
-        if (quality > l2AState.lastQuality) {
-          if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
-            quality = l2AState.lastQuality + 1;
+          for (var _i2 = 0; _i2 < bitrateCount; ++_i2) {
+            diff1[_i2] = l2AParameter.w[_i2] - l2AParameter.prev_w[_i2];
+            l2AParameter.prev_w[_i2] = l2AParameter.w[_i2];
+          } // Lagrangian multiplier Q calculation:
+
+
+          l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput)); // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
+
+          var temp = [];
+
+          for (var _i3 = 0; _i3 < bitrateCount; ++_i3) {
+            temp[_i3] = Math.abs(bitrates[_i3] - _dotmultiplication(l2AParameter.w, bitrates));
+          } // Quality is calculated based on the probability distribution w (the output of L2A)
+
+
+          quality = temp.indexOf(Math.min.apply(Math, temp)); // We employ a cautious -stepwise- ascent
+
+          if (quality > l2AState.lastQuality) {
+            if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
+              quality = l2AState.lastQuality + 1;
+            }
+          } // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
+
+
+          if (bitrates[quality] >= lastthroughput) {
+            l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
           }
-        } // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
 
-
-        if (bitrates[quality] >= lastthroughput) {
-          l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
+          l2AState.lastSegment.url = currentHttpRequest.url;
         }
 
         switchRequest.quality = quality;
@@ -9135,7 +9159,7 @@ function LoLPRule(config) {
       scheduleController.setTimeToLoadDelay(0);
 
       if (switchRequest.quality !== currentQuality) {
-        console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
+        logger.debug('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
       }
 
       return switchRequest;

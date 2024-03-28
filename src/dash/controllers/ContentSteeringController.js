@@ -36,10 +36,10 @@ import ContentSteeringRequest from '../vo/ContentSteeringRequest';
 import ContentSteeringResponse from '../vo/ContentSteeringResponse';
 import DashConstants from '../constants/DashConstants';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import Utils from '../../core/Utils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import BaseURL from '../vo/BaseURL';
 import MpdLocation from '../vo/MpdLocation';
+import Utils from '../../core/Utils.js';
 
 const QUERY_PARAMETER_KEYS = {
     THROUGHPUT: '_DASH_throughput',
@@ -486,9 +486,11 @@ function ContentSteeringController() {
                 }
                 if (reference) {
                     const referenceUrl = new URL(reference.url);
+                    let host = pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST];
+                    host = Utils.stringHasProtocol(host) ? host : `${referenceUrl.protocol}//${host}`;
                     const synthesizedElement =
                         {
-                            synthesizedUrl: `${pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]}${referenceUrl.pathname}`,
+                            synthesizedUrl: `${host}${referenceUrl.pathname}`,
                             serviceLocation: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID],
                             queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.PARAMS],
                             reference

@@ -1,6 +1,6 @@
 {
     "name": "dashjs",
-    "version": "4.7.0-as2",
+    "version": "4.7.1-as2",
     "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
     "author": "Dash Industry Forum",
     "license": "BSD-3-Clause",
@@ -11,6 +11,7 @@
         "start": "webpack serve --config build/webpack.dev.js",
         "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
         "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
+        "postbuild": "cp index.d.ts dash.d.ts",
         "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
         "test": "karma start karma.unit.conf.js",
         "test-browserunit": "karma start build/karma.conf.js",

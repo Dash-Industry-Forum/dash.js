@@ -492,8 +492,8 @@ var Utils = /*#__PURE__*/function () {
     }
     /**
      * Compares both urls and returns a relative url (target relative to original)
-     * @param {string} original
-     * @param {string} target
+     * @param {string} originalUrl
+     * @param {string} targetUrl
      * @return {string|*}
      */
 
@@ -536,6 +536,17 @@ var Utils = /*#__PURE__*/function () {
       } catch (e) {
         return {};
       }
+    }
+    /**
+     * Checks for existence of "http" or "https" in a string
+     * @param string
+     * @returns {boolean}
+     */
+
+  }, {
+    key: "stringHasProtocol",
+    value: function stringHasProtocol(string) {
+      return /(http(s?)):\/\//i.test(string);
     }
   }]);
 

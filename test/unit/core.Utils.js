@@ -94,4 +94,19 @@ describe('Utils', () => {
             expect(Utils.parseHttpHeaders(null)).to.be.empty;
         })
     })
+
+    describe('stringHasProtocol', () => {
+
+        it('Should return true for valid http url', () => {
+            expect(Utils.stringHasProtocol('http://dash.akamaized.net')).to.be.true;
+        })
+
+        it('Should return true for valid https url', () => {
+            expect(Utils.stringHasProtocol('https://dash.akamaized.net')).to.be.true;
+        })
+
+        it('Should return false if url has no protocol', () => {
+            expect(Utils.stringHasProtocol('dash.akamaized.net')).to.be.false;
+        })
+    })
 })

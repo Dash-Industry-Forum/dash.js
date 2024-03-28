@@ -4081,7 +4081,7 @@ declare namespace dashjs {
         serviceLocation: string;
         startTime: number;
         timescale: number;
-        type: 'InitializationSegment' | 'MediaSegment';
+        type: 'InitializationSegment' | 'MediaSegment' | null;
         url: string;
         wallStartTime: number | null;
     }
