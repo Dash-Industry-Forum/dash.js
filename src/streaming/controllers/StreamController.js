@@ -105,6 +105,8 @@ function StreamController() {
         });
         timeSyncController.initialize();
 
+        mediaSourceController.setConfig({ settings });
+
         if (protectionController) {
             eventBus.trigger(Events.PROTECTION_CREATED, {
                 controller: protectionController
@@ -638,6 +640,13 @@ function StreamController() {
 
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
+
+        if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
+            const time = playbackController.getTime();
+            activeStream.deactivate(false);
+            _openMediaSource(time, false, false);
+            return;
+        }
 
         activeStream.prepareTrackChange(e);
     }

@@ -326,7 +326,7 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.id !== lastFragmentRequest.mediaInfo.id)) && trigger) {
+                if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.index !== lastFragmentRequest.mediaInfo.index)) && trigger) {
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
                         mediaType: type,
                         oldMediaInfo: lastFragmentRequest.mediaInfo,

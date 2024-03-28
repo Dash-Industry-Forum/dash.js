@@ -7,15 +7,15 @@
 		exports["dashjs"] = factory();
 	else
 		root["dashjs"] = factory();
-})(self, () => {
-return /******/ (() => { // webpackBootstrap
+})(self, function() {
+return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ "./externals/BigInteger.js":
 /*!*********************************!*\
   !*** ./externals/BigInteger.js ***!
   \*********************************/
-/***/ ((module, exports, __webpack_require__) => {
+/***/ (function(module, exports, __webpack_require__) {
 
 /* module decorator */ module = __webpack_require__.nmd(module);
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;var bigInt = function (undefined) {
@@ -1819,13 +1819,10 @@ if (true) {
 /*!***************************************!*\
   !*** ./src/core/errors/ErrorsBase.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -1890,7 +1887,7 @@ var ErrorsBase = /*#__PURE__*/function () {
   return ErrorsBase;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ErrorsBase);
+/* harmony default export */ __webpack_exports__["default"] = (ErrorsBase);
 
 /***/ }),
 
@@ -1898,13 +1895,10 @@ var ErrorsBase = /*#__PURE__*/function () {
 /*!***************************************!*\
   !*** ./src/core/events/EventsBase.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -1969,7 +1963,7 @@ var EventsBase = /*#__PURE__*/function () {
   return EventsBase;
 }();
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (EventsBase);
+/* harmony default export */ __webpack_exports__["default"] = (EventsBase);
 
 /***/ }),
 
@@ -1977,13 +1971,10 @@ var EventsBase = /*#__PURE__*/function () {
 /*!**********************************************!*\
   !*** ./src/mss/MssFragmentInfoController.js ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _streaming_vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../streaming/vo/FragmentRequest */ "./src/streaming/vo/FragmentRequest.js");
 /* harmony import */ var _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /**
@@ -2165,7 +2156,7 @@ function MssFragmentInfoController(config) {
 }
 
 MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MssFragmentInfoController));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MssFragmentInfoController));
 /* jshint ignore:line */
 
 /***/ }),
@@ -2174,13 +2165,10 @@ MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
 /*!*********************************************!*\
   !*** ./src/mss/MssFragmentMoofProcessor.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _streaming_vo_DashJSError__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../streaming/vo/DashJSError */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _errors_MssErrors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./errors/MssErrors */ "./src/mss/errors/MssErrors.js");
 /* harmony import */ var _streaming_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../streaming/MediaPlayerEvents */ "./src/streaming/MediaPlayerEvents.js");
@@ -2539,7 +2527,7 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor));
 /* jshint ignore:line */
 
 /***/ }),
@@ -2548,13 +2536,10 @@ MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
 /*!*********************************************!*\
   !*** ./src/mss/MssFragmentMoovProcessor.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _errors_MssErrors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./errors/MssErrors */ "./src/mss/errors/MssErrors.js");
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -3209,7 +3194,7 @@ function MssFragmentMoovProcessor(config) {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3218,13 +3203,10 @@ MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
 /*!*****************************************!*\
   !*** ./src/mss/MssFragmentProcessor.js ***!
   \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _MssFragmentMoofProcessor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MssFragmentMoofProcessor */ "./src/mss/MssFragmentMoofProcessor.js");
 /* harmony import */ var _MssFragmentMoovProcessor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MssFragmentMoovProcessor */ "./src/mss/MssFragmentMoovProcessor.js");
 /* harmony import */ var _streaming_vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../streaming/vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
@@ -3426,7 +3408,7 @@ function MssFragmentProcessor(config) {
 }
 
 MssFragmentProcessor.__dashjs_factory_name = 'MssFragmentProcessor';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor));
 /* jshint ignore:line */
 
 /***/ }),
@@ -3435,13 +3417,10 @@ MssFragmentProcessor.__dashjs_factory_name = 'MssFragmentProcessor';
 /*!*******************************!*\
   !*** ./src/mss/MssHandler.js ***!
   \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _streaming_vo_DataChunk__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../streaming/vo/DataChunk */ "./src/streaming/vo/DataChunk.js");
 /* harmony import */ var _streaming_vo_FragmentRequest__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/vo/FragmentRequest */ "./src/streaming/vo/FragmentRequest.js");
 /* harmony import */ var _MssFragmentInfoController__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MssFragmentInfoController */ "./src/mss/MssFragmentInfoController.js");
@@ -3704,7 +3683,7 @@ factory.errors = _errors_MssErrors__WEBPACK_IMPORTED_MODULE_5__["default"];
 dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory);
 /* jshint ignore:line */
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (factory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
 /* jshint ignore:line */
 
 /***/ }),
@@ -3713,13 +3692,10 @@ dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory
 /*!*************************************!*\
   !*** ./src/mss/errors/MssErrors.js ***!
   \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/errors/ErrorsBase */ "./src/core/errors/ErrorsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -3805,7 +3781,7 @@ var MssErrors = /*#__PURE__*/function (_ErrorsBase) {
 }(_core_errors_ErrorsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var mssErrors = new MssErrors();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (mssErrors);
+/* harmony default export */ __webpack_exports__["default"] = (mssErrors);
 
 /***/ }),
 
@@ -3813,13 +3789,10 @@ var mssErrors = new MssErrors();
 /*!*************************************!*\
   !*** ./src/mss/parser/MssParser.js ***!
   \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _externals_BigInteger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../externals/BigInteger */ "./externals/BigInteger.js");
 /* harmony import */ var _externals_BigInteger__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_externals_BigInteger__WEBPACK_IMPORTED_MODULE_0__);
 /**
@@ -4639,7 +4612,7 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs.FactoryMaker.getClassFactory(MssParser));
+/* harmony default export */ __webpack_exports__["default"] = (dashjs.FactoryMaker.getClassFactory(MssParser));
 /* jshint ignore:line */
 
 /***/ }),
@@ -4648,13 +4621,10 @@ MssParser.__dashjs_factory_name = 'MssParser';
 /*!********************************************!*\
   !*** ./src/streaming/MediaPlayerEvents.js ***!
   \********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/events/EventsBase */ "./src/core/events/EventsBase.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -5131,7 +5101,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 }(_core_events_EventsBase__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 var mediaPlayerEvents = new MediaPlayerEvents();
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (mediaPlayerEvents);
+/* harmony default export */ __webpack_exports__["default"] = (mediaPlayerEvents);
 
 /***/ }),
 
@@ -5139,13 +5109,10 @@ var mediaPlayerEvents = new MediaPlayerEvents();
 /*!*****************************************!*\
   !*** ./src/streaming/vo/DashJSError.js ***!
   \*****************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5191,7 +5158,7 @@ var DashJSError = function DashJSError(code, message, data) {
   this.data = data || null;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DashJSError);
+/* harmony default export */ __webpack_exports__["default"] = (DashJSError);
 
 /***/ }),
 
@@ -5199,13 +5166,10 @@ var DashJSError = function DashJSError(code, message, data) {
 /*!***************************************!*\
   !*** ./src/streaming/vo/DataChunk.js ***!
   \***************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
@@ -5260,7 +5224,7 @@ function DataChunk() {
   this.endFragment = null;
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DataChunk);
+/* harmony default export */ __webpack_exports__["default"] = (DataChunk);
 
 /***/ }),
 
@@ -5268,13 +5232,10 @@ function DataChunk() {
 /*!*********************************************!*\
   !*** ./src/streaming/vo/FragmentRequest.js ***!
   \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -5368,7 +5329,7 @@ var FragmentRequest = /*#__PURE__*/function () {
 
 FragmentRequest.ACTION_DOWNLOAD = 'download';
 FragmentRequest.ACTION_COMPLETE = 'complete';
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FragmentRequest);
+/* harmony default export */ __webpack_exports__["default"] = (FragmentRequest);
 
 /***/ }),
 
@@ -5376,13 +5337,13 @@ FragmentRequest.ACTION_COMPLETE = 'complete';
 /*!*************************************************!*\
   !*** ./src/streaming/vo/metrics/HTTPRequest.js ***!
   \*************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "HTTPRequest": () => (/* binding */ HTTPRequest),
-/* harmony export */   "HTTPRequestTrace": () => (/* binding */ HTTPRequestTrace)
+/* harmony export */   "HTTPRequest": function() { return /* binding */ HTTPRequest; },
+/* harmony export */   "HTTPRequestTrace": function() { return /* binding */ HTTPRequestTrace; }
 /* harmony export */ });
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -5625,31 +5586,31 @@ HTTPRequest.OTHER_TYPE = 'other';
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = (module) => {
+/******/ 		__webpack_require__.n = function(module) {
 /******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
+/******/ 				function() { return module['default']; } :
+/******/ 				function() { return module; };
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 		__webpack_require__.d = function(exports, definition) {
 /******/ 			for(var key in definition) {
 /******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		__webpack_require__.g = (function() {
 /******/ 			if (typeof globalThis === 'object') return globalThis;
 /******/ 			try {
@@ -5658,45 +5619,44 @@ HTTPRequest.OTHER_TYPE = 'other';
 /******/ 				if (typeof window === 'object') return window;
 /******/ 			}
 /******/ 		})();
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
+/******/ 	!function() {
 /******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
+/******/ 		__webpack_require__.r = function(exports) {
 /******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
 /******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__webpack_require__.nmd = (module) => {
+/******/ 	!function() {
+/******/ 		__webpack_require__.nmd = function(module) {
 /******/ 			module.paths = [];
 /******/ 			if (!module.children) module.children = [];
 /******/ 			return module;
 /******/ 		};
-/******/ 	})();
+/******/ 	}();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
+!function() {
 "use strict";
 /*!**************************!*\
   !*** ./src/mss/index.js ***!
   \**************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MssHandler": () => (/* reexport safe */ _MssHandler__WEBPACK_IMPORTED_MODULE_0__["default"]),
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "MssHandler": function() { return /* reexport safe */ _MssHandler__WEBPACK_IMPORTED_MODULE_0__["default"]; }
 /* harmony export */ });
 /* harmony import */ var _MssHandler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MssHandler */ "./src/mss/MssHandler.js");
 /**
@@ -5739,10 +5699,9 @@ if (!dashjs) {
 }
 
 dashjs.MssHandler = _MssHandler__WEBPACK_IMPORTED_MODULE_0__["default"];
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (dashjs);
+/* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
-})();
-
+}();
 __webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()

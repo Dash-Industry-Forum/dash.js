@@ -100,7 +100,7 @@ function ProtectionModel_21Jan2015(config) {
                 session = sessions[i];
                 (function (s) {
                     _closeKeySessionInternal(session);
-                    done(s)
+                    done(s);
                 })(session);
             }
         } else {
@@ -403,8 +403,8 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function _closeKeySessionInternal(sessionToken) {
-        if (!sessionToken) {
-            return
+        if (!sessionToken || !sessionToken.session) {
+            return Promise.resolve;
         }
         const session = sessionToken.session;
 

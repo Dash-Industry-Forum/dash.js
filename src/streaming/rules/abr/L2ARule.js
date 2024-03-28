@@ -448,7 +448,7 @@ function L2ARule(config) {
                     if (bitrates[quality] >= lastthroughput) {
                         l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
                     }
-                    l2AState.lastSegment.url = currentHttpRequest.url;
+                    l2AState.lastSegmentUrl = currentHttpRequest.url;
                 }
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = throughput;
