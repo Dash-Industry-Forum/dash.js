@@ -1107,15 +1107,15 @@ function DashAdapter() {
             }
         }
 
-        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);        
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
         mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
-        
+
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
 
         // Save IDs of AS that we can switch to
         try {
-            const adaptationSetSwitching = mediaInfo.supplementalProperties[DashConstants.ADAPTATION_SET_SWITCHING];
+            const adaptationSetSwitching = mediaInfo.supplementalProperties[DashConstants.ADAPTATION_SET_SWITCHING]?.value;
             if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
                 mediaInfo.adaptationSetSwitchingCompatibleIds = adaptationSetSwitching.split(',')
                 mediaInfo.adaptationSetSwitchingCompatibleIds = mediaInfo.adaptationSetSwitchingCompatibleIds.map((id) => {
