@@ -43,8 +43,8 @@ class Reporting {
         this.value = '';
 
         // DVB Extensions
-        this.dvb_reportingUrl = '';
-        this.dvb_probability = DEFAULT_DVB_PROBABILITY;
+        this.dvbReportingUrl = '';
+        this.dvbProbability = DEFAULT_DVB_PROBABILITY;
     }
 }
 

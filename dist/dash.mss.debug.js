@@ -4735,6 +4735,24 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     _this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
     /**
+     * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+    /**
+     * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+     */
+
+    _this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+    /**
+     * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+     * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+     */
+
+    _this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
+    /**
      * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
      * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
      */
@@ -4896,6 +4914,18 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
      */
 
     _this.TEXT_TRACK_ADDED = 'textTrackAdded';
+    /**
+     * Triggered when a text track should be shown
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_ENTER = 'cueEnter';
+    /**
+     * Triggered when a text track should be hidden
+     * @event MediaPlayerEvents#CUE_ENTER
+     */
+
+    _this.CUE_EXIT = 'cueExit';
     /**
      * Triggered when a throughput measurement based on the last segment request has been stored
      * @event MediaPlayerEvents#THROUGHPUT_MEASUREMENT_STORED

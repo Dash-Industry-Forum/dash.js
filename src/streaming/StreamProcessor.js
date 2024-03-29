@@ -641,7 +641,7 @@ function StreamProcessor(config) {
      */
     function prepareQualityChange(e) {
         if (pendingSwitchToRepresentationInfo) {
-            logger.warning(`Canceling queued representation switch to ${pendingSwitchToRepresentationInfo.quality} for ${type}`);
+            logger.warn(`Canceling queued representation switch to ${pendingSwitchToRepresentationInfo.quality} for ${type}`);
         }
         if (e.isAdaptationSetSwitch) {
             logger.debug(`Preparing quality switch to different AdaptationSet for type ${type}`);

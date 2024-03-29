@@ -60,6 +60,8 @@ class MediaInfo {
         this.selectionPriority = 1;
         this.supplementalProperties = {};
         this.supplementalPropertiesAsArray = [];
+        this.essentialProperties = {};
+        this.essentialPropertiesAsArray = [];
         this.segmentAlignment = false;
         this.subSegmentAlignment = false;
         this.adaptationSetSwitchingCompatibleIds = []
