@@ -1812,6 +1812,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'muted':
                     $scope.muted = this.parseBoolean(value);
                     $scope.toggleMuted();
+                    if ($scope.muted === true){
+                        document.getElementById('muteBtn')?.click();    
+                    } 
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);

@@ -121,6 +121,7 @@ function OfflineStreamProcessor(config) {
             events: events,
             eventBus: eventBus,
             errors: errors,
+            adapter,
             segmentsController: segmentsController
         });
 

@@ -126,7 +126,7 @@
                 },
                 {
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd",
-                    "name": "SegmentTemplate/Number, live profile",
+                    "name": "On-demand Testcard - Multiple Languages, AAC Stereo and Surround, Audio Description, AVC Video",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
                     "provider": "bbc"
                 },
@@ -225,42 +225,42 @@
             "name": "LIVE (Dynamic MPD)",
             "submenu": [
                 {
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
                     "name": "SegmentTemplate without manifest updates (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/mup_30/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/mup_30/testpic_2s/Manifest.mpd",
                     "name": "SegmentTemplate with manifest updates every 30s (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
                     "name": "SegmentTimeline with $time (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/segtimelinenr_1/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
                     "name": "SegmentTimeline with $number (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
                     "name": "Multiperiod SegmentTemplate. New period every minute (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": " https://livesim.dashif.org/livesim/ato_10/testpic_2s/Manifest.mpd",
+                    "url": " https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd",
                     "name": "10 seconds availabilityTimeOffset (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/ato_inf/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/ato_inf/testpic_2s/Manifest.mpd",
                     "name": "Infinite offset - all segments available at availability start (livesim)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
                     "name": "SCTE35 events",
                     "provider": "dashif"
                 },
@@ -297,8 +297,20 @@
                 },
                 {
                     "name": "LiveSIM Caminandes 02, Gran Dillama (25fps, 25gop, 2sec, multi MOOF/MDAT, 1080p, KID=1236) v2",
-                    "url": "http://refapp.hbbtv.org/livesim/02_llamav2/manifest.mpd",
+                    "url": "http://refapp.hbbtv.org/livesim2/02_llamav2/manifest.mpd",
                     "provider": "hbbtv"
+                }, 
+                {
+                    "name": "Live Testcard - Multiple Languages, AVC Video",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "Live Testcard - Multiple Languages, HEVC Video",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/hevc-ctv.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
+                    "provider": "bbc"
                 }
             ]
         },
@@ -316,12 +328,12 @@
                     "provider": "akamai"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
                     "name": "Low Latency (Single-Rate) (livesim-chunked)",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
                     "name": "Low Latency (Multi-Rate) (livesim-chunked)",
                     "provider": "dashif"
                 },
@@ -334,6 +346,18 @@
                     "url": "https://explo.broadpeak.tv:8343/bpk-tv/spring/lowlat/index_timeline.mpd",
                     "name": "Live low latency (SegmentTimeline, CMSD)",
                     "provider": "broadpeak"
+                },
+                {
+                    "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, AVC Video",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-avc-full.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, HEVC Video",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-hevc-ctv.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
+                    "provider": "bbc"
                 }
             ]
         },
@@ -347,68 +371,74 @@
                 },
                 {
                     "name": "TTML Segmented Subtitles VoD",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "TTML Segmented Subtitles Live (livesim)",
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/multi_subs.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "TTML Sideloaded XML Subtitles",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/xml_subs.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/cea608.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions (livesim)",
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/cea608.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions and TTML segments VoD",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/cea608_and_segs.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608_and_segs.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/cea608_and_segs.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608_and_segs.mpd",
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/imsc1_img.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/imsc1_img.mpd",
                     "name": "IMSC1 (CMAF) Image Subtitles",
-                    "moreInfo": "https://livesim.dashif.org/dash/vod/testpic_2s/imsc1_img_subs_info.html",
+                    "moreInfo": "https://livesim2.dashif.org/vod/testpic_2s/imsc1_img_subs_info.html",
                     "provider": "dashif"
                 },
                 {
                     "name": "TTML Image Subtitles embedded (VoD)",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/img_subs.mpd",
-                    "moreInfo": "https://livesim.dashif.org/dash/vod/testpic_2s/img_subs_info.html",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/img_subs.mpd",
+                    "moreInfo": "https://livesim2.dashif.org/vod/testpic_2s/img_subs_info.html",
                     "provider": "dashif"
                 },
                 {
-                    "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
+                    "name": "On-demand Elephant's Dream - with EBU-TT-D Subtitle Track in English",
+                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "On-demand Elephant's Dream - with EBU-TT-D 'Snaking' Subtitle Track (random text) - lines grow over time simulating live subtitles",
                     "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "BBC R&D EBU-TT-D Subtitling Test",
-                    "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
+                    "name": "Live Testcard - Multiple Subtitle Languages and Downloadable Font Signalling",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                }
+                } 
             ]
         },
         {
@@ -1226,7 +1256,7 @@
                 },
                 {
                     "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
-                    "url": "//livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest_thumbs.mpd",
                     "provider": "dashif"
                 },
                 {
@@ -1246,24 +1276,30 @@
             "submenu": [
                 {
                     "name": "48k AAC-LC Stereo Beeps (Live)",
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/audio.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
                     "provider": "dashif"
                 },
                 {
                     "name": "48k AAC-LC Stereo Beeps (Ondemand)",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/audio.mpd",
+                    "url": "https://livesim2.dashif.org/vod/testpic_2s/audio.mpd",
                     "provider": "dashif"
                 },
                 {
-                    "name": "HE and LC AAC Stereo in English",
-                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
+                    "name": "Live Testcard Audio - AAC-LC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-lc-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
                     "provider": "bbc"
                 },
                 {
-                    "name": "AAC-LC Surround (4 active channels) in English",
+                    "name": "Live Testcard Audio - HE-AAC Stereo in English",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-he-en.mpd",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "On-demand Testcard Audio - AAC-LC Surround (4 active channels) in English",
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-surround-en.mpd",
-                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
+                    "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/",
                     "provider": "bbc"
                 },
                 {

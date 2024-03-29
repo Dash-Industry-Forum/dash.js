@@ -1133,7 +1133,8 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        mediaInfo.lang = bcp47Normalize(lang);
+        let normLang = bcp47Normalize(lang);
+        mediaInfo.lang = (normLang) ? normLang : lang;
         mediaInfo.roles = ['caption'];
         mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
     }
