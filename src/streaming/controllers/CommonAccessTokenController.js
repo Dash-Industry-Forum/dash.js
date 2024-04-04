@@ -58,7 +58,9 @@ function CommonAccessTokenController() {
         }
 
         const host = Utils.getHostFromUrl(url);
-        return hostTokenMap[host] ? hostTokenMap[host] : null;
+        if (host) {
+            return hostTokenMap[host] ? hostTokenMap[host] : null;
+        }
     }
 
     function setup() {
