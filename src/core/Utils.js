@@ -181,9 +181,13 @@ class Utils {
     }
 
     static getHostFromUrl(urlString) {
-        const url = new URL(urlString);
+        try {
+            const url = new URL(urlString);
 
-        return url.host
+            return url.host
+        } catch (e) {
+            return null
+        }
     }
 
     static parseUserAgent(ua = null) {
