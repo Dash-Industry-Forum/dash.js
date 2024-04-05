@@ -12,6 +12,21 @@
   },
   "testvectors": [
     {
+      "name": "Segment Base",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd"
+    },
+    {
+      "name": "Segment Template, number based",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+    },
+    {
+      "name": "Segment Timeline, time based",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd"
+    },
+    {
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
@@ -48,9 +63,6 @@
       "name": "Shaka Demo Assets: Angel-One Widevine",
       "type": "vod",
       "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
-      "testcases": [
-        "Constants.TESTCASES.CATEGORIES.ALL"
-      ],
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
@@ -66,7 +78,7 @@
       "name": "livesim2 SCTE35",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
-      "included": [
+      "includedTestfiles": [
         "feature-support/emsg-triggered"
       ],
       "testdata": {
@@ -81,39 +93,43 @@
       "name": "Segment Timeline with negative video EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
-      "excluded": [
-        "playback/seek","payback-advanced/attach-at-non-zero"
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with negative audio EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
-      "excluded": [
-        "playback/seek","payback-advanced/attach-at-non-zero"
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with positive video EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
-      "excluded": [
-        "playback/seek","payback-advanced/attach-at-non-zero"
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with positive audio EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
-      "excluded": [
-        "playback/seek","payback-advanced/attach-at-non-zero"
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with missing audio segment in MPD for time 0",
       "type": "vod",
       "url": "/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd",
-      "included": [
+      "includedTestfiles": [
         "advanced/seek-in-gaps"
       ],
       "testdata": {
@@ -129,7 +145,7 @@
       "name": "Segment Timeline with missing video segment in MPD for time 0",
       "type": "vod",
       "url": "/base/test/functional/content/gap/video_gap_at_start_timeline.mpd",
-      "included": [
+      "includedTestfiles": [
         "advanced/seek-in-gaps"
       ],
       "testdata": {
