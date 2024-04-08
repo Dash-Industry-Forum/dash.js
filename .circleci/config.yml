@@ -157,11 +157,11 @@ jobs:
             -   run:
                     name: Run functional tests for one vector (chrome / http)
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"single\", \"browsers\":\"chrome_custom\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack
             -   run:
                     name: Run functional tests for smoke vectors (chrome / http)
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"smoke\", \"browsers\":\"chrome_custom\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack
             - process_test_results
 
     functional-tests-full-part-1:

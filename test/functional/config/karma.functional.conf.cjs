@@ -59,7 +59,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'html', 'progress', 'junit', 'coverage'],
+        reporters: ['mocha', 'html', 'progress', 'junit', 'coverage', 'BrowserStack'],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -98,7 +98,7 @@ module.exports = function (config) {
         },
 
         browserStack: {
-            username: process.env.BROWSERSTACK_USERNAME,
+            username: process.env.BROWSERSTACK_USER,
             accessKey: process.env.BROWSERSTACK_ACCESS_KEY
         },
 
@@ -137,7 +137,8 @@ module.exports = function (config) {
         customLaunchers: {
             bs_chrome: {
                 base: 'BrowserStack',
-                browser: 'Chrome'
+                browser: 'chrome',
+                os: 'Windows',
             },
             chrome_custom: {
                 base: 'Chrome',
