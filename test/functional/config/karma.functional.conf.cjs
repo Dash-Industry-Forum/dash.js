@@ -138,7 +138,9 @@ module.exports = function (config) {
             bs_chrome: {
                 base: 'BrowserStack',
                 browser: 'chrome',
+                'browser_version': 'latest',
                 os: 'Windows',
+                'os_version': '11',
             },
             chrome_custom: {
                 base: 'Chrome',
