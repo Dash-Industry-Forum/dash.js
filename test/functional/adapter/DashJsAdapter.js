@@ -17,12 +17,35 @@ class DashJsAdapter {
      * @param autoplay
      */
     init(autoplay = true) {
+        this._initLogEvents();
+        this._createPlayerInstance();
+
+        this.player.initialize(this.videoElement, null, autoplay);
+        this.attachTtmlRenderingDiv();
+        this._registerInternalEvents();
+    }
+
+    initForPreload(mpd) {
+        this._initLogEvents();
+        this._createPlayerInstance();
+        this.player.initialize(null, mpd, true);
+        this.player.updateSettings({
+            streaming: {
+                cacheInitSegments: true
+            }
+        })
+    }
+
+    _initLogEvents() {
         this.logEvents[dashjs.Debug.LOG_LEVEL_NONE] = [];
         this.logEvents[dashjs.Debug.LOG_LEVEL_FATAL] = [];
         this.logEvents[dashjs.Debug.LOG_LEVEL_ERROR] = [];
         this.logEvents[dashjs.Debug.LOG_LEVEL_WARNING] = [];
         this.logEvents[dashjs.Debug.LOG_LEVEL_INFO] = [];
         this.logEvents[dashjs.Debug.LOG_LEVEL_DEBUG] = [];
+    }
+
+    _createPlayerInstance() {
         this.player = dashjs.MediaPlayer().create();
         this.player.updateSettings({
             debug: {
@@ -30,9 +53,10 @@ class DashJsAdapter {
                 dispatchEvent: true
             }
         })
-        this.player.initialize(this.videoElement, null, autoplay);
-        this.attachTtmlRenderingDiv();
-        this._registerInternalEvents();
+    }
+
+    attachView() {
+        this.player.attachView(this.videoElement)
     }
 
     getLogEvents() {
@@ -63,6 +87,10 @@ class DashJsAdapter {
 
     getSettings() {
         return this.player.getSettings();
+    }
+
+    setInitialMediaSettingsFor(type, value) {
+        this.player.setInitialMediaSettingsFor(type, value)
     }
 
     /**
@@ -143,6 +171,10 @@ class DashJsAdapter {
      */
     play() {
         this.player.play();
+    }
+
+    preload() {
+        this.player.preload()
     }
 
     /**
@@ -443,6 +475,29 @@ class DashJsAdapter {
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
             this.player.on(event, _onEvent);
+        })
+    }
+
+    async waitForMediaSegmentDownload(timeoutValue) {
+        return new Promise((resolve) => {
+            let timeout = null;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(event, _onEvent);
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(null);
+            }
+            const _onEvent = (e) => {
+                if (e.request.type === 'MediaSegment') {
+                    _onComplete(e);
+                }
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            this.player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, _onEvent);
         })
     }
 

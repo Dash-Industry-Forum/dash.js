@@ -15,9 +15,17 @@ class Utils {
                 targetTestvectors.push(testvector)
             }
 
-            // Testvector explicitly included
-            else if (testvector.includedTestfiles && testvector.includedTestfiles.length > 0 && testvector.includedTestfiles.indexOf(testcase) >= 0) {
-                targetTestvectors.push(testvector);
+            // Testvector explicitly included either concretely or per category
+            else if (testvector.includedTestfiles && testvector.includedTestfiles.length > 0) {
+                if (testvector.includedTestfiles.indexOf(testcase) >= 0) {
+                    targetTestvectors.push(testvector);
+                } else {
+                    const lastIndex = testcase.lastIndexOf('/');
+                    const category = testcase.substring(0, lastIndex) + '/*';
+                    if (testvector.includedTestfiles.indexOf(category) >= 0) {
+                        targetTestvectors.push(testvector);
+                    }
+                }
             }
 
             // All testfiles included and the current testcase not explicitly excluded

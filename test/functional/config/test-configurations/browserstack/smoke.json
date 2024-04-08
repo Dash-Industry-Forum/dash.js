@@ -35,8 +35,8 @@
         "playback/play",
         "playback/pause",
         "playback/seek",
-        "audio/switch-audio",
-        "text/switch-text"
+        "audio/*",
+        "text/*"
       ]
     },
     {
@@ -78,7 +78,9 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "playback-advanced/cmcd",
+        "playback-advanced/preload"
       ]
     },
     {
@@ -136,7 +138,7 @@
         "playback/play",
         "playback/pause",
         "playback/seek",
-        "multiperiod-playback"
+        "playback-advanced/multiperiod-playback"
       ]
     },
     {
@@ -148,7 +150,7 @@
         "playback/play",
         "playback/pause",
         "playback/seek",
-        "text/switch-text"
+        "text/*"
       ]
     },
     {

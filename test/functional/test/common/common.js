@@ -42,8 +42,22 @@ export function initializeDashJsAdapter(item, mpd, settings = null) {
     let playerAdapter = new DashJsAdapter();
     playerAdapter.init(true);
     playerAdapter.setDrmData(item.drm);
-    playerAdapter.updateSettings(settings);
+    if (settings) {
+        playerAdapter.updateSettings(settings);
+    }
     playerAdapter.attachSource(mpd);
+
+    return playerAdapter
+}
+
+export function initializeDashJsAdapterForPreload(item, mpd, settings) {
+    let playerAdapter = new DashJsAdapter();
+    playerAdapter.initForPreload(mpd);
+    playerAdapter.setDrmData(item.drm);
+    if (settings) {
+        playerAdapter.updateSettings(settings);
+    }
+    playerAdapter.preload();
 
     return playerAdapter
 }
