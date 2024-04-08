@@ -151,6 +151,13 @@ module.exports = function (config) {
                 os: 'Windows',
                 'os_version': '11',
             },
+            bs_safari_mac: {
+                'base' : 'BrowserStack',
+                'browser_version' : 'latest',
+                'os' : 'OS X',
+                'os_version' : 'Ventura',
+                'browser' : 'safari',
+            },
             chrome_custom: {
                 base: 'Chrome',
                 flags: ['--disable-web-security', '--autoplay-policy=no-user-gesture-required', '--disable-popup-blocking']
