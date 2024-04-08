@@ -37,7 +37,8 @@ module.exports = function (config) {
             'karma-junit-reporter',
             'karma-chrome-launcher',
             'karma-firefox-launcher',
-            'karma-htmlfile-reporter'
+            'karma-htmlfile-reporter',
+            'karma-browserstack-launcher'
         ],
 
         // list of files / patterns to load in the browser
@@ -96,6 +97,11 @@ module.exports = function (config) {
             dir: 'test/functional/results/coverage/karma'
         },
 
+        browserStack: {
+            username: process.env.BROWSERSTACK_USERNAME,
+            accessKey: process.env.BROWSERSTACK_ACCESS_KEY
+        },
+
         webpack: {},
 
         client: {
@@ -129,6 +135,10 @@ module.exports = function (config) {
         browsers: testConfiguration.browsers,
 
         customLaunchers: {
+            bs_chrome: {
+                base: 'BrowserStack',
+                browser: 'Chrome'
+            },
             chrome_custom: {
                 base: 'Chrome',
                 flags: ['--disable-web-security', '--autoplay-policy=no-user-gesture-required', '--disable-popup-blocking']
