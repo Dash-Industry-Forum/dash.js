@@ -99,7 +99,9 @@ module.exports = function (config) {
 
         browserStack: {
             username: process.env.BROWSERSTACK_USER,
-            accessKey: process.env.BROWSERSTACK_ACCESS_KEY
+            accessKey: process.env.BROWSERSTACK_ACCESS_KEY,
+            timeout: 180000,
+            captureTimeout: 300
         },
 
         webpack: {},

@@ -1,6 +1,7 @@
 {
   "browsers": [
-    "bs_chrome_win_11"
+    "bs_chrome_win_11",
+    "bs_firefox_win_11"
   ],
   "testfiles": {
     "included": [
