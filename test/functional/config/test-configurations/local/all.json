@@ -8,6 +8,7 @@
       "all"
     ],
     "excluded": [
+      "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
@@ -368,7 +369,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -377,7 +378,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -386,7 +387,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -395,7 +396,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -404,7 +405,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -413,7 +414,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -422,7 +423,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -431,7 +432,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -441,7 +442,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -451,7 +452,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -461,7 +462,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -471,7 +472,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -481,7 +482,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -491,7 +492,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -501,7 +502,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -511,7 +512,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -520,7 +521,7 @@
       "provider": "cta",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -528,7 +529,7 @@
       "name": "Shaka 44 different subtitles",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     }
   ]
