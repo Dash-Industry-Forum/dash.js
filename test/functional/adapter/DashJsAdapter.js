@@ -366,7 +366,7 @@ class DashJsAdapter {
                 if (e.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO || e.mediaType === Constants.DASH_JS.MEDIA_TYPES.AUDIO) {
                     try {
                         const currentTime = this.videoElement.currentTime;
-                        const bufferStart = this.videoElement.buffered.start(0);
+                        const bufferStart = this.getBufferStartForCurrentTime(currentTime);
                         if (currentTime - bufferStart > target + tolerance) {
                             _onComplete(false);
                         }
@@ -374,9 +374,28 @@ class DashJsAdapter {
                     }
                 }
             }
+
+            const _onBufferingCompleted = () => {
+                const currentTime = this.videoElement.currentTime;
+                if (currentTime > 0) {
+                    _onComplete(true);
+                }
+            }
             timeout = setTimeout(_onTimeout, timeoutValue);
             this.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+            this.player.on('bufferingCompleted', _onBufferingCompleted);
         })
+    }
+
+    getBufferStartForCurrentTime(currentTime) {
+        const ranges = this.videoElement.buffered;
+        for (let i = 0; i < ranges.length; i++) {
+            if (ranges.start(i) <= currentTime && ranges.end(i) >= currentTime) {
+                return ranges.start(i)
+            }
+        }
+
+        return ranges.start(0);
     }
 
     async emsgEvents(timeoutValue, schemeIdUri) {
