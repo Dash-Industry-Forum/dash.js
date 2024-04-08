@@ -135,12 +135,19 @@ module.exports = function (config) {
         browsers: testConfiguration.browsers,
 
         customLaunchers: {
-            bs_chrome: {
+            bs_chrome_win_11: {
                 base: 'BrowserStack',
                 browser: 'chrome',
                 'browser_version': 'latest',
                 os: 'Windows',
-                'os_version': '10',
+                'os_version': '11',
+            },
+            bs_firefox_win_11: {
+                base: 'BrowserStack',
+                browser: 'firefox',
+                'browser_version': 'latest',
+                os: 'Windows',
+                'os_version': '11',
             },
             chrome_custom: {
                 base: 'Chrome',

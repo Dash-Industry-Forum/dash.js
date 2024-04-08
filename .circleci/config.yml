@@ -155,14 +155,15 @@ jobs:
             - run_testbuild
             - functional_test_setup
             -   run:
-                    name: Run functional tests for one vector (chrome / http)
+                    name: Run functional tests for one vector
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack/single
             -   run:
-                    name: Run functional tests for smoke vectors (chrome / http)
+                    name: Run functional tests for smoke vectors
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack
-            - process_test_results
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack/smoke
+            -   process_test_results:
+                    when: always
 
     functional-tests-full-part-1:
         executor: dashjs-executor
