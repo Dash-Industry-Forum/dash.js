@@ -85,17 +85,15 @@ commands:
 
     run_test_suite:
         parameters:
-            browsers:
-                default: "chrome_custom"
-                type: string
             testconfig:
                 default: ""
                 type: string
         steps:
             -   run:
-                    name: Run functional tests <<parameters.browsers>> <<parameters.testconfig>>
+                    name: Run functional tests <<parameters.testconfig>>
+                    when: always
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --settings "{\"testconfig\":\"<<parameters.testconfig>>\", \"browsers\":\"<<parameters.browsers>>\"}"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.testconfig>>
     build_samples:
         # parameters:
         #     samples:
@@ -156,22 +154,18 @@ jobs:
             - dependencies_setup
             - run_testbuild
             - functional_test_setup
-            -   run:
-                    name: Run functional tests for one vector
-                    command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack/single
-            -   run:
-                    name: Run functional tests for smoke vectors
-                    command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack/smoke
-            -   process_test_results
+            -   run_test_suite:
+                    testconfig: browserstack/single
+            -   run_test_suite:
+                    testconfig: browserstack/smoke
+            - process_test_results
 
     functional-tests-full-part-1:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: full_part_1
+                    testconfig: browserstack/drm_emsg_eptdelta_gaps
             - process_test_results
 
     functional-tests-full-part-2:
@@ -179,7 +173,7 @@ jobs:
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: full_part_2
+                    testconfig: browserstack/multiperiod_subtitle_vendor
             - process_test_results
 
     functional-tests-full-part-3:
@@ -187,7 +181,7 @@ jobs:
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: full_part_3
+                    testconfig: browserstack/vod_live_lowlatency_mss_multiaudio
             - process_test_results
 
 workflows:

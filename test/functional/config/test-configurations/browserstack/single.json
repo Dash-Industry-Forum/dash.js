@@ -19,7 +19,14 @@
         "com.widevine.alpha": {
           "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
         }
-      }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "audio/switch-audio",
+        "text/switch-text"
+      ]
     }
   ]
 }

@@ -1,13 +1,13 @@
 {
   "browsers": [
-    "chrome_custom"
+    "chrome_custom",
+    "firefox_custom"
   ],
   "testfiles": {
     "included": [
       "all"
     ],
     "excluded": [
-      "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
