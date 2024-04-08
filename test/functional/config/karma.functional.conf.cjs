@@ -137,10 +137,10 @@ module.exports = function (config) {
         customLaunchers: {
             bs_chrome: {
                 base: 'BrowserStack',
-                browser: 'chrome',
+                browser: 'firefox',
                 'browser_version': 'latest',
                 os: 'Windows',
-                'os_version': '11',
+                'os_version': '10',
             },
             chrome_custom: {
                 base: 'Chrome',
