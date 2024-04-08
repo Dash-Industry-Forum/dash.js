@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
 /**
  * @ignore
  */
@@ -71,4 +73,4 @@ function HandlerHelpers() {
 }
 
 HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
-export default dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(HandlerHelpers); /* jshint ignore:line */

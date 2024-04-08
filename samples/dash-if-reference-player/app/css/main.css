@@ -696,3 +696,7 @@ BS Information
 .bs-callout-danger {
     border-left-color: #CA0B00;
 }
+
+::cue {
+    background: blue;
+}

@@ -1,0 +1,27 @@
+{
+  "browsers": [
+    "bs_chrome_win_11",
+    "bs_firefox_win_11",
+    "bs_safari_mac"
+  ],
+  "testfiles": {
+    "included": [
+      "all"
+    ],
+    "excluded": [
+      "vendor/google-ad-manager-emsg"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    }
+  ]
+}

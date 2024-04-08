@@ -1585,7 +1585,11 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
-        return mediaController.getCurrentTrackFor(type, streamInfo.id);
+        if (streamInfo) {
+            return mediaController.getCurrentTrackFor(type, streamInfo.id);
+        }
+
+        return null
     }
 
     /**
@@ -2370,15 +2374,19 @@ function MediaPlayer() {
         if (protectionController) {
             return protectionController;
         }
+
+        if (typeof dashjs === 'undefined') {
+            return null
+        }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
-        let Protection = dashjs.Protection; /* jshint ignore:line */
-        if (typeof Protection === 'function') { //TODO need a better way to register/detect plugin components
-            let protection = Protection(context).create();
-            Events.extend(Protection.events);
-            MediaPlayerEvents.extend(Protection.events, {
+        let detectedProtection = dashjs.Protection; /* jshint ignore:line */
+        if (typeof detectedProtection === 'function') { //TODO need a better way to register/detect plugin components
+            let protection = detectedProtection(context).create();
+            Events.extend(detectedProtection.events);
+            MediaPlayerEvents.extend(detectedProtection.events, {
                 publicOnly: true
             });
-            Errors.extend(Protection.errors);
+            Errors.extend(detectedProtection.errors);
             if (!capabilities) {
                 capabilities = Capabilities(context).getInstance();
             }
@@ -2403,13 +2411,13 @@ function MediaPlayer() {
     }
 
     function _detectMetricsReporting() {
-        if (metricsReportingController) {
+        if (metricsReportingController || typeof dashjs === 'undefined') {
             return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-        let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
-        if (typeof MetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
-            let metricsReporting = MetricsReporting(context).create();
+        let detectedMetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
+        if (typeof detectedMetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
+            let metricsReporting = detectedMetricsReporting(context).create();
 
             metricsReportingController = metricsReporting.createMetricsReporting({
                 debug: debug,
@@ -2426,14 +2434,15 @@ function MediaPlayer() {
     }
 
     function _detectMss() {
-        if (mssHandler) {
+        if (mssHandler || typeof dashjs === 'undefined') {
             return;
         }
+
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
-        if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
-            Errors.extend(MssHandler.errors);
-            mssHandler = MssHandler(context).create({
+        let detectedMssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        if (typeof detectedMssHandler === 'function') { //TODO need a better way to register/detect plugin components
+            Errors.extend(detectedMssHandler.errors);
+            mssHandler = detectedMssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
                 dashMetrics: dashMetrics,
@@ -2463,15 +2472,19 @@ function MediaPlayer() {
             return offlineController;
         }
 
-        // do not require Offline as dependencies as this is optional and intended to be loaded separately
-        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
+        if (typeof dashjs === 'undefined') {
+            return null
+        }
 
-        if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
-            Events.extend(OfflineController.events);
-            MediaPlayerEvents.extend(OfflineController.events, {
+        // do not require Offline as dependencies as this is optional and intended to be loaded separately
+        let detectedOfflineController = dashjs.OfflineController; /* jshint ignore:line */
+
+        if (typeof detectedOfflineController === 'function') { //TODO need a better way to register/detect plugin components
+            Events.extend(detectedOfflineController.events);
+            MediaPlayerEvents.extend(detectedOfflineController.events, {
                 publicOnly: true
             });
-            Errors.extend(OfflineController.errors);
+            Errors.extend(detectedOfflineController.errors);
 
             const manifestLoader = _createManifestLoader();
             const manifestUpdater = ManifestUpdater(context).create();
@@ -2484,7 +2497,7 @@ function MediaPlayer() {
                 contentSteeringController
             });
 
-            offlineController = OfflineController(context).create({
+            offlineController = detectedOfflineController(context).create({
                 debug: debug,
                 manifestUpdater: manifestUpdater,
                 baseURLController: baseURLController,

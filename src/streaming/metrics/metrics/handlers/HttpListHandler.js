@@ -30,6 +30,7 @@
  */
 
 import HandlerHelpers from '../../utils/HandlerHelpers.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
 
 function HttpListHandler(config) {
 
@@ -109,4 +110,4 @@ function HttpListHandler(config) {
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default dashjs.FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */
