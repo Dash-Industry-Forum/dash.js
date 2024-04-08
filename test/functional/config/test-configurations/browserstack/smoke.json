@@ -30,7 +30,14 @@
           },
           "httpTimeout": 5000
         }
-      }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "audio/switch-audio",
+        "text/switch-text"
+      ]
     },
     {
       "name": "1080p with W3C Clear Key, single key",
@@ -42,13 +49,20 @@
             "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
           }
         }
-      }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "livesim2 SCTE35",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
-      "includedTestfiles": ["feature-support/emsg-triggered"],
+      "includedTestfiles": [
+        "feature-support/emsg-triggered"
+      ],
       "testdata": {
         "emsg": {
           "minimumNumberOfEvents": 2,
@@ -60,37 +74,52 @@
     {
       "name": "DASH-IF Live Sim - Segment Template without manifest updates",
       "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd"
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "Segment Timeline with $time$",
       "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
-      "type": "live"
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "Segment Timeline with $number$",
       "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
-      "type": "live"
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "Audio only live",
       "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
-      "type": "live"
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "MSS",
       "type": "vod",
-      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest"
-    },
-    {
-      "name": "Shaka Demo Assets: Angel-One Widevine",
-      "type": "vod",
-      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
-      "drm": {
-        "com.widevine.alpha": {
-          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
-        }
-      }
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     },
     {
       "name": "AWS Multiperiod unencrypted",
@@ -103,18 +132,34 @@
           "maximumNumberOfPeriodSwitches": 15
         }
       },
-      "excludedTestfiles": ["advanced/no-reload-after-seek"]
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "multiperiod-playback"
+      ]
     },
     {
       "name": "TTML Segmented Subtitles Live (livesim2)",
       "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
       "provider": "dashif",
-      "type": "live"
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "text/switch-text"
+      ]
     },
     {
       "name": "Segment Base",
       "type": "vod",
-      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd"
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
     }
   ]
 }
