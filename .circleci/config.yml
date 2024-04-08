@@ -59,9 +59,11 @@ commands:
         steps:
             -   run:
                     name: Install xmlstarlet
+                    when: always
                     command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
             -   run:
                     name: Modify XML files recursively and copy to another folder
+                    when: always
                     command: |
                         mkdir test/functional/results/test/karma/junit/adjusted
                         cd test/functional/results/test/karma/junit
@@ -162,8 +164,7 @@ jobs:
                     name: Run functional tests for smoke vectors
                     command:
                         node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack/smoke
-            -   process_test_results:
-                    when: always
+            -   process_test_results
 
     functional-tests-full-part-1:
         executor: dashjs-executor
