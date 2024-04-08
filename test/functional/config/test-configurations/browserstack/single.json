@@ -14,21 +14,9 @@
   },
   "testvectors": [
     {
-      "name": "Shaka Demo Assets: Angel-One Widevine",
-      "type": "vod",
-      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
-      "drm": {
-        "com.widevine.alpha": {
-          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
-        }
-      },
-      "includedTestfiles": [
-        "playback/play",
-        "playback/pause",
-        "playback/seek",
-        "audio/switch-audio",
-        "text/switch-text"
-      ]
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd"
     }
   ]
 }
