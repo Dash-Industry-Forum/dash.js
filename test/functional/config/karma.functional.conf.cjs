@@ -105,7 +105,7 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: false,
+            useIframe: true,
             mocha: {
                 timeout: 180000
             },
@@ -137,7 +137,7 @@ module.exports = function (config) {
         customLaunchers: {
             bs_chrome: {
                 base: 'BrowserStack',
-                browser: 'firefox',
+                browser: 'chrome',
                 'browser_version': 'latest',
                 os: 'Windows',
                 'os_version': '10',
