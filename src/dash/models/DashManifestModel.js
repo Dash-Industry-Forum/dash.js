@@ -51,6 +51,7 @@ import MpdLocation from '../vo/MpdLocation.js';
 import PatchLocation from '../vo/PatchLocation.js';
 import ContentProtection from '../vo/ContentProtection.js';
 import ClientDataReporting from '../vo/ClientDataReporting.js';
+import CMCDParameters from '../vo/CMCDParameters.js';
 
 function DashManifestModel() {
     let instance,
@@ -1256,11 +1257,12 @@ function DashManifestModel() {
         return entry;
     }
 
-    function _createClientDataResportingInstance(element){
+    function _createClientDataReportingInstance(element){
         const entry = new ClientDataReporting();
 
         if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS)) {
-            entry.CMCDParameters = element[DashConstants.CMCD_PARAMETERS];
+            entry.cmcdParameters = new CMCDParameters();
+            entry.cmcdParameters.init(element[DashConstants.CMCD_PARAMETERS]);
         }
 
         if (element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS) && element[DashConstants.SERVICE_LOCATIONS] !== ''){
@@ -1364,7 +1366,7 @@ function DashManifestModel() {
                             element = Array.isArray(element) ? element.at(element.length - 1) : element;
                             contentSteering = _createContentSteeringInstance(element);
                         } else if (prop === DashConstants.CLIENT_DATA_REPORTING) {
-                            clientDataReporting = _createClientDataResportingInstance(sd[prop]);
+                            clientDataReporting = _createClientDataReportingInstance(sd[prop]);
                         }
                     }
                 }

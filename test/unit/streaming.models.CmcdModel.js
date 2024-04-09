@@ -489,7 +489,7 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: { 
                                     version: 1,
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -513,8 +513,8 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: {
                                     version: 1,
-                                    includeInRequests: '*',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['*'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -571,10 +571,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
+                                'cmcdParameters': {
                                     version: 1,
-                                    includeInRequests: 'mdp xlink steering',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['mpd', 'xlink', 'steering'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -595,10 +595,10 @@ describe('CmcdModel', function () {
                     
                         serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
+                                'cmcdParameters': {
                                     version: 1,
-                                    includeInRequests: 'segment',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['segment'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -623,7 +623,7 @@ describe('CmcdModel', function () {
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
     
-                    it('should return cmcd data if includeInRequests include mdp and type is mdp', function () {
+                    it('should return cmcd data if includeInRequests includes mpd and type is mpd', function () {
                         const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
                         const MEDIA_TYPE = 'video';
                     
@@ -634,10 +634,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
+                                'cmcdParameters': {
                                     version: 1,
-                                    includeInRequests: 'mpd',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['mpd'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -659,10 +659,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                'CMCDParameters': {
+                                'cmcdParameters': {
                                     version: 1,
-                                    includeInRequests: 'xlink',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['xlink'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -683,10 +683,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                CMCDParameters: {
+                                cmcdParameters: {
                                     version: 1,
-                                    includeInRequests: 'steering',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['steering'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1157,7 +1157,7 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: { 
                                     version: 1,
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1180,8 +1180,8 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: {
                                     version: 1,
-                                    includeInRequests: '*',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['*'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1232,10 +1232,10 @@ describe('CmcdModel', function () {
                     
                         let serviceDescriptionSettings = {
                             clientDataReporting: {
-                                CMCDParameters: {
+                                cmcdParameters: {
                                     version: 1,
-                                    includeInRequests: 'mdp xlink steering',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['mpd', 'xlink', 'steering'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1258,8 +1258,8 @@ describe('CmcdModel', function () {
 
                                 CMCDParameters: {
                                     version: 1,
-                                    includeInRequests: 'segment',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['segment'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1284,7 +1284,7 @@ describe('CmcdModel', function () {
                         expect(parameters.value).to.not.equals(null);
                     });
     
-                    it('should return cmcd data if includeInRequests include mdp and type is mdp', function () {
+                    it('should return cmcd data if includeInRequests include mpd and type is mpd', function () {
                         const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
                         const MEDIA_TYPE = 'video';
                     
@@ -1297,8 +1297,8 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 'CMCDParameters': {
                                     version: 1,
-                                    includeInRequests: 'mpd',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['mpd'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1323,8 +1323,8 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: {
                                     version: 1,
-                                    includeInRequests: 'xlink',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['xlink'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1349,8 +1349,8 @@ describe('CmcdModel', function () {
                             clientDataReporting: {
                                 CMCDParameters: {
                                     version: 1,
-                                    includeInRequests: 'steering',
-                                    keys: 'br d ot tb bl dl mtp nor nrr su bs rtp cid pr sf sid st v',
+                                    includeInRequests: ['steering'],
+                                    keys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
                                 }
                             }
                         }
@@ -1365,8 +1365,8 @@ describe('CmcdModel', function () {
             });
         });
 
-        describe('applyCMCDParameters', () => {
-            it('should ignore service description cmcd configuration when applyCMCDParameters is false', function () {
+        describe('applyParametersFromMpd', () => {
+            it('should ignore service description cmcd configuration when applyParametersFromMpd is false', function () {
                 const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
                     
@@ -1377,8 +1377,8 @@ describe('CmcdModel', function () {
 
                 settings.update({
                     streaming: {
-                        applyCMCDParameters: false,
                         cmcd: {
+                            applyParametersFromMpd: false,
                             enabled: true,
                             cid: 'test-cid',
                             sid: 'test-sid',
@@ -1389,9 +1389,9 @@ describe('CmcdModel', function () {
 
                 let serviceDescriptionSettings = {
                     clientDataReporting: {
-                        CMCDParameters: {
+                        cmcdParameters: {
                             version: '1',
-                            keys: 'sid',
+                            keys: ['sid'],
                             sessionID: 'sid-123',
                         }
                     }
@@ -1404,7 +1404,7 @@ describe('CmcdModel', function () {
                 expect(parameters.value).to.equal('cid="test-cid"');
             });
 
-            it('should ignore player cmcd configuration when applyCMCDParameters is true', function () {
+            it('should ignore player cmcd configuration when applyParametersFromMpd is true', function () {
                 const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
                     
@@ -1415,8 +1415,8 @@ describe('CmcdModel', function () {
 
                 settings.update({
                     streaming: {
-                        applyCMCDParameters: true,
                         cmcd: {
+                            applyParametersFromMpd: true,
                             enabled: true,
                             cid: 'test-cid',
                             sid: 'test-sid',
@@ -1427,9 +1427,9 @@ describe('CmcdModel', function () {
 
                 let serviceDescriptionSettings = {
                     clientDataReporting: {
-                        CMCDParameters: {
+                        cmcdParameters: {
                             version: '1',
-                            keys: 'sid',
+                            keys: ['sid'],
                             sessionID: 'sid-123',
                         }
                     }

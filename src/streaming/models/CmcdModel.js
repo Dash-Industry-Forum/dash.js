@@ -46,17 +46,7 @@ import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 
 const CMCD_VERSION = 1;
-const CMCD_ALL_REQUESTS = '*';
-const OBJECT_TYPES = {
-    MANIFEST: 'm',
-    AUDIO: 'a',
-    VIDEO: 'v',
-    INIT: 'i',
-    CAPTION: 'c',
-    ISOBMFF_TEXT_TRACK: 'tt',
-    ENCRYPTION_KEY: 'k',
-    OTHER: 'o'
-};
+const CMCD_ALL_REQUESTS_PLACEHOLDER = '*';
 const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
@@ -176,8 +166,8 @@ function CmcdModel() {
 
     function _applyWhitelist(cmcdData) {
         try {
-            const cmcdParameters = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
+            const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+            const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
 
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
@@ -213,30 +203,30 @@ function CmcdModel() {
     }
 
     function isCmcdEnabled() {
-        const cmcdParameters = getCmcdParametersFromManifest();
-        return _canBeEnabled(cmcdParameters) && _checkIncludeInRequests(cmcdParameters) && _checkAvailableKeys(cmcdParameters);
+        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+        return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
     }
 
-    function _canBeEnabled(cmcdParameters) {
-        if (Object.keys(cmcdParameters).length) {
-            if (!cmcdParameters.version) {
+    function _canBeEnabled(cmcdParametersFromManifest) {
+        if (Object.keys(cmcdParametersFromManifest).length) {
+            if (!cmcdParametersFromManifest.version) {
                 logger.error(`version parameter must be defined.`);
                 return false;
             }
-            if (!cmcdParameters.keys) {
+            if (!cmcdParametersFromManifest.keys) {
                 logger.error(`keys parameter must be defined.`);
                 return false;
             }
         }
-        return cmcdParameters.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
+        return cmcdParametersFromManifest.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
     }
 
-    function _checkIncludeInRequests(cmcdParameters) {
+    function _checkIncludeInRequests(cmcdParametersFromManifest) {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
-        if (cmcdParameters.version) {
-            enabledRequests = cmcdParameters.includeInRequests?.split(' ') ?? [CMCD_ALL_REQUESTS];
-            if (!enabledRequests || enabledRequests.some(k => k === CMCD_ALL_REQUESTS)) {
+        if (cmcdParametersFromManifest.version) {
+            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [CMCD_ALL_REQUESTS_PLACEHOLDER];
+            if (!enabledRequests || enabledRequests.some(k => k === CMCD_ALL_REQUESTS_PLACEHOLDER)) {
                 return true
             }
         }
@@ -244,7 +234,7 @@ function CmcdModel() {
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
 
-        if (invalidRequests.length == enabledRequests.length) {
+        if (invalidRequests.length === enabledRequests.length) {
             logger.error(`None of the request types are supported.`);
             return false;
         }
@@ -256,9 +246,9 @@ function CmcdModel() {
         return true;
     }
 
-    function _checkAvailableKeys(cmcdParameters){
+    function _checkAvailableKeys(cmcdParametersFromManifest){
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
-        const enabledCMCDKeys = cmcdParameters.version ? cmcdParameters.keys.split(' ') : settings.get().streaming.cmcd.enabledKeys;
+        const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
         if (invalidKeys.length == enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
@@ -273,30 +263,29 @@ function CmcdModel() {
     }
 
     function getCmcdParametersFromManifest() {
-        let cmcdParameters = {};
+        let cmcdParametersFromManifest = {};
         if (serviceDescriptionController) {
             const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
             if (
-                settings.get().streaming.applyCMCDParameters &&
+                settings.get().streaming.cmcd.applyParametersFromMpd &&
                 serviceDescription.clientDataReporting && 
-                serviceDescription.clientDataReporting.CMCDParameters
+                serviceDescription.clientDataReporting.cmcdParameters
             ) {
-                cmcdParameters = serviceDescription.clientDataReporting.CMCDParameters;
+                cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
             }
         }
-        return cmcdParameters;
+        return cmcdParametersFromManifest;
     }
 
     function _isIncludedInRequestFilter(type) {
-        const cmcdParameters = getCmcdParametersFromManifest();
+        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
         let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
 
-        if (cmcdParameters.version) {
-            const includeInRequests = cmcdParameters.includeInRequests;
-            includeInRequestsArray = includeInRequests ? includeInRequests.split(' ') : [CMCD_ALL_REQUESTS];
+        if (cmcdParametersFromManifest.version) {
+            includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [CMCD_ALL_REQUESTS_PLACEHOLDER];
         }
 
-        if (includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS)) {
+        if (includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS_PLACEHOLDER)) {
             return true;
         }
 
@@ -342,7 +331,7 @@ function CmcdModel() {
 
     function _updateLastMediaTypeRequest(type, mediatype) {
         // Video > Audio > None
-        if (mediatype == Constants.VIDEO || mediatype == Constants.AUDIO) {
+        if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
             if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO)
                 _lastMediaTypeRequest = mediatype;
         }
@@ -351,7 +340,7 @@ function CmcdModel() {
     function _getCmcdDataForSteering(request) {
         const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
         
-        data.ot = OBJECT_TYPES.OTHER;
+        data.ot = CmcdObjectType.OTHER;
 
         return data;
     }
@@ -492,16 +481,16 @@ function CmcdModel() {
 
 
     function _getGenericCmcdData() {
-        const cmcdParameters = getCmcdParametersFromManifest();
+        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
         const data = {};
 
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
-
-        data.v = cmcdParameters.version ? cmcdParameters.version : CMCD_VERSION;
+        cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
+        
+        data.v = CMCD_VERSION;
+        
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-
-        cid = cmcdParameters.contentID ? cmcdParameters.contentID : cid;
-        data.sid = cmcdParameters.sessionID ? cmcdParameters.sessionID : data.sid;
+        data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
 
         data.sid = `${data.sid}`;
 

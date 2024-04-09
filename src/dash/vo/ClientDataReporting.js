@@ -34,7 +34,7 @@
  */
 class ClientDataReporting {
     constructor() {
-        this.CMCDParameters = null;
+        this.cmcdParameters = null;
         this.serviceLocations = null;
         this.serviceLocationsArray = [];
         this.adaptationSets = null;

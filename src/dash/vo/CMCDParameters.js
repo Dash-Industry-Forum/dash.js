@@ -28,47 +28,36 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker.js';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 
-function ClientDataReportingModel() {
+import DescriptorType from './DescriptorType.js';
 
-    let instance,
-        serviceDescriptionController;
+/**
+ * @class
+ * @ignore
+ */
+class CMCDParameters extends DescriptorType {
+    constructor() {
+        super();
+        this.version = null;
+        this.sessionID = null;
+        this.contentID = null;
+        this.mode = null;
+        this.keys = null;
+        this.includeInRequests = null;
+    }
 
-    function setConfig(config) {
-        if (!config) return;
-    
-        if (config.serviceDescriptionController) {
-            serviceDescriptionController = config.serviceDescriptionController;
+    init(data) {
+        super.init(data);
+
+        if (data) {
+            this.version = data.version;
+            this.sessionID = data.sessionID;
+            this.contentID = data.contentID;
+            this.mode = data.mode;
+            this.keys = data.keys ? data.keys.split(' ') : null;
+            this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : null;
         }
     }
-
-    function isServiceLocationIncluded(requestType, serviceLocation) {
-
-        if (requestType === HTTPRequest.CONTENT_STEERING_TYPE) {
-            return true;
-        }
-
-        const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-        const isIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
-        return isIncluded;
-    }
-
-    function isAdaptationsIncluded(adaptationSet) {
-        const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-        const isIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
-        return isIncluded;
-    }
-
-    instance = {
-        setConfig,
-        isAdaptationsIncluded,
-        isServiceLocationIncluded,
-    };
-
-    return instance;
 }
 
-ClientDataReportingModel.__dashjs_factory_name = 'ClientDataReportingModel';
-export default FactoryMaker.getSingletonFactory(ClientDataReportingModel);
+export default CMCDParameters;

@@ -1042,7 +1042,6 @@ declare namespace dashjs {
             liveUpdateTimeThresholdInMilliseconds?: number,
             cacheInitSegments?: boolean,
             applyServiceDescription?: boolean,
-            applyCMCDParameters?:boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
             eventControllerRefreshDelay?: number,
@@ -1259,6 +1258,7 @@ declare namespace dashjs {
                 }
             },
             cmcd?: {
+                applyParametersFromMpd?:boolean,
                 enabled?: boolean,
                 sid?: string | null,
                 cid?: string | null,

@@ -216,18 +216,18 @@ export default {
     CMCD_MODE_HEADER: 'header',
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the availables keys for CDCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the availables keys for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CDCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_AVAILABLE_REQUESTS: ['segment','mpd','xlink','steering'],
+    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
 
 
     INITIALIZE: 'initialize',

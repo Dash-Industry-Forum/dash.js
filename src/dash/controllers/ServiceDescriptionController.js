@@ -299,7 +299,7 @@ function ServiceDescriptionController() {
     }
 
     /**
-     * Add information about client data reporting element. Handling is up to the ContentSteeringController
+     * Add information about client data reporting element. Handling is up to the CMCDModel
      *  @param {object} sd
      *  @private
      */

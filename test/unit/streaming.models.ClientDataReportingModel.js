@@ -19,26 +19,26 @@ describe('ClientDataReportingModel', function () {
 
     describe('if not configured', function () {
 
-        it('serviceLocationIncluded returns true when the filter is not present in manifest', function () {
+        it('isServiceLocationIncluded returns true when the filter is not present in manifest', function () {
             const serviceLocation='test-location';
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
 
-        it('adaptationSetIncluded returns true when the filter is not present in manifest', function () {
+        it('isAdaptationsIncluded returns true when the filter is not present in manifest', function () {
             const adaptationId='1';
 
-            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+            const result = clientDataReportingModel.isAdaptationsIncluded(adaptationId);
 
             expect(result).to.equal(true);
         });
 
-        it('serviceLocationIncluded returns true when the filter is not present in manifest and requestType is steering', function () {
+        it('isServiceLocationIncluded returns true when the filter is not present in manifest and requestType is steering', function () {
             const serviceLocation='test-location';
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -46,7 +46,7 @@ describe('ClientDataReportingModel', function () {
 
     describe('if configured', function () {
 
-        it('serviceLocationIncluded returns true when service location is included in the filter', function () {
+        it('isServiceLocationIncluded returns true when service location is included in the filter', function () {
             const serviceLocation='test-b';
 
             const serviceDescriptionSettings = {
@@ -56,12 +56,12 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
 
-        it('adaptationSetIncluded returns true when adaptation set is included in the filter', function () {
+        it('isAdaptationsIncluded returns true when adaptation set is included in the filter', function () {
             const adaptationId='test-a';
 
             const serviceDescriptionSettings = {
@@ -71,12 +71,12 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+            const result = clientDataReportingModel.isAdaptationsIncluded(adaptationId);
 
             expect(result).to.equal(true);
         });
 
-        it('serviceLocationIncluded returns true when service location is included in the filter and requestType is steering', function () {
+        it('isServiceLocationIncluded returns true when service location is included in the filter and requestType is steering', function () {
             const serviceLocation='test-b';
 
             const serviceDescriptionSettings = {
@@ -86,13 +86,13 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
 
 
-        it('serviceLocationIncluded returns false when service location is not included in the filter', function () {
+        it('isServiceLocationIncluded returns false when service location is not included in the filter', function () {
             const serviceLocation='test-c';
 
             const serviceDescriptionSettings = {
@@ -102,12 +102,12 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(false);
         });
 
-        it('adaptationSetIncluded returns false when adaptation set is not included in the filter', function () {
+        it('isAdaptationsIncluded returns false when adaptation set is not included in the filter', function () {
             const adaptationId='test-c';
 
             const serviceDescriptionSettings = {
@@ -117,12 +117,12 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.adaptationSetIncluded(adaptationId);
+            const result = clientDataReportingModel.isAdaptationsIncluded(adaptationId);
 
             expect(result).to.equal(false);
         });
 
-        it('serviceLocationIncluded returns true when service location is not included in the filter but requestType is steering', function () {
+        it('isServiceLocationIncluded returns true when service location is not included in the filter but requestType is steering', function () {
             const serviceLocation='test-c';
 
             const serviceDescriptionSettings = {
@@ -132,7 +132,7 @@ describe('ClientDataReportingModel', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingModel.serviceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingModel.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });

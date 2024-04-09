@@ -1544,6 +1544,7 @@ describe('DashManifestModel', function () {
                                 'keys':keys,
                                 'mode':mode,
                                 'sessionID':sessionID,
+                                'version': 1,
                             },
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
@@ -1551,12 +1552,13 @@ describe('DashManifestModel', function () {
                     }],
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
-                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
-                expect(CMCDParameters.contentID).to.be.equal(contentID);
-                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
-                expect(CMCDParameters.keys).to.be.equal(keys);
-                expect(CMCDParameters.mode).to.be.equal(mode);
-                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+                const cmcdParameters = data[0].clientDataReporting.cmcdParameters;
+                expect(cmcdParameters.contentID).to.be.equal(contentID);
+                expect(cmcdParameters.includeInRequests).to.have.length(1);
+                expect(cmcdParameters.includeInRequests[0]).to.be.equal(includeInRequests);
+                expect(cmcdParameters.keys).to.have.same.members(keys.split(' '));
+                expect(cmcdParameters.mode).to.be.equal(mode);
+                expect(cmcdParameters.sessionID).to.be.equal(sessionID);
             })
 
             it('should return client data reporting and cmcd data from manifest', () => {
@@ -1583,15 +1585,16 @@ describe('DashManifestModel', function () {
                     }],
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
-                const CMCDParameters = data[0].clientDataReporting.CMCDParameters;
+                const cmcdParameters = data[0].clientDataReporting.cmcdParameters;
                 const clientDataReporting = data[0].clientDataReporting;
                 expect(clientDataReporting.serviceLocations).to.be.equal(serviceLocations);
                 expect(clientDataReporting.adaptationSets).to.be.equal(adaptationSets);
-                expect(CMCDParameters.contentID).to.be.equal(contentID);
-                expect(CMCDParameters.includeInRequests).to.be.equal(includeInRequests);
-                expect(CMCDParameters.keys).to.be.equal(keys);
-                expect(CMCDParameters.mode).to.be.equal(mode);
-                expect(CMCDParameters.sessionID).to.be.equal(sessionID);
+                expect(cmcdParameters.contentID).to.be.equal(contentID);
+                expect(cmcdParameters.includeInRequests).to.have.length(1);
+                expect(cmcdParameters.includeInRequests[0]).to.be.equal(includeInRequests);
+                expect(cmcdParameters.keys).to.have.same.members(keys.split(' '));
+                expect(cmcdParameters.mode).to.be.equal(mode);
+                expect(cmcdParameters.sessionID).to.be.equal(sessionID);
             })
 
         })
