@@ -30,6 +30,7 @@
  */
 import IndexDBStore from '../storage/IndexDBStore.js';
 import OfflineErrors from '../errors/OfflineErrors.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
  * @class OfflineStoreController
@@ -169,4 +170,4 @@ function OfflineStoreController(config) {
 }
 
 OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
-export default dashjs.FactoryMaker.getClassFactory(OfflineStoreController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineStoreController); /* jshint ignore:line */

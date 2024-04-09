@@ -30,6 +30,7 @@
  */
 
 import DVBReporting from './reporters/DVBReporting.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ReportingFactory(config) {
     config = config || {};
@@ -80,4 +81,4 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */

@@ -1,0 +1,167 @@
+{
+  "browsers": [
+    "bs_chrome_win_11"
+  ],
+  "testfiles": {
+    "included": [
+      "all"
+    ],
+    "excluded": [
+      "vendor/google-ad-manager-emsg"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "1080p with PlayReady and Widevine DRM, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "audio/*",
+        "text/*"
+      ]
+    },
+    {
+      "name": "1080p with W3C Clear Key, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "clearkeys": {
+            "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+          }
+        }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    },
+    {
+      "name": "livesim2 SCTE35",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/emsg-triggered"
+      ],
+      "testdata": {
+        "emsg": {
+          "minimumNumberOfEvents": 2,
+          "runtime": 65000,
+          "schemeIdUri": "urn:scte:scte35:2013:bin"
+        }
+      }
+    },
+    {
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback-advanced/cmcd",
+        "playback-advanced/preload"
+      ]
+    },
+    {
+      "name": "Segment Timeline with $time$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    },
+    {
+      "name": "Segment Timeline with $number$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    },
+    {
+      "name": "Audio only live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    },
+    {
+      "name": "MSS",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    },
+    {
+      "name": "AWS Multiperiod unencrypted",
+      "type": "live",
+      "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 70000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 15
+        }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
+      "name": "TTML Segmented Subtitles Live (livesim2)",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
+      "provider": "dashif",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "text/*"
+      ]
+    },
+    {
+      "name": "Segment Base",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ]
+    }
+  ]
+}

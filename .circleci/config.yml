@@ -6,7 +6,7 @@ executors:
     dashjs-executor:
         working_directory: ~/repo
         docker:
-            -   image: cimg/node:16.18.1
+            -   image: cimg/node:20.11.1
 
 commands:
     dependencies_setup:
@@ -47,57 +47,53 @@ commands:
                     command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                     background: true
 
-    build_unit_test_steps:
+    run_testbuild:
         steps:
             - browser-tools/install-browser-tools
             -   run:
                     name: Build and run unit tests
                     command: |
                         npm run build
-                        npm run test
 
     process_test_results: # CircleCI can not handle NaN values so we replace them with 0
         steps:
             -   run:
                     name: Install xmlstarlet
+                    when: always
                     command: sudo apt-get -y update && sudo apt-get -y install xmlstarlet
             -   run:
                     name: Modify XML files recursively and copy to another folder
+                    when: always
                     command: |
-                        mkdir test/functional/reports/junit/adjusted
-                        cd test/functional/reports/junit
+                        mkdir test/functional/results/test/karma/junit/adjusted
+                        cd test/functional/results/test/karma/junit
                         for file in *.xml; do
                         [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
                         cp "$file" adjusted/$file
                         done
             -   store_test_results:
-                    path: test/functional/reports/junit/adjusted
+                    path: test/functional/results/test/karma/junit/adjusted
 
     functional_steps:
         steps:
             - functional_precondition
             - checkout
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - functional_test_setup
 
     run_test_suite:
         parameters:
-            browser:
-                default: "chrome"
-                type: string
-            protocol:
-                default: "https"
-                type: string
-            groupname:
+            testconfig:
                 default: ""
                 type: string
         steps:
             -   run:
-                    name: Run functional tests (<<parameters.browser>> / <<parameters.protocol>>) <<parameters.groupname>>
+                    name: Run functional tests <<parameters.testconfig>>
+                    when: always
                     command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --app=remote --browsers=<<parameters.browser>> --protocol=<<parameters.protocol>> --groupname="<<parameters.groupname>>"
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.testconfig>>
     build_samples:
         # parameters:
         #     samples:
@@ -122,7 +118,7 @@ jobs:
         steps:
             - checkout
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - build_samples
 
     merge-build-and-unit-test:
@@ -137,7 +133,7 @@ jobs:
                         git checkout development
                         git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
 
     functional-tests-smoke:
         executor: dashjs-executor
@@ -156,60 +152,36 @@ jobs:
                             git merge --no-edit --no-ff $CIRCLE_BRANCH
                         fi
             - dependencies_setup
-            - build_unit_test_steps
+            - run_testbuild
             - functional_test_setup
-            -   run:
-                    name: Run functional tests for one vector (chrome / https)
-                    command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
-            -   run:
-                    name: Run functional tests for smoke vectors (chrome / https)
-                    command:
-                        node test/functional/runTests.cjs --selenium=remote --reporters=junit --debug=true --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+            -   run_test_suite:
+                    testconfig: browserstack/single
+            -   run_test_suite:
+                    testconfig: browserstack/smoke
             - process_test_results
 
-    functional-tests-VOD_LIVE:
+    functional-tests-full-part-1:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: VOD (Static MPD)
-            -   run_test_suite:
-                    groupname: LIVE (Dynamic MPD)
-            -   run_test_suite:
-                    groupname: Live Low Latency
+                    testconfig: browserstack/drm_emsg_eptdelta_gaps
             - process_test_results
 
-    functional-tests-DRM:
+    functional-tests-full-part-2:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: DRM (modern)
-            -   run_test_suite:
-                    groupname: DRM Content (conservative/legacy)
+                    testconfig: browserstack/multiperiod_subtitle_vendor
             - process_test_results
 
-    functional-tests-Subtitles_Thumbnails_Audio_Smooth:
+    functional-tests-full-part-3:
         executor: dashjs-executor
         steps:
             - functional_steps
             -   run_test_suite:
-                    groupname: Subtitles and Captions
-            -   run_test_suite:
-                    groupname: Thumbnails
-            -   run_test_suite:
-                    groupname: Audio-only
-            -   run_test_suite:
-                    groupname: Smooth Streaming
-            - process_test_results
-
-    functional-tests-only-http:
-        executor: dashjs-executor
-        steps:
-            - functional_steps
-            -   run_test_suite:
-                    protocol: http
+                    testconfig: browserstack/vod_live_lowlatency_mss_multiaudio
             - process_test_results
 
 workflows:
@@ -237,8 +209,7 @@ workflows:
                             only:
                                 - development
         jobs:
-            - functional-tests-VOD_LIVE
-            - functional-tests-DRM
-            - functional-tests-Subtitles_Thumbnails_Audio_Smooth
-            - functional-tests-only-http
+            - functional-tests-full-part-1
+            - functional-tests-full-part-2
+            - functional-tests-full-part-3
 

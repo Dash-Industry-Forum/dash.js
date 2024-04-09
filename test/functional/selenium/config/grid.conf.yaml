@@ -1,0 +1,145 @@
+# General Selenium Grid
+general:
+    gridConfig:
+        hostname: 10.147.67.85
+        port: 4444
+
+
+# A set of variables to contain repeated configurations which can then be
+# referenced below.  The syntax for the variable is "name: &name", which
+# generates an "anchor" with the given name.  Later, you can inject the
+# contents of the variable with "*name".
+vars:
+    basic_edge_config: &basic_edge_config
+        ms:edgeOptions:
+            args:
+                # Normally, Edge disallows autoplaying videos in many cases.  Enable it
+                # for testing.
+                - "--autoplay-policy=no-user-gesture-required"
+                # Disable browser features that try to save power by suspending media,
+                # throttling timers, etc.
+                - "--disable-background-media-suspend"
+                - "--disable-background-timer-throttling"
+                - "--disable-backgrounding-occluded-windows"
+                # Disable GPU acceleration to avoid contention for hardware resources
+                # during parallel testing and to create more stability for screenshots.
+                - "--disable-gpu"
+
+            # Instruct edgedriver not to disable component updater. The component
+            # updater must run in order for the Widevine CDM to be available when
+            # using a new user-data-dir.
+            excludeSwitches:
+                - "disable-component-update"
+    firefox_config: &firefox_config
+        moz:firefoxOptions:
+            # Override Firefox default preferences in the temporary profile created
+            # for each test run.
+            # args:
+            #  - "-profile /Users/danielsilhavy/WebstormProjects/dashjs-karma-tests/selenium/firefox/profile"
+            prefs:
+                # Overrides Selenium's explicit default setting, to allow Firefox to
+                # install the Widevine CDM on demand.
+                media.gmp-manager.updateEnabled: true
+                # Overrides Firefox's Linux-specific default setting to disable DRM.
+                media.eme.enabled: true
+
+    minimum_chrome_args: &minimum_chrome_args
+        # Normally, Chrome disallows autoplaying videos in many cases.  Enable
+        # it for testing.
+        - "--autoplay-policy=no-user-gesture-required"
+        # Disable browser features that try to save power by suspending media,
+        # throttling timers, etc.
+        - "--disable-background-media-suspend"
+        - "--disable-background-timer-throttling"
+        - "--disable-backgrounding-occluded-windows"
+        # Disable GPU acceleration to avoid contention for hardware resources
+        # during parallel testing and to create more stability for screenshots.
+        - "--disable-gpu"
+
+    minimum_chrome_android_args: &minimum_chrome_android_args
+        # There is no way in YAML to natively merge arrays, so we start by
+        # duplicating the flags from minimum_chrome_args above.
+        - "--autoplay-policy=no-user-gesture-required"
+        # On Android we must set --user-data-dir.  WebDriver does not do it for
+        # us as it does on other platforms.  Without --user-data-dir,
+        # --unsafely-allow... does not work.
+        - "--user-data-dir=/data/data/com.android.chrome/cache"
+
+    chrome_config: &chrome_config
+        goog:chromeOptions:
+            args: *minimum_chrome_args
+
+            # Instruct chromedriver not to disable component updater. The
+            # component updater must run in order for the Widevine CDM to be
+            # available when using a new user-data-dir.
+            # TODO(http://crbug.com/613581): Remove once Chrome bug is fixed.
+            excludeSwitches:
+                - "disable-component-update"
+
+    chrome_android_config: &chrome_android_config
+        goog:chromeOptions:
+            args: *minimum_chrome_android_args
+
+            # Once the new session request reaches chromedriver, it will take
+            # the androidPackage option as a request to start Chrome through
+            # adb on the tethered device.
+            #appPackage: com.android.chrome
+
+browsers:
+    ChromeMac:
+        browser: chrome
+        os: mac
+        parameters: *chrome_config
+        included: true
+
+    FirefoxMac:
+        browser: firefox
+        os: Mac
+        parameters: *firefox_config
+        included: false
+
+    Safari:
+        browser: safari
+        os: Mac
+        included: false
+
+    ChromeWindows:
+        browser: chrome
+        os: Windows
+        parameters: *chrome_config
+        included: false
+
+    FirefoxWindows:
+        browser: firefox
+        os: Windows
+        parameters: *firefox_config
+        included: false
+
+    MicrosoftEdge:
+        browser: MicrosoftEdge
+        os: Windows
+        parameters: *basic_edge_config
+        included: false
+
+    ChromeLinux:
+        browser: chrome
+        os: Linux
+        parameters: *chrome_config
+        included: false
+
+    FirefoxLinux:
+        browser: firefox
+        os: Linux
+        parameters: *firefox_config
+        included: false
+
+    ChromeAndroid:
+        browser: Chrome
+        os: Android
+        parameters: *chrome_android_config
+        included: false
+
+    Tizen:
+        browser: tizen
+        included: false
+        version: 2022

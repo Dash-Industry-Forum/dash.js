@@ -32,6 +32,7 @@
 import MetricSerialiser from '../../utils/MetricSerialiser.js';
 import RNG from '../../utils/RNG.js';
 import CustomParametersModel from '../../../models/CustomParametersModel.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
 
 function DVBReporting(config) {
     config = config || {};
@@ -197,4 +198,4 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default dashjs.FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */

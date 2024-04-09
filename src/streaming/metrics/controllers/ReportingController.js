@@ -30,6 +30,7 @@
  */
 
 import ReportingFactory from '../reporting/ReportingFactory.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ReportingController(config) {
 
@@ -72,4 +73,4 @@ function ReportingController(config) {
 }
 
 ReportingController.__dashjs_factory_name = 'ReportingController';
-export default dashjs.FactoryMaker.getClassFactory(ReportingController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ReportingController); /* jshint ignore:line */

@@ -33,6 +33,7 @@ import OfflineStream from './OfflineStream.js';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser.js';
 import OfflineErrors from './errors/OfflineErrors.js';
 import DashParser from '../dash/parser/DashParser.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function OfflineDownload(config) {
     config = config || {};
@@ -666,4 +667,4 @@ function OfflineDownload(config) {
 }
 
 OfflineDownload.__dashjs_factory_name = 'OfflineDownload';
-export default dashjs.FactoryMaker.getClassFactory(OfflineDownload); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineDownload); /* jshint ignore:line */

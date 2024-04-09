@@ -1,0 +1,65 @@
+{
+  "browsers": [
+    "chrome_custom"
+  ],
+  "testfiles": {
+    "included": [
+      "all"
+    ],
+    "excluded": [
+      "vendor/google-ad-manager-emsg"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd"
+    },
+    {
+      "name": "Segment Timeline with $time$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Segment Timeline with $number$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
+      "type": "live"
+    },
+    {
+      "name": "AWS Single Period $number$",
+      "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Audio only live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Akamai Low Latency - Multi Rate",
+      "type": "live",
+      "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
+    },
+    {
+      "name": "MSS",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest"
+    },
+    {
+      "name": "Multi audio",
+      "type": "vod",
+      "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd"
+    },
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      }
+    }
+  ]
+}
