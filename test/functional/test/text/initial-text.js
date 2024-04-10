@@ -34,7 +34,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter);
         });
 
-        it(`Set initial audio track`, async () => {
+        it(`Set initial text track`, async () => {
             availableTextTracks = playerAdapter.getTracksFor(Constants.DASH_JS.MEDIA_TYPES.TEXT);
 
             for (let i = 0; i < availableTextTracks.length; i++) {

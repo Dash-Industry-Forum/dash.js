@@ -17,7 +17,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -26,7 +26,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -35,16 +35,16 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
       "name": "TTML Sideloaded XML Subtitles",
-      "url": "https://livesim2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+      "url": "https://livesim2.dashif.org/vod/testpic_2s/ttml_subs.mpd",
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -53,7 +53,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -62,7 +62,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -71,7 +71,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -80,7 +80,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -90,7 +90,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -100,7 +100,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -110,7 +110,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -120,7 +120,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -130,7 +130,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -140,7 +140,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -150,7 +150,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -160,7 +160,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -169,7 +169,7 @@
       "provider": "cta",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -177,7 +177,7 @@
       "name": "Shaka 44 different subtitles",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     }
   ]

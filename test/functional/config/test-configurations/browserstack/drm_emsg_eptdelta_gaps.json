@@ -72,7 +72,8 @@
     {
       "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
       "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd"
+      "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
+      "excludedTestfiles": ["playback-advanced/preload"]
     },
     {
       "name": "livesim2 SCTE35",

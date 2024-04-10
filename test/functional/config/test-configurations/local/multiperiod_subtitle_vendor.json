@@ -96,7 +96,7 @@
     },
     {
       "name": "TTML Sideloaded XML Subtitles",
-      "url": "https://livesim2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+      "url": "https://livesim2.dashif.org/vod/testpic_2s/ttml_subs.mpd",
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
