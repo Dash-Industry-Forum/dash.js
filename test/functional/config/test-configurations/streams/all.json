@@ -1,13 +1,63 @@
 {
-  "browsers": [
-    "bs_chrome_win_11"
-  ],
   "testfiles": {
     "included": [
       "all"
+    ],
+    "excluded": [
+      "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
+    {
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd"
+    },
+    {
+      "name": "Segment Timeline with $time$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Segment Timeline with $number$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
+      "type": "live"
+    },
+    {
+      "name": "AWS Single Period $number$",
+      "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Audio only live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
+      "type": "live"
+    },
+    {
+      "name": "Akamai Low Latency - Multi Rate",
+      "type": "live",
+      "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
+    },
+    {
+      "name": "MSS",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest"
+    },
+    {
+      "name": "Multi audio",
+      "type": "vod",
+      "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd"
+    },
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      }
+    },
     {
       "name": "AWS Multiperiod unencrypted",
       "type": "live",
@@ -73,7 +123,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -82,7 +132,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -91,16 +141,16 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
       "name": "TTML Sideloaded XML Subtitles",
-      "url": "https://livesim2.dashif.org/dash/vod/testpic_2s/xml_subs.mpd",
+      "url": "https://livesim2.dashif.org/vod/testpic_2s/ttml_subs.mpd",
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -109,7 +159,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -118,7 +168,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -127,7 +177,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -136,7 +186,7 @@
       "provider": "dashif",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -146,7 +196,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -156,7 +206,7 @@
       "provider": "dashif",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -166,7 +216,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -176,7 +226,7 @@
       "provider": "bbc",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -186,7 +236,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -196,7 +246,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -206,7 +256,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -216,7 +266,7 @@
       "provider": "bbc",
       "type": "live",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -225,7 +275,7 @@
       "provider": "cta",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
     },
     {
@@ -233,8 +283,142 @@
       "name": "Shaka 44 different subtitles",
       "type": "vod",
       "includedTestfiles": [
-        "text/switch-text"
+        "text/*"
       ]
+    },
+    {
+      "name": "1080p with PlayReady and Widevine DRM, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        }
+      }
+    },
+    {
+      "name": "1080p with W3C Clear Key, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "clearkeys": {
+            "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+          }
+        }
+      }
+    },
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      }
+    },
+    {
+      "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
+      "excludedTestfiles": [
+        "playback-advanced/preload"
+      ]
+    },
+    {
+      "name": "livesim2 SCTE35",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/emsg-triggered"
+      ],
+      "testdata": {
+        "emsg": {
+          "minimumNumberOfEvents": 2,
+          "runtime": 65000,
+          "schemeIdUri": "urn:scte:scte35:2013:bin"
+        }
+      }
+    },
+    {
+      "name": "Segment Timeline with negative video EPT Delta",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
+      ]
+    },
+    {
+      "name": "Segment Timeline with negative audio EPT Delta",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
+      ]
+    },
+    {
+      "name": "Segment Timeline with positive video EPT Delta",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
+      ]
+    },
+    {
+      "name": "Segment Timeline with positive audio EPT Delta",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
+      "excludedTestfiles": [
+        "playback/seek",
+        "payback-advanced/attach-at-non-zero"
+      ]
+    },
+    {
+      "name": "Segment Timeline with missing audio segment in MPD for time 0",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd",
+      "includedTestfiles": [
+        "advanced/seek-in-gaps"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 0,
+            "end": 5.97
+          }
+        ]
+      }
+    },
+    {
+      "name": "Segment Timeline with missing video segment in MPD for time 0",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_gap_at_start_timeline.mpd",
+      "includedTestfiles": [
+        "advanced/seek-in-gaps"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 0,
+            "end": 6
+          }
+        ]
+      }
     }
   ]
 }

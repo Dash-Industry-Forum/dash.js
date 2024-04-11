@@ -1,7 +1,4 @@
 {
-  "browsers": [
-    "chrome_custom"
-  ],
   "testfiles": {
     "included": [
       "all"
@@ -11,21 +8,6 @@
     ]
   },
   "testvectors": [
-    {
-      "name": "Segment Base",
-      "type": "vod",
-      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd"
-    },
-    {
-      "name": "Segment Template, number based",
-      "type": "vod",
-      "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
-    },
-    {
-      "name": "Segment Timeline, time based",
-      "type": "vod",
-      "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd"
-    },
     {
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
@@ -72,7 +54,8 @@
     {
       "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
       "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd"
+      "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
+      "excludedTestfiles": ["playback-advanced/preload"]
     },
     {
       "name": "livesim2 SCTE35",

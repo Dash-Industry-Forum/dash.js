@@ -1,7 +1,4 @@
 {
-  "browsers": [
-    "chrome_custom"
-  ],
   "testfiles": {
     "included": [
       "all"
@@ -124,20 +121,17 @@
       ]
     },
     {
-      "name": "AWS Multiperiod unencrypted",
+      "name": "DASH-IF Multiperiod Segment Template",
       "type": "live",
-      "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
+      "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
       "testdata": {
         "periods": {
           "waitingTimeForPeriodSwitches": 70000,
           "minimumNumberOfPeriodSwitches": 1,
-          "maximumNumberOfPeriodSwitches": 15
+          "maximumNumberOfPeriodSwitches": 2
         }
       },
       "includedTestfiles": [
-        "playback/play",
-        "playback/pause",
-        "playback/seek",
         "playback-advanced/multiperiod-playback"
       ]
     },

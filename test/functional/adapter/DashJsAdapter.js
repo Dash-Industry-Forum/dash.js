@@ -489,7 +489,7 @@ class DashJsAdapter {
                 resolve(res);
             }
             const _onTimeout = () => {
-                _onComplete(null);
+                _onComplete({});
             }
             const _onEvent = (e) => {
                 if (e.request.type === 'MediaSegment') {
