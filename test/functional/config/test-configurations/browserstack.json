@@ -4,6 +4,7 @@
   ],
   "reporters": [
     "junit",
+    "progress",
     "BrowserStack"
   ]
 }

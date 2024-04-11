@@ -93,7 +93,7 @@ commands:
                 type: string
         steps:
             -   run:
-                    name: Run functional tests <<parameters.configfile>>
+                    name: Run functional tests <<parameters.configfile>> - <<parameters.streamsfile>>
                     when: always
                     command:
                         node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.configfile>> --streamsfile=<<parameters.streamsfile>>
