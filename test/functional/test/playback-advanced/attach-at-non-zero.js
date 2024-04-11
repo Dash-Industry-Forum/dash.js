@@ -60,10 +60,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 startTime = playerAdapter.isDynamic() ? startTime - Constants.TEST_INPUTS.ATTACH_AT_NON_ZERO.LIVE_RANDOM_ATTACH_SUBTRACT_OFFSET : startTime - Constants.TEST_INPUTS.ATTACH_AT_NON_ZERO.VOD_RANDOM_ATTACH_SUBTRACT_OFFSET;
                 startTime = Math.max(startTime, 0);
                 playerAdapter.attachSource(mpd, startTime);
-
+                playerAdapter.pause();
                 let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);
                 expect(seeked).to.be.true;
-
                 const targetTime = playerAdapter.isDynamic() ? startTime - playerAdapter.getDvrSeekOffset(0) : startTime;
                 checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             });

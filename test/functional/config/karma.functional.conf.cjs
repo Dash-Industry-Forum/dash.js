@@ -31,16 +31,8 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai', 'webpack'],
 
         plugins: [
-            'karma-webpack',
-            'karma-mocha',
-            'karma-chai',
-            'karma-coverage',
-            'karma-mocha-reporter',
-            'karma-junit-reporter',
-            'karma-chrome-launcher',
-            'karma-firefox-launcher',
-            'karma-htmlfile-reporter',
-            'karma-browserstack-launcher'
+            'karma-*',  // default plugins
+            '@*/karma-*', // default scoped plugins
         ],
 
         // list of files / patterns to load in the browser
@@ -61,7 +53,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'html', 'progress', 'junit', 'coverage', 'BrowserStack'],
+        reporters: testConfiguration.reporters,
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -84,7 +76,7 @@ module.exports = function (config) {
         },
 
         htmlReporter: {
-            outputFile: 'test/functional/results/test/karma/htmlreporter/out.html',
+            outputFile: `test/functional/results/test/karma/htmlreporter/${Date.now()}.html`,
             pageTitle: 'dash.js',
             subPageTitle: 'Functional Tests',
             groupSuites: true,
@@ -154,11 +146,11 @@ module.exports = function (config) {
                 'os_version': '11',
             },
             bs_safari_mac: {
-                'base' : 'BrowserStack',
-                'browser_version' : 'latest',
-                'os' : 'OS X',
-                'os_version' : 'Ventura',
-                'browser' : 'safari',
+                'base': 'BrowserStack',
+                'browser_version': 'latest',
+                'os': 'OS X',
+                'os_version': 'Ventura',
+                'browser': 'safari',
             },
             chrome_custom: {
                 base: 'Chrome',

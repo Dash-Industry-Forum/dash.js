@@ -49,13 +49,17 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
         it(`Expect requests to have CMCD query parameters`, async () => {
             const eventPayload = await playerAdapter.waitForMediaSegmentDownload(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME)
+            expect(eventPayload.request).to.not.be.undefined;
+            expect(eventPayload.request.url).to.not.be.undefined;
             const requestUrl = eventPayload.request.url;
             const url = new URL(requestUrl);
             const cmcdString = url.searchParams.get('CMCD');
             const cmcdParams = {}
             cmcdString.split(',').forEach(pair => {
                 const [key, value] = pair.split('=');
-                cmcdParams[key] = value.replace(/"/g, '');
+                if (value) {
+                    cmcdParams[key] = value.replace(/"/g, '');
+                }
             });
 
             expect(cmcdParams.sid).to.be.equal('sid');

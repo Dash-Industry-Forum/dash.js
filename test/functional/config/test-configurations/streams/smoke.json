@@ -132,9 +132,6 @@
         }
       },
       "includedTestfiles": [
-        "playback/play",
-        "playback/pause",
-        "playback/seek",
         "playback-advanced/multiperiod-playback"
       ]
     },
