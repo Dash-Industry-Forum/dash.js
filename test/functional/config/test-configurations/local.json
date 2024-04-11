@@ -1,0 +1,6 @@
+{
+  "browsers": [
+    "chrome_custom",
+    "firefox_custom"
+  ]
+}

@@ -1,7 +1,4 @@
 {
-  "browsers": [
-    "chrome_custom"
-  ],
   "testfiles": {
     "included": [
       "all"

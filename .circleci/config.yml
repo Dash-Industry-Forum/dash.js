@@ -85,15 +85,18 @@ commands:
 
     run_test_suite:
         parameters:
-            testconfig:
-                default: ""
+            streamsfile:
+                default: "single"
+                type: string
+            configfile:
+                default: "browserstack"
                 type: string
         steps:
             -   run:
-                    name: Run functional tests <<parameters.testconfig>>
+                    name: Run functional tests <<parameters.configfile>>
                     when: always
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.testconfig>>
+                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.configfile>> --streamsfile=<<parameters.streamsfile>>
     build_samples:
         # parameters:
         #     samples:
@@ -155,9 +158,11 @@ jobs:
             - run_testbuild
             - functional_test_setup
             -   run_test_suite:
-                    testconfig: browserstack/single
+                    streamsfile: single
+                    configfile: browserstack
             -   run_test_suite:
-                    testconfig: browserstack/smoke
+                    streamsfile: smoke
+                    configfile: browserstack
             - process_test_results
 
     functional-tests-full-part-1:
@@ -165,7 +170,8 @@ jobs:
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: browserstack/drm_emsg_eptdelta_gaps
+                    streamsfile: drm_emsg_eptdelta_gaps
+                    configfile: browserstack
             - process_test_results
 
     functional-tests-full-part-2:
@@ -173,7 +179,8 @@ jobs:
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: browserstack/multiperiod_subtitle_vendor
+                    streamsfile: multiperiod_subtitle_vendor
+                    configfile: browserstack
             - process_test_results
 
     functional-tests-full-part-3:
@@ -181,7 +188,8 @@ jobs:
         steps:
             - functional_steps
             -   run_test_suite:
-                    testconfig: browserstack/vod_live_lowlatency_mss_multiaudio
+                    streamsfile: vod_live_lowlatency_mss_multiaudio
+                    configfile: browserstack
             - process_test_results
 
 workflows:

@@ -7,16 +7,18 @@ module.exports = function (config) {
     const argv = yargs(hideBin(process.argv)).parse()
     // Find the settings JSON object in the command arguments
     const configFileName = argv.configfile
+    const streamsFileName = argv.streamsfile
 
     if (!configFileName) {
         return
     }
 
-    const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'))
-    const includedTestfiles = _getIncludedTestfiles(testConfiguration)
-    const excludedTestfiles = _getExcludedTestfiles(testConfiguration)
+    const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'));
+    const streamsConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/streams/${streamsFileName}.json`, 'utf-8'));
+    const includedTestfiles = _getIncludedTestfiles(streamsConfiguration)
+    const excludedTestfiles = _getExcludedTestfiles(streamsConfiguration)
     const customContextFile = testConfiguration.customContextFile ? testConfiguration.customContextFile : 'test/functional/view/index.html';
-    const testvectors = testConfiguration.testvectors
+    const testvectors = streamsConfiguration.testvectors
 
     config.set({
 
@@ -185,7 +187,7 @@ function _getIncludedTestfiles(testConfiguration) {
     }
 
     if (!testConfiguration.testfiles.included || testConfiguration.testfiles.included.indexOf('all') >= 0) {
-        return { pattern: `test/functional/test/**/*.js`, watched: false }
+        return [{ pattern: `test/functional/test/**/*.js`, watched: false }]
     }
 
     return testConfiguration.testfiles.included.map((entry) => {
