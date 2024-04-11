@@ -6,7 +6,6 @@
   "reporters": [
     "mocha",
     "html",
-    "progress",
     "coverage"
   ]
 }

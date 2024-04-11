@@ -3,8 +3,8 @@
     "bs_chrome_win_11"
   ],
   "reporters": [
+    "mocha",
     "junit",
-    "progress",
     "BrowserStack"
   ]
 }
