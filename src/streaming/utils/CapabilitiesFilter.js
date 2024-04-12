@@ -56,9 +56,9 @@ function CapabilitiesFilter() {
                     if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
-                    _applyCustomFilters(manifest);
-                    resolve();
                 })
+                .then(() => _applyCustomFilters(manifest))
+                .then(() => resolve())
                 .catch(() => {
                     resolve();
                 });
@@ -225,25 +225,90 @@ function CapabilitiesFilter() {
     }
 
     function _applyCustomFilters(manifest) {
-        const customCapabilitiesFilters = customParametersModel.getCustomCapabilitiesFilters();
-        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period || manifest.Period.length === 0) {
-            return;
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+            return Promise.resolve();
         }
 
+        const promises = [];
         manifest.Period.forEach((period) => {
-            period.AdaptationSet = period.AdaptationSet.filter((as) => {
-
-                if (!as.Representation || as.Representation.length === 0) {
-                    return true;
-                }
-
-                as.Representation = as.Representation.filter((representation) => {
-                    return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
-                });
-
-                return as.Representation && as.Representation.length > 0;
-            });
+            promises.push(_applyCustomFiltersAdaptationSetsOfPeriod(period));
         });
+
+        return Promise.all(promises);
+    }
+
+    function _applyCustomFiltersAdaptationSetsOfPeriod(period) {
+        return new Promise((resolve) => {
+
+            if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
+                resolve();
+                return;
+            }
+
+            const promises = [];
+            period.AdaptationSet.forEach((as) => {
+                promises.push(_applyCustomFiltersRepresentationsOfAdaptation(as));
+            });
+
+            Promise.all(promises)
+                .then(() => {
+                    period.AdaptationSet = period.AdaptationSet.filter((as) => {
+                        return as.Representation && as.Representation.length > 0;
+                    });
+                    resolve();
+                })
+                .catch(() => {
+                    resolve();
+                });
+        });
+
+    }
+
+    function _applyCustomFiltersRepresentationsOfAdaptation(as) {
+        return new Promise((resolve) => {
+
+            if (!as.Representation || as.Representation.length === 0) {
+                resolve();
+                return;
+            }
+
+            const promises = [];
+            as.Representation.forEach((rep) => {
+                promises.push(_applyCustomFiltersRepresentation(rep));
+            });
+
+            Promise.all(promises)
+                .then((supported) => {
+                    as.Representation = as.Representation.filter((rep, i) => {
+                        let isReprSupported = supported[i].every( (s)=>{return s});
+                        if (!isReprSupported) {
+                            logger.debug('[Stream] Representation '+rep.id+' has been removed because of unsupported CustomFilter');
+                        }
+                        return isReprSupported;
+                    });
+                    resolve();
+                })
+                .catch((err) => {
+                    logger.warn('[Stream] at least one promise rejected in CustomFilter with error: ',err);
+                    resolve();
+                });
+        });
+
+    }
+
+    function _applyCustomFiltersRepresentation(rep) {
+        const promises = [];
+        const customCapabilitiesFilters = customParametersModel.getCustomCapabilitiesFilters();
+
+        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0) {
+            promises.push(Promise.resolve(true));
+        } else {
+            customCapabilitiesFilters.forEach(customFilter => {
+                promises.push(new Promise(resolve => resolve(customFilter(rep))));
+            });
+        }
+
+        return Promise.all(promises)
     }
 
     instance = {

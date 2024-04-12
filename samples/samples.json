@@ -698,6 +698,17 @@
                 ]
             },
             {
+                "title": "Custom Capabilities Filter - MediaCapabilitiesAPI",
+                "description": "This sample shows how to filter representations based on responses from MCA.",
+                "href": "advanced/custom-capabilities-filter_mca.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Custom initial track selection example",
                 "description": "This sample shows how to define your own initial track selection function.",
                 "href": "advanced/custom-initial-track-selection.html",
