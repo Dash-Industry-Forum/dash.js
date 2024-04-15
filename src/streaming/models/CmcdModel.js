@@ -218,7 +218,9 @@ function CmcdModel() {
                 return false;
             }
         }
-        return cmcdParametersFromManifest.version ? true : settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
+        const isEnabledFromManifest = cmcdParametersFromManifest.version;
+        const isEnabledFromSettings = settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
+        return isEnabledFromManifest || isEnabledFromSettings;
     }
 
     function _checkIncludeInRequests(cmcdParametersFromManifest) {
@@ -251,7 +253,7 @@ function CmcdModel() {
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
-        if (invalidKeys.length == enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
+        if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
             logger.error(`None of the keys are implemented.`);
             return false;
         }
