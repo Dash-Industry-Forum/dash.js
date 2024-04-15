@@ -52,7 +52,6 @@ import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
 import VideoModel from './models/VideoModel.js';
 import CmcdModel from './models/CmcdModel.js';
 import CmsdModel from './models/CmsdModel.js';
-import ClientDataReportingModel from './models/ClientDataReportingModel.js';
 import DOMStorage from './utils/DOMStorage.js';
 import Debug from './../core/Debug.js';
 import Errors from './../core/errors/Errors.js';
@@ -81,6 +80,7 @@ import BoxParser from './utils/BoxParser.js';
 import TextController from './text/TextController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
+import ClientDataReportingController from './controllers/ClientDataReportingController.js';
 
 /**
  * The media types
@@ -166,11 +166,11 @@ function MediaPlayer() {
         manifestModel,
         cmcdModel,
         cmsdModel,
-        clientDataReportingModel,
         videoModel,
         uriFragmentModel,
         domStorage,
-        segmentBaseController;
+        segmentBaseController,
+        clientDataReportingController;
 
     /*
     ---------------------------------------------------------------------------
@@ -235,6 +235,9 @@ function MediaPlayer() {
         }
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
+        }
+        if (config.clientDataReportingController) {
+            clientDataReportingController = config.clientDataReportingController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -352,7 +355,7 @@ function MediaPlayer() {
 
             cmsdModel = CmsdModel(context).getInstance();
 
-            clientDataReportingModel = ClientDataReportingModel(context).getInstance();
+            clientDataReportingController = ClientDataReportingController(context).getInstance();
 
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
@@ -2348,7 +2351,7 @@ function MediaPlayer() {
             throughputController,
         });
 
-        clientDataReportingModel.setConfig({
+        clientDataReportingController.setConfig({
             serviceDescriptionController
         })
 

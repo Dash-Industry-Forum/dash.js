@@ -31,7 +31,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 
-function ClientDataReportingModel() {
+function ClientDataReportingController() {
 
     let instance,
         serviceDescriptionController;
@@ -70,5 +70,5 @@ function ClientDataReportingModel() {
     return instance;
 }
 
-ClientDataReportingModel.__dashjs_factory_name = 'ClientDataReportingModel';
-export default FactoryMaker.getSingletonFactory(ClientDataReportingModel);
+ClientDataReportingController.__dashjs_factory_name = 'ClientDataReportingController';
+export default FactoryMaker.getSingletonFactory(ClientDataReportingController);

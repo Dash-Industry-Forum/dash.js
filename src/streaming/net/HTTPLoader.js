@@ -35,7 +35,6 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import DashJSError from '../vo/DashJSError.js';
 import CmcdModel from '../models/CmcdModel.js';
 import CmsdModel from '../models/CmsdModel.js';
-import ClientDataReportingModel from '../models/ClientDataReportingModel.js';
 import Utils from '../../core/Utils.js';
 import Debug from '../../core/Debug.js';
 import EventBus from '../../core/EventBus.js';
@@ -44,6 +43,7 @@ import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
 import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
+import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 
 /**
  * @module HTTPLoader
@@ -72,11 +72,11 @@ function HTTPLoader(cfg) {
         downloadErrorToRequestTypeMap,
         cmcdModel,
         cmsdModel,
-        clientDataReportingModel,
         xhrLoader,
         fetchLoader,
         customParametersModel,
         commonAccessTokenController,
+        clientDataReportingController,
         logger;
 
     function setup() {
@@ -85,7 +85,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
-        clientDataReportingModel = ClientDataReportingModel(context).getInstance();
+        clientDataReportingController = ClientDataReportingController(context).getInstance();
         cmsdModel = CmsdModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
         commonAccessTokenController = CommonAccessTokenController(context).getInstance();
@@ -571,8 +571,8 @@ function HTTPLoader(cfg) {
     function _updateRequestUrlAndHeaders(request) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
-        const isIncludedFilters = clientDataReportingModel.isServiceLocationIncluded(request.type, currentServiceLocation) &&
-            clientDataReportingModel.isAdaptationsIncluded(currentAdaptationSetId);
+        const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
+            clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
         if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
