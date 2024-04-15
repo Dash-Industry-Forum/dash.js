@@ -687,6 +687,17 @@
                 ]
             },
             {
+                "title": "CMCD Reporting from manifest",
+                "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005). Configuring it from manifest file.",
+                "href": "advanced/cmcd-from-manifest.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Custom Capabilities Filters",
                 "description": "This sample shows how to filter representations.",
                 "href": "advanced/custom-capabilities-filters.html",
