@@ -225,7 +225,6 @@ function CmcdModel() {
 
     function _checkIncludeInRequests(cmcdParametersFromManifest) {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
-        console.log(enabledRequests);
 
         if (cmcdParametersFromManifest.version) {
             enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
