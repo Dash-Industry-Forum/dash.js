@@ -5,6 +5,6 @@
   "reporters": [
     "mocha",
     "junit",
-    "BrowserStack"
+    "coverage"
   ]
 }
