@@ -72,7 +72,7 @@ function ThroughputRule(config) {
                     switchRequest.reason = {
                         throughput,
                         latency,
-                        message: `[ThroughputRule]: Switching to Representation with bitrate ${switchRequest.representation.bitrateInKbit} kbit/s. Throughput: ${throughput}`
+                        message:`[ThroughputRule]: Switching to Representation with bitrate ${switchRequest.representation ? switchRequest.representation.bitrateInKbit : 'n/a'} kbit/s. Throughput: ${throughput}`
                     };
                     scheduleController.setTimeToLoadDelay(0);
                 }

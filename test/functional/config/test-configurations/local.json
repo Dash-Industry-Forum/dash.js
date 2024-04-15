@@ -1,0 +1,10 @@
+{
+  "browsers": [
+    "chrome_custom"
+  ],
+  "reporters": [
+    "mocha",
+    "html",
+    "coverage"
+  ]
+}

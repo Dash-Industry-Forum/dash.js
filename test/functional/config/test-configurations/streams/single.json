@@ -1,0 +1,20 @@
+{
+  "testfiles": {
+    "included": [
+      "all"
+    ],
+    "excluded": [
+      "vendor/google-ad-manager-emsg"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "AWS Single Period $number$",
+      "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback-advanced/cmcd"
+      ]
+    }
+  ]
+}

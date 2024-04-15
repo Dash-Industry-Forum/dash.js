@@ -1669,7 +1669,7 @@ function MediaPlayer() {
     */
     /**
      * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether or not to use the representation.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      * @memberof module:MediaPlayer
