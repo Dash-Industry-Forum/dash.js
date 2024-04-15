@@ -421,11 +421,15 @@ function TextTracks(config) {
             previousISDState = renderHTML(
                 cue.isd,
                 finalCue,
-                function (src) { return _resolveImageSrc(cue, src) },
+                function (src) {
+                    return _resolveImageSrc(cue, src)
+                },
                 captionContainer.clientHeight,
                 captionContainer.clientWidth,
                 settings.get().streaming.text.imsc.displayForcedOnlyMode,
-                function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
+                function (err) {
+                    logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/
+                },
                 previousISDState,
                 settings.get().streaming.text.imsc.enableRollUp
             );
@@ -534,7 +538,8 @@ function TextTracks(config) {
                                      * Only do this for imsc subs (where isd is present).
                                      */
                                     if (prevCue.isd) {
-                                        prevCue.onexit = function () { };
+                                        prevCue.onexit = function () {
+                                        };
                                     }
                                     // If cues are added when the track is disabled they can still persist in memory
                                     if (track.mode !== Constants.TEXT_DISABLED) {
@@ -941,7 +946,7 @@ function TextTracks(config) {
     function _isCueActive(cue) {
         const currentTime = videoModel.getTime();
 
-        return cue.startTime >= currentTime && cue.endTime <= currentTime
+        return currentTime >= cue.startTime && currentTime <= cue.endTime
     }
 
     function deleteCuesFromTrackIdx(trackIdx, start, end) {
