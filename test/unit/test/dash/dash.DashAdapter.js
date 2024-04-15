@@ -1146,13 +1146,11 @@ describe('DashAdapter', function () {
 
             it('applies add operation to structure with no siblings', function () {
                 let manifest = {};
-                let addedPeriod = { id: 'foo' };
+                let addedPeriod = { id: 'foo', tagName: 'Period' };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
                     selector: '/MPD',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1161,8 +1159,8 @@ describe('DashAdapter', function () {
             });
 
             it('applies add operation to structure with single sibling', function () {
-                let originalPeriod = { id: 'foo' };
-                let addedPeriod = { id: 'bar' };
+                let originalPeriod = { id: 'foo', tagName: 'Period' };
+                let addedPeriod = { id: 'bar', tagName: 'Period' };
                 // special case x2js object which omits the  variant
                 let manifest = {
                     Period: [originalPeriod]
@@ -1170,9 +1168,7 @@ describe('DashAdapter', function () {
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
                     selector: '/MPD',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1182,16 +1178,14 @@ describe('DashAdapter', function () {
 
             it('applies add implicit append operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
-                let addedPeriod = { id: 'baz' };
+                let addedPeriod = { id: 'baz', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
                     selector: '/MPD',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1201,7 +1195,7 @@ describe('DashAdapter', function () {
 
             it('applies add prepend operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
-                let addedPeriod = { id: 'baz' };
+                let addedPeriod = { id: 'baz', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
@@ -1209,9 +1203,7 @@ describe('DashAdapter', function () {
                     action: 'add',
                     selector: '/MPD',
                     position: 'prepend',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1221,7 +1213,7 @@ describe('DashAdapter', function () {
 
             it('applies add before operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
-                let addedPeriod = { id: 'qux' };
+                let addedPeriod = { id: 'qux', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
@@ -1229,9 +1221,7 @@ describe('DashAdapter', function () {
                     action: 'add',
                     selector: '/MPD/Period[2]',
                     position: 'before',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1241,7 +1231,7 @@ describe('DashAdapter', function () {
 
             it('applies add after operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
-                let addedPeriod = { id: 'qux' };
+                let addedPeriod = { id: 'qux', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
@@ -1249,9 +1239,7 @@ describe('DashAdapter', function () {
                     action: 'add',
                     selector: '/MPD/Period[2]',
                     position: 'after',
-                    children: [{
-                        Period: addedPeriod
-                    }]
+                    children: [addedPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1295,16 +1283,14 @@ describe('DashAdapter', function () {
 
             it('applies replace operation with siblings', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }, { id: 'baz' }];
-                let replacementPeriod = { id: 'qux' };
+                let replacementPeriod = { id: 'qux', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
                     selector: '/MPD/Period[2]',
-                    children: [{
-                        Period: replacementPeriod
-                    }]
+                    children: [replacementPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1314,16 +1300,14 @@ describe('DashAdapter', function () {
 
             it('applies replace operation without siblings', function () {
                 let originalPeriod = { id: 'foo' };
-                let replacementPeriod = { id: 'bar' };
+                let replacementPeriod = { id: 'bar', tagName: 'Period' };
                 let manifest = {
                     Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
                     selector: '/MPD/Period[1]',
-                    children: [{
-                        Period: replacementPeriod
-                    }]
+                    children: [replacementPeriod]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
@@ -1410,7 +1394,7 @@ describe('DashAdapter', function () {
 
             it('applies multiple operations respecting order', function () {
                 let originalPeriods = [{ id: 'foo' }, { id: 'bar' }];
-                let newPeriod = { id: 'baz' };
+                let newPeriod = { id: 'baz', tagName: 'Period' };
                 let manifest = {
                     Period: originalPeriods.slice()
                 };
@@ -1425,9 +1409,7 @@ describe('DashAdapter', function () {
                         action: 'add',
                         selector: '/MPD/Period[2]',
                         position: 'before',
-                        children: [{
-                            Period: newPeriod
-                        }]
+                        children: [newPeriod]
                     },
                     {
                         action: 'replace',
