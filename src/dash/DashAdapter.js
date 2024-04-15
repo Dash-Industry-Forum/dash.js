@@ -1188,7 +1188,6 @@ function DashAdapter() {
 
     instance = {
         applyPatchToManifest,
-        getMainAdaptationForType,
         areMediaInfosEqual,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
@@ -1207,6 +1206,7 @@ function DashAdapter() {
         getIsTextTrack,
         getIsTypeOf,
         getLocation,
+        getMainAdaptationForType,
         getManifestUpdatePeriod,
         getMediaInfoForType,
         getMpd,
