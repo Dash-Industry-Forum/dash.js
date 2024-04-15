@@ -53,9 +53,9 @@ class CMCDParameters extends DescriptorType {
             this.version = data.version;
             this.sessionID = data.sessionID;
             this.contentID = data.contentID;
-            this.mode = data.mode;
+            this.mode = data.mode ?? 'query';
             this.keys = data.keys ? data.keys.split(' ') : null;
-            this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : null;
+            this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : ['segment'];
         }
     }
 }

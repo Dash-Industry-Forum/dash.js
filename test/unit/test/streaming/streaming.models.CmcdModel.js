@@ -69,6 +69,14 @@ describe('CmcdModel', function () {
                     mediaType: MEDIA_TYPE
                 };
 
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            includeInRequests: ['mpd']
+                        }
+                    }
+                });
+
                 let headers = cmcdModel.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
@@ -203,6 +211,14 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE
                 };
+
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            includeInRequests: ['other']
+                        }
+                    }
+                });
 
                 let headers = cmcdModel.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -351,7 +367,7 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: {} },
                 };
 
-                settings.update({ streaming: { cmcd: { enabled: true, cid: CID } } });
+                settings.update({ streaming: { cmcd: { enabled: true, cid: CID, includeInRequests: ['mpd'] } } });
 
                 let headers = cmcdModel.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -713,6 +729,14 @@ describe('CmcdModel', function () {
                     mediaType: MEDIA_TYPE
                 };
 
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            includeInRequests: ['mpd']
+                        }
+                    }
+                });
+
                 let parameters = cmcdModel.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
@@ -829,6 +853,14 @@ describe('CmcdModel', function () {
                     type: REQUEST_TYPE,
                     mediaType: MEDIA_TYPE
                 };
+
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            includeInRequests: ['other']
+                        }
+                    }
+                });
 
                 let parameters = cmcdModel.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
@@ -1003,7 +1035,7 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: {} },
                 };
 
-                settings.update({ streaming: { cmcd: { enabled: true, cid: CID } } });
+                settings.update({ streaming: { cmcd: { enabled: true, cid: CID, includeInRequests: ['mpd'] } } });
 
                 let parameters = cmcdModel.getQueryParameter(request);
                 expect(parameters).to.have.property('key');

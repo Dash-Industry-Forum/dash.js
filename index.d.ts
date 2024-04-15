@@ -1265,7 +1265,8 @@ declare namespace dashjs {
                 rtp?: number | null,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
-                enabledKeys?: Array<string>
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>
             },
             cmsd?: {
                 enabled?: boolean,

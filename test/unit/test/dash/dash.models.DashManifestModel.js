@@ -1515,9 +1515,7 @@ describe('DashManifestModel', function () {
                 const manifestData = {
                     ServiceDescription:[{
                         'ClientDataReporting':{
-                            'CMCDParameters': {
-
-                            },
+                            'CMCDParameters': {},
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
                         },
@@ -1525,8 +1523,20 @@ describe('DashManifestModel', function () {
                 }
                 const data = dashManifestModel.getServiceDescriptions(manifestData);
                 const clientDataReporting = data[0].clientDataReporting;
+
+                expect(clientDataReporting.cmcdParameters.mode).to.be.equal('query');
+                expect(clientDataReporting.cmcdParameters.includeInRequests.length).to.be.equal(1);
+                expect(clientDataReporting.cmcdParameters.includeInRequests[0]).to.be.equal('segment');
+
                 expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.serviceLocationsArray.length).to.be.equal(2);
+                expect(clientDataReporting.serviceLocationsArray[0]).to.be.equal('cdn-a');
+                expect(clientDataReporting.serviceLocationsArray[1]).to.be.equal('cdn-b');
+
                 expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+                expect(clientDataReporting.adaptationSetsArray.length).to.be.equal(2);
+                expect(clientDataReporting.adaptationSetsArray[0]).to.be.equal('test1');
+                expect(clientDataReporting.adaptationSetsArray[1]).to.be.equal('test2');
             })
 
             it('should return cmcd data from manifest', () => {

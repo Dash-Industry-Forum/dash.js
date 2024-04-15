@@ -46,7 +46,7 @@ import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 
 const CMCD_VERSION = 1;
-const CMCD_ALL_REQUESTS_PLACEHOLDER = '*';
+const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
@@ -225,12 +225,10 @@ function CmcdModel() {
 
     function _checkIncludeInRequests(cmcdParametersFromManifest) {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
+        console.log(enabledRequests);
 
         if (cmcdParametersFromManifest.version) {
-            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [CMCD_ALL_REQUESTS_PLACEHOLDER];
-            if (!enabledRequests || enabledRequests.some(k => k === CMCD_ALL_REQUESTS_PLACEHOLDER)) {
-                return true
-            }
+            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
         }
 
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
@@ -284,11 +282,7 @@ function CmcdModel() {
         let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
 
         if (cmcdParametersFromManifest.version) {
-            includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [CMCD_ALL_REQUESTS_PLACEHOLDER];
-        }
-
-        if (includeInRequestsArray.find(t => t === CMCD_ALL_REQUESTS_PLACEHOLDER)) {
-            return true;
+            includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [DEFAULT_INCLUDE_IN_REQUESTS];
         }
 
         const filtersTypes = {
