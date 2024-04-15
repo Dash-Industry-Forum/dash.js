@@ -10,14 +10,8 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai', 'webpack'],
 
         plugins: [
-            'karma-webpack',
-            'karma-mocha',
-            'karma-chai',
-            'karma-coverage',
-            'karma-mocha-reporter',
-            'karma-chrome-launcher',
-            'karma-junit-reporter',
-            'karma-firefox-launcher'
+            'karma-*',  // default plugins
+            '@*/karma-*', // default scoped plugins
         ],
 
         middleware: [],

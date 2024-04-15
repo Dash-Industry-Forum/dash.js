@@ -1,7 +1,6 @@
 {
   "browsers": [
-    "chrome_custom",
-    "firefox_custom"
+    "chrome_custom"
   ],
   "reporters": [
     "mocha",

@@ -1,4 +1,3 @@
-import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
@@ -19,7 +18,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter;
 
         before(() => {
-            playerAdapter = initializeDashJsAdapter(item, mpd);
+            playerAdapter = initializeDashJsAdapter(item, mpd, {
+                streaming: {
+                    buffer: {
+                        fastSwitchEnabled: false
+                    }
+                }
+            });
         })
 
         after(() => {
