@@ -699,8 +699,8 @@
             },
             {
                 "title": "Custom Capabilities Filter - MediaCapabilitiesAPI",
-                "description": "This sample shows how to filter representations based on responses from MCA.",
-                "href": "advanced/custom-capabilities-filter_mca.html",
+                "description": "This sample shows how to filter representations based on responses from Media Capabilities API.",
+                "href": "advanced/custom-capabilities-filter-mca.html",
                 "image": "lib/img/bbb-2.jpg",
                 "labels": [
                     "VoD",
