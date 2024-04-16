@@ -92,7 +92,7 @@ describe('PatchManifestModel', function () {
                     action: 'add',
                     selector: '/MPD/Period',
                     position: 'after',
-                    children: [{ 'Period': {} }]
+                    children: [{ tagName: 'Period' }]
                 }]);
                 let operations = patchManifestModel.getPatchOperations(patch);
                 expect(operations.length).to.equal(1);
@@ -137,7 +137,7 @@ describe('PatchManifestModel', function () {
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
                     selector: '/MPD/Period',
-                    children: [{ 'Period': {} }]
+                    children: [{ tagName: 'Period' }]
                 }]);
                 let operations = patchManifestModel.getPatchOperations(patch);
                 expect(operations.length).to.equal(1);
