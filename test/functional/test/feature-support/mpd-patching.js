@@ -3,7 +3,7 @@ import Utils from '../../src/Utils.js';
 import {expect} from 'chai'
 import {checkIsPlaying, checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
-const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED;
+const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.MPD_PATCHING;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
@@ -13,7 +13,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let playerAdapter
 
         before(function () {
-            if (!item.testdata || !item.testdata.emsg || isNaN(item.testdata.emsg.minimumNumberOfEvents) || isNaN(item.testdata.emsg.runtime) || !item.testdata.emsg.schemeIdUri) {
+            if (item.type === Constants.CONTENT_TYPES.VOD || !item.testdata || !item.testdata.mpdPatching) {
                 this.skip();
             }
             playerAdapter = initializeDashJsAdapter(item, mpd);
@@ -33,10 +33,14 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter);
         });
 
-        it(`Dispatches events in receive and start mode`, async () => {
-            const eventData = await playerAdapter.emsgEvents(item.testdata.emsg.runtime, item.testdata.emsg.schemeIdUri);
-            expect(eventData.onStart).to.be.at.least(item.testdata.emsg.minimumNumberOfEvents);
-            expect(eventData.onReceive).to.be.at.least(item.testdata.emsg.minimumNumberOfEvents);
+        it(`Two consecutive manifest updates shall be of type Patch`, async () => {
+            const manifest = playerAdapter.getManifest();
+            const minimumUpdatePeriodInMs = parseInt(manifest.minimumUpdatePeriod) * 1000;
+
+            let manifestUpdateEvent = await playerAdapter.waitForEventAndGetPayload(minimumUpdatePeriodInMs * 2, 'internalManifestLoaded')
+            expect(manifestUpdateEvent.manifest.tagName).to.be.equal('Patch')
+            manifestUpdateEvent = await playerAdapter.waitForEventAndGetPayload(minimumUpdatePeriodInMs * 2, 'internalManifestLoaded')
+            expect(manifestUpdateEvent.manifest.tagName).to.be.equal('Patch')
         });
 
         it(`Should still be progressing`, async () => {

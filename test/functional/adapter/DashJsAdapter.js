@@ -192,6 +192,10 @@ class DashJsAdapter {
         return this.player.getTargetLiveDelay();
     }
 
+    getManifest() {
+        return this.player.getManifest();
+    }
+
     seek(value) {
         this.player.seek(value);
     }
@@ -472,6 +476,27 @@ class DashJsAdapter {
             }
             const _onEvent = (e) => {
                 _onComplete(true);
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            this.player.on(event, _onEvent);
+        })
+    }
+
+    async waitForEventAndGetPayload(timeoutValue, event) {
+        return new Promise((resolve) => {
+            let timeout = null;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(event, _onEvent);
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(null);
+            }
+            const _onEvent = (e) => {
+                _onComplete(e);
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
             this.player.on(event, _onEvent);
