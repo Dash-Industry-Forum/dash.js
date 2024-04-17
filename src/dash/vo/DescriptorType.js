@@ -44,7 +44,7 @@ class DescriptorType {
     init(data) {
         if (data) {
             this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value ? data.value : null;
+            this.value = data.value ? data.value.toString() : null;
             this.id = data.id ? data.id : null;
             // Only add the DVB extensions if they exist
             if (data[DashConstants.DVB_URL]) {
@@ -65,7 +65,7 @@ class DescriptorType {
                 return (
                     this.schemeIdUri === entry.schemeIdUri && (
                         this.value ?
-                            (this.value.match(entry.value)) : // check if provided value matches RegExp
+                            (this.value.toString().match(entry.value)) : // check if provided value matches RegExp
                             (''.match(entry.value)) // check if RegExp allows absent value   
                     )
                 );
