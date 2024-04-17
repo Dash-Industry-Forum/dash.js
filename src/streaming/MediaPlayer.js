@@ -2173,7 +2173,7 @@ function MediaPlayer() {
 
     /**
      * Returns the current manifest
-     * @returns {string}
+     * @returns {object}
      */
     function getManifest() {
         return manifestModel.getValue();
