@@ -13,7 +13,7 @@
         "MSMediaKeys": true,
         "MediaKeys": true
     },
-    "parser": "babel-eslint",
+    "parser": "@babel/eslint-parser",
     "rules": {
         "no-caller": 2,
         "no-undef": 2,
