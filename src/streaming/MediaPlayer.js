@@ -2171,6 +2171,13 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Returns the current manifest
+     * @returns {object}
+     */
+    function getManifest() {
+        return manifestModel.getValue();
+    }
 
     /**
      * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
@@ -2642,6 +2649,7 @@ function MediaPlayer() {
         getPlaybackRate,
         getProtectionController,
         getCurrentRepresentationForType,
+        getManifest,
         getRepresentationsByType,
         getSettings,
         getSource,
