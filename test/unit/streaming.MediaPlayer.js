@@ -463,35 +463,59 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure bitrate according to playback area size', function () {
-            let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.enabled).to.be.false; // jshint ignore:line
 
             player.updateSettings({
                 'streaming': {
                     'abr': {
-                        'limitBitrateByPortal': true
+                        'limitBitrateByPortal': { enabled: true }
                     }
                 }
             });
 
-            limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.enabled).to.be.true; // jshint ignore:line
         });
 
-        it('should configure usePixelRatioInLimitBitrateByPortal', function () {
-            let UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+        it('should configure usePixelRatio in limitBitrateByPortal', function () {
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.usePixelRatio).to.be.false; // jshint ignore:line
 
             player.updateSettings({
                 'streaming': {
                     'abr': {
-                        'usePixelRatioInLimitBitrateByPortal': true
+                        'limitBitrateByPortal': { usePixelRatio: true }
                     }
                 }
             });
 
-            UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.usePixelRatio).to.be.true; // jshint ignore:line
+        });
+
+        it('should configure scalingFactor in limitBitrateByPortal', function () {
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.scalingFactor).to.equal(1);
+
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'limitBitrateByPortal': { scalingFactor: 0.5 }
+                    }
+                }
+            });
+
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.scalingFactor).to.equal(0.5);
+        });
+
+        it('should configure minimumBandwidthInBit in limitBitrateByPortal', function () {
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit).to.equal(0); // jshint ignore:line
+
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'limitBitrateByPortal': { minimumBandwidthInBit: 100000 }
+                    }
+                }
+            });
+
+            expect(player.getSettings().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit).to.equal(100000); // jshint ignore:line
         });
 
         it('should configure initialRepresentationRatioFor', function () {

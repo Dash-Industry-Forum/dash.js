@@ -1128,10 +1128,6 @@ declare namespace dashjs {
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
                 useDeadTimeLatency?: boolean;
-                limitBitrateByPortal?: boolean;
-                usePixelRatioInLimitBitrateByPortal?: boolean;
-                portalScale?: number;
-                portalMinimum?: number;
                 maxBitrate?: {
                     audio?: number;
                     video?: number;
@@ -1157,6 +1153,12 @@ declare namespace dashjs {
                     video?: boolean;
                 },
                 fetchThroughputCalculationMode?: string;
+                limitBitrateByPortal?: {
+                    enabled?: boolean;
+                    usePixelRatio?: boolean;
+                    scalingFactor?: number;
+                    minimumBandwidthInKbit?: number;
+                }
             },
             cmcd?: {
                 enabled?: boolean,

@@ -520,7 +520,7 @@ function AbrController() {
      * @private
      */
     function _checkPortalSize(idx, type, streamId) {
-        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+        if (!settings.get().streaming.abr.limitBitrateByPortal.enabled || type !== Constants.VIDEO || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
             return idx;
         }
 
@@ -528,13 +528,21 @@ function AbrController() {
             setElementSize();
         }
 
-        const portalScale = settings.get().streaming.abr.portalScale || 1;
-        const portalLimitMinimum = settings.get().streaming.abr.portalMinimum || 0;
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
         const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
+        
+        const scalingFactor = settings.get().streaming.abr.limitBitrateByPortal.scalingFactor > 0
+            ? Math.sqrt(settings.get().streaming.abr.limitBitrateByPortal.scalingFactor)
+            : 1;
+
+        const minimumBandwidthInBit = settings.get().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit > 0
+            ? settings.get().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit
+            : 0;
+        
+        const scaledWidth = elementWidth * scalingFactor;
+        const scaledHeight = elementHeight * scalingFactor;
+        
         let newIdx = idx;
-        const scaledWidth = elementWidth * Math.sqrt(portalScale);
-        const scaledHeight = elementHeight * Math.sqrt(portalScale);
 
         if (scaledWidth > 0 && scaledHeight > 0) {
             while (
@@ -542,7 +550,8 @@ function AbrController() {
                 representation[newIdx] &&
                 scaledWidth < representation[newIdx].width &&
                 scaledWidth - representation[newIdx - 1].width < representation[newIdx].width - scaledWidth &&
-                representation[newIdx - 1].bandwidth >= portalLimitMinimum * 1000) {
+                representation[newIdx - 1].bandwidth >= minimumBandwidthInBit
+            ) {
                 newIdx = newIdx - 1;
             }
 
@@ -911,7 +920,7 @@ function AbrController() {
 
     function setElementSize() {
         if (videoModel) {
-            const hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+            const hasPixelRatio = settings.get().streaming.abr.limitBitrateByPortal.usePixelRatio && window.hasOwnProperty('devicePixelRatio');
             const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
             elementWidth = videoModel.getClientWidth() * pixelRatio;
             elementHeight = videoModel.getClientHeight() * pixelRatio;
