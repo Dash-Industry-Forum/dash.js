@@ -1573,6 +1573,8 @@ declare namespace dashjs {
 
         destroy(): void;
 
+        getManifest(): object;
+
     }
 
     interface MediaPlayerErrors {
@@ -3692,7 +3694,7 @@ declare namespace dashjs {
         getFonts(): FontInfo[];
 
         getFontsForTrackId(trackId: number): FontInfo[];
-        
+
         reset(): void;
     }
 

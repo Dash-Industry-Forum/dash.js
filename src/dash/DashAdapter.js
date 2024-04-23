@@ -904,7 +904,7 @@ function DashAdapter() {
                                 // if the inserted element matches the operation target (not leaf) and there is a relative position we
                                 // want the inserted position to be set such that our insertion is relative to original position
                                 // since replace has modified the array length we reduce the insert point by 1
-                                position = relativePosition + (insertBefore ? 0 : 1) + (operation.action == 'replace' ? -1 : 0);
+                                position = relativePosition + (insertBefore ? 0 : 1) + (operation.action === 'replace' ? -1 : 0);
                             } else {
                                 // otherwise we are in an add append/prepend case or replace case that removed the target name completely
                                 position = insertBefore ? 0 : updatedNodes.length;
@@ -1188,7 +1188,6 @@ function DashAdapter() {
 
     instance = {
         applyPatchToManifest,
-        getMainAdaptationForType,
         areMediaInfosEqual,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
@@ -1207,6 +1206,7 @@ function DashAdapter() {
         getIsTextTrack,
         getIsTypeOf,
         getLocation,
+        getMainAdaptationForType,
         getManifestUpdatePeriod,
         getMediaInfoForType,
         getMpd,

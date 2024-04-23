@@ -1,7 +1,7 @@
 import DashConstants from '../../../src/dash/constants/DashConstants.js';
 
 function staticSElements() {
-    return [[0,10], [10,5], [15,10]].map(([t, d]) => {
+    return [[0, 10], [10, 5], [15, 10]].map(([t, d]) => {
         return {
             __children: [],
             d: d,
@@ -44,7 +44,7 @@ function staticAdaptationSet(id) {
 }
 
 function staticBaseUrl(url, serviceLocation) {
-    if(!serviceLocation) {
+    if (!serviceLocation) {
         return url;
     }
     return {
@@ -82,24 +82,23 @@ class PatchHelper {
             [DashConstants.ORIGINAL_PUBLISH_TIME]: new Date().toISOString(),
             // only the ordered child array is simulated
             __children: operations.map((operation) => {
-                if (operation.action == 'add') {
+                if (operation.action === 'add') {
                     // add is special because it has extra possible attributes
                     return {
-                        add: {
-                            sel: operation.selector,
-                            __children: operation.children,
-                            __text: operation.text,
-                            pos: operation.position,
-                            type: operation.type
-                        }
-                    };
+                        tagName: operation.action,
+                        sel: operation.selector,
+                        __children: operation.children,
+                        __text: operation.text,
+                        pos: operation.position,
+                        type: operation.type
+                    }
+
                 } else {
                     return {
-                        [operation.action]: {
-                            sel: operation.selector,
-                            __children: operation.children,
-                            __text: operation.text
-                        }
+                        tagName: operation.action,
+                        sel: operation.selector,
+                        __children: operation.children,
+                        __text: operation.text
                     };
                 }
             })

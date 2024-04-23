@@ -207,13 +207,13 @@ function ManifestUpdater() {
                 let publishTime = adapter.getPublishTime(manifest);
 
                 // apply validated patch to manifest
-                patchSuccessful = adapter.applyPatchToManifest(manifest, patch);
+                adapter.applyPatchToManifest(manifest, patch);
 
                 // get the updated publish time
                 let updatedPublishTime = adapter.getPublishTime(manifest);
 
                 // ensure the patch properly updated the in-memory publish time
-                patchSuccessful = publishTime.getTime() != updatedPublishTime.getTime();
+                patchSuccessful = publishTime.getTime() !== updatedPublishTime.getTime();
             }
 
             // if the patch failed to apply, force a full manifest refresh
