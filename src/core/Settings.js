@@ -215,15 +215,19 @@ import Events from './events/Events';
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
- *                limitBitrateByPortal: false,
- *                usePixelRatioInLimitBitrateByPortal: false,
  *                maxBitrate: { audio: -1, video: -1 },
  *                minBitrate: { audio: -1, video: -1 },
  *                maxRepresentationRatio: { audio: 1, video: 1 },
  *                initialBitrate: { audio: -1, video: -1 },
  *                initialRepresentationRatio: { audio: -1, video: -1 },
  *                autoSwitchBitrate: { audio: true, video: true },
- *                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
+ *                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA,
+ *                limitBitrateByPortal: {
+ *                    enabled: false,
+ *                    usePixelRatio: false,
+ *                    scalingFactor: 1,
+ *                    minimumBandwidthInBit: 0
+ *                }
  *            },
  *            cmcd: {
  *                enabled: false,
@@ -605,6 +609,21 @@ import Events from './events/Events';
  */
 
 /**
+ * @typedef {Object} ABRPortalSettings
+ * @property {boolean} [enabled=false]
+ * If true, the size of the video portal will limit the max chosen video resolution.
+ * @property {boolean} [usePixelRatio=false]
+ * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ * Useful on, for example, retina displays.
+ * @property {number} [scalingFactor=1]
+ * Scales the size of the video portal used to limit the max video resolution.
+ * The square root of this value is multiplied with the width and height of the media element.
+ * Accounts for pixel ratio if `usePixelRatio` is set.
+ * @property {number} [minimumBandwidthInBit=0]
+ * Limits the minimum bandwidth video playback quality can go down to depending on the portal size.
+ */
+
+/**
  * @typedef {Object} AbrSettings
  * @property {string} [movingAverageMethod="slidingWindow"]
  * Sets the moving average method used for smoothing throughput estimates.
@@ -642,12 +661,6 @@ import Events from './events/Events';
  * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as static.
  *
  * If false, the reciprocal of the whole transfer time will be used.
- * @property {boolean} [limitBitrateByPortal=false]
- * If true, the size of the video portal will limit the max chosen video resolution.
- * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
- * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
- *
- * Useful on, for example, retina displays.
  * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}]
  * The maximum bitrate that the ABR algorithms will choose. This value is specified in kbps.
  *
@@ -681,6 +694,9 @@ import Events from './events/Events';
  * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming.
  *
  * For details please check the samples section and FetchLoader.js.
+ * 
+ * @property {module:Settings~ABRPortalSettings} limitBitrateByPortal
+ * Control the impact of the portal size on ABR.
  */
 
 /**
@@ -1042,8 +1058,6 @@ function Settings() {
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
-                limitBitrateByPortal: false,
-                usePixelRatioInLimitBitrateByPortal: false,
                 maxBitrate: {
                     audio: -1,
                     video: -1
@@ -1068,7 +1082,13 @@ function Settings() {
                     audio: true,
                     video: true
                 },
-                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
+                limitBitrateByPortal: {
+                    enabled: false,
+                    usePixelRatio: false,
+                    scalingFactor: 1,
+                    minimumBandwidthInBit: 0
+                }
             },
             cmcd: {
                 enabled: false,

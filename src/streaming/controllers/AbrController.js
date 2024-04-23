@@ -520,23 +520,38 @@ function AbrController() {
      * @private
      */
     function _checkPortalSize(idx, type, streamId) {
-        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+        if (!settings.get().streaming.abr.limitBitrateByPortal.enabled || type !== Constants.VIDEO || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
             return idx;
         }
 
         if (!windowResizeEventCalled) {
             setElementSize();
         }
+
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
         const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation_asArray;
+        
+        const scalingFactor = settings.get().streaming.abr.limitBitrateByPortal.scalingFactor > 0
+            ? Math.sqrt(settings.get().streaming.abr.limitBitrateByPortal.scalingFactor)
+            : 1;
+
+        const minimumBandwidthInBit = settings.get().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit > 0
+            ? settings.get().streaming.abr.limitBitrateByPortal.minimumBandwidthInBit
+            : 0;
+        
+        const scaledWidth = elementWidth * scalingFactor;
+        const scaledHeight = elementHeight * scalingFactor;
+        
         let newIdx = idx;
 
-        if (elementWidth > 0 && elementHeight > 0) {
+        if (scaledWidth > 0 && scaledHeight > 0) {
             while (
                 newIdx > 0 &&
                 representation[newIdx] &&
-                elementWidth < representation[newIdx].width &&
-                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth) {
+                scaledWidth < representation[newIdx].width &&
+                scaledWidth - representation[newIdx - 1].width < representation[newIdx].width - scaledWidth &&
+                representation[newIdx - 1].bandwidth >= minimumBandwidthInBit
+            ) {
                 newIdx = newIdx - 1;
             }
 
@@ -905,7 +920,7 @@ function AbrController() {
 
     function setElementSize() {
         if (videoModel) {
-            const hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+            const hasPixelRatio = settings.get().streaming.abr.limitBitrateByPortal.usePixelRatio && window.hasOwnProperty('devicePixelRatio');
             const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
             elementWidth = videoModel.getClientWidth() * pixelRatio;
             elementHeight = videoModel.getClientHeight() * pixelRatio;

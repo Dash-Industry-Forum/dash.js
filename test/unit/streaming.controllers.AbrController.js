@@ -270,6 +270,60 @@ describe('AbrController', function () {
         expect(minAllowedIndex).to.be.equal(0);
     });
 
+    it('should return the appropriate max allowed index for the portal scale', function () {
+        const mediaInfo = streamProcessor.getMediaInfo();
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.representationCount = 5;
+        mediaInfo.type = Constants.VIDEO;
+        abrCtrl.updateTopQualityIndex(mediaInfo);
+
+        const s = { streaming: { abr: { limitBitrateByPortal: { enabled: true } } } };
+        const streamId = streamProcessor.getStreamInfo().id;
+        settings.update(s);
+
+        videoModelMock.width = 1000;
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(4);
+
+        videoModelMock.width = 800;
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(1);
+
+        s.streaming.abr.limitBitrateByPortal.scalingFactor = 2;
+        settings.update(s);
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(4);
+
+        s.streaming.abr.limitBitrateByPortal.scalingFactor = 0.2;
+        settings.update(s);
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.be.equal(0);
+    })
+
+    it('should limit the min allowed bitrate for the portal scale', function () {
+        const mediaInfo = streamProcessor.getMediaInfo();
+
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.representationCount = 5;
+        mediaInfo.type = Constants.VIDEO;
+        abrCtrl.updateTopQualityIndex(mediaInfo);
+
+        const s = { streaming: { abr: { limitBitrateByPortal: { enabled: true } } } };
+        const streamId = streamProcessor.getStreamInfo().id;
+        settings.update(s);
+
+        s.streaming.abr.limitBitrateByPortal.scalingFactor = 0.2;
+        settings.update(s);
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.equal(0);
+
+        s.streaming.abr.limitBitrateByPortal.minimumBandwidthInBit = 2000000;
+        settings.update(s);
+
+        expect(abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId)).to.equal(1);
+    })
+
     it('should configure initial bitrate for video type', function () {
         domStorageMock.setSavedBitrateSettings(Constants.VIDEO, 50);
 
@@ -290,7 +344,7 @@ describe('AbrController', function () {
         expect(bitrateInfo.bitrate).to.be.equal(3000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(2);
 
-        const s = { streaming: { abr: { limitBitrateByPortal: true } } };
+        const s = { streaming: { abr: { limitBitrateByPortal: { enabled: true } } } };
         settings.update(s);
 
         bitrateInfo = abrCtrl.getTopBitrateInfoFor(Constants.VIDEO);
