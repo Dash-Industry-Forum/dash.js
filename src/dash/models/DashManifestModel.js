@@ -641,11 +641,16 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (getIsText(processedRealAdaptation) &&
-                        getIsFragmented(processedRealAdaptation) &&
-                        processedRealAdaptation.mimeType &&
-                        processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
-                        voRepresentation.range = 0;
+                    } else {
+                        const mimeType = processedRealAdaptation.mimeType || getMimeType(processedRealAdaptation);
+                        if (
+                            getIsText(processedRealAdaptation) &&
+                            getIsFragmented(processedRealAdaptation) &&
+                            mimeType &&
+                            mimeType.indexOf('application/mp4') === -1
+                        ) {
+                            voRepresentation.range = 0;
+                        }
                     }
 
                     if (segmentInfo.hasOwnProperty(DashConstants.TIMESCALE)) {
