@@ -75,6 +75,14 @@
     "githook.cjs",
     "index.d.ts",
     "dist",
-    "contrib/akamai"
+    "contrib/akamai",
+    "contrib/videojs-vtt.js/vtt.min.js"
+  ],
+  "keywords": [
+    "DASH",
+    "DASH-IF",
+    "MSE",
+    "EME",
+    "Smooth Streaming"
   ]
 }
