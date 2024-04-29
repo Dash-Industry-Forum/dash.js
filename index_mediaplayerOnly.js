@@ -34,8 +34,6 @@ import FactoryMaker from './src/core/FactoryMaker.js';
 import Debug from './src/core/Debug.js';
 import { getVersionString } from './src/core/Version.js';
 
-import { } from 'es6-promise/auto.js';
-
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;
 

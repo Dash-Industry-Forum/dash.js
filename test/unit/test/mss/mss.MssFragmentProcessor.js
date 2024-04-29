@@ -97,11 +97,9 @@ describe('MssFragmentProcessor', function () {
                 type: 'audio'
             }
         };
-        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
-            name: 'Unsupported codec',
-            message: 'Unsupported codec',
-            data: {}
-        });
+
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw().with.property('code', MssErrors.MSS_UNSUPPORTED_CODEC_CODE);
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw().with.property('message', MssErrors.MSS_UNSUPPORTED_CODEC_MESSAGE);
     });
 
     it('should not throw an error when attempting to call generateMoov for audio mp4 initialization segment', () => {
@@ -128,11 +126,7 @@ describe('MssFragmentProcessor', function () {
                 }, index: 0, type: 'audio'
             }
         };
-        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
-            name: 'Unsupported codec',
-            message: 'Unsupported codec',
-            data: {}
-        });
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw();
     });
 
     it('should throw an error when attempting to call generateMoov for video mp4 initialization segment', () => {
@@ -154,16 +148,15 @@ describe('MssFragmentProcessor', function () {
             width: NaN,
             adaptation: {
                 period: {
-                    mpd: { manifest: { Period_: [{ AdaptationSet_: [{ SegmentTemplate: { timescale: 0 } }] }] } },
+                    mpd: { manifest: { Period: [{ AdaptationSet: [{ SegmentTemplate: { timescale: 0 } }] }] } },
                     index: 0
-                }, index: 0, type: 'video'
+                },
+                index: 0,
+                type: 'video'
             }
         };
-        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
-            name: 'Unsupported codec',
-            message: 'Unsupported codec',
-            data: {}
-        });
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw().with.property('code', MssErrors.MSS_UNSUPPORTED_CODEC_CODE);
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw().with.property('message', MssErrors.MSS_UNSUPPORTED_CODEC_MESSAGE);
     });
 
     it('should not throw an error when attempting to call generateMoov for video mp4 initialization segment', () => {
@@ -190,10 +183,6 @@ describe('MssFragmentProcessor', function () {
                 }, index: 0, type: 'video'
             }
         };
-        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
-            name: 'Unsupported codec',
-            message: 'Unsupported codec',
-            data: {}
-        });
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw();
     });
 });

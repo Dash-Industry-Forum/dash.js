@@ -31,7 +31,7 @@ const configProd = merge(common, {
             files: [
                 'src/**/*.js',
                 'test/unit/mocks/*.js',
-                'test/unit/*.js'
+                'test/unit/test/**/*.js'
             ]
         })
     ]

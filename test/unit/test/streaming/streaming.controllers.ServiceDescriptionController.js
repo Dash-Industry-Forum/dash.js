@@ -86,9 +86,11 @@ describe('ServiceDescriptionController', () => {
             serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
 
             const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
+            console.log('currentSettings', currentSettings)
             expect(currentSettings.liveDelay).to.be.NaN;
             expect(currentSettings.liveCatchup.maxDrift).to.be.NaN;
-            expect(currentSettings.liveCatchup.playbackRate).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.NaN;
             expect(currentSettings.minBitrate).to.be.empty;
             expect(currentSettings.maxBitrate).to.be.empty;
             expect(currentSettings.initialBitrate).to.be.empty;
@@ -125,7 +127,8 @@ describe('ServiceDescriptionController', () => {
             const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
             expect(currentSettings.liveDelay).to.be.equal(10);
             expect(currentSettings.liveCatchup.maxDrift).to.be.NaN;
-            expect(currentSettings.liveCatchup.playbackRate).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate.max).to.be.NaN;
+            expect(currentSettings.liveCatchup.playbackRate.min).to.be.NaN;
             expect(currentSettings.minBitrate).to.be.empty;
             expect(currentSettings.maxBitrate).to.be.empty;
             expect(currentSettings.initialBitrate).to.be.empty;
