@@ -1,12 +1,12 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']); /* jshint ignore:line */
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 });
 
-angular.module('DashSourcesService', ['ngResource']).factory('sources', function ($resource) { /* jshint ignore:line */
+angular.module('DashSourcesService', ['ngResource']).factory('sources', function ($resource) {
     return $resource('app/sources.json', {}, {
         query: {
             method: 'GET',
@@ -15,7 +15,7 @@ angular.module('DashSourcesService', ['ngResource']).factory('sources', function
     });
 });
 
-angular.module('DashContributorsService', ['ngResource']).factory('contributors', function ($resource) { /* jshint ignore:line */
+angular.module('DashContributorsService', ['ngResource']).factory('contributors', function ($resource) {
     return $resource('app/contributors.json', {}, {
         query: {
             method: 'GET',
@@ -24,7 +24,7 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) { /* jshint ignore:line */
+angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
     return $resource('https://testassets.dashif.org/dashjs.json', {}, {
         query: {
             method: 'GET',
@@ -41,7 +41,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     sources.query(function (data) {
         $scope.availableStreams = data.items;
         // if no mss package, remove mss samples.
-        var MssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        var MssHandler = dashjs.MssHandler;
         if (typeof MssHandler !== 'function') {
             for (var i = $scope.availableStreams.length - 1; i >= 0; i--) {
                 if ($scope.availableStreams[i].name === 'Smooth Streaming') {
@@ -346,11 +346,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.video = document.querySelector('.dash-video-player video');
     // store a ref in window.player to provide an easy way to play with dash.js API
-    window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+    window.player = $scope.player = dashjs.MediaPlayer().create();
 
     const defaultSettings = JSON.parse(JSON.stringify($scope.player.getSettings()));
 
-    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
         console.log(e);
         if (!e.event) {
             $scope.$apply(function () {
@@ -415,12 +415,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         document.getElementById('never-replace-audio').checked = true;
     }
 
-    $scope.controlbar = new ControlBar($scope.player); /* jshint ignore:line */
+    $scope.controlbar = new ControlBar($scope.player);
     $scope.controlbar.initialize();
     $scope.controlbar.disable();
     $scope.version = $scope.player.getVersion();
 
-    $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) {
         $scope.isDynamic = e.data.type === 'dynamic';
     }, $scope);
 
@@ -438,17 +438,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
 
-    $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
         $scope.currentStreamInfo = e.toStreamInfo;
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
         $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndex + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) {
         stopMetricsInterval();
         $scope.videoQualities = $scope.player.getRepresentationsByType('video');
         $scope.chartCount = 0;
@@ -459,20 +459,20 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }, $scope.updateMetricsInterval);
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function (e) {
         if ($('#loop-cb').is(':checked') &&
             e && e.isLast) {
             $scope.doLoad();
         }
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function (e) {
         if (e.data) {
             $scope.selectedKeySystem = e.data.keySystem.systemString;
         }
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function (e) {
         if (e.data) {
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
@@ -481,7 +481,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.CONFORMANCE_VIOLATION, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.CONFORMANCE_VIOLATION, function (e) {
         if (e && e.event && e.event.key && !$scope.conformanceViolations[e.event.key]) {
             var existingViolation = $scope.conformanceViolations.filter(function (violation) {
                 return violation.event.key === e.event.key;
@@ -1785,8 +1785,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     $scope.muted = this.parseBoolean(value);
                     $scope.toggleMuted();
                     if ($scope.muted === true){
-                        document.getElementById('muteBtn')?.click();    
-                    } 
+                        document.getElementById('muteBtn')?.click();
+                    }
                     break;
                 case 'drmToday':
                     $scope.drmToday = this.parseBoolean(value);
@@ -2457,8 +2457,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 }]);
 
-function legendLabelClickHandler(obj) { /* jshint ignore:line */
-    var scope = angular.element($('body')).scope(); /* jshint ignore:line */
+function legendLabelClickHandler(obj) {
+    var scope = angular.element($('body')).scope();
     var id = obj.id.split('.');
     var target = scope.chartState[id[0]][id[1]];
     target.selected = !target.selected;

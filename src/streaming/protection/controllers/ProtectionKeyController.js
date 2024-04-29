@@ -401,4 +401,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(ProtectionKeyController); 

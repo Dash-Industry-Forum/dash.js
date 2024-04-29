@@ -73,4 +73,4 @@ function ReportingController(config) {
 }
 
 ReportingController.__dashjs_factory_name = 'ReportingController';
-export default FactoryMaker.getClassFactory(ReportingController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ReportingController); 

@@ -73,4 +73,4 @@ function HandlerHelpers() {
 }
 
 HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
-export default FactoryMaker.getSingletonFactory(HandlerHelpers); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(HandlerHelpers); 

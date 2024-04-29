@@ -101,4 +101,4 @@ function RangeController(config) {
 }
 
 RangeController.__dashjs_factory_name = 'RangeController';
-export default FactoryMaker.getClassFactory(RangeController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(RangeController); 

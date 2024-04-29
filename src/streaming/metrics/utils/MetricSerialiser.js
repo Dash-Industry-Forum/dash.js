@@ -99,4 +99,4 @@ function MetricSerialiser() {
 }
 
 MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
-export default FactoryMaker.getSingletonFactory(MetricSerialiser); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(MetricSerialiser); 

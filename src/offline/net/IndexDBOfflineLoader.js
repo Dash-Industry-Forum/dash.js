@@ -100,5 +100,5 @@ function IndexDBOfflineLoader(config) {
 }
 
 IndexDBOfflineLoader.__dashjs_factory_name = 'IndexDBOfflineLoader';
-const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); 
 export default factory;
