@@ -667,4 +667,4 @@ function OfflineDownload(config) {
 }
 
 OfflineDownload.__dashjs_factory_name = 'OfflineDownload';
-export default FactoryMaker.getClassFactory(OfflineDownload); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineDownload); 

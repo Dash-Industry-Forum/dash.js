@@ -379,5 +379,5 @@ function OfflineStreamProcessor(config) {
 }
 
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
-const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); 
 export default factory;

@@ -112,5 +112,5 @@ function KeySystemW3CClearKey(config) {
 }
 
 KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
-export default FactoryMaker.getSingletonFactory(KeySystemW3CClearKey); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemW3CClearKey); 
 

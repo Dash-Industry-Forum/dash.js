@@ -198,4 +198,4 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(DVBReporting); 

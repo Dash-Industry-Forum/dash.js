@@ -401,4 +401,4 @@ function ProtectionModel_3Feb2014(config) {
 }
 
 ProtectionModel_3Feb2014.__dashjs_factory_name = 'ProtectionModel_3Feb2014';
-export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014); 

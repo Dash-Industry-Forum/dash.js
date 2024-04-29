@@ -177,4 +177,4 @@ function DVBErrorsTranslator(config) {
 }
 
 DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
-export default FactoryMaker.getSingletonFactory(DVBErrorsTranslator); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(DVBErrorsTranslator); 

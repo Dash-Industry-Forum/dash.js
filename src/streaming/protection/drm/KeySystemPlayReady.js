@@ -306,4 +306,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemPlayReady); 

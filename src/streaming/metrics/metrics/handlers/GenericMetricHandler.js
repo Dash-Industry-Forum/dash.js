@@ -69,4 +69,4 @@ function GenericMetricHandler() {
 }
 
 GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
-export default FactoryMaker.getClassFactory(GenericMetricHandler); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(GenericMetricHandler); 

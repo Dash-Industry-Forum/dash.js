@@ -489,4 +489,4 @@ function OfflineIndexDBManifestParser(config) {
     return instance;
 }
 OfflineIndexDBManifestParser.__dashjs_factory_name = 'OfflineIndexDBManifestParser';
-export default FactoryMaker.getClassFactory(OfflineIndexDBManifestParser); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineIndexDBManifestParser); 

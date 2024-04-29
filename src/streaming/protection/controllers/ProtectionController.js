@@ -1136,4 +1136,4 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-export default FactoryMaker.getClassFactory(ProtectionController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(ProtectionController); 

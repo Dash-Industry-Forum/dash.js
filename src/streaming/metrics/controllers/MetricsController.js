@@ -97,4 +97,4 @@ function MetricsController(config) {
 }
 
 MetricsController.__dashjs_factory_name = 'MetricsController';
-export default FactoryMaker.getClassFactory(MetricsController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MetricsController); 

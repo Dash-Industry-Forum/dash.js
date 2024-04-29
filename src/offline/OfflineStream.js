@@ -339,4 +339,4 @@ function OfflineStream(config) {
 }
 
 OfflineStream.__dashjs_factory_name = 'OfflineStream';
-export default FactoryMaker.getClassFactory(OfflineStream); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineStream); 

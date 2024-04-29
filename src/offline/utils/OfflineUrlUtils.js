@@ -72,4 +72,4 @@ function OfflineUrlUtils() {
 }
 
 OfflineUrlUtils.__dashjs_factory_name = 'OfflineUrlUtils';
-export default FactoryMaker.getSingletonFactory(OfflineUrlUtils); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(OfflineUrlUtils); 

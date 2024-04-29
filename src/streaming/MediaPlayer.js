@@ -2398,7 +2398,7 @@ function MediaPlayer() {
             return null
         }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
-        let detectedProtection = dashjs.Protection; /* jshint ignore:line */
+        let detectedProtection = dashjs.Protection; 
         if (typeof detectedProtection === 'function') { //TODO need a better way to register/detect plugin components
             let protection = detectedProtection(context).create();
             Events.extend(detectedProtection.events);
@@ -2434,7 +2434,7 @@ function MediaPlayer() {
             return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-        let detectedMetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
+        let detectedMetricsReporting = dashjs.MetricsReporting; 
         if (typeof detectedMetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
             let metricsReporting = detectedMetricsReporting(context).create();
 
@@ -2458,7 +2458,7 @@ function MediaPlayer() {
         }
 
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-        let detectedMssHandler = dashjs.MssHandler; /* jshint ignore:line */
+        let detectedMssHandler = dashjs.MssHandler; 
         if (typeof detectedMssHandler === 'function') { //TODO need a better way to register/detect plugin components
             Errors.extend(detectedMssHandler.errors);
             mssHandler = detectedMssHandler(context).create({
@@ -2496,7 +2496,7 @@ function MediaPlayer() {
         }
 
         // do not require Offline as dependencies as this is optional and intended to be loaded separately
-        let detectedOfflineController = dashjs.OfflineController; /* jshint ignore:line */
+        let detectedOfflineController = dashjs.OfflineController; 
 
         if (typeof detectedOfflineController === 'function') { //TODO need a better way to register/detect plugin components
             Events.extend(detectedOfflineController.events);

@@ -88,4 +88,4 @@ function DVBErrorsHandler(config) {
     return instance;
 }
 
-export default FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(DVBErrorsHandler); 
