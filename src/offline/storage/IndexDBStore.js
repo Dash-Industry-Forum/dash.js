@@ -33,7 +33,7 @@
  * @ignore
  */
 import localforage from 'localforage';
-import {XmlEntities as entities} from 'html-entities';
+import {decode} from 'html-entities';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 function IndexDBStore() {
@@ -195,7 +195,7 @@ function IndexDBStore() {
                     }
                 }
                 if (item !== null) {
-                    item.manifest = entities.decode(item.manifest);
+                    item.manifest = decode(item.manifest);
                     return Promise.resolve(item);
                 } else {
                     return Promise.reject('Cannot found manifest with this manifestId : ' + id);
