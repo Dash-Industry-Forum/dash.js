@@ -819,6 +819,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "HDR Video Capabilities",
+                "description": "This sample uses Media Capabilities API together with HDR-related EssentialProperty descriptors.",
+                "href": "advanced/hdr-video.html",
+                "image": "http://webapi.streaming.dolby.com/v0_9/sources/media/v01/img/dolbyaudio_black2.png",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
