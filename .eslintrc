@@ -14,6 +14,7 @@
     "MediaKeys": true
   },
   "parserOptions": {
+    "ecmaVersion": 2020,
     "sourceType": "module",
     "parser": "@babel/eslint-parser",
     "requireConfigFile": false
