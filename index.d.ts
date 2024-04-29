@@ -1258,13 +1258,15 @@ declare namespace dashjs {
                 }
             },
             cmcd?: {
+                applyParametersFromMpd?:boolean,
                 enabled?: boolean,
                 sid?: string | null,
                 cid?: string | null,
                 rtp?: number | null,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
-                enabledKeys?: Array<string>
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>
             },
             cmsd?: {
                 enabled?: boolean,

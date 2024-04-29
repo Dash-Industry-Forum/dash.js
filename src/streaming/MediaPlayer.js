@@ -80,6 +80,7 @@ import BoxParser from './utils/BoxParser.js';
 import TextController from './text/TextController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
+import ClientDataReportingController from './controllers/ClientDataReportingController.js';
 
 /**
  * The media types
@@ -168,7 +169,8 @@ function MediaPlayer() {
         videoModel,
         uriFragmentModel,
         domStorage,
-        segmentBaseController;
+        segmentBaseController,
+        clientDataReportingController;
 
     /*
     ---------------------------------------------------------------------------
@@ -233,6 +235,9 @@ function MediaPlayer() {
         }
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
+        }
+        if (config.clientDataReportingController) {
+            clientDataReportingController = config.clientDataReportingController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -349,6 +354,8 @@ function MediaPlayer() {
             cmcdModel = CmcdModel(context).getInstance();
 
             cmsdModel = CmsdModel(context).getInstance();
+
+            clientDataReportingController = ClientDataReportingController(context).getInstance();
 
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
@@ -2347,8 +2354,13 @@ function MediaPlayer() {
             abrController,
             dashMetrics,
             playbackController,
-            throughputController
+            serviceDescriptionController,
+            throughputController,
         });
+
+        clientDataReportingController.setConfig({
+            serviceDescriptionController
+        })
 
         cmsdModel.setConfig({});
 

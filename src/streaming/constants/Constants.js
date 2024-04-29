@@ -214,6 +214,22 @@ export default {
      *  @static
      */
     CMCD_MODE_HEADER: 'header',
+
+    /**
+     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the availables keys for CMCD metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+
+    /**
+     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CMCD metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+
+
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
@@ -226,6 +242,7 @@ export default {
     START_TIME: 'starttime',
     SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
     SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
+    CTA_5004_2023_SCHEME: 'urn:mpeg:dash:cta-5004:2023',
     THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
     COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
@@ -292,4 +309,3 @@ export default {
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token'
 }
-
