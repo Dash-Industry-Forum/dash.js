@@ -404,7 +404,8 @@ describe('CmcdModel', function () {
                 expect(headers[REQUEST_HEADER_NAME].split(',').map(e => {
                     return e.split('=')[0]
                 })).to.not.include('dl');
-                expect(headers[STATUS_HEADER_NAME]).to.be.empty;
+                console.log(headers)
+                expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
                 expect(headers[SESSION_HEADER_NAME]).to.be.empty;
             });
 
@@ -426,10 +427,10 @@ describe('CmcdModel', function () {
                     }
                 });
                 let headers = cmcdModel.getHeaderParameters(request);
-                expect(headers[OBJECT_HEADER_NAME]).to.be.empty;
-                expect(headers[REQUEST_HEADER_NAME]).to.be.empty;
-                expect(headers[STATUS_HEADER_NAME]).to.be.empty;
-                expect(headers[SESSION_HEADER_NAME]).to.be.empty;
+                expect(headers[OBJECT_HEADER_NAME]).to.be.undefined;
+                expect(headers[REQUEST_HEADER_NAME]).to.be.undefined;
+                expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
+                expect(headers[SESSION_HEADER_NAME]).to.be.undefined;
             });
         })
 
@@ -753,8 +754,7 @@ describe('CmcdModel', function () {
 
                 abrControllerMock.getPossibleVoRepresentations = () => {
                     return [
-                        {
-                        }
+                        {}
                     ]
                 };
                 let request = {
