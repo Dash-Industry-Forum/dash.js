@@ -9,11 +9,11 @@
   },
   "testvectors": [
     {
-      "name": "AWS Single Period $number$",
-      "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
-      "type": "live",
+      "name": "Segment Base",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
       "includedTestfiles": [
-        "playback-advanced/cmcd"
+        "playback/*"
       ]
     }
   ]

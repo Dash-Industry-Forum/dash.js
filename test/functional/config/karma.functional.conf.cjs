@@ -125,6 +125,8 @@ module.exports = function (config) {
         autoWatch: false,
 
         browserNoActivityTimeout: 180000,
+        browserDisconnectTimeout: 20000,
+        browserDisconnectTolerance: 3,
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher

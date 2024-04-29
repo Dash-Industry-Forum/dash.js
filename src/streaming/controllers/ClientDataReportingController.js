@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2023, Dash Industry Forum.
+ * Copyright (c) 2024, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,51 +28,47 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
-import DashConstants from '../constants/DashConstants.js'
+import FactoryMaker from '../../core/FactoryMaker.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 
-class DescriptorType {
-    constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
-    }
+function ClientDataReportingController() {
 
-    init(data) {
-        if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value ? data.value.toString() : null;
-            this.id = data.id ? data.id : null;
-            // Only add the DVB extensions if they exist
-            if (data[DashConstants.DVB_URL]) {
-                this.dvbUrl = data[DashConstants.DVB_URL]
-            }
-            if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
-            }
-            if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
-            }
+    let instance,
+        serviceDescriptionController;
+
+    function setConfig(config) {
+        if (!config) return;
+    
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
     }
 
-    inArray(arr) {
-        if (arr) {
-            return arr.some((entry) => {
-                return (
-                    this.schemeIdUri === entry.schemeIdUri && (
-                        this.value ?
-                            (this.value.toString().match(entry.value)) : // check if provided value matches RegExp
-                            (''.match(entry.value)) // check if RegExp allows absent value   
-                    )
-                );
-            })
+    function isServiceLocationIncluded(requestType, serviceLocation) {
+
+        if (requestType === HTTPRequest.CONTENT_STEERING_TYPE) {
+            return true;
         }
-        return false;
+
+        const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
+        return isIncluded;
     }
+
+    function isAdaptationsIncluded(adaptationSet) {
+        const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
+        return isIncluded;
+    }
+
+    instance = {
+        setConfig,
+        isAdaptationsIncluded,
+        isServiceLocationIncluded,
+    };
+
+    return instance;
 }
 
-export default DescriptorType;
+ClientDataReportingController.__dashjs_factory_name = 'ClientDataReportingController';
+export default FactoryMaker.getSingletonFactory(ClientDataReportingController);

@@ -8,13 +8,13 @@ import {expect} from 'chai';
 
 const context = {};
 
-let dashParser = DashParser(context).create({debug: new DebugMock()});
+let dashParser = DashParser(context).create({ debug: new DebugMock() });
 const errorHandlerMock = new ErrorHandlerMock();
 const dashManifestModel = DashManifestModel(context).getInstance();
 
 describe('DashParser', function () {
 
-    it('should throw an error when parse is called without data and config object has been set properly', function () {
+    it('should throw an error when parse is called without data and config object has been set properly', () => {
         expect(dashParser.parse.bind('')).to.be.throw('failed to parse the manifest');
     });
 

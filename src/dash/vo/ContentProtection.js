@@ -43,6 +43,7 @@ class ContentProtection extends DescriptorType {
         this.refId = null;
         this.robustness = null;
         this.keyId = null;
+        this.cencDefaultKid = null;
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
@@ -58,7 +59,7 @@ class ContentProtection extends DescriptorType {
             this.cencDefaultKid = data.hasOwnProperty(DashConstants.CENC_DEFAULT_KID) ? data[DashConstants.CENC_DEFAULT_KID] : null;
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
-            this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : null;
+            this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
         }
     }
 

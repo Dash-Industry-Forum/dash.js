@@ -150,7 +150,6 @@ export function translateEntitiesAndCharacterReferences(entitiesList, str) {
                     }
 
                     if (pos + 1) pos += 1
-
                     return children;
                 } else if (S.charCodeAt(pos + 1) === exclamationCC) {
                     if (S.charCodeAt(pos + 2) == minusCC) {
@@ -210,7 +209,6 @@ export function translateEntitiesAndCharacterReferences(entitiesList, str) {
                 // Transform/process on the fly child nodes to add them to their parent as an array or an object
                 if (parent) {
                     let tagName = node.tagName;
-                    delete node.tagName;
                     if (nodesAsArray.indexOf(tagName) !== -1) {
                         if (!parent[tagName]) {
                             parent[tagName] = [];
@@ -360,6 +358,7 @@ export function translateEntitiesAndCharacterReferences(entitiesList, str) {
             pos++;
         }
         // dash.js - BEGIN
+        node.__children = children;
         return node;
         // dash.js - END
     }

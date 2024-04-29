@@ -91,7 +91,7 @@ describe('KeySystemPlayready', function () {
 
         it('should return the correct cdmData', function () {
             cdmData = keySystem.getCDMData(protData.cdmData);
-            expect(keySystem).to.be.defined;
+            expect(keySystem).to.not.be.undefined;
             expect(cdmData).to.be.not.null;
             expect(cdmData).to.be.instanceOf(ArrayBuffer);
             var cdmDataString = String.fromCharCode.apply(null, new Uint16Array(cdmData));

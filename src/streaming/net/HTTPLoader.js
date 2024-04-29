@@ -43,6 +43,7 @@ import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
 import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
+import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 
 /**
  * @module HTTPLoader
@@ -75,6 +76,7 @@ function HTTPLoader(cfg) {
         fetchLoader,
         customParametersModel,
         commonAccessTokenController,
+        clientDataReportingController,
         logger;
 
     function setup() {
@@ -83,6 +85,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        clientDataReportingController = ClientDataReportingController(context).getInstance();
         cmsdModel = CmsdModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
         commonAccessTokenController = CommonAccessTokenController(context).getInstance();
@@ -566,16 +569,7 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _updateRequestUrlAndHeaders(request) {
-
-        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
-            const cmcdMode = settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                const additionalQueryParameter = _getAdditionalQueryParameter(request);
-                request.url = Utils.addAditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = Object.assign(request.headers, cmcdModel.getHeaderParameters(request));
-            }
-        }
+        _updateRequestUrlAndHeadersWithCMCD(request);
 
         // Add queryParams that came from pathway cloning
         if (request.queryParams) {
@@ -592,6 +586,28 @@ function HTTPLoader(cfg) {
         const commonAccessToken = commonAccessTokenController.getCommonAccessTokenForUrl(request.url)
         if (commonAccessToken) {
             request.headers[Constants.COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken
+        }
+    }
+
+    /**
+     * Updates the request url and headers with CMCD data
+     * @param request
+     * @private
+     */
+    function _updateRequestUrlAndHeadersWithCMCD(request) {
+        const currentServiceLocation = request?.serviceLocation;
+        const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
+        const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
+            clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
+        if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
+            const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                request.url = Utils.addAditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                request.headers = Object.assign(request.headers, cmcdModel.getHeaderParameters(request));
+            }
         }
     }
 

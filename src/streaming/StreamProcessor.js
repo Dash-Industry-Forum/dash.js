@@ -471,7 +471,7 @@ function StreamProcessor(config) {
                 adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, currentMediaInfo, representation, settings.get().streaming.gaps.threshold);
             } else if (isDynamic && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
                 // If we find a valid request ahead of the current time then we are in a gap. Segments are only added at the end of the timeline
-                adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, currentMediaInfo, representation, settings.get().streaming.gaps.threshold,);
+                adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, currentMediaInfo, representation, settings.get().streaming.gaps.threshold);
             }
             if (!isNaN(adjustedTime) && adjustedTime !== bufferingTime) {
                 if (playbackController.isSeeking() || playbackController.getTime() === 0) {

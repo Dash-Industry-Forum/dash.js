@@ -1258,13 +1258,15 @@ declare namespace dashjs {
                 }
             },
             cmcd?: {
+                applyParametersFromMpd?:boolean,
                 enabled?: boolean,
                 sid?: string | null,
                 cid?: string | null,
                 rtp?: number | null,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header',
-                enabledKeys?: Array<string>
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>
             },
             cmsd?: {
                 enabled?: boolean,
@@ -1570,6 +1572,8 @@ declare namespace dashjs {
         reset(): void;
 
         destroy(): void;
+
+        getManifest(): object;
 
     }
 
@@ -3690,7 +3694,7 @@ declare namespace dashjs {
         getFonts(): FontInfo[];
 
         getFontsForTrackId(trackId: number): FontInfo[];
-        
+
         reset(): void;
     }
 

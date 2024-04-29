@@ -165,6 +165,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Live stream with MPD Patching",
+                "description": "Example showing how dash.js handles live streams with updates to the MPD provided via MPD patching",
+                "href": "live-streaming/mpd-patching.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -687,9 +698,31 @@
                 ]
             },
             {
+                "title": "CMCD Reporting from manifest",
+                "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005). Configuring it from manifest file.",
+                "href": "advanced/cmcd-from-manifest.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Custom Capabilities Filters",
                 "description": "This sample shows how to filter representations.",
                 "href": "advanced/custom-capabilities-filters.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Custom Capabilities Filter - MediaCapabilitiesAPI",
+                "description": "This sample shows how to filter representations based on responses from Media Capabilities API.",
+                "href": "advanced/custom-capabilities-filter-mca.html",
                 "image": "lib/img/bbb-2.jpg",
                 "labels": [
                     "VoD",

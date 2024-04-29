@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2023, Dash Industry Forum.
+ * Copyright (c) 2024, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,51 +28,37 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import DescriptorType from './DescriptorType.js';
+
 /**
  * @class
  * @ignore
  */
-import DashConstants from '../constants/DashConstants.js'
-
-class DescriptorType {
+class CMCDParameters extends DescriptorType {
     constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
+        super();
+        this.version = null;
+        this.sessionID = null;
+        this.contentID = null;
+        this.mode = null;
+        this.keys = null;
+        this.includeInRequests = null;
     }
 
     init(data) {
-        if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value ? data.value.toString() : null;
-            this.id = data.id ? data.id : null;
-            // Only add the DVB extensions if they exist
-            if (data[DashConstants.DVB_URL]) {
-                this.dvbUrl = data[DashConstants.DVB_URL]
-            }
-            if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
-            }
-            if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
-            }
-        }
-    }
+        super.init(data);
 
-    inArray(arr) {
-        if (arr) {
-            return arr.some((entry) => {
-                return (
-                    this.schemeIdUri === entry.schemeIdUri && (
-                        this.value ?
-                            (this.value.toString().match(entry.value)) : // check if provided value matches RegExp
-                            (''.match(entry.value)) // check if RegExp allows absent value   
-                    )
-                );
-            })
+        if (data) {
+            this.version = data.version;
+            this.sessionID = data.sessionID;
+            this.contentID = data.contentID;
+            this.mode = data.mode ?? 'query';
+            this.keys = data.keys ? data.keys.split(' ') : null;
+            this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : ['segment'];
+            this.schemeIdUri = data.schemeIdUri;
         }
-        return false;
     }
 }
 
-export default DescriptorType;
+export default CMCDParameters;

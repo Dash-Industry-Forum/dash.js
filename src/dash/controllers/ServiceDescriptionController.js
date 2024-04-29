@@ -80,7 +80,8 @@ function ServiceDescriptionController() {
             minBitrate: {},
             maxBitrate: {},
             initialBitrate: {},
-            contentSteering: null
+            contentSteering: null,
+            clientDataReporting: null,
         };
         prftOffsets = [];
     }
@@ -127,6 +128,10 @@ function ServiceDescriptionController() {
 
         if (sd.contentSteering) {
             _applyServiceDescriptionContentSteering(sd);
+        }
+
+        if (sd.clientDataReporting) {
+            _applyServiceDescriptionClientDataReporting(sd);
         }
     }
 
@@ -291,6 +296,15 @@ function ServiceDescriptionController() {
      */
     function _applyServiceDescriptionContentSteering(sd) {
         serviceDescriptionSettings.contentSteering = sd.contentSteering;
+    }
+
+    /**
+     * Add information about client data reporting element. Handling is up to the CMCDModel
+     *  @param {object} sd
+     *  @private
+     */
+    function _applyServiceDescriptionClientDataReporting(sd) {
+        serviceDescriptionSettings.clientDataReporting = sd.clientDataReporting;
     }
 
     /**
