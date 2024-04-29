@@ -162,19 +162,76 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createVideoConfiguration(rep, codec) {
-        const width = rep.width || null;
-        const height = rep.height || null;
-        const framerate = rep.frameRate || null;
-        const bitrate = rep.bandwidth || null;
-
-        return {
-            codec,
-            width,
-            height,
-            framerate,
-            bitrate
+    function _convertHDRPropertiesToConfig(representation) {
+        let cfg = {
+            colorGamut: 'srgb',
+            transferFunction: 'srgb',
+            isSupported: true
         };
+
+        for (const prop of representation.EssentialProperty || []) {
+
+            // note: MCA does not reflect a parameter related to 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag'
+
+            // translate ColourPrimaries signaling into capability queries
+            if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [1, 5, 6, 7].includes(prop.value)) {
+                cfg.colorGamut = 'srgb';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [11, 12].includes(prop.value)) {
+                cfg.colorGamut = 'p3';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [9].includes(prop.value)) {
+                cfg.colorGamut = 'rec2020';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries') {
+                cfg.isSupported = false;
+            }
+
+            // translate TransferCharacteristics signaling into capability queries
+            if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [1, 6, 13, 14, 15].includes(prop.value)) {
+                cfg.transferFunction = 'srgb';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [16].includes(prop.value)) {
+                cfg.transferFunction = 'pq';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [18].includes(prop.value)) {
+                cfg.transferFunction = 'hlg';
+            }
+            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics') {
+                cfg.isSupported = false;
+            }
+
+            // translate hdrMetadataType signaling into capability queries
+            if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'ST2094-10') {
+                cfg.hdrMetadataType = 'smpteSt2094-10';
+            }
+            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'SL-HDR2') {
+                cfg.hdrMetadataType = 'slhdr2'; // TODO: this is not specified by W3C
+            }
+            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'ST2094-40') {
+                cfg.hdrMetadataType = 'smpteSt2094-40';
+            }
+            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi') {
+                cfg.isSupported = false;
+            }
+        }
+
+        return cfg;
+    }
+
+    function _createVideoConfiguration(rep, codec) {
+        let config = {
+            codec: codec,
+            width: rep.width || null,
+            height: rep.height || null,
+            framerate: rep.frameRate || null,
+            bitrate: rep.bandwidth || null
+        }
+        if (settings.get().streaming.capabilities.filterHDREssentialProperties) {
+            Object.assign(config, _convertHDRPropertiesToConfig(rep));
+        }
+
+        return config;
     }
 
     function _createAudioConfiguration(rep, codec) {
