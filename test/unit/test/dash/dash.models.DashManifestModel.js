@@ -1508,5 +1508,159 @@ describe('DashManifestModel', function () {
             })
 
         })
+
+        describe('get CMCD data from Manifest', () => {
+
+            it('should return client data reporting from manifest', () => {
+                const manifestData = {
+                    ServiceDescription:[{
+                        'ClientDataReporting':{
+                            'CMCDParameters': { schemeIdUri: 'urn:mpeg:dash:cta-5004:2023' },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const clientDataReporting = data[0].clientDataReporting;
+
+                expect(clientDataReporting.cmcdParameters.mode).to.be.equal('query');
+                expect(clientDataReporting.cmcdParameters.includeInRequests.length).to.be.equal(1);
+                expect(clientDataReporting.cmcdParameters.includeInRequests[0]).to.be.equal('segment');
+
+                expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.serviceLocationsArray.length).to.be.equal(2);
+                expect(clientDataReporting.serviceLocationsArray[0]).to.be.equal('cdn-a');
+                expect(clientDataReporting.serviceLocationsArray[1]).to.be.equal('cdn-b');
+
+                expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+                expect(clientDataReporting.adaptationSetsArray.length).to.be.equal(2);
+                expect(clientDataReporting.adaptationSetsArray[0]).to.be.equal('test1');
+                expect(clientDataReporting.adaptationSetsArray[1]).to.be.equal('test2');
+            })
+
+            it('should NOT return client data reporting if schemeIdUri is missed in manifest', () => {
+                const manifestData = {
+                    ServiceDescription:[{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {},
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const clientDataReporting = data[0].clientDataReporting;
+
+                expect(clientDataReporting.cmcdParameters).to.be.null;
+
+                expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.serviceLocationsArray.length).to.be.equal(2);
+                expect(clientDataReporting.serviceLocationsArray[0]).to.be.equal('cdn-a');
+                expect(clientDataReporting.serviceLocationsArray[1]).to.be.equal('cdn-b');
+
+                expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+                expect(clientDataReporting.adaptationSetsArray.length).to.be.equal(2);
+                expect(clientDataReporting.adaptationSetsArray[0]).to.be.equal('test1');
+                expect(clientDataReporting.adaptationSetsArray[1]).to.be.equal('test2');
+            })
+
+            it('should NOT return client data reporting if schemeIdUri is invalid in manifest', () => {
+                const manifestData = {
+                    ServiceDescription:[{
+                        'ClientDataReporting':{
+                            'CMCDParameters': { schemeIdUri: 'urn:mpeg:daaash:ctaa-5003:2003' },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const clientDataReporting = data[0].clientDataReporting;
+
+                expect(clientDataReporting.cmcdParameters).to.be.null;
+
+                expect(clientDataReporting.serviceLocations).to.be.equal('cdn-a cdn-b');
+                expect(clientDataReporting.serviceLocationsArray.length).to.be.equal(2);
+                expect(clientDataReporting.serviceLocationsArray[0]).to.be.equal('cdn-a');
+                expect(clientDataReporting.serviceLocationsArray[1]).to.be.equal('cdn-b');
+
+                expect(clientDataReporting.adaptationSets).to.be.equal('test1 test2');
+                expect(clientDataReporting.adaptationSetsArray.length).to.be.equal(2);
+                expect(clientDataReporting.adaptationSetsArray[0]).to.be.equal('test1');
+                expect(clientDataReporting.adaptationSetsArray[1]).to.be.equal('test2');
+            })
+
+            it('should return cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const manifestData = {
+                    ServiceDescription:[{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                                'version': 1,
+                                'schemeIdUri': 'urn:mpeg:dash:cta-5004:2023'
+                            },
+                            'serviceLocations': 'cdn-a cdn-b',
+                            'adaptationSets': 'test1 test2'
+                        },
+                    }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const cmcdParameters = data[0].clientDataReporting.cmcdParameters;
+                expect(cmcdParameters.contentID).to.be.equal(contentID);
+                expect(cmcdParameters.includeInRequests).to.have.length(1);
+                expect(cmcdParameters.includeInRequests[0]).to.be.equal(includeInRequests);
+                expect(cmcdParameters.keys).to.have.same.members(keys.split(' '));
+                expect(cmcdParameters.mode).to.be.equal(mode);
+                expect(cmcdParameters.sessionID).to.be.equal(sessionID);
+            })
+
+            it('should return client data reporting and cmcd data from manifest', () => {
+                const contentID = 1;
+                const includeInRequests = '*';
+                const keys = 'br sid cid';
+                const mode = 'query';
+                const sessionID = 2;
+                const serviceLocations = 'cdn-a cdn-b';
+                const adaptationSets = 'test1 test2';
+                const manifestData = {
+                    ServiceDescription:[{
+                        'ClientDataReporting':{
+                            'CMCDParameters': {
+                                'contentID':contentID,
+                                'includeInRequests':includeInRequests,
+                                'keys':keys,
+                                'mode':mode,
+                                'sessionID':sessionID,
+                                'schemeIdUri': 'urn:mpeg:dash:cta-5004:2023'
+                            },
+                            'serviceLocations': serviceLocations,
+                            'adaptationSets': adaptationSets
+                        },
+                    }],
+                }
+                const data = dashManifestModel.getServiceDescriptions(manifestData);
+                const cmcdParameters = data[0].clientDataReporting.cmcdParameters;
+                const clientDataReporting = data[0].clientDataReporting;
+                expect(clientDataReporting.serviceLocations).to.be.equal(serviceLocations);
+                expect(clientDataReporting.adaptationSets).to.be.equal(adaptationSets);
+                expect(cmcdParameters.contentID).to.be.equal(contentID);
+                expect(cmcdParameters.includeInRequests).to.have.length(1);
+                expect(cmcdParameters.includeInRequests[0]).to.be.equal(includeInRequests);
+                expect(cmcdParameters.keys).to.have.same.members(keys.split(' '));
+                expect(cmcdParameters.mode).to.be.equal(mode);
+                expect(cmcdParameters.sessionID).to.be.equal(sessionID);
+            })
+
+        })
     });
 });
