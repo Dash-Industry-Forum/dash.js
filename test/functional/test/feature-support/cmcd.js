@@ -9,7 +9,7 @@ import {
 } from '../common/common.js';
 import {expect} from 'chai';
 
-const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.CMCD;
+const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.CMCD;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;

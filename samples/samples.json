@@ -165,6 +165,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Live stream with MPD Patching",
+                "description": "Example showing how dash.js handles live streams with updates to the MPD provided via MPD patching",
+                "href": "live-streaming/mpd-patching.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
