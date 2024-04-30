@@ -176,5 +176,15 @@ describe('Capabilities', function () {
             res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test', value: '5' });
             expect(res).to.be.true;
         });
+
+        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for HDR-schemeIdUri', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
+            expect(res).to.be.false;
+
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDREssentialProperties:true } } });
+
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
+            expect(res).to.be.true;
+        });
     });
 });
