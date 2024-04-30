@@ -27,35 +27,22 @@
 
     <script>
         function printInfosToPage() {
-            let elMpdTrack = document.getElementById('ulMpdTrackList');
-            if (elMpdTrack) {
-                let adapter = player.getDashAdapter();
-                let mpd = adapter.getMpd();
-
-                let tracks = mpd.manifest.Period[0].AdaptationSet.filter(t => t.mimeType === 'video/mp4');
-                console.log("[HdrPlugIn] video-tracks: %o", tracks);
-
-                tracks.forEach(t => {
-                    let li = document.createElement('li');
-                    li.innerHTML = '<pre>' + t.Label[0].__text + '</pre>';
-                    elMpdTrack.appendChild(li);
-                })
-            }
-
-            elSupportedTrack = document.getElementById('ulSupportedTrackList');
+            let elSupportedTrack = document.getElementById('ulSupportedTrackList');
             if (elSupportedTrack) {
                 let tracks = player.getTracksFor('video');
                 tracks.forEach(t => {
                     let li = document.createElement('li');
-                    li.innerHTML = '<pre>' + t.labels[0].text + '</pre>';
+                    let label = t.labels.length ? t.labels[0].text : t.id;
+                    li.innerHTML = '<pre>' + label + '</pre>';
                     elSupportedTrack.appendChild(li);
                 })
             };
 
-            elCurrTrack = document.getElementById('elCurrTrack');
+            let elCurrTrack = document.getElementById('elCurrTrack');
             if (elCurrTrack) {
                 let currTrack = player.getCurrentTrackFor('video');
-                elCurrTrack.innerHTML = '<pre>' + currTrack.labels[0].text + '</pre>';
+                let label = currTrack.labels.length ? currTrack.labels[0].text : currTrack.id;
+                elCurrTrack.innerHTML = '<pre>' + label + '</pre>';
             }
         }
     </script>
@@ -101,9 +88,8 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="h-100 p-5 bg-light border rounded-3">
-                        <h3>Using the HDR Properties signaling PlugIn</h3>
-                        <p>This example shows how to add and configure the HDR properties signaling plugin with the
-                            dash.js player</p>
+                        <h3>HDR Video Capabilities</h3>
+                        <p>This example shows how dash.js can be configured to check support for HDR Properties with Media Capabilities API</p>
                     </div>
                 </div>
                 <div class="col-md-8">
@@ -144,21 +130,20 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="h-100 p-5 border rounded-3">
-                    <h3>Get video streams from Manifest</h3>
-                    <label for="mediaSettings">retured label of <code>getStreamsFromManifest()</code>, filtered for
-                        video:</label>
-                    <ul id="ulMpdTrackList"></ul>
-                    <p>This appears to show the video AdaptationSets after Capability filtering.</p>
-
-                    <h3>Get supported Tracks for Video</h3>
-                    <label for="mediaSettings">retured label(s) of <code>getTracksFor('video')</code>:</label>
-                    <ul id="ulSupportedTrackList"></ul>
-
-                    <h3>Current video track</h3>
-                    <label for="mediaSettings">retured label of <code>getCurrentTrackFor('video')</code>:</label>
-                    <ul id="elCurrTrack"></ul>
+            <div class="row pt-3 mt-4 ">
+                <div class="col-md-6">
+                    <div class="h-100 p-5 bg-light border rounded-3">
+                        <h3>Get supported Tracks for Video</h3>
+                        <label for="mediaSettings">retured label(s) or track-id(s) of <code>getTracksFor('video')</code>:</label>
+                        <ul id="ulSupportedTrackList"></ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="h-100 p-5 bg-light border rounded-3">
+                        <h3>Current video track</h3>
+                        <label for="mediaSettings">retured label or track-id of <code>getCurrentTrackFor('video')</code>:</label>
+                        <ul id="elCurrTrack"></ul>
+                    </div>
                 </div>
             </div>
             <div class="row">
