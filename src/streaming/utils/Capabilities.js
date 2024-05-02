@@ -159,7 +159,7 @@ function Capabilities() {
     function _checkCodecWithMediaCapabilities(config, type) {
         return new Promise((resolve) => {
 
-            if (!config || !config.codec) {
+            if (!config || !config.codec || (config.isSupported===false)) {
                 resolve(false);
                 return;
             }
@@ -174,7 +174,10 @@ function Capabilities() {
             configuration[type].height = config.height;
             configuration[type].bitrate = parseInt(config.bitrate);
             configuration[type].framerate = parseFloat(config.framerate);
-
+            if (config.hdrMetadataType) configuration[type].hdrMetadataType = config.hdrMetadataType;
+            if (config.colorGamut) configuration[type].colorGamut = config.colorGamut;
+            if (config.transferFunction) configuration[type].transferFunction = config.transferFunction;
+            
             navigator.mediaCapabilities.decodingInfo(configuration)
                 .then((result) => {
                     resolve(result.supported);
@@ -192,6 +195,22 @@ function Capabilities() {
      */
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
+
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDREssentialProperties) {
+            // we already took care of these descriptors with the codecs check
+            // let's bypass them here
+
+            const EssentialHDRProperties = [
+                { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
+                { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI },
+                { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI }
+            ];
+
+            supportedEssentialProps = supportedEssentialProps.filter(p => {
+                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri===p.schemeIdUri)));
+            });
+            supportedEssentialProps.push(...EssentialHDRProperties);
+        }
 
         try {
             return ep.inArray(supportedEssentialProps);

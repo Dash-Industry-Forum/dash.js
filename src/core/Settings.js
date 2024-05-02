@@ -80,7 +80,8 @@ import Events from './events/Events.js';
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
                 ],
- *               useMediaCapabilitiesApi: false
+ *               useMediaCapabilitiesApi: false,
+                filterHDREssentialProperties: false
  *            },
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
@@ -660,6 +661,8 @@ import Events from './events/Events.js';
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ * @property {boolean} [filterHDREssentialProperties=false]
+ * Enable dash.js to query MediaCapabilities API for signalled HDR-related EssentialProperties. If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking.
  */
 
 /**
@@ -1051,7 +1054,8 @@ function Settings() {
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
                 ],
-                useMediaCapabilitiesApi: false
+                useMediaCapabilitiesApi: false,
+                filterHDREssentialProperties: false
             },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
