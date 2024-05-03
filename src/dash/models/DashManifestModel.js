@@ -649,6 +649,9 @@ function DashManifestModel() {
                 if (realRepresentation.hasOwnProperty(DashConstants.SCAN_TYPE)) {
                     voRepresentation.scanType = realRepresentation.scanType;
                 }
+                if (realRepresentation.hasOwnProperty(DashConstants.FRAMERATE)) {
+                    voRepresentation.frameRate = realRepresentation[DashConstants.FRAMERATE];
+                }
                 if (realRepresentation.hasOwnProperty(DashConstants.QUALITY_RANKING)) {
                     voRepresentation.qualityRanking = realRepresentation[DashConstants.QUALITY_RANKING];
                 }
