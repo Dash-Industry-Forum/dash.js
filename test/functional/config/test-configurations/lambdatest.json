@@ -16,7 +16,8 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000
+      "pseudoActivityInterval": 5000,
+      "tunnel": true
     },
     "firefox": {
       "base": "WebDriver",
