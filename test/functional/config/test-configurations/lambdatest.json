@@ -1,7 +1,7 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "firefox"
+    "chrome"
   ],
   "hostname": "localhost",
   "port": 9876,
