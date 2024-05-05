@@ -7,15 +7,11 @@
     "chrome_win11": {
       "base": "WebDriver",
       "browserName": "chrome",
-      "platform": "windows 11",
+      "platform": "Windows 10",
       "version": "latest",
       "name": "Chrome Win 11",
-      "pseudoActivityInterval": 5000,
-      "flags": [
-        "--disable-web-security",
-        "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking"
-      ]
+      "console": false,
+      "pseudoActivityInterval": 5000
     }
   },
   "reporters": [

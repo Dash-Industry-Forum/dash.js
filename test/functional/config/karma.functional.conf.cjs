@@ -29,6 +29,9 @@ module.exports = function (config) {
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '../../../',
 
+        // web server port
+        hostname: 'localhost',
+        port: 9876,
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -111,10 +114,6 @@ module.exports = function (config) {
             },
             testvectors
         },
-
-        // web server port
-        port: 9876,
-
 
         // enable / disable colors in the output (reporters and logs)
         colors: true,
