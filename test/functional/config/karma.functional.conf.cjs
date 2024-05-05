@@ -13,12 +13,16 @@ module.exports = function (config) {
         return
     }
 
-    const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'));
+    let testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'));
     const streamsConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/streams/${streamsFileName}.json`, 'utf-8'));
     const includedTestfiles = _getIncludedTestfiles(streamsConfiguration)
     const excludedTestfiles = _getExcludedTestfiles(streamsConfiguration)
     const customContextFile = testConfiguration.customContextFile ? testConfiguration.customContextFile : 'test/functional/view/index.html';
     const testvectors = streamsConfiguration.testvectors
+
+    if (testConfiguration && testConfiguration.type && testConfiguration.type === 'lambdatest') {
+        testConfiguration = _adjustConfigurationForLambdatest(testConfiguration)
+    }
 
     config.set({
 
@@ -132,37 +136,7 @@ module.exports = function (config) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: testConfiguration.browsers,
 
-        customLaunchers: {
-            bs_chrome_win_11: {
-                base: 'BrowserStack',
-                browser: 'chrome',
-                'browser_version': 'latest',
-                os: 'Windows',
-                'os_version': '11',
-            },
-            bs_firefox_win_11: {
-                base: 'BrowserStack',
-                browser: 'firefox',
-                'browser_version': 'latest',
-                os: 'Windows',
-                'os_version': '11',
-            },
-            bs_safari_mac: {
-                'base': 'BrowserStack',
-                'browser_version': 'latest',
-                'os': 'OS X',
-                'os_version': 'Ventura',
-                'browser': 'safari',
-            },
-            chrome_custom: {
-                base: 'Chrome',
-                flags: ['--disable-web-security', '--autoplay-policy=no-user-gesture-required', '--disable-popup-blocking']
-            },
-            firefox_custom: {
-                base: 'Firefox',
-                prefs: {}
-            }
-        },
+        customLaunchers: testConfiguration.customLaunchers,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
@@ -197,4 +171,19 @@ function _getExcludedTestfiles(testConfiguration) {
     return testConfiguration.testfiles.excluded.map((entry) => {
         return `test/functional/test/${entry}.js`
     })
+}
+
+function _adjustConfigurationForLambdatest(testConfiguration) {
+    if (testConfiguration && testConfiguration.customLaunchers) {
+        Object.keys(testConfiguration.customLaunchers).forEach((key) => {
+            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
+            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
+            testConfiguration.customLaunchers[key].config = {
+                hostname: 'hub.lambdatest.com',
+                port: 80
+            };
+        })
+    }
+
+    return testConfiguration
 }

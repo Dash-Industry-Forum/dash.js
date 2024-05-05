@@ -2,6 +2,20 @@
   "browsers": [
     "chrome_custom"
   ],
+  "customLaunchers": {
+    "chrome_custom": {
+      "base": "Chrome",
+      "flags": [
+        "--disable-web-security",
+        "--autoplay-policy=no-user-gesture-required",
+        "--disable-popup-blocking"
+      ]
+    },
+    "firefox_custom": {
+      "base": "Firefox",
+      "prefs": {}
+    }
+  },
   "reporters": [
     "mocha",
     "html",

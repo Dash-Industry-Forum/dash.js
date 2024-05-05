@@ -159,10 +159,7 @@ jobs:
             - functional_test_setup
             -   run_test_suite:
                     streamsfile: single
-                    configfile: browserstack
-            -   run_test_suite:
-                    streamsfile: smoke
-                    configfile: browserstack
+                    configfile: lambdatest
             - process_test_results
 
     functional-tests-full-part-1:
