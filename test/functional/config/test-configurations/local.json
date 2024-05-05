@@ -2,6 +2,7 @@
   "browsers": [
     "chrome_custom"
   ],
+  "hostname": "localhost",
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",

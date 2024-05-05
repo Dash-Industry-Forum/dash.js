@@ -4,6 +4,9 @@
     "chrome",
     "firefox"
   ],
+  "hostname": "localhost.lambdatest.com",
+  "port": 4200,
+  "protocol": "https",
   "customLaunchers": {
     "chrome": {
       "base": "WebDriver",

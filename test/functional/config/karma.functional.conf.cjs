@@ -30,8 +30,9 @@ module.exports = function (config) {
         basePath: '../../../',
 
         // web server port
-        hostname: 'localhost',
-        port: 9876,
+        hostname: testConfiguration.hostname ? testConfiguration.hostname : 'localhost',
+        port: testConfiguration.port ? testConfiguration.port : 9876,
+        protocol: testConfiguration.protocol ? testConfiguration.protocol : 'http',
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
