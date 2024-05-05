@@ -109,7 +109,7 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: true,
+            useIframe: false,
             mocha: {
                 timeout: 180000
             },

@@ -1,11 +1,10 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome",
     "firefox"
   ],
   "hostname": "localhost",
-  "port": 4200,
+  "port": 9876,
   "protocol": "http",
   "customLaunchers": {
     "chrome": {

@@ -3,6 +3,8 @@
     "chrome_custom"
   ],
   "hostname": "localhost",
+  "port": 4200,
+  "protocol": "http",
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",
