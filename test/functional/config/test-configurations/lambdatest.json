@@ -1,9 +1,7 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome",
-    "firefox",
-    "edge"
+    "firefox"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -31,7 +29,13 @@
       "terminal": true,
       "network": true,
       "pseudoActivityInterval": 5000,
-      "tunnel": true
+      "tunnel": true,
+      "moz:firefoxOptions": {
+        "prefs": {
+          "media.gmp-manager.updateEnabled": true,
+          "media.eme.enabled": true
+        }
+      }
     },
     "edge": {
       "base": "WebDriver",
