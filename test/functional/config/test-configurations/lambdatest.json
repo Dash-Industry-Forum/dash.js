@@ -1,7 +1,8 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome"
+    "chrome",
+    "firefox"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -10,9 +11,9 @@
     "chrome": {
       "base": "WebDriver",
       "browserName": "chrome",
-      "platform": "windows 10",
-      "version": "122.0",
-      "name": "Chrome Win 10",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Chrome Win 11",
       "console": true,
       "terminal": true,
       "network": true,
@@ -22,13 +23,14 @@
     "firefox": {
       "base": "WebDriver",
       "browserName": "firefox",
-      "platform": "windows 10",
-      "version": "123.0",
-      "name": "Firefox Win 10",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Firefox Win 11",
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000
+      "pseudoActivityInterval": 5000,
+      "tunnel": true
     }
   },
   "reporters": [
