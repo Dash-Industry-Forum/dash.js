@@ -4,9 +4,9 @@
     "chrome",
     "firefox"
   ],
-  "hostname": "localhost.lambdatest.com",
+  "hostname": "localhost",
   "port": 4200,
-  "protocol": "https",
+  "protocol": "http",
   "customLaunchers": {
     "chrome": {
       "base": "WebDriver",
@@ -16,6 +16,7 @@
       "name": "Chrome Win 10",
       "console": true,
       "terminal": true,
+      "network": true,
       "pseudoActivityInterval": 5000
     },
     "firefox": {
@@ -26,6 +27,7 @@
       "name": "Firefox Win 10",
       "console": true,
       "terminal": true,
+      "network": true,
       "pseudoActivityInterval": 5000
     }
   },
