@@ -1,16 +1,28 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_win11"
+    "chrome",
+    "firefox"
   ],
   "customLaunchers": {
-    "chrome_win11": {
+    "chrome": {
       "base": "WebDriver",
       "browserName": "chrome",
-      "platform": "Windows 10",
-      "version": "latest",
-      "name": "Chrome Win 11",
-      "console": false,
+      "platform": "windows 10",
+      "version": "122.0",
+      "name": "Chrome Win 10",
+      "console": true,
+      "terminal": true,
+      "pseudoActivityInterval": 5000
+    },
+    "firefox": {
+      "base": "WebDriver",
+      "browserName": "firefox",
+      "platform": "windows 10",
+      "version": "123.0",
+      "name": "Firefox Win 10",
+      "console": true,
+      "terminal": true,
       "pseudoActivityInterval": 5000
     }
   },
