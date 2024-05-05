@@ -2,7 +2,8 @@
   "type": "lambdatest",
   "browsers": [
     "chrome",
-    "firefox"
+    "firefox",
+    "edge"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -26,6 +27,18 @@
       "platform": "windows 11",
       "version": "latest",
       "name": "Firefox Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 5000,
+      "tunnel": true
+    },
+    "edge": {
+      "base": "WebDriver",
+      "browserName": "edge",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Edge Win 11",
       "console": true,
       "terminal": true,
       "network": true,

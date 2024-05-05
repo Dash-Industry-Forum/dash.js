@@ -58,15 +58,7 @@ commands:
                     name: "Setup custom environment variables"
                     command: |
                         echo 'export LT_USERNAME="${LAMBDATEST_USER}"' >> $BASH_ENV
-
-            -   run:
-                    name: "Setup custom environment variables"
-                    command: |
                         echo 'export LT_ACCESS_KEY="${LAMBDATEST_ACCESS_KEY}"' >> $BASH_ENV
-
-            -   run: # test what branch we're on.
-                    name: "Here is the LT_Username : "
-                    command: echo ${LT_USERNAME}
 
     run_testbuild:
         steps:
@@ -180,6 +172,9 @@ jobs:
             - functional_test_setup
             -   run_test_suite:
                     streamsfile: single
+                    configfile: lambdatest
+            -   run_test_suite:
+                    streamsfile: smoke
                     configfile: lambdatest
             - process_test_results
 
