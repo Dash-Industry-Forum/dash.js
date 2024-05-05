@@ -29,23 +29,44 @@ commands:
             -   run:
                     name: Check if preconditions are met for functional tests
                     command: |
-                        if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
-                            echo "BrowserStack not configured, functional tests will not be executed."
+                        if [ -z "LAMBDATEST_ACCESS_KEY" ]; then
+                            echo "Lambdatest not configured, functional tests will not be executed."
                             circleci-agent step halt
                         fi
 
     functional_test_setup:
         steps:
             -   run:
-                    name: Download the browserstack binary file to create a tunnel
-                    command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
+                    name: "Downloading tunnel binary"
+                    command: |
+                        wget https://downloads.lambdatest.com/tunnel/v3/linux/64bit/LT_Linux.zip
+
             -   run:
-                    name: Unzip the browserstack binary file
-                    command: unzip BrowserStackLocal-linux-x64.zip
+                    name: "Extracting tunnel binary"
+                    command: |
+                        sudo apt-get install unzip
+                        unzip LT_Linux.zip
+
             -   run:
-                    name: Run browserstack with provided access key
-                    command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
+                    name: "Executing tunnel binary"
                     background: true
+                    command: |
+                        ./LT -user ${LAMBDATEST_EMAIL} -key ${LAMBDATEST_KEY}
+                        sleep 40
+
+            -   run:
+                    name: "Setup custom environment variables"
+                    command: |
+                        echo 'export LT_USERNAME="${LAMBDATEST_USER}"' >> $BASH_ENV
+
+            -   run:
+                    name: "Setup custom environment variables"
+                    command: |
+                        echo 'export LT_ACCESS_KEY="${LAMBDATEST_ACCESS_KEY}"' >> $BASH_ENV
+
+            -   run: # test what branch we're on.
+                    name: "Here is the LT_Username : "
+                    command: echo ${LT_USERNAME}
 
     run_testbuild:
         steps:
@@ -89,7 +110,7 @@ commands:
                 default: "single"
                 type: string
             configfile:
-                default: "browserstack"
+                default: "lambdatest"
                 type: string
         steps:
             -   run:
