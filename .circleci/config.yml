@@ -51,7 +51,7 @@ commands:
                     name: "Executing tunnel binary"
                     background: true
                     command: |
-                        ./LT -user ${LAMBDATEST_EMAIL} -key ${LAMBDATEST_KEY}
+                        ./LT --user ${LAMBDATEST_EMAIL} --key ${LAMBDATEST_KEY}
                         sleep 40
 
             -   run:
