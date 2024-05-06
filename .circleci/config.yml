@@ -222,11 +222,6 @@ workflows:
                         branches:
                             ignore: # as creds are available only for non-forked branches
                                 - /pull\/[0-9]+/
-            -   functional-tests-smoke:
-                    filters:
-                        branches:
-                            ignore: # as creds are available only for non-forked branches
-                                - /pull\/[0-9]+/
 
     scheduled-workflow:
         triggers:
