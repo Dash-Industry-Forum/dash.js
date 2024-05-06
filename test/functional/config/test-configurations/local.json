@@ -21,6 +21,7 @@
     }
   },
   "reporters": [
+    "junit",
     "mocha",
     "html",
     "coverage"

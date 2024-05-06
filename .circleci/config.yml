@@ -80,7 +80,7 @@ commands:
                     command: |
                         mkdir test/functional/results/test/karma/junit/adjusted
                         cd test/functional/results/test/karma/junit
-                        for file in *.xml; do
+                        for file in **/*.xml; do
                         [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
                         cp "$file" adjusted/$file
