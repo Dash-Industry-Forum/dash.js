@@ -52,7 +52,7 @@ commands:
                     background: true
                     command: |
                         ./LT --user ${LAMBDATEST_EMAIL} --key ${LAMBDATEST_KEY}
-                        sleep 60
+                        sleep 40
 
             -   run:
                     name: "Setup custom environment variables"
