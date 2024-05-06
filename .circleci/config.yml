@@ -184,7 +184,7 @@ jobs:
             - functional_steps
             -   run_test_suite:
                     streamsfile: drm_emsg_eptdelta_gaps
-                    configfile: browserstack
+                    configfile: lambdatest-full
             - process_test_results
 
     functional-tests-full-part-2:
@@ -193,7 +193,7 @@ jobs:
             - functional_steps
             -   run_test_suite:
                     streamsfile: multiperiod_subtitle_vendor
-                    configfile: browserstack
+                    configfile: lambdatest-full
             - process_test_results
 
     functional-tests-full-part-3:
@@ -202,7 +202,7 @@ jobs:
             - functional_steps
             -   run_test_suite:
                     streamsfile: vod_live_lowlatency_mss_multiaudio
-                    configfile: browserstack
+                    configfile: lambdatest-full
             - process_test_results
 
 workflows:

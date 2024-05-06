@@ -1,7 +1,9 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "firefox"
+    "chrome",
+    "firefox",
+    "edge"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -16,7 +18,7 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000,
+      "pseudoActivityInterval": 30000,
       "tunnel": true
     },
     "firefox": {
@@ -28,7 +30,7 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000,
+      "pseudoActivityInterval": 30000,
       "tunnel": true,
       "moz:firefoxOptions": {
         "prefs": {
@@ -54,7 +56,7 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000,
+      "pseudoActivityInterval": 30000,
       "tunnel": true
     }
   },

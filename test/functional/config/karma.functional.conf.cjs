@@ -109,7 +109,7 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: false,
+            useIframe: true,
             mocha: {
                 timeout: 180000
             },
@@ -130,7 +130,7 @@ module.exports = function (config) {
 
         browserNoActivityTimeout: 180000,
         browserDisconnectTimeout: 20000,
-        browserDisconnectTolerance: 3,
+        browserDisconnectTolerance: 2,
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
