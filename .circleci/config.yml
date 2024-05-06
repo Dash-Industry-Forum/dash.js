@@ -166,6 +166,10 @@ jobs:
         executor: dashjs-executor
         steps:
             - functional_steps
+            - run:
+                  name: Sleep
+                  command: |
+                      sleep 30
             -   run_test_suite:
                     streamsfile: single
                     configfile: lambdatest
