@@ -175,7 +175,7 @@ jobs:
                     configfile: lambdatest
             -   run_test_suite:
                     streamsfile: smoke
-                    configfile: lambdatest
+                    configfile: lambdatest-smoke
             - process_test_results
 
     functional-tests-full-part-1:

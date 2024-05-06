@@ -21,6 +21,18 @@
       "pseudoActivityInterval": 30000,
       "tunnel": true
     },
+    "chrome_mobile": {
+      "base": "WebDriver",
+      "browserName": "chrome",
+      "platform": "Google Pixel 8 Pro",
+      "version": "latest",
+      "name": "Chrome Android",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    },
     "firefox": {
       "base": "WebDriver",
       "browserName": "firefox",
@@ -38,10 +50,6 @@
           "media.eme.enabled": true
         }
       },
-      "flags": [
-        "--media.gmp-manager.updateEnabled=true",
-        "--media.eme.enabled=true"
-      ],
       "prefs": {
         "media.gmp-manager.updateEnabled": true,
         "media.eme.enabled": true
