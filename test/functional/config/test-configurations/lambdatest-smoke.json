@@ -1,14 +1,13 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_win_11",
-    "chrome_mac"
+    "chrome_windows_11"
   ],
   "hostname": "localhost",
   "port": 9876,
   "protocol": "http",
   "customLaunchers": {
-    "chrome_win_11": {
+    "chrome_windows_11": {
       "base": "WebDriver",
       "browserName": "chrome",
       "platform": "windows 11",
@@ -20,7 +19,7 @@
       "pseudoActivityInterval": 30000,
       "tunnel": true
     },
-    "chrome_mac": {
+    "chrome_mac_sonoma": {
       "base": "WebDriver",
       "browserName": "chrome",
       "platform": "macOS sonoma",
