@@ -122,7 +122,9 @@ dash.js ships with predefined configuration files. They are located in `test/fun
 | `audio/switch-audio`                     | Switch the audio language during playback and expect the player to download the right media segments.                                                         |
 | `buffer/buffer-cleanup`                  | Play the stream for some time and expect the buffer level to stay withing the predefined tolerance.                                                           |
 | `buffer/initial-buffer-target`           | Set an initial buffer target and expect the player to build the buffer before starting playback.                                                              |
+| `feature-support/cmcd`                   | Checks if CMCD parameters are included in outgoing segment requests if enabled.                                                                               |
 | `feature-support/emsg-triggered`         | Checks if EMSG events are correctly parsed and dispatched to the application.                                                                                 |
+| `feature-support/mpd-patching`           | Checks if two consecutive manifest updates are of type <Patch>                                                                                                |
 | `live/latency-catchup`                   | Expect the player to apply the catchup logic to stick to a certain latency if enabled.                                                                        |
 | `live/live-delay`                        | Expect the live delay to correspond to the initial settings.                                                                                                  |
 | `playback/ended`                         | Expect the ended event to be thrown once playback is finished.                                                                                                |
