@@ -1,0 +1,28 @@
+{
+  "type": "lambdatest",
+  "browsers": [
+    "chrome"
+  ],
+  "hostname": "localhost",
+  "port": 9876,
+  "protocol": "http",
+  "customLaunchers": {
+    "chrome": {
+      "base": "WebDriver",
+      "browserName": "chrome",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Chrome Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    }
+  },
+  "reporters": [
+    "mocha",
+    "junit",
+    "coverage"
+  ]
+}
