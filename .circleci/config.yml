@@ -117,6 +117,10 @@ commands:
                 type: string
         steps:
             -   run:
+                    name: Sleep
+                    command: |
+                        sleep 30
+            -   run:
                     name: Run functional tests <<parameters.configfile>> - <<parameters.streamsfile>>
                     when: always
                     command:
@@ -166,10 +170,6 @@ jobs:
         executor: dashjs-executor
         steps:
             - functional_steps
-            - run:
-                  name: Sleep
-                  command: |
-                      sleep 30
             -   run_test_suite:
                     streamsfile: single
                     configfile: lambdatest
