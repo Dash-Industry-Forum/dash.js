@@ -2,6 +2,7 @@
   "type": "lambdatest",
   "browsers": [
     "chrome",
+    "chrome_mobile",
     "firefox",
     "edge"
   ],

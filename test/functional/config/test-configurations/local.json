@@ -1,6 +1,7 @@
 {
   "browsers": [
-    "chrome_custom"
+    "chrome_custom",
+    "firefox_custom"
   ],
   "hostname": "localhost",
   "port": 4200,

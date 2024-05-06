@@ -23,9 +23,9 @@
     "chrome_mac": {
       "base": "WebDriver",
       "browserName": "chrome",
-      "platform": "macOS Ventura",
+      "platform": "macOS sonoma",
       "version": "latest",
-      "name": "Chrome MacOS Ventura",
+      "name": "Chrome MacOS sonoma",
       "console": true,
       "terminal": true,
       "network": true,
