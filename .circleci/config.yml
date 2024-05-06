@@ -83,7 +83,8 @@ commands:
                         for file in **/*.xml; do
                         [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
-                        cp "$file" adjusted/$file
+                        modified_file="${file//\//_}"
+                        cp "$file" adjusted/$modified_file
                         done
             -   store_test_results:
                     path: test/functional/results/test/karma/junit/adjusted
