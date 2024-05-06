@@ -109,9 +109,9 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: true,
+            useIframe: false,
             mocha: {
-                timeout: 180000
+                timeout: 120000
             },
             testvectors
         },
@@ -128,7 +128,7 @@ module.exports = function (config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
 
-        browserNoActivityTimeout: 180000,
+        browserNoActivityTimeout: 120000,
         browserDisconnectTimeout: 20000,
         browserDisconnectTolerance: 2,
 
@@ -144,7 +144,7 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 2
+        concurrency: 1
     })
 }
 
