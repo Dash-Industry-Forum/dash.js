@@ -1,8 +1,7 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_windows_11",
-    "chrome_mac_sonoma"
+    "chrome_windows_11"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -17,19 +16,7 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 30000,
-      "tunnel": true
-    },
-    "chrome_mac_sonoma": {
-      "base": "WebDriver",
-      "browserName": "chrome",
-      "platform": "macOS Sonoma",
-      "version": "latest",
-      "name": "Chrome MacOS sonoma",
-      "console": true,
-      "terminal": true,
-      "network": true,
-      "pseudoActivityInterval": 30000,
+      "pseudoActivityInterval": 5000,
       "tunnel": true
     }
   },
