@@ -18,18 +18,6 @@
       "network": true,
       "pseudoActivityInterval": 30000,
       "tunnel": true
-    },
-    "chrome_mac_sonoma": {
-      "base": "WebDriver",
-      "browserName": "chrome",
-      "platform": "macOS sonoma",
-      "version": "latest",
-      "name": "Chrome MacOS sonoma",
-      "console": true,
-      "terminal": true,
-      "network": true,
-      "pseudoActivityInterval": 30000,
-      "tunnel": true
     }
   },
   "reporters": [
