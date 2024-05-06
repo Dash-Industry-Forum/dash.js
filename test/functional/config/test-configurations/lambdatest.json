@@ -35,6 +35,14 @@
           "media.gmp-manager.updateEnabled": true,
           "media.eme.enabled": true
         }
+      },
+      "flags": [
+        "--media.gmp-manager.updateEnabled=true",
+        "--media.eme.enabled=true"
+      ],
+      "prefs": {
+        "media.gmp-manager.updateEnabled": true,
+        "media.eme.enabled": true
       }
     },
     "edge": {
