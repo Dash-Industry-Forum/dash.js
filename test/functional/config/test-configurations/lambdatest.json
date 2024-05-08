@@ -1,0 +1,77 @@
+{
+  "type": "lambdatest",
+  "browsers": [
+    "chrome_windows_11",
+    "firefox_windows_11",
+    "edge_windows_11",
+    "chrome_mac_sonoma"
+  ],
+  "hostname": "localhost",
+  "port": 9876,
+  "protocol": "http",
+  "customLaunchers": {
+    "chrome_windows_11": {
+      "base": "WebDriver",
+      "browserName": "chrome",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Chrome Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    },
+    "firefox_windows_11": {
+      "base": "WebDriver",
+      "browserName": "firefox",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Firefox Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true,
+      "moz:firefoxOptions": {
+        "prefs": {
+          "media.gmp-manager.updateEnabled": true,
+          "media.eme.enabled": true
+        }
+      },
+      "prefs": {
+        "media.gmp-manager.updateEnabled": true,
+        "media.eme.enabled": true
+      }
+    },
+    "edge_windows_11": {
+      "base": "WebDriver",
+      "browserName": "edge",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Edge Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    },
+    "chrome_mac_sonoma": {
+      "base": "WebDriver",
+      "browserName": "chrome",
+      "platform": "macOS Sonoma",
+      "version": "latest",
+      "name": "Chrome MacOS sonoma",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    }
+  },
+  "reporters": [
+    "mocha",
+    "junit",
+    "coverage"
+  ]
+}

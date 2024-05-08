@@ -13,18 +13,26 @@ module.exports = function (config) {
         return
     }
 
-    const testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'));
+    let testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/${configFileName}.json`, 'utf-8'));
     const streamsConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/streams/${streamsFileName}.json`, 'utf-8'));
     const includedTestfiles = _getIncludedTestfiles(streamsConfiguration)
     const excludedTestfiles = _getExcludedTestfiles(streamsConfiguration)
     const customContextFile = testConfiguration.customContextFile ? testConfiguration.customContextFile : 'test/functional/view/index.html';
     const testvectors = streamsConfiguration.testvectors
 
+    if (testConfiguration && testConfiguration.type && testConfiguration.type === 'lambdatest') {
+        testConfiguration = _adjustConfigurationForLambdatest(testConfiguration)
+    }
+
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '../../../',
 
+        // web server port
+        hostname: testConfiguration.hostname ? testConfiguration.hostname : 'localhost',
+        port: testConfiguration.port ? testConfiguration.port : 9876,
+        protocol: testConfiguration.protocol ? testConfiguration.protocol : 'http',
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -68,8 +76,7 @@ module.exports = function (config) {
             outputDir: `test/functional/results/test/karma/junit`, // results will be saved as $outputDir/$browserName.xml
             outputFile: `${Date.now()}.xml`, // if included, results will be saved as $outputDir/$browserName/$outputFile
             suite: '', // suite will become the package name attribute in xml testsuite element
-            useBrowserName: false, // add browser name to report and classes names
-            nameFormatter: undefined, // function (browser, result) to customize the name attribute in xml testcase element
+            useBrowserName: true, // add browser name to report and classes names
             classNameFormatter: undefined, // function (browser, result) to customize the classname attribute in xml testcase element
             properties: {}, // key value pair of properties to add to the <properties> section of the report
             xmlVersion: null // use '1' if reporting to be per SonarQube 6.2 XML format
@@ -101,16 +108,12 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: true,
+            useIframe: false,
             mocha: {
-                timeout: 180000
+                timeout: 120000
             },
             testvectors
         },
-
-        // web server port
-        port: 9876,
-
 
         // enable / disable colors in the output (reporters and logs)
         colors: true,
@@ -124,45 +127,15 @@ module.exports = function (config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
 
-        browserNoActivityTimeout: 180000,
+        browserNoActivityTimeout: 120000,
         browserDisconnectTimeout: 20000,
-        browserDisconnectTolerance: 3,
+        browserDisconnectTolerance: 2,
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: testConfiguration.browsers,
 
-        customLaunchers: {
-            bs_chrome_win_11: {
-                base: 'BrowserStack',
-                browser: 'chrome',
-                'browser_version': 'latest',
-                os: 'Windows',
-                'os_version': '11',
-            },
-            bs_firefox_win_11: {
-                base: 'BrowserStack',
-                browser: 'firefox',
-                'browser_version': 'latest',
-                os: 'Windows',
-                'os_version': '11',
-            },
-            bs_safari_mac: {
-                'base': 'BrowserStack',
-                'browser_version': 'latest',
-                'os': 'OS X',
-                'os_version': 'Ventura',
-                'browser': 'safari',
-            },
-            chrome_custom: {
-                base: 'Chrome',
-                flags: ['--disable-web-security', '--autoplay-policy=no-user-gesture-required', '--disable-popup-blocking']
-            },
-            firefox_custom: {
-                base: 'Firefox',
-                prefs: {}
-            }
-        },
+        customLaunchers: testConfiguration.customLaunchers,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
@@ -197,4 +170,19 @@ function _getExcludedTestfiles(testConfiguration) {
     return testConfiguration.testfiles.excluded.map((entry) => {
         return `test/functional/test/${entry}.js`
     })
+}
+
+function _adjustConfigurationForLambdatest(testConfiguration) {
+    if (testConfiguration && testConfiguration.customLaunchers) {
+        Object.keys(testConfiguration.customLaunchers).forEach((key) => {
+            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
+            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
+            testConfiguration.customLaunchers[key].config = {
+                hostname: 'hub.lambdatest.com',
+                port: 80
+            };
+        })
+    }
+
+    return testConfiguration
 }
