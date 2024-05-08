@@ -48,10 +48,7 @@
                     var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
                     var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
-                    var adaptation = dashAdapter.getAdaptationForType(periodIdx, 'video', streamInfo);
-                    var currentRep = adaptation.Representation.find(function (rep) {
-                        return rep.id === repSwitch.to
-                    })
+                    var currentRep = player.getCurrentRepresentationForType('video');
                     var frameRate = currentRep.frameRate;
                     var resolution = currentRep.width + 'x' + currentRep.height;
                     document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
@@ -116,7 +113,7 @@
                             <span id="calculatedBitrate"></span>
                         </div>
                         <strong>Framerate:</strong>
-                        <span id="framerate"></span>    
+                        <span id="framerate"></span>
                         </br>
                         <strong>Resolution:</strong>
                         <span id="resolution"></span>
