@@ -110,6 +110,10 @@ function AbrControllerMock () {
     this.getPossibleVoRepresentations = function () {
         return []
     }
+
+    this.getPossibleVoRepresentationsFilteredBySettings = function () {
+        return []
+    }
 }
 
 export default AbrControllerMock;

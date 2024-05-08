@@ -679,7 +679,7 @@ function Stream(config) {
             return thumbnailController.getPossibleVoRepresentations();
         }
         const mediaInfo = getMediaInfo(type);
-        return abrController.getPossibleVoRepresentations(mediaInfo, true);
+        return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
     }
 
     /**
@@ -698,7 +698,7 @@ function Stream(config) {
             possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
         } else {
             const mediaInfo = getMediaInfo(type);
-            possibleVoRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            possibleVoRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         }
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
@@ -727,7 +727,7 @@ function Stream(config) {
             possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
         } else {
             const mediaInfo = getMediaInfo(type);
-            possibleVoRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            possibleVoRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         }
 
         index = Math.max(Math.min(index, possibleVoRepresentations.length - 1), 0)

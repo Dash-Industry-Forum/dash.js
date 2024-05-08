@@ -153,43 +153,43 @@ describe('AbrController', function () {
         const s = { streaming: { abr: { maxBitrate: {} } } };
         s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[0].bandwidth / 1000;
         settings.update(s);
-        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo, false);
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, false);
         expect(possibleVoRepresentations.length).to.be.equal(1);
         expect(possibleVoRepresentations[0].id).to.be.equal(1);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[1].bandwidth / 1000;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(2);
         expect(possibleVoRepresentations[1].id).to.be.equal(2);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = bitrateList[2].bandwidth / 1000;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
         expect(possibleVoRepresentations[2].id).to.be.equal(3);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(1);
         expect(possibleVoRepresentations[0].id).to.be.equal(1);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(2);
         expect(possibleVoRepresentations[1].id).to.be.equal(2);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
         expect(possibleVoRepresentations[2].id).to.be.equal(3);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
         expect(possibleVoRepresentations[2].id).to.be.equal(3);
     });
@@ -229,37 +229,37 @@ describe('AbrController', function () {
         const s = { streaming: { abr: { minBitrate: {} } } };
         s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[0].bandwidth / 1000;
         settings.update(s);
-        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[1].bandwidth / 1000;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(2);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = bitrateList[2].bandwidth / 1000;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(1);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(2);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(1);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
-        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(3);
     });
 
@@ -318,7 +318,7 @@ describe('AbrController', function () {
         mediaInfo.streamInfo = streamProcessor.getStreamInfo();
         mediaInfo.type = Constants.VIDEO;
 
-        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentations(mediaInfo);
+        let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
         expect(possibleVoRepresentations.length).to.be.equal(2);
     });
 
