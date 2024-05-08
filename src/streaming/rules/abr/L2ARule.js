@@ -301,7 +301,7 @@ function L2ARule(config) {
         const representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, safeThroughput, true);//During strat-up phase abr.controller is responsible for bitrate decisions.
         const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
         const l2AParameter = l2AParameterDict[mediaType];
-        const possibleRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+        const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
 
         switchRequest.representation = representation;
         switchRequest.reason.throughput = safeThroughput;
@@ -350,7 +350,7 @@ function L2ARule(config) {
             //Main adaptation logic of L2A-LL
             const abrController = rulesContext.getAbrController();
             const mediaInfo = rulesContext.getMediaInfo();
-            const possibleRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
             const videoModel = rulesContext.getVideoModel();
             let currentPlaybackRate = videoModel.getPlaybackRate();
             const alpha = Math.max(Math.pow(HORIZON, 1), VL * Math.sqrt(HORIZON));// Step size, used for gradient descent exploration granularity

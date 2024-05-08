@@ -241,12 +241,12 @@ function CmcdModel() {
         invalidRequests.map((k) => {
             logger.warn(`request type ${k} is not supported.`);
         });
-        
+
         return true;
     }
 
     function _checkAvailableKeys(cmcdParametersFromManifest){
-        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS; 
+        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
 
@@ -267,7 +267,7 @@ function CmcdModel() {
             const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
             if (
                 settings.get().streaming.cmcd.applyParametersFromMpd &&
-                serviceDescription.clientDataReporting && 
+                serviceDescription.clientDataReporting &&
                 serviceDescription.clientDataReporting.cmcdParameters
             ) {
                 cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
@@ -299,7 +299,7 @@ function CmcdModel() {
     function getCmcdData(request) {
         try {
             let cmcdData = null;
-            
+
             _updateLastMediaTypeRequest(request.type, request.mediaType);
 
             if (_isIncludedInRequestFilter(request.type)) {
@@ -334,7 +334,7 @@ function CmcdModel() {
 
     function _getCmcdDataForSteering(request) {
         const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-        
+
         data.ot = CmcdObjectType.OTHER;
 
         return data;
@@ -481,9 +481,9 @@ function CmcdModel() {
 
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
-        
+
         data.v = CMCD_VERSION;
-        
+
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
 
@@ -518,7 +518,7 @@ function CmcdModel() {
 
     function _getTopBitrateByType(mediaInfo) {
         try {
-            const bitrates = abrController.getPossibleVoRepresentations(mediaInfo).map((rep) => {
+            const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => {
                 return rep.bitrateInKbit
             });
             return Math.max(...bitrates)

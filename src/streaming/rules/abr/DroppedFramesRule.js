@@ -31,7 +31,7 @@ function DroppedFramesRule() {
 
         let droppedFrames = 0;
         let totalFrames = 0;
-        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+        const representations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         let newRepresentation = null;
 
         //No point in measuring dropped frames for the first index.

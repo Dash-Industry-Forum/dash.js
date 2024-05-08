@@ -103,7 +103,7 @@ function LoLPRule(config) {
             }
 
             // QoE parameters
-            const possibleRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
             let bandwidths = possibleRepresentations.map(r => r.bandwidth);
             let segmentDuration = rulesContext.getRepresentation().fragmentDuration;
             let minBitrateKbps = Math.min(...bandwidths) / 1000.0; // min bitrate level
