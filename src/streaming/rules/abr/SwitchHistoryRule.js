@@ -22,7 +22,7 @@ function SwitchHistoryRule() {
         const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests(streamId, mediaType) : {};
         const abrController = rulesContext.getAbrController();
         const mediaInfo = rulesContext.getMediaInfo();
-        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+        const representations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         let drops = 0;
         let noDrops = 0;
 

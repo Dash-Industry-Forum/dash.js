@@ -157,7 +157,7 @@ function BolaRule(config) {
     function _getInitialBolaState(rulesContext) {
         const initialState = {};
         const mediaInfo = rulesContext.getMediaInfo();
-        const representations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+        const representations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         const bitrates = representations.map(r => r.bandwidth);
         let utilities = bitrates.map(b => Math.log(b));
         utilities = utilities.map(u => u - utilities[0] + 1); // normalize

@@ -385,7 +385,7 @@ function LearningAbrController() {
     function _setSomBitrateNeurons(mediaInfo, abrController) {
         if (!somBitrateNeurons) {
             somBitrateNeurons = [];
-            const possibleRepresentations = abrController.getPossibleVoRepresentations(mediaInfo, true);
+            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
             const bitrateList = possibleRepresentations.map((r) => r.bandwidth);
             minBitrate = Math.min(...bitrateList);
             bitrateNormalizationFactor = _getMagnitude(bitrateList);
