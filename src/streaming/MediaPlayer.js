@@ -1475,6 +1475,8 @@ function MediaPlayer() {
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
+     * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
      * @param {number} value - the quality index, 0 corresponding to the lowest possible index
