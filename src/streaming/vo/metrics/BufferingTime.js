@@ -30,39 +30,20 @@
  */
 
 /**
- * Metrics Constants declaration
  * @class
  * @ignore
  */
-class MetricsConstants {
-
-    init () {
-        this.TCP_CONNECTION = 'TcpList';
-        this.HTTP_REQUEST = 'HttpList';
-        this.TRACK_SWITCH = 'RepSwitchList';
-        this.BUFFER_LEVEL = 'BufferLevel';
-        this.BUFFER_LOADED = 'bufferLoaded';
-        this.BUFFERING_TIME = 'BufferingTime';
-        this.ABANDON_LOAD = 'abandonload';
-        this.ALLOW_LOAD = 'allowload';
-        this.BUFFER_EMPTY = 'bufferStalled';
-        this.BUFFER_STATE = 'BufferState';
-        this.DVR_INFO = 'DVRInfo';
-        this.DROPPED_FRAMES = 'DroppedFrames';
-        this.SCHEDULING_INFO = 'SchedulingInfo';
-        this.REQUESTS_QUEUE = 'RequestsQueue';
-        this.MANIFEST_UPDATE = 'ManifestUpdate';
-        this.MANIFEST_UPDATE_STREAM_INFO = 'ManifestUpdatePeriodInfo';
-        this.MANIFEST_UPDATE_TRACK_INFO = 'ManifestUpdateRepresentationInfo';
-        this.PLAY_LIST = 'PlayList';
-        this.DVB_ERRORS = 'DVBErrors';
-        this.HTTP_REQUEST_DVB_REPORTING_TYPE = 'DVBReporting';
-    }
-
+class BufferingTime {
+    /**
+     * @description This Object holds reference to the current buffering time.
+     */
     constructor() {
-        this.init();
+        /**
+         * Target buffering time.
+         * @public
+         */
+        this.time = null;
     }
 }
 
-let constants = new MetricsConstants();
-export default constants;
+export default BufferingTime;

@@ -238,8 +238,13 @@ function ScheduleController(config) {
         if (!type || !currentRepresentationInfo) {
             return true;
         }
+
+        const bufferTarget = getBufferTarget();
+
+        const bufferingTime = dashMetrics.getCurrentBufferingTime(type);
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-        return bufferLevel < getBufferTarget();
+
+        return Math.min(bufferLevel, bufferingTime) < bufferTarget;
     }
 
     /**

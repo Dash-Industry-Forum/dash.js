@@ -910,6 +910,9 @@ function Settings() {
             buffer: {
                 enableSeekDecorrelationFix: false,
                 fastSwitchEnabled: true,
+                fastSwitchFragmentCount: 1.5,
+                fastSwitchSafeMinBufferDuration: 12,
+                fastSwitchSafeMinFragmentCount: 2,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
                 bufferPruningInterval: 10,

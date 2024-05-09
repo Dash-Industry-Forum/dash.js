@@ -126,6 +126,24 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the current buffering time for a given media type
+     * @param {MediaType} mediaType
+     * @returns {number}
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function getCurrentBufferingTime(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
+        const metric = getCurrent(metrics, MetricsConstants.BUFFERING_TIME);
+
+        if (metric) {
+            return metric.time;
+        }
+
+        return 0;
+    }
+
+    /**
      * @param {MediaType} mediaType
      * @param {number} t
      * @param {number} level
@@ -147,6 +165,17 @@ function DashMetrics(config) {
      */
     function addBufferState(mediaType, state, target) {
         metricsModel.addBufferState(mediaType, state, target);
+    }
+
+    /**
+     * @param {MediaType} mediaType
+     * @param {number} time
+     * @memberof module:DashMetrics
+     * @instance
+     * @ignore
+     */
+    function addBufferingTime(mediaType, time) {
+        metricsModel.addBufferingTime(mediaType, time);
     }
 
     /**
@@ -549,6 +578,7 @@ function DashMetrics(config) {
         getCurrentRepresentationSwitch,
         getCurrentBufferState,
         getCurrentBufferLevel,
+        getCurrentBufferingTime,
         getCurrentHttpRequest,
         getHttpRequests,
         getCurrentDroppedFrames,
@@ -568,6 +598,7 @@ function DashMetrics(config) {
         addRequestsQueue,
         addBufferLevel,
         addBufferState,
+        addBufferingTime,
         addDroppedFrames,
         addPlayList,
         addDVBErrors,
