@@ -78,11 +78,24 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function reset() {
-        const numSessions = sessions.length;
-        let session;
+        return new Promise((resolve, reject) => {
+            if (sessions.length === 0) {
+                eventBus.trigger(events.TEARDOWN_COMPLETE);
+                resolve();
+                return;
+            }
 
-        if (numSessions !== 0) {
-            // Called when we are done closing a session.  Success or fail
+            const promises = [];
+            for (let i = sessions.length - 1; i >= 0; i--) {
+                promises.push(_resetSingleSession(sessions[i]));
+            }
+
+            return Promise.all(promises);
+        })
+    }
+
+    function _resetSingleSession(session) {
+        return new Promise((resolve) => {
             const done = function (session) {
                 removeSession(session);
                 if (sessions.length === 0) {
@@ -96,28 +109,36 @@ function ProtectionModel_21Jan2015(config) {
                     }
                 }
             };
-            for (let i = 0; i < numSessions; i++) {
-                session = sessions[i];
-                (function (s) {
-                    _closeKeySessionInternal(session)
-                    done(s);
-                })(session);
-            }
-        } else {
-            eventBus.trigger(events.TEARDOWN_COMPLETE);
-        }
+
+            _closeKeySessionInternal(session)
+                .finally(() => {
+                    done(session);
+                    resolve();
+                })
+        })
     }
 
     function stop() {
-        // Close and remove not usable sessions
-        let session;
-        for (let i = 0; i < sessions.length; i++) {
-            session = sessions[i];
+        const promises = []
+        for (let i = sessions.length - 1; i >= 0; i--) {
+            promises.push(_stopSingleSession(sessions[i]));
+        }
+
+        return Promise.all(promises)
+    }
+
+    function _stopSingleSession(session) {
+        return new Promise((resolve) => {
             if (!session.getUsable()) {
                 _closeKeySessionInternal(session)
-                removeSession(session);
+                    .finally(() => {
+                        removeSession(session);
+                        resolve();
+                    })
+            } else {
+                resolve()
             }
-        }
+        })
     }
 
     function getAllInitData() {
@@ -413,7 +434,11 @@ function ProtectionModel_21Jan2015(config) {
         session.removeEventListener('message', sessionToken);
 
         // Send our request to the key session
-        return session.close();
+        return Promise.race([
+            session.close(),
+            new Promise((resolve, reject) => {
+                setTimeout(reject, 500)
+            })]);
     }
 
     // This is our main event handler for all desired HTMLMediaElement events

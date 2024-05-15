@@ -83,7 +83,7 @@ import CustomParametersModel from './models/CustomParametersModel';
 
 /**
  * The media types
- * @typedef {("video" | "audio" | "text" | "image")} MediaType
+ * @typedef {('video' | 'audio' | 'text' | 'image')} MediaType
  */
 
 /**
@@ -1435,10 +1435,13 @@ function MediaPlayer() {
         }
 
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
-            _resetPlaybackControllers();
+            _resetPlaybackControllers()
+                .then(() => {
+                    _initializePlayback(providedStartTime);
+                })
+        } else {
+            _initializePlayback(providedStartTime);
         }
-
-        _initializePlayback(providedStartTime);
     }
 
     /**
@@ -1899,9 +1902,16 @@ function MediaPlayer() {
         source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
-            _resetPlaybackControllers();
+            _resetPlaybackControllers()
+                .then(() => {
+                    _initializePlaybackIfReady()
+                })
+        } else {
+            _initializePlaybackIfReady()
         }
+    }
 
+    function _initializePlaybackIfReady() {
         if (isReady()) {
             _initializePlayback(providedStartTime);
         }
@@ -2150,18 +2160,32 @@ function MediaPlayer() {
         abrController.reset();
         mediaController.reset();
         segmentBaseController.reset();
-        if (protectionController) {
-            if (settings.get().streaming.protection.keepProtectionMediaKeys) {
-                protectionController.stop();
-            } else {
-                protectionController.reset();
-                protectionController = null;
-                _detectProtection();
-            }
-        }
         textController.reset();
         cmcdModel.reset();
         cmsdModel.reset();
+        return _resetProtectionController()
+    }
+
+    function _resetProtectionController() {
+        return new Promise((resolve) => {
+            if (!protectionController) {
+                resolve()
+                return
+            }
+            if (settings.get().streaming.protection.keepProtectionMediaKeys) {
+                protectionController.stop()
+                    .finally(() => {
+                        resolve()
+                    })
+            } else {
+                protectionController.reset()
+                    .finally(() => {
+                        protectionController = null;
+                        _detectProtection();
+                        resolve()
+                    })
+            }
+        })
     }
 
     function _createPlaybackControllers() {

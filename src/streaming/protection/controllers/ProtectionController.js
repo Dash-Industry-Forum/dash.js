@@ -574,8 +574,9 @@ function ProtectionController(config) {
     function stop() {
         _abortLicenseRequest();
         if (protectionModel) {
-            protectionModel.stop();
+            return protectionModel.stop();
         }
+        return Promise.resolve;
     }
 
     /**
@@ -585,27 +586,38 @@ function ProtectionController(config) {
      * associated with a HTMLMediaElement, it will be detached from that element.
      *
      * @memberof module:ProtectionController
-     * @instance
-     * @ignore
-     */
+     * @instanceignore
+     *
+     **/
     function reset() {
-        eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
+        return new Promise((resolve) => {
+            eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+            eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
 
-        checkConfig();
+            checkConfig();
 
-        _abortLicenseRequest();
+            _abortLicenseRequest();
 
-        setMediaElement(null);
+            setMediaElement(null);
 
-        selectedKeySystem = null;
-        keySystemSelectionInProgress = false;
+            selectedKeySystem = null;
+            keySystemSelectionInProgress = false;
 
-        if (protectionModel) {
-            protectionModel.reset();
-            protectionModel = null;
-        }
+            if (protectionModel) {
+                protectionModel.reset()
+                    .then(() => {
+                        protectionModel = null;
+                        _resetVariablesAfterReset();
+                        resolve();
+                    })
+            } else {
+                _resetVariablesAfterReset()
+                resolve();
+            }
+        })
+    }
 
+    function _resetVariablesAfterReset() {
         needkeyRetries.forEach(retryTimeout => clearTimeout(retryTimeout));
         needkeyRetries = [];
 
