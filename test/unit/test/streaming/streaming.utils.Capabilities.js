@@ -58,6 +58,12 @@ EssentialPropertyHDR.init({
     value: '9'
 });
 
+let EssentialPropertyHDRFormat = new DescriptorType;
+EssentialPropertyHDRFormat.init({
+    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+    value: 'ST2094-10'
+});
+
 describe('Capabilities', function () {
     beforeEach(function () {
         settings = Settings({}).getInstance();
@@ -177,13 +183,26 @@ describe('Capabilities', function () {
             expect(res).to.be.true;
         });
 
-        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for HDR-schemeIdUri', function () {
+        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for Colorimetry schemeIdUri', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
             expect(res).to.be.false;
 
-            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDREssentialProperties:true } } });
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
 
             res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
+            expect(res).to.be.true;
+        });
+        
+        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for HDR-Format schemeIdUri', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDRMetadataFormatEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
             expect(res).to.be.true;
         });
     });
