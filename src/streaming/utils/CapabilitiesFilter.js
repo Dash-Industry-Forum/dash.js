@@ -162,7 +162,7 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _convertHDRPropertiesToConfig(representation) {
+    function _convertHDRColorimetryToConfig(representation) {
         let cfg = {
             colorGamut: 'srgb',
             transferFunction: 'srgb',
@@ -174,44 +174,54 @@ function CapabilitiesFilter() {
             // note: MCA does not reflect a parameter related to 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag'
 
             // translate ColourPrimaries signaling into capability queries
-            if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [1, 5, 6, 7].includes(prop.value)) {
+            if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [1, 5, 6, 7].includes(prop.value)) {
                 cfg.colorGamut = 'srgb';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [11, 12].includes(prop.value)) {
+            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [11, 12].includes(prop.value)) {
                 cfg.colorGamut = 'p3';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries' && [9].includes(prop.value)) {
+            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [9].includes(prop.value)) {
                 cfg.colorGamut = 'rec2020';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:ColourPrimaries') {
+            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
 
             // translate TransferCharacteristics signaling into capability queries
-            if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [1, 6, 13, 14, 15].includes(prop.value)) {
+            if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [1, 6, 13, 14, 15].includes(prop.value)) {
                 cfg.transferFunction = 'srgb';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [16].includes(prop.value)) {
+            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [16].includes(prop.value)) {
                 cfg.transferFunction = 'pq';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics' && [18].includes(prop.value)) {
+            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [18].includes(prop.value)) {
                 cfg.transferFunction = 'hlg';
             }
-            else if (prop.schemeIdUri == 'urn:mpeg:mpegB:cicp:TransferCharacteristics') {
+            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
+        }
 
+        return cfg;
+    }
+
+    function _convertHDRMetadataFormatToConfig(representation) {
+        let cfg = {
+            isSupported: true
+        };
+
+        for (const prop of representation.EssentialProperty || []) {
             // translate hdrMetadataType signaling into capability queries
-            if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'ST2094-10') {
+            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'ST2094-10') {
                 cfg.hdrMetadataType = 'smpteSt2094-10';
             }
-            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'SL-HDR2') {
+            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'SL-HDR2') {
                 cfg.hdrMetadataType = 'slhdr2'; // TODO: this is not specified by W3C
             }
-            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi' && prop.value == 'ST2094-40') {
+            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'ST2094-40') {
                 cfg.hdrMetadataType = 'smpteSt2094-40';
             }
-            else if (prop.schemeIdUri == 'urn:dvb:dash:hdr-dmi') {
+            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
         }
@@ -227,9 +237,14 @@ function CapabilitiesFilter() {
             framerate: rep.frameRate || null,
             bitrate: rep.bandwidth || null
         }
-        if (settings.get().streaming.capabilities.filterHDREssentialProperties) {
-            Object.assign(config, _convertHDRPropertiesToConfig(rep));
+        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+            Object.assign(config, _convertHDRColorimetryToConfig(rep));
         }
+        let supportedFlag = config.isSupported;
+        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+        }
+        if (!supportedFlag) config.isSupported == false; // restore this flag as it may got overridden by 2nd Object.assign
 
         return config;
     }

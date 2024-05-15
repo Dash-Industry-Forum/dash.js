@@ -196,14 +196,23 @@ function Capabilities() {
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
 
-        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDREssentialProperties) {
-            // we already took care of these descriptors with the codecs check
-            // let's bypass them here
-
+        // we already took care of these descriptors with the codecs check
+        // let's bypass them here
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             const EssentialHDRProperties = [
                 { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
                 { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI },
                 { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI }
+            ];
+
+            supportedEssentialProps = supportedEssentialProps.filter(p => {
+                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri===p.schemeIdUri)));
+            });
+            supportedEssentialProps.push(...EssentialHDRProperties);
+        }
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            const EssentialHDRProperties = [
+                { schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI },
             ];
 
             supportedEssentialProps = supportedEssentialProps.filter(p => {
