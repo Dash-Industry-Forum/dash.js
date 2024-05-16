@@ -260,6 +260,10 @@ function MediaPlayer() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
     }
 
     /**
@@ -897,6 +901,31 @@ function MediaPlayer() {
         }
 
         return t;
+    }
+
+    /**
+     * Returns the current playhead time relative to the start of the DVR window.
+     * This method is only supported for live and will return NaN for VoD
+     * @returns {number} The current playhead time of the media relative to the start of the DVR window
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function timeInDvrWindow() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!playbackController.getIsDynamic()) {
+            return NaN
+        }
+
+        let t = getVideoElement().currentTime;
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
+        t = (metric === null || t === 0) ? 0 : t - metric.range.start;
+
+        return t
     }
 
     /**
@@ -2716,6 +2745,7 @@ function MediaPlayer() {
         setXHRWithCredentialsForType,
         time,
         timeAsUTC,
+        timeInDvrWindow,
         triggerSteeringRequest,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
