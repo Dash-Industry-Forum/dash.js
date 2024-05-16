@@ -875,38 +875,34 @@ function MediaPlayer() {
     }
 
     /**
-     * Current time of the playhead, in seconds.
+     * Current playhead time in seconds.
      *
-     * If called with no arguments then the returned time value is time elapsed since the start point of the first stream, or if it is a live stream, then the time will be based on the return value of the {@link module:MediaPlayer#duration duration()} method.
-     * However if a stream ID is supplied then time is relative to the start of that stream, or is null if there is no such stream id in the manifest.
+     * If called with no arguments then the returned value is the current time of the video element.
+     * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no such period id in the manifest.
      *
-     * @param {string} streamId - The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
+     * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first period or the AST.
      * @returns {number} The current playhead time of the media, or null.
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
-    function time(streamId) {
+    function time(periodId) {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         let t = getVideoElement().currentTime;
 
-        if (streamId !== undefined) {
-            t = streamController.getTimeRelativeToStreamId(t, streamId);
-        } else if (playbackController.getIsDynamic()) {
-            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-            let metric = dashMetrics.getCurrentDVRInfo(type);
-            t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
+        if (periodId !== undefined) {
+            t = streamController.getTimeRelativeToStreamId(t, periodId);
         }
 
         return t;
     }
 
     /**
-     * Duration of the media's playback, in seconds.
+     * Total duration of the media in seconds.
      *
-     * @returns {number} The current duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
+     * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
