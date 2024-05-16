@@ -192,3 +192,4 @@ dash.js is released under [BSD license](https://github.com/Dash-Industry-Forum/d
 ### Tested With
 
 [<img src="https://cloud.githubusercontent.com/assets/7864462/12837037/452a17c6-cb73-11e5-9f39-fc96893bc9bf.png" alt="Browser Stack Logo" width="300">](https://www.browserstack.com/)
+[<img src="https://www.lambdatest.com/support/img/logo.svg" alt="Browser Stack Logo" width="300">](https://www.lambdatest.com/)
