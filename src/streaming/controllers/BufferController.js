@@ -1162,7 +1162,7 @@ function BufferController(config) {
             return adjustedTime === targetTime ? NaN : adjustedTime;
 
         } catch (e) {
-
+            return NaN
         }
     }
 
