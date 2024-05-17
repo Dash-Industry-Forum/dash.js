@@ -74,15 +74,15 @@ import Events from './events/Events.js';
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
  *               supportedEssentialProperties: [
-                    { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
-                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /5|6/ },
-                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
-                    { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
-                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
-                ],
+ *                   { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
+ *                   { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /5|6/ },
+ *                   { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /5|6/ },
+ *                   { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: '6' },
+ *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+ *               ],
  *               useMediaCapabilitiesApi: false,
-                filterVideoColorimetryEssentialProperties: false,
-                filterHDRMetadataFormatEssentialProperties: false
+ *               filterVideoColorimetryEssentialProperties: false,
+ *               filterHDRMetadataFormatEssentialProperties: false
  *            },
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
@@ -664,7 +664,7 @@ import Events from './events/Events.js';
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
  * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
- * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking. (including 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag')
+ * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
  */

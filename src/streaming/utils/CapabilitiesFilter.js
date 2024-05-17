@@ -216,7 +216,7 @@ function CapabilitiesFilter() {
                 cfg.hdrMetadataType = 'smpteSt2094-10';
             }
             else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'SL-HDR2') {
-                cfg.hdrMetadataType = 'slhdr2'; // TODO: this is not specified by W3C
+                cfg.hdrMetadataType = 'slhdr2'; // Note: This is not specified by W3C
             }
             else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'ST2094-40') {
                 cfg.hdrMetadataType = 'smpteSt2094-40';
