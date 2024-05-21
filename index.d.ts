@@ -1419,15 +1419,11 @@ declare namespace dashjs {
 
         duration(): number;
 
-        timeAsUTC(): number;
-
-        durationAsUTC(): number;
+        timeAsUtc(): number;
 
         getActiveStream(): Stream | null;
 
-        getDVRWindowSize(): number;
-
-        getDVRSeekOffset(value: number): number;
+        getDvrSeekOffset(value: number): number;
 
         getTargetLiveDelay(): number;
 

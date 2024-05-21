@@ -186,12 +186,12 @@ describe('MediaPlayer', function () {
                 expect(player.duration).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method timeAsUTC should throw an exception', function () {
-                expect(player.timeAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method timeAsUtc should throw an exception', function () {
+                expect(player.timeAsUtc).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method durationAsUTC should throw an exception', function () {
-                expect(player.durationAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method getDvrWindow should throw an exception', function () {
+                expect(player.getDvrWindow).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
         });
@@ -201,13 +201,13 @@ describe('MediaPlayer', function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
 
-            it('Method getDVRWindowSize should return 0', function () {
-                let dvrWindowSize = player.getDVRWindowSize();
-                expect(dvrWindowSize).equal(0);
+            it('Method getDvrWindow should return empty object', function () {
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.be.empty
             });
 
-            it('Method getDVRSeekOffset should return 0', function () {
-                let dvrSeekOffset = player.getDVRSeekOffset();
+            it('Method getDvrSeekOffset should return 0', function () {
+                let dvrSeekOffset = player.getDvrSeekOffset();
                 expect(dvrSeekOffset).equal(0);
             });
 
@@ -372,9 +372,19 @@ describe('MediaPlayer', function () {
                 expect(time).to.equal(4);
             });
 
-            it('timeInDvrWindow should return NaN for VoD content', function () {
+            it('Method time should return time of playback relative to reference period', function () {
+                streamControllerMock.getTimeRelativeToStreamId = function () {
+                    return 10
+                }
+                videoElementMock.currentTime = 15;
+                let time = player.time('id');
+                expect(time).to.equal(10);
+            });
+
+            it('timeInDvrWindow should return current time for VoD content', function () {
+                videoElementMock.currentTime = 15;
                 let time = player.timeInDvrWindow();
-                expect(time).to.be.NaN;
+                expect(time).to.be.equal(15);
             });
 
             it('timeInDvrWindow should return relative time for live content', function () {
@@ -401,7 +411,58 @@ describe('MediaPlayer', function () {
                 expect(time).to.be.equal(-15);
             });
 
-            it('Method duration should return duration of playback', function () {
+            it('getDvrWindow shall return start and end values matching the duration of the VoD content', function () {
+                playbackControllerMock.setIsDynamic(false);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, null, { start: 10, end: 60 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(10);
+                expect(dvrWindow.end).to.be.equal(60);
+                expect(dvrWindow.size).to.be.equal(50);
+            });
+
+            it('getDvrWindow shall return right values for live content with available from being 1970', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(0) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(800);
+                expect(dvrWindow.startAsUtc).to.be.equal(800);
+                expect(dvrWindow.end).to.be.equal(830);
+                expect(dvrWindow.endAsUtc).to.be.equal(830);
+                expect(dvrWindow.size).to.be.equal(30);
+            });
+
+            it('getDvrWindow shall return right values for live content with available from greater than 1970', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(5000) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(800);
+                expect(dvrWindow.startAsUtc).to.be.equal(805);
+                expect(dvrWindow.end).to.be.equal(830);
+                expect(dvrWindow.endAsUtc).to.be.equal(835);
+                expect(dvrWindow.size).to.be.equal(30);
+            });
+
+            it('timeAsUtc should return time() VoD content', function () {
+                let time = player.timeAsUtc();
+                expect(time).to.be.NaN
+            });
+
+            it('Method duration should return duration of playback for VoD content', function () {
                 let duration = player.duration();
                 expect(duration).to.equal(0);
 
@@ -412,6 +473,17 @@ describe('MediaPlayer', function () {
                 videoElementMock.duration = 4;
                 duration = player.duration();
                 expect(duration).to.equal(4);
+            });
+
+            it('Method duration should return duration of playback for Live content', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(5000) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let duration = player.duration();
+                expect(duration).to.equal(30);
             });
         });
     });
@@ -1129,20 +1201,28 @@ describe('MediaPlayer', function () {
 });
 
 describe('MediaPlayer with context injected', () => {
-    const specHelper = new SpecHelper();
-    const videoElementMock = new VideoElementMock();
-    const capaMock = new CapabilitiesMock();
-    const streamControllerMock = new StreamControllerMock();
-    const abrControllerMock = new AbrControllerMock();
-    const playbackControllerMock = new PlaybackControllerMock();
-    const mediaPlayerModel = new MediaPlayerModelMock();
-    const mediaControllerMock = new MediaControllerMock();
+    let specHelper;
+    let videoElementMock;
+    let capaMock;
+    let streamControllerMock;
+    let abrControllerMock;
+    let playbackControllerMock;
+    let mediaPlayerModel;
+    let mediaControllerMock;
 
     let player;
     let eventBus;
     let settings;
 
     beforeEach(function () {
+        specHelper = new SpecHelper();
+        videoElementMock = new VideoElementMock();
+        capaMock = new CapabilitiesMock();
+        streamControllerMock = new StreamControllerMock();
+        abrControllerMock = new AbrControllerMock();
+        playbackControllerMock = new PlaybackControllerMock();
+        mediaPlayerModel = new MediaPlayerModelMock();
+        mediaControllerMock = new MediaControllerMock();
         // tear down
         player = null;
         settings?.reset();
@@ -1175,13 +1255,9 @@ describe('MediaPlayer with context injected', () => {
 
     describe('Tools Functions', () => {
         describe('When the player is initialised', () => {
-            before(() => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-            })
 
             beforeEach(() => {
-                streamControllerMock.refreshManifest.resetHistory();
-
+                sinon.spy(streamControllerMock, 'refreshManifest');
                 mediaControllerMock.reset();
             });
 

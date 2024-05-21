@@ -243,8 +243,8 @@ class DashJsAdapter {
 
     generateValidStartPosition() {
         if (this.isDynamic()) {
-            // getDVRSeekOffset of 0 gives us the start of the DVR window relative to AST. To that number we add a random start time within the DVR window
-            return (Math.random() * (this.player.getDVRWindowSize() - this.player.getTargetLiveDelay())) + this.player.getDVRSeekOffset(0);
+            // getDvrSeekOffset of 0 gives us the start of the DVR window relative to AST. To that number we add a random start time within the DVR window
+            return (Math.random() * (this.player.getDvrWindow().size - this.player.getTargetLiveDelay())) + this.player.getDvrSeekOffset(0);
         } else {
             return Math.random() * this.getDuration();
         }
@@ -255,7 +255,7 @@ class DashJsAdapter {
     }
 
     getDvrSeekOffset(value) {
-        return this.player.getDVRSeekOffset(value);
+        return this.player.getDvrSeekOffset(value);
     }
 
     getCurrentLiveLatency() {

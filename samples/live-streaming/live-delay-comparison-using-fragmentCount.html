@@ -57,7 +57,7 @@
                 document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
                 for (var i = 1; i < 7; i++) {
                     var p = eval('player' + i);
-                    document.querySelector('#video' + i + 'delay').innerHTML = Math.round((d.getTime() / 1000) - Number(p.timeAsUTC()));
+                    document.querySelector('#video' + i + 'delay').innerHTML = Math.round((d.getTime() / 1000) - Number(p.timeAsUtc()));
                     document.querySelector('#video' + i + 'buffer').innerHTML = p.getBufferLength() + 's';
                 }
 

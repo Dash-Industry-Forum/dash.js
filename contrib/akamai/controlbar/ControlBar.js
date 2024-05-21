@@ -178,7 +178,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var _onPlayStart = function (/*e*/) {
-        setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
+        setTime(displayUTCTimeCodes ? self.player.timeAsUtc() : self.player.time());
         updateDuration();
         togglePlayPauseBtnState();
         if (seekbarBufferInterval) {
@@ -189,7 +189,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var _onPlayTimeUpdate = function (/*e*/) {
         updateDuration();
         if (!seeking) {
-            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
+            setTime(displayUTCTimeCodes ? player.timeAsUtc() : player.time());
             if (seekbarPlay) {
                 seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
             }
@@ -401,7 +401,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var updateDuration = function () {
         var duration = self.player.duration();
         if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-            setDuration(displayUTCTimeCodes ? self.player.durationAsUTC() : duration);
+            setDuration(displayUTCTimeCodes ? self.player.getDvrWindow().endAsUtc : duration);
             seekbar.max = duration;
         }
     };
@@ -838,7 +838,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 // Other tracks will just have their text
                 item.textContent = arr[i];
             }
-            
+
             item.onmouseover = function (/*e*/) {
                 if (this.selected !== true) {
                     this.classList.add('menu-item-over');
