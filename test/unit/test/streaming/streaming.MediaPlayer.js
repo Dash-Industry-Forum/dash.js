@@ -19,6 +19,7 @@ import sinon from 'sinon';
 import {expect} from 'chai';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
 const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
@@ -33,14 +34,14 @@ describe('MediaPlayer', function () {
     let dummyUrl = specHelper.getDummyUrl();
 
     // init mock
-    const videoElementMock = new VideoElementMock();
-    const capaMock = new CapabilitiesMock();
-    const streamControllerMock = new StreamControllerMock();
-    const abrControllerMock = new AbrControllerMock();
-    const throughputControllerMock = new ThroughputControllerMock();
-    const playbackControllerMock = new PlaybackControllerMock();
-    const mediaPlayerModel = new MediaPlayerModelMock();
-    const mediaControllerMock = new MediaControllerMock();
+    let videoElementMock
+    let capaMock;
+    let streamControllerMock
+    let abrControllerMock;
+    let throughputControllerMock;
+    let playbackControllerMock;
+    let mediaPlayerModel
+    let mediaControllerMock;
     const objectUtils = ObjectUtils(context).getInstance();
     const settings = Settings(context).getInstance();
     const customParametersModel = CustomParametersModel(context).getInstance();
@@ -51,8 +52,16 @@ describe('MediaPlayer', function () {
 
         // to avoid unwanted log
         const debug = player.getDebug();
-        expect(debug).to.exist; // jshint ignore:line
+        expect(debug).to.exist;
 
+        mediaPlayerModel = new MediaPlayerModelMock();
+        playbackControllerMock = new PlaybackControllerMock();
+        videoElementMock = new VideoElementMock();
+        capaMock = new CapabilitiesMock();
+        streamControllerMock = new StreamControllerMock();
+        abrControllerMock = new AbrControllerMock();
+        throughputControllerMock = new ThroughputControllerMock();
+        mediaControllerMock = new MediaControllerMock();
         player.setConfig({
             streamController: streamControllerMock,
             capabilities: capaMock,
@@ -75,7 +84,7 @@ describe('MediaPlayer', function () {
         describe('When it is not initialized', function () {
             it('Method isReady should return false', function () {
                 const isReady = player.isReady();
-                expect(isReady).to.be.false; // jshint ignore:line
+                expect(isReady).to.be.false;
             });
         });
 
@@ -85,7 +94,7 @@ describe('MediaPlayer', function () {
                 player.initialize(videoElementMock, dummyUrl, false);
 
                 const isReady = player.isReady();
-                expect(isReady).to.be.false; // jshint ignore:line
+                expect(isReady).to.be.false;
 
                 capaMock.setMediaSourceSupported(true);
             });
@@ -96,7 +105,7 @@ describe('MediaPlayer', function () {
                     player.off('error', playerError);
 
                     const isReady = player.isReady();
-                    expect(isReady).to.be.false; // jshint ignore:line
+                    expect(isReady).to.be.false;
 
                     // reinit mock
                     capaMock.setMediaSourceSupported(true);
@@ -114,7 +123,7 @@ describe('MediaPlayer', function () {
             });
             it('Method isReady should return true', function () {
                 const isReady = player.isReady();
-                expect(isReady).to.be.true; // jshint ignore:line
+                expect(isReady).to.be.true;
             });
         });
     });
@@ -177,93 +186,91 @@ describe('MediaPlayer', function () {
                 expect(player.duration).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method timeAsUTC should throw an exception', function () {
-                expect(player.timeAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method timeAsUtc should throw an exception', function () {
+                expect(player.timeAsUtc).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method durationAsUTC should throw an exception', function () {
-                expect(player.durationAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method getDvrWindow should throw an exception', function () {
+                expect(player.getDvrWindow).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
         });
 
         describe('When it is initialized', function () {
             beforeEach(function () {
-                playbackControllerMock.reset();
-                videoElementMock.reset();
                 player.initialize(videoElementMock, dummyUrl, false);
             });
 
-            it('Method getDVRWindowSize should return 0', function () {
-                let dvrWindowSize = player.getDVRWindowSize();
-                expect(dvrWindowSize).equal(0); // jshint ignore:line
+            it('Method getDvrWindow should return empty object', function () {
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.be.empty
             });
 
-            it('Method getDVRSeekOffset should return 0', function () {
-                let dvrSeekOffset = player.getDVRSeekOffset();
-                expect(dvrSeekOffset).equal(0); // jshint ignore:line
+            it('Method getDvrSeekOffset should return 0', function () {
+                let dvrSeekOffset = player.getDvrSeekOffset();
+                expect(dvrSeekOffset).equal(0);
             });
 
             it('Method play should start playing', function () {
                 let isPlaying = playbackControllerMock.isPlaying();
-                expect(isPlaying).to.be.false; // jshint ignore:line
+                expect(isPlaying).to.be.false;
 
                 player.play();
 
                 isPlaying = playbackControllerMock.isPlaying();
-                expect(isPlaying).to.be.true; // jshint ignore:line
+                expect(isPlaying).to.be.true;
             });
 
             it('Method pause should pause playback', function () {
                 let paused = playbackControllerMock.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
 
                 player.pause();
 
                 paused = playbackControllerMock.isPaused();
-                expect(paused).to.be.true; // jshint ignore:line
+                expect(paused).to.be.true;
             });
 
             it('Method isPaused should return pause state', function () {
                 player.play();
 
                 let paused = player.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
 
                 player.pause();
 
                 paused = player.isPaused();
-                expect(paused).to.be.true; // jshint ignore:line
+                expect(paused).to.be.true;
 
                 player.play();
 
                 paused = player.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
             });
 
             it('Method seek should throw an exception', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
 
                 expect(player.seek).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
 
                 expect(player.seek.bind(player, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
             });
 
             it('Method setMute should throw an exception', function () {
                 let isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 expect(player.setMute.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method setVolume should throw an exception', function () {
@@ -277,11 +284,11 @@ describe('MediaPlayer', function () {
 
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
-                expect(isDynamic).to.be.false; // jshint ignore:line
+                expect(isDynamic).to.be.false;
 
                 playbackControllerMock.setIsDynamic(true);
                 isDynamic = player.isDynamic();
-                expect(isDynamic).to.be.true; // jshint ignore:line
+                expect(isDynamic).to.be.true;
             });
 
             it('Method setPlaybackRate should change playback value of video element', function () {
@@ -302,28 +309,28 @@ describe('MediaPlayer', function () {
 
             it('Method setMute should change mute value of video element', function () {
                 let isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 player.setMute(true);
                 isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.true; // jshint ignore:line
+                expect(isMuted).to.be.true;
 
                 player.setMute(false);
                 isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method isMuted should return mute state', function () {
                 let isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 player.setMute(true);
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.true; // jshint ignore:line
+                expect(isMuted).to.be.true;
 
                 player.setMute(false);
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method setVolume should change volume value of video element', function () {
@@ -365,7 +372,97 @@ describe('MediaPlayer', function () {
                 expect(time).to.equal(4);
             });
 
-            it('Method duration should return duration of playback', function () {
+            it('Method time should return time of playback relative to reference period', function () {
+                streamControllerMock.getTimeRelativeToStreamId = function () {
+                    return 10
+                }
+                videoElementMock.currentTime = 15;
+                let time = player.time('id');
+                expect(time).to.equal(10);
+            });
+
+            it('timeInDvrWindow should return current time for VoD content', function () {
+                videoElementMock.currentTime = 15;
+                let time = player.timeInDvrWindow();
+                expect(time).to.be.equal(15);
+            });
+
+            it('timeInDvrWindow should return relative time for live content', function () {
+                playbackControllerMock.setIsDynamic(true);
+                videoElementMock.currentTime = 15;
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, null, { start: 10, end: 60 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let time = player.timeInDvrWindow();
+                expect(time).to.be.equal(5);
+            });
+
+            it('timeInDvrWindow should return time 0 for live content if the current play position is outside of the DVR window', function () {
+                playbackControllerMock.setIsDynamic(true);
+                videoElementMock.currentTime = 15;
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, null, { start: 30, end: 60 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let time = player.timeInDvrWindow();
+                expect(time).to.be.equal(0);
+            });
+
+            it('getDvrWindow shall return start and end values matching the duration of the VoD content', function () {
+                playbackControllerMock.setIsDynamic(false);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, null, { start: 10, end: 60 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(10);
+                expect(dvrWindow.end).to.be.equal(60);
+                expect(dvrWindow.size).to.be.equal(50);
+            });
+
+            it('getDvrWindow shall return right values for live content with available from being 1970', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(0) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(800);
+                expect(dvrWindow.startAsUtc).to.be.equal(800);
+                expect(dvrWindow.end).to.be.equal(830);
+                expect(dvrWindow.endAsUtc).to.be.equal(830);
+                expect(dvrWindow.size).to.be.equal(30);
+            });
+
+            it('getDvrWindow shall return right values for live content with available from greater than 1970', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(5000) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let dvrWindow = player.getDvrWindow();
+                expect(dvrWindow).to.not.be.null;
+                expect(dvrWindow.start).to.be.equal(800);
+                expect(dvrWindow.startAsUtc).to.be.equal(805);
+                expect(dvrWindow.end).to.be.equal(830);
+                expect(dvrWindow.endAsUtc).to.be.equal(835);
+                expect(dvrWindow.size).to.be.equal(30);
+            });
+
+            it('timeAsUtc should return time() VoD content', function () {
+                let time = player.timeAsUtc();
+                expect(time).to.be.NaN
+            });
+
+            it('Method duration should return duration of playback for VoD content', function () {
                 let duration = player.duration();
                 expect(duration).to.equal(0);
 
@@ -377,6 +474,17 @@ describe('MediaPlayer', function () {
                 duration = player.duration();
                 expect(duration).to.equal(4);
             });
+
+            it('Method duration should return duration of playback for Live content', function () {
+                playbackControllerMock.setIsDynamic(true);
+                const dashMetricsMock = new DashMetricsMock();
+                dashMetricsMock.addDVRInfo('video', 0, { availableFrom: new Date(5000) }, { start: 800, end: 830 })
+                player.setConfig({
+                    dashMetrics: dashMetricsMock
+                })
+                let duration = player.duration();
+                expect(duration).to.equal(30);
+            });
         });
     });
 
@@ -387,7 +495,7 @@ describe('MediaPlayer', function () {
         });
         it('should configure MaxAllowedBitrateFor', function () {
             let maxAllowedBitrateFor = player.getSettings().streaming.abr.maxBitrate.audio;
-            expect(maxAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
+            expect(maxAllowedBitrateFor === -1).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -405,7 +513,7 @@ describe('MediaPlayer', function () {
 
         it('should configure MinAllowedBitrateFor', function () {
             let minAllowedBitrateFor = player.getSettings().streaming.abr.minBitrate.audio;
-            expect(minAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
+            expect(minAllowedBitrateFor === -1).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -423,7 +531,7 @@ describe('MediaPlayer', function () {
 
         it('should configure bitrate according to playback area size', function () {
             let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+            expect(limitBitrateByPortal).to.be.false;
 
             player.updateSettings({
                 'streaming': {
@@ -434,12 +542,12 @@ describe('MediaPlayer', function () {
             });
 
             limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(limitBitrateByPortal).to.be.true;
         });
 
         it('should configure usePixelRatioInLimitBitrateByPortal', function () {
             let UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
 
             player.updateSettings({
                 'streaming': {
@@ -450,13 +558,13 @@ describe('MediaPlayer', function () {
             });
 
             UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
         });
 
 
         it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
             let autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
-            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+            expect(autoSwitchBitrateForVideo).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -470,7 +578,7 @@ describe('MediaPlayer', function () {
 
             autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
 
-            expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
+            expect(autoSwitchBitrateForVideo).to.be.false;
         });
 
         it('Method getAverageThroughput should value computed from ThroughputController', function () {
@@ -501,16 +609,16 @@ describe('MediaPlayer', function () {
 
         it('should configure autoplay', function () {
             let autoplay = player.getAutoPlay();
-            expect(autoplay).to.be.true; // jshint ignore:line
+            expect(autoplay).to.be.true;
 
             player.setAutoPlay(false);
             autoplay = player.getAutoPlay();
-            expect(autoplay).to.be.false; // jshint ignore:line
+            expect(autoplay).to.be.false;
         });
 
         it('should configure LiveDelayFragmentCount', function () {
             let liveDelayFragmentCount = player.getSettings().streaming.delay.liveDelayFragmentCount;
-            expect(liveDelayFragmentCount).to.be.NaN; // jshint ignore:line
+            expect(liveDelayFragmentCount).to.be.NaN;
 
             player.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 5 } } });
 
@@ -520,7 +628,7 @@ describe('MediaPlayer', function () {
 
         it('should configure liveDelay', function () {
             let liveDelay = player.getSettings().streaming.delay.liveDelay;
-            expect(liveDelay).to.be.NaN; // jshint ignore:line
+            expect(liveDelay).to.be.NaN;
 
             player.updateSettings({ 'streaming': { 'delay': { 'liveDelay': 10 } } });
 
@@ -530,32 +638,32 @@ describe('MediaPlayer', function () {
 
         it('should configure useSuggestedPresentationDelay', function () {
             let useSuggestedPresentationDelay = player.getSettings().streaming.delay.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.true;
 
             player.updateSettings({ 'streaming': { 'delay': { 'useSuggestedPresentationDelay': false } } });
 
             useSuggestedPresentationDelay = player.getSettings().streaming.delay.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.false;
         });
 
         it('should configure scheduleWhilePaused', function () {
             let scheduleWhilePaused = player.getSettings().streaming.scheduling.scheduleWhilePaused;
-            expect(scheduleWhilePaused).to.be.true; // jshint ignore:line
+            expect(scheduleWhilePaused).to.be.true;
 
             player.updateSettings({ 'streaming': { scheduling: { 'scheduleWhilePaused': false } } });
 
             scheduleWhilePaused = player.getSettings().streaming.scheduling.scheduleWhilePaused;
-            expect(scheduleWhilePaused).to.be.false; // jshint ignore:line
+            expect(scheduleWhilePaused).to.be.false;
         });
 
         it('should configure fastSwitchEnabled', function () {
             let fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
-            expect(fastSwitchEnabled).to.be.true; // jshint ignore:line
+            expect(fastSwitchEnabled).to.be.true;
 
             player.updateSettings({ 'streaming': { 'buffer': { 'fastSwitchEnabled': false } } });
 
             fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
-            expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
+            expect(fastSwitchEnabled).to.be.false;
         });
 
         it('Method addABRCustomRule should throw an exception', function () {
@@ -618,12 +726,12 @@ describe('MediaPlayer', function () {
 
         it('should configure useManifestDateHeaderTimeSource', function () {
             let useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
-            expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
+            expect(useManifestDateHeaderTimeSource).to.be.true;
 
             player.updateSettings({ 'streaming': { utcSynchronization: { 'useManifestDateHeaderTimeSource': false } } });
 
             useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
-            expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
+            expect(useManifestDateHeaderTimeSource).to.be.false;
         });
 
         it('should configure BufferToKeep', function () {
@@ -790,12 +898,12 @@ describe('MediaPlayer', function () {
 
             it('Method enableText should return false', function () {
                 const enabled = player.enableText();
-                expect(enabled).to.be.false; // jshint ignore:line
+                expect(enabled).to.be.false;
             });
 
             it('Method isTextEnabled should return false', function () {
                 const enabled = player.isTextEnabled();
-                expect(enabled).to.be.false; // jshint ignore:line
+                expect(enabled).to.be.false;
             });
 
 
@@ -826,14 +934,14 @@ describe('MediaPlayer', function () {
 
                 const element = player.getVideoElement();
                 const areEquals = objectUtils.areEqual(element, videoElementMock);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('should be able to attach view', function () {
                 let element = player.getVideoElement();
                 const objectUtils = ObjectUtils(context).getInstance();
                 let areEquals = objectUtils.areEqual(element, videoElementMock);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
 
                 const myNewView = new VideoElementMock();
 
@@ -842,12 +950,12 @@ describe('MediaPlayer', function () {
                 element = player.getVideoElement();
 
                 areEquals = objectUtils.areEqual(element, myNewView);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('should be able to attach TTML renderer div', function () {
                 let ttmlRenderer = player.getTTMLRenderingDiv();
-                expect(ttmlRenderer).to.be.undefined; // jshint ignore:line
+                expect(ttmlRenderer).to.be.undefined;
 
                 const myTTMLRenderer = {
                     style: {}
@@ -857,7 +965,7 @@ describe('MediaPlayer', function () {
 
                 ttmlRenderer = player.getTTMLRenderingDiv();
                 const areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('Method attachView should throw an exception when attaching a view which is not VIDEO or AUDIO DOM element', function () {
@@ -934,7 +1042,7 @@ describe('MediaPlayer', function () {
 
             it('should configure initial media settings', function () {
                 let initialSettings = player.getInitialMediaSettingsFor('audio');
-                expect(initialSettings).to.not.exist; // jshint ignore:line
+                expect(initialSettings).to.not.exist;
 
                 player.setInitialMediaSettingsFor('audio', 'settings');
 
@@ -1026,12 +1134,12 @@ describe('MediaPlayer', function () {
 
             it('should set current track', function () {
                 let currentTrack = mediaControllerMock.isCurrentTrack('audio');
-                expect(currentTrack).to.be.false; // jshint ignore:line
+                expect(currentTrack).to.be.false;
 
                 player.setCurrentTrack('audio');
 
                 currentTrack = mediaControllerMock.isCurrentTrack('audio');
-                expect(currentTrack).to.be.true; // jshint ignore:line
+                expect(currentTrack).to.be.true;
             });
         });
     });
@@ -1071,42 +1179,50 @@ describe('MediaPlayer', function () {
 
             it('Method getDashMetrics should return dash metrics', function () {
                 const metricsExt = player.getDashMetrics();
-                expect(metricsExt).to.exist; // jshint ignore:line
+                expect(metricsExt).to.exist;
             });
 
-            it('Method getBufferLength should return 0 when no type is defined', function () {
+            it('Method getBufferLength should return NaN when no type is defined', function () {
                 const bufferLength = player.getBufferLength();
-                expect(bufferLength).to.equals(0); // jshint ignore:line
+                expect(bufferLength).to.be.NaN
             });
 
             it('Method getBufferLength should return NaN when type is Muxed', function () {
                 const bufferLength = player.getBufferLength(Constants.MUXED);
-                expect(bufferLength).to.be.NaN; // jshint ignore:line
+                expect(bufferLength).to.be.NaN;
             });
 
             it('Method getBufferLength should return NaN when type is Video', function () {
                 const bufferLength = player.getBufferLength(Constants.VIDEO);
-                expect(bufferLength).to.be.NaN; // jshint ignore:line
+                expect(bufferLength).to.be.NaN;
             });
         });
     });
 });
 
 describe('MediaPlayer with context injected', () => {
-    const specHelper = new SpecHelper();
-    const videoElementMock = new VideoElementMock();
-    const capaMock = new CapabilitiesMock();
-    const streamControllerMock = new StreamControllerMock();
-    const abrControllerMock = new AbrControllerMock();
-    const playbackControllerMock = new PlaybackControllerMock();
-    const mediaPlayerModel = new MediaPlayerModelMock();
-    const mediaControllerMock = new MediaControllerMock();
+    let specHelper;
+    let videoElementMock;
+    let capaMock;
+    let streamControllerMock;
+    let abrControllerMock;
+    let playbackControllerMock;
+    let mediaPlayerModel;
+    let mediaControllerMock;
 
     let player;
     let eventBus;
     let settings;
 
     beforeEach(function () {
+        specHelper = new SpecHelper();
+        videoElementMock = new VideoElementMock();
+        capaMock = new CapabilitiesMock();
+        streamControllerMock = new StreamControllerMock();
+        abrControllerMock = new AbrControllerMock();
+        playbackControllerMock = new PlaybackControllerMock();
+        mediaPlayerModel = new MediaPlayerModelMock();
+        mediaControllerMock = new MediaControllerMock();
         // tear down
         player = null;
         settings?.reset();
@@ -1123,7 +1239,7 @@ describe('MediaPlayer with context injected', () => {
 
         // to avoid unwanted log
         const debug = player.getDebug();
-        expect(debug).to.exist; // jshint ignore:line
+        expect(debug).to.exist;
 
         player.setConfig({
             streamController: streamControllerMock,
@@ -1139,13 +1255,9 @@ describe('MediaPlayer with context injected', () => {
 
     describe('Tools Functions', () => {
         describe('When the player is initialised', () => {
-            before(() => {
-                sinon.spy(streamControllerMock, 'refreshManifest');
-            })
 
             beforeEach(() => {
-                streamControllerMock.refreshManifest.resetHistory();
-
+                sinon.spy(streamControllerMock, 'refreshManifest');
                 mediaControllerMock.reset();
             });
 
