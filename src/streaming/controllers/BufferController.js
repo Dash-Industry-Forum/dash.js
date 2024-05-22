@@ -587,7 +587,7 @@ function BufferController(config) {
             return clearRanges;
         }
 
-        // if no target time is provided we clear everyhing
+        // if no target time is provided we clear everything
         if ((!seekTime && seekTime !== 0) || isNaN(seekTime)) {
             clearRanges.push({
                 start: ranges.start(0),
@@ -597,7 +597,6 @@ function BufferController(config) {
 
         // otherwise we need to calculate the correct pruning range
         else {
-
             const behindPruningRange = _getRangeBehindForPruning(seekTime, ranges);
             const aheadPruningRange = _getRangeAheadForPruning(seekTime, ranges);
 
@@ -926,6 +925,7 @@ function BufferController(config) {
     function clearBuffers(ranges) {
         return new Promise((resolve, reject) => {
             if (!ranges || !sourceBufferSink || ranges.length === 0) {
+                _updateBufferLevel();
                 resolve();
                 return;
             }

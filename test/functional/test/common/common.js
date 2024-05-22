@@ -27,6 +27,11 @@ export async function checkForEndedEvent(playerAdapter) {
     expect(ended).to.be.true;
 }
 
+export async function reachedTargetForwardBuffer(playerAdapter, targetBuffer, tolerance) {
+    const reachedBuffer = await playerAdapter.reachedTargetForwardBuffer(Constants.TEST_TIMEOUT_THRESHOLDS.TARGET_BUFFER_REACHED, targetBuffer, tolerance);
+    expect(reachedBuffer).to.be.true;
+}
+
 export function checkLiveDelay(playerAdapter, lowerThreshold, upperThreshold) {
     const liveDelay = playerAdapter.getCurrentLiveLatency();
     expect(liveDelay).to.be.at.least(lowerThreshold);

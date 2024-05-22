@@ -595,6 +595,33 @@ class DashJsAdapter {
             delayPollInterval = setInterval(_checkDelay, 100);
         })
     }
+
+    async reachedTargetForwardBuffer(timeoutValue, targetBuffer, tolerance) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let delayPollInterval = null;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                clearInterval(delayPollInterval);
+                delayPollInterval = null;
+                timeout = null;
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(false);
+            }
+
+            const _checkBuffer = () => {
+                const buffer = this.getBufferLengthByType();
+                if (buffer >= targetBuffer) {
+                    _onComplete(true);
+                }
+            };
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            delayPollInterval = setInterval(_checkBuffer, 100);
+        })
+    }
 }
 
 export default DashJsAdapter;
