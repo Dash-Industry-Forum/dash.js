@@ -63,6 +63,9 @@ import FactoryMaker from '../core/FactoryMaker';
 import Settings from '../core/Settings';
 import {getVersionString} from '../core/Version';
 
+//Datadog
+import { datadogRum } from '@datadog/browser-rum'
+
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
 import DashAdapter from '../dash/DashAdapter';
@@ -188,6 +191,21 @@ function MediaPlayer() {
         customParametersModel = CustomParametersModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
+        datadogRum.init({
+            clientToken: 'pube8531eb9771121d613ad5528171490ec',
+            applicationId: 'f4c9db5f-7b57-4567-a02c-04cba44265af',
+            // `site` refers to the Datadog site parameter of your organization
+            // see https://docs.datadoghq.com/getting_started/site/
+            site: 'datadoghq.com',
+            service: 'birb-party',
+            env: 'production',
+            version: '1.0.0',
+            sessionSampleRate: 100,
+            sessionReplaySampleRate: 100,
+            trackResources: true,
+            trackLongTasks: true,
+            trackUserInteractions: true,
+        });
     }
 
     /**
