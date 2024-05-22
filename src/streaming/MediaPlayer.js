@@ -958,7 +958,7 @@ function MediaPlayer() {
         let t = getVideoElement().currentTime;
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         let metric = dashMetrics.getCurrentDVRInfo(type);
-        t = (metric === null || t === 0) ? 0 : t - metric.range.start;
+        t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
 
         return t
     }

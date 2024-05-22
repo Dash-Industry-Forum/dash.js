@@ -399,7 +399,7 @@ describe('MediaPlayer', function () {
                 expect(time).to.be.equal(5);
             });
 
-            it('timeInDvrWindow should return negative relative time for live content if the current play position is outside of the DVR window', function () {
+            it('timeInDvrWindow should return time 0 for live content if the current play position is outside of the DVR window', function () {
                 playbackControllerMock.setIsDynamic(true);
                 videoElementMock.currentTime = 15;
                 const dashMetricsMock = new DashMetricsMock();
@@ -408,7 +408,7 @@ describe('MediaPlayer', function () {
                     dashMetrics: dashMetricsMock
                 })
                 let time = player.timeInDvrWindow();
-                expect(time).to.be.equal(-15);
+                expect(time).to.be.equal(0);
             });
 
             it('getDvrWindow shall return start and end values matching the duration of the VoD content', function () {
