@@ -1,4 +1,5 @@
 import Constants from '../src/Constants.js';
+import {getRandomNumber} from '../test/common/common.js';
 
 class DashJsAdapter {
 
@@ -184,6 +185,10 @@ class DashJsAdapter {
         return this.player.time();
     }
 
+    getCurrentTimeWithinDvrWindow() {
+        return this.player.timeInDvrWindow();
+    }
+
     getBufferLengthByType(type) {
         return this.player.getBufferLength(type);
     }
@@ -198,6 +203,10 @@ class DashJsAdapter {
 
     seek(value) {
         this.player.seek(value);
+    }
+
+    seekToPresentationTime(value) {
+        this.player.seekToPresentationTime(value);
     }
 
     getCurrentTextTrackIndex() {
@@ -217,12 +226,23 @@ class DashJsAdapter {
     }
 
     /**
-     * Checks whether the provided time is within a threshold compared to the current playback time
+     * Checks whether the provided time is within a threshold compared to the current playback time within the DVR window
      * @param time
      * @param threshold
      * @return {boolean}
      */
-    timeIsWithinThreshold(time, threshold) {
+    timeWithinThresholdForDvrWindow(time, threshold) {
+        const currentTime = this.getCurrentTimeWithinDvrWindow();
+        return currentTime + threshold > time && currentTime - threshold < time;
+    }
+
+    /**
+     * Checks whether the provided time is within a threshold compared to the current playback time. Works with absolute presentation times
+     * @param time
+     * @param threshold
+     * @return {boolean}
+     */
+    timeWithinThreshold(time, threshold) {
         const currentTime = this.getCurrentTime();
         return currentTime + threshold > time && currentTime - threshold < time;
     }
@@ -236,9 +256,25 @@ class DashJsAdapter {
     }
 
     generateValidSeekPosition(duration = NaN) {
-        duration = isNaN(duration) ? this.player.duration() : duration;
-        const targetDuration = this.player.isDynamic() ? duration - this.getCurrentLiveLatency() : duration - Constants.TEST_INPUTS.SEEK.VOD_RANDOM_SEEK_DURATION_SUBTRACT_OFFSET;
+        duration = isNaN(duration) ? this.getDuration() : duration;
+        const targetDuration = this.isDynamic() ? duration - this.getCurrentLiveLatency() : duration - Constants.TEST_INPUTS.SEEK.VOD_RANDOM_SEEK_DURATION_SUBTRACT_OFFSET;
         return Math.random() * targetDuration;
+    }
+
+    generateValidPresentationTimeSeekPosition() {
+        let min;
+        let max;
+
+        if (this.isDynamic()) {
+            const dvrWindow = this.getDvrWindow();
+            min = dvrWindow.start
+            max = dvrWindow.end - this.getTargetLiveDelay();
+        } else {
+            min = 0;
+            max = this.getDuration() - Constants.TEST_INPUTS.SEEK.VOD_RANDOM_SEEK_DURATION_SUBTRACT_OFFSET;
+        }
+
+        return getRandomNumber(min, max);
     }
 
     generateValidStartPosition() {
@@ -256,6 +292,10 @@ class DashJsAdapter {
 
     getDvrSeekOffset(value) {
         return this.player.getDvrSeekOffset(value);
+    }
+
+    getDvrWindow() {
+        return this.player.getDvrWindow();
     }
 
     getCurrentLiveLatency() {

@@ -676,29 +676,42 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function seekToPresentationTime(presentationTime) {
+    function seekToPresentationTime(seektime) {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        checkParameterType(presentationTime, 'number');
+        checkParameterType(seektime, 'number');
 
-        if (isNaN(presentationTime)) {
+        if (isNaN(seektime)) {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
-        if (presentationTime < 0) {
-            presentationTime = 0;
+        if (seektime < 0) {
+            seektime = 0;
         }
 
 
         // For VoD limit the seek to the duration of the content
         const videoElement = getVideoElement();
         if (!playbackController.getIsDynamic() && videoElement.duration) {
-            presentationTime = Math.min(videoElement.duration, presentationTime);
+            seektime = Math.min(videoElement.duration, seektime);
         }
 
-        playbackController.seek(presentationTime, false, false, true);
+        // For live, take live delay into account
+        if (playbackController.getIsDynamic()) {
+            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            let metric = dashMetrics.getCurrentDVRInfo(type);
+            if (!metric) {
+                return;
+            }
+            seektime = _adjustSeekTimeBasedOnLiveDelay(seektime, metric)
+            if (seektime < metric.range.start) {
+                seektime = metric.range.start
+            }
+        }
+
+        playbackController.seek(seektime, false, false, true);
     }
 
     /**
@@ -872,15 +885,18 @@ function MediaPlayer() {
             return 0;
         }
 
-        let liveDelay = playbackController.getOriginalLiveDelay();
-
         let val = metric.range.start + value;
 
-        if (val > (metric.range.end - liveDelay)) {
-            val = metric.range.end - liveDelay;
+        return _adjustSeekTimeBasedOnLiveDelay(val, metric);
+    }
+
+    function _adjustSeekTimeBasedOnLiveDelay(seektime, metric) {
+        let liveDelay = playbackController.getOriginalLiveDelay();
+        if (seektime > (metric.range.end - liveDelay)) {
+            seektime = metric.range.end - liveDelay;
         }
 
-        return val;
+        return seektime;
     }
 
     /**

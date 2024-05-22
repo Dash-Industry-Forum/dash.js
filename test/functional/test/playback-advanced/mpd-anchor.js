@@ -5,7 +5,7 @@ import {
     checkIsPlaying,
     checkIsProgressing,
     checkLiveDelay,
-    checkNoCriticalErrors, checkTimeWithinThreshold,
+    checkNoCriticalErrors, checkTimeWithinThresholdForDvrWindow,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -44,7 +44,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);
             expect(seeked).to.be.true;
 
-            checkTimeWithinThreshold(playerAdapter, startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
         it(`Attach with #posix and expect live delay to correspond`, async function () {
