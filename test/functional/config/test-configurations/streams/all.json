@@ -422,7 +422,7 @@
     },
     {
       "name": "MPD Patching with $time",
-      "url": "https://192-46-234-23.ip.linodeusercontent.com/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",
       "testdata": {
         "mpdPatching": true
@@ -433,7 +433,7 @@
     },
     {
       "name": "MPD Patching with $number",
-      "url": "https://192-46-234-23.ip.linodeusercontent.com/livesim2/segtimelinenr_1/patch_60/testpic_2s/Manifest.mpd",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",
       "testdata": {
         "mpdPatching": true
