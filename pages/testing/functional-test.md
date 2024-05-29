@@ -112,7 +112,7 @@ options:
 
 dash.js ships with predefined configuration files. They are located in `test/functional/config/test-configurations`.
 
-## Supported Testscases
+## Supported Testcases
 
 | Testcase                                 | Description                                                                                                                                                   |
 |:-----------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------|
