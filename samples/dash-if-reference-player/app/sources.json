@@ -83,6 +83,11 @@
             "acronym": "Broadpeak",
             "name": "Broadpeak",
             "url": "https://www.broadpeak.tv/"
+        },
+        "dolby": {
+            "acronym": "Dolby",
+            "name": "Dolby Laboratories Inc.",
+            "url": "https://www.dolby.com/"
         }
     },
     "items": [
@@ -1235,6 +1240,12 @@
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
                     "provider": "axinom"
+                },
+                {
+                    "name": "Multiple AdaptationSets",
+                    "url": "https://webapi.streaming.dolby.com/v0_9/sources/media/v01/dash/lesson_8.mpd",
+                    "moreInfo": "",
+                    "provider": "dolby"
                 }
             ]
         },
