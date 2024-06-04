@@ -174,7 +174,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.optionsGutter = false;
     $scope.drmData = [];
     $scope.initialSettings = {
-        audio: null,
+        audioLang: null,
+        audioRole: null,
+        audioAccessibility: null,
+        audioAccessibilityScheme: 'off',
         video: null,
         text: null,
         textEnabled: true,
@@ -250,6 +253,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         forceQualitySwitchSelected: false,
         drmPrioritiesEnabled: false,
         languageAudio: null,
+        roleAudio: null,
+        accessibilityAudio: null,
+        accessibilitySchemeAudio: 'off',
         roleVideo: null,
         languageText: null,
         roleText: undefined,
@@ -413,6 +419,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         document.getElementById('always-replace-audio').checked = true;
     } else {
         document.getElementById('never-replace-audio').checked = true;
+    }
+
+    if ($scope.initialSettings.audioAccessibilityScheme === 'DVB') {
+        document.getElementById('audio-accessibility-DVB').checked = true;
+    } else if ($scope.initialSettings.audioAccessibilityScheme === 'MPEG') {
+        document.getElementById('audio-accessibility-MPEG').checked = true;
+    } else {
+        document.getElementById('audio-accessibility-off').checked = true;
     }
 
     $scope.controlbar = new ControlBar($scope.player);
@@ -764,17 +778,94 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
-    $scope.updateInitialLanguageAudio = function () {
-        $scope.player.setInitialMediaSettingsFor('audio', {
-            lang: $scope.initialSettings.audio
-        });
-    };
-
     $scope.updateInitialRoleVideo = function () {
         $scope.player.setInitialMediaSettingsFor('video', {
             role: $scope.initialSettings.video
         });
     };
+
+    $scope.updateInitialLanguageAudio = function () {
+        var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+        $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+            lang: $scope.initialSettings.audioLang
+        }));
+    };
+
+    $scope.updateInitialRoleAudio = function () {
+        var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+        $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+            role: $scope.initialSettings.audioRole
+        }));
+    };
+
+    $scope._convertRoleScheme = function (setting) {
+        var scheme = undefined;
+        switch (setting) {
+            case 'MPEG':
+                scheme = 'urn:mpeg:dash:role:2011';
+                break;
+            case 'DVB':
+                scheme = 'urn:tva:metadata:cs:AudioPurposeCS:2007';
+                break;
+        }
+        return scheme;
+    }
+
+    $scope._backconvertRoleScheme = function (setting) {
+        var scheme = 'off';
+        
+        if (setting) {
+            scheme = undefined;
+            switch (setting.schemeIdUri) {
+                case 'urn:mpeg:dash:role:2011':
+                    scheme = 'MPEG';
+                    break;
+                case 'urn:tva:metadata:cs:AudioPurposeCS:2007':
+                    scheme = 'DVB';
+                    break;
+            }
+        }
+        return scheme;
+    }
+
+    $scope._genSettingsAudioAccessibility = function (scheme, value) {
+        if (scheme && scheme !== 'off') {
+            return {
+                schemeIdUri: $scope._convertRoleScheme(scheme),
+                value: value
+            };
+        }
+        return {};
+    }
+
+    $scope.updateInitialAccessibilityAudio = function () {
+        var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+        var scheme = $scope.initialSettings.audioAccessibilityScheme;
+
+        if (scheme === 'off') {
+            scheme = 'MPEG';
+            $scope.initialSettings.audioAccessibilityScheme = scheme;
+        }
+
+        $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+            accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility)
+        }));
+    };
+
+    $scope.updateInitialAccessibilitySchemeAudio = function (s) {
+        var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+        var scheme = $scope.initialSettings.audioAccessibilityScheme;
+
+        if (scheme === 'off') {
+            delete settings.accessibility;
+            $scope.player.setInitialMediaSettingsFor('audio', settings);
+            $scope.initialSettings.audioAccessibility = null;
+        } else {
+            $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+                accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility)
+            }));
+        }
+    }
 
     $scope.updateInitialLanguageText = function () {
         $scope.player.setInitialMediaSettingsFor('text', {
@@ -796,12 +887,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
     }
 
-    $scope.toggleImscEnableRollUp = function() {
-        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp }}}});
+    $scope.toggleImscEnableRollUp = function () {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { enableRollUp: $scope.imscEnableRollUp } } } });
     }
 
-    $scope.toggleImscdisplayForcedOnlyMode = function() {
-        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode }}}});
+    $scope.toggleImscdisplayForcedOnlyMode = function () {
+        $scope.player.updateSettings({ streaming: { text: { imsc: { displayForcedOnlyMode: $scope.imscdisplayForcedOnlyMode } } } });
     }
 
     $scope.updateCmcdSessionId = function () {
@@ -1061,11 +1152,20 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.player.setProtectionData($scope.protData);
             $scope.player.attachSource($scope.selectedItem.url);
         }
-        if ($scope.initialSettings.audio) {
-            $scope.player.setInitialMediaSettingsFor('audio', {
-                lang: $scope.initialSettings.audio
-            });
+
+        var audioSettings = {};
+        if ($scope.initialSettings.audioLang) {
+            audioSettings.lang = $scope.initialSettings.audioLang;
         }
+        if ($scope.initialSettings.audioRole) {
+            audioSettings.role = $scope.initialSettings.audioRole;
+        }
+        var scheme = $scope.initialSettings.audioAccessibilityScheme;
+        if (scheme !== 'off') {
+            audioSettings.accessibility = $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility);
+        } // otherwise, keep accessibility unset
+        $scope.player.setInitialMediaSettingsFor('audio', audioSettings);
+
         if ($scope.initialSettings.video) {
             $scope.player.setInitialMediaSettingsFor('video', {
                 role: $scope.initialSettings.video
@@ -1522,7 +1622,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             drmToday: $scope.drmToday,
             forceQualitySwitchSelected: $scope.forceQualitySwitchSelected,
             drmPrioritiesEnabled: $scope.prioritiesEnabled,
-            languageAudio: $scope.initialSettings.audio,
+            languageAudio: $scope.initialSettings.audioLang,
+            roleAudio: $scope.initialSettings.audioRole,
+            accessibilityAudio: $scope.initialSettings.audioAccessibility,
+            accessibilitySchemeAudio: $scope.initialSettings.audioAccessibilityScheme,
             roleVideo: $scope.initialSettings.video,
             languageText: $scope.initialSettings.text,
             roleText: $scope.initialSettings.textRole,
@@ -1644,13 +1747,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var obj = base;
 
         for (var key = 0; key < keyList.length; key++) {
-            base = base[keyList[key]] = base [keyList[key]] || {};
+            base = base[keyList[key]] = base[keyList[key]] || {};
         }
 
 
         value = $scope.handleQueryParameters(value);
 
-        if (lastProperty) base = base [lastProperty] = value;
+        if (lastProperty) base = base[lastProperty] = value;
 
         return obj;
     }
@@ -1791,7 +1894,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 case 'muted':
                     $scope.muted = this.parseBoolean(value);
                     $scope.toggleMuted();
-                    if ($scope.muted === true){
+                    if ($scope.muted === true) {
                         document.getElementById('muteBtn')?.click();
                     }
                     break;
@@ -1806,9 +1909,35 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     $scope.prioritiesEnabled = this.parseBoolean(value);
                     break;
                 case 'languageAudio':
-                    $scope.player.setInitialMediaSettingsFor('audio', {
+                    var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+                    $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
                         lang: $scope.handleQueryParameters(value)
-                    });
+                    }));
+                    break;
+                case 'roleAudio':
+                    var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+                    $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+                        role: $scope.handleQueryParameters(value)
+                    }));
+                    break;
+                case 'accessibilityAudio':
+                    var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+                    $scope.initialSettings.audioAccessibility = $scope.handleQueryParameters(value);
+                    $scope.player.setInitialMediaSettingsFor('audio', Object.assign(settings, {
+                        accessibility: $scope.handleQueryParameters(value)
+                    }));
+                    break;
+                case 'accessibilitySchemeAudio':
+                    var settings = $scope.player.getInitialMediaSettingsFor('audio') || {};
+                    var scheme = $scope.handleQueryParameters(value);
+
+                    $scope.initialSettings.audioAccessibilityScheme = scheme;
+                    if (scheme === 'off') {
+                        delete settings.accessibility;
+                    } else {
+                        Object.assign(settings, {accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility)} );
+                    }
+                    $scope.player.setInitialMediaSettingsFor('audio', settings);
                     break;
                 case 'roleVideo':
                     $scope.player.setInitialMediaSettingsFor('video', {
@@ -1862,8 +1991,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if (value === 'null') typedValue = null;
         else if (value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) :
-                (floatRegEx.test(value) ? typedValue = parseFloat(value) :
-                    typedValue = value);
+            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
+                typedValue = value);
 
         return typedValue;
     }
@@ -2191,8 +2320,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.maxVideoBitrate = currentConfig.streaming.abr.maxBitrate.video;
         }
 
-        if ($scope.player.getInitialMediaSettingsFor('audio')) {
-            $scope.initialSettings.audio = $scope.player.getInitialMediaSettingsFor('audio').lang;
+        var currentAudioSettings = $scope.player.getInitialMediaSettingsFor('audio');
+        if (currentAudioSettings) {
+            $scope.initialSettings.audioLang = currentAudioSettings.lang;
+            if (currentAudioSettings.role) {
+                $scope.initialSettings.audioRole = currentAudioSettings.role.value;
+            }
+            if (currentAudioSettings.accessibility) {
+                $scope.initialSettings.audioAccessibilityScheme = $scope._backconvertRoleScheme(currentAudioSettings.accessibility);
+                $scope.initialSettings.audioAccessibility = currentAudioSettings.accessibility.value;
+            } else {
+                $scope.initialSettings.audioAccessibilityScheme = $scope._backconvertRoleScheme(null);
+            }
         }
         if ($scope.player.getInitialMediaSettingsFor('video')) {
             $scope.initialSettings.video = $scope.player.getInitialMediaSettingsFor('video').role;
