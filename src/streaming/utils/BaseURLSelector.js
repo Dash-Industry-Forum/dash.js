@@ -70,7 +70,8 @@ function BaseURLSelector() {
 
         contentSteeringSelector = ContentSteeringSelector(context).create();
         contentSteeringSelector.setConfig({
-            blacklistController: serviceLocationBlacklistController
+            blacklistController: serviceLocationBlacklistController,
+            addBlacklistEventName: Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD
         })
 
         selector = basicSelector;
@@ -131,6 +132,7 @@ function BaseURLSelector() {
     }
 
     function reset() {
+        contentSteeringSelector.reset();
         serviceLocationBlacklistController.reset();
     }
 
