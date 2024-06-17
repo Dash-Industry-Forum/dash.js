@@ -64,6 +64,12 @@ EssentialPropertyHDRFormat.init({
     value: 'ST2094-10'
 });
 
+let EssentialPropertyPrivateTransferFunction = new DescriptorType;
+EssentialPropertyPrivateTransferFunction.init({
+    schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+    value: '2'
+});
+
 describe('Capabilities', function () {
     beforeEach(function () {
         settings = Settings({}).getInstance();
@@ -203,6 +209,15 @@ describe('Capabilities', function () {
             
             settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDRMetadataFormatEssentialProperties:true } } });
             res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.true;
+        });
+        
+        it('should return true for unspecified TransferFunction if MediaCapabilities-check is enabled', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
             expect(res).to.be.true;
         });
     });
