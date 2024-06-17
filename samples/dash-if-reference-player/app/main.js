@@ -429,8 +429,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
         var availableRepresentations = $scope.player.getRepresentationsByType(e.mediaType)
         var maxIndex = availableRepresentations ? availableRepresentations.length : 0;
+        var pendingIndex = availableRepresentations.findIndex(function (element) {
+            return element.id === e.currentRepresentation.id
+        });
 
-        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.absoluteIndex + 1;
+        $scope[e.mediaType + 'PendingIndex'] = pendingIndex + 1;
         $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
@@ -443,7 +446,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
-        $scope[e.mediaType + 'Index'] = e.newRepresentation.absoluteIndex + 1;
+        var availableRepresentations = $scope.player.getRepresentationsByType(e.mediaType)
+        var index = availableRepresentations.findIndex(function (element) {
+            return element.id === e.newRepresentation.id
+        });
+        $scope[e.mediaType + 'Index'] = index + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);

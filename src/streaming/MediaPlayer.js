@@ -1475,9 +1475,11 @@ function MediaPlayer() {
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
+     * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest absolute index
+     * @param {number} value - the quality index, 0 corresponding to the lowest possible index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -2398,7 +2400,7 @@ function MediaPlayer() {
             return null
         }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
-        let detectedProtection = dashjs.Protection; 
+        let detectedProtection = dashjs.Protection;
         if (typeof detectedProtection === 'function') { //TODO need a better way to register/detect plugin components
             let protection = detectedProtection(context).create();
             Events.extend(detectedProtection.events);
@@ -2434,7 +2436,7 @@ function MediaPlayer() {
             return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-        let detectedMetricsReporting = dashjs.MetricsReporting; 
+        let detectedMetricsReporting = dashjs.MetricsReporting;
         if (typeof detectedMetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
             let metricsReporting = detectedMetricsReporting(context).create();
 
@@ -2458,7 +2460,7 @@ function MediaPlayer() {
         }
 
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-        let detectedMssHandler = dashjs.MssHandler; 
+        let detectedMssHandler = dashjs.MssHandler;
         if (typeof detectedMssHandler === 'function') { //TODO need a better way to register/detect plugin components
             Errors.extend(detectedMssHandler.errors);
             mssHandler = detectedMssHandler(context).create({
@@ -2496,7 +2498,7 @@ function MediaPlayer() {
         }
 
         // do not require Offline as dependencies as this is optional and intended to be loaded separately
-        let detectedOfflineController = dashjs.OfflineController; 
+        let detectedOfflineController = dashjs.OfflineController;
 
         if (typeof detectedOfflineController === 'function') { //TODO need a better way to register/detect plugin components
             Events.extend(detectedOfflineController.events);

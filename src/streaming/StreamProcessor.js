@@ -654,7 +654,7 @@ function StreamProcessor(config) {
                     targetRepresentation = representationController.getCurrentRepresentation()
                 }
 
-                // Update Representation Controller with the new data
+                // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
                 const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
                 const representationId = targetRepresentation.id;
                 return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, representationId)

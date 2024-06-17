@@ -30,7 +30,7 @@ function RulesContextMock() {
     };
     this.getAbrController = function () {
         return {
-            getPossibleVoRepresentations: function () {
+            getPossibleVoRepresentationsFilteredBySettings: function () {
                 return [{ id: 1 }]
             }
         };

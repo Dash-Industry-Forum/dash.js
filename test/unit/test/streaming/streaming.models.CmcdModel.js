@@ -136,7 +136,7 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_URL = 'next_object';
                 const NEXT_OBJECT_RANGE = '100-500';
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: TOP_BITRATE / 1000
@@ -788,7 +788,7 @@ describe('CmcdModel', function () {
                 const NEXT_OBJECT_URL = 'next_object';
                 const NEXT_OBJECT_RANGE = '100-500';
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: 20
@@ -882,7 +882,7 @@ describe('CmcdModel', function () {
                 const DURATION = 987.213;
                 const CHANGED_PLAYBACK_RATE = 2.4;
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: BITRATE / 1000
@@ -917,7 +917,7 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: BITRATE / 1000
@@ -953,7 +953,7 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: BITRATE / 1000
@@ -992,7 +992,7 @@ describe('CmcdModel', function () {
                 const BITRATE = 10000;
                 const DURATION = 987.213;
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {
                             bitrateInKbit: BITRATE / 1000
@@ -1052,7 +1052,7 @@ describe('CmcdModel', function () {
                 const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                 const MEDIA_TYPE = 'video';
 
-                abrControllerMock.getPossibleVoRepresentations = () => {
+                abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
                     return [
                         {}
                     ]

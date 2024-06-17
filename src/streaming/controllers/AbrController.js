@@ -216,7 +216,7 @@ function AbrController() {
     }
 
     function getOptimalRepresentationForBitrate(mediaInfo, bitrate, includeCompatibleMediaInfos = true) {
-        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
+        const possibleVoRepresentations = getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
             return null;
@@ -246,7 +246,7 @@ function AbrController() {
             return null;
         }
 
-        const possibleVoRepresentations = getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
+        const possibleVoRepresentations = getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
 
         return possibleVoRepresentations.find((rep) => {
             return rep.absoluteIndex === absoluteIndex
@@ -254,6 +254,19 @@ function AbrController() {
     }
 
     function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true) {
+        return _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos)
+    }
+
+    function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
+        let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
+
+        // Filter the list of options based on the provided settings
+        voRepresentations = _filterByAllowedSettings(voRepresentations)
+
+        return voRepresentations;
+    }
+
+    function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
         let voRepresentations = [];
         if (!mediaInfo) {
             return voRepresentations;
@@ -271,10 +284,7 @@ function AbrController() {
         // Now sort by quality (usually simply by bitrate)
         voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
 
-        // Filter the list of options based on the provided settings
-        voRepresentations = _filterByAllowedSettings(voRepresentations)
-
-        // Add an absolute index after filtering
+        // Add an absolute index
         voRepresentations.forEach((rep, index) => {
             rep.absoluteIndex = index
         })
@@ -287,7 +297,7 @@ function AbrController() {
             })
         }
 
-        return voRepresentations;
+        return voRepresentations
     }
 
     function _getPossibleMediaInfos(mediaInfo) {
@@ -746,7 +756,7 @@ function AbrController() {
      * @returns {boolean}
      */
     function isPlayingAtLowestQuality(representation) {
-        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
+        const voRepresentations = getPossibleVoRepresentationsFilteredBySettings(representation.mediaInfo, true);
 
         return voRepresentations[0].id === representation.id
     }
@@ -760,7 +770,7 @@ function AbrController() {
         if (!representation) {
             return true;
         }
-        const voRepresentations = getPossibleVoRepresentations(representation.mediaInfo, true);
+        const voRepresentations = getPossibleVoRepresentationsFilteredBySettings(representation.mediaInfo, true);
 
         return voRepresentations[voRepresentations.length - 1].id === representation.id;
     }
@@ -791,6 +801,7 @@ function AbrController() {
         getInitialBitrateFor,
         getOptimalRepresentationForBitrate,
         getPossibleVoRepresentations,
+        getPossibleVoRepresentationsFilteredBySettings,
         getRepresentationByAbsoluteIndex,
         initialize,
         isPlayingAtLowestQuality,
