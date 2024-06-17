@@ -714,13 +714,13 @@ declare namespace dashjs {
 
         getSuggestedPresentationDelay(): string;
 
-        getAvailabilityStartTime(externalManifest: object): number;
+        getAvailabilityStartTime(externalManifest?: object): number;
 
-        getIsDynamic(externalManifest: object): boolean;
+        getIsDynamic(externalManifest?: object): boolean;
 
-        getDuration(externalManifest: object): number;
+        getDuration(externalManifest?: object): number;
 
-        getRegularPeriods(externalManifest: object): any[];
+        getRegularPeriods(externalManifest?: object): any[];
 
         getMpd(externalManifest?: object): Mpd;
 
