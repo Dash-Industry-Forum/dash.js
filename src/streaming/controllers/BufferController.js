@@ -513,7 +513,7 @@ function BufferController(config) {
         });
     }
 
-    function prepareForReplacementTrackSwitch(representation) {
+    function prepareForReplacementTrackSwitch(selectedRepresentation) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
@@ -521,7 +521,7 @@ function BufferController(config) {
                 })
                 .then(() => {
                     if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(representation);
+                        return changeType(selectedRepresentation)
                     }
 
                     return Promise.resolve();
@@ -544,7 +544,7 @@ function BufferController(config) {
             updateAppendWindow()
                 .then(() => {
                     if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(selectedRepresentation);
+                        return changeType(selectedRepresentation)
                     }
 
                     return Promise.resolve();
@@ -556,6 +556,10 @@ function BufferController(config) {
                     reject(e);
                 });
         });
+    }
+
+    function changeType(selectedRepresentation) {
+        return sourceBufferSink.changeType(selectedRepresentation);
     }
 
     function pruneAllSafely() {
@@ -1227,6 +1231,7 @@ function BufferController(config) {
 
     instance = {
         appendInitSegmentFromCache,
+        changeType,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,

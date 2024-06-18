@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd" type="static" minBufferTime="PT6S" profiles="urn:dvb:dash:profile:dvb-dash:2014" mediaPresentationDuration="PT0H10M0.000S">
+    <BaseURL>https://arte-uhd-cmafhls.akamaized.net/tests/test_new_encodes/115000/115000/115045-000-A_v1/</BaseURL>
+    <Period start="PT0S" duration="PT0H10M0.000S" id="1">
+        <AdaptationSet id="264" mimeType="video/mp4" frameRate="25/1" segmentAlignment="true" subsegmentAlignment="true" startWithSAP="1" subsegmentStartsWithSAP="1" bitstreamSwitching="false">
+            <SupplementalProperty schemeIdUri="urn:mpeg:dash:adaptation-set-switching:2016" value="265"/>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+            <Representation id="1" width="384" height="216" scanType="progressive" bandwidth="235197" codecs="avc1.640014">
+                <BaseURL>videos/115045-000-A_x264_CRF20_246_8bits_v216.mp4</BaseURL>
+                <SegmentBase indexRange="863-2102">
+                    <Initialization range="0-862" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="2" width="640" height="360" scanType="progressive" bandwidth="602175" codecs="avc1.64001F">
+                <BaseURL>videos/115045-000-A_x264_CRF20_656_8bits_v360.mp4</BaseURL>
+                <SegmentBase indexRange="863-2102">
+                    <Initialization range="0-862" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="3" width="3840" height="2160" scanType="progressive" bandwidth="8101292" codecs="avc1.64003C">
+                <BaseURL>videos/115045-000-A_x264_CRF25_14792_8bits_v2160.mp4</BaseURL>
+                <SegmentBase indexRange="863-2102">
+                    <Initialization range="0-862" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="4" width="768" height="432" scanType="progressive" bandwidth="1115389" codecs="avc1.64001F">
+                <BaseURL>videos/115045-000-A_x264_CRF20_1642_8bits_v432.mp4</BaseURL>
+                <SegmentBase indexRange="862-2101">
+                    <Initialization range="0-861" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="5" width="1280" height="720" scanType="progressive" bandwidth="2372606" codecs="avc1.640028">
+                <BaseURL>videos/115045-000-A_x264_CRF21_3616_8bits_v720.mp4</BaseURL>
+                <SegmentBase indexRange="863-2102">
+                    <Initialization range="0-862" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="6" width="1920" height="1080" scanType="progressive" bandwidth="4266383" codecs="avc1.640032">
+                <BaseURL>videos/115045-000-A_x264_CRF22_7396_8bits_v1080.mp4</BaseURL>
+                <SegmentBase indexRange="864-2103">
+                    <Initialization range="0-863" />
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet id="265" mimeType="video/mp4" frameRate="25/1" segmentAlignment="true" subsegmentAlignment="true" startWithSAP="1" subsegmentStartsWithSAP="1" bitstreamSwitching="false">
+            <SupplementalProperty schemeIdUri="urn:mpeg:dash:adaptation-set-switching:2016" value="264"/>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+            <Representation id="7" width="384" height="216" scanType="progressive" bandwidth="233574" codecs="hev1.2.4.L63.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_246_10bits_v216.mp4</BaseURL>
+                <SegmentBase indexRange="3369-4608">
+                    <Initialization range="0-3368" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="8" width="640" height="360" scanType="progressive" bandwidth="592347" codecs="hev1.2.4.L90.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_656_10bits_v360.mp4</BaseURL>
+                <SegmentBase indexRange="3368-4607">
+                    <Initialization range="0-3367" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="9" width="768" height="432" scanType="progressive" bandwidth="1087817" codecs="hev1.2.4.L90.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_1642_10bits_v432.mp4</BaseURL>
+                <SegmentBase indexRange="3370-4609">
+                    <Initialization range="0-3369" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="10" width="1280" height="720" scanType="progressive" bandwidth="2032374" codecs="hev1.2.4.L120.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF21_3616_10bits_v720.mp4</BaseURL>
+                <SegmentBase indexRange="3373-4612">
+                    <Initialization range="0-3372" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="11" width="384" height="216" scanType="progressive" bandwidth="231632" codecs="hev1.1.6.L63.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_246_8bits_v216.mp4</BaseURL>
+                <SegmentBase indexRange="3395-4634">
+                    <Initialization range="0-3394" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="12" width="640" height="360" scanType="progressive" bandwidth="579990" codecs="hev1.1.6.L90.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_656_8bits_v360.mp4</BaseURL>
+                <SegmentBase indexRange="3397-4636">
+                    <Initialization range="0-3396" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="13" width="768" height="432" scanType="progressive" bandwidth="1014756" codecs="hev1.1.6.L90.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF20_1642_8bits_v432.mp4</BaseURL>
+                <SegmentBase indexRange="3399-4638">
+                    <Initialization range="0-3398" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="14" width="1280" height="720" scanType="progressive" bandwidth="1861940" codecs="hev1.1.6.L120.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF21_3616_8bits_v720.mp4</BaseURL>
+                <SegmentBase indexRange="3399-4638">
+                    <Initialization range="0-3398" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="15" width="3840" height="2160" scanType="progressive" bandwidth="5836323" codecs="hev1.2.4.L153.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF25_14792_10bits_v2160.mp4</BaseURL>
+                <SegmentBase indexRange="3375-4614">
+                    <Initialization range="0-3374" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="16" width="3840" height="2160" scanType="progressive" bandwidth="5099010" codecs="hev1.1.6.L153.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF25_14792_8bits_v2160.mp4</BaseURL>
+                <SegmentBase indexRange="3404-4643">
+                    <Initialization range="0-3403" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="17" width="1920" height="1080" scanType="progressive" bandwidth="3181240" codecs="hev1.2.4.L123.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF22_7396_10bits_v1080.mp4</BaseURL>
+                <SegmentBase indexRange="3374-4613">
+                    <Initialization range="0-3373" />
+                </SegmentBase>
+            </Representation>
+            <Representation id="18" width="1920" height="1080" scanType="progressive" bandwidth="2874999" codecs="hev1.1.6.L123.B0">
+                <BaseURL>videos/115045-000-A_x265_CRF22_7396_8bits_v1080.mp4</BaseURL>
+                <SegmentBase indexRange="3400-4639">
+                    <Initialization range="0-3399" />
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet mimeType="audio/mp4" lang="fra" segmentAlignment="0">
+            <Label>Français</Label>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+            <Representation id="19" bandwidth="194726" audioSamplingRate="44100" codecs="mp4a.40.2">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+                <BaseURL>audios/115045-000-A_aud_VF.mp4</BaseURL>
+                <SegmentBase indexRange="729-1980">
+                    <Initialization range="0-728" />
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

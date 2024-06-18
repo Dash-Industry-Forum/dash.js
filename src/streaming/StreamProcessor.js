@@ -725,6 +725,13 @@ function StreamProcessor(config) {
 
         selectMediaInfo(newMediaInfo, newRepresentation)
             .then(() => {
+                if (newRepresentation.codecs !== e.oldRepresentation.codecs) {
+                    fragmentModel.abortRequests();
+                    return bufferController.changeType(newRepresentation)
+                }
+                return Promise.resolve()
+            })
+            .then(() => {
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
     }
