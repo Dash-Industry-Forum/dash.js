@@ -259,7 +259,13 @@ declare namespace dashjs {
 
         getRepresentationCount(adaptation: object): number;
 
-        getBitrateListForAdaptation(realAdaptation: object): { bandwidth: number, width: number, height: number, scanType: string | null, id: string | null };
+        getBitrateListForAdaptation(realAdaptation: object): {
+            bandwidth: number,
+            width: number,
+            height: number,
+            scanType: string | null,
+            id: string | null
+        };
 
         getSelectionPriority(realAdaptation: object): number;
 
@@ -708,13 +714,13 @@ declare namespace dashjs {
 
         getSuggestedPresentationDelay(): string;
 
-        getAvailabilityStartTime(externalManifest: object): number;
+        getAvailabilityStartTime(externalManifest?: object): number;
 
-        getIsDynamic(externalManifest: object): boolean;
+        getIsDynamic(externalManifest?: object): boolean;
 
-        getDuration(externalManifest: object): number;
+        getDuration(externalManifest?: object): number;
 
-        getRegularPeriods(externalManifest: object): any[];
+        getRegularPeriods(externalManifest?: object): any[];
 
         getMpd(externalManifest?: object): Mpd;
 
@@ -1258,7 +1264,7 @@ declare namespace dashjs {
                 }
             },
             cmcd?: {
-                applyParametersFromMpd?:boolean,
+                applyParametersFromMpd?: boolean,
                 enabled?: boolean,
                 sid?: string | null,
                 cid?: string | null,
@@ -1401,6 +1407,8 @@ declare namespace dashjs {
 
         seek(value: number): void;
 
+        seekToPresentationTime(value: number): void;
+
         seekToOriginalLive(): void;
 
         setPlaybackRate(value: number): void;
@@ -1417,17 +1425,17 @@ declare namespace dashjs {
 
         time(streamId?: string): number;
 
+        timeInDvrWindow(): number;
+
+        getDvrWindow(): object;
+
         duration(): number;
 
-        timeAsUTC(): number;
-
-        durationAsUTC(): number;
+        timeAsUtc(): number;
 
         getActiveStream(): Stream | null;
 
-        getDVRWindowSize(): number;
-
-        getDVRSeekOffset(value: number): number;
+        getDvrSeekOffset(value: number): number;
 
         getTargetLiveDelay(): number;
 
@@ -1875,6 +1883,7 @@ declare namespace dashjs {
         type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
         font: FontInfo;
     }
+
     export interface DynamicToStaticEvent extends Event {
         type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
     }
@@ -3381,7 +3390,9 @@ declare namespace dashjs {
     }
 
     export class LicenseRequest {
-        constructor(url: string, method: string, responseType: string, headers: { [key: string]: string }, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
+        constructor(url: string, method: string, responseType: string, headers: {
+            [key: string]: string
+        }, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
 
         url: string;
         method: string;
@@ -4062,7 +4073,15 @@ declare namespace dashjs {
     }
 
     export interface TTMLParser {
-        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): { start: number, end: number, type: string, cueID: string, isd: any, images: any[], embeddedImages: any[] }[];
+        parse(data: string, offsetTime: number, startTimeSegment: number, endTimeSegment: number, images: any[]): {
+            start: number,
+            end: number,
+            type: string,
+            cueID: string,
+            isd: any,
+            images: any[],
+            embeddedImages: any[]
+        }[];
     }
 
     export interface URLUtils {

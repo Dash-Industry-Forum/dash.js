@@ -74,6 +74,7 @@
         "playback/play",
         "playback/pause",
         "playback/seek",
+        "playback/seek-to-presentation-time",
         "feature-support/cmcd",
         "playback-advanced/preload"
       ]
@@ -85,7 +86,8 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "playback/seek-to-presentation-time"
       ]
     },
     {
@@ -95,7 +97,8 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "playback/seek-to-presentation-time"
       ]
     },
     {
@@ -105,7 +108,8 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "playback/seek-to-presentation-time"
       ]
     },
     {
@@ -115,7 +119,8 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "playback/seek-to-presentation-time"
       ]
     },
     {
@@ -142,6 +147,7 @@
         "playback/play",
         "playback/pause",
         "playback/seek",
+        "playback/seek-to-presentation-time",
         "text/*"
       ]
     },
@@ -155,7 +161,7 @@
     },
     {
       "name": "MPD Patching with $time",
-      "url": "https://192-46-234-23.ip.linodeusercontent.com/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",
       "testdata": {
         "mpdPatching": true

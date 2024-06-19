@@ -240,6 +240,16 @@
                     "provider": "dashif"
                 },
                 {
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
+                    "name": "SegmentTimeline with manifest updates provided via MPD patches",
+                    "provider": "dashif"
+                },
+                {
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_0/patch_60/periods_60/testpic_2s/Manifest.mpd",
+                    "name": "Multiperiod SegmentTemplate with manifest updates provided via MPD patches",
+                    "provider": "dashif"
+                },
+                {
                     "url": " https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd",
                     "name": "10 seconds availabilityTimeOffset (livesim)",
                     "provider": "dashif"

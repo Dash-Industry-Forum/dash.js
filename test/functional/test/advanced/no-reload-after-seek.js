@@ -4,7 +4,7 @@ import {expect} from 'chai'
 import {
     checkIsPlaying,
     checkIsProgressing, checkNoCriticalErrors,
-    checkTimeWithinThreshold,
+    checkTimeWithinThresholdForDvrWindow,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -49,7 +49,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             const previousTime = playerAdapter.getCurrentTime();
             const seekTime = previousTime - Constants.TEST_INPUTS.NO_RELOAD_AFTER_SEEK.TIME_TO_SEEK_BACK_FOR_REDUNDANT_SEGMENT_FETCH;
             playerAdapter.seek(seekTime);
-            checkTimeWithinThreshold(playerAdapter, seekTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, seekTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
         it(`Start playback`, () => {
