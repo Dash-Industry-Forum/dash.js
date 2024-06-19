@@ -280,16 +280,18 @@ function CapabilitiesFilter() {
             Promise.all(promises)
                 .then((supported) => {
                     as.Representation = as.Representation.filter((rep, i) => {
-                        let isReprSupported = supported[i].every( (s)=>{return s});
+                        let isReprSupported = supported[i].every((s) => {
+                            return s
+                        });
                         if (!isReprSupported) {
-                            logger.debug('[Stream] Representation '+rep.id+' has been removed because of unsupported CustomFilter');
+                            logger.debug('[Stream] Representation ' + rep.id + ' has been removed because of unsupported CustomFilter');
                         }
                         return isReprSupported;
                     });
                     resolve();
                 })
                 .catch((err) => {
-                    logger.warn('[Stream] at least one promise rejected in CustomFilter with error: ',err);
+                    logger.warn('[Stream] at least one promise rejected in CustomFilter with error: ', err);
                     resolve();
                 });
         });
