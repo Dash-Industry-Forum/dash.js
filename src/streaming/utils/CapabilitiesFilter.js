@@ -174,36 +174,36 @@ function CapabilitiesFilter() {
             // note: MCA does not reflect a parameter related to 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag'
 
             // translate ColourPrimaries signaling into capability queries
-            if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['1', '5', '6', '7'].includes(prop.value.toString())) {
-                cfg.colorGamut = 'srgb';
+            if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['1', '5', '6', '7'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.SRGB;
             }
-            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['11', '12'].includes(prop.value.toString())) {
-                cfg.colorGamut = 'p3';
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['11', '12'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.P3;
             }
-            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['9'].includes(prop.value.toString())) {
-                cfg.colorGamut = 'rec2020';
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['9'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.REC2020;
             }
-            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
                 cfg.colorGamut = null;
             }
-            else if (prop.schemeIdUri == Constants.COLOUR_PRIMARIES_SCHEME_ID_URI) {
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
 
             // translate TransferCharacteristics signaling into capability queries
-            if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['1', '6', '13', '14', '15'].includes(prop.value.toString())) {
-                cfg.transferFunction = 'srgb';
+            if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['1', '6', '13', '14', '15'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.SRGB;
             }
-            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['16'].includes(prop.value.toString())) {
-                cfg.transferFunction = 'pq';
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['16'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.PQ;
             }
-            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['18'].includes(prop.value.toString())) {
-                cfg.transferFunction = 'hlg';
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['18'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.HLG;
             }
-            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
                 cfg.transferFunction = null;
             }
-            else if (prop.schemeIdUri == Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
         }
@@ -218,16 +218,16 @@ function CapabilitiesFilter() {
 
         for (const prop of representation.EssentialProperty || []) {
             // translate hdrMetadataType signaling into capability queries
-            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'ST2094-10') {
-                cfg.hdrMetadataType = 'smpteSt2094-10';
+            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_10;
             }
-            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'SL-HDR2') {
-                cfg.hdrMetadataType = 'slhdr2'; // Note: This is not specified by W3C
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SLHDR2; // Note: This is not specified by W3C
             }
-            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == 'ST2094-40') {
-                cfg.hdrMetadataType = 'smpteSt2094-40';
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_40;
             }
-            else if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
                 cfg.isSupported = false;
             }
         }
@@ -246,11 +246,16 @@ function CapabilitiesFilter() {
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             Object.assign(config, _convertHDRColorimetryToConfig(rep));
         }
-        let supportedFlag = config.isSupported;
+        let colorimetrySupported = config.isSupported;
+        
         if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
             Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
         }
-        if (!supportedFlag) config.isSupported == false; // restore this flag as it may got overridden by 2nd Object.assign
+        let metadataFormatSupported = config.isSupported;
+
+        if (!colorimetrySupported && !metadataFormatSupported) {
+            config.isSupported == false; // restore this flag as it may got overridden by 2nd Object.assign
+        }
 
         return config;
     }

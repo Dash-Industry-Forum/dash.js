@@ -249,6 +249,28 @@ export default {
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',
+    HDR_METADATA_FORMAT_VALUES: {
+        ST2094_10: 'ST2094-10',
+        SL_HDR2: 'SL-HDR2',
+        ST2094_40: 'ST2094-40'
+    },
+    MEDIA_CAPABILITIES_API: {
+        COLORGAMUT: {
+            SRGB: 'srgb',
+            P3: 'p3',
+            REC2020: 'rec2020'
+        },
+        TRANSFERFUNCTION: {
+            SRGB: 'srgb',
+            PQ: 'pq',
+            HLG: 'hlg'
+        },
+        HDR_METADATATYPE: {
+            SMPTE_ST_2094_10: 'smpteSt2094-10',
+            SLHDR2: 'slhdr2',
+            SMPTE_ST_2094_40: 'smpteSt2094-40'
+        }
+    },
     XML: 'XML',
     ARRAY_BUFFER: 'ArrayBuffer',
     DVB_REPORTING_URL: 'dvb:reportingUrl',

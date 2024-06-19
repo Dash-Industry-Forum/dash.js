@@ -159,7 +159,7 @@ function Capabilities() {
     function _checkCodecWithMediaCapabilities(config, type) {
         return new Promise((resolve) => {
 
-            if (!config || !config.codec || (config.isSupported===false)) {
+            if (!config || !config.codec || (config.isSupported === false)) {
                 resolve(false);
                 return;
             }
@@ -174,9 +174,9 @@ function Capabilities() {
             configuration[type].height = config.height;
             configuration[type].bitrate = parseInt(config.bitrate);
             configuration[type].framerate = parseFloat(config.framerate);
-            if (config.hdrMetadataType) configuration[type].hdrMetadataType = config.hdrMetadataType;
-            if (config.colorGamut) configuration[type].colorGamut = config.colorGamut;
-            if (config.transferFunction) configuration[type].transferFunction = config.transferFunction;
+            if (config.hdrMetadataType) { configuration[type].hdrMetadataType = config.hdrMetadataType; }
+            if (config.colorGamut) { configuration[type].colorGamut = config.colorGamut; }
+            if (config.transferFunction) { configuration[type].transferFunction = config.transferFunction; }
             
             navigator.mediaCapabilities.decodingInfo(configuration)
                 .then((result) => {
@@ -206,7 +206,7 @@ function Capabilities() {
             ];
 
             supportedEssentialProps = supportedEssentialProps.filter(p => {
-                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri===p.schemeIdUri)));
+                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri === p.schemeIdUri)));
             });
             supportedEssentialProps.push(...EssentialHDRProperties);
         }
@@ -216,7 +216,7 @@ function Capabilities() {
             ];
 
             supportedEssentialProps = supportedEssentialProps.filter(p => {
-                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri===p.schemeIdUri)));
+                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri === p.schemeIdUri)));
             });
             supportedEssentialProps.push(...EssentialHDRProperties);
         }
