@@ -177,7 +177,7 @@ function Capabilities() {
             if (config.hdrMetadataType) { configuration[type].hdrMetadataType = config.hdrMetadataType; }
             if (config.colorGamut) { configuration[type].colorGamut = config.colorGamut; }
             if (config.transferFunction) { configuration[type].transferFunction = config.transferFunction; }
-            
+
             navigator.mediaCapabilities.decodingInfo(configuration)
                 .then((result) => {
                     resolve(result.supported);
@@ -186,6 +186,23 @@ function Capabilities() {
                     resolve(false);
                 });
         });
+    }
+
+    /**
+     * Add additional descriptors to list of descriptors,
+     * avoid duplicated entries
+     * @param {array} props
+     * @param {array} newProps
+     * @return {array}
+     * @private
+     */
+    function _addProperties(props, newProps) {
+        props = props.filter(p => {
+            return !(p.schemeIdUri && (newProps.some(np => np.schemeIdUri === p.schemeIdUri)));
+        });
+        props.push(...newProps);
+
+        return props;
     }
 
     /**
@@ -199,26 +216,16 @@ function Capabilities() {
         // we already took care of these descriptors with the codecs check
         // let's bypass them here
         if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
-            const EssentialHDRProperties = [
-                { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
-                { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI },
-                { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI }
-            ];
-
-            supportedEssentialProps = supportedEssentialProps.filter(p => {
-                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri === p.schemeIdUri)));
-            });
-            supportedEssentialProps.push(...EssentialHDRProperties);
+            supportedEssentialProps = _addProperties(supportedEssentialProps,
+                [
+                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
+                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI },
+                    { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI }
+                ]
+            );
         }
         if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            const EssentialHDRProperties = [
-                { schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI },
-            ];
-
-            supportedEssentialProps = supportedEssentialProps.filter(p => {
-                return !(p.schemeIdUri && (EssentialHDRProperties.some(ep=>ep.schemeIdUri === p.schemeIdUri)));
-            });
-            supportedEssentialProps.push(...EssentialHDRProperties);
+            supportedEssentialProps = _addProperties(supportedEssentialProps, [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]);
         }
 
         try {
