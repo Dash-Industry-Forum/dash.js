@@ -78,7 +78,9 @@ function MediaPlayerModel() {
      * @returns {number} corrected min playback rate
      */
     function _checkMinPlaybackRate(rate, log) {
-        if (isNaN(rate)) return 0;
+        if (isNaN(rate)) {
+            return 0;
+        }
         if (rate > 0) {
             if (log) {
                 logger.warn(`Supplied minimum playback rate is a positive value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)
@@ -101,7 +103,9 @@ function MediaPlayerModel() {
      * @returns {number} corrected max playback rate
      */
     function _checkMaxPlaybackRate(rate, log) {
-        if (isNaN(rate)) return 0;
+        if (isNaN(rate)) {
+            return 0;
+        }
         if (rate < 0) {
             if (log) {
                 logger.warn(`Supplied maximum playback rate is a negative value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)

@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
     "start": "webpack serve --config build/webpack.dev.cjs",
-    "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/test/**/*.js",
+    "lint": "eslint \"src/**/*.js\" \"test/unit/mocks/*.js\" \"test/unit/test/**/*.js\"",
     "build": "tsc && npm run test && npm run lint && npm run webpack-build",
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",

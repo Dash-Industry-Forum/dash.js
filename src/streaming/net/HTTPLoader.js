@@ -445,7 +445,9 @@ function HTTPLoader(cfg) {
 
     function _applyRequestInterceptors(httpRequest) {
         const interceptors = customParametersModel.getRequestInterceptors();
-        if (!interceptors) return Promise.resolve(httpRequest);
+        if (!interceptors) {
+            return Promise.resolve(httpRequest);
+        }
 
         return interceptors.reduce((prev, next) => {
             return prev.then((request) => {
@@ -456,7 +458,9 @@ function HTTPLoader(cfg) {
 
     function _applyResponseInterceptors(response) {
         const interceptors = customParametersModel.getResponseInterceptors();
-        if (!interceptors) return Promise.resolve(response);
+        if (!interceptors) {
+            return Promise.resolve(response);
+        }
 
         return interceptors.reduce((prev, next) => {
             return prev.then(resp => {

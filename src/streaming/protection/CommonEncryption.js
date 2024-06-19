@@ -52,8 +52,9 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri && cp.schemeIdUri.toLowerCase() === DashConstants.MP4_PROTECTION_SCHEME && cp.value &&
-                (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs'))
+                (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs')) {
                 retVal = cp;
+            }
         }
         return retVal;
     }
@@ -129,8 +130,9 @@ class CommonEncryption {
      */
     static parsePSSHList(data) {
 
-        if (data === null || data === undefined)
+        if (data === null || data === undefined) {
             return [];
+        }
 
         let dv = new DataView(data.buffer || data); // data.buffer first for Uint8Array support
         let done = false;
@@ -146,8 +148,9 @@ class CommonEncryption {
                 systemID;
             let boxStart = byteCursor;
 
-            if (byteCursor >= dv.buffer.byteLength)
+            if (byteCursor >= dv.buffer.byteLength) {
                 break;
+            }
 
             /* Box size */
             size = dv.getUint32(byteCursor);

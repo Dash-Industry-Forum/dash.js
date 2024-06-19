@@ -157,7 +157,9 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function _onInitFragmentLoaded(e) {
-        if (!e.chunk.bytes || isBufferingCompleted) return;
+        if (!e.chunk.bytes || isBufferingCompleted) {
+            return;
+        }
 
         initCache.save(e.chunk);
 

@@ -33,16 +33,22 @@
  * @ignore
  */
 class EventsBase {
-    extend (events, config) {
-        if (!events) return;
+    extend(events, config) {
+        if (!events) {
+            return;
+        }
 
         let override = config ? config.override : false;
         let publicOnly = config ? config.publicOnly : false;
 
 
         for (const evt in events) {
-            if (!events.hasOwnProperty(evt) || (this[evt] && !override)) continue;
-            if (publicOnly && events[evt].indexOf('public_') === -1) continue;
+            if (!events.hasOwnProperty(evt) || (this[evt] && !override)) {
+                continue;
+            }
+            if (publicOnly && events[evt].indexOf('public_') === -1) {
+                continue;
+            }
             this[evt] = events[evt];
 
         }

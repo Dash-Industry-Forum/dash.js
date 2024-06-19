@@ -56,7 +56,9 @@ function ServiceDescriptionController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.adapter) {
             adapter = config.adapter;
@@ -108,7 +110,9 @@ function ServiceDescriptionController() {
         let sd = (supportedServiceDescriptions.length > 0)
             ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
             : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
-        if (!sd) return;
+        if (!sd) {
+            return;
+        }
 
         if (sd.latency && sd.latency.target > 0) {
             _applyServiceDescriptionLatency(sd);

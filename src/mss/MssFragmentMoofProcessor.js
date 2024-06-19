@@ -189,7 +189,9 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
-        if (type !== 'video' && type !== 'audio') return;
+        if (type !== 'video' && type !== 'audio') {
+            return;
+        }
         const dvrInfos = dashMetrics.getCurrentDVRInfo(type);
         if (!dvrInfos || (range.end > dvrInfos.range.end)) {
             logger.debug('Update DVR range: [' + range.start + ' - ' + range.end + ']');

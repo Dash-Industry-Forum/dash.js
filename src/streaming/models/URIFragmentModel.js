@@ -49,7 +49,9 @@ function URIFragmentModel() {
     function initialize(uri) {
         URIFragmentDataVO = new URIFragmentData();
 
-        if (!uri) return null;
+        if (!uri) {
+            return null;
+        }
 
         const hashIndex = uri.indexOf('#');
         if (hashIndex !== -1) {
@@ -58,7 +60,7 @@ function URIFragmentModel() {
                 const fragment = fragments[i];
                 const equalIndex = fragment.indexOf('=');
                 if (equalIndex !== -1) {
-                    const key = fragment.substring(0,equalIndex);
+                    const key = fragment.substring(0, equalIndex);
                     if (URIFragmentDataVO.hasOwnProperty(key)) {
                         URIFragmentDataVO[key] = fragment.substr(equalIndex + 1);
                     }

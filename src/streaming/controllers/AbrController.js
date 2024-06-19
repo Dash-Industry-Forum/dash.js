@@ -181,7 +181,9 @@ function AbrController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.streamController) {
             streamController = config.streamController;

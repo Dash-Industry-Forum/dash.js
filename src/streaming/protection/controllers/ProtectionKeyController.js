@@ -59,7 +59,9 @@ function ProtectionKeyController() {
         clearkeyW3CKeySystem;
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.debug) {
             debug = config.debug;
@@ -401,4 +403,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default FactoryMaker.getSingletonFactory(ProtectionKeyController); 
+export default FactoryMaker.getSingletonFactory(ProtectionKeyController);

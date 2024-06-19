@@ -47,6 +47,10 @@
       {
         "SwitchCase": 1
       }
+    ],
+    "curly": [
+      "error",
+      "all"
     ]
   }
 }

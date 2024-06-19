@@ -86,7 +86,9 @@ function CmcdModel() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.abrController) {
             abrController = config.abrController;
@@ -130,12 +132,20 @@ function CmcdModel() {
     }
 
     function _updateStreamProcessors() {
-        if (!playbackController) return;
+        if (!playbackController) {
+            return;
+        }
         const streamController = playbackController.getStreamController();
-        if (!streamController) return;
-        if (typeof streamController.getActiveStream !== 'function') return;
+        if (!streamController) {
+            return;
+        }
+        if (typeof streamController.getActiveStream !== 'function') {
+            return;
+        }
         const activeStream = streamController.getActiveStream();
-        if (!activeStream) return;
+        if (!activeStream) {
+            return;
+        }
         streamProcessors = activeStream.getProcessors();
     }
 
@@ -245,7 +255,7 @@ function CmcdModel() {
         return true;
     }
 
-    function _checkAvailableKeys(cmcdParametersFromManifest){
+    function _checkAvailableKeys(cmcdParametersFromManifest) {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
@@ -327,8 +337,9 @@ function CmcdModel() {
     function _updateLastMediaTypeRequest(type, mediatype) {
         // Video > Audio > None
         if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
-            if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO)
+            if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO) {
                 _lastMediaTypeRequest = mediatype;
+            }
         }
     }
 
@@ -370,8 +381,12 @@ function CmcdModel() {
         const nextRequest = _probeNextRequest(mediaType);
 
         let ot;
-        if (mediaType === Constants.VIDEO) ot = CmcdObjectType.VIDEO;
-        if (mediaType === Constants.AUDIO) ot = CmcdObjectType.AUDIO;
+        if (mediaType === Constants.VIDEO) {
+            ot = CmcdObjectType.VIDEO;
+        }
+        if (mediaType === Constants.AUDIO) {
+            ot = CmcdObjectType.AUDIO;
+        }
         if (mediaType === Constants.TEXT) {
             if (request.representation.mediaInfo.mimeType === 'application/mp4') {
                 ot = CmcdObjectType.TIMED_TEXT;
@@ -625,7 +640,9 @@ function CmcdModel() {
     }
 
     function _probeNextRequest(mediaType) {
-        if (!streamProcessors || streamProcessors.length === 0) return;
+        if (!streamProcessors || streamProcessors.length === 0) {
+            return;
+        }
         for (let streamProcessor of streamProcessors) {
             if (streamProcessor.getType() === mediaType) {
                 return streamProcessor.probeNextRequest();
@@ -637,7 +654,9 @@ function CmcdModel() {
         try {
             // Get the values we need
             let playbackRate = playbackController.getPlaybackRate();
-            if (!playbackRate) playbackRate = 1;
+            if (!playbackRate) {
+                playbackRate = 1;
+            }
             let { bandwidth, mediaType, representation, duration } = request;
             const mediaInfo = representation.mediaInfo
 
@@ -645,7 +664,9 @@ function CmcdModel() {
                 return NaN;
             }
             let currentBufferLevel = _getBufferLevelByType(mediaType);
-            if (currentBufferLevel === 0) currentBufferLevel = 500;
+            if (currentBufferLevel === 0) {
+                currentBufferLevel = 500;
+            }
 
             // Calculate RTP
             let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits

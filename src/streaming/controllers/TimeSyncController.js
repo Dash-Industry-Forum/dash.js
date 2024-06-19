@@ -76,7 +76,9 @@ function TimeSyncController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
