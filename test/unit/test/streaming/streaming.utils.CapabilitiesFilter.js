@@ -4,7 +4,7 @@ import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 let adapterMock;
 let capabilitiesFilter;
@@ -94,7 +94,7 @@ describe('CapabilitiesFilter', function () {
                         }]
                     }]
                 };
-                
+
                 prepareCapabilitiesMock({
                     name: 'supportsCodec', definition: function () {
                         return false;
@@ -131,7 +131,7 @@ describe('CapabilitiesFilter', function () {
                         }]
                     }]
                 };
-                
+
                 prepareCapabilitiesMock({
                     name: 'supportsCodec', definition: function (config) {
                         return config.codec === 'audio/mp4;codecs="mp4a.40.2"';
@@ -156,7 +156,7 @@ describe('CapabilitiesFilter', function () {
                 settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
                 settings.update({ streaming: { capabilities: { filterVideoColorimetryEssentialProperties: true } } });
             });
-            
+
             it('should set sRGB in config from EssentialProperties', function (done) {
                 const manifest = {
                     Period: [{
@@ -302,6 +302,89 @@ describe('CapabilitiesFilter', function () {
                     .then(() => {
                         expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
                         expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+
+            it('should filter AdaptationSet from ColourPrimaries and HDRMetadataFormat', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'video/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L90.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                        value: 'ST2094-10'
+                                    }]
+                                }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '99'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-10'
+                                }]
+                            }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '18'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-40'
+                                }]
+                            }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '1'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-40'
+                                }]
+                            }]
+                        }]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterHDRMetadataFormatEssentialProperties: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'supportsCodec', definition: function (config) {
+                        return config.colorGamut === 'srgb' && config.hdrMetadataType === 'smpteSt2094-10';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
                         done();
                     })
                     .catch((e) => {
@@ -607,9 +690,9 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
             });
-            
+
             it('should handle rejected promises', function (done) {
-                
+
                 customParametersModel.registerCustomCapabilitiesFilter(repHeightFilterFn); // this function resolves
                 customParametersModel.registerCustomCapabilitiesFilter(customFilterRejects); // this function rejects
 

@@ -213,18 +213,19 @@ function CapabilitiesFilter() {
 
     function _convertHDRMetadataFormatToConfig(representation) {
         let cfg = {
-            isSupported: true
+            isSupported: true,
+            hdrMetadataType: null
         };
 
         for (const prop of representation.EssentialProperty || []) {
             // translate hdrMetadataType signaling into capability queries
-            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
+            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
                 cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_10;
             }
-            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
                 cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SLHDR2; // Note: This is not specified by W3C
             }
-            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value == Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
                 cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_40;
             }
             else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
@@ -253,7 +254,7 @@ function CapabilitiesFilter() {
         }
         let metadataFormatSupported = config.isSupported;
 
-        if (!colorimetrySupported && !metadataFormatSupported) {
+        if (!colorimetrySupported || !metadataFormatSupported) {
             config.isSupported == false; // restore this flag as it may got overridden by 2nd Object.assign
         }
 
