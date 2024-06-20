@@ -1,11 +1,10 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
-import {expect} from 'chai'
 import {
     checkIsPlaying,
     checkIsProgressing,
     checkNoCriticalErrors,
-    checkTimeWithinThreshold,
+    checkTimeWithinThresholdForDvrWindow,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -34,9 +33,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter)
         });
 
-        it(`Seek to 0`, async () => {
+        it(`Seek() to 0`, async () => {
             playerAdapter.seek(0);
-            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
         it(`Checking playing state`, async () => {
@@ -47,11 +46,11 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter)
         });
 
-        it(`Seek to negative value`, async () => {
+        it(`Seek() to negative value`, async () => {
             playerAdapter.pause();
             playerAdapter.seek(-10);
 
-            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
         it(`Checking playing state`, async () => {
@@ -63,7 +62,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter)
         });
 
-        it(`Seek to large value`, async () => {
+        it(`Seek() to large value`, async () => {
             playerAdapter.pause();
             playerAdapter.seek(999999999999);
 
@@ -71,7 +70,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration();
             const allowedDifference = playerAdapter.isDynamic() ? Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE_LIVE_EDGE : Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE;
 
-            checkTimeWithinThreshold(playerAdapter, targetTime, allowedDifference);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, allowedDifference);
         });
 
         for (let i = 0; i < Constants.TEST_INPUTS.SEEK.NUMBER_OF_RANDOM_SEEKS; i++) {
@@ -80,7 +79,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 playerAdapter.pause();
                 playerAdapter.seek(targetTime);
 
-                checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+                checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             });
 
             it(`Checking playing state`, async () => {

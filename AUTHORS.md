@@ -52,3 +52,4 @@
 * @matiasrb97 [Matías Rodriguez, Qualabs]
 * @santimintegui [Santiago Mintegui, Qualabs]
 * @N1Knight [Nicolás Caballero, Qualabs]
+* @v-nova-vinod [Vinod Balakrishnan, V-Nova]

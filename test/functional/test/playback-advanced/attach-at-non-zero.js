@@ -4,7 +4,7 @@ import {expect} from 'chai'
 import {
     checkIsPlaying,
     checkIsProgressing,
-    checkTimeWithinThreshold,
+    checkTimeWithinThresholdForDvrWindow,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -29,7 +29,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             playerAdapter.attachSource(mpd, null);
 
             await checkIsPlaying(playerAdapter, true);
-            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             await checkIsProgressing(playerAdapter);
         })
 
@@ -37,7 +37,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             playerAdapter.attachSource(mpd, -10);
 
             await checkIsPlaying(playerAdapter, true);
-            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             await checkIsProgressing(playerAdapter);
         })
 
@@ -45,7 +45,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             playerAdapter.attachSource(mpd, 'foobar');
 
             await checkIsPlaying(playerAdapter, true)
-            checkTimeWithinThreshold(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             await checkIsProgressing(playerAdapter);
         })
 
@@ -64,7 +64,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);
                 expect(seeked).to.be.true;
                 const targetTime = playerAdapter.isDynamic() ? startTime - playerAdapter.getDvrSeekOffset(0) : startTime;
-                checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+                checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             });
         }
 

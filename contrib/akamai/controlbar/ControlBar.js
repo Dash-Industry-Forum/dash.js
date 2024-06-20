@@ -178,7 +178,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var _onPlayStart = function (/*e*/) {
-        setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
+        setTime(displayUTCTimeCodes ? self.player.timeAsUtc() : self.player.timeInDvrWindow());
         updateDuration();
         togglePlayPauseBtnState();
         if (seekbarBufferInterval) {
@@ -189,13 +189,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var _onPlayTimeUpdate = function (/*e*/) {
         updateDuration();
         if (!seeking) {
-            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
+            setTime(displayUTCTimeCodes ? player.timeAsUtc() : player.timeInDvrWindow());
             if (seekbarPlay) {
-                seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
+                seekbarPlay.style.width = Math.max((player.timeInDvrWindow() / player.duration() * 100), 0) + '%';
             }
 
             if (seekbar.getAttribute('type') === 'range') {
-                seekbar.value = player.time();
+                seekbar.value = player.timeInDvrWindow();
             }
 
         }
@@ -384,7 +384,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return;
         }
         if (self.player.isDynamic() && self.player.duration()) {
-            var liveDelay = self.player.duration() - value;
+            var liveDelay = Math.max(self.player.duration() - value, 0);
             var targetLiveDelay = self.player.getTargetLiveDelay();
 
             if (liveDelay < targetLiveDelay + liveThresholdSecs) {
@@ -401,7 +401,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var updateDuration = function () {
         var duration = self.player.duration();
         if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-            setDuration(displayUTCTimeCodes ? self.player.durationAsUTC() : duration);
+            setDuration(displayUTCTimeCodes ? self.player.getDvrWindow().endAsUtc : duration);
             seekbar.max = duration;
         }
     };
@@ -597,7 +597,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
-    var _matchTrackWithNativeTrack = function(track, nativeTrack) {
+    var _matchTrackWithNativeTrack = function (track, nativeTrack) {
         let label = track.id !== undefined ? track.id.toString() : track.lang;
 
         return !!(
@@ -619,7 +619,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 trackMode = nativeTrack.mode;
                 break;
             }
-        };
+        }
+        ;
 
         return (trackMode === undefined) ? 'showing' : trackMode;
     };
@@ -689,7 +690,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var _onBufferLevelUpdated = function () {
         if (seekbarBuffer) {
-            seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+            seekbarBuffer.style.width = ((player.timeInDvrWindow() + getBufferLevel()) / player.duration() * 100) + '%';
         }
     };
 
@@ -838,7 +839,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 // Other tracks will just have their text
                 item.textContent = arr[i];
             }
-            
+
             item.onmouseover = function (/*e*/) {
                 if (this.selected !== true) {
                     this.classList.add('menu-item-over');

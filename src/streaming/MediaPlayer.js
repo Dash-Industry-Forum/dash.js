@@ -260,6 +260,10 @@ function MediaPlayer() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
     }
 
     /**
@@ -630,7 +634,7 @@ function MediaPlayer() {
      *
      * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
      * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
-     * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
+     * @see {@link module:MediaPlayer#getDvrSeekOffset getDvrSeekOffset()}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
      * @memberof module:MediaPlayer
@@ -651,7 +655,7 @@ function MediaPlayer() {
             value = 0;
         }
 
-        let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+        let s = playbackController.getIsDynamic() ? getDvrSeekOffset(value) : value;
 
         // For VoD limit the seek to the duration of the content
         const videoElement = getVideoElement();
@@ -660,6 +664,54 @@ function MediaPlayer() {
         }
 
         playbackController.seek(s, false, false, true);
+    }
+
+    /**
+     * Sets the currentTime property of the attached video element. Compared to the seek() function this function does not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
+     * For VoD this function behaves similar to the seek() function.
+
+     * @param {number} value - A presentation time in seconds
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function seekToPresentationTime(seektime) {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        checkParameterType(seektime, 'number');
+
+        if (isNaN(seektime)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+
+        if (seektime < 0) {
+            seektime = 0;
+        }
+
+
+        // For VoD limit the seek to the duration of the content
+        const videoElement = getVideoElement();
+        if (!playbackController.getIsDynamic() && videoElement.duration) {
+            seektime = Math.min(videoElement.duration, seektime);
+        }
+
+        // For live, take live delay into account
+        if (playbackController.getIsDynamic()) {
+            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            let metric = dashMetrics.getCurrentDVRInfo(type);
+            if (!metric) {
+                return;
+            }
+            seektime = _adjustSeekTimeBasedOnLiveDelay(seektime, metric)
+            if (seektime < metric.range.start) {
+                seektime = metric.range.start
+            }
+        }
+
+        playbackController.seek(seektime, false, false, true);
     }
 
     /**
@@ -816,22 +868,6 @@ function MediaPlayer() {
     }
 
     /**
-     * The timeShiftBufferLength (DVR Window), in seconds.
-     *
-     * @returns {number} The window of allowable play time behind the live point of a live stream as defined in the manifest.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getDVRWindowSize() {
-        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-        let metric = dashMetrics.getCurrentDVRInfo(type);
-        if (!metric) {
-            return 0;
-        }
-        return metric.manifestInfo.dvrWindowSize;
-    }
-
-    /**
      * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
      * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link module:MediaPlayer#seek seek()} method
      * which will calculate this value for you and set the video element's currentTime property all in one simple call.
@@ -842,22 +878,25 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getDVRSeekOffset(value) {
+    function getDvrSeekOffset(value) {
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         let metric = dashMetrics.getCurrentDVRInfo(type);
         if (!metric) {
             return 0;
         }
 
-        let liveDelay = playbackController.getOriginalLiveDelay();
-
         let val = metric.range.start + value;
 
-        if (val > (metric.range.end - liveDelay)) {
-            val = metric.range.end - liveDelay;
+        return _adjustSeekTimeBasedOnLiveDelay(val, metric);
+    }
+
+    function _adjustSeekTimeBasedOnLiveDelay(seektime, metric) {
+        let liveDelay = playbackController.getOriginalLiveDelay();
+        if (seektime > (metric.range.end - liveDelay)) {
+            seektime = metric.range.end - liveDelay;
         }
 
-        return val;
+        return seektime;
     }
 
     /**
@@ -875,38 +914,85 @@ function MediaPlayer() {
     }
 
     /**
-     * Current time of the playhead, in seconds.
+     * Current playhead time in seconds.
      *
-     * If called with no arguments then the returned time value is time elapsed since the start point of the first stream, or if it is a live stream, then the time will be based on the return value of the {@link module:MediaPlayer#duration duration()} method.
-     * However if a stream ID is supplied then time is relative to the start of that stream, or is null if there is no such stream id in the manifest.
+     * If called with no arguments then the returned value is the current time of the video element.
+     * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no such period id in the manifest.
      *
-     * @param {string} streamId - The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
+     * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first period or the AST.
      * @returns {number} The current playhead time of the media, or null.
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
-    function time(streamId) {
+    function time(periodId = '') {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
         let t = getVideoElement().currentTime;
 
-        if (streamId !== undefined) {
-            t = streamController.getTimeRelativeToStreamId(t, streamId);
-        } else if (playbackController.getIsDynamic()) {
-            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-            let metric = dashMetrics.getCurrentDVRInfo(type);
-            t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
+        if (periodId !== '') {
+            t = streamController.getTimeRelativeToStreamId(t, periodId);
         }
 
         return t;
     }
 
     /**
-     * Duration of the media's playback, in seconds.
+     * Returns the current playhead time relative to the start of the DVR window.
+     * For VoD this method returns the same value as time()
+     * @returns {number} The current playhead time of the media relative to the start of the DVR window
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function timeInDvrWindow() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        if (!playbackController.getIsDynamic()) {
+            return time()
+        }
+
+        let t = getVideoElement().currentTime;
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
+        t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
+
+        return t
+    }
+
+    function getDvrWindow() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
+
+        if (!metric) {
+            return {}
+        }
+
+        let offset = 0;
+        const isDynamic = playbackController.getIsDynamic();
+        if (isDynamic) {
+            offset = metric.manifestInfo.availableFrom.getTime() / 1000;
+        }
+        return {
+            start: metric.range.start,
+            end: metric.range.end,
+            startAsUtc: isDynamic ? offset + metric.range.start : NaN,
+            endAsUtc: isDynamic ? offset + metric.range.end : NaN,
+            size: metric.range.end - metric.range.start
+        }
+    }
+
+    /**
+     * Total duration of the media in seconds.
      *
-     * @returns {number} The current duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
+     * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
@@ -926,40 +1012,35 @@ function MediaPlayer() {
     }
 
     /**
-     * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
-     * Note - this property only has meaning for live streams. If called before play() has begun, it will return a value of NaN.
+     * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1 1970.
+     * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has begun, it will return a value of NaN.
      *
      * @returns {number} The current playhead time as UTC timestamp.
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
-    function timeAsUTC() {
+    function timeAsUtc() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        if (time() < 0) {
-            return NaN;
-        }
-        return _getAsUTC(time());
-    }
 
-    /**
-     * Use this method to get the current duration as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
-     * Note - this property only has meaning for live streams.
-     *
-     * @returns {number} The current duration as UTC timestamp.
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function durationAsUTC() {
-        if (!playbackInitialized) {
-            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        if (!playbackController.getIsDynamic() || time() < 0) {
+            return NaN
         }
-        return _getAsUTC(duration());
-    }
 
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
+        let availabilityStartTime,
+            utcValue;
+
+        if (!metric) {
+            return 0;
+        }
+        availabilityStartTime = metric.manifestInfo.availableFrom.getTime() / 1000;
+        utcValue = availabilityStartTime + time()
+        return utcValue;
+    }
 
     /*
     ---------------------------------------------------------------------------
@@ -1866,7 +1947,7 @@ function MediaPlayer() {
             callback(null);
             return;
         }
-        const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
+        const s = playbackController.getIsDynamic() ? getDvrSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {
             callback(null);
@@ -2547,20 +2628,6 @@ function MediaPlayer() {
         return null;
     }
 
-    function _getAsUTC(valToConvert) {
-        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
-        let metric = dashMetrics.getCurrentDVRInfo(type);
-        let availableFrom,
-            utcValue;
-
-        if (!metric) {
-            return 0;
-        }
-        availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-        utcValue = valToConvert + (availableFrom + metric.range.start);
-        return utcValue;
-    }
-
     function _sanitizeSettings(value) {
         const defaults = settings.get().streaming.defaultSchemeIdUri;
         let output = {};
@@ -2636,7 +2703,6 @@ function MediaPlayer() {
         convertToTimeCode,
         destroy,
         duration,
-        durationAsUTC,
         enableForcedTextStreaming,
         enableText,
         extend,
@@ -2652,8 +2718,8 @@ function MediaPlayer() {
         getCurrentSteeringResponseData,
         getCurrentTextTrackIndex,
         getCurrentTrackFor,
-        getDVRSeekOffset,
-        getDVRWindowSize,
+        getDvrSeekOffset,
+        getDvrWindow,
         getDashAdapter,
         getDashMetrics,
         getDebug,
@@ -2705,6 +2771,7 @@ function MediaPlayer() {
         retrieveManifest,
         seek,
         seekToOriginalLive,
+        seekToPresentationTime,
         setAutoPlay,
         setConfig,
         setCurrentTrack,
@@ -2719,7 +2786,8 @@ function MediaPlayer() {
         setVolume,
         setXHRWithCredentialsForType,
         time,
-        timeAsUTC,
+        timeAsUtc,
+        timeInDvrWindow,
         triggerSteeringRequest,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,

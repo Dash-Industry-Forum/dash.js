@@ -859,5 +859,21 @@
                 ]
             }
         ]
+    },
+    {
+        "section": "MPEG-5 Part 2 - LCEVC",
+        "samples": [
+            {
+                "title": "SEI Implementation",
+                "description": "A sample showing how to use the MPEG-5 Part 2 LCEVC in an SEI Based enhancement delivery.",
+                "href": "lcevc-sei/lcevc-sei.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
     }
 ]

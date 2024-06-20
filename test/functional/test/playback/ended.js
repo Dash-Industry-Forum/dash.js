@@ -4,7 +4,7 @@ import {
     checkForEndedEvent,
     checkIsPlaying,
     checkIsProgressing,
-    checkNoCriticalErrors, checkTimeWithinThreshold,
+    checkNoCriticalErrors, checkTimeWithinThresholdForDvrWindow,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -42,7 +42,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             const targetTime = playerAdapter.getDuration() - Constants.TEST_INPUTS.ENDED.SEEK_END_OFFSET;
             playerAdapter.seek(targetTime);
 
-            checkTimeWithinThreshold(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+            checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         })
 
         it(`Check if ended event is thrown`, async () => {
