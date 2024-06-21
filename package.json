@@ -64,9 +64,7 @@
     "html-entities": "^2.5.2",
     "imsc": "^1.1.5",
     "localforage": "^1.10.0",
-    "m3u8-parser": "^7.1.0",
     "path-browserify": "^1.0.1",
-    "timers-browserify": "^2.0.12",
     "ua-parser-js": "^1.0.37"
   },
   "repository": {
