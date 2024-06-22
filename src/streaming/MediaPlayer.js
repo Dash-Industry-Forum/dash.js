@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import { Cta608Parser } from '@svta/common-media-library/cta/608/Cta608Parser';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import Constants from './constants/Constants.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import MetricsConstants from './constants/MetricsConstants.js';

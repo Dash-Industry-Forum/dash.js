@@ -41,8 +41,8 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
-import { Cta608Parser } from '@svta/common-media-library/cta/608/Cta608Parser';
-import { extractCta608DataFromSample } from '@svta/common-media-library/cta/608/extractCta608DataFromSample';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import {extractCta608DataFromSample} from '@svta/common-media-library/cta/608/extractCta608DataFromSample';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;

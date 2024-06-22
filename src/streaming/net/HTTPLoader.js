@@ -361,8 +361,8 @@ function HTTPLoader(cfg) {
         const traces = [];
         let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, progressTimeout;
 
-        let httpRequest; // CommonMediaLibrary.request.CommonMediaRequest
-        let httpResponse; // CommonMediaLibrary.request.CommonMediaResponse
+        let httpRequest; // CommonMediaRequest
+        let httpResponse; // CommonMediaResponse
 
         requestObject.bytesLoaded = NaN;
         requestObject.bytesTotal = NaN;
@@ -400,7 +400,7 @@ function HTTPLoader(cfg) {
             customData: { request: requestObject }
         };
 
-        // Init response (CommonMediaLibrary.request.CommoneMediaResponse)
+        // Init response (CommoneMediaResponse)
         httpResponse = {
             request: httpRequest,
             resourceTiming: {

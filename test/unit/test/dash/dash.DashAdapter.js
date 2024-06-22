@@ -1,7 +1,7 @@
 import DashAdapter from '../../../../src/dash/DashAdapter.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
-import { Cta608Parser } from '@svta/common-media-library/cta/608/Cta608Parser';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import VoHelper from '../../helpers/VOHelper.js';
 import PatchHelper from '../../helpers/PatchHelper.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
