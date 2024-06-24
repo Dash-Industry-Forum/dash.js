@@ -4,7 +4,7 @@ import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 let adapterMock;
 let capabilitiesFilter;
@@ -16,7 +16,7 @@ describe('CapabilitiesFilter', function () {
     beforeEach(function () {
         adapterMock = new AdapterMock();
         adapterMock.getIsTypeOf = function (as, type) {
-            return type === 'audio' && as.mimeType === 'audio/mp4';
+            return (type === 'audio' && as.mimeType === 'audio/mp4') || (type === 'video' && as.mimeType === 'video/mp4');
         };
 
         settings = Settings({}).getInstance();
@@ -148,6 +148,249 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
             });
+        });
+
+        describe('filter codecs using essentialProperties', function () {
+
+            beforeEach(function () {
+                settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
+                settings.update({ streaming: { capabilities: { filterVideoColorimetryEssentialProperties: true } } });
+            });
+
+            it('should set sRGB in config from EssentialProperties', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'video/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L90.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '1'
+                                    }]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'supportsCodec', definition: function (config) {
+                        return config.colorGamut === 'srgb' && config.transferFunction === 'srgb';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+
+            it('should set sRGB in config from EssentialProperties', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'video/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L90.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '9'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '16'
+                                    }]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'supportsCodec', definition: function (config) {
+                        return config.colorGamut === 'rec2020' && config.transferFunction === 'pq';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+
+            it('should flag unknown EssentialProperty-values as not supported', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'video/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L90.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '1'
+                                    }]
+                                },
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L120.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '2'
+                                    }]
+                                },
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L120.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '99'
+                                    }]
+                                },
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L120.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '99'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                        value: '1'
+                                    }]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'supportsCodec', definition: function (config) {
+                        return config.isSupported;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+
+            it('should filter AdaptationSet from ColourPrimaries and HDRMetadataFormat', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'video/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    codecs: 'hvc1.2.4.L90.B0',
+                                    EssentialProperty: [{
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                        value: 'ST2094-10'
+                                    }]
+                                }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '99'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-10'
+                                }]
+                            }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '18'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-40'
+                                }]
+                            }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                    value: '1'
+                                },
+                                {
+                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                    value: 'ST2094-40'
+                                }]
+                            }]
+                        }]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterHDRMetadataFormatEssentialProperties: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'supportsCodec', definition: function (config) {
+                        return config.colorGamut === 'srgb' && config.hdrMetadataType === 'smpteSt2094-10';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
         });
 
         describe('filter EssentialProperty values', function () {
@@ -447,9 +690,9 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
             });
-            
+
             it('should handle rejected promises', function (done) {
-                
+
                 customParametersModel.registerCustomCapabilitiesFilter(repHeightFilterFn); // this function resolves
                 customParametersModel.registerCustomCapabilitiesFilter(customFilterRejects); // this function rejects
 
