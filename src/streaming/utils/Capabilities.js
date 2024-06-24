@@ -159,7 +159,7 @@ function Capabilities() {
     function _checkCodecWithMediaCapabilities(config, type) {
         return new Promise((resolve) => {
 
-            if (!config || !config.codec) {
+            if (!config || !config.codec || (config.isSupported === false)) {
                 resolve(false);
                 return;
             }
@@ -174,6 +174,9 @@ function Capabilities() {
             configuration[type].height = config.height;
             configuration[type].bitrate = parseInt(config.bitrate);
             configuration[type].framerate = parseFloat(config.framerate);
+            if (config.hdrMetadataType) { configuration[type].hdrMetadataType = config.hdrMetadataType; }
+            if (config.colorGamut) { configuration[type].colorGamut = config.colorGamut; }
+            if (config.transferFunction) { configuration[type].transferFunction = config.transferFunction; }
 
             navigator.mediaCapabilities.decodingInfo(configuration)
                 .then((result) => {
@@ -186,12 +189,44 @@ function Capabilities() {
     }
 
     /**
+     * Add additional descriptors to list of descriptors,
+     * avoid duplicated entries
+     * @param {array} props
+     * @param {array} newProps
+     * @return {array}
+     * @private
+     */
+    function _addProperties(props, newProps) {
+        props = props.filter(p => {
+            return !(p.schemeIdUri && (newProps.some(np => np.schemeIdUri === p.schemeIdUri)));
+        });
+        props.push(...newProps);
+
+        return props;
+    }
+
+    /**
      * Check if a specific EssentialProperty is supported
      * @param {DescriptorType} ep
      * @return {boolean}
      */
     function supportsEssentialProperty(ep) {
         let supportedEssentialProps = settings.get().streaming.capabilities.supportedEssentialProperties;
+
+        // we already took care of these descriptors with the codecs check
+        // let's bypass them here
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+            supportedEssentialProps = _addProperties(supportedEssentialProps,
+                [
+                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
+                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI },
+                    { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI }
+                ]
+            );
+        }
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            supportedEssentialProps = _addProperties(supportedEssentialProps, [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]);
+        }
 
         try {
             return ep.inArray(supportedEssentialProps);
