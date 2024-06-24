@@ -168,7 +168,9 @@ function RepresentationController(config) {
     }
 
     function _onSegmentsLoaded(representation, e) {
-        if (!e || e.error) return;
+        if (!e || e.error) {
+            return;
+        }
 
         const fragments = e.segments;
         const segments = [];

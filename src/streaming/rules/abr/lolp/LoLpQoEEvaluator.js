@@ -105,8 +105,12 @@ function LoLpQoeEvaluator() {
         qoeInfo.weights.latencyPenalty.push({ threshold: 100000000, penalty: (maxBitrateKbps * 0.1) });
 
         // Set weight: playbackSpeedPenalty
-        if (!minBitrateKbps) qoeInfo.weights.playbackSpeedPenalty = 200; // set some safe value, else consider throwing error
-        else qoeInfo.weights.playbackSpeedPenalty = minBitrateKbps;
+        if (!minBitrateKbps) {
+            qoeInfo.weights.playbackSpeedPenalty = 200;
+        } // set some safe value, else consider throwing error
+        else {
+            qoeInfo.weights.playbackSpeedPenalty = minBitrateKbps;
+        }
 
         return qoeInfo;
     }

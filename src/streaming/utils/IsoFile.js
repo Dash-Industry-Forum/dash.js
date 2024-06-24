@@ -38,21 +38,23 @@ function IsoFile() {
         parsedIsoFile;
 
     /**
-    * @param {string} type
-    * @returns {IsoBox|null}
-    * @memberof IsoFile#
-    */
+     * @param {string} type
+     * @returns {IsoBox|null}
+     * @memberof IsoFile#
+     */
     function getBox(type) {
-        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0) || typeof parsedIsoFile.fetch !== 'function') return null;
+        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0) || typeof parsedIsoFile.fetch !== 'function') {
+            return null;
+        }
 
         return convertToDashIsoBox(parsedIsoFile.fetch(type));
     }
 
     /**
-    * @param {string} type
-    * @returns {Array|null} array of {@link IsoBox}
-    * @memberof IsoFile#
-    */
+     * @param {string} type
+     * @returns {Array|null} array of {@link IsoBox}
+     * @memberof IsoFile#
+     */
     function getBoxes(type) {
         let boxes = [];
 
@@ -75,19 +77,21 @@ function IsoFile() {
     }
 
     /**
-    * @param {string} value
-    * @memberof IsoFile#
-    */
+     * @param {string} value
+     * @memberof IsoFile#
+     */
     function setData(value) {
         parsedIsoFile = value;
     }
 
     /**
-    * @returns {IsoBox|null}
-    * @memberof IsoFile#
-    */
+     * @returns {IsoBox|null}
+     * @memberof IsoFile#
+     */
     function getLastBox() {
-        if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
+        if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) {
+            return null;
+        }
 
         let type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
         let boxes = getBoxes(type);
@@ -96,7 +100,9 @@ function IsoFile() {
     }
 
     function convertToDashIsoBox(boxData) {
-        if (!boxData) return null;
+        if (!boxData) {
+            return null;
+        }
 
         let box = new IsoBox(boxData);
 
@@ -116,5 +122,6 @@ function IsoFile() {
 
     return instance;
 }
+
 IsoFile.__dashjs_factory_name = 'IsoFile';
 export default FactoryMaker.getClassFactory(IsoFile);

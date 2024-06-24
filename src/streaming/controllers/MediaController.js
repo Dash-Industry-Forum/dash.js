@@ -60,7 +60,9 @@ function MediaController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.domStorage) {
             domStorage = config.domStorage;
@@ -129,7 +131,9 @@ function MediaController() {
             setInitialSettings(type, settings);
         }
 
-        if (!possibleTracks || (possibleTracks.length === 0)) return;
+        if (!possibleTracks || (possibleTracks.length === 0)) {
+            return;
+        }
 
         if (settings) {
             filteredTracks = Array.from(possibleTracks);
@@ -170,10 +174,14 @@ function MediaController() {
      * @memberof MediaController#
      */
     function addTrack(track) {
-        if (!track) return;
+        if (!track) {
+            return;
+        }
 
         const mediaType = track.type;
-        if (!_isMultiTrackSupportedByType(mediaType)) return;
+        if (!_isMultiTrackSupportedByType(mediaType)) {
+            return;
+        }
 
         let streamId = track.streamInfo.id;
         if (!tracks[streamId]) {
@@ -198,9 +206,13 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getTracksFor(type, streamId) {
-        if (!type) return [];
+        if (!type) {
+            return [];
+        }
 
-        if (!tracks[streamId] || !tracks[streamId][type]) return [];
+        if (!tracks[streamId] || !tracks[streamId][type]) {
+            return [];
+        }
 
         return tracks[streamId][type].list;
     }
@@ -212,7 +224,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getCurrentTrackFor(type, streamId) {
-        if (!type || !tracks[streamId] || !tracks[streamId][type]) return null;
+        if (!type || !tracks[streamId] || !tracks[streamId][type]) {
+            return null;
+        }
         return tracks[streamId][type].current;
     }
 
@@ -237,14 +251,18 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setTrack(track, noSettingsSave = false) {
-        if (!track || !track.streamInfo) return;
+        if (!track || !track.streamInfo) {
+            return;
+        }
 
         const type = track.type;
         const streamInfo = track.streamInfo;
         const id = streamInfo.id;
         const current = getCurrentTrackFor(type, id);
 
-        if (!tracks[id] || !tracks[id][type]) return;
+        if (!tracks[id] || !tracks[id][type]) {
+            return;
+        }
 
         tracks[id][type].current = track;
 
@@ -260,7 +278,9 @@ function MediaController() {
 
             let settings = extractSettings(track);
 
-            if (!settings || !tracks[id][type].storeLastSettings) return;
+            if (!settings || !tracks[id][type].storeLastSettings) {
+                return;
+            }
 
             if (settings.roles) {
                 settings.role = settings.roles[0];
@@ -286,7 +306,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setInitialSettings(type, value) {
-        if (!type || !value) return;
+        if (!type || !value) {
+            return;
+        }
 
         initialSettings[type] = value;
     }
@@ -297,7 +319,9 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getInitialSettings(type) {
-        if (!type) return null;
+        if (!type) {
+            return null;
+        }
 
         return initialSettings[type];
     }
@@ -578,7 +602,9 @@ function MediaController() {
     }
 
     function selectInitialTrack(type, mediaInfos) {
-        if (type === Constants.TEXT) return mediaInfos[0];
+        if (type === Constants.TEXT) {
+            return mediaInfos[0];
+        }
 
         let tmpArr;
         const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();

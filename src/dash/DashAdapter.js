@@ -68,7 +68,9 @@ function DashAdapter() {
     // #region PUBLIC FUNCTIONS
     // --------------------------------------------------
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.constants) {
             constants = config.constants;
@@ -100,12 +102,16 @@ function DashAdapter() {
         }
 
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
-        if (!selectedVoPeriod) return null;
+        if (!selectedVoPeriod) {
+            return null;
+        }
 
         const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
         let realAdaptation = getMainAdaptationForType(type, streamInfo);
-        if (!realAdaptation) return null;
+        if (!realAdaptation) {
+            return null;
+        }
         let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, voPeriods[0].mpd.manifest, streamInfo.index);
 
         return convertAdaptationToMediaInfo(voAdaptations[idx]);
@@ -137,7 +143,9 @@ function DashAdapter() {
         const index = streamInfo ? streamInfo.index : 0;
         const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[index].mpd.manifest, index, type);
 
-        if (!adaptations || adaptations.length === 0) return null;
+        if (!adaptations || adaptations.length === 0) {
+            return null;
+        }
 
         if (adaptations.length > 1 && streamInfo) {
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
@@ -292,7 +300,9 @@ function DashAdapter() {
      * @ignore
      */
     function updatePeriods(newManifest) {
-        if (!newManifest) return null;
+        if (!newManifest) {
+            return null;
+        }
 
         checkConfig();
 
@@ -371,7 +381,9 @@ function DashAdapter() {
             realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
         }
 
-        if (!realAdaptation) return [];
+        if (!realAdaptation) {
+            return [];
+        }
         return dashManifestModel.getProducerReferenceTimesForAdaptation(realAdaptation);
     }
 
@@ -934,7 +946,9 @@ function DashAdapter() {
             const selectedVoPeriod = getPeriodForStreamInfo(mediaInfo.streamInfo, voPeriods);
             const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-            if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) return null;
+            if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) {
+                return null;
+            }
             return voAdaptations[mediaInfo.index];
         } catch (e) {
             return null;
@@ -947,7 +961,9 @@ function DashAdapter() {
         for (let i = 0; i < ln; i++) {
             let voPeriod = voPeriodsArray[i];
 
-            if (streamInfo && streamInfo.id === voPeriod.id) return voPeriod;
+            if (streamInfo && streamInfo.id === voPeriod.id) {
+                return voPeriod;
+            }
         }
 
         return null;
@@ -973,8 +989,12 @@ function DashAdapter() {
         mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
         if (mediaInfo.accessibility.filter(function (accessibility) {
-            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') return true;
-        })[0]) mediaInfo.embeddedCaptions = true;
+            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
+                return true;
+            }
+        })[0]) {
+            mediaInfo.embeddedCaptions = true;
+        }
         mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
         if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);

@@ -37,8 +37,10 @@ function ClientDataReportingController() {
         serviceDescriptionController;
 
     function setConfig(config) {
-        if (!config) return;
-    
+        if (!config) {
+            return;
+        }
+
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
         }

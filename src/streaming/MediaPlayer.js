@@ -2650,12 +2650,24 @@ function MediaPlayer() {
             return null;
         }
 
-        if (value.lang) output.lang = value.lang;
-        if (value.index) output.index = value.index;
-        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
-        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
-        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
-        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        if (value.lang) {
+            output.lang = value.lang;
+        }
+        if (value.index) {
+            output.index = value.index;
+        }
+        if (value.viewpoint) {
+            output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        }
+        if (value.audioChannelConfiguration) {
+            output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        }
+        if (value.role) {
+            output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        }
+        if (value.accessibility) {
+            output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        }
 
         return output;
     }

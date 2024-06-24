@@ -372,7 +372,9 @@ function BufferController(config) {
         }
 
         // Check if session has not been stopped in the meantime (while last segment was being appended)
-        if (!sourceBufferSink) return;
+        if (!sourceBufferSink) {
+            return;
+        }
 
         _updateBufferLevel();
 
@@ -421,7 +423,9 @@ function BufferController(config) {
      * @private
      */
     function _adjustSeekTarget() {
-        if (isNaN(seekTarget) || isPrebuffering) return;
+        if (isNaN(seekTarget) || isPrebuffering) {
+            return;
+        }
         // Check buffered data only for audio and video
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
             seekTarget = NaN;
@@ -440,7 +444,9 @@ function BufferController(config) {
         // Get buffered range corresponding to the seek target
         const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
         const range = getRangeAt(seekTarget, segmentDuration);
-        if (!range) return;
+        if (!range) {
+            return;
+        }
 
         if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
             // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
@@ -843,7 +849,9 @@ function BufferController(config) {
 
     function checkIfSufficientBuffer() {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
-        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
+            return;
+        }
 
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
@@ -1120,7 +1128,9 @@ function BufferController(config) {
             let ln,
                 i;
 
-            if (!ranges) return totalBufferedTime;
+            if (!ranges) {
+                return totalBufferedTime;
+            }
 
             for (i = 0, ln = ranges.length; i < ln; i++) {
                 totalBufferedTime += ranges.end(i) - ranges.start(i);

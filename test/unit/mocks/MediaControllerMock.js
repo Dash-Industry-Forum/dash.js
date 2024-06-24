@@ -45,7 +45,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     setTrack(track) {
-        if (!track) return;
+        if (!track) {
+            return;
+        }
         this.track = track;
     }
 
@@ -55,7 +57,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     setInitialSettings(type, value) {
-        if (!type || !value) return;
+        if (!type || !value) {
+            return;
+        }
 
         this.initialSettings[type] = value;
     }
@@ -66,7 +70,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     getInitialSettings(type) {
-        if (!type) return null;
+        if (!type) {
+            return null;
+        }
 
         return this.initialSettings[type];
     }

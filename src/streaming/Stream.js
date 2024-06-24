@@ -753,7 +753,9 @@ function Stream(config) {
         let manifest = manifestModel.getValue();
 
         let processor = getProcessorForMediaInfo(mediaInfo);
-        if (!processor) return;
+        if (!processor) {
+            return;
+        }
 
         let currentTime = playbackController.getTime();
         logger.info('Stream -  Process track changed at current time ' + currentTime);
@@ -918,7 +920,9 @@ function Stream(config) {
                         let trackChangedEvent = trackChangedEvents.pop();
                         let mediaInfo = trackChangedEvent.newMediaInfo;
                         let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-                        if (!processor) return;
+                        if (!processor) {
+                            return;
+                        }
                         promises.push(processor.prepareTrackSwitch());
                         promises.push(processor.selectMediaInfo(mediaInfo));
                     }

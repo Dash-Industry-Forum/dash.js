@@ -38,6 +38,7 @@ function CustomTimeRanges(/*config*/) {
     function add(start, end) {
         let i;
 
+        // eslint-disable-next-line curly
         for (i = 0; (i < this.customTimeRangeArray.length) && (start > this.customTimeRangeArray[i].start); i++) ;
 
         this.customTimeRangeArray.splice(i, 0, { start: start, end: end });

@@ -129,7 +129,9 @@ function FragmentController(config) {
 
     function onFragmentLoadingCompleted(e) {
         // Event propagation may have been stopped (see MssHandler)
-        if (!e.sender) return;
+        if (!e.sender) {
+            return;
+        }
 
         const request = e.request;
         const bytes = e.response;
