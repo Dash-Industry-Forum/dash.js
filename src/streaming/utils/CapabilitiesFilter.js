@@ -255,7 +255,7 @@ function CapabilitiesFilter() {
         let metadataFormatSupported = config.isSupported;
 
         if (!colorimetrySupported || !metadataFormatSupported) {
-            config.isSupported == false; // restore this flag as it may got overridden by 2nd Object.assign
+            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
         }
 
         return config;
