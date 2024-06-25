@@ -872,7 +872,9 @@ function TextTracks(config) {
     }
 
     function cueInTrack(track, cue) {
-        if (!track.cues) return false;
+        if (!track.cues) {
+            return false;
+        }
         for (let i = 0; i < track.cues.length; i++) {
             if ((track.cues[i].startTime === cue.startTime) &&
                 (track.cues[i].endTime === cue.endTime)) {

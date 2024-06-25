@@ -66,7 +66,9 @@ function MssFragmentInfoController(config) {
     }
 
     function start() {
-        if (started) return;
+        if (started) {
+            return;
+        }
 
         logger.debug('Start');
 
@@ -77,7 +79,9 @@ function MssFragmentInfoController(config) {
     }
 
     function stop() {
-        if (!started) return;
+        if (!started) {
+            return;
+        }
 
         logger.debug('Stop');
 
@@ -92,7 +96,9 @@ function MssFragmentInfoController(config) {
     }
 
     function loadNextFragmentInfo() {
-        if (!started) return;
+        if (!started) {
+            return;
+        }
 
         // Get last segment from SegmentTimeline
         const representation = getCurrentRepresentation();
@@ -153,8 +159,10 @@ function MssFragmentInfoController(config) {
         fragmentModel.executeRequest(request);
     }
 
-    function fragmentInfoLoaded (e) {
-        if (!started) return;
+    function fragmentInfoLoaded(e) {
+        if (!started) {
+            return;
+        }
 
         const request = e.request;
         if (!e.response) {
@@ -208,4 +216,4 @@ function MssFragmentInfoController(config) {
 }
 
 MssFragmentInfoController.__dashjs_factory_name = 'MssFragmentInfoController';
-export default FactoryMaker.getClassFactory(MssFragmentInfoController); 
+export default FactoryMaker.getClassFactory(MssFragmentInfoController);

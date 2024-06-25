@@ -95,9 +95,15 @@ function MediaSourceController() {
     }
 
     function setDuration(value) {
-        if (!mediaSource || mediaSource.readyState !== 'open') return;
-        if (value === null && isNaN(value)) return;
-        if (mediaSource.duration === value) return;
+        if (!mediaSource || mediaSource.readyState !== 'open') {
+            return;
+        }
+        if (value === null && isNaN(value)) {
+            return;
+        }
+        if (mediaSource.duration === value) {
+            return;
+        }
 
         if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
             value = Math.pow(2, 32);

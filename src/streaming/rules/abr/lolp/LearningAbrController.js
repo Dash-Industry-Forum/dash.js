@@ -470,7 +470,9 @@ function LearningAbrController() {
         for (let i = 0; i < centers.length; i++) {
             let distance = 0;
             for (let j = 0; j < centers.length; j++) {
-                if (i === j) continue;
+                if (i === j) {
+                    continue;
+                }
                 distance += _getDistance(centers[i], centers[j], distanceWeights);
             }
             if (maxDistance === null || distance > maxDistance) {

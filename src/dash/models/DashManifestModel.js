@@ -235,7 +235,9 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT) || !adaptation[DashConstants.VIEWPOINT].length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT) || !adaptation[DashConstants.VIEWPOINT].length) {
+            return [];
+        }
         return adaptation[DashConstants.VIEWPOINT].map(viewpoint => {
             const vp = new DescriptorType();
             vp.init(viewpoint);
@@ -244,7 +246,9 @@ function DashManifestModel() {
     }
 
     function getRolesForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE) || !adaptation[DashConstants.ROLE].length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ROLE) || !adaptation[DashConstants.ROLE].length) {
+            return [];
+        }
         return adaptation[DashConstants.ROLE].map(role => {
             const r = new DescriptorType();
             r.init(role);
@@ -253,7 +257,9 @@ function DashManifestModel() {
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY) || !adaptation[DashConstants.ACCESSIBILITY].length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY) || !adaptation[DashConstants.ACCESSIBILITY].length) {
+            return [];
+        }
         return adaptation[DashConstants.ACCESSIBILITY].map(accessibility => {
             const a = new DescriptorType();
             a.init(accessibility);
@@ -262,7 +268,9 @@ function DashManifestModel() {
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) {
+            return [];
+        }
         return adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
             acc.init(audioChanCfg);
@@ -271,7 +279,9 @@ function DashManifestModel() {
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) return [];
+        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) {
+            return [];
+        }
         return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
             const acc = new DescriptorType();
             acc.init(audioChanCfg);
@@ -568,8 +578,10 @@ function DashManifestModel() {
     }
 
     function getEssentialPropertiesForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) return [];
-        return adaptation.EssentialProperty.map( essentialProperty => {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) {
+            return [];
+        }
+        return adaptation.EssentialProperty.map(essentialProperty => {
             const s = new DescriptorType();
             s.init(essentialProperty);
             return s
@@ -577,7 +589,9 @@ function DashManifestModel() {
     }
 
     function getEssentialPropertiesForRepresentation(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return [];
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
+            return [];
+        }
 
         return realRepresentation.EssentialProperty.map((essentialProperty) => {
             const s = new DescriptorType();
@@ -1049,7 +1063,9 @@ function DashManifestModel() {
         const eventStreams = [];
         let i;
 
-        if (!inbandStreams) return eventStreams;
+        if (!inbandStreams) {
+            return eventStreams;
+        }
 
         for (i = 0; i < inbandStreams.length; i++) {
             const eventStream = new EventStream();
@@ -1260,7 +1276,7 @@ function DashManifestModel() {
         return entry;
     }
 
-    function _createClientDataReportingInstance(element){
+    function _createClientDataReportingInstance(element) {
         const entry = new ClientDataReporting();
 
         if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && element[DashConstants.CMCD_PARAMETERS].schemeIdUri === Constants.CTA_5004_2023_SCHEME) {
@@ -1268,12 +1284,12 @@ function DashManifestModel() {
             entry.cmcdParameters.init(element[DashConstants.CMCD_PARAMETERS]);
         }
 
-        if (element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS) && element[DashConstants.SERVICE_LOCATIONS] !== ''){
+        if (element.hasOwnProperty(DashConstants.SERVICE_LOCATIONS) && element[DashConstants.SERVICE_LOCATIONS] !== '') {
             entry.serviceLocations = element[DashConstants.SERVICE_LOCATIONS];
             entry.serviceLocationsArray = entry.serviceLocations.toString().split(' ');
         }
 
-        if (element.hasOwnProperty(DashConstants.ADAPTATION_SETS) && element[DashConstants.ADAPTATION_SETS] !== ''){
+        if (element.hasOwnProperty(DashConstants.ADAPTATION_SETS) && element[DashConstants.ADAPTATION_SETS] !== '') {
             entry.adaptationSets = element[DashConstants.ADAPTATION_SETS];
             entry.adaptationSetsArray = entry.adaptationSets.toString().split(' ');
         }
@@ -1391,7 +1407,9 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) return [];
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) {
+            return [];
+        }
         return adaptation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             s.init(supp);
@@ -1400,7 +1418,9 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) return [];
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) {
+            return [];
+        }
         return representation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             s.init(supp);
@@ -1409,7 +1429,9 @@ function DashManifestModel() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.errHandler) {
             errHandler = config.errHandler;

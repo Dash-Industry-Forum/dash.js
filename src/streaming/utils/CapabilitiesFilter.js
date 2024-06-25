@@ -80,12 +80,12 @@ function CapabilitiesFilter() {
 
     function _filterUnsupportedAdaptationSetsOfPeriod(period, type) {
         return new Promise((resolve) => {
-
+            
             if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
                 resolve();
                 return;
             }
-
+            
             const promises = [];
             period.AdaptationSet.forEach((as) => {
                 if (adapter.getIsTypeOf(as, type)) {
@@ -162,19 +162,103 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createVideoConfiguration(rep, codec) {
-        const width = rep.width || null;
-        const height = rep.height || null;
-        const framerate = rep.frameRate || null;
-        const bitrate = rep.bandwidth || null;
-
-        return {
-            codec,
-            width,
-            height,
-            framerate,
-            bitrate
+    function _convertHDRColorimetryToConfig(representation) {
+        let cfg = {
+            colorGamut: null,
+            transferFunction: null,
+            isSupported: true
         };
+
+        for (const prop of representation.EssentialProperty || []) {
+
+            // note: MCA does not reflect a parameter related to 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag'
+
+            // translate ColourPrimaries signaling into capability queries
+            if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['1', '5', '6', '7'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.SRGB;
+            }
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['11', '12'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.P3;
+            }
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['9'].includes(prop.value.toString())) {
+                cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.REC2020;
+            }
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+                cfg.colorGamut = null;
+            }
+            else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI) {
+                cfg.isSupported = false;
+            }
+
+            // translate TransferCharacteristics signaling into capability queries
+            if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['1', '6', '13', '14', '15'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.SRGB;
+            }
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['16'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.PQ;
+            }
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['18'].includes(prop.value.toString())) {
+                cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.HLG;
+            }
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+                cfg.transferFunction = null;
+            }
+            else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
+                cfg.isSupported = false;
+            }
+        }
+
+        return cfg;
+    }
+
+    function _convertHDRMetadataFormatToConfig(representation) {
+        let cfg = {
+            isSupported: true,
+            hdrMetadataType: null
+        };
+
+        for (const prop of representation.EssentialProperty || []) {
+            // translate hdrMetadataType signaling into capability queries
+            if (prop.schemeIdUri == Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_10;
+            }
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SLHDR2; // Note: This is not specified by W3C
+            }
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_40;
+            }
+            else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
+                cfg.isSupported = false;
+            }
+        }
+
+        return cfg;
+    }
+
+    function _createVideoConfiguration(rep, codec) {
+        let config = {
+            codec: codec,
+            width: rep.width || null,
+            height: rep.height || null,
+            framerate: rep.frameRate || null,
+            bitrate: rep.bandwidth || null
+        }
+        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+            Object.assign(config, _convertHDRColorimetryToConfig(rep));
+        }
+        let colorimetrySupported = config.isSupported;
+        
+        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+        }
+        let metadataFormatSupported = config.isSupported;
+
+        if (!colorimetrySupported || !metadataFormatSupported) {
+            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
+        }
+
+        return config;
     }
 
     function _createAudioConfiguration(rep, codec) {
@@ -280,16 +364,18 @@ function CapabilitiesFilter() {
             Promise.all(promises)
                 .then((supported) => {
                     as.Representation = as.Representation.filter((rep, i) => {
-                        let isReprSupported = supported[i].every( (s)=>{return s});
+                        let isReprSupported = supported[i].every((s) => {
+                            return s
+                        });
                         if (!isReprSupported) {
-                            logger.debug('[Stream] Representation '+rep.id+' has been removed because of unsupported CustomFilter');
+                            logger.debug('[Stream] Representation ' + rep.id + ' has been removed because of unsupported CustomFilter');
                         }
                         return isReprSupported;
                     });
                     resolve();
                 })
                 .catch((err) => {
-                    logger.warn('[Stream] at least one promise rejected in CustomFilter with error: ',err);
+                    logger.warn('[Stream] at least one promise rejected in CustomFilter with error: ', err);
                     resolve();
                 });
         });

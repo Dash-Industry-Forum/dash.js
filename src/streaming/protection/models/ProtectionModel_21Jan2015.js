@@ -260,8 +260,9 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function setMediaElement(mediaElement) {
-        if (videoElement === mediaElement)
+        if (videoElement === mediaElement) {
             return;
+        }
 
         // Replacing the previous element
         if (videoElement) {
@@ -579,4 +580,4 @@ function ProtectionModel_21Jan2015(config) {
 }
 
 ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015); 
+export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);

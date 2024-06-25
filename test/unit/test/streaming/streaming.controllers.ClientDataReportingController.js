@@ -1,8 +1,8 @@
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
-import { HTTPRequest } from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import ClientDataReportingController from '../../../../src/streaming/controllers/ClientDataReportingController.js';
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 
 const context = {};
 
@@ -20,7 +20,7 @@ describe('ClientDataReportingController', function () {
     describe('if not configured', function () {
 
         it('isServiceLocationIncluded returns true when the filter is not present in manifest', function () {
-            const serviceLocation='test-location';
+            const serviceLocation = 'test-location';
 
             const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
@@ -28,7 +28,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isAdaptationsIncluded returns true when the filter is not present in manifest', function () {
-            const adaptationId='1';
+            const adaptationId = '1';
 
             const result = clientDataReportingController.isAdaptationsIncluded(adaptationId);
 
@@ -36,7 +36,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isServiceLocationIncluded returns true when the filter is not present in manifest and requestType is steering', function () {
-            const serviceLocation='test-location';
+            const serviceLocation = 'test-location';
 
             const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
@@ -47,7 +47,7 @@ describe('ClientDataReportingController', function () {
     describe('if configured', function () {
 
         it('isServiceLocationIncluded returns true when service location is included in the filter', function () {
-            const serviceLocation='test-b';
+            const serviceLocation = 'test-b';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {
@@ -62,7 +62,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isAdaptationsIncluded returns true when adaptation set is included in the filter', function () {
-            const adaptationId='test-a';
+            const adaptationId = 'test-a';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {
@@ -77,7 +77,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isServiceLocationIncluded returns true when service location is included in the filter and requestType is steering', function () {
-            const serviceLocation='test-b';
+            const serviceLocation = 'test-b';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {
@@ -93,7 +93,7 @@ describe('ClientDataReportingController', function () {
 
 
         it('isServiceLocationIncluded returns false when service location is not included in the filter', function () {
-            const serviceLocation='test-c';
+            const serviceLocation = 'test-c';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {
@@ -108,7 +108,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isAdaptationsIncluded returns false when adaptation set is not included in the filter', function () {
-            const adaptationId='test-c';
+            const adaptationId = 'test-c';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {
@@ -123,7 +123,7 @@ describe('ClientDataReportingController', function () {
         });
 
         it('isServiceLocationIncluded returns true when service location is not included in the filter but requestType is steering', function () {
-            const serviceLocation='test-c';
+            const serviceLocation = 'test-c';
 
             const serviceDescriptionSettings = {
                 clientDataReporting: {

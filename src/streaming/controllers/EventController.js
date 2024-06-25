@@ -192,8 +192,9 @@ function EventController() {
         try {
             for (const key in events) {
                 if (events.hasOwnProperty(key)) {
-                    if (Object.keys(events[key]).length === 0)
+                    if (Object.keys(events[key]).length === 0) {
                         delete events[key];
+                    }
                 }
             }
         } catch (e) {

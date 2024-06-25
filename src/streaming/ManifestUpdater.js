@@ -65,7 +65,9 @@ function ManifestUpdater() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.manifestModel) {
             manifestModel = config.manifestModel;

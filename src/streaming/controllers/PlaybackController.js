@@ -206,10 +206,14 @@ function PlaybackController() {
      * @param {boolean} adjustLiveDelay
      */
     function seek(time, stickToBuffered = false, internal = false, adjustLiveDelay = false) {
-        if (!streamInfo || !videoModel || !videoModel.getElement()) return;
+        if (!streamInfo || !videoModel || !videoModel.getElement()) {
+            return;
+        }
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
-        if (time === currentTime) return;
+        if (time === currentTime) {
+            return;
+        }
 
         internalSeek = (internal === true);
 
@@ -468,7 +472,9 @@ function PlaybackController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.streamController) {
             streamController = config.streamController;
@@ -498,7 +504,9 @@ function PlaybackController() {
      * @param {object} mediaType
      */
     function updateCurrentTime(mediaType = null) {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) return;
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking() || manifestUpdateInProgress) {
+            return;
+        }
 
         // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
         // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
@@ -557,7 +565,9 @@ function PlaybackController() {
      * Start interval handler for wallclock time update
      */
     function startUpdatingWallclockTime() {
-        if (wallclockTimeIntervalId !== null) return;
+        if (wallclockTimeIntervalId !== null) {
+            return;
+        }
 
         wallclockTimeIntervalId = setInterval(() => {
             _onWallclockTime();
@@ -576,7 +586,9 @@ function PlaybackController() {
         const voRepresentation = e.currentRepresentation;
         const info = voRepresentation ? voRepresentation.mediaInfo.streamInfo : null;
 
-        if (info === null || streamInfo.id !== info.id) return;
+        if (info === null || streamInfo.id !== info.id) {
+            return;
+        }
         streamInfo = info;
     }
 
@@ -689,7 +701,9 @@ function PlaybackController() {
         pause();
         stopUpdatingWallclockTime();
         const streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
-        if (!streamInfo) return;
+        if (!streamInfo) {
+            return;
+        }
         eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamInfo.isLast });
     }
 

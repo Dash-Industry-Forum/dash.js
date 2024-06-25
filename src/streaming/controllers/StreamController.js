@@ -460,7 +460,9 @@ function StreamController() {
 
         function _onMediaSourceOpen() {
             // Manage situations in which a call to reset happens while MediaSource is being opened
-            if (!mediaSource || mediaSource.readyState !== 'open') return;
+            if (!mediaSource || mediaSource.readyState !== 'open') {
+                return;
+            }
 
             logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
@@ -1318,7 +1320,9 @@ function StreamController() {
     }
 
     function _onPlaybackError(e) {
-        if (!e.error) return;
+        if (!e.error) {
+            return;
+        }
 
         let msg;
 
@@ -1411,7 +1415,9 @@ function StreamController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.capabilities) {
             capabilities = config.capabilities;
