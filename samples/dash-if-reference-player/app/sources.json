@@ -83,6 +83,11 @@
             "acronym": "Broadpeak",
             "name": "Broadpeak",
             "url": "https://www.broadpeak.tv/"
+        },
+        "dolby": {
+            "acronym": "Dolby",
+            "name": "Dolby Laboratories Inc.",
+            "url": "https://www.dolby.com/"
         }
     },
     "items": [
@@ -208,6 +213,12 @@
                     "name": "Spring (25fps, 75gop, 1920x804(2.40) h264, KID=148D) v1",
                     "url": "http://refapp.hbbtv.org/videos/spring_804p_v1/manifest.mpd",
                     "provider": "hbbtv"
+                },
+                {
+                    "name": "Multiple AdaptationSets",
+                    "url": "https://webapi.streaming.dolby.com/v0_9/sources/media/v01/dash/lesson_8.mpd",
+                    "moreInfo": "",
+                    "provider": "dolby"
                 }
             ]
         },
