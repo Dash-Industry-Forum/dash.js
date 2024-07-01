@@ -75,7 +75,9 @@ function ContentSteeringController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.adapter) {
             adapter = config.adapter;

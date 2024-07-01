@@ -162,7 +162,9 @@ function AdapterMock() {
     };
 
     this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
+            return null;
+        }
 
         return realRepresentation.EssentialProperty.map((prop) => {
             return {

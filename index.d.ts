@@ -1,4 +1,4 @@
-import * as CommonMediaLibrary from '@svta/common-media-library';
+import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
 
 export = dashjs;
 export as namespace dashjs;
@@ -714,13 +714,13 @@ declare namespace dashjs {
 
         getSuggestedPresentationDelay(): string;
 
-        getAvailabilityStartTime(externalManifest: object): number;
+        getAvailabilityStartTime(externalManifest?: object): number;
 
-        getIsDynamic(externalManifest: object): boolean;
+        getIsDynamic(externalManifest?: object): boolean;
 
-        getDuration(externalManifest: object): number;
+        getDuration(externalManifest?: object): number;
 
-        getRegularPeriods(externalManifest: object): any[];
+        getRegularPeriods(externalManifest?: object): any[];
 
         getMpd(externalManifest?: object): Mpd;
 
@@ -1527,13 +1527,13 @@ declare namespace dashjs {
 
         setProtectionData(value: ProtectionDataSet): void;
 
-        addRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
+        addRequestInterceptor(interceptor: RequestInterceptor): void;
 
-        removeRequestInterceptor(interceptor: CommonMediaLibrary.RequestInterceptor): void;
+        removeRequestInterceptor(interceptor: RequestInterceptor): void;
 
-        addResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
+        addResponseInterceptor(interceptor: ResponseInterceptor): void;
 
-        removeResponseInterceptor(interceptor: CommonMediaLibrary.ResponseInterceptor): void;
+        removeResponseInterceptor(interceptor: ResponseInterceptor): void;
 
         registerLicenseRequestFilter(filter: RequestFilter): void;
 

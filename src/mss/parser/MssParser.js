@@ -89,7 +89,9 @@ function MssParser(config) {
 
     function getAttributeAsBoolean(node, attrName) {
         const value = node.getAttribute(attrName);
-        if (!value) return false;
+        if (!value) {
+            return false;
+        }
         return value.toLowerCase() === 'true';
     }
 
@@ -199,8 +201,12 @@ function MssParser(config) {
 
         width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
         height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
-        if (!isNaN(width)) representation.width = width;
-        if (!isNaN(height)) representation.height = height;
+        if (!isNaN(width)) {
+            representation.width = width;
+        }
+        if (!isNaN(height)) {
+            representation.height = height;
+        }
 
 
         fourCCValue = qualityLevel.getAttribute('FourCC');
@@ -536,8 +542,9 @@ function MssParser(config) {
             schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
             value: 'com.widevine.alpha'
         };
-        if (!KID)
+        if (!KID) {
             return widevineCP;
+        }
         // Create Widevine CENC header (Protocol Buffer) with KID value
         const wvCencHeader = new Uint8Array(2 + KID.length);
         wvCencHeader[0] = 0x12;
@@ -874,4 +881,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default FactoryMaker.getClassFactory(MssParser); 
+export default FactoryMaker.getClassFactory(MssParser);

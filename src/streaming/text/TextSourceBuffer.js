@@ -37,11 +37,12 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender.js';
 import ISOBoxer from 'codem-isoboxer';
-import cea608parser from '../../../externals/cea608-parser.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import {extractCta608DataFromSample} from '@svta/common-media-library/cta/608/extractCta608DataFromSample';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
@@ -494,7 +495,7 @@ function TextSourceBuffer(config) {
             }
 
             const handler = _makeCueAdderForIndex(trackIdx);
-            embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
+            embeddedCea608FieldParsers[i] = new Cta608Parser(i + 1, {
                 newCue: handler
             }, null);
         }
@@ -540,22 +541,20 @@ function TextSourceBuffer(config) {
         const raw = new DataView(data);
         for (let i = 0; i < samples.length; i++) {
             const sample = samples[i];
-            const cea608Ranges = cea608parser.findCea608Nalus(raw, sample.offset, sample.size);
+            const ccData = extractCta608DataFromSample(raw, sample.offset, sample.size);
+            
             let lastSampleTime = null;
             let idx = 0;
-            for (let j = 0; j < cea608Ranges.length; j++) {
-                const ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
-                for (let k = 0; k < 2; k++) {
-                    if (ccData[k].length > 0) {
-                        if (sample.cts !== lastSampleTime) {
-                            idx = 0;
-                        } else {
-                            idx += 1;
-                        }
-                        const timestampOffset = _getTimestampOffset();
-                        allCcData.fields[k].push([sample.cts + (timestampOffset * embeddedTimescale), ccData[k], idx]);
-                        lastSampleTime = sample.cts;
+            for (let k = 0; k < 2; k++) {
+                if (ccData[k].length > 0) {
+                    if (sample.cts !== lastSampleTime) {
+                        idx = 0;
+                    } else {
+                        idx += 1;
                     }
+                    const timestampOffset = _getTimestampOffset();
+                    allCcData.fields[k].push([sample.cts + (timestampOffset * embeddedTimescale), ccData[k], idx]);
+                    lastSampleTime = sample.cts;
                 }
             }
         }

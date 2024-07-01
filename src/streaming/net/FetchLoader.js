@@ -53,8 +53,8 @@ function FetchLoader() {
 
     /**
      * Load request
-     * @param {CommonMediaLibrary.request.CommonMediaRequest} httpRequest
-     * @param {CommonMediaLibrary.request.CommonMediaResponse} httpResponse
+     * @param {CommonMediaRequest} httpRequest
+     * @param {CommonMediaResponse} httpResponse
      */
     function load(httpRequest, httpResponse) {
         // Variables will be used in the callback functions

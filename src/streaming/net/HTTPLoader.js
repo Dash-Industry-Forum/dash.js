@@ -361,8 +361,8 @@ function HTTPLoader(cfg) {
         const traces = [];
         let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, progressTimeout;
 
-        let httpRequest; // CommonMediaLibrary.request.CommonMediaRequest
-        let httpResponse; // CommonMediaLibrary.request.CommonMediaResponse
+        let httpRequest; // CommonMediaRequest
+        let httpResponse; // CommonMediaResponse
 
         requestObject.bytesLoaded = NaN;
         requestObject.bytesTotal = NaN;
@@ -400,7 +400,7 @@ function HTTPLoader(cfg) {
             customData: { request: requestObject }
         };
 
-        // Init response (CommonMediaLibrary.request.CommoneMediaResponse)
+        // Init response (CommoneMediaResponse)
         httpResponse = {
             request: httpRequest,
             resourceTiming: {
@@ -445,7 +445,9 @@ function HTTPLoader(cfg) {
 
     function _applyRequestInterceptors(httpRequest) {
         const interceptors = customParametersModel.getRequestInterceptors();
-        if (!interceptors) return Promise.resolve(httpRequest);
+        if (!interceptors) {
+            return Promise.resolve(httpRequest);
+        }
 
         return interceptors.reduce((prev, next) => {
             return prev.then((request) => {
@@ -456,7 +458,9 @@ function HTTPLoader(cfg) {
 
     function _applyResponseInterceptors(response) {
         const interceptors = customParametersModel.getResponseInterceptors();
-        if (!interceptors) return Promise.resolve(response);
+        if (!interceptors) {
+            return Promise.resolve(response);
+        }
 
         return interceptors.reduce((prev, next) => {
             return prev.then(resp => {

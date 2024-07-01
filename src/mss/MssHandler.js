@@ -122,7 +122,9 @@ function MssHandler(config) {
 
     function onInitFragmentNeeded(e) {
         let streamProcessor = getStreamProcessor(e.mediaType);
-        if (!streamProcessor) return;
+        if (!streamProcessor) {
+            return;
+        }
 
         // Create init segment request
         let representationController = streamProcessor.getRepresentationController();
@@ -156,10 +158,14 @@ function MssHandler(config) {
     }
 
     function onSegmentMediaLoaded(e) {
-        if (e.error) return;
+        if (e.error) {
+            return;
+        }
 
         let streamProcessor = getStreamProcessor(e.request.mediaType);
-        if (!streamProcessor) return;
+        if (!streamProcessor) {
+            return;
+        }
 
         // Process moof to transcode it from MSS to DASH (or to update segment timeline for SegmentInfo fragments)
         mssFragmentProcessor.processFragment(e, streamProcessor);
@@ -200,10 +206,10 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); 
-        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); 
-        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); 
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); 
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
         eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 
@@ -241,7 +247,7 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-const factory = dashjs.FactoryMaker.getClassFactory(MssHandler); 
+const factory = dashjs.FactoryMaker.getClassFactory(MssHandler);
 factory.errors = MssErrors;
-dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory); 
-export default factory; 
+dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory);
+export default factory;

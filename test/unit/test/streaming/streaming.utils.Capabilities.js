@@ -58,6 +58,18 @@ EssentialPropertyHDR.init({
     value: '9'
 });
 
+let EssentialPropertyHDRFormat = new DescriptorType;
+EssentialPropertyHDRFormat.init({
+    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+    value: 'ST2094-10'
+});
+
+let EssentialPropertyPrivateTransferFunction = new DescriptorType;
+EssentialPropertyPrivateTransferFunction.init({
+    schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+    value: '2'
+});
+
 describe('Capabilities', function () {
     beforeEach(function () {
         settings = Settings({}).getInstance();
@@ -174,6 +186,38 @@ describe('Capabilities', function () {
             res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test' });
             expect(res).to.be.true;
             res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test', value: '5' });
+            expect(res).to.be.true;
+        });
+
+        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for Colorimetry schemeIdUri', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
+            expect(res).to.be.false;
+
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
+            expect(res).to.be.true;
+        });
+        
+        it('should return true if MediaCapabilities-check is enabled, even if value is unknown for HDR-Format schemeIdUri', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDRMetadataFormatEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
+            expect(res).to.be.true;
+        });
+        
+        it('should return true for unspecified TransferFunction if MediaCapabilities-check is enabled', function () {
+            let res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
+            expect(res).to.be.false;
+            
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+            res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
             expect(res).to.be.true;
         });
     });

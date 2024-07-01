@@ -382,14 +382,18 @@ function StreamProcessor(config) {
      */
     function _onInitFragmentNeeded(e, rescheduleIfNoRequest = true) {
         // Event propagation may have been stopped (see MssHandler)
-        if (!e.sender) return;
+        if (!e.sender) {
+            return;
+        }
 
         if (playbackController.getIsManifestUpdateInProgress()) {
             _noValidRequest();
             return;
         }
 
-        if (currentMediaInfo.isText && !textController.isTextEnabled()) return;
+        if (currentMediaInfo.isText && !textController.isTextEnabled()) {
+            return;
+        }
 
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {

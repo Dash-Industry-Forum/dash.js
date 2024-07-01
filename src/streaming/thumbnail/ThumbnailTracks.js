@@ -208,8 +208,9 @@ function ThumbnailTracks(config) {
                                     end: ss.mediaStartTime + ss.duration,
                                     url: imageUrl
                                 });
-                                if (callback)
+                                if (callback) {
                                     callback(imageUrl);
+                                }
                             }
                         });
                         return true;

@@ -20,9 +20,13 @@ function MediaPlayerFactory() {
      * @returns {MediaPlayer|null}
      */
     function create(video, source, context) {
-        if (!video || !(/^VIDEO$/i).test(video.nodeName)) return null;
+        if (!video || !(/^VIDEO$/i).test(video.nodeName)) {
+            return null;
+        }
 
-        if (video._dashjs_player) return video._dashjs_player;
+        if (video._dashjs_player) {
+            return video._dashjs_player;
+        }
 
         let player;
         let videoID = (video.id || video.name || 'video element');

@@ -47,6 +47,11 @@
       {
         "SwitchCase": 1
       }
-    ]
+    ],
+    "curly": [
+      "error",
+      "all"
+    ],
+    "space-infix-ops": ["error", { "int32Hint": true }]
   }
 }

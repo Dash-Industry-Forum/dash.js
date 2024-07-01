@@ -194,7 +194,9 @@ function CustomParametersModel() {
                 return true;
             }
         });
-        if (index < 0) return;
+        if (index < 0) {
+            return;
+        }
         filters.splice(index, 1);
     }
 
@@ -299,7 +301,7 @@ function CustomParametersModel() {
     /**
      * Unregisters a request interceptor.
      * @param {function} interceptor - the request interceptor callback
-     */ 
+     */
     function removeRequestInterceptor(interceptor) {
         _unregisterFilter(requestInterceptors, interceptor);
     }
@@ -307,7 +309,7 @@ function CustomParametersModel() {
     /**
      * Unregisters a response interceptor.
      * @param {function} interceptor - the request interceptor callback
-     */    
+     */
     function removeResponseInterceptor(interceptor) {
         _unregisterFilter(responseInterceptors, interceptor);
     }

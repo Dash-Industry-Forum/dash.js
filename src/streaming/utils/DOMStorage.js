@@ -64,7 +64,9 @@ function DOMStorage(config) {
 
     //type can be local, session
     function isSupported(type) {
-        if (supported !== undefined) return supported;
+        if (supported !== undefined) {
+            return supported;
+        }
 
         supported = false;
 

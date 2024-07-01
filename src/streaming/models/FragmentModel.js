@@ -242,8 +242,12 @@ function FragmentModel(config) {
 
         return arr.filter(request => {
             for (const prop in filter) {
-                if (prop === 'state') continue;
-                if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
+                if (prop === 'state') {
+                    continue;
+                }
+                if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) {
+                    return false;
+                }
             }
 
             return true;
@@ -271,7 +275,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingCompleted(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         loadingRequests.splice(loadingRequests.indexOf(e.request), 1);
 
@@ -293,7 +299,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingInProgress(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         eventBus.trigger(events.FRAGMENT_LOADING_PROGRESS,
             {
@@ -307,7 +315,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingAborted(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED,
             { request: e.request },

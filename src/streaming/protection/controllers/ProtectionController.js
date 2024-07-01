@@ -1028,7 +1028,9 @@ function ProtectionController(config) {
      * @private
      */
     function _applyFilters(filters, param) {
-        if (!filters) return Promise.resolve();
+        if (!filters) {
+            return Promise.resolve();
+        }
         return filters.reduce((prev, next) => {
             return prev.then(() => {
                 return next(param);
@@ -1136,4 +1138,4 @@ function ProtectionController(config) {
 }
 
 ProtectionController.__dashjs_factory_name = 'ProtectionController';
-export default FactoryMaker.getClassFactory(ProtectionController); 
+export default FactoryMaker.getClassFactory(ProtectionController);

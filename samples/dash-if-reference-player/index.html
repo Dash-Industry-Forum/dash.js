@@ -677,39 +677,86 @@
         <div class="options-item">
             <div class="options-item-title">Initial Settings</div>
             <div class="options-item-body">
-                <label class="options-label">Initial bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate"
-                       ng-change="updateInitialBitrateVideo()">
-                <label class="options-label">Minimum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate"
-                       ng-change="updateMinimumBitrateVideo()">
-                <label class="options-label">Maximum bitrate Video:</label>
-                <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate"
-                       ng-change="updateMaximumBitrateVideo()">
-                <label class="options-label">Audio:</label>
-                <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'"
-                       ng-model="initialSettings.audio" ng-change="updateInitialLanguageAudio()">
-                <label class="options-label">Video:</label>
-                <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
-                       ng-model="initialSettings.video" ng-change="updateInitialRoleVideo()">
-                <label class="options-label">Text:</label>
-                <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'"
-                       ng-model="initialSettings.text" ng-change="updateInitialLanguageText()">
-                <input type="text" class="form-control" placeholder="text initial role, e.g. 'caption'"
-                       ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="Enable subtitle on loading text">
-                    <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled"
-                           ng-change="toggleText()">
-                    Enable Text At Loading
-                </label>
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="Force text streaming">
-                    <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming"
-                           ng-change="toggleForcedTextStreaming()">
-                    Force Text Streaming
-                </label>
-
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Video</div>
+                    <div class="sub-options-item-body">
+                        <label class="options-label">Initial bitrate Video:</label>
+                        <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate"
+                            ng-change="updateInitialBitrateVideo()">
+                        <label class="options-label">Minimum bitrate Video:</label>
+                        <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate"
+                            ng-change="updateMinimumBitrateVideo()">
+                        <label class="options-label">Maximum bitrate Video:</label>
+                        <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate"
+                            ng-change="updateMaximumBitrateVideo()">
+                        <label class="options-label">Role:</label>
+                        <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
+                            ng-model="initialSettings.video" ng-change="updateInitialRoleVideo()">
+                    </div>
+                </div>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Audio</div>
+                    <div class="sub-options-item-body">
+                        <label class="options-label">Language:</label>
+                        <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'"
+                            ng-model="initialSettings.audioLang" ng-change="updateInitialLanguageAudio()">
+                        <label class="options-label">Role:</label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="Specify the Role@value for the MPEG-defined role scheme">
+                            <input type="text" class="form-control" placeholder="initial role, e.g. 'caption'"
+                                ng-model="initialSettings.audioRole" ng-change="updateInitialRoleAudio()">
+                        </label>
+                        <label class="options-label">Accessibility</label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="unsets audio accessibility setting">
+                            <input type="radio" id="audio-accessibility-off" autocomplete="off" name="audio-accessibility-scheme"
+                                ng-model="initialSettings.audioAccessibilityScheme" value="off"
+                                ng-click="updateInitialAccessibilitySchemeAudio('off')"
+                                checked="checked">
+                                <i>no Accessibility</i>
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="Sets the schemeIdUri used for Accessibility to 'urn:mpeg:dash:role:2011'">
+                            <input type="radio" id="audio-accessibility-MPEG" autocomplete="off" name="audio-accessibility-scheme"
+                                ng-model="initialSettings.audioAccessibilityScheme" value="MPEG"
+                                ng-click="updateInitialAccessibilitySchemeAudio('MPEG')">
+                                MPEG scheme
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="Sets the schemeIdUri used for Accessibility to 'urn:tva:metadata:cs:AudioPurposeCS:2007'">
+                            <input type="radio" id="audio-accessibility-DVB" autocomplete="off" name="audio-accessibility-scheme"
+                                ng-model="initialSettings.audioAccessibilityScheme" value="DVB"
+                                ng-click="updateInitialAccessibilitySchemeAudio('DVB')">
+                                DVB scheme
+                        </label>
+                        <label class="options-label">value:</label>
+                        <input type="text" class="form-control" placeholder="initial accessibility, e.g. 'description'"
+                            ng-model="initialSettings.audioAccessibility" ng-change="updateInitialAccessibilityAudio()">
+                    </div>
+                </div>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Text</div>
+                    <div class="sub-options-item-body">
+                        <label class="options-label">Language:</label>
+                        <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'"
+                            ng-model="initialSettings.text" ng-change="updateInitialLanguageText()">
+                        <label class="options-label">Role:</label>
+                        <input type="text" class="form-control" placeholder="text initial role, e.g. 'caption'"
+                            ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                            title="Enable subtitle on loading text">
+                            <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled"
+                                ng-change="toggleText()">
+                            Enable Text At Loading
+                        </label>
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                            title="Force text streaming">
+                            <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming"
+                                ng-change="toggleForcedTextStreaming()">
+                            Force Text Streaming
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="options-item">

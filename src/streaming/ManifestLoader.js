@@ -134,7 +134,9 @@ function ManifestLoader(config) {
             request: request,
             success: function (data, textStatus, responseURL) {
                 // Manage situations in which success is called after calling reset
-                if (!xlinkController) return;
+                if (!xlinkController) {
+                    return;
+                }
 
                 let actualUrl,
                     baseUri,

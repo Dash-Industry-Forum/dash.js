@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import cea608parser from '../../externals/cea608-parser.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import Constants from './constants/Constants.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import MetricsConstants from './constants/MetricsConstants.js';
@@ -371,7 +371,7 @@ function MediaPlayer() {
 
             adapter.setConfig({
                 constants: Constants,
-                cea608parser: cea608parser,
+                cea608parser: new Cta608Parser(),
                 errHandler: errHandler,
                 BASE64: BASE64
             });
@@ -2650,12 +2650,24 @@ function MediaPlayer() {
             return null;
         }
 
-        if (value.lang) output.lang = value.lang;
-        if (value.index) output.index = value.index;
-        if (value.viewpoint) output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
-        if (value.audioChannelConfiguration) output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
-        if (value.role) output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
-        if (value.accessibility) output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        if (value.lang) {
+            output.lang = value.lang;
+        }
+        if (value.index) {
+            output.index = value.index;
+        }
+        if (value.viewpoint) {
+            output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+        }
+        if (value.audioChannelConfiguration) {
+            output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+        }
+        if (value.role) {
+            output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+        }
+        if (value.accessibility) {
+            output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        }
 
         return output;
     }

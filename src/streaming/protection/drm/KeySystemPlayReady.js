@@ -53,7 +53,7 @@ function KeySystemPlayReady(config) {
     const settings = config.settings;
 
     function checkConfig() {
-        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray')) {
             throw new Error('Missing config parameter(s)');
         }
     }
@@ -204,11 +204,9 @@ function KeySystemPlayReady(config) {
         // Handle native MS PlayReady ContentProtection elements
         if ('pro' in cpData && cpData.pro) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
-        }
-        else if ('prheader' in cpData && cpData.prheader) {
+        } else if ('prheader' in cpData && cpData.prheader) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.prheader.__text);
-        }
-        else {
+        } else {
             return null;
         }
 
@@ -263,7 +261,9 @@ function KeySystemPlayReady(config) {
             i;
 
         checkConfig();
-        if (!_cdmData) return null;
+        if (!_cdmData) {
+            return null;
+        }
 
         // Convert custom data into multibyte string
         customData = [];
@@ -306,4 +306,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default FactoryMaker.getSingletonFactory(KeySystemPlayReady); 
+export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);

@@ -85,7 +85,9 @@ function VideoModel() {
     }
 
     function setPlaybackRate(value, ignoreReadyState = false) {
-        if (!element) return;
+        if (!element) {
+            return;
+        }
         if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
             // If media element hasn't loaded enough data to play yet, wait until it has
             element.addEventListener('canplay', onPlaybackCanPlay);

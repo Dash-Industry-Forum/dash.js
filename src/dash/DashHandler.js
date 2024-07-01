@@ -126,7 +126,9 @@ function DashHandler(config) {
     }
 
     function getInitRequest(mediaInfo, representation) {
-        if (!representation) return null;
+        if (!representation) {
+            return null;
+        }
         return _generateInitRequest(mediaInfo, representation, getType());
     }
 
@@ -261,7 +263,9 @@ function DashHandler(config) {
             indexToRequest,
             lastSegment ? lastSegment.mediaStartTime : -1
         );
-        if (!segment) return null;
+        if (!segment) {
+            return null;
+        }
         request = _getRequestForSegment(mediaInfo, segment);
         return request;
     }
