@@ -635,6 +635,7 @@ function StreamProcessor(config) {
     /**
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
      * @param {object} newMediaInfo
+     * @param targetRepresentation
      */
     function selectMediaInfo(newMediaInfo, targetRepresentation = null) {
         return new Promise((resolve) => {
@@ -729,18 +730,12 @@ function StreamProcessor(config) {
 
         selectMediaInfo(newMediaInfo, newRepresentation)
             .then(() => {
-                if (newRepresentation.codecs !== e.oldRepresentation.codecs) {
-                    fragmentModel.abortRequests();
-                    return bufferController.changeType(newRepresentation)
-                }
-                return Promise.resolve()
-            })
-            .then(() => {
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
     }
 
     function _handleDifferentSwitchTypes(e, newRepresentation) {
+
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
             _prepareForForceReplacementQualitySwitch(newRepresentation);
@@ -768,7 +763,7 @@ function StreamProcessor(config) {
     function _prepareForForceReplacementQualitySwitch(voRepresentation) {
 
         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
-        // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
+        // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might use wrong values.
         // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
         fragmentModel.abortRequests();
 
@@ -779,6 +774,7 @@ function StreamProcessor(config) {
         }, { mediaType: type, streamId: streamInfo.id });
 
         scheduleController.setCheckPlaybackQuality(false);
+
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
         bufferController.prepareForForceReplacementQualitySwitch(voRepresentation)
             .then(() => {
@@ -791,6 +787,20 @@ function StreamProcessor(config) {
                 pendingSwitchToVoRepresentation = null;
                 qualityChangeInProgress = false;
             });
+    }
+
+    function _prepareForAbandonQualitySwitch(voRepresentation) {
+        bufferController.prepareForAbandonQualitySwitch(voRepresentation)
+            .then(() => {
+                fragmentModel.abortRequests();
+                shouldRepeatRequest = true;
+                scheduleController.setCheckPlaybackQuality(false);
+                scheduleController.startScheduleTimer();
+                qualityChangeInProgress = false;
+            })
+            .catch(() => {
+                qualityChangeInProgress = false;
+            })
     }
 
     function _prepareForFastQualitySwitch(voRepresentation) {
@@ -809,7 +819,7 @@ function StreamProcessor(config) {
 
             // The new quality is higher than the one we originally requested
             if (request.bandwidth < voRepresentation.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
-                bufferController.updateBufferTimestampOffset(voRepresentation)
+                bufferController.prepareForFastQualitySwitch(voRepresentation)
                     .then(() => {
                         // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
                         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -826,7 +836,7 @@ function StreamProcessor(config) {
                     })
             }
 
-            // If we have buffered a higher quality we do not replace anything. We might cancel the current request due to abandon request rule
+            // If we have buffered a higher quality we do not replace anything.
             else {
                 _prepareForDefaultQualitySwitch(voRepresentation);
             }
@@ -845,7 +855,7 @@ function StreamProcessor(config) {
         }
 
 
-        bufferController.updateBufferTimestampOffset(voRepresentation)
+        bufferController.prepareForDefaultQualitySwitch(voRepresentation)
             .then(() => {
                 scheduleController.setCheckPlaybackQuality(false);
                 if (currentMediaInfo.segmentAlignment || currentMediaInfo.subSegmentAlignment) {
@@ -862,19 +872,6 @@ function StreamProcessor(config) {
             })
     }
 
-    function _prepareForAbandonQualitySwitch(voRepresentation) {
-        bufferController.updateBufferTimestampOffset(voRepresentation)
-            .then(() => {
-                fragmentModel.abortRequests();
-                shouldRepeatRequest = true;
-                scheduleController.setCheckPlaybackQuality(false);
-                scheduleController.startScheduleTimer();
-                qualityChangeInProgress = false;
-            })
-            .catch(() => {
-                qualityChangeInProgress = false;
-            })
-    }
 
     /**
      * We have canceled the download of a fragment and need to adjust the buffer time or reload an init segment

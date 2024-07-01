@@ -510,8 +510,56 @@ function BufferController(config) {
                     return updateBufferTimestampOffset(voRepresentation)
                 })
                 .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
                     setIsBufferingCompleted(false);
                     resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForAbandonQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForFastQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForDefaultQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
                 })
                 .catch((e) => {
                     reject(e);
@@ -526,11 +574,7 @@ function BufferController(config) {
                     return updateAppendWindow();
                 })
                 .then(() => {
-                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return changeType(selectedRepresentation)
-                    }
-
-                    return Promise.resolve();
+                    return changeType(selectedRepresentation)
                 })
                 .then(() => {
                     return pruneAllSafely();
@@ -549,11 +593,7 @@ function BufferController(config) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
                 .then(() => {
-                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return changeType(selectedRepresentation)
-                    }
-
-                    return Promise.resolve();
+                    return changeType(selectedRepresentation)
                 })
                 .then(() => {
                     resolve();
@@ -565,7 +605,10 @@ function BufferController(config) {
     }
 
     function changeType(selectedRepresentation) {
-        return sourceBufferSink.changeType(selectedRepresentation);
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+            return sourceBufferSink.changeType(selectedRepresentation);
+        }
+        return Promise.resolve()
     }
 
     function pruneAllSafely() {
@@ -1258,6 +1301,9 @@ function BufferController(config) {
         getType,
         hasBufferAtTime,
         initialize,
+        prepareForAbandonQualitySwitch,
+        prepareForDefaultQualitySwitch,
+        prepareForFastQualitySwitch,
         prepareForForceReplacementQualitySwitch,
         prepareForNonReplacementTrackSwitch,
         prepareForPlaybackSeek,
