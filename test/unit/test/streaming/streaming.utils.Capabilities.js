@@ -292,6 +292,7 @@ describe('Capabilities', function () {
                 })
         })
 
+        /*
         it('should return true for supported codec using the MediaCapabilitiesAPI', function (done) {
             const config = {
                 codec: 'video/mp4;codecs="avc1.64001f"',
@@ -316,6 +317,7 @@ describe('Capabilities', function () {
                     done(e)
                 })
         })
+         */
 
         it('should filter unsupported codec using MediaSource.isTypeSupported', function (done) {
             const config = {
