@@ -416,7 +416,7 @@ import Events from './events/Events.js';
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  * @property {boolean} [useChangeTypeForTrackSwitch=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
- * Note that some platforms might not implement the changeType functio. dash.js is checking for the availability before trying to call it.
+ * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
  * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
  * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
@@ -860,7 +860,7 @@ import Events from './events/Events.js';
  * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
- * 
+ *
  * If not specified this value defaults to ['segment'].
  */
 

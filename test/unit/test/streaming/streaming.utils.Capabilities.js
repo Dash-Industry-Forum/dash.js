@@ -2,7 +2,7 @@ import Capabilities from '../../../../src/streaming/utils/Capabilities.js';
 import Settings from '../../../../src/core/Settings.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 
 let settings;
 let capabilities;
@@ -78,6 +78,7 @@ describe('Capabilities', function () {
         capabilities.setConfig({
             settings: settings
         });
+        settings.reset();
     });
 
     describe('supports EssentialProperty', function () {
@@ -181,11 +182,17 @@ describe('Capabilities', function () {
             props.push(...[{ schemeIdUri: 'tag:dashif.org:scheme:value:test' }]);
             settings.update({ streaming: { capabilities: { supportedEssentialProperties: props } } })
 
-            let res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test', value: '' });
+            let res = capabilities.supportsEssentialProperty({
+                schemeIdUri: 'tag:dashif.org:scheme:value:test',
+                value: ''
+            });
             expect(res).to.be.true;
             res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test' });
             expect(res).to.be.true;
-            res = capabilities.supportsEssentialProperty({ schemeIdUri: 'tag:dashif.org:scheme:value:test', value: '5' });
+            res = capabilities.supportsEssentialProperty({
+                schemeIdUri: 'tag:dashif.org:scheme:value:test',
+                value: '5'
+            });
             expect(res).to.be.true;
         });
 
@@ -193,32 +200,147 @@ describe('Capabilities', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
             expect(res).to.be.false;
 
-            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true,
+                        filterVideoColorimetryEssentialProperties: true
+                    }
+                }
+            });
 
             res = capabilities.supportsEssentialProperty(EssentialPropertyHDR);
             expect(res).to.be.true;
         });
-        
+
         it('should return true if MediaCapabilities-check is enabled, even if value is unknown for HDR-Format schemeIdUri', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
             expect(res).to.be.false;
-            
-            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true,
+                        filterVideoColorimetryEssentialProperties: true
+                    }
+                }
+            });
             res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
             expect(res).to.be.false;
-            
-            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterHDRMetadataFormatEssentialProperties:true } } });
+
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true,
+                        filterHDRMetadataFormatEssentialProperties: true
+                    }
+                }
+            });
             res = capabilities.supportsEssentialProperty(EssentialPropertyHDRFormat);
             expect(res).to.be.true;
         });
-        
+
         it('should return true for unspecified TransferFunction if MediaCapabilities-check is enabled', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
             expect(res).to.be.false;
-            
-            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true, filterVideoColorimetryEssentialProperties:true } } });
+
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true,
+                        filterVideoColorimetryEssentialProperties: true
+                    }
+                }
+            });
             res = capabilities.supportsEssentialProperty(EssentialPropertyPrivateTransferFunction);
             expect(res).to.be.true;
         });
     });
+
+    describe('supportsCodec', function () {
+        it('should return true for supported codec using MediaSource.isTypeSupported', function (done) {
+            const config = {
+                codec: 'video/mp4;codecs="avc1.64001f"',
+                width: 320,
+                height: 180
+            }
+
+            capabilities.supportsCodec(config, 'video')
+                .then((result) => {
+                    expect(result).to.be.true
+                    done()
+                })
+                .catch((e) => {
+                    done(e)
+                })
+        })
+
+        it('should filter unsupported codec using MediaSource.isTypeSupported', function (done) {
+            const config = {
+                codec: 'video/mp4;codecs="vvvvc1.64001f"',
+                width: 320,
+                height: 180
+            }
+
+            capabilities.supportsCodec(config, 'video')
+                .then((result) => {
+                    expect(result).to.be.false
+                    done()
+                })
+                .catch((e) => {
+                    done(e)
+                })
+        })
+
+        it('should return true for supported codec using the MediaCapabilitiesAPI', function (done) {
+            const config = {
+                codec: 'video/mp4;codecs="avc1.64001f"',
+                width: 320,
+                height: 180,
+                bitrate: 5000,
+                framerate: 25
+            }
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true
+                    }
+                }
+            })
+            capabilities.supportsCodec(config, 'video')
+                .then((result) => {
+                    expect(result).to.be.true
+                    done()
+                })
+                .catch((e) => {
+                    done(e)
+                })
+        })
+
+        it('should filter unsupported codec using MediaSource.isTypeSupported', function (done) {
+            const config = {
+                codec: 'video/mp4;codecs="vvvvc1.64001f"',
+                width: 320,
+                height: 180,
+                bitrate: 5000,
+                framerate: 25
+            }
+
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true
+                    }
+                }
+            })
+            capabilities.supportsCodec(config, 'video')
+                .then((result) => {
+                    expect(result).to.be.false
+                    done()
+                })
+                .catch((e) => {
+                    done(e)
+                })
+        })
+    })
 });
