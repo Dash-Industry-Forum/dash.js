@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import cea608parser from '../../externals/cea608-parser.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import Constants from './constants/Constants.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import MetricsConstants from './constants/MetricsConstants.js';
@@ -371,7 +371,7 @@ function MediaPlayer() {
 
             adapter.setConfig({
                 constants: Constants,
-                cea608parser: cea608parser,
+                cea608parser: new Cta608Parser(),
                 errHandler: errHandler,
                 BASE64: BASE64
             });

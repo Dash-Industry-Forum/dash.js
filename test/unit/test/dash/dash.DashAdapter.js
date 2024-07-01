@@ -1,7 +1,7 @@
 import DashAdapter from '../../../../src/dash/DashAdapter.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
-import cea608parser from '../../../../externals/cea608-parser.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import VoHelper from '../../helpers/VOHelper.js';
 import PatchHelper from '../../helpers/PatchHelper.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
@@ -470,7 +470,7 @@ describe('DashAdapter', function () {
             dashAdapter.setConfig({
                 constants: Constants,
                 errHandler: errorHandlerMock,
-                cea608parser: cea608parser
+                cea608parser: new Cta608Parser(),
             });
         });
 
