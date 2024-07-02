@@ -42,8 +42,8 @@ function SwitchRequestHistory() {
         const currentRepresentation = switchRequest.currentRepresentation;
         const newRepresentation = switchRequest.newRepresentation;
 
-        // Don`t compare quality switches between different periods
-        if (currentRepresentation.mediaInfo.streamInfo.id !== newRepresentation.mediaInfo.streamInfo.id) {
+        // Don`t compare quality switches between different periods or different AdaptationSets
+        if (currentRepresentation.mediaInfo.streamInfo.id !== newRepresentation.mediaInfo.streamInfo.id || newRepresentation.mediaInfo.id !== currentRepresentation.mediaInfo.id) {
             return;
         }
 

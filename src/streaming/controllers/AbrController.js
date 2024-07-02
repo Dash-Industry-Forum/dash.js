@@ -225,10 +225,11 @@ function AbrController() {
         }
 
         // If bitrate should be as small as possible return the Representation with the lowest bitrate
+        const smallestRepresentation = possibleVoRepresentations.reduce((a, b) => {
+            return a.bandwidth < b.bandwidth ? a : b;
+        })
         if (bitrate <= 0) {
-            return possibleVoRepresentations.sort((a, b) => {
-                return a.bandwidth - b.bandwidth;
-            })[0]
+            return smallestRepresentation
         }
 
         // Get all Representations that have lower or equal bitrate than our target bitrate
@@ -237,10 +238,13 @@ function AbrController() {
         });
 
         if (!targetRepresentations || targetRepresentations.length === 0) {
-            return possibleVoRepresentations[0];
+            return smallestRepresentation
         }
 
-        return targetRepresentations[targetRepresentations.length - 1];
+        return targetRepresentations.reduce((max, curr) => {
+            return (curr.absoluteIndex > max.absoluteIndex) ? curr : max;
+        })
+
     }
 
     function getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, includeCompatibleMediaInfos = true) {
@@ -284,7 +288,7 @@ function AbrController() {
         })
 
         // Now sort by quality (usually simply by bitrate)
-        voRepresentations = _sortByCalculatedQualityRank(voRepresentations);
+        voRepresentations = _sortRepresentationsByQuality(voRepresentations);
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
@@ -443,15 +447,17 @@ function AbrController() {
         }
     }
 
-    /**
-     * Calculate a quality rank based on bandwidth, codec and qualityRanking. Lower value means better quality.
-     * @param voRepresentations
-     * @private
-     */
-    function _sortByCalculatedQualityRank(voRepresentations) {
+    function _sortRepresentationsByQuality(voRepresentations) {
+        if (_shouldSortByQualityRankingAttribute(voRepresentations)) {
+            voRepresentations = _sortByQualityRankingAttribute(voRepresentations)
+        } else {
+            voRepresentations = _sortByDefaultParameters(voRepresentations)
+        }
 
-        // All Representations must have a qualityRanking otherwise we ignore it
-        // QualityRanking only applies to Representations within one AS. If we merged multiple AS based on the adaptation-set-switching-2016 supplemental property we can not apply this logic
+        return voRepresentations
+    }
+
+    function _shouldSortByQualityRankingAttribute(voRepresentations) {
         let firstMediaInfo = null;
         const filteredRepresentations = voRepresentations.filter((rep) => {
             if (!firstMediaInfo) {
@@ -460,18 +466,45 @@ function AbrController() {
             return !isNaN(rep.qualityRanking) && adapter.areMediaInfosEqual(firstMediaInfo, rep.mediaInfo);
         })
 
-        if (filteredRepresentations.length === voRepresentations.length) {
-            voRepresentations.sort((a, b) => {
-                return b.qualityRanking - a.qualityRanking;
-            })
-        } else {
-            voRepresentations.sort((a, b) => {
-                return a.bandwidth - b.bandwidth;
-            })
-        }
+        return filteredRepresentations.length === voRepresentations.length
+    }
+
+    function _sortByQualityRankingAttribute(voRepresentations) {
+        voRepresentations.sort((a, b) => {
+            return b.qualityRanking - a.qualityRanking;
+        })
 
         return voRepresentations
     }
+
+
+    function _sortByDefaultParameters(voRepresentations) {
+        voRepresentations.sort((a, b) => {
+
+            // In case both Representations are coming from the same MediaInfo then choose the one with the highest resolution and highest bitrate
+            if (adapter.areMediaInfosEqual(a.mediaInfo, b.mediaInfo)) {
+                if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+                    return a.pixelsPerSecond - b.pixelsPerSecond
+                } else {
+                    return a.bandwidth - b.bandwidth
+                }
+            }
+
+            // In case the Representations are coming from different MediaInfos they might have different codecs. The bandwidth is not a good indicator, use bits per pixel instead
+            else {
+                if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+                    return a.pixelsPerSecond - b.pixelsPerSecond
+                } else if (!isNaN(a.bitsPerPixel) && !isNaN(b.bitsPerPixel)) {
+                    return b.bitsPerPixel - a.bitsPerPixel
+                } else {
+                    return a.bandwidth - b.bandwidth
+                }
+            }
+        })
+
+        return voRepresentations
+    }
+
 
     /**
      * While fragment loading is in progress we check if we might need to abort the request
@@ -496,6 +529,7 @@ function AbrController() {
             streamProcessor,
             currentRequest: e.request,
             throughputController,
+            adapter,
             videoModel
         });
         const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
@@ -618,6 +652,7 @@ function AbrController() {
                 switchRequestHistory,
                 droppedFramesHistory,
                 streamProcessor,
+                adapter,
                 videoModel
             });
             const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);

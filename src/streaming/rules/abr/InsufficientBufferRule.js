@@ -102,6 +102,10 @@ function InsufficientBufferRule(config) {
             const safeThroughput = throughput * settings.get().streaming.abr.rules.insufficientBufferRule.parameters.throughputSafetyFactor;
             const bitrate = safeThroughput * bufferLevel / fragmentDuration
 
+            if (isNaN(bitrate) || bitrate <= 0) {
+                return switchRequest
+            }
+
             switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true);
             switchRequest.reason = {
                 message: '[InsufficientBufferRule]: Limiting maximum bitrate to avoid a buffer underrun.',

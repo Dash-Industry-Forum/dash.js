@@ -1221,7 +1221,7 @@ function Settings() {
                         }
                     },
                     droppedFramesRule: {
-                        active: true,
+                        active: false,
                         parameters: {
                             minimumSampleSize: 375,
                             droppedFramesPercentageThreshold: 0.15

@@ -322,42 +322,77 @@ describe('AbrController', function () {
         expect(possibleVoRepresentations.length).to.be.equal(2);
     });
 
-    it('should return an appropriate Representation when calling getOptimalRepresentationForBitrate', function () {
-        const mediaInfo = streamProcessor.getMediaInfo();
-        const bitrateList = mediaInfo.bitrateList;
+    describe('getOptimalRepresentationForBitrate()', function () {
 
-        adapterMock.getVoRepresentations = () => {
-            return [
-                {
-                    bitrateInKbit: bitrateList[0].bandwidth / 1000,
-                    bandwidth: bitrateList[0].bandwidth,
-                    mediaInfo,
-                    id: 1
-                },
-                {
-                    bitrateInKbit: bitrateList[1].bandwidth / 1000,
-                    bandwidth: bitrateList[1].bandwidth,
-                    mediaInfo,
-                    id: 2
-                },
-                {
-                    bitrateInKbit: bitrateList[2].bandwidth / 1000,
-                    bandwidth: bitrateList[2].bandwidth,
-                    mediaInfo,
-                    id: 3
-                }
-            ]
-        }
+        it('Should return Representation with lowest bitrate', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            adapterMock.getVoRepresentations = () => {
+                return [
+                    {
+                        bitrateInKbit: 10,
+                        bandwidth: 10000,
+                        mediaInfo,
+                        id: 1
+                    },
+                    {
+                        bitrateInKbit: 5,
+                        bandwidth: 5000,
+                        mediaInfo,
+                        id: 3
+                    }
+                ]
+            }
 
-        adapterMock.areMediaInfosEqual = () => {
-            return true
-        }
+            adapterMock.areMediaInfosEqual = () => {
+                return true
+            }
 
-        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
-        mediaInfo.type = Constants.VIDEO;
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
 
-        let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, bitrateList[2].bandwidth / 1000);
-        expect(optimalRepresentationForBitrate.id).to.be.equal(3);
-    });
+            let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, 0);
+            expect(optimalRepresentationForBitrate.id).to.be.equal(3);
+        })
+
+        it('should return the right Representation in case only bitrate is given', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            const bitrateList = mediaInfo.bitrateList;
+
+            adapterMock.getVoRepresentations = () => {
+                return [
+                    {
+                        bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                        bandwidth: bitrateList[0].bandwidth,
+                        mediaInfo,
+                        id: 1
+                    },
+                    {
+                        bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                        bandwidth: bitrateList[1].bandwidth,
+                        mediaInfo,
+                        id: 2
+                    },
+                    {
+                        bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                        bandwidth: bitrateList[2].bandwidth,
+                        mediaInfo,
+                        id: 3
+                    }
+                ]
+            }
+
+            adapterMock.areMediaInfosEqual = () => {
+                return true
+            }
+
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+
+            let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, bitrateList[2].bandwidth / 1000);
+            expect(optimalRepresentationForBitrate.id).to.be.equal(3);
+        });
+    })
+
+
 
 });
