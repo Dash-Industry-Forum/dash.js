@@ -185,6 +185,18 @@ jobs:
                     configfile: lambdatest-smoke
             - process_test_results
 
+    functional-tests-single-and-smoke:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            -   run_test_suite:
+                    streamsfile: single
+                    configfile: lambdatest
+            -   run_test_suite:
+                    streamsfile: smoke
+                    configfile: lambdatest-smoke
+            - process_test_results
+
     functional-tests-full-part-1:
         executor: dashjs-executor
         steps:
@@ -222,14 +234,7 @@ workflows:
                         branches:
                             ignore:
                                 - development # skiping redundant job if already on development
-            -   functional-tests-single:
-                    filters:
-                        branches:
-                            ignore: # as creds are available only for non-forked branches
-                                - /pull\/[0-9]+/
-            -   functional-tests-smoke:
-                    requires:
-                        - functional-tests-single
+            -   functional-tests-single-and-smoke:
                     filters:
                         branches:
                             ignore: # as creds are available only for non-forked branches
