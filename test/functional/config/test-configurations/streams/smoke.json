@@ -9,6 +9,17 @@
   },
   "testvectors": [
     {
+      "name": "MSS",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
       "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/Dash/protected_dash_1080p_h264_singlekey/manifest.mpd",
@@ -105,17 +116,6 @@
       "name": "Audio only live",
       "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
       "type": "live",
-      "includedTestfiles": [
-        "playback/play",
-        "playback/pause",
-        "playback/seek",
-        "playback/seek-to-presentation-time"
-      ]
-    },
-    {
-      "name": "MSS",
-      "type": "vod",
-      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
       "includedTestfiles": [
         "playback/play",
         "playback/pause",

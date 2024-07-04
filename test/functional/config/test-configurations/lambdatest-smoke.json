@@ -1,10 +1,10 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_mac_sonoma"
+    "chrome_windows_11"
   ],
   "hostname": "localhost",
-  "port": 9876,
+  "port": 9877,
   "protocol": "http",
   "customLaunchers": {
     "chrome_windows_11": {
