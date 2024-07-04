@@ -127,6 +127,7 @@ module.exports = function (config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
 
+        captureTimeout: 600000,
         browserNoActivityTimeout: 120000,
         browserDisconnectTimeout: 20000,
         browserDisconnectTolerance: 2,
