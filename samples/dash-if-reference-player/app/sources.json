@@ -307,8 +307,8 @@
                     "provider": "aws"
                 },
                 {
-                    "name": "LiveSIM Caminandes 02, Gran Dillama (25fps, 25gop, 2sec, multi MOOF/MDAT, 1080p, KID=1236) v2",
-                    "url": "http://refapp.hbbtv.org/livesim2/02_llamav2/manifest.mpd",
+                    "name": "Main (3 video bitrates, 2 audio languages,3 subtitle languages) + Advertisement, Multiperiod",
+                    "url": "https://refapp.hbbtv.org/videos/multiperiod_v8.php?drm=0&advert=1&emsg=0&video=v1,v2,v3&audiolang=eng,fin&sublang=eng,fin,swe&mup=2&spd=8",
                     "provider": "hbbtv"
                 },
                 {

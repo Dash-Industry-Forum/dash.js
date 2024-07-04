@@ -2653,7 +2653,7 @@ function MediaPlayer() {
         if (value.lang) {
             output.lang = value.lang;
         }
-        if (value.index) {
+        if (!isNaN(value.index)) {
             output.index = value.index;
         }
         if (value.viewpoint) {

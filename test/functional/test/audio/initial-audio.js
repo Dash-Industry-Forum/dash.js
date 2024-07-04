@@ -42,11 +42,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 playerAdapter.destroy();
                 playerAdapter = initializeDashJsAdapter(item, mpd)
                 playerAdapter.setInitialMediaSettingsFor(Constants.DASH_JS.MEDIA_TYPES.AUDIO, {
-                    lang: track.lang
+                    lang: track.lang,
+                    index: track.index
                 })
                 await checkIsProgressing(playerAdapter);
                 const currentTrack = playerAdapter.getCurrentTrackFor(Constants.DASH_JS.MEDIA_TYPES.AUDIO);
                 expect(currentTrack.lang).to.be.equal(track.lang);
+                expect(currentTrack.index).to.be.equal(track.index);
             }
         });
 

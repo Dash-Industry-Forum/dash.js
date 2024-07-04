@@ -768,6 +768,10 @@ function MediaController() {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
 
         if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestEfficiency(tmpArr);
+        }
+
+        if (tmpArr.length > 1) {
             tmpArr = getTracksWithHighestBitrate(tmpArr);
         }
 

@@ -1,10 +1,10 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_windows_11"
+    "edge_windows_11"
   ],
   "hostname": "localhost",
-  "port": 9876,
+  "port": 9877,
   "protocol": "http",
   "customLaunchers": {
     "chrome_windows_11": {
@@ -16,7 +16,24 @@
       "console": true,
       "terminal": true,
       "network": true,
-      "pseudoActivityInterval": 5000,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true,
+      "flags": [
+        "--disable-web-security",
+        "--autoplay-policy=no-user-gesture-required",
+        "--disable-popup-blocking"
+      ]
+    },
+    "edge_windows_11": {
+      "base": "WebDriver",
+      "browserName": "edge",
+      "platform": "windows 11",
+      "version": "latest",
+      "name": "Edge Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
       "tunnel": true
     }
   },
