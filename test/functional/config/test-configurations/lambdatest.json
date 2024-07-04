@@ -1,7 +1,6 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "chrome_windows_11",
     "firefox_windows_11",
     "edge_windows_11",
     "chrome_mac_sonoma"
