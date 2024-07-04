@@ -1,7 +1,7 @@
 {
   "type": "lambdatest",
   "browsers": [
-    "edge_windows_11"
+    "chrome_mac_sonoma"
   ],
   "hostname": "localhost",
   "port": 9876,
@@ -25,6 +25,18 @@
       "platform": "windows 11",
       "version": "latest",
       "name": "Edge Win 11",
+      "console": true,
+      "terminal": true,
+      "network": true,
+      "pseudoActivityInterval": 30000,
+      "tunnel": true
+    },
+    "chrome_mac_sonoma": {
+      "base": "WebDriver",
+      "browserName": "chrome",
+      "platform": "macOS Sonoma",
+      "version": "latest",
+      "name": "Chrome MacOS sonoma",
       "console": true,
       "terminal": true,
       "network": true,
