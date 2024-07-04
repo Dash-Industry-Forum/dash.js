@@ -110,7 +110,7 @@ module.exports = function (config) {
         client: {
             useIframe: false,
             mocha: {
-                timeout: 120000
+                timeout: 90000
             },
             testvectors
         },
