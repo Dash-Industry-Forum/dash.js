@@ -664,7 +664,20 @@ function DashManifestModel() {
                     voRepresentation.scanType = realRepresentation.scanType;
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.FRAMERATE)) {
-                    voRepresentation.frameRate = realRepresentation[DashConstants.FRAMERATE];
+                    const frameRate = realRepresentation[DashConstants.FRAMERATE];
+                    if (isNaN(frameRate) && frameRate.includes('/')) {
+                        const parts = frameRate.split('/');
+                        if (parts.length === 2) {
+                            const numerator = parseFloat(parts[0]);
+                            const denominator = parseFloat(parts[1]);
+
+                            if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                                voRepresentation.frameRate = numerator / denominator;
+                            }
+                        }
+                    } else {
+                        voRepresentation.frameRate = frameRate
+                    }
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.QUALITY_RANKING)) {
                     voRepresentation.qualityRanking = realRepresentation[DashConstants.QUALITY_RANKING];
@@ -763,8 +776,18 @@ function DashManifestModel() {
                     }
                 }
 
+                voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
+                voRepresentation.supplementalProperties = getSupplementalPropertiesForRepresentation(realRepresentation);
                 voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
+
+                if (!isNaN(voRepresentation.width) && !isNaN(voRepresentation.height) && !isNaN(voRepresentation.frameRate)) {
+                    voRepresentation.pixelsPerSecond = Math.max(1, voRepresentation.width * voRepresentation.height * voRepresentation.frameRate)
+                    if (!isNaN(voRepresentation.bandwidth)) {
+                        voRepresentation.bitsPerPixel = voRepresentation.bandwidth / voRepresentation.pixelsPerSecond
+                    }
+                }
+
                 voRepresentations.push(voRepresentation);
             }
         }

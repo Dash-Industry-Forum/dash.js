@@ -44,8 +44,10 @@ class Representation {
         this.availabilityTimeOffset = 0;
         this.bandwidth = NaN;
         this.bitrateInKbit = NaN;
+        this.bitsPerPixel = NaN;
         this.codecPrivateData = null;
         this.codecs = null;
+        this.essentialProperties = [];
         this.fragmentDuration = null;
         this.frameRate = null;
         this.height = NaN;
@@ -57,6 +59,7 @@ class Representation {
         this.mediaInfo = null;
         this.mimeType = null;
         this.mseTimeOffset = NaN;
+        this.pixelsPerSecond = NaN;
         this.presentationTimeOffset = 0;
         this.qualityRanking = NaN;
         this.range = null;
@@ -64,6 +67,7 @@ class Representation {
         this.segments = null;
         this.segmentDuration = NaN;
         this.segmentInfoType = null;
+        this.supplementalProperties = [];
         this.startNumber = 1;
         this.timescale = 1;
         this.width = NaN;

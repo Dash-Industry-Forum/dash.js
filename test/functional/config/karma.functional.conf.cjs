@@ -110,7 +110,7 @@ module.exports = function (config) {
         client: {
             useIframe: false,
             mocha: {
-                timeout: 120000
+                timeout: 90000
             },
             testvectors
         },
@@ -127,7 +127,8 @@ module.exports = function (config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
 
-        browserNoActivityTimeout: 120000,
+        captureTimeout: 600000,
+        browserNoActivityTimeout: 180000,
         browserDisconnectTimeout: 20000,
         browserDisconnectTolerance: 2,
 

@@ -510,6 +510,9 @@ function BufferController(config) {
                     return updateBufferTimestampOffset(voRepresentation)
                 })
                 .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
                     setIsBufferingCompleted(false);
                     resolve();
                 })
@@ -519,18 +522,59 @@ function BufferController(config) {
         });
     }
 
-    function prepareForReplacementTrackSwitch(representation) {
+    function prepareForAbandonQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForFastQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForDefaultQualitySwitch(voRepresentation) {
+        return new Promise((resolve, reject) => {
+            updateBufferTimestampOffset(voRepresentation)
+                .then(() => {
+                    return changeType(voRepresentation)
+                })
+                .then(() => {
+                    resolve()
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForReplacementTrackSwitch(selectedRepresentation) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
                     return updateAppendWindow();
                 })
                 .then(() => {
-                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(representation);
-                    }
-
-                    return Promise.resolve();
+                    return changeType(selectedRepresentation)
                 })
                 .then(() => {
                     return pruneAllSafely();
@@ -549,11 +593,7 @@ function BufferController(config) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
                 .then(() => {
-                    if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-                        return sourceBufferSink.changeType(selectedRepresentation);
-                    }
-
-                    return Promise.resolve();
+                    return changeType(selectedRepresentation)
                 })
                 .then(() => {
                     resolve();
@@ -562,6 +602,13 @@ function BufferController(config) {
                     reject(e);
                 });
         });
+    }
+
+    function changeType(selectedRepresentation) {
+        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
+            return sourceBufferSink.changeType(selectedRepresentation);
+        }
+        return Promise.resolve()
     }
 
     function pruneAllSafely() {
@@ -1237,6 +1284,7 @@ function BufferController(config) {
 
     instance = {
         appendInitSegmentFromCache,
+        changeType,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,
@@ -1253,6 +1301,9 @@ function BufferController(config) {
         getType,
         hasBufferAtTime,
         initialize,
+        prepareForAbandonQualitySwitch,
+        prepareForDefaultQualitySwitch,
+        prepareForFastQualitySwitch,
         prepareForForceReplacementQualitySwitch,
         prepareForNonReplacementTrackSwitch,
         prepareForPlaybackSeek,

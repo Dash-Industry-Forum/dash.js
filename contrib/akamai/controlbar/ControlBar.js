@@ -537,6 +537,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 contentFunc = function (element, index) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrateInKbit) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
+                    result += element && element.codecs ? ' (' + element.codecs + ')' : '';
                     return result;
                 };
 
