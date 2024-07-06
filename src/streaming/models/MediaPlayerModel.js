@@ -126,12 +126,12 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getCatchupMaxDrift() {
-        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift >= 0) {
             return settings.get().streaming.liveCatchup.maxDrift;
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift > 0) {
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift >= 0) {
             return serviceDescriptionSettings.liveCatchup.maxDrift;
         }
 
