@@ -932,7 +932,7 @@ function StreamProcessor(config) {
         // Init segment could not be loaded. If we have multiple baseUrls we still have a chance to get a valid segment.
         if (e.request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
             _onInitFragmentNeeded({
-                representationId: e.request.representationId,
+                representationId: e.request.representation.id,
                 sender: {}
             }, false)
         }
