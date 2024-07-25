@@ -1,9 +1,3 @@
-/simple.html
-samples/mpds
-#################
-## Node.js
-#################
-
 node_modules
 npm-debug.log
 
@@ -192,3 +186,6 @@ build/typings/
 #Karma Functional tests
 test/functional-karma/coverage
 test/functional-karma/results
+
+# Dist files
+dash.d.ts
