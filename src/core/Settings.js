@@ -1025,6 +1025,10 @@ function Settings() {
         'streaming.abr.rules.abandonRequestsRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
         'streaming.abr.rules.l2ARule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
         'streaming.abr.rules.loLPRule.active': Events.SETTING_UPDATED_ABR_ACTIVE_RULES,
+        'streaming.abr.maxBitrate.video': Events.SETTING_UPDATED_MAX_BITRATE,
+        'streaming.abr.maxBitrate.audio': Events.SETTING_UPDATED_MAX_BITRATE,
+        'streaming.abr.minBitrate.video': Events.SETTING_UPDATED_MIN_BITRATE,
+        'streaming.abr.minBitrate.audio': Events.SETTING_UPDATED_MIN_BITRATE,
     };
 
     /**

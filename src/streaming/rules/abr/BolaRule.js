@@ -80,10 +80,12 @@ function BolaRule(config) {
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
     }
 
     /**
-     * If we rebuffer, we don't want the placeholder buffer to artificially raise BOLA quality
+     * If the buffer is empty, we don't want the placeholder buffer to artificially raise BOLA quality
      * @param {object} e
      * @private
      */
@@ -111,11 +113,21 @@ function BolaRule(config) {
             if (bolaStateDict[streamId].hasOwnProperty(mediaType)) {
                 const bolaState = bolaStateDict[streamId][mediaType];
                 if (bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-                    bolaState.state = BOLA_STATE_STARTUP; // TODO: BOLA_STATE_SEEK?
+                    bolaState.state = BOLA_STATE_STARTUP;
                     _clearBolaStateOnSeek(bolaState);
                 }
             }
         }
+    }
+
+    function _clearBolaStateOnSeek(bolaState) {
+        bolaState.placeholderBuffer = 0;
+        bolaState.mostAdvancedSegmentStart = NaN;
+        bolaState.lastSegmentWasReplacement = false;
+        bolaState.lastSegmentStart = NaN;
+        bolaState.lastSegmentDurationS = NaN;
+        bolaState.lastSegmentRequestTimeMs = NaN;
+        bolaState.lastSegmentFinishTimeMs = NaN;
     }
 
     /**
@@ -124,13 +136,54 @@ function BolaRule(config) {
      * @private
      */
     function _onMetricAdded(e) {
-        if (e && e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
-            const bolaState = bolaStateDict[e.streamId] && bolaStateDict[e.streamId][e.mediaType] ? bolaStateDict[e.streamId][e.mediaType] : null;
-            if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
-                bolaState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
-                bolaState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
-                _checkNewSegment(bolaState, e.mediaType);
+        try {
+            if (e && e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
+                const bolaState = bolaStateDict[e.value._streamId] && bolaStateDict[e.value._streamId][e.mediaType] ? bolaStateDict[e.value._streamId][e.mediaType] : null;
+                if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
+                    bolaState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
+                    bolaState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
+                    _checkNewSegment(bolaState, e.mediaType);
+                }
             }
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * When a new segment is downloaded, we get two notifications: onMediaFragmentLoaded() and onMetricAdded(). It is
+     * possible that the quality for the downloaded segment was lower (not higher) than the quality indicated by BOLA.
+     * This might happen because of other rules such as the DroppedFramesRule. When this happens, we trim the
+     * placeholder buffer to make BOLA more stable. This mechanism also avoids inflating the buffer when BOLA itself
+     * decides not to increase the quality to avoid oscillations.
+     *
+     * We should also check for replacement segments (fast switching). In this case, a segment is downloaded but does
+     * not grow the actual buffer. Fast switching might cause the buffer to deplete, causing BOLA to drop the bitrate.
+     * We avoid this by growing the placeholder buffer.
+     * @param bolaState
+     * @param mediaType
+     */
+    function _checkNewSegment(bolaState, mediaType) {
+        if (!isNaN(bolaState.lastSegmentStart) && !isNaN(bolaState.lastSegmentRequestTimeMs) && !isNaN(bolaState.placeholderBuffer)) {
+            bolaState.placeholderBuffer *= PLACEHOLDER_BUFFER_DECAY;
+
+            // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
+            if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+                const bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
+                const maxEffectiveBufferForLastSegment = _maxBufferLevelForRepresentation(bolaState, bolaState.currentRepresentation);
+                const maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
+                bolaState.placeholderBuffer = Math.min(maxPlaceholderBuffer, bolaState.placeholderBuffer);
+            }
+
+            // then see if we should grow placeholder buffer
+            if (bolaState.lastSegmentWasReplacement && !isNaN(bolaState.lastSegmentDurationS)) {
+                // compensate for segments that were downloaded but did not grow the buffer
+                bolaState.placeholderBuffer += bolaState.lastSegmentDurationS;
+            }
+
+            bolaState.lastSegmentStart = NaN;
+            bolaState.lastSegmentRequestTimeMs = NaN;
         }
     }
 
@@ -182,7 +235,7 @@ function BolaRule(config) {
     }
 
     /**
-     *  NOTE: in live streaming, the real buffer level can drop below minimumBufferS, but bola should not stick to lowest bitrate by using a placeholder buffer level
+     *  NOTE: in live streaming, the real buffer level can drop below minimumBufferS, but BOLA should not stick to lowest bitrate by using a placeholder buffer level
      * @param bufferTimeDefault
      * @param representations
      * @param utilities
@@ -209,21 +262,6 @@ function BolaRule(config) {
         // note that expressions for gp and Vp assume utilities[0] === 1, which is true because of normalization
 
         return { gp: gp, Vp: Vp };
-    }
-
-    /**
-     *
-     * @param bolaState
-     * @private
-     */
-    function _clearBolaStateOnSeek(bolaState) {
-        bolaState.placeholderBuffer = 0;
-        bolaState.mostAdvancedSegmentStart = NaN;
-        bolaState.lastSegmentWasReplacement = false;
-        bolaState.lastSegmentStart = NaN;
-        bolaState.lastSegmentDurationS = NaN;
-        bolaState.lastSegmentRequestTimeMs = NaN;
-        bolaState.lastSegmentFinishTimeMs = NaN;
     }
 
     /**
@@ -268,7 +306,7 @@ function BolaRule(config) {
         let quality = NaN;
         let score = NaN;
         for (let i = 0; i < bitrateCount; ++i) {
-            let s = (bolaState.Vp * (bolaState.utilities[i] + bolaState.gp) - bufferLevel) / bolaState.representations[i].bandwidth;
+            let s = (bolaState.Vp * (bolaState.utilities[i] - 1 + bolaState.gp) - bufferLevel) / bolaState.representations[i].bandwidth;
             if (isNaN(score) || s >= score) {
                 score = s;
                 quality = i;
@@ -348,42 +386,13 @@ function BolaRule(config) {
     }
 
     /**
-     * When a new segment is downloaded, we get two notifications: onMediaFragmentLoaded() and onMetricAdded(). It is
-     * possible that the quality for the downloaded segment was lower (not higher) than the quality indicated by BOLA.
-     * This might happen because of other rules such as the DroppedFramesRule. When this happens, we trim the
-     * placeholder buffer to make BOLA more stable. This mechanism also avoids inflating the buffer when BOLA itself
-     * decides not to increase the quality to avoid oscillations.
-     *
-     * We should also check for replacement segments (fast switching). In this case, a segment is downloaded but does
-     * not grow the actual buffer. Fast switching might cause the buffer to deplete, causing BOLA to drop the bitrate.
-     * We avoid this by growing the placeholder buffer.
-     * @param bolaState
-     * @param mediaType
+     * We need to reset the Bola State once the min/max bitrate settings have been updated. Otherwise, the utility function works on outdated values
+     * @private
      */
-    function _checkNewSegment(bolaState, mediaType) {
-        if (!isNaN(bolaState.lastSegmentStart) && !isNaN(bolaState.lastSegmentRequestTimeMs) && !isNaN(bolaState.placeholderBuffer)) {
-            bolaState.placeholderBuffer *= PLACEHOLDER_BUFFER_DECAY;
-
-            // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
-            if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-                const bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
-                const maxEffectiveBufferForLastSegment = _maxBufferLevelForRepresentation(bolaState, bolaState.currentRepresentation);
-                const maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
-                bolaState.placeholderBuffer = Math.min(maxPlaceholderBuffer, bolaState.placeholderBuffer);
-            }
-
-            // then see if we should grow placeholder buffer
-
-            if (bolaState.lastSegmentWasReplacement && !isNaN(bolaState.lastSegmentDurationS)) {
-                // compensate for segments that were downloaded but did not grow the buffer
-                bolaState.placeholderBuffer += bolaState.lastSegmentDurationS;
-            }
-
-            bolaState.lastSegmentStart = NaN;
-            bolaState.lastSegmentRequestTimeMs = NaN;
-        }
+    function _onMinMaxBitrateUpdated() {
+        resetInitialSettings()
     }
+
 
     /**
      * The minimum buffer level that would cause BOLA to choose target quality rather than a lower bitrate
@@ -606,6 +615,8 @@ function BolaRule(config) {
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
     }
 
     instance = {

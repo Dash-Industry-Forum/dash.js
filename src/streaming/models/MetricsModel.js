@@ -37,7 +37,11 @@ import BufferLevel from '../vo/metrics/BufferLevel.js';
 import BufferState from '../vo/metrics/BufferState.js';
 import DVRInfo from '../vo/metrics/DVRInfo.js';
 import DroppedFrames from '../vo/metrics/DroppedFrames.js';
-import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo} from '../vo/metrics/ManifestUpdate.js';
+import {
+    ManifestUpdate,
+    ManifestUpdateStreamInfo,
+    ManifestUpdateRepresentationInfo
+} from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import EventBus from '../../core/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
@@ -192,6 +196,7 @@ function MetricsModel(config) {
         vo._serviceLocation = request.serviceLocation || null;
         vo._fileLoaderType = request.fileLoaderType;
         vo._resourceTimingValues = request.resourceTimingValues;
+        vo._streamId = request && request.representation && request.representation.mediaInfo && request.representation.mediaInfo.streamInfo ? request.representation.mediaInfo.streamInfo.id : null;
 
         if (traces) {
             traces.forEach(trace => {
