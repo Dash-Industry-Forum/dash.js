@@ -90,6 +90,8 @@ class CoreEvents extends EventsBase {
         this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
         this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
         this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+        this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+        this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
     }
 }
 

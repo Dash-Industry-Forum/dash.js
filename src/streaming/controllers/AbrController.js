@@ -771,12 +771,12 @@ function AbrController() {
             const switchOnThreshold = bufferTimeDefault;
             const switchOffThreshold = 0.5 * bufferTimeDefault;
 
-            const useBufferABR = abrRulesCollection.getBolaState(mediaType)
-            const newUseBufferABR = bufferLevel > (useBufferABR ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
-            abrRulesCollection.setBolaState(mediaType, newUseBufferABR);
+            const isUsingBolaRule = abrRulesCollection.getBolaState(mediaType)
+            const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+            abrRulesCollection.setBolaState(mediaType, shouldUseBolaRule);
 
-            if (newUseBufferABR !== useBufferABR) {
-                if (newUseBufferABR) {
+            if (shouldUseBolaRule !== isUsingBolaRule) {
+                if (shouldUseBolaRule) {
                     logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
                 } else {
                     logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
