@@ -47,7 +47,7 @@ player.updateSettings({
 | ABR Rule         | Description                            |
 |:-----------------|:---------------------------------------|
 | `throughputRule` | [ThroughputRule](throughput-rule.html) |
-| `bolaRule`       | tbd                                    |
+| `bolaRule`       | [BolaRule](bola-rule.html)             |
 
 **Important**: If both `throughputRule` and `bolaRule` are enabled dash.js dynamically switches between those two
 rules based on the current buffer level.
@@ -91,7 +91,7 @@ player.updateSettings({
 | ABR Rule                 | Description                                             |
 |:-------------------------|:--------------------------------------------------------|
 | `insufficientBufferRule` | [InsufficientBufferRule](insufficient-buffer-rule.html) |
-| `switchHistoryRule`      | tbd                                                     |
+| `switchHistoryRule`      | [SwitchHistoryRule](switch-history-rule.html)           |
 | `droppedFramesRule`      | [DroppedFramesRule](dropped-frames-rule.html)           |
 | `abandonRequestsRule`    | [AbandonRequestRule](abandon-request-rule.html)         |
 | `l2ARule`                | [L2ARule](l2a.html)                                     |
