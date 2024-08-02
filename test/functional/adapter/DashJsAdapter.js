@@ -1,5 +1,6 @@
 import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
+import dashjs from '../../../dist/dash.all.min.js'
 
 class DashJsAdapter {
 

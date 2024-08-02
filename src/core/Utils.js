@@ -34,8 +34,8 @@
  * @ignore
  */
 
-import path from 'path-browserify'
-import {UAParser} from 'ua-parser-js'
+import path from 'path-browserify-esm';
+import Bowser from 'bowser';
 
 class Utils {
     static mixin(dest, source, copy) {
@@ -192,9 +192,9 @@ class Utils {
 
     static parseUserAgent(ua = null) {
         try {
-            const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
+            const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent : '' : '';
 
-            return UAParser(uaString);
+            return Bowser.getParser(uaString);
         } catch (e) {
             return {};
         }

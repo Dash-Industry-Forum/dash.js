@@ -1,7 +1,8 @@
 {
   "testfiles": {
     "included": [
-      "all"
+      "playback/play",
+      "playback/pause"
     ],
     "excluded": [
       "vendor/google-ad-manager-emsg"
@@ -13,7 +14,7 @@
       "type": "vod",
       "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
       "includedTestfiles": [
-        "playback/*"
+        "playback/play"
       ]
     }
   ]

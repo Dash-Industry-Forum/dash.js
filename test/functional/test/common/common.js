@@ -1,5 +1,5 @@
 import Constants from '../../src/Constants.js';
-import {expect} from 'chai';
+import { expect } from '@esm-bundle/chai';
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 
 export async function checkIsPlaying(playerAdapter, expectedState) {

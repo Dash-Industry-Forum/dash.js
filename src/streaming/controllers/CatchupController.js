@@ -122,7 +122,7 @@ function CatchupController() {
     function _resetInitialSettings() {
         isCatchupSeekInProgress = false;
         const ua = Utils.parseUserAgent();
-        isSafari = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'safari';
+        isSafari = ua && ua.parsedResult && ua.parsedResult.browser && ua.parsedResult.browser.name && ua.parsedResult.browser.name.toLowerCase() === 'safari';
     }
 
 

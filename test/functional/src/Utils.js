@@ -1,7 +1,7 @@
 class Utils {
 
     static getTestvectorsForTestcase(testcase) {
-        const testvectors = window.__karma__.config.testvectors
+        const testvectors = window.testrunnerConfig.testvectors;
 
         if (!testvectors || testvectors.length === 0) {
             return []
