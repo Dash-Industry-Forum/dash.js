@@ -76,7 +76,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
         if (seg) {
-            seg.replacementTime = Math.round((index - 1) * representation.segmentDuration * representation.timescale, 10);
+            seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
 
             let url = template.media;
             url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
