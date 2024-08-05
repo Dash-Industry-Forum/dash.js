@@ -1,6 +1,6 @@
 const { merge } = require('webpack-merge');
 const ESLintPlugin = require('eslint-webpack-plugin');
-const common = require('./webpack.base.cjs').config;
+const { umdConfig, esmConfig } = require('./webpack.base.cjs');
 
 const entries = {
     'dash.all': './index.js',
@@ -11,7 +11,7 @@ const entries = {
     'dash.offline': './src/offline/index.js'
 }
 
-const configDev = merge(common, {
+const configDevUmd = merge(umdConfig, {
     mode: 'development',
     entry: entries,
     output: {
@@ -19,7 +19,7 @@ const configDev = merge(common, {
     }
 });
 
-const configProd = merge(common, {
+const configProdUmd = merge(umdConfig, {
     mode: 'production',
     entry: entries,
     output: {
@@ -37,4 +37,30 @@ const configProd = merge(common, {
     ]
 });
 
-module.exports = [configDev, configProd];
+const configDevEsm = merge(esmConfig, {
+    mode: 'development',
+    entry: entries,
+    output: {
+        filename: '[name].debug.esm.js'
+    }
+});
+
+const configProdEsm = merge(esmConfig, {
+    mode: 'production',
+    entry: entries,
+    output: {
+        filename: '[name].min.esm.js'
+    },
+    performance: { hints: false },
+    plugins: [
+        new ESLintPlugin({
+            files: [
+                'src/**/*.js',
+                'test/unit/mocks/*.js',
+                'test/unit/test/**/*.js'
+            ]
+        })
+    ]
+});
+
+module.exports = [configDevUmd, configProdUmd, configDevEsm, configProdEsm];
