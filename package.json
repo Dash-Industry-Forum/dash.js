@@ -14,7 +14,6 @@
     }
   },
   "type": "module",
-  "types": "index.d.ts",
   "scripts": {
     "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
     "start": "webpack serve --config build/webpack.dev.cjs",
