@@ -23,16 +23,5 @@ const umdDevConfig = merge(umdConfig, {
     }
 });
 
-const esmDevConfig = merge(esmConfig, {
-    mode: 'development',
-    entry: {
-        'dash.all': './index.js',
-        'dash.mss': './src/mss/index.js',
-        'dash.offline': './src/offline/index.js'
-    },
-    output: {
-        filename: '[name].debug.esm.js',
-    },
-});
 
-module.exports = [umdDevConfig, esmDevConfig];
+module.exports = [umdDevConfig];
