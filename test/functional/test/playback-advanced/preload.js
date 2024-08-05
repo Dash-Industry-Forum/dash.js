@@ -1,5 +1,6 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
+import { expect } from '@esm-bundle/chai';
 
 import {
     checkIsNotProgressing,
@@ -7,8 +8,7 @@ import {
     checkIsProgressing,
     checkNoCriticalErrors,
     initializeDashJsAdapterForPreload
-} from '../common/common.js';
-import {expect} from 'chai';
+} from '../common/common.js';;
 
 const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.PRELOAD;
 

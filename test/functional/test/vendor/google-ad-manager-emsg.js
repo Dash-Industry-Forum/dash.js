@@ -1,6 +1,6 @@
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import GoogleAdManagerAdapter from '../../adapter/GoogleAdManagerAdapter.js';
-import {expect} from 'chai'
+import { expect } from '@esm-bundle/chai';
 import {checkForEndedEvent, checkIsPlaying, checkIsProgressing, checkNoCriticalErrors} from '../common/common.js';
 
 let playerAdapter;

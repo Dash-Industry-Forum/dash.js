@@ -7,7 +7,12 @@ const { esbuildPlugin } = require('@web/dev-server-esbuild');
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const { fromRollup } = require('@web/dev-server-rollup');
 const commonjs = fromRollup(rollupCommonjs);
-
+const { seleniumLauncher } = require('@web/test-runner-selenium');
+const webdriver = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
+const { defaultReporter } = require('@web/test-runner');
+const { junitReporter } = require('@web/test-runner-junit-reporter');
+const { summaryReporter } = require('@web/test-runner');
 
 const argv = yargs(hideBin(process.argv)).parse()
 // Find the settings JSON object in the command arguments
@@ -28,27 +33,33 @@ if (testConfiguration && testConfiguration.type && testConfiguration.type === 'l
     testConfiguration = _adjustConfigurationForLambdatest(testConfiguration)
 }
 
+let options = new chrome.Options();
+options.addArguments('--disable-web-security');
+options.addArguments('--autoplay-policy=no-user-gesture-required');
+options.addArguments('--disable-popup-blocking');
+
 module.exports = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     rootDir: '../../../',
 
     // web server port
-    //hostname: testConfiguration.hostname ? testConfiguration.hostname : 'localhost',
-    //port: testConfiguration.port ? testConfiguration.port : 9876,
-    //protocol: testConfiguration.protocol ? testConfiguration.protocol : 'http',
+    hostname: testConfiguration.hostname ? testConfiguration.hostname : 'localhost',
+    port: testConfiguration.port ? testConfiguration.port : 9876,
+    protocol: testConfiguration.protocol ? testConfiguration.protocol : 'http:',
 
 
     // list of files / patterns to load in the browser
     files: [
         '!test/functional/test/common/*.js',
+        '!dist/dash.mss.min.js'
     ].concat(includedTestfiles).concat(excludedTestfiles),
 
     // JS language target to compile down to using esbuild. Recommended value is "auto", which compiles based on user-agent.
     esbuildTarget: 'auto',
 
     // whether to analyze code coverage
-    coverage: true,
+    coverage: false,
 
     // amount of browsers to run concurrently
     concurrentBrowsers: 1,
@@ -59,25 +70,19 @@ module.exports = {
     // 	Resolve bare module imports using node resolution.
     nodeResolve: true,
 
-    browsers: [
-        chromeLauncher({
-            launchOptions: {
-                headless: false,
-                devtools: false,
-                args: [
-                    "--disable-web-security",
-                    "--autoplay-policy=no-user-gesture-required",
-                    "--disable-popup-blocking",
-                    "--disable-background-timer-throttling"
-                ]
-            }
-        })
-    ],
+    browsers: [seleniumLauncher({
+        driverBuilder: new webdriver.Builder()
+            .forBrowser('chrome')
+            .setChromeOptions(options)
+            .usingServer('http://localhost:4444/wd/hub'),
+    })],
 
     plugins: [
         commonjs({
             include: [
-                'dist/dash.all.min.js',
+                'node_modules/fast-deep-equal/index.js',
+                'node_modules/codem-isoboxer/dist/iso_boxer.js',
+                'node_modules/imsc/src/main/js/main.js'
             ],
         })
     ],
@@ -87,6 +92,20 @@ module.exports = {
             timeout: '90000'
         }
     },
+
+    reporters: [
+        defaultReporter({
+            reportTestResults: false,
+            reportTestProgress: true,
+        }),
+        junitReporter({
+            outputPath: `test/functional/results/test/junit/${Date.now()}.xml`, // default `'./test-results.xml'`
+            reportLogs: true, // default `false`
+        }),
+        summaryReporter({
+            flatten: false
+        })
+    ],
 
     debug: true,
 

@@ -5,7 +5,7 @@
   ],
   "hostname": "localhost",
   "port": 4200,
-  "protocol": "http",
+  "protocol": "http:",
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",

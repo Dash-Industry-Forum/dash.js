@@ -1,13 +1,12 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
-
+import { expect } from '@esm-bundle/chai';
 import {
     checkIsPlaying,
     checkIsProgressing,
     checkNoCriticalErrors,
     initializeDashJsAdapter
 } from '../common/common.js';
-import {expect} from 'chai';
 
 const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.CMCD;
 

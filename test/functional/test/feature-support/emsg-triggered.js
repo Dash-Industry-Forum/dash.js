@@ -1,6 +1,6 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
-import {expect} from 'chai'
+import { expect } from '@esm-bundle/chai';
 import {checkIsPlaying, checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
 
 const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED;
