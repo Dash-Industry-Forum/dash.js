@@ -9,6 +9,7 @@
       "types": "./index.d.ts",
       "import": "./dist/esm/dash.all.debug.esm.js",
       "default": "./dist/esm/dash.all.debug.esm.js",
+      "browser": "./dist/dash.all.min.js",
       "script": "./dist/dash.all.min.js"
     }
   },
