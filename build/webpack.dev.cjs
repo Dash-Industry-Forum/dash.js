@@ -1,5 +1,5 @@
 const { merge } = require('webpack-merge');
-const { umdConfig, esmConfig } = require('./webpack.base.cjs');
+const { umdConfig } = require('./webpack.base.cjs');
 const path = require('path');
 
 const umdDevConfig = merge(umdConfig, {
