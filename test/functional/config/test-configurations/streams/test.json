@@ -9,11 +9,14 @@
   },
   "testvectors": [
     {
-      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "name": "MPD Patching with $time",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "testdata": {
+        "mpdPatching": true
+      },
       "includedTestfiles": [
-        "playback/seek-to-presentation-time"
+        "feature-support/mpd-patching"
       ]
     }
   ]

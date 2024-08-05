@@ -34,7 +34,7 @@
  * @ignore
  */
 
-import path from 'path-browserify-esm';
+import path from 'path-browserify';
 import Bowser from 'bowser';
 
 class Utils {

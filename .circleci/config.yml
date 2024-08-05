@@ -29,36 +29,25 @@ commands:
             -   run:
                     name: Check if preconditions are met for functional tests
                     command: |
-                        if [ -z "LAMBDATEST_ACCESS_KEY" ]; then
-                            echo "Lambdatest not configured, functional tests will not be executed."
+                        if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
+                            echo "BrowserStack not configured, functional tests will not be executed."
                             circleci-agent step halt
                         fi
 
     functional_test_setup:
         steps:
             -   run:
-                    name: "Downloading tunnel binary"
-                    command: |
-                        wget https://downloads.lambdatest.com/tunnel/v3/linux/64bit/LT_Linux.zip
+                    name: Download the browserstack binary file to create a tunnel
+                    command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
 
             -   run:
-                    name: "Extracting tunnel binary"
-                    command: |
-                        sudo apt-get install unzip
-                        unzip LT_Linux.zip
+                    name: Unzip the browserstack binary file
+                    command: unzip BrowserStackLocal-linux-x64.zip
 
             -   run:
-                    name: "Executing tunnel binary"
+                    name: Run browserstack with provided access key
+                    command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                     background: true
-                    command: |
-                        ./LT --user ${LAMBDATEST_EMAIL} --key ${LAMBDATEST_KEY}
-                        sleep 40
-
-            -   run:
-                    name: "Setup custom environment variables"
-                    command: |
-                        echo 'export LT_USERNAME="${LAMBDATEST_USER}"' >> $BASH_ENV
-                        echo 'export LT_ACCESS_KEY="${LAMBDATEST_ACCESS_KEY}"' >> $BASH_ENV
 
     run_testbuild:
         steps:
@@ -78,8 +67,8 @@ commands:
                     name: Modify XML files recursively and copy to another folder
                     when: always
                     command: |
-                        mkdir test/functional/results/test/karma/junit/adjusted
-                        cd test/functional/results/test/karma/junit
+                        mkdir test/functional/results/test/junit/adjusted
+                        cd test/functional/results/test/junit
                         for file in **/*.xml; do
                         [ -f "$file" ] || continue
                         xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
@@ -87,7 +76,7 @@ commands:
                         cp "$file" adjusted/$modified_file
                         done
             -   store_test_results:
-                    path: test/functional/results/test/karma/junit/adjusted
+                    path: test/functional/results/test/junit/adjusted
 
     functional_steps:
         steps:
@@ -125,7 +114,7 @@ commands:
                     name: Run functional tests <<parameters.configfile>> - <<parameters.streamsfile>>
                     when: always
                     command:
-                        node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=<<parameters.configfile>> --streamsfile=<<parameters.streamsfile>>
+                        web-test-runner --config test/functional/config/web-test-runner.config.cjs --configfile=<<parameters.configfile>> --streamsfile=<<parameters.streamsfile>>
     build_samples:
         # parameters:
         #     samples:
@@ -166,6 +155,15 @@ jobs:
                         git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
             - run_testbuild
+
+    functional-tests-browserstack:
+        executor: dashjs-executor
+        steps:
+            - functional_steps
+            -   run_test_suite:
+                    streamsfile: single
+                    configfile: browserstack
+            - process_test_results
 
     functional-tests-single:
         executor: dashjs-executor
@@ -239,6 +237,11 @@ workflows:
                         branches:
                             ignore: # as creds are available only for non-forked branches
                                 - /pull\/[0-9]+/
+            -   functional-tests-browserstack:
+                    filters:
+                        branches:
+                            only: # as creds are available only for non-forked branches
+                                - feature/webTestRunner
 
     scheduled-workflow:
         triggers:

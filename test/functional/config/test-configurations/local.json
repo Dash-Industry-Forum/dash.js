@@ -2,11 +2,12 @@
   "hostname": "localhost",
   "port": 4200,
   "protocol": "http:",
+  "platform": "local",
   "seleniumServer": "http://localhost:4444/wd/hub",
   "browsers": [
     {
       "name": "chrome",
-      "enabled": false,
+      "enabled": true,
       "flags": [
         "--disable-web-security",
         "--autoplay-policy=no-user-gesture-required",

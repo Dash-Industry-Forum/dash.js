@@ -1,9 +1,6 @@
 const fs = require('fs');
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-const rollupCommonjs = require('@rollup/plugin-commonjs');
-const { fromRollup } = require('@web/dev-server-rollup');
-const commonjs = fromRollup(rollupCommonjs);
 const { seleniumLauncher } = require('@web/test-runner-selenium');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
@@ -11,11 +8,25 @@ const firefox = require('selenium-webdriver/firefox');
 const { defaultReporter } = require('@web/test-runner');
 const { junitReporter } = require('@web/test-runner-junit-reporter');
 const { summaryReporter } = require('@web/test-runner');
+const rollupCommonjs = require('@rollup/plugin-commonjs');
+const { fromRollup } = require('@web/dev-server-rollup');
+const commonjs = fromRollup(rollupCommonjs);
+const { browserstackLauncher } = require('@web/test-runner-browserstack');
 
 const argv = yargs(hideBin(process.argv)).parse()
 // Find the settings JSON object in the command arguments
 const configFileName = argv.configfile
 const streamsFileName = argv.streamsfile
+
+const sharedBrowserstackCapabilities = {
+    // your username and key for browserstack, you can get this from your browserstack account
+    // it's recommended to store these as environment variables
+    'browserstack.user': process.env.BROWSERSTACK_USER,
+    'browserstack.key': process.env.BROWSERSTACK_ACCESS_KEY,
+
+    project: 'dash.js',
+    name: 'Functional Tests',
+};
 
 if (!configFileName) {
     return
@@ -29,9 +40,6 @@ const browsers = _getBrowserConfiguration(testConfiguration);
 const reporters = _getReporters(testConfiguration);
 const testvectors = streamsConfiguration.testvectors;
 
-if (testConfiguration && testConfiguration.type && testConfiguration.type === 'lambdatest') {
-    testConfiguration = _adjustConfigurationForLambdatest(testConfiguration)
-}
 
 module.exports = {
 
@@ -55,18 +63,22 @@ module.exports = {
     coverage: false,
 
     // amount of browsers to run concurrently
-    concurrentBrowsers: 2,
+    concurrentBrowsers: 1,
+
+    // amount of test files to execute concurrently in a browser. the default value is based
+    // on amount of available CPUs locally which is irrelevant when testing remotely
+    concurrency: 1,
 
     // 	Resolve bare module imports using node resolution.
     nodeResolve: true,
-
-    browsers,
 
     plugins: [
         commonjs({
             include: [],
         })
     ],
+
+    browsers,
 
     testFramework: {
         config: {
@@ -128,16 +140,15 @@ function _getBrowserConfiguration(testConfiguration) {
         return []
     }
 
-    const seleniumServer = testConfiguration.seleniumServer;
     const browsers = [];
     testConfiguration.browsers.forEach((browserEntry) => {
         if (browserEntry.enabled) {
             switch (browserEntry.name) {
                 case 'chrome':
-                    browsers.push(_getChromeConfiguration(browserEntry, seleniumServer));
+                    browsers.push(_getChromeConfiguration(browserEntry, testConfiguration));
                     break;
                 case 'firefox':
-                    browsers.push(_getFirefoxConfiguration(browserEntry, seleniumServer));
+                    browsers.push(_getFirefoxConfiguration(browserEntry, testConfiguration));
                     break;
             }
         }
@@ -146,7 +157,15 @@ function _getBrowserConfiguration(testConfiguration) {
     return browsers;
 }
 
-function _getChromeConfiguration(browserEntry, seleniumServer) {
+function _getChromeConfiguration(browserEntry, testConfiguration) {
+    if (testConfiguration.platform && testConfiguration.platform === 'local') {
+        return _getChromeLocalSeleniumConfiguration(browserEntry, testConfiguration);
+    } else if (testConfiguration.platform && testConfiguration.platform === 'browserstack') {
+        return _getBrowserstackChromeConfiguration(browserEntry, testConfiguration);
+    }
+}
+
+function _getChromeLocalSeleniumConfiguration(browserEntry, testConfiguration) {
     const options = new chrome.Options();
     browserEntry.flags.forEach((flag) => {
         options.addArguments(flag)
@@ -155,21 +174,39 @@ function _getChromeConfiguration(browserEntry, seleniumServer) {
         driverBuilder: new webdriver.Builder()
             .forBrowser('chrome')
             .setChromeOptions(options)
-            .usingServer(seleniumServer),
+            .usingServer(testConfiguration.seleniumServer),
     })
 }
+
+function _getBrowserstackChromeConfiguration(browserEntry, testConfiguration) {
+    return browserstackLauncher({
+        capabilities: {
+            ...sharedBrowserstackCapabilities,
+            browserName: browserEntry.name,
+            os: browserEntry.os,
+            os_version: browserEntry.osVersion,
+            'goog:chromeOptions': {
+                args: browserEntry.flags
+            }
+        },
+    })
+}
+
 
 function _getFirefoxConfiguration(browserEntry, seleniumServer) {
     const options = new firefox.Options();
     browserEntry.flags.forEach((flag) => {
         options.setPreference(flag.key, flag.value);
     })
-    return seleniumLauncher({
-        driverBuilder: new webdriver.Builder()
-            .forBrowser('firefox')
-            .setFirefoxOptions(options)
-            .usingServer(seleniumServer),
-    })
+
+    if (testConfiguration.seleniumServer) {
+        return seleniumLauncher({
+            driverBuilder: new webdriver.Builder()
+                .forBrowser('firefox')
+                .setFirefoxOptions(options)
+                .usingServer(testConfiguration.seleniumServer),
+        })
+    }
 }
 
 function _getReporters(testConfiguration) {
@@ -195,17 +232,3 @@ function _getReporters(testConfiguration) {
 
 }
 
-function _adjustConfigurationForLambdatest(testConfiguration) {
-    if (testConfiguration && testConfiguration.customLaunchers) {
-        Object.keys(testConfiguration.customLaunchers).forEach((key) => {
-            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
-            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
-            testConfiguration.customLaunchers[key].config = {
-                hostname: 'hub.lambdatest.com',
-                port: 80
-            };
-        })
-    }
-
-    return testConfiguration
-}
