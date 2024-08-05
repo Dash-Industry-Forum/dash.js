@@ -1,29 +1,53 @@
 {
-  "browsers": [
-    "chrome_custom",
-    "firefox_custom"
-  ],
   "hostname": "localhost",
   "port": 4200,
   "protocol": "http:",
-  "customLaunchers": {
-    "chrome_custom": {
-      "base": "Chrome",
+  "seleniumServer": "http://localhost:4444/wd/hub",
+  "browsers": [
+    {
+      "name": "chrome",
+      "enabled": false,
       "flags": [
         "--disable-web-security",
         "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking"
+        "--disable-popup-blocking",
+        "--disable-search-engine-choice-screen"
       ]
     },
-    "firefox_custom": {
-      "base": "Firefox",
-      "prefs": {}
+    {
+      "name": "firefox",
+      "enabled": true,
+      "flags": [
+        {
+          "key": "media.gmp-manager.updateEnabled",
+          "value": true
+        },
+        {
+          "key": "media.eme.enabled",
+          "value": true
+        }
+      ]
     }
-  },
+  ],
   "reporters": [
-    "junit",
-    "mocha",
-    "html",
-    "coverage"
+    {
+      "name": "default",
+      "options": {
+        "reportTestResults": false,
+        "reportTestProgress": true
+      }
+    },
+    {
+      "name": "junit",
+      "options": {
+        "reportLogs": true
+      }
+    },
+    {
+      "name": "summary",
+      "options": {
+        "flatten": false
+      }
+    }
   ]
 }

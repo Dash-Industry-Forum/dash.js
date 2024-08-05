@@ -1,15 +1,13 @@
 const fs = require('fs');
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-const { playwrightLauncher } = require('@web/test-runner-playwright');
-const { chromeLauncher } = require('@web/test-runner-chrome');
-const { esbuildPlugin } = require('@web/dev-server-esbuild');
 const rollupCommonjs = require('@rollup/plugin-commonjs');
 const { fromRollup } = require('@web/dev-server-rollup');
 const commonjs = fromRollup(rollupCommonjs);
 const { seleniumLauncher } = require('@web/test-runner-selenium');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
+const firefox = require('selenium-webdriver/firefox');
 const { defaultReporter } = require('@web/test-runner');
 const { junitReporter } = require('@web/test-runner-junit-reporter');
 const { summaryReporter } = require('@web/test-runner');
@@ -27,32 +25,27 @@ let testConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-
 const streamsConfiguration = JSON.parse(fs.readFileSync(`test/functional/config/test-configurations/streams/${streamsFileName}.json`, 'utf-8'));
 const includedTestfiles = _getIncludedTestfiles(streamsConfiguration);
 const excludedTestfiles = _getExcludedTestfiles(streamsConfiguration);
+const browsers = _getBrowserConfiguration(testConfiguration);
+const reporters = _getReporters(testConfiguration);
 const testvectors = streamsConfiguration.testvectors;
 
 if (testConfiguration && testConfiguration.type && testConfiguration.type === 'lambdatest') {
     testConfiguration = _adjustConfigurationForLambdatest(testConfiguration)
 }
 
-let options = new chrome.Options();
-options.addArguments('--disable-web-security');
-options.addArguments('--autoplay-policy=no-user-gesture-required');
-options.addArguments('--disable-popup-blocking');
-
 module.exports = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     rootDir: '../../../',
 
-    // web server port
+    // server options
     hostname: testConfiguration.hostname ? testConfiguration.hostname : 'localhost',
     port: testConfiguration.port ? testConfiguration.port : 9876,
     protocol: testConfiguration.protocol ? testConfiguration.protocol : 'http:',
 
-
     // list of files / patterns to load in the browser
     files: [
         '!test/functional/test/common/*.js',
-        '!dist/dash.mss.min.js'
     ].concat(includedTestfiles).concat(excludedTestfiles),
 
     // JS language target to compile down to using esbuild. Recommended value is "auto", which compiles based on user-agent.
@@ -62,28 +55,16 @@ module.exports = {
     coverage: false,
 
     // amount of browsers to run concurrently
-    concurrentBrowsers: 1,
-
-    //whether to run tests with @web/test-runner-playwright
-    playwright: true,
+    concurrentBrowsers: 2,
 
     // 	Resolve bare module imports using node resolution.
     nodeResolve: true,
 
-    browsers: [seleniumLauncher({
-        driverBuilder: new webdriver.Builder()
-            .forBrowser('chrome')
-            .setChromeOptions(options)
-            .usingServer('http://localhost:4444/wd/hub'),
-    })],
+    browsers,
 
     plugins: [
         commonjs({
-            include: [
-                'node_modules/fast-deep-equal/index.js',
-                'node_modules/codem-isoboxer/dist/iso_boxer.js',
-                'node_modules/imsc/src/main/js/main.js'
-            ],
+            include: [],
         })
     ],
 
@@ -93,23 +74,11 @@ module.exports = {
         }
     },
 
-    reporters: [
-        defaultReporter({
-            reportTestResults: false,
-            reportTestProgress: true,
-        }),
-        junitReporter({
-            outputPath: `test/functional/results/test/junit/${Date.now()}.xml`, // default `'./test-results.xml'`
-            reportLogs: true, // default `false`
-        }),
-        summaryReporter({
-            flatten: false
-        })
-    ],
+    reporters,
 
-    debug: true,
+    debug: false,
 
-    testRunnerHtml: function (testFramework) {
+    testRunnerHtml: function (testRunnerImport) {
         return `<html>
             <head>
                 <title>dash.js test</title>
@@ -123,7 +92,7 @@ module.exports = {
             <script>
                 window.testrunnerConfig = ${JSON.stringify({ 'testvectors': testvectors })};
             </script>
-            <script type="module" src="${testFramework}"></script>
+            <script type="module" src="${testRunnerImport}"></script>
           </body>
         </html>`
     },
@@ -152,6 +121,78 @@ function _getExcludedTestfiles(testConfiguration) {
     return testConfiguration.testfiles.excluded.map((entry) => {
         return `!test/functional/test/${entry}.js`
     })
+}
+
+function _getBrowserConfiguration(testConfiguration) {
+    if (!testConfiguration || !testConfiguration.browsers || testConfiguration.browsers.length === 0 || !testConfiguration.seleniumServer) {
+        return []
+    }
+
+    const seleniumServer = testConfiguration.seleniumServer;
+    const browsers = [];
+    testConfiguration.browsers.forEach((browserEntry) => {
+        if (browserEntry.enabled) {
+            switch (browserEntry.name) {
+                case 'chrome':
+                    browsers.push(_getChromeConfiguration(browserEntry, seleniumServer));
+                    break;
+                case 'firefox':
+                    browsers.push(_getFirefoxConfiguration(browserEntry, seleniumServer));
+                    break;
+            }
+        }
+    })
+
+    return browsers;
+}
+
+function _getChromeConfiguration(browserEntry, seleniumServer) {
+    const options = new chrome.Options();
+    browserEntry.flags.forEach((flag) => {
+        options.addArguments(flag)
+    })
+    return seleniumLauncher({
+        driverBuilder: new webdriver.Builder()
+            .forBrowser('chrome')
+            .setChromeOptions(options)
+            .usingServer(seleniumServer),
+    })
+}
+
+function _getFirefoxConfiguration(browserEntry, seleniumServer) {
+    const options = new firefox.Options();
+    browserEntry.flags.forEach((flag) => {
+        options.setPreference(flag.key, flag.value);
+    })
+    return seleniumLauncher({
+        driverBuilder: new webdriver.Builder()
+            .forBrowser('firefox')
+            .setFirefoxOptions(options)
+            .usingServer(seleniumServer),
+    })
+}
+
+function _getReporters(testConfiguration) {
+    if (!testConfiguration || !testConfiguration.reporters || testConfiguration.reporters.length === 0) {
+        return []
+    }
+
+    return testConfiguration.reporters.map((reporterEntry) => {
+        switch (reporterEntry.name) {
+            case 'default':
+                return defaultReporter(reporterEntry.options)
+            case 'junit':
+                const outputPath = reporterEntry.options && reporterEntry.options.outputPath ? reporterEntry.options.outputPath : `test/functional/results/test/junit/${Date.now()}.xml`
+                if (!reporterEntry.options) {
+                    reporterEntry.options = {};
+                }
+                reporterEntry.options.outputPath = outputPath;
+                return junitReporter(reporterEntry.options);
+            case 'summary':
+                return summaryReporter(reporterEntry.options)
+        }
+    })
+
 }
 
 function _adjustConfigurationForLambdatest(testConfiguration) {

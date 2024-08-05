@@ -1,7 +1,8 @@
 import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
-import {Debug} from '../../../index.js';
-import {MediaPlayer} from '../../../index.js';
+import dashjs from '../../../dist/dash.all.min.js';
+// eslint-disable-next-line no-unused-vars
+import mss from '../../../dist/dash.mss.min.js';
 
 class DashJsAdapter {
 
@@ -40,16 +41,16 @@ class DashJsAdapter {
     }
 
     _initLogEvents() {
-        this.logEvents[Debug.LOG_LEVEL_NONE] = [];
-        this.logEvents[Debug.LOG_LEVEL_FATAL] = [];
-        this.logEvents[Debug.LOG_LEVEL_ERROR] = [];
-        this.logEvents[Debug.LOG_LEVEL_WARNING] = [];
-        this.logEvents[Debug.LOG_LEVEL_INFO] = [];
-        this.logEvents[Debug.LOG_LEVEL_DEBUG] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_NONE] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_FATAL] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_ERROR] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_WARNING] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_INFO] = [];
+        this.logEvents[dashjs.Debug.LOG_LEVEL_DEBUG] = [];
     }
 
     _createPlayerInstance() {
-        this.player = MediaPlayer().create();
+        this.player = dashjs.MediaPlayer().create();
         this.player.updateSettings({
             debug: {
                 logLevel: 3,
@@ -101,8 +102,8 @@ class DashJsAdapter {
      * @private
      */
     _registerInternalEvents() {
-        this.player.on(MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
-        this.player.on(MediaPlayer.events.LOG, this._onLogEvent)
+        this.player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
+        this.player.on(dashjs.MediaPlayer.events.LOG, this._onLogEvent)
     }
 
     /**
@@ -110,8 +111,8 @@ class DashJsAdapter {
      * @private
      */
     _unregisterInternalEvents() {
-        this.player.off(MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
-        this.player.off(MediaPlayer.events.LOG, this._onLogEvent)
+        this.player.off(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
+        this.player.off(dashjs.MediaPlayer.events.LOG, this._onLogEvent)
     }
 
     /**
@@ -333,7 +334,7 @@ class DashJsAdapter {
                 const _onComplete = (res) => {
                     clearTimeout(timeout);
                     timeout = null;
-                    this.player.off(MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
+                    this.player.off(dashjs.MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
                     resolve(res);
                 }
                 const _onTimeout = () => {
@@ -343,7 +344,7 @@ class DashJsAdapter {
                     _onComplete(true);
                 }
                 timeout = setTimeout(_onTimeout, timeoutValue);
-                this.player.on(MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
+                this.player.on(dashjs.MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
             }
         })
     }
@@ -362,7 +363,7 @@ class DashJsAdapter {
             const _onComplete = (res) => {
                 clearTimeout(timeout);
                 timeout = null;
-                this.player.off(MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
+                this.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
                 resolve(res);
             }
             const _onTimeout = () => {
@@ -378,7 +379,7 @@ class DashJsAdapter {
                 }
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
-            this.player.on(MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
+            this.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
         })
     }
 
@@ -389,7 +390,7 @@ class DashJsAdapter {
             const _onComplete = (res) => {
                 clearTimeout(timeout);
                 timeout = null;
-                this.player.off(MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
+                this.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
                 resolve(res);
             }
             const _onTimeout = () => {
@@ -401,7 +402,7 @@ class DashJsAdapter {
                 }
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
-            this.player.on(MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
+            this.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated);
         })
     }
 
@@ -413,7 +414,7 @@ class DashJsAdapter {
             const _onComplete = () => {
                 clearTimeout(timeout);
                 timeout = null;
-                this.player.off(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitched);
+                this.player.off(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitched);
                 resolve(periodSwitches);
             }
             const _onTimeout = () => {
@@ -423,7 +424,7 @@ class DashJsAdapter {
                 periodSwitches += 1;
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
-            this.player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitched);
+            this.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitched);
         })
     }
 
@@ -434,7 +435,7 @@ class DashJsAdapter {
             const _onComplete = (res) => {
                 clearTimeout(timeout);
                 timeout = null;
-                this.player.off(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+                this.player.off(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
                 resolve(res);
             }
             const _onTimeout = () => {
@@ -460,7 +461,7 @@ class DashJsAdapter {
                 }
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
-            this.player.on(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+            this.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
             this.player.on('bufferingCompleted', _onBufferingCompleted);
         })
     }
@@ -499,7 +500,7 @@ class DashJsAdapter {
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
             this.player.on(schemeIdUri, _onStartEvent, null); /* Default mode is onStart, no need to specify a mode */
-            this.player.on(schemeIdUri, _onReceiveEvent, null, { mode: MediaPlayer.events.EVENT_MODE_ON_RECEIVE });
+            this.player.on(schemeIdUri, _onReceiveEvent, null, { mode: dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE });
         })
     }
 
@@ -564,7 +565,7 @@ class DashJsAdapter {
                 }
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
-            this.player.on(MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, _onEvent);
+            this.player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, _onEvent);
         })
     }
 
