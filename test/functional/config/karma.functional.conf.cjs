@@ -128,7 +128,7 @@ module.exports = function (config) {
         autoWatch: false,
 
         captureTimeout: 600000,
-        browserNoActivityTimeout: 180000,
+        browserNoActivityTimeout: 400000,
         browserDisconnectTimeout: 20000,
         browserDisconnectTolerance: 2,
 
