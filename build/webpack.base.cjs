@@ -1,18 +1,9 @@
 const path = require('path');
 const pkg = require('../package.json');
 
-const out_dir = '../dist';
-
-const config = {
+const commonConfig = {
     devtool: 'source-map',
     target: ['web', 'es5'],
-    output: {
-        path: path.resolve(__dirname, out_dir),
-        publicPath: '/dist/',
-        library: 'dashjs',
-        libraryTarget: 'umd',
-        libraryExport: 'default'
-    },
     module: {
         rules: [
             {
@@ -29,7 +20,7 @@ const config = {
                 use: [
                     {
                         loader: `babel-loader`,
-                        options: {presets: ['@babel/env']}
+                        options: { presets: ['@babel/env'] }
                     }
                 ]
             }
@@ -43,4 +34,30 @@ const config = {
     },
 }
 
-module.exports = {config};
+const umdConfig = {
+    ...commonConfig,
+    output: {
+        path: path.resolve(__dirname, '../dist'),
+        publicPath: '/dist/',
+        library: 'dashjs',
+        libraryTarget: 'umd',
+        libraryExport: 'default'
+    },
+};
+
+const esmConfig = {
+    ...commonConfig,
+    experiments: {
+        outputModule: true
+    },
+    output: {
+        path: path.resolve(__dirname, '../dist/esm'),
+        publicPath: '/dist/esm/',
+        library: {
+            type: 'module',
+        },
+        libraryExport: 'default',
+    },
+};
+
+module.exports = { umdConfig, esmConfig };

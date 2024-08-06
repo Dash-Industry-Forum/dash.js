@@ -1,8 +1,8 @@
 const { merge } = require('webpack-merge');
-const common = require('./webpack.base.cjs').config;
+const { umdConfig } = require('./webpack.base.cjs');
 const path = require('path');
 
-const config = merge(common, {
+const umdDevConfig = merge(umdConfig, {
     mode: 'development',
     entry: {
         'dash.all': './index.js',
@@ -23,4 +23,5 @@ const config = merge(common, {
     }
 });
 
-module.exports = config;
+
+module.exports = [umdDevConfig];
