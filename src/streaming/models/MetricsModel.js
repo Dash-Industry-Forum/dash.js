@@ -197,6 +197,7 @@ function MetricsModel(config) {
         vo._fileLoaderType = request.fileLoaderType;
         vo._resourceTimingValues = request.resourceTimingValues;
         vo._streamId = request && request.representation && request.representation.mediaInfo && request.representation.mediaInfo.streamInfo ? request.representation.mediaInfo.streamInfo.id : null;
+        vo._bandwidth_ratio = request && request.bandwidth && request.representation && request.representation.mediaInfo ? request.representation.mediaInfo.bitrateList[request.representation.mediaInfo.bitrateList.length - 1].bandwidth / request.bandwidth : 1;
 
         if (traces) {
             traces.forEach(trace => {
