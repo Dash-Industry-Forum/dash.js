@@ -66,17 +66,17 @@ const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
 function ProtectionController(config) {
 
     config = config || {};
-    const protectionKeyController = config.protectionKeyController;
-    let protectionModel = config.protectionModel;
+    const BASE64 = config.BASE64;
+    const cmcdModel = config.cmcdModel;
+    const constants = config.constants;
+    const customParametersModel = config.customParametersModel;
+    const debug = config.debug;
     const eventBus = config.eventBus;
     const events = config.events;
-    const debug = config.debug;
-    const BASE64 = config.BASE64;
-    const constants = config.constants;
-    let needkeyRetries = [];
-    const cmcdModel = config.cmcdModel;
+    const protectionKeyController = config.protectionKeyController;
     const settings = config.settings;
-    const customParametersModel = config.customParametersModel;
+    let protectionModel = config.protectionModel;
+    let needkeyRetries = [];
 
     let instance,
         logger,

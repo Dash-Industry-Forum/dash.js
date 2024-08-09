@@ -51,7 +51,7 @@ SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [Protecti
 SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
 
-function ProtectionModel_21Jan2015(config) {
+function DefaultProtectionModel(config) {
 
     config = config || {};
     const context = this.context;
@@ -579,5 +579,5 @@ function ProtectionModel_21Jan2015(config) {
     return instance;
 }
 
-ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
+DefaultProtectionModel.__dashjs_factory_name = 'DefaultProtectionModel';
+export default FactoryMaker.getClassFactory(DefaultProtectionModel);

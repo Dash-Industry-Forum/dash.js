@@ -3238,7 +3238,7 @@ declare namespace dashjs {
         reset(): void;
     }
 
-    export interface ProtectionModel_21Jan2015 {
+    export interface DefaultProtectionModel {
         getAllInitData(): ArrayBuffer[];
 
         getSessions(): any[]; // Is this MediaSession[] ?
