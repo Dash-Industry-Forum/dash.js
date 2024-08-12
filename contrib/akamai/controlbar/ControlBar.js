@@ -694,7 +694,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             })
         }
 
-        textTrackList[e.streamId] = textTrackList[e.streamId].concat(tracksToBeAdded);
+        textTrackList[e.streamId] = textTrackList[e.streamId].concat(e.tracks);
 
         nativeTextTracks = video.textTracks;
         nativeTextTracks.addEventListener('change', _onTracksChanged);
