@@ -121,7 +121,7 @@ function MediaController() {
         const possibleTracks = getTracksFor(type, streamInfo.id);
         let filteredTracks = [];
 
-        if (!settings) {
+        if (!settings || Object.keys(settings).length === 0) {
             settings = domStorage.getSavedMediaSettings(type);
             if (settings) {
                 // If the settings are defined locally, do not take codec into account or it'll be too strict.

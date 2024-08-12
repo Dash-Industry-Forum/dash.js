@@ -1133,7 +1133,7 @@ function Settings() {
                 scheduleWhilePaused: true
             },
             text: {
-                defaultEnabled: true,
+                defaultEnabled: false,
                 dispatchForManualRendering: false,
                 extendSegmentedCues: true,
                 imsc: {
