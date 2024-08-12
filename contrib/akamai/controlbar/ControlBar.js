@@ -621,7 +621,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 break;
             }
         }
-        ;
 
         return (trackMode === undefined) ? 'showing' : trackMode;
     };
@@ -640,7 +639,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 if (isNaN(index)) {
                     return {
                         mode: 'showing',
-                        text: 'OFF'
+                        text: 'OFF',
+                        _indexToSelect: 0
                     };
                 }
 
@@ -654,7 +654,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
                 return {
                     mode: _getNativeVideoTrackMode(element),
-                    text: trackText
+                    text: trackText,
+                    _indexToSelect: element._indexToSelect
                 }
             };
             captionMenu = createMenu({ menuType: 'caption', arr: tracks }, contentFunc);
@@ -684,7 +685,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         var tracksToBeAdded = [];
 
         if (e.tracks && e.tracks.length > 0) {
-            tracksToBeAdded = e.tracks.filter(function (track) {
+            tracksToBeAdded = e.tracks.filter(function (track, index) {
+                track._indexToSelect = index;
                 if (track && track.roles && track.roles.length > 0) {
                     return !track.roles.some(function (role) {
                         return role.schemeIdUri === 'urn:mpeg:dash:role:2011' && role.value === 'forced-subtitle'
@@ -694,7 +696,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             })
         }
 
-        textTrackList[e.streamId] = textTrackList[e.streamId].concat(e.tracks);
+        textTrackList[e.streamId] = textTrackList[e.streamId].concat(tracksToBeAdded);
 
         nativeTextTracks = video.textTracks;
         nativeTextTracks.addEventListener('change', _onTracksChanged);
@@ -841,7 +843,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         for (var i = 0; i < arr.length; i++) {
             var item = document.createElement('li');
             item.id = name + 'Item_' + i;
-            item.index = i;
+            item.index = typeof arr[i]._indexToSelect !== 'undefined' ? arr[i]._indexToSelect : i;
             item.mediaType = mediaType;
             item.name = name;
             item.selected = false;
