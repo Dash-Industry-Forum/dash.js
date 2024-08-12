@@ -681,7 +681,20 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             textTrackList[e.streamId] = [];
         }
 
-        textTrackList[e.streamId] = textTrackList[e.streamId].concat(e.tracks);
+        var tracksToBeAdded = [];
+
+        if (e.tracks && e.tracks.length > 0) {
+            tracksToBeAdded = e.tracks.filter(function (track) {
+                if (track && track.roles && track.roles.length > 0) {
+                    return !track.roles.some(function (role) {
+                        return role.schemeIdUri === 'urn:mpeg:dash:role:2011' && role.value === 'forced-subtitle'
+                    })
+                }
+                return true
+            })
+        }
+
+        textTrackList[e.streamId] = textTrackList[e.streamId].concat(tracksToBeAdded);
 
         nativeTextTracks = video.textTracks;
         nativeTextTracks.addEventListener('change', _onTracksChanged);
