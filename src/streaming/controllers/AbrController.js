@@ -217,7 +217,7 @@ function AbrController() {
         }
     }
 
-    function getOptimalRepresentationForBitrate(mediaInfo, bitrate, includeCompatibleMediaInfos = true) {
+    function getOptimalRepresentationForBitrate(mediaInfo, bitrateInKbit, includeCompatibleMediaInfos = true) {
         const possibleVoRepresentations = getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
@@ -228,13 +228,13 @@ function AbrController() {
         const smallestRepresentation = possibleVoRepresentations.reduce((a, b) => {
             return a.bandwidth < b.bandwidth ? a : b;
         })
-        if (bitrate <= 0) {
+        if (bitrateInKbit <= 0) {
             return smallestRepresentation
         }
 
         // Get all Representations that have lower or equal bitrate than our target bitrate
         const targetRepresentations = possibleVoRepresentations.filter((rep) => {
-            return rep.bitrateInKbit <= bitrate
+            return rep.bitrateInKbit <= bitrateInKbit
         });
 
         if (!targetRepresentations || targetRepresentations.length === 0) {

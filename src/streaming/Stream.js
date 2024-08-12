@@ -189,9 +189,10 @@ function Stream(config) {
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
      * @param {array} previousBufferSinks
+     * @param representationsFromPreviousPeriod
      * @memberof Stream#
      */
-    function activate(mediaSource, previousBufferSinks) {
+    function activate(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
         return new Promise((resolve, reject) => {
             if (isActive) {
                 resolve(previousBufferSinks);
@@ -208,7 +209,7 @@ function Stream(config) {
             }
 
 
-            _initializeMedia(mediaSource, previousBufferSinks)
+            _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
                 .then((bufferSinks) => {
                     isActive = true;
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
@@ -222,7 +223,7 @@ function Stream(config) {
         });
     }
 
-    function startPreloading(mediaSource, previousBuffers) {
+    function startPreloading(mediaSource, previousBuffers, representationsFromPreviousPeriod = []) {
         return new Promise((resolve, reject) => {
 
             if (getPreloaded()) {
@@ -231,9 +232,9 @@ function Stream(config) {
             }
 
             logger.info(`[startPreloading] Preloading next stream with id ${getId()}`);
-            setPreloaded(true);
+            _setPreloaded(true);
 
-            _commonMediaInitialization(mediaSource, previousBuffers)
+            _commonMediaInitialization(mediaSource, previousBuffers, representationsFromPreviousPeriod)
                 .then(() => {
                     for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
                         streamProcessors[i].setExplicitBufferingTime(getStartTime());
@@ -242,7 +243,7 @@ function Stream(config) {
                     resolve();
                 })
                 .catch(() => {
-                    setPreloaded(false);
+                    _setPreloaded(false);
                     reject();
                 });
         });
@@ -252,11 +253,12 @@ function Stream(config) {
      *
      * @param {object} mediaSource
      * @param {array} previousBufferSinks
+     * @param representationsFromPreviousPeriod
      * @return {Promise<Array>}
      * @private
      */
-    function _initializeMedia(mediaSource, previousBufferSinks) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks);
+    function _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
+        return _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod);
     }
 
     /**
@@ -266,7 +268,7 @@ function Stream(config) {
      * @return {Promise<array>}
      * @private
      */
-    function _commonMediaInitialization(mediaSource, previousBufferSinks) {
+    function _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve, reject) => {
             checkConfig();
 
@@ -278,7 +280,10 @@ function Stream(config) {
             MEDIA_TYPES.forEach((mediaType) => {
                 // If we are preloading without a video element we can not start texttrack handling.
                 if (!(mediaType === Constants.TEXT && !mediaSource) && (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))) {
-                    promises.push(_initializeMediaForType(mediaType, mediaSource));
+                    const representationFromPreviousPeriod = representationsFromPreviousPeriod.find((representation) => {
+                        return representation.mediaInfo.type === mediaType
+                    })
+                    promises.push(_initializeMediaForType(mediaType, mediaSource, representationFromPreviousPeriod));
                 }
             });
 
@@ -315,7 +320,7 @@ function Stream(config) {
      */
     function initializeForTextWithMediaSource(mediaSource) {
         return new Promise((resolve, reject) => {
-            _initializeMediaForType(Constants.TEXT, mediaSource)
+            _initializeMediaForType(Constants.TEXT, mediaSource, null)
                 .then(() => {
                     return createBufferSinkForText()
                 })
@@ -335,7 +340,7 @@ function Stream(config) {
      * @param {object} mediaSource
      * @private
      */
-    function _initializeMediaForType(type, mediaSource) {
+    function _initializeMediaForType(type, mediaSource, representationFromPreviousPeriod) {
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
         let embeddedMediaInfos = [];
 
@@ -410,7 +415,11 @@ function Stream(config) {
 
         if (initialMediaInfo) {
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
-            return streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
+            const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
+            return streamProcessor.selectMediaInfo({
+                newMediaInfo,
+                previouslySelectedRepresentation: representationFromPreviousPeriod
+            });
         }
 
         return Promise.resolve();
@@ -544,7 +553,7 @@ function Stream(config) {
         streamProcessors = [];
         isActive = false;
         hasFinishedBuffering = false;
-        setPreloaded(false);
+        _setPreloaded(false);
         setIsEndedEventSignaled(false);
         eventBus.trigger(Events.STREAM_DEACTIVATED, { streamInfo });
     }
@@ -749,10 +758,10 @@ function Stream(config) {
 
         hasFinishedBuffering = false;
 
-        let mediaInfo = e.newMediaInfo;
+        let newMediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
-        let processor = getProcessorForMediaInfo(mediaInfo);
+        let processor = getProcessorForMediaInfo(newMediaInfo);
         if (!processor) {
             return;
         }
@@ -768,7 +777,7 @@ function Stream(config) {
                 manifestUpdater.refreshManifest();
             }
         } else {
-            processor.selectMediaInfo(mediaInfo)
+            processor.selectMediaInfo({ newMediaInfo })
                 .then(() => {
                     processor.prepareTrackSwitch();
                 });
@@ -807,7 +816,7 @@ function Stream(config) {
     }
 
     function onBufferingCompleted() {
-        let processors = getProcessors();
+        let processors = getStreamProcessors();
         const ln = processors.length;
 
         if (ln === 0) {
@@ -848,14 +857,14 @@ function Stream(config) {
             return null;
         }
 
-        let processors = getProcessors();
+        let processors = getStreamProcessors();
 
         return processors.filter(function (processor) {
             return (processor.getType() === type);
         })[0];
     }
 
-    function getProcessors() {
+    function getStreamProcessors() {
         let arr = [];
 
         let type,
@@ -905,7 +914,7 @@ function Stream(config) {
                 if (allMediaForType) {
                     for (let j = 0; j < allMediaForType.length; j++) {
                         if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
-                            promises.push(streamProcessor.selectMediaInfo(allMediaForType[j]))
+                            promises.push(streamProcessor.selectMediaInfo({ newMediaInfo: allMediaForType[j] }))
                         }
                     }
                 }
@@ -918,13 +927,13 @@ function Stream(config) {
                     // Only relevant for MSS
                     while (trackChangedEvents.length > 0) {
                         let trackChangedEvent = trackChangedEvents.pop();
-                        let mediaInfo = trackChangedEvent.newMediaInfo;
+                        let newMediaInfo = trackChangedEvent.newMediaInfo;
                         let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) {
                             return;
                         }
                         promises.push(processor.prepareTrackSwitch());
-                        promises.push(processor.selectMediaInfo(mediaInfo));
+                        promises.push(processor.selectMediaInfo({ newMediaInfo }));
                     }
 
                     return Promise.all(promises)
@@ -973,7 +982,7 @@ function Stream(config) {
         }
     }
 
-    function setPreloaded(value) {
+    function _setPreloaded(value) {
         preloaded = value;
     }
 
@@ -1023,13 +1032,13 @@ function Stream(config) {
         getIsActive,
         getIsEndedEventSignaled,
         getPreloaded,
-        getProcessors,
         getRepresentationForTypeById,
         getRepresentationForTypeByIndex,
         getRepresentationsByType,
         getStartTime,
         getStreamId,
         getStreamInfo,
+        getStreamProcessors,
         getThumbnailController,
         initialize,
         initializeForTextWithMediaSource,
@@ -1038,7 +1047,6 @@ function Stream(config) {
         reset,
         setIsEndedEventSignaled,
         setMediaSource,
-        setPreloaded,
         startPreloading,
         startScheduleControllers,
         updateData,

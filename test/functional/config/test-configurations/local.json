@@ -12,7 +12,8 @@
       "flags": [
         "--disable-web-security",
         "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking"
+        "--disable-popup-blocking",
+        "--disable-search-engine-choice-screen"
       ]
     },
     "firefox_custom": {

@@ -83,8 +83,8 @@ describe('Stream', function () {
             expect(isActive).to.be.false; // jshint ignore:line
         });
 
-        it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
-            const processors = stream.getProcessors();
+        it('should return an empty array when getStreamProcessors is called but streamProcessors attribute is an empty array', () => {
+            const processors = stream.getStreamProcessors();
 
             expect(processors).to.be.instanceOf(Array); // jshint ignore:line
             expect(processors).to.be.empty; // jshint ignore:line
