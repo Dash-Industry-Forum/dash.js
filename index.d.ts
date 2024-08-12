@@ -4629,7 +4629,7 @@ declare namespace dashjs {
 
         getStreamInfo(): StreamInfo;
 
-        selectMediaInfo(selectionData: object): Promise<any>;
+        selectMediaInfo(selectionInput: object): Promise<any>;
 
         clearMediaInfoArray(): void;
 
