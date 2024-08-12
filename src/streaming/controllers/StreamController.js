@@ -45,6 +45,7 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
+import streamProcessor from '../StreamProcessor.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -594,7 +595,7 @@ function StreamController() {
      * @private
      */
     function _handleInnerPeriodSeek(e) {
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = activeStream.getStreamProcessors();
 
         streamProcessors.forEach((sp) => {
             return sp.prepareInnerPeriodPlaybackSeeking(e);
@@ -612,7 +613,7 @@ function StreamController() {
     function _handleOuterPeriodSeek(e, seekToStream) {
         // Stop segment requests
         const seekTime = e && !isNaN(e.seekTime) ? e.seekTime : NaN;
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = activeStream.getStreamProcessors();
 
         const promises = streamProcessors.map((sp) => {
             // Cancel everything in case the active stream is still buffering
@@ -684,7 +685,11 @@ function StreamController() {
             let seamlessPeriodSwitch = _canSourceBuffersBeReused(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
-                nextStream.startPreloading(mediaSource, bufferSinks)
+                const previousStreamProcessors = previousStream ? previousStream.getStreamProcessors() : [];
+                const representationsFromPreviousPeriod = previousStreamProcessors.map((streamProcessor) => {
+                    return streamProcessor.getRepresentation();
+                })
+                nextStream.startPreloading(mediaSource, bufferSinks, representationsFromPreviousPeriod)
                     .then(() => {
                         preloadingStreams.push(nextStream);
                     });
@@ -957,7 +962,7 @@ function StreamController() {
      * @return {array}
      */
     function getActiveStreamProcessors() {
-        return activeStream ? activeStream.getProcessors() : [];
+        return activeStream ? activeStream.getStreamProcessors() : [];
     }
 
     /**

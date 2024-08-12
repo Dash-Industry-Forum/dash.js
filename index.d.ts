@@ -1,4 +1,9 @@
-import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
+import {
+    CommonMediaRequest,
+    CommonMediaResponse,
+    RequestInterceptor,
+    ResponseInterceptor
+} from '@svta/common-media-library/request'
 
 export = dashjs;
 export as namespace dashjs;
@@ -4562,7 +4567,7 @@ declare namespace dashjs {
 
         getHasVideoTrack(): boolean;
 
-        startPreloading(mediaSource: MediaSource, previousBuffers: any[]): void;
+        startPreloading(mediaSource: MediaSource, previousBuffers: any[], representationsFromPreviousPeriod: Representation[]): void;
 
         getThumbnailController(): object;
 
@@ -4570,7 +4575,7 @@ declare namespace dashjs {
 
         reset(): void;
 
-        getProcessors(): any[];
+        getStreamProcessors(): any[];
 
         setMediaSource(mediaSource: MediaSource): void;
 
@@ -4587,8 +4592,6 @@ declare namespace dashjs {
         getAdapter(): DashAdapter
 
         getHasFinishedBuffering(): boolean
-
-        setPreloaded(value: boolean): void
 
         startScheduleControllers(): void
 
@@ -4626,7 +4629,7 @@ declare namespace dashjs {
 
         getStreamInfo(): StreamInfo;
 
-        selectMediaInfo(newMediaInfo: MediaInfo): Promise<any>;
+        selectMediaInfo(selectionData: object): Promise<any>;
 
         clearMediaInfoArray(): void;
 
