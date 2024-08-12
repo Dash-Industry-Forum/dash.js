@@ -189,9 +189,10 @@ function Stream(config) {
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
      * @param {array} previousBufferSinks
+     * @param representationsFromPreviousPeriod
      * @memberof Stream#
      */
-    function activate(mediaSource, previousBufferSinks) {
+    function activate(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
         return new Promise((resolve, reject) => {
             if (isActive) {
                 resolve(previousBufferSinks);
@@ -208,7 +209,7 @@ function Stream(config) {
             }
 
 
-            _initializeMedia(mediaSource, previousBufferSinks)
+            _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
                 .then((bufferSinks) => {
                     isActive = true;
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
@@ -252,11 +253,12 @@ function Stream(config) {
      *
      * @param {object} mediaSource
      * @param {array} previousBufferSinks
+     * @param representationsFromPreviousPeriod
      * @return {Promise<Array>}
      * @private
      */
-    function _initializeMedia(mediaSource, previousBufferSinks) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks, []);
+    function _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
+        return _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod);
     }
 
     /**
@@ -414,7 +416,10 @@ function Stream(config) {
         if (initialMediaInfo) {
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
             const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
-            return streamProcessor.selectMediaInfo({ newMediaInfo, previouslySelectedRepresentation: representationFromPreviousPeriod });
+            return streamProcessor.selectMediaInfo({
+                newMediaInfo,
+                previouslySelectedRepresentation: representationFromPreviousPeriod
+            });
         }
 
         return Promise.resolve();
