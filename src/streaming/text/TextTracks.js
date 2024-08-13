@@ -207,8 +207,6 @@ function TextTracks(config) {
         textTrackInfos.push(textTrackInfoVO);
     }
 
-
-
     function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {
         const viewAspectRatio = viewWidth / viewHeight;
         const videoAspectRatio = videoWidth / videoHeight;

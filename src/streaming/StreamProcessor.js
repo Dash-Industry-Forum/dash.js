@@ -659,7 +659,9 @@ function StreamProcessor(config) {
                 selectedValues = _handleMpdUpdate(selectionInput);
             }
 
-            currentMediaInfo = selectedValues.currentMediaInfo;
+            _setCurrentMediaInfo(selectedValues.currentMediaInfo);
+
+            eventBus.trigger()
 
             // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
             const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
@@ -674,6 +676,15 @@ function StreamProcessor(config) {
                 })
 
         })
+    }
+
+    function _setCurrentMediaInfo(value) {
+        currentMediaInfo = value;
+        eventBus.trigger(Events.MEDIAINFO_UPDATED, {
+            mediaType: type,
+            streamId: streamInfo.id,
+            currentMediaInfo
+        });
     }
 
     function _handleAdaptationSetQualitySwitch(selectionInput) {
@@ -756,7 +767,7 @@ function StreamProcessor(config) {
         scheduleController.setSwitchTrack(true);
 
         const newMediaInfo = newRepresentation.mediaInfo;
-        currentMediaInfo = newMediaInfo;
+        _setCurrentMediaInfo(newMediaInfo);
 
         selectMediaInfo({ newMediaInfo, newRepresentation })
             .then(() => {
