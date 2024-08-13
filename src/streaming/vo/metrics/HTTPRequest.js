@@ -144,7 +144,7 @@ class HTTPRequest {
         /**
          * The ratio of the current representation bandwidth to the top representation bandwidth - used for adjusting cachedetection to bitrate ladder.
          */
-        this._bandwidth_ratio = 1;
+        this._bandwidthRatio = 1;
     }
 }
 
