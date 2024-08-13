@@ -481,6 +481,9 @@ function TextController(config) {
     }
 
     function _isForcedSubtitleTrack(textTrackInfo) {
+        if (!textTrackInfo || !textTrackInfo.roles || textTrackInfo.roles.length === 0) {
+            return false
+        }
         return textTrackInfo.roles.some((role) => {
             return role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === DashConstants.FORCED_SUBTITLE
         })
