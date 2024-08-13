@@ -146,7 +146,7 @@ function CmcdModel() {
         if (!activeStream) {
             return;
         }
-        streamProcessors = activeStream.getProcessors();
+        streamProcessors = activeStream.getStreamProcessors();
     }
 
     function getQueryParameter(request) {

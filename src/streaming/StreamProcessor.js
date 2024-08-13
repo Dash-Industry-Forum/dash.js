@@ -634,47 +634,77 @@ function StreamProcessor(config) {
 
     /**
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
-     * @param {object} newMediaInfo
-     * @param targetRepresentation
+     * @param {object} selectionInput
      */
-    function selectMediaInfo(newMediaInfo, targetRepresentation = null) {
+    function selectMediaInfo(selectionInput) {
         return new Promise((resolve) => {
-            if (representationController) {
-
-                // Switching to a new AdaptationSet as part of a quality switch
-                if (targetRepresentation) {
-                    currentMediaInfo = newMediaInfo;
-                }
-
-                // Switching to a new AS
-                else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, newMediaInfo)))) {
-                    currentMediaInfo = newMediaInfo;
-                    const bitrate = abrController.getInitialBitrateFor(type);
-                    targetRepresentation = abrController.getOptimalRepresentationForBitrate(currentMediaInfo, bitrate, false);
-                }
-
-                // MPD update quality remains the same
-                else {
-                    currentMediaInfo = newMediaInfo;
-                    targetRepresentation = representationController.getCurrentRepresentation()
-                }
-
-                // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
-                const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
-                const representationId = targetRepresentation.id;
-                return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, representationId)
-                    .then(() => {
-                        _onDataUpdateCompleted()
-                        resolve();
-                    })
-                    .catch((e) => {
-                        logger.error(e);
-                        resolve()
-                    })
-            } else {
+            if (!representationController) {
                 return Promise.resolve();
             }
+
+            let selectedValues = null;
+
+            // Switching to a new AdaptationSet as part of a quality switch
+            if (selectionInput.newRepresentation) {
+                selectedValues = _handleAdaptationSetQualitySwitch(selectionInput);
+            }
+
+            // Switching to a new AS
+            else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, selectionInput.newMediaInfo)))) {
+                selectedValues = _handleAdaptationSetSwitch(selectionInput);
+            }
+
+            // MPD update quality remains the same
+            else {
+                selectedValues = _handleMpdUpdate(selectionInput);
+            }
+
+            currentMediaInfo = selectedValues.currentMediaInfo;
+
+            // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
+            const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
+            return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, selectedValues.selectedRepresentation.id)
+                .then(() => {
+                    _onDataUpdateCompleted()
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
+                    resolve()
+                })
+
         })
+    }
+
+    function _handleAdaptationSetQualitySwitch(selectionInput) {
+        return {
+            selectedRepresentation: selectionInput.newRepresentation,
+            currentMediaInfo: selectionInput.newMediaInfo,
+        }
+    }
+
+    function _handleAdaptationSetSwitch(selectionInput) {
+        let bitrateInKbit = NaN;
+
+        // In case ABR was disabled and we got a selected Representation from the previous period we use a bitrate that is close to the one from the previous period
+        if (!settings.get().streaming.abr.autoSwitchBitrate[selectionInput.newMediaInfo.type] && selectionInput.previouslySelectedRepresentation) {
+            bitrateInKbit = selectionInput.previouslySelectedRepresentation.bitrateInKbit
+        } else {
+            bitrateInKbit = abrController.getInitialBitrateFor(type);
+        }
+
+        const selectedRepresentation = abrController.getOptimalRepresentationForBitrate(selectionInput.newMediaInfo, bitrateInKbit, false);
+        return {
+            selectedRepresentation,
+            currentMediaInfo: selectionInput.newMediaInfo
+        }
+    }
+
+    function _handleMpdUpdate(selectionInput) {
+        return {
+            currentMediaInfo: selectionInput.newMediaInfo,
+            selectedRepresentation: representationController.getCurrentRepresentation()
+        }
     }
 
     /**
@@ -728,7 +758,7 @@ function StreamProcessor(config) {
         const newMediaInfo = newRepresentation.mediaInfo;
         currentMediaInfo = newMediaInfo;
 
-        selectMediaInfo(newMediaInfo, newRepresentation)
+        selectMediaInfo({ newMediaInfo, newRepresentation })
             .then(() => {
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
@@ -965,12 +995,12 @@ function StreamProcessor(config) {
             return;
         }
 
-        const mInfo = mediaInfoArr.find((info) => {
+        const newMediaInfo = mediaInfoArr.find((info) => {
             return info.index === currentTrackInfo.index && info.lang === currentTrackInfo.lang;
         });
 
-        if (mInfo) {
-            selectMediaInfo(mInfo)
+        if (newMediaInfo) {
+            selectMediaInfo({ newMediaInfo })
                 .then(() => {
                     bufferController.setIsBufferingCompleted(false);
                     setExplicitBufferingTime(playbackController.getTime());
