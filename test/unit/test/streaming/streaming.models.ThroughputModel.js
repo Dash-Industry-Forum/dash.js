@@ -148,6 +148,7 @@ describe('ThroughputModel', () => {
                 }
             })
             dummyHttpRequest._tfinish = dummyHttpRequest.trequest;
+            dummyHttpRequest._bandwidthRatio = 1;
             throughputModel.addEntry('video', dummyHttpRequest);
             const values = throughputModel.getThroughputDict('video');
 
