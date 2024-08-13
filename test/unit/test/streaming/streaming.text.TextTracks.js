@@ -48,15 +48,15 @@ describe('TextTracks', function () {
         });
     });
 
-    describe('Method addTextTrack', function () {
-        it('should trigger TEXT_TRACK_ADDED and TEXT_TRACKS_QUEUE_INITIALIZED events when a call to addTextTrackfunction is made', function () {
+    describe('Method addTextTrackInfo', function () {
+        it('should trigger TEXT_TRACK_ADDED and TEXT_TRACKS_QUEUE_INITIALIZED events when a call to addTextTrackInfo function is made', function () {
             const spyTrackAdded = chai.spy();
             const spyTracksQueueInit = chai.spy();
 
             eventBus.on(Events.TEXT_TRACK_ADDED, spyTrackAdded);
             eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, spyTracksQueueInit);
 
-            textTracks.addTextTrack({
+            textTracks.addTextTrackInfo({
                 index: 0,
                 kind: 'subtitles',
                 label: 'eng',
@@ -76,7 +76,7 @@ describe('TextTracks', function () {
 
     describe('Method addCaptions', function () {
         it('should call addCue function when a call to addCaptions is made', function () {
-            textTracks.addTextTrack({
+            textTracks.addTextTrackInfo({
                 index: 0,
                 kind: 'subtitles',
                 id: 'eng',
