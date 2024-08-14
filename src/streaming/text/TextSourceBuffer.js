@@ -43,6 +43,7 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import {extractCta608DataFromSample} from '@svta/common-media-library/cta/608/extractCta608DataFromSample';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
@@ -136,7 +137,7 @@ function TextSourceBuffer(config) {
         }
 
         for (let i = 0; i < mInfos.length; i++) {
-            _createTextTrackFromMediaInfo(mInfos[i]);
+            _createTextTrackInfoFromMediaInfo(mInfos[i]);
         }
 
     }
@@ -146,22 +147,26 @@ function TextSourceBuffer(config) {
      * @param {object} mediaInfo
      * @private
      */
-    function _createTextTrackFromMediaInfo(mediaInfo) {
+    function _createTextTrackInfoFromMediaInfo(mediaInfo) {
+
+        // We are mapping DASH specification strings to the ones of the HTML specification.
+        // See also https://html.spec.whatwg.org/multipage/media.html#text-track-kind
+        const trackKindMap = {};
+        trackKindMap[DashConstants.SUBTITLE] = 'subtitles'
+        trackKindMap[DashConstants.CAPTION] = 'captions'
+        trackKindMap[DashConstants.FORCED_SUBTITLE] = 'subtitles'
+
         const textTrackInfo = new TextTrackInfo();
-        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
         for (let key in mediaInfo) {
             textTrackInfo[key] = mediaInfo[key];
         }
 
-        textTrackInfo.labels = mediaInfo.labels;
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = mediaInfo.isFragmented;
-        textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
         textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
 
-        textTracks.addTextTrack(textTrackInfo);
+        textTracks.addTextTrackInfo(textTrackInfo);
     }
 
     function abort() {
@@ -250,7 +255,7 @@ function TextSourceBuffer(config) {
     function _getKind(mediaInfo, trackKindMap) {
         let kind = (mediaInfo.roles && mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0].value] : trackKindMap.caption;
 
-        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+        kind = Object.values(trackKindMap).includes(kind) ? kind : trackKindMap.caption;
 
         return kind;
     }
@@ -331,7 +336,7 @@ function TextSourceBuffer(config) {
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
-            
+
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();
@@ -542,7 +547,7 @@ function TextSourceBuffer(config) {
         for (let i = 0; i < samples.length; i++) {
             const sample = samples[i];
             const ccData = extractCta608DataFromSample(raw, sample.offset, sample.size);
-            
+
             let lastSampleTime = null;
             let idx = 0;
             for (let k = 0; k < 2; k++) {

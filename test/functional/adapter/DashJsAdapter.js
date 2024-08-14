@@ -622,6 +622,12 @@ class DashJsAdapter {
             delayPollInterval = setInterval(_checkBuffer, 100);
         })
     }
+
+    async sleep(timeoutValue) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, timeoutValue)
+        });
+    }
 }
 
 export default DashJsAdapter;
