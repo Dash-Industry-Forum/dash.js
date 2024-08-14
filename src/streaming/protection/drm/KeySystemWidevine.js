@@ -40,7 +40,7 @@ import CommonEncryption from '../CommonEncryption.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
+const uuid = ProtectionConstants.WIDEVINE_UUID;
 const systemString = ProtectionConstants.WIDEVINE_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
@@ -85,4 +85,4 @@ function KeySystemWidevine(config) {
 }
 
 KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default FactoryMaker.getSingletonFactory(KeySystemWidevine); 
+export default FactoryMaker.getSingletonFactory(KeySystemWidevine);

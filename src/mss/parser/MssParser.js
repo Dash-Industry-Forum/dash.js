@@ -37,6 +37,7 @@
 
 import BigInt from '../../../externals/BigInteger.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import ProtectionConstants from '../../streaming/constants/ProtectionConstants.js';
 
 function MssParser(config) {
     config = config || {};
@@ -531,16 +532,16 @@ function MssParser(config) {
             __prefix: 'mspr'
         };
         return {
-            schemeIdUri: 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95',
-            value: 'com.microsoft.playready',
+            schemeIdUri: 'urn:uuid:' + ProtectionConstants.PLAYREADY_UUID,
+            value: ProtectionConstants.PLAYREADY_KEYSTEM_STRING,
             pro: pro
         };
     }
 
     function createWidevineContentProtection(KID) {
         let widevineCP = {
-            schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
-            value: 'com.widevine.alpha'
+            schemeIdUri: 'urn:uuid:' + ProtectionConstants.WIDEVINE_UUID,
+            value: ProtectionConstants.WIDEVINE_KEYSTEM_STRING
         };
         if (!KID) {
             return widevineCP;

@@ -559,19 +559,19 @@ function DefaultProtectionModel(config) {
     }
 
     instance = {
+        closeKeySession,
+        createKeySession,
         getAllInitData,
         getSessions,
+        loadKeySession,
+        removeKeySession,
         requestKeySystemAccess,
+        reset,
         selectKeySystem,
         setMediaElement,
         setServerCertificate,
-        createKeySession,
-        updateKeySession,
-        loadKeySession,
-        removeKeySession,
-        closeKeySession,
         stop,
-        reset
+        updateKeySession,
     };
 
     setup();
