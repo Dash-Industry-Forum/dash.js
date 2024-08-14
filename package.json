@@ -4,9 +4,16 @@
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "author": "Dash Industry Forum",
   "license": "BSD-3-Clause",
-  "exports": "./dist/dash.all.min.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/esm/dash.all.debug.esm.js",
+      "default": "./dist/esm/dash.all.debug.esm.js",
+      "browser": "./dist/dash.all.min.js",
+      "script": "./dist/dash.all.min.js"
+    }
+  },
   "type": "module",
-  "types": "index.d.ts",
   "scripts": {
     "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
     "start": "webpack serve --config build/webpack.dev.cjs",

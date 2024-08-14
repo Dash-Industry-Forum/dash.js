@@ -1,4 +1,9 @@
-import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
+import {
+    CommonMediaRequest,
+    CommonMediaResponse,
+    RequestInterceptor,
+    ResponseInterceptor
+} from '@svta/common-media-library/request'
 
 export = dashjs;
 export as namespace dashjs;
@@ -15,6 +20,15 @@ declare namespace dashjs {
         setLogTimestampVisible(flag: boolean): void;
 
         setCalleeNameVisible(flag: boolean): void;
+    }
+
+    namespace Debug {
+        const LOG_LEVEL_NONE = 0;
+        const LOG_LEVEL_FATAL = 1;
+        const LOG_LEVEL_ERROR = 2;
+        const LOG_LEVEL_WARNING = 3;
+        const LOG_LEVEL_INFO = 4;
+        const LOG_LEVEL_DEBUG = 5;
     }
 
     interface EventBus {
@@ -1296,6 +1310,14 @@ declare namespace dashjs {
 
     export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
+    export interface DvrWindow {
+        start: number;
+        end: number;
+        startAsUtc: number;
+        endAsUtc: number;
+        size: number;
+    }
+
     export interface MediaPlayerClass {
         setConfig(config: object): void;
 
@@ -1427,7 +1449,7 @@ declare namespace dashjs {
 
         timeInDvrWindow(): number;
 
-        getDvrWindow(): object;
+        getDvrWindow(): DvrWindow;
 
         duration(): number;
 
@@ -1483,7 +1505,7 @@ declare namespace dashjs {
 
         setTextTrack(idx: number): void;
 
-        getRepresentationsFor(type: MediaType): Representation[];
+        getRepresentationsByType(type: MediaType): Representation[];
 
         getStreamsFromManifest(manifest: object): StreamInfo[];
 
@@ -3179,6 +3201,31 @@ declare namespace dashjs {
     }
 
     /**
+     * Streaming - Protection - Events
+     **/
+
+    export interface ProtectionEvents {
+        KEY_ADDED: 'public_keyAdded';
+        KEY_ERROR: 'public_keyError';
+        KEY_MESSAGE: 'public_keyMessage';
+        KEY_SESSION_CLOSED: 'public_keySessionClosed';
+        KEY_SESSION_CREATED: 'public_keySessionCreated';
+        KEY_SESSION_REMOVED: 'public_keySessionRemoved';
+        KEY_STATUSES_CHANGED: 'public_keyStatusesChanged';
+        KEY_SYSTEM_ACCESS_COMPLETE: 'public_keySystemAccessComplete';
+        KEY_SYSTEM_SELECTED: 'public_keySystemSelected';
+        LICENSE_REQUEST_COMPLETE: 'public_licenseRequestComplete';
+        LICENSE_REQUEST_SENDING: 'public_licenseRequestSending';
+        NEED_KEY: 'needkey';
+        PROTECTION_CREATED: 'public_protectioncreated';
+        PROTECTION_DESTROYED: 'public_protectiondestroyed';
+        SERVER_CERTIFICATE_UPDATED: 'serverCertificateUpdated';
+        TEARDOWN_COMPLETE: 'protectionTeardownComplete';
+        VIDEO_ELEMENT_SELECTED: 'videoElementSelected';
+        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
+    }
+
+    /**
      * Streaming - Protection - Models
      **/
 
@@ -3509,6 +3556,11 @@ declare namespace dashjs {
 
     export interface Protection {
         createProtectionSystem(config: object): void;
+    }
+
+    export namespace Protection {
+        export const events: ProtectionEvents;
+        export const errors: ProtectionErrors;
     }
 
     /**
@@ -4515,7 +4567,7 @@ declare namespace dashjs {
 
         getHasVideoTrack(): boolean;
 
-        startPreloading(mediaSource: MediaSource, previousBuffers: any[]): void;
+        startPreloading(mediaSource: MediaSource, previousBuffers: any[], representationsFromPreviousPeriod: Representation[]): void;
 
         getThumbnailController(): object;
 
@@ -4523,7 +4575,7 @@ declare namespace dashjs {
 
         reset(): void;
 
-        getProcessors(): any[];
+        getStreamProcessors(): any[];
 
         setMediaSource(mediaSource: MediaSource): void;
 
@@ -4540,8 +4592,6 @@ declare namespace dashjs {
         getAdapter(): DashAdapter
 
         getHasFinishedBuffering(): boolean
-
-        setPreloaded(value: boolean): void
 
         startScheduleControllers(): void
 
@@ -4579,7 +4629,7 @@ declare namespace dashjs {
 
         getStreamInfo(): StreamInfo;
 
-        selectMediaInfo(newMediaInfo: MediaInfo): Promise<any>;
+        selectMediaInfo(selectionInput: object): Promise<any>;
 
         clearMediaInfoArray(): void;
 

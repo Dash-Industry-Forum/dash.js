@@ -36,6 +36,7 @@ import Debug from '../../core/Debug.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function MediaController() {
 
@@ -121,7 +122,7 @@ function MediaController() {
         const possibleTracks = getTracksFor(type, streamInfo.id);
         let filteredTracks = [];
 
-        if (!settings) {
+        if (!settings || Object.keys(settings).length === 0) {
             settings = domStorage.getSavedMediaSettings(type);
             if (settings) {
                 // If the settings are defined locally, do not take codec into account or it'll be too strict.
@@ -603,7 +604,7 @@ function MediaController() {
 
     function selectInitialTrack(type, mediaInfos) {
         if (type === Constants.TEXT) {
-            return mediaInfos[0];
+            return _handleInitialTextTrackSelection(mediaInfos);
         }
 
         let tmpArr;
@@ -648,6 +649,23 @@ function MediaController() {
         }
 
         return tmpArr.length > 0 ? tmpArr[0] : mediaInfos[0];
+    }
+
+    function _handleInitialTextTrackSelection(mediaInfos) {
+        const filteredMediaInfos = mediaInfos.filter((mediaInfo) => {
+            if (mediaInfo && mediaInfo.roles && mediaInfo.roles.length > 0) {
+                return mediaInfo.roles.every((role) => {
+                    return role.schemeIdUri !== Constants.DASH_ROLE_SCHEME_ID || role.value !== DashConstants.FORCED_SUBTITLE
+                })
+            }
+            return true
+        })
+
+        if (filteredMediaInfos.length > 0) {
+            return filteredMediaInfos[0];
+        }
+
+        return null
     }
 
     /**

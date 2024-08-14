@@ -419,10 +419,12 @@ function StreamController() {
             });
 
             let keepBuffers = false;
+            let representationsFromPreviousPeriod = [];
             activeStream = stream;
 
             if (previousStream) {
                 keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+                representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
 
@@ -439,9 +441,9 @@ function StreamController() {
 
             // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
-                _openMediaSource(seekTime, keepBuffers, false);
+                _openMediaSource({ seekTime, keepBuffers, streamActivated: false, representationsFromPreviousPeriod });
             } else {
-                _activateStream(seekTime, keepBuffers);
+                _activateStream({ seekTime, keepBuffers });
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -450,12 +452,10 @@ function StreamController() {
 
     /**
      * Setup the Media Source. Open MSE and attach event listeners
-     * @param {number} seekTime
-     * @param {boolean} keepBuffers
-     * @param {boolean} streamActivated
      * @private
+     * @param inputParameters
      */
-    function _openMediaSource(seekTime, keepBuffers, streamActivated = false) {
+    function _openMediaSource(inputParameters) {
         let sourceUrl;
 
         function _onMediaSourceOpen() {
@@ -472,9 +472,9 @@ function StreamController() {
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
-            if (streamActivated) {
-                if (!isNaN(seekTime)) {
-                    playbackController.seek(seekTime, true, true);
+            if (inputParameters.streamActivated) {
+                if (!isNaN(inputParameters.seekTime)) {
+                    playbackController.seek(inputParameters.seekTime, true, true);
                 }
                 // Set the media source for all StreamProcessors
                 activeStream.setMediaSource(mediaSource)
@@ -483,7 +483,7 @@ function StreamController() {
                         activeStream.initializeForTextWithMediaSource(mediaSource);
                     })
             } else {
-                _activateStream(seekTime, keepBuffers);
+                _activateStream(inputParameters);
             }
         }
 
@@ -498,8 +498,8 @@ function StreamController() {
             mediaSource = mediaSourceController.createMediaSource();
             _open();
         } else {
-            if (keepBuffers) {
-                _activateStream(seekTime, keepBuffers);
+            if (inputParameters.keepBuffers) {
+                _activateStream(inputParameters);
             } else {
                 mediaSourceController.detachMediaSource(videoModel);
                 _open();
@@ -512,8 +512,9 @@ function StreamController() {
      * @param {number} seekTime
      * @param {boolean} keepBuffers
      */
-    function _activateStream(seekTime, keepBuffers) {
-        activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime)
+    function _activateStream(inputParameters) {
+        const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
+        activeStream.activate(mediaSource, inputParameters.keepBuffers ? bufferSinks : undefined, representationsFromPreviousPeriod)
             .then((sinks) => {
                 // check if change type is supported by the browser
                 if (sinks) {
@@ -525,15 +526,22 @@ function StreamController() {
                 }
 
                 // Set the initial time for this stream in the StreamProcessor
-                if (!isNaN(seekTime)) {
-                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
-                    playbackController.seek(seekTime, false, true);
+                if (!isNaN(inputParameters.seekTime)) {
+                    eventBus.trigger(Events.SEEK_TARGET, { time: inputParameters.seekTime }, { streamId: activeStream.getId() });
+                    playbackController.seek(inputParameters.seekTime, false, true);
                     activeStream.startScheduleControllers();
                 }
 
                 isStreamSwitchingInProgress = false;
                 eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
             });
+    }
+
+    function _getRepresentationsFromPreviousPeriod(previousStream) {
+        const previousStreamProcessors = previousStream ? previousStream.getStreamProcessors() : [];
+        return previousStreamProcessors.map((streamProcessor) => {
+            return streamProcessor.getRepresentation();
+        })
     }
 
     /**
@@ -594,7 +602,7 @@ function StreamController() {
      * @private
      */
     function _handleInnerPeriodSeek(e) {
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = activeStream.getStreamProcessors();
 
         streamProcessors.forEach((sp) => {
             return sp.prepareInnerPeriodPlaybackSeeking(e);
@@ -612,7 +620,7 @@ function StreamController() {
     function _handleOuterPeriodSeek(e, seekToStream) {
         // Stop segment requests
         const seekTime = e && !isNaN(e.seekTime) ? e.seekTime : NaN;
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = activeStream.getStreamProcessors();
 
         const promises = streamProcessors.map((sp) => {
             // Cancel everything in case the active stream is still buffering
@@ -634,7 +642,7 @@ function StreamController() {
      * @private
      */
     function _onCurrentTrackChanged(e) {
-        // Track was changed in non active stream. No need to do anything, this only happens when a stream starts preloading
+        // Track was changed in non-active stream. No need to do anything, this only happens when a stream starts preloading
         if (e.newMediaInfo.streamInfo.id !== activeStream.getId()) {
             return;
         }
@@ -643,9 +651,9 @@ function StreamController() {
         _deactivateAllPreloadingStreams();
 
         if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
-            const time = playbackController.getTime();
+            const seekTime = playbackController.getTime();
             activeStream.deactivate(false);
-            _openMediaSource(time, false, false);
+            _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
             return;
         }
 
@@ -684,7 +692,8 @@ function StreamController() {
             let seamlessPeriodSwitch = _canSourceBuffersBeReused(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
-                nextStream.startPreloading(mediaSource, bufferSinks)
+                const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
+                nextStream.startPreloading(mediaSource, bufferSinks, representationsFromPreviousPeriod)
                     .then(() => {
                         preloadingStreams.push(nextStream);
                     });
@@ -957,7 +966,7 @@ function StreamController() {
      * @return {array}
      */
     function getActiveStreamProcessors() {
-        return activeStream ? activeStream.getProcessors() : [];
+        return activeStream ? activeStream.getStreamProcessors() : [];
     }
 
     /**
@@ -1302,7 +1311,7 @@ function StreamController() {
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            _openMediaSource(seekTime, false, true);
+            _openMediaSource({ seekTime, keepBuffers: false, streamActivated: true });
         }
     }
 
@@ -1378,13 +1387,13 @@ function StreamController() {
      */
     function _handleMediaErrorDecode() {
         logger.warn('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
-        const time = playbackController.getTime();
+        const seekTime = playbackController.getTime();
         // Deactivate the current stream.
         activeStream.deactivate(false);
 
         // Reset MSE
-        logger.warn(`MediaSource has been resetted. Resuming playback from time ${time}`);
-        _openMediaSource(time, false, false);
+        logger.warn(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
     function getActiveStreamInfo() {

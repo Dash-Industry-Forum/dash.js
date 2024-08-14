@@ -176,6 +176,17 @@
       "includedTestfiles": [
         "text/*"
       ]
+    },
+    {
+      "name": "Arte forced-subtitles",
+      "type": "vod",
+      "url": "https://arteamd1.akamaized.net/GPU/034000/034700/034755-230-A/221125154117/034755-230-A_8_DA_v20221125.mpd",
+      "includedTestfiles": [
+        "text/forced-subtitles"
+      ],
+      "testdata": {
+        "forcedSubtitles": {}
+      }
     }
   ]
 }
