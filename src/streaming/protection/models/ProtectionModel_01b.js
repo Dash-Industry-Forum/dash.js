@@ -45,6 +45,7 @@ import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import ProtectionErrors from '../errors/ProtectionErrors.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 function ProtectionModel_01b(config) {
 
@@ -296,7 +297,7 @@ function ProtectionModel_01b(config) {
                 switch (event.type) {
                     case api.needkey:
                         let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, 'cenc') });
+                        eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) });
                         break;
 
                     case api.keyerror:
@@ -454,4 +455,4 @@ function ProtectionModel_01b(config) {
 }
 
 ProtectionModel_01b.__dashjs_factory_name = 'ProtectionModel_01b';
-export default FactoryMaker.getClassFactory(ProtectionModel_01b); 
+export default FactoryMaker.getClassFactory(ProtectionModel_01b);

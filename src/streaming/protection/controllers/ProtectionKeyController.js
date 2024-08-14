@@ -39,6 +39,7 @@ import Widevine from './../servers/Widevine.js';
 import ClearKey from './../servers/ClearKey.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import KeySystemMetadata from '../vo/KeySystemMetadata.js';
 
 /**
  * @module ProtectionKeyController
@@ -207,8 +208,8 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
-        let cp, ks, ksIdx, cpIdx;
+    function getSupportedKeySystemMetadataFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
+        let cp, keySystem, ksIdx, cpIdx;
         let supportedKS = [];
 
         if (!contentProtectionElements || !contentProtectionElements.length) {
@@ -216,27 +217,27 @@ function ProtectionKeyController() {
         }
 
         const mp4ProtectionElement = CommonEncryption.findMp4ProtectionElement(contentProtectionElements);
-        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-            ks = keySystems[ksIdx];
+        for (ksIdx = 0; ksIdx < keySystems.length; ksIdx++) {
+            keySystem = keySystems[ksIdx];
 
             // Get protection data that applies for current key system
-            const protData = _getProtDataForKeySystem(ks.systemString, applicationSpecifiedProtectionData);
+            const protData = _getProtDataForKeySystem(keySystem.systemString, applicationSpecifiedProtectionData);
 
-            for (cpIdx = 0; cpIdx < contentProtectionElements.length; ++cpIdx) {
+            for (cpIdx = 0; cpIdx < contentProtectionElements.length; cpIdx++) {
                 cp = contentProtectionElements[cpIdx];
-                if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
+                if (cp.schemeIdUri.toLowerCase() === keySystem.schemeIdURI) {
                     // Look for DRM-specific ContentProtection
-                    let initData = ks.getInitData(cp, mp4ProtectionElement);
+                    let initData = keySystem.getInitData(cp, mp4ProtectionElement);
 
-                    supportedKS.push({
+                    supportedKS.push(new KeySystemMetadata({
                         ks: keySystems[ksIdx],
                         keyId: cp.keyId,
                         initData: initData,
                         protData: protData,
-                        cdmData: ks.getCDMData(protData ? protData.cdmData : null),
+                        cdmData: keySystem.getCDMData(protData ? protData.cdmData : null),
                         sessionId: _getSessionId(protData, cp),
                         sessionType: _getSessionType(protData, sessionType)
-                    });
+                    }));
                 }
             }
         }
@@ -385,18 +386,18 @@ function ProtectionKeyController() {
     }
 
     instance = {
-        initialize,
-        setProtectionData,
-        isClearKey,
-        initDataEquals,
-        getKeySystems,
-        setKeySystems,
         getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystemsFromSegmentPssh,
+        getKeySystems,
         getLicenseServerModelInstance,
+        getSupportedKeySystemMetadataFromContentProtection,
+        getSupportedKeySystemsFromSegmentPssh,
+        initDataEquals,
+        initialize,
+        isClearKey,
         processClearKeyLicenseRequest,
-        setConfig
+        setConfig,
+        setKeySystems,
+        setProtectionData,
     };
 
     return instance;

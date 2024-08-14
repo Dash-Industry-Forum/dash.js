@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashConstants from '../../dash/constants/DashConstants.js';
+import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
     prefixes: ['clearkey', 'dashif', 'ck']
@@ -52,7 +53,7 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri && cp.schemeIdUri.toLowerCase() === DashConstants.MP4_PROTECTION_SCHEME && cp.value &&
-                (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs')) {
+                (cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CENC || cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CBCS)) {
                 retVal = cp;
             }
         }

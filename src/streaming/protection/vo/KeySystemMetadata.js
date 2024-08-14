@@ -28,43 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import ProtectionConstants from '../../constants/ProtectionConstants.js';
-
 /**
- * @classdesc Represents a set of configurations that describe the capabilities desired for
- *  support by a given CDM
+ * @classdesc A model class to save metadata about a key system
  * @ignore
  */
-class KeySystemConfiguration {
-    /**
-     * @param {Array.<MediaCapability>} audioCapabilities array of
-     * desired audio capabilities.  Higher preference capabilities should be placed earlier
-     * in the array.
-     * @param {Array.<MediaCapability>} videoCapabilities array of
-     * desired video capabilities.  Higher preference capabilities should be placed earlier
-     * in the array.
-     * @param {string} distinctiveIdentifier desired use of distinctive identifiers.
-     * One of "required", "optional", or "not-allowed"
-     * @param {string} persistentState desired support for persistent storage of
-     * key systems.  One of "required", "optional", or "not-allowed"
-     * @param {Array.<string>} sessionTypes List of session types that must
-     * be supported by the key system
-     * @class
-     */
-    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
-        this.initDataTypes = [];
-        this.initDataTypes.push(ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC);
-        if (audioCapabilities && audioCapabilities.length) {
-            this.audioCapabilities = audioCapabilities;
-        }
-        if (videoCapabilities && videoCapabilities.length) {
-            this.videoCapabilities = videoCapabilities;
-        }
-        this.distinctiveIdentifier = distinctiveIdentifier;
-        this.persistentState = persistentState;
-        this.sessionTypes = sessionTypes;
+
+class KeySystemMetadata {
+    constructor(config) {
+        this.ks = config.ks;
+        this.keyId = config.keyId;
+        this.initData = config.initData;
+        this.protData = config.protData;
+        this.cdmData = config.cdmData;
+        this.sessionId = config.sessionId;
+        this.sessionType = config.sessionType;
     }
 }
 
-export default KeySystemConfiguration;
+export default KeySystemMetadata;

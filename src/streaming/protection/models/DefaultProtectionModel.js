@@ -135,21 +135,21 @@ function DefaultProtectionModel(config) {
         return sessions;
     }
 
-    function requestKeySystemAccess(ksConfigurations) {
+    function requestKeySystemAccess(keySystemConfigurationsToRequest) {
         return new Promise((resolve, reject) => {
-            _requestKeySystemAccessInternal(ksConfigurations, 0, resolve, reject);
+            _requestKeySystemAccessInternal(keySystemConfigurationsToRequest, 0, resolve, reject);
         })
     }
 
     /**
      * Initializes access to a key system. Once we found a valid configuration we get a mediaKeySystemAccess object
-     * @param ksConfigurations
+     * @param keySystemConfigurationsToRequest
      * @param idx
      * @param resolve
      * @param reject
      * @private
      */
-    function _requestKeySystemAccessInternal(ksConfigurations, idx, resolve, reject) {
+    function _requestKeySystemAccessInternal(keySystemConfigurationsToRequest, idx, resolve, reject) {
 
         // In case requestMediaKeySystemAccess is not available we can not proceed and dispatch an error
         if (navigator.requestMediaKeySystemAccess === undefined ||
@@ -160,11 +160,11 @@ function DefaultProtectionModel(config) {
             return;
         }
 
-        // If a systemStringPriority is defined by the application we use these values. Otherwise we use the default system string
+        // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
         // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-        const protDataSystemStringPriority = ksConfigurations[idx].protData && ksConfigurations[idx].protData.systemStringPriority ? ksConfigurations[idx].protData.systemStringPriority : null;
-        const configs = ksConfigurations[idx].configs;
-        const currentKeySystem = ksConfigurations[idx].ks;
+        const protDataSystemStringPriority = keySystemConfigurationsToRequest[idx].protData && keySystemConfigurationsToRequest[idx].protData.systemStringPriority ? keySystemConfigurationsToRequest[idx].protData.systemStringPriority : null;
+        const configs = keySystemConfigurationsToRequest[idx].configs;
+        const currentKeySystem = keySystemConfigurationsToRequest[idx].ks;
         let systemString = currentKeySystem.systemString;
 
         // Use the default values in case no values are provided by the application
@@ -182,8 +182,8 @@ function DefaultProtectionModel(config) {
                 resolve({ data: keySystemAccess });
             })
             .catch((e) => {
-                if (idx + 1 < ksConfigurations.length) {
-                    _requestKeySystemAccessInternal(ksConfigurations, idx + 1, resolve, reject);
+                if (idx + 1 < keySystemConfigurationsToRequest.length) {
+                    _requestKeySystemAccessInternal(keySystemConfigurationsToRequest, idx + 1, resolve, reject);
                 } else {
                     const errorMessage = 'Key system access denied! ';
                     eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: errorMessage + e.message });

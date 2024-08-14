@@ -40,6 +40,7 @@ import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
 import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -80,9 +81,9 @@ function ProtectionController(config) {
 
     let instance,
         logger,
-        pendingKeySessionsToHandle,
+        pendingKeySystemsToHandle,
         mediaInfoArr,
-        protDataSet,
+        applicationProvidedProtectionData,
         sessionType,
         robustnessLevel,
         selectedKeySystem,
@@ -92,7 +93,7 @@ function ProtectionController(config) {
 
     function setup() {
         logger = debug.getLogger(instance);
-        pendingKeySessionsToHandle = [];
+        pendingKeySystemsToHandle = [];
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
@@ -102,8 +103,8 @@ function ProtectionController(config) {
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
     }
 
-    function checkConfig() {
-        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemsFromContentProtection')) {
+    function _checkConfig() {
+        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemMetadataFromContentProtection')) {
             throw new Error('Missing config parameter(s)');
         }
     }
@@ -124,8 +125,7 @@ function ProtectionController(config) {
             throw new Error('mediaInfo can not be null or undefined');
         }
 
-        checkConfig();
-
+        _checkConfig();
         mediaInfoArr.push(mediaInfo);
     }
 
@@ -139,44 +139,44 @@ function ProtectionController(config) {
             return;
         }
 
-        let supportedKeySystems = [];
-        mediaInfoArr.forEach((mInfo) => {
-            const currentKs = protectionKeyController.getSupportedKeySystemsFromContentProtection(mInfo.contentProtection, protDataSet, sessionType);
-            // We assume that the same key systems are signaled for each AS. We can use the first entry we found
-            if (currentKs.length > 0) {
-                if (supportedKeySystems.length === 0) {
-                    supportedKeySystems = currentKs;
+        let supportedKeySystemsMetadata = [];
+        mediaInfoArr.forEach((mediaInfo) => {
+            const keySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromContentProtection(mediaInfo.contentProtection, applicationProvidedProtectionData, sessionType);
+            // We assume that the same key systems are signaled for each AS. We can use the first entry we find
+            if (keySystemsMetadata.length > 0) {
+                if (supportedKeySystemsMetadata.length === 0) {
+                    supportedKeySystemsMetadata = keySystemsMetadata;
                 }
                 // Save config for creating key session once we selected a key system
-                pendingKeySessionsToHandle.push(currentKs);
+                pendingKeySystemsToHandle.push(keySystemsMetadata);
             }
         })
 
-        if (supportedKeySystems && supportedKeySystems.length > 0) {
-            _selectKeySystemOrUpdateKeySessions(supportedKeySystems, true);
+        if (supportedKeySystemsMetadata && supportedKeySystemsMetadata.length > 0) {
+            _selectKeySystemOrUpdateKeySessions(supportedKeySystemsMetadata, true);
         }
     }
 
     /**
      * Selects a key system if we dont have any one yet. Otherwise we use the existing key system and trigger a new license request if the initdata has changed
-     * @param {array} supportedKs
+     * @param {array} supportedKeySystemsMetadata
      * @private
      */
-    function _handleKeySystemFromPssh(supportedKs) {
-        pendingKeySessionsToHandle.push(supportedKs);
-        _selectKeySystemOrUpdateKeySessions(supportedKs, false);
+    function _handleKeySystemFromPssh(supportedKeySystemsMetadata) {
+        pendingKeySystemsToHandle.push(supportedKeySystemsMetadata);
+        _selectKeySystemOrUpdateKeySessions(supportedKeySystemsMetadata, false);
     }
 
     /**
      * Select the key system or update one of our existing key sessions
-     * @param {array} supportedKs
+     * @param {array} supportedKeySystemsMetadata
      * @param {boolean} fromManifest
      * @private
      */
-    function _selectKeySystemOrUpdateKeySessions(supportedKs, fromManifest) {
+    function _selectKeySystemOrUpdateKeySessions(supportedKeySystemsMetadata, fromManifest) {
         // First time, so we need to select a key system
         if (!selectedKeySystem && !keySystemSelectionInProgress) {
-            _selectInitialKeySystem(supportedKs, fromManifest);
+            _selectInitialKeySystem(supportedKeySystemsMetadata, fromManifest);
         }
 
         // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
@@ -187,70 +187,109 @@ function ProtectionController(config) {
 
     /**
      * We do not have a key system yet. Select one
-     * @param {array} supportedKs
+     * @param {array} supportedKeySystemsMetadata
      * @param {boolean} fromManifest
      * @private
      */
-    function _selectInitialKeySystem(supportedKs, fromManifest) {
-        if (!keySystemSelectionInProgress) {
-            keySystemSelectionInProgress = true;
-            const requestedKeySystems = [];
-
-            // Reorder key systems according to priority order provided in protectionData
-            supportedKs = supportedKs.sort((ksA, ksB) => {
-                let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKs.length;
-                let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKs.length;
-                return indexA - indexB;
-            });
-
-            // Add all key systems to our request list since we have yet to select a key system
-            for (let i = 0; i < supportedKs.length; i++) {
-                const keySystemConfiguration = _getKeySystemConfiguration(supportedKs[i]);
-                requestedKeySystems.push({
-                    ks: supportedKs[i].ks,
-                    configs: [keySystemConfiguration],
-                    protData: supportedKs[i].protData
-                });
-            }
-
-            let keySystemAccess;
-
-            protectionModel.requestKeySystemAccess(requestedKeySystems)
-                .then((event) => {
-                    keySystemAccess = event.data;
-                    let selectedSystemString = keySystemAccess.mksa && keySystemAccess.mksa.selectedSystemString ? keySystemAccess.mksa.selectedSystemString : keySystemAccess.keySystem.systemString;
-                    logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
-                    return protectionModel.selectKeySystem(keySystemAccess);
-                })
-                .then((keySystem) => {
-                    selectedKeySystem = keySystem;
-                    keySystemSelectionInProgress = false;
-
-                    if (!protectionModel) {
-                        return;
-                    }
-
-                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
-
-                    // Set server certificate from protData
-                    const protData = _getProtDataForKeySystem(selectedKeySystem);
-                    if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-                        protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
-                    }
-
-                    _handleKeySessions();
-                })
-                .catch((event) => {
-                    selectedKeySystem = null;
-                    keySystemSelectionInProgress = false;
-                    if (!fromManifest) {
-                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-                            data: null,
-                            error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
-                        });
-                    }
-                })
+    function _selectInitialKeySystem(supportedKeySystemsMetadata, fromManifest) {
+        if (keySystemSelectionInProgress) {
+            return
         }
+
+        keySystemSelectionInProgress = true;
+
+        // Reorder key systems according to priority order provided in protectionData
+        supportedKeySystemsMetadata = _sortKeySystemsByPriority(supportedKeySystemsMetadata)
+
+        // Add all key systems to our request list since we have yet to select a key system
+        const keySystemConfigurationsToRequest = _getKeySystemConfigurations(supportedKeySystemsMetadata);
+
+        let mediaKeySystemAccess;
+        protectionModel.requestKeySystemAccess(keySystemConfigurationsToRequest)
+            .then((event) => {
+                mediaKeySystemAccess = event.data;
+                let selectedSystemString = mediaKeySystemAccess.mksa && mediaKeySystemAccess.mksa.selectedSystemString ? mediaKeySystemAccess.mksa.selectedSystemString : mediaKeySystemAccess.keySystem.systemString;
+                logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
+                return protectionModel.selectKeySystem(mediaKeySystemAccess);
+            })
+            .then((keySystem) => {
+                selectedKeySystem = keySystem;
+                keySystemSelectionInProgress = false;
+
+                if (!protectionModel) {
+                    return;
+                }
+
+                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: mediaKeySystemAccess });
+
+                // Set server certificate from protData
+                const protData = _getProtDataForKeySystem(selectedKeySystem);
+                if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                    protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+                }
+
+                _handleKeySessions();
+            })
+            .catch((event) => {
+                selectedKeySystem = null;
+                keySystemSelectionInProgress = false;
+                if (!fromManifest) {
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                        data: null,
+                        error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+                    });
+                }
+            })
+
+    }
+
+    function _sortKeySystemsByPriority(supportedKeySystems) {
+        return supportedKeySystems.sort((ksA, ksB) => {
+            let indexA = (applicationProvidedProtectionData && applicationProvidedProtectionData[ksA.ks.systemString] && applicationProvidedProtectionData[ksA.ks.systemString].priority >= 0) ? applicationProvidedProtectionData[ksA.ks.systemString].priority : supportedKeySystems.length;
+            let indexB = (applicationProvidedProtectionData && applicationProvidedProtectionData[ksB.ks.systemString] && applicationProvidedProtectionData[ksB.ks.systemString].priority >= 0) ? applicationProvidedProtectionData[ksB.ks.systemString].priority : supportedKeySystems.length;
+            return indexA - indexB;
+        });
+    }
+
+    function _getKeySystemConfigurations(supportedKeySystemsMetadata) {
+        const keySystemConfigurationsToRequest = [];
+        for (let i = 0; i < supportedKeySystemsMetadata.length; i++) {
+            const keySystemConfiguration = _getKeySystemConfiguration(supportedKeySystemsMetadata[i]);
+            keySystemConfigurationsToRequest.push({
+                ks: supportedKeySystemsMetadata[i].ks,
+                configs: [keySystemConfiguration],
+                protData: supportedKeySystemsMetadata[i].protData
+            });
+        }
+
+        return keySystemConfigurationsToRequest;
+    }
+
+    /**
+     * Returns an object corresponding to the EME MediaKeySystemConfiguration dictionary
+     * @param {object} keySystem
+     * @return {KeySystemConfiguration}
+     * @private
+     */
+    function _getKeySystemConfiguration(keySystemData) {
+        const protData = keySystemData.protData;
+        const audioCapabilities = [];
+        const videoCapabilities = [];
+        const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+        const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+        const ksSessionType = keySystemData.sessionType;
+        const distinctiveIdentifier = (protData && protData.distinctiveIdentifier) ? protData.distinctiveIdentifier : 'optional';
+        const persistentState = (protData && protData.persistentState) ? protData.persistentState : (ksSessionType === 'temporary') ? 'optional' : 'required';
+
+        mediaInfoArr.forEach((media) => {
+            if (media.type === constants.AUDIO) {
+                audioCapabilities.push(new MediaCapability(media.codec, audioRobustness));
+            } else if (media.type === constants.VIDEO) {
+                videoCapabilities.push(new MediaCapability(media.codec, videoRobustness));
+            }
+        });
+
+        return new KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType]);
     }
 
     /**
@@ -260,16 +299,16 @@ function ProtectionController(config) {
     function _handleKeySessions() {
         // Create key sessions for the different AdaptationSets
         let ksIdx;
-        for (let i = 0; i < pendingKeySessionsToHandle.length; i++) {
-            for (ksIdx = 0; ksIdx < pendingKeySessionsToHandle[i].length; ksIdx++) {
-                if (selectedKeySystem === pendingKeySessionsToHandle[i][ksIdx].ks) {
-                    const current = pendingKeySessionsToHandle[i][ksIdx]
+        for (let i = 0; i < pendingKeySystemsToHandle.length; i++) {
+            for (ksIdx = 0; ksIdx < pendingKeySystemsToHandle[i].length; ksIdx++) {
+                if (selectedKeySystem === pendingKeySystemsToHandle[i][ksIdx].ks) {
+                    const current = pendingKeySystemsToHandle[i][ksIdx]
                     _loadOrCreateKeySession(current)
                     break;
                 }
             }
         }
-        pendingKeySessionsToHandle = [];
+        pendingKeySystemsToHandle = [];
     }
 
     /**
@@ -311,7 +350,7 @@ function ProtectionController(config) {
      * @ignore
      */
     function loadKeySession(keySystemInfo) {
-        checkConfig();
+        _checkConfig();
         protectionModel.loadKeySession(keySystemInfo);
     }
 
@@ -370,8 +409,8 @@ function ProtectionController(config) {
         if (keySystem) {
             const keySystemString = keySystem.systemString;
 
-            if (protDataSet) {
-                return (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
+            if (applicationProvidedProtectionData) {
+                return (keySystemString in applicationProvidedProtectionData) ? applicationProvidedProtectionData[keySystemString] : null;
             }
         }
         return null;
@@ -399,9 +438,9 @@ function ProtectionController(config) {
      * @instance
      * @ignore
      */
-    function getSupportedKeySystemsFromContentProtection(cps) {
-        checkConfig();
-        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType);
+    function getSupportedKeySystemMetadataFromContentProtection(cps) {
+        _checkConfig();
+        return protectionKeyController.getSupportedKeySystemMetadataFromContentProtection(cps, applicationProvidedProtectionData, sessionType);
     }
 
     /**
@@ -470,7 +509,7 @@ function ProtectionController(config) {
      * @ignore
      */
     function removeKeySession(sessionToken) {
-        checkConfig();
+        _checkConfig();
         protectionModel.removeKeySession(sessionToken);
     }
 
@@ -486,7 +525,7 @@ function ProtectionController(config) {
      * @ignore
      */
     function closeKeySession(sessionToken) {
-        checkConfig();
+        _checkConfig();
         protectionModel.closeKeySession(sessionToken);
     }
 
@@ -502,7 +541,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#ServerCertificateUpdated
      */
     function setServerCertificate(serverCertificate) {
-        checkConfig();
+        _checkConfig();
         protectionModel.setServerCertificate(serverCertificate);
     }
 
@@ -517,7 +556,7 @@ function ProtectionController(config) {
      * @instance
      */
     function setMediaElement(element) {
-        checkConfig();
+        _checkConfig();
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(events.NEED_KEY, _onNeedKey, instance);
@@ -562,7 +601,7 @@ function ProtectionController(config) {
      * @ignore
      */
     function setProtectionData(data) {
-        protDataSet = data;
+        applicationProvidedProtectionData = data;
         protectionKeyController.setProtectionData(data);
     }
 
@@ -593,7 +632,7 @@ function ProtectionController(config) {
         eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
 
-        checkConfig();
+        _checkConfig();
 
         _abortLicenseRequest();
 
@@ -611,37 +650,7 @@ function ProtectionController(config) {
         needkeyRetries = [];
 
         mediaInfoArr = [];
-        pendingKeySessionsToHandle = [];
-    }
-
-    /**
-     * Returns an object corresponding to the EME MediaKeySystemConfiguration dictionary
-     * @param {object} keySystem
-     * @return {KeySystemConfiguration}
-     * @private
-     */
-    function _getKeySystemConfiguration(keySystemData) {
-        const protData = keySystemData.protData;
-        const audioCapabilities = [];
-        const videoCapabilities = [];
-        const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
-        const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
-        const ksSessionType = keySystemData.sessionType;
-        const distinctiveIdentifier = (protData && protData.distinctiveIdentifier) ? protData.distinctiveIdentifier : 'optional';
-        const persistentState = (protData && protData.persistentState) ? protData.persistentState : (ksSessionType === 'temporary') ? 'optional' : 'required';
-
-        mediaInfoArr.forEach((media) => {
-            if (media.type === constants.AUDIO) {
-                audioCapabilities.push(new MediaCapability(media.codec, audioRobustness));
-            } else if (media.type === constants.VIDEO) {
-                videoCapabilities.push(new MediaCapability(media.codec, videoRobustness));
-            }
-        });
-
-        return new KeySystemConfiguration(
-            audioCapabilities, videoCapabilities, distinctiveIdentifier,
-            persistentState,
-            [ksSessionType]);
+        pendingKeySystemsToHandle = [];
     }
 
     /**
@@ -1049,7 +1058,7 @@ function ProtectionController(config) {
             logger.debug('DRM: onNeedKey');
 
             // Ignore non-cenc initData
-            if (event.key.initDataType !== 'cenc') {
+            if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
                 logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
                 return;
             }
@@ -1085,7 +1094,7 @@ function ProtectionController(config) {
 
             logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-            const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, protDataSet, sessionType);
+            const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
             if (supportedKs.length === 0) {
                 logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
                 return;
@@ -1114,23 +1123,23 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initializeForMedia,
         clearMediaInfoArray,
-        handleKeySystemFromManifest,
+        closeKeySession,
         createKeySession,
+        getKeySystems,
+        getSupportedKeySystemMetadataFromContentProtection,
+        handleKeySystemFromManifest,
+        initializeForMedia,
         loadKeySession,
         removeKeySession,
-        closeKeySession,
-        setServerCertificate,
-        setMediaElement,
-        setSessionType,
-        setRobustnessLevel,
-        setProtectionData,
-        getSupportedKeySystemsFromContentProtection,
-        getKeySystems,
+        reset,
         setKeySystems,
+        setMediaElement,
+        setProtectionData,
+        setRobustnessLevel,
+        setServerCertificate,
+        setSessionType,
         stop,
-        reset
     };
 
     setup();
