@@ -81,7 +81,7 @@ function ProtectionController(config) {
 
     let instance,
         logger,
-        pendingKeySystemsToHandle,
+        pendingMediaTypesToHandle,
         mediaInfoArr,
         applicationProvidedProtectionData,
         sessionType,
@@ -93,7 +93,7 @@ function ProtectionController(config) {
 
     function setup() {
         logger = debug.getLogger(instance);
-        pendingKeySystemsToHandle = [];
+        pendingMediaTypesToHandle = [];
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
@@ -148,7 +148,7 @@ function ProtectionController(config) {
                     supportedKeySystemsMetadata = keySystemsMetadata;
                 }
                 // Save config for creating key session once we selected a key system
-                pendingKeySystemsToHandle.push(keySystemsMetadata);
+                pendingMediaTypesToHandle.push(keySystemsMetadata);
             }
         })
 
@@ -163,7 +163,7 @@ function ProtectionController(config) {
      * @private
      */
     function _handleKeySystemFromPssh(supportedKeySystemsMetadata) {
-        pendingKeySystemsToHandle.push(supportedKeySystemsMetadata);
+        pendingMediaTypesToHandle.push(supportedKeySystemsMetadata);
         _selectKeySystemOrUpdateKeySessions(supportedKeySystemsMetadata, false);
     }
 
@@ -208,9 +208,7 @@ function ProtectionController(config) {
         protectionModel.requestKeySystemAccess(keySystemConfigurationsToRequest)
             .then((event) => {
                 mediaKeySystemAccess = event.data;
-                let selectedSystemString = mediaKeySystemAccess.mksa && mediaKeySystemAccess.mksa.selectedSystemString ? mediaKeySystemAccess.mksa.selectedSystemString : mediaKeySystemAccess.keySystem.systemString;
-                logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
-                return protectionModel.selectKeySystem(mediaKeySystemAccess);
+                return _onKeySystemAccessed(mediaKeySystemAccess);
             })
             .then((keySystem) => {
                 selectedKeySystem = keySystem;
@@ -241,6 +239,12 @@ function ProtectionController(config) {
                 }
             })
 
+    }
+
+    function _onKeySystemAccessed(mediaKeySystemAccess) {
+        let selectedSystemString = mediaKeySystemAccess && mediaKeySystemAccess.selectedSystemString ? mediaKeySystemAccess.selectedSystemString : mediaKeySystemAccess.keySystem.systemString;
+        logger.info('DRM: KeySystem Access Granted for system string (' + selectedSystemString + ')!  Selecting key system...');
+        return protectionModel.selectKeySystem(mediaKeySystemAccess);
     }
 
     function _sortKeySystemsByPriority(supportedKeySystems) {
@@ -275,6 +279,7 @@ function ProtectionController(config) {
         const protData = keySystemData.protData;
         const audioCapabilities = [];
         const videoCapabilities = [];
+        const initDataTypes = (protData && protData.initDataTypes && protData.initDataTypes.length > 0) ? protData.initDataTypes : [ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
         const ksSessionType = keySystemData.sessionType;
@@ -289,7 +294,7 @@ function ProtectionController(config) {
             }
         });
 
-        return new KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType]);
+        return new KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType], initDataTypes);
     }
 
     /**
@@ -299,16 +304,16 @@ function ProtectionController(config) {
     function _handleKeySessions() {
         // Create key sessions for the different AdaptationSets
         let ksIdx;
-        for (let i = 0; i < pendingKeySystemsToHandle.length; i++) {
-            for (ksIdx = 0; ksIdx < pendingKeySystemsToHandle[i].length; ksIdx++) {
-                if (selectedKeySystem === pendingKeySystemsToHandle[i][ksIdx].ks) {
-                    const current = pendingKeySystemsToHandle[i][ksIdx]
+        for (let i = 0; i < pendingMediaTypesToHandle.length; i++) {
+            for (ksIdx = 0; ksIdx < pendingMediaTypesToHandle[i].length; ksIdx++) {
+                if (selectedKeySystem === pendingMediaTypesToHandle[i][ksIdx].ks) {
+                    const current = pendingMediaTypesToHandle[i][ksIdx]
                     _loadOrCreateKeySession(current)
                     break;
                 }
             }
         }
-        pendingKeySystemsToHandle = [];
+        pendingMediaTypesToHandle = [];
     }
 
     /**
@@ -650,7 +655,7 @@ function ProtectionController(config) {
         needkeyRetries = [];
 
         mediaInfoArr = [];
-        pendingKeySystemsToHandle = [];
+        pendingMediaTypesToHandle = [];
     }
 
     /**

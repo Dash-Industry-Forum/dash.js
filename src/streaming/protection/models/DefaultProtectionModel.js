@@ -172,12 +172,12 @@ function DefaultProtectionModel(config) {
 
         // Check all the available system strings and the available configurations for support
         _checkAccessForKeySystem(systemStringsToApply, configs)
-            .then((mediaKeySystemAccess) => {
-                const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                    mediaKeySystemAccess.getConfiguration() : null;
+            .then((data) => {
+                const configuration = data && data.nativeMediaKeySystemAccessObject && typeof data.nativeMediaKeySystemAccessObject.getConfiguration === 'function' ?
+                    data.nativeMediaKeySystemAccessObject.getConfiguration() : null;
                 const keySystemAccess = new KeySystemAccess(currentKeySystem, configuration);
-
-                keySystemAccess.mksa = mediaKeySystemAccess;
+                keySystemAccess.selectedSystemString = data.selectedSystemString;
+                keySystemAccess.nativeMediaKeySystemAccessObject = data.nativeMediaKeySystemAccessObject;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
                 resolve({ data: keySystemAccess });
             })
@@ -221,8 +221,7 @@ function DefaultProtectionModel(config) {
 
         navigator.requestMediaKeySystemAccess(systemString, configs)
             .then((mediaKeySystemAccess) => {
-                mediaKeySystemAccess.selectedSystemString = systemString;
-                resolve(mediaKeySystemAccess);
+                resolve({ nativeMediaKeySystemAccessObject: mediaKeySystemAccess, selectedSystemString: systemString });
             })
             .catch((e) => {
                 if (idx + 1 < systemStringsToApply.length) {
@@ -240,7 +239,7 @@ function DefaultProtectionModel(config) {
      */
     function selectKeySystem(keySystemAccess) {
         return new Promise((resolve, reject) => {
-            keySystemAccess.mksa.createMediaKeys()
+            keySystemAccess.nativeMediaKeySystemAccessObject.createMediaKeys()
                 .then((mkeys) => {
                     keySystem = keySystemAccess.keySystem;
                     mediaKeys = mkeys;

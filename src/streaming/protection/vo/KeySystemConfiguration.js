@@ -52,9 +52,8 @@ class KeySystemConfiguration {
      * be supported by the key system
      * @class
      */
-    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
-        this.initDataTypes = [];
-        this.initDataTypes.push(ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC);
+    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes, initDataTypes) {
+        this.initDataTypes = initDataTypes && initDataTypes.length > 0 ? initDataTypes : [ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC];
         if (audioCapabilities && audioCapabilities.length) {
             this.audioCapabilities = audioCapabilities;
         }
