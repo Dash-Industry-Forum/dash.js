@@ -209,7 +209,7 @@ function ProtectionKeyController() {
      * @instance
      */
     function getSupportedKeySystemMetadataFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
-        let cp, keySystem, ksIdx, cpIdx;
+        let contentProtectionElement, keySystem, ksIdx, cpIdx;
         let supportedKS = [];
 
         if (!contentProtectionElements || !contentProtectionElements.length) {
@@ -224,18 +224,18 @@ function ProtectionKeyController() {
             const protData = _getProtDataForKeySystem(keySystem.systemString, applicationSpecifiedProtectionData);
 
             for (cpIdx = 0; cpIdx < contentProtectionElements.length; cpIdx++) {
-                cp = contentProtectionElements[cpIdx];
-                if (cp.schemeIdUri.toLowerCase() === keySystem.schemeIdURI) {
+                contentProtectionElement = contentProtectionElements[cpIdx];
+                if (contentProtectionElement.schemeIdUri.toLowerCase() === keySystem.schemeIdURI) {
                     // Look for DRM-specific ContentProtection
-                    let initData = keySystem.getInitData(cp, mp4ProtectionElement);
+                    let initData = keySystem.getInitData(contentProtectionElement, mp4ProtectionElement);
 
                     supportedKS.push(new KeySystemMetadata({
                         ks: keySystems[ksIdx],
-                        keyId: cp.keyId,
+                        keyId: contentProtectionElement.keyId,
                         initData: initData,
                         protData: protData,
                         cdmData: keySystem.getCDMData(protData ? protData.cdmData : null),
-                        sessionId: _getSessionId(protData, cp),
+                        sessionId: _getSessionId(protData, contentProtectionElement),
                         sessionType: _getSessionType(protData, sessionType)
                     }));
                 }
@@ -308,7 +308,7 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === 'license-release' || messageType === 'individualization-request') {
+        if (messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE || messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
             return null;
         }
 

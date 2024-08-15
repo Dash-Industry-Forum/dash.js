@@ -46,7 +46,13 @@ export default {
     INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
     INITIALIZATION_DATA_TYPE_WEBM: 'webm',
     ENCRYPTION_SCHEME_CENC: 'cenc',
-    ENCRYPTION_SCHEME_CBCS: 'cbcs'
+    ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    MEDIA_KEY_MESSAGE_TYPES: {
+        LICENSE_REQUEST: 'license-request',
+        LICENSE_RENEWAL: 'license-renewal',
+        LICENSE_RELEASE: 'license-release',
+        INDIVIDUALIZATION_REQUEST: 'individualization-request',
+    }
 }
 
 

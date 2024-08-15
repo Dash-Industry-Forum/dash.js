@@ -283,43 +283,47 @@ function DefaultProtectionModel(config) {
     }
 
     function setServerCertificate(serverCertificate) {
-        if (!keySystem || !mediaKeys) {
-            throw new Error('Can not set server certificate until you have selected a key system');
-        }
-        mediaKeys.setServerCertificate(serverCertificate).then(function () {
-            logger.info('DRM: License server certificate successfully updated.');
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
-        }).catch(function (error) {
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
-        });
+        return new Promise((resolve, reject) => {
+            mediaKeys.setServerCertificate(serverCertificate)
+                .then(function () {
+                    logger.info('DRM: License server certificate successfully updated.');
+                    eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
+                    resolve();
+                })
+                .catch((error) => {
+                    reject(error);
+                    eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
+                });
+        })
     }
 
     /**
      * Create a key session, a session token and initialize a request by calling generateRequest
-     * @param ksInfo
+     * @param keySystemMetadata
      */
-    function createKeySession(ksInfo) {
+    function createKeySession(keySystemMetadata) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not create sessions until you have selected a key system');
         }
 
-        const session = mediaKeys.createSession(ksInfo.sessionType);
-        const sessionToken = createSessionToken(session, ksInfo);
-
+        const mediaKeySession = mediaKeys.createSession(keySystemMetadata.sessionType);
+        const sessionToken = _createSessionToken(mediaKeySession, keySystemMetadata);
 
         // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
-        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (ksInfo.initData || (ksInfo.protData && ksInfo.protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
 
-        session.generateRequest(dataType, ksInfo.initData).then(function () {
-            logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
-            eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
-        }).catch(function (error) {
-            removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {
-                data: null,
-                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)
+        mediaKeySession.generateRequest(dataType, keySystemMetadata.initData)
+            .then(function () {
+                logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
+                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
+            })
+            .catch(function (error) {
+                removeSession(sessionToken);
+                eventBus.trigger(events.KEY_SESSION_CREATED, {
+                    data: null,
+                    error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)
+                });
             });
-        });
     }
 
     function updateKeySession(sessionToken, message) {
@@ -338,12 +342,12 @@ function DefaultProtectionModel(config) {
             });
     }
 
-    function loadKeySession(ksInfo) {
+    function loadKeySession(keySystemMetadata) {
         if (!keySystem || !mediaKeys) {
             throw new Error('Can not load sessions until you have selected a key system');
         }
 
-        const sessionId = ksInfo.sessionId;
+        const sessionId = keySystemMetadata.sessionId;
 
         // Check if session Id is not already loaded or loading
         for (let i = 0; i < sessions.length; i++) {
@@ -353,8 +357,8 @@ function DefaultProtectionModel(config) {
             }
         }
 
-        const session = mediaKeys.createSession(ksInfo.sessionType);
-        const sessionToken = createSessionToken(session, ksInfo);
+        const session = mediaKeys.createSession(keySystemMetadata.sessionType);
+        const sessionToken = _createSessionToken(session, keySystemMetadata);
 
         // Load persisted session data into our newly created session object
         session.load(sessionId).then(function (success) {
@@ -473,13 +477,13 @@ function DefaultProtectionModel(config) {
 
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
-    function createSessionToken(session, ksInfo) {
+    function _createSessionToken(session, keySystemMetadata) {
         const token = { // Implements SessionToken
             session: session,
-            keyId: ksInfo.keyId,
-            initData: ksInfo.initData,
-            sessionId: ksInfo.sessionId,
-            sessionType: ksInfo.sessionType,
+            keyId: keySystemMetadata.keyId,
+            initData: keySystemMetadata.initData,
+            sessionId: keySystemMetadata.sessionId,
+            sessionType: keySystemMetadata.sessionType,
 
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
@@ -487,25 +491,34 @@ function DefaultProtectionModel(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
-                        event.target.keyStatuses.forEach(function () {
-                            let keyStatus = parseKeyStatus(arguments);
-                            switch (keyStatus.status) {
-                                case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
-                                    break;
-                                default:
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
-                                    break;
-                            }
-                        });
+                        this._onKeyStatusChange(event);
                         break;
 
                     case 'message':
-                        let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
+                        this._onKeyMessage(event);
                         break;
                 }
+            },
+
+            _onKeyStatusChange: function (event) {
+                eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
+                event.target.keyStatuses.forEach(function () {
+                    let keyStatus = parseKeyStatus(arguments);
+                    switch (keyStatus.status) {
+                        case 'expired':
+                            eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
+                            break;
+                        default:
+                            eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
+                            break;
+                    }
+                });
+            },
+
+            _onKeyMessage: function (event) {
+                let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
+
             },
 
             getKeyId: function () {
