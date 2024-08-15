@@ -99,6 +99,11 @@
         "playback/play",
         "playback/pause",
         "playback/seek"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
       ]
     },
     {
