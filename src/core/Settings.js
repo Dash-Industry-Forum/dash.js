@@ -80,7 +80,7 @@ import Events from './events/Events.js';
  *                   { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
- *               useMediaCapabilitiesApi: false,
+ *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
  *               filterHDRMetadataFormatEssentialProperties: false
  *            },
@@ -660,7 +660,7 @@ import Events from './events/Events.js';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {Array.<string>} [supportedEssentialProperties]
  * List of supported \<EssentialProperty\> elements
- * @property {boolean} [useMediaCapabilitiesApi=false]
+ * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
  * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
