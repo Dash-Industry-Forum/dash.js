@@ -17,6 +17,11 @@
         "playback/pause",
         "playback/seek",
         "playback/seek-to-presentation-time"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
       ]
     },
     {
@@ -78,9 +83,6 @@
       "excludedPlatforms": [
         {
           "browser": "safari"
-        },
-        {
-          "browser": "chrome"
         }
       ]
     },

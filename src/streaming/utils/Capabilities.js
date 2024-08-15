@@ -151,41 +151,99 @@ function Capabilities() {
 
     /**
      * Check codec support using the MediaCapabilities API
-     * @param {object} config
+     * @param {object} inputConfig
      * @param {string} type
      * @return {Promise<boolean>}
      * @private
      */
-    function _checkCodecWithMediaCapabilities(config, type) {
+    function _checkCodecWithMediaCapabilities(inputConfig, type) {
         return new Promise((resolve) => {
 
-            if (!config || !config.codec || (config.isSupported === false)) {
+            if (!inputConfig || !inputConfig.codec || (inputConfig.isSupported === false)) {
                 resolve(false);
                 return;
             }
 
-            const configuration = {
-                type: 'media-source'
-            };
+            const genericMediaCapabilitiesConfiguration = _getGenericMediaCapabilitiesConfig(inputConfig, type);
+            const configurationsToTest = _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig)
+            const promises = configurationsToTest.map((configuration) => {
+                return navigator.mediaCapabilities.decodingInfo(configuration)
+            })
 
-            configuration[type] = {};
-            configuration[type].contentType = config.codec;
-            configuration[type].width = config.width;
-            configuration[type].height = config.height;
-            configuration[type].bitrate = parseInt(config.bitrate);
-            configuration[type].framerate = parseFloat(config.framerate);
-            if (config.hdrMetadataType) { configuration[type].hdrMetadataType = config.hdrMetadataType; }
-            if (config.colorGamut) { configuration[type].colorGamut = config.colorGamut; }
-            if (config.transferFunction) { configuration[type].transferFunction = config.transferFunction; }
-
-            navigator.mediaCapabilities.decodingInfo(configuration)
-                .then((result) => {
-                    resolve(result.supported);
+            Promise.allSettled(promises)
+                .then((results) => {
+                    const isSupported = results.some((singleResult) => {
+                        return singleResult.status === 'fulfilled' && singleResult.value && singleResult.value.supported
+                    })
+                    resolve(isSupported);
                 })
-                .catch(() => {
-                    resolve(false);
-                });
         });
+    }
+
+    function _getGenericMediaCapabilitiesConfig(inputConfig, type) {
+        let configuration
+
+        if (type === Constants.VIDEO) {
+            configuration = _getGenericMediaCapabilitiesVideoConfig(inputConfig)
+        } else if (type === Constants.AUDIO) {
+            configuration = _getGenericMediaCapabilitiesAudioConfig(inputConfig)
+        }
+
+        configuration[type].contentType = inputConfig.codec;
+        configuration[type].bitrate = parseInt(inputConfig.bitrate);
+        configuration.type = 'media-source';
+
+        return configuration
+    }
+
+    function _getGenericMediaCapabilitiesVideoConfig(inputConfig) {
+        const configuration = {
+            video: {}
+        };
+
+        configuration.video.width = inputConfig.width;
+        configuration.video.height = inputConfig.height;
+        configuration.video.framerate = parseFloat(inputConfig.framerate);
+        if (inputConfig.hdrMetadataType) {
+            configuration.video.hdrMetadataType = inputConfig.hdrMetadataType;
+        }
+        if (inputConfig.colorGamut) {
+            configuration.video.colorGamut = inputConfig.colorGamut;
+        }
+        if (inputConfig.transferFunction) {
+            configuration.video.transferFunction = inputConfig.transferFunction;
+        }
+
+        return configuration
+    }
+
+    function _getGenericMediaCapabilitiesAudioConfig(inputConfig) {
+        const configuration = {
+            audio: {}
+        };
+
+        if (inputConfig.samplerate) {
+            configuration.audio.samplerate = inputConfig.samplerate;
+        }
+
+        return configuration
+    }
+
+    function _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig) {
+        if (!inputConfig || !inputConfig.keySystemsMetadata || inputConfig.keySystemsMetadata.length === 0) {
+            return [genericMediaCapabilitiesConfiguration];
+        }
+
+        return inputConfig.keySystemsMetadata.map((keySystemMetadata) => {
+            const curr = { ...genericMediaCapabilitiesConfiguration };
+            if (keySystemMetadata.ks) {
+                curr.keySystemConfiguration = {};
+                if (keySystemMetadata.ks.systemString) {
+                    curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
+                }
+            }
+            return curr
+        })
     }
 
     /**
