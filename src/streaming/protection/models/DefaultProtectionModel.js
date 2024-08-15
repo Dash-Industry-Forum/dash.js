@@ -47,7 +47,7 @@ import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const SYSTEM_STRING_PRIORITY = {};
-SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
 
