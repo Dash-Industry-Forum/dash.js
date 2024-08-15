@@ -48,6 +48,7 @@
     "karma-junit-reporter": "^2.0.1",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
+    "karma-safarinative-launcher": "^1.1.0",
     "karma-webdriver-launcher": "^1.0.8",
     "karma-webpack": "^5.0.0",
     "mocha": "^10.1.0",
