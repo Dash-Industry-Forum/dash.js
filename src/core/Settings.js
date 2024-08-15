@@ -1062,7 +1062,7 @@ function Settings() {
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
                 ],
-                useMediaCapabilitiesApi: false,
+                useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
                 filterHDRMetadataFormatEssentialProperties: false
             },
