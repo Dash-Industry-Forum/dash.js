@@ -40,7 +40,7 @@ export default {
     PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
     WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
     PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
-    CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30',
+    CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
     W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
     INITIALIZATION_DATA_TYPE_CENC: 'cenc',
     INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
