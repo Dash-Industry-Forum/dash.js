@@ -687,7 +687,7 @@ function Stream(config) {
             }
             return thumbnailController.getPossibleVoRepresentations();
         }
-        const mediaInfo = getMediaInfo(type);
+        const mediaInfo = _getMediaInfo(type);
         return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
     }
 
@@ -706,8 +706,11 @@ function Stream(config) {
             }
             possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
         } else {
-            const mediaInfo = getMediaInfo(type);
-            possibleVoRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            const mediaInfos = _getAllMediaInfos(type);
+
+            possibleVoRepresentations = mediaInfos.flatMap((mediaInfo) => {
+                return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            })
         }
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
@@ -735,7 +738,7 @@ function Stream(config) {
             }
             possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
         } else {
-            const mediaInfo = getMediaInfo(type);
+            const mediaInfo = _getMediaInfo(type);
             possibleVoRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         }
 
@@ -801,18 +804,34 @@ function Stream(config) {
         }
     }
 
-    function getMediaInfo(type) {
-        let streamProcessor = null;
+    function _getMediaInfo(type) {
+        let streamProcessor = _getStreamProcessorForType(type);
 
-        for (let i = 0; i < streamProcessors.length; i++) {
-            streamProcessor = streamProcessors[i];
-
-            if (streamProcessor.getType() === type) {
-                return streamProcessor.getMediaInfo();
-            }
+        if (streamProcessor) {
+            return streamProcessor.getMediaInfo();
         }
 
         return null;
+    }
+
+    function _getAllMediaInfos(type) {
+        let streamProcessor = _getStreamProcessorForType(type);
+
+        if (streamProcessor) {
+            return streamProcessor.getAllMediaInfos();
+        }
+
+        return [];
+    }
+
+    function _getStreamProcessorForType(type) {
+        if (!type) {
+            return null
+        }
+
+        return streamProcessors.find((streamProcessor) => {
+            return streamProcessor.getType() === type;
+        })
     }
 
     function onBufferingCompleted() {
