@@ -52,6 +52,15 @@ export default {
         LICENSE_RENEWAL: 'license-renewal',
         LICENSE_RELEASE: 'license-release',
         INDIVIDUALIZATION_REQUEST: 'individualization-request',
+    },
+    ROBUSTNESS_STRINGS: {
+        WIDEVINE: {
+            SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
+            SW_SECURE_DECODE: 'SW_SECURE_DECODE',
+            HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
+            HW_SECURE_DECODE: 'HW_SECURE_DECODE',
+            HW_SECURE_ALL: 'HW_SECURE_ALL'
+        }
     }
 }
 

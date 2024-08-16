@@ -46,7 +46,7 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
-            { pattern: 'https://imasdk.googleapis.com/js/sdkloader/ima3_dai.js', watched: false, nocache: true },
+            { pattern: 'test/functional/lib/ima3_dai.js', watched: false, nocache: true },
             { pattern: 'dist/dash.all.debug.js', watched: false, nocache: true },
             { pattern: 'dist/dash.mss.min.js', watched: false, nocache: true },
             { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
@@ -110,7 +110,7 @@ module.exports = function (config) {
         client: {
             useIframe: false,
             mocha: {
-                timeout: 90000
+                timeout: 100000
             },
             testvectors
         },

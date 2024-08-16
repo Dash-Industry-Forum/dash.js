@@ -20,8 +20,7 @@ try {
     VAST_EVENTS_TO_VERIFY[google.ima.dai.api.StreamEvent.Type.COMPLETE] = {
         position: 4
     };
-}
-catch(e) {
+} catch (e) {
     console.log(e);
 }
 
@@ -89,13 +88,13 @@ class GoogleAdManagerAdapter {
         const data = event.event.messageData;
         const pts = event.event.calculatedPresentationTime;
         if ((data instanceof Uint8Array) && data.byteLength > 0) {
-            console.log(`Called streamManager.processMetadata using EMSG event at playback time ${this.playerAdapter.getCurrentTime()}`)
+            //console.log(`Called streamManager.processMetadata using EMSG event at playback time ${this.playerAdapter.getCurrentTime()}`)
             this.streamManager.processMetadata('ID3', data, pts);
         }
     }
 
     requestStream() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const streamRequest = new google.ima.dai.api.PodStreamRequest();
             streamRequest.networkCode = NETWORK_CODE;
             streamRequest.customAssetKey = CUSTOM_ASSET_KEY;
