@@ -4,8 +4,8 @@
       "all"
     ],
     "excluded": [
-      "vendor/google-ad-manager-emsg",
-      "buffer/buffer-to-keep-seek"
+      "buffer/buffer-to-keep-seek",
+      "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [

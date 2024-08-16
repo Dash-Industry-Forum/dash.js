@@ -16,8 +16,8 @@ before(() => {
 
 after(() => {
     mpd = null;
-    playerAdapter.destroy();
     googleAdManagerAdapter.reset();
+    playerAdapter.destroy();
 })
 
 it('Register DAI pod session', async () => {
