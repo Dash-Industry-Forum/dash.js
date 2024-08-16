@@ -11,7 +11,8 @@
     "MediaSource": true,
     "WebKitMediaKeys": true,
     "MSMediaKeys": true,
-    "MediaKeys": true
+    "MediaKeys": true,
+    "google": true
   },
   "parserOptions": {
     "ecmaVersion": 2020,
