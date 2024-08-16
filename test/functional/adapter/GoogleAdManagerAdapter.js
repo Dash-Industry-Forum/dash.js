@@ -54,8 +54,11 @@ class GoogleAdManagerAdapter {
             this._onVastEvent, false);
     }
 
+    unregisterVastEventListener() {
+        this.streamManager.removeEventListener(Object.keys(VAST_EVENTS_TO_VERIFY), this._onVastEvent, false);
+    }
+
     _onVastEvent(event) {
-        console.log(`Received ${event.type} event at playback time ${this.playerAdapter.getCurrentTime()}`);
         switch (event.type) {
             case google.ima.dai.api.StreamEvent.Type.STARTED:
             case google.ima.dai.api.StreamEvent.Type.FIRST_QUARTILE:

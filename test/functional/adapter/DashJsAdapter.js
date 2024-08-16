@@ -75,6 +75,7 @@ class DashJsAdapter {
     destroy() {
         this.logEvents = {};
         if (this.player) {
+            this._unregisterInternalEvents();
             this.player.resetSettings();
             this.player.destroy();
         }
