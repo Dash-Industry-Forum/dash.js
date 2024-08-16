@@ -30,6 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
+import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 export function supportsMediaSource() {
     let hasManagedMediaSource = ('ManagedMediaSource' in window)
@@ -165,7 +166,7 @@ function Capabilities() {
             }
 
             const genericMediaCapabilitiesConfiguration = _getGenericMediaCapabilitiesConfig(inputConfig, type);
-            const configurationsToTest = _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig)
+            const configurationsToTest = _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig, type)
             const promises = configurationsToTest.map((configuration) => {
                 return navigator.mediaCapabilities.decodingInfo(configuration)
             })
@@ -229,7 +230,7 @@ function Capabilities() {
         return configuration
     }
 
-    function _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig) {
+    function _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig, type) {
         if (!inputConfig || !inputConfig.keySystemsMetadata || inputConfig.keySystemsMetadata.length === 0) {
             return [genericMediaCapabilitiesConfiguration];
         }
@@ -240,6 +241,10 @@ function Capabilities() {
                 curr.keySystemConfiguration = {};
                 if (keySystemMetadata.ks.systemString) {
                     curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
+                }
+                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
+                    curr.keySystemConfiguration[type] = { robustness: ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO };
+
                 }
             }
             return curr
