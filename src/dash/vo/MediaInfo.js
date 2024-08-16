@@ -34,7 +34,6 @@
  */
 class MediaInfo {
     constructor() {
-        this.KID = null;
         this.accessibility = null;
         this.adaptationSetSwitchingCompatibleIds = [];
         this.audioChannelConfiguration = null;

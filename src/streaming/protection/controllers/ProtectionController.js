@@ -100,7 +100,7 @@ function ProtectionController(config) {
         licenseXhrRequest = null;
         licenseRequestRetryTimeout = null;
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
+        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
     }
 
     function _checkConfig() {
@@ -640,7 +640,7 @@ function ProtectionController(config) {
      */
     function reset() {
         eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onKeyStatusChanged, instance);
+        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
 
         _checkConfig();
 
@@ -665,14 +665,17 @@ function ProtectionController(config) {
 
     /**
      * Event handler for when the status of the key has changed
-     * @param {object} e
+     * @param {object} keyStatus
      * @private
      */
-    function _onKeyStatusChanged(e) {
-        if (e.error) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: null, error: e.error });
+    function _onInternalKeyStatusChanged(e) {
+        if (e.keyStatus && e.keyStatus.status && e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
+            eventBus.trigger(events.KEY_STATUSES_CHANGED, {
+                data: null,
+                error: { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) }
+            });
         } else {
-            logger.debug('DRM: key status = ' + e.status);
+            logger.debug(`DRM: key status = ${e.keyStatus.status} for key id ${e.token.keyId}`);
         }
     }
 

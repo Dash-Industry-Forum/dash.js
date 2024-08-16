@@ -504,14 +504,8 @@ function DefaultProtectionModel(config) {
                 eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
                 event.target.keyStatuses.forEach(function () {
                     let keyStatus = parseKeyStatus(arguments);
-                    switch (keyStatus.status) {
-                        case 'expired':
-                            eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
-                            break;
-                        default:
-                            eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
-                            break;
-                    }
+                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {keyStatus, token});
+
                 });
             },
 
