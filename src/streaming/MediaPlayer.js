@@ -532,6 +532,19 @@ function MediaPlayer() {
     }
 
     /**
+     * Use this method to trigger an event via the eventBus {@link MediaPlayerEvents}
+     *
+     * @param {string} type - {@link MediaPlayerEvents}
+     * @param {object} payload - Payload of the event
+     * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId, mediaType}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function trigger(type, payload, filters) {
+        eventBus.trigger(type, payload, filters);
+    }
+
+    /**
      * Current version of Dash.js
      * @returns {string} the current dash.js version string.
      * @memberof module:MediaPlayer
@@ -2801,6 +2814,7 @@ function MediaPlayer() {
         time,
         timeAsUtc,
         timeInDvrWindow,
+        trigger,
         triggerSteeringRequest,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
