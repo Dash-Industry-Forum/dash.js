@@ -3030,7 +3030,7 @@ declare namespace dashjs {
 
         setProtectionData(data: object): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[]): object[];
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[]): object[];
 
         getKeySystems(): any[];
 
@@ -3060,7 +3060,7 @@ declare namespace dashjs {
 
         getKeySystemBySystemString(systemString: string): KeySystem | null;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
 
         getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
@@ -3285,7 +3285,7 @@ declare namespace dashjs {
         reset(): void;
     }
 
-    export interface ProtectionModel_21Jan2015 {
+    export interface DefaultProtectionModel {
         getAllInitData(): ArrayBuffer[];
 
         getSessions(): any[]; // Is this MediaSession[] ?

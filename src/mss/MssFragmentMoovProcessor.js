@@ -141,7 +141,7 @@ function MssFragmentMoovProcessor(config) {
         createTrexBox(mvex);
 
         if (contentProtection && protectionController) {
-            let supportedKS = protectionController.getSupportedKeySystemsFromContentProtection(contentProtection);
+            let supportedKS = protectionController.getSupportedKeySystemMetadataFromContentProtection(contentProtection);
             createProtectionSystemSpecificHeaderBox(moov, supportedKS);
         }
     }

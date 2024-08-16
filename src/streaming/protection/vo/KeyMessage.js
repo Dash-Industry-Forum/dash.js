@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+
 /**
  * @classdesc EME-independent KeyMessage
  * @ignore
@@ -46,7 +48,7 @@ class KeyMessage {
         this.sessionToken = sessionToken;
         this.message = message;
         this.defaultURL = defaultURL;
-        this.messageType = messageType ? messageType : 'license-request';
+        this.messageType = messageType ? messageType : ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_REQUEST;
     }
 }
 

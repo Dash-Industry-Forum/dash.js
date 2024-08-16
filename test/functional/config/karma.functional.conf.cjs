@@ -144,7 +144,7 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 2
+        concurrency: !isNaN(testConfiguration.concurrency) ? testConfiguration.concurrency : 2
     })
 }
 

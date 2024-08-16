@@ -46,6 +46,7 @@ import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 function ProtectionModel_3Feb2014(config) {
 
@@ -300,7 +301,7 @@ function ProtectionModel_3Feb2014(config) {
                     case api.needkey:
                         if (event.initData) {
                             const initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, 'cenc') });
+                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) });
                         }
                         break;
                 }

@@ -2358,6 +2358,7 @@ function MediaPlayer() {
             customParametersModel,
             adapter,
             settings,
+            protectionController,
             manifestModel,
             errHandler
         });

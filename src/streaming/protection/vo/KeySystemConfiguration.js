@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+
 /**
  * @classdesc Represents a set of configurations that describe the capabilities desired for
  *  support by a given CDM
@@ -50,8 +52,8 @@ class KeySystemConfiguration {
      * be supported by the key system
      * @class
      */
-    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
-        this.initDataTypes = [ 'cenc' ];
+    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes, initDataTypes) {
+        this.initDataTypes = initDataTypes && initDataTypes.length > 0 ? initDataTypes : [ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC];
         if (audioCapabilities && audioCapabilities.length) {
             this.audioCapabilities = audioCapabilities;
         }

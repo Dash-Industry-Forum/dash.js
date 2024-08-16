@@ -46,6 +46,8 @@ class KeySystemAccess {
     constructor(keySystem, ksConfiguration) {
         this.keySystem = keySystem;
         this.ksConfiguration = ksConfiguration;
+        this.nativeMediaKeySystemAccessObject = null;
+        this.selectedSystemString = null;
     }
 }
 

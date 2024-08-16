@@ -28,61 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
- * Google Widevine DRM
- *
- * @class
- * @implements MediaPlayer.dependencies.protection.KeySystem
+ * @classdesc A model class to save metadata about a key system
+ * @ignore
  */
 
-import CommonEncryption from '../CommonEncryption.js';
-import ProtectionConstants from '../../constants/ProtectionConstants.js';
-import FactoryMaker from '../../../core/FactoryMaker.js';
-
-const uuid = ProtectionConstants.WIDEVINE_UUID;
-const systemString = ProtectionConstants.WIDEVINE_KEYSTEM_STRING;
-const schemeIdURI = 'urn:uuid:' + uuid;
-
-function KeySystemWidevine(config) {
-
-    config = config || {};
-    let instance;
-    const BASE64 = config.BASE64;
-
-    function getInitData(cp) {
-        return CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
+class KeySystemMetadata {
+    constructor(config) {
+        this.ks = config.ks;
+        this.keyId = config.keyId;
+        this.initData = config.initData;
+        this.protData = config.protData;
+        this.cdmData = config.cdmData;
+        this.sessionId = config.sessionId;
+        this.sessionType = config.sessionType;
     }
-
-    function getRequestHeadersFromMessage( /*message*/ ) {
-        return null;
-    }
-
-    function getLicenseRequestFromMessage(message) {
-        return new Uint8Array(message);
-    }
-
-    function getLicenseServerURLFromInitData( /*initData*/ ) {
-        return null;
-    }
-
-    function getCDMData(/*cdmData*/) {
-        return null;
-    }
-
-    instance = {
-        uuid,
-        schemeIdURI,
-        systemString,
-        getInitData,
-        getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData,
-        getCDMData
-    };
-
-    return instance;
 }
 
-KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
+export default KeySystemMetadata;
