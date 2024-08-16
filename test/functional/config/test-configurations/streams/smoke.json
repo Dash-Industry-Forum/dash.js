@@ -4,7 +4,6 @@
       "all"
     ],
     "excluded": [
-      "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
