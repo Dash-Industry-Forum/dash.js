@@ -1339,14 +1339,20 @@ function StreamController() {
             && (e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR
                 || e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED)) {
             const streamProcessors = getActiveStreamProcessors();
+            let hasUnusableKey = false;
             streamProcessors.forEach((streamProcessor) => {
                 const currentMediaInfo = streamProcessor.getMediaInfo();
                 const isKeyIdUsable =
                     currentMediaInfo ? capabilities.isKeyIdUsableByMediaInfo(currentMediaInfo) : true;
                 if (!isKeyIdUsable) {
+                    hasUnusableKey = true;
                     _handleUnusableKeyId(streamProcessor)
                 }
             })
+            // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
+            if (hasUnusableKey && playbackController.getTime() === 0) {
+                playbackController.seek(0.01, false, false);
+            }
         }
     }
 
@@ -1360,7 +1366,7 @@ function StreamController() {
             errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
         }
 
-        mediaController.setTrack(supportedMediaInfos[0]);
+        mediaController.setTrack(supportedMediaInfos[0], { replaceBuffer: true })
     }
 
     function _onPlaybackError(e) {

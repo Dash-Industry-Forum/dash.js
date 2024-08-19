@@ -248,10 +248,10 @@ function MediaController() {
 
     /**
      * @param {MediaInfo} track
-     * @param {boolean} noSettingsSave specify if settings must be not be saved
+     * @param {object} options
      * @memberof MediaController#
      */
-    function setTrack(track, noSettingsSave = false) {
+    function setTrack(track, options = {}) {
         if (!track || !track.streamInfo) {
             return;
         }
@@ -271,11 +271,12 @@ function MediaController() {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
-                switchMode: settings.get().streaming.trackSwitchMode[type]
+                switchMode: settings.get().streaming.trackSwitchMode[type],
+                options
             }, { streamId: id });
         }
 
-        if (!noSettingsSave) {
+        if (options.hasOwnProperty('noSettingsSave') && !options.noSettingsSave) {
 
             let settings = extractSettings(track);
 

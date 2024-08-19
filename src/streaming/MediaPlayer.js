@@ -1754,7 +1754,7 @@ function MediaPlayer() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setTrack(track, noSettingsSave);
+        mediaController.setTrack(track, { noSettingsSave });
     }
 
     /*

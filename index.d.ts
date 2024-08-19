@@ -2329,7 +2329,7 @@ declare namespace dashjs {
 
         isCurrentTrack(track: MediaInfo): boolean;
 
-        setTrack(track: MediaInfo, noSettingsSave: boolean): void;
+        setTrack(track: MediaInfo, options: object): void;
 
         setInitialSettings(type: string, value: object): void;
 

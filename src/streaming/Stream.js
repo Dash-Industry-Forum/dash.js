@@ -782,9 +782,11 @@ function Stream(config) {
                 manifestUpdater.refreshManifest();
             }
         } else {
+
             processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
-                    processor.prepareTrackSwitch();
+                    const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;
+                    processor.prepareTrackSwitch(replaceBuffer);
                 });
         }
     }
