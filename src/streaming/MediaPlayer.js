@@ -290,7 +290,8 @@ function MediaPlayer() {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
-                settings
+                settings,
+                protectionController
             })
         }
 
@@ -2436,7 +2437,7 @@ function MediaPlayer() {
 
         abrController.setConfig({
             streamController,
-            protectionController,
+            capabilities,
             domStorage,
             mediaPlayerModel,
             customParametersModel,
@@ -2504,9 +2505,7 @@ function MediaPlayer() {
                 publicOnly: true
             });
             Errors.extend(detectedProtection.errors);
-            if (!capabilities) {
-                capabilities = Capabilities(context).getInstance();
-            }
+
             protectionController = protection.createProtectionSystem({
                 debug,
                 errHandler,
@@ -2520,6 +2519,12 @@ function MediaPlayer() {
                 cmcdModel,
                 settings
             });
+
+            if (!capabilities) {
+                capabilities = Capabilities(context).getInstance();
+            }
+
+            capabilities.setProtectionController(protectionController);
 
             return protectionController;
         }

@@ -42,6 +42,7 @@ import DashJSError from './vo/DashJSError.js';
 import BoxParser from './utils/BoxParser.js';
 import URLUtils from './utils/URLUtils.js';
 import BlacklistController from './controllers/BlacklistController.js';
+import MediaInfoSelectionInput from './vo/MediaInfoSelectionInput.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -416,10 +417,11 @@ function Stream(config) {
         if (initialMediaInfo) {
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
             const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
-            return streamProcessor.selectMediaInfo({
+            const mediaInfoSelectionInput = new MediaInfoSelectionInput({
                 newMediaInfo,
                 previouslySelectedRepresentation: representationFromPreviousPeriod
             });
+            return streamProcessor.selectMediaInfo(mediaInfoSelectionInput);
         }
 
         return Promise.resolve();
@@ -463,26 +465,26 @@ function Stream(config) {
         const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
 
         let streamProcessor = StreamProcessor(context).create({
-            streamInfo,
-            type,
-            mimeType,
-            timelineConverter,
-            adapter,
-            manifestModel,
-            mediaPlayerModel,
-            fragmentModel,
-            dashMetrics: config.dashMetrics,
-            baseURLController: config.baseURLController,
-            segmentBaseController: config.segmentBaseController,
             abrController,
-            playbackController,
-            throughputController,
-            mediaController,
-            textController,
-            errHandler,
-            settings,
+            adapter,
+            baseURLController: config.baseURLController,
             boxParser,
-            segmentBlacklistController
+            dashMetrics: config.dashMetrics,
+            errHandler,
+            fragmentModel,
+            manifestModel,
+            mediaController,
+            mediaPlayerModel,
+            mimeType,
+            playbackController,
+            segmentBaseController: config.segmentBaseController,
+            segmentBlacklistController,
+            settings,
+            streamInfo,
+            textController,
+            throughputController,
+            timelineConverter,
+            type,
         });
 
         streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
@@ -780,7 +782,7 @@ function Stream(config) {
                 manifestUpdater.refreshManifest();
             }
         } else {
-            processor.selectMediaInfo({ newMediaInfo })
+            processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     processor.prepareTrackSwitch();
                 });
@@ -933,7 +935,7 @@ function Stream(config) {
                 if (allMediaForType) {
                     for (let j = 0; j < allMediaForType.length; j++) {
                         if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
-                            promises.push(streamProcessor.selectMediaInfo({ newMediaInfo: allMediaForType[j] }))
+                            promises.push(streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[j] })))
                         }
                     }
                 }
@@ -952,7 +954,7 @@ function Stream(config) {
                             return;
                         }
                         promises.push(processor.prepareTrackSwitch());
-                        promises.push(processor.selectMediaInfo({ newMediaInfo }));
+                        promises.push(processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo })));
                     }
 
                     return Promise.all(promises)

@@ -56,7 +56,7 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
-        protectionController,
+        capabilities,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
@@ -216,8 +216,8 @@ function AbrController() {
         if (config.settings) {
             settings = config.settings;
         }
-        if (config.protectionController) {
-            protectionController = config.protectionController;
+        if (config.capabilities) {
+            capabilities = config.capabilities;
         }
     }
 
@@ -306,11 +306,7 @@ function AbrController() {
         voRepresentations = voRepresentations.filter((representation) => {
             const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
             const isKeyIdUsable =
-                representation && representation.mediaInfo && representation.mediaInfo.contentProtection
-                && representation.mediaInfo.contentProtection.length > 0 ?
-                    representation.mediaInfo.contentProtection.every((cp) => {
-                        return protectionController.isKeyIdUsable(cp.keyId)
-                    }) : true;
+                representation && representation.mediaInfo ? capabilities.isKeyIdUsableByMediaInfo(representation.mediaInfo) : true;
             return isMediaInfoAllowed && isKeyIdUsable
         })
 

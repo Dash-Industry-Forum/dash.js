@@ -50,6 +50,7 @@ import {PlayListTrace} from './vo/metrics/PlayList.js';
 import SegmentsController from '../dash/controllers/SegmentsController.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import TimeUtils from './utils/TimeUtils.js';
+import MediaInfoSelectionInput from './vo/MediaInfoSelectionInput.js';
 
 
 function StreamProcessor(config) {
@@ -58,39 +59,39 @@ function StreamProcessor(config) {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    let streamInfo = config.streamInfo;
-    let type = config.type;
-    let errHandler = config.errHandler;
-    let mimeType = config.mimeType;
-    let timelineConverter = config.timelineConverter;
-    let adapter = config.adapter;
-    let manifestModel = config.manifestModel;
-    let mediaPlayerModel = config.mediaPlayerModel;
-    let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
-    let playbackController = config.playbackController;
-    let mediaController = config.mediaController;
-    let textController = config.textController;
-    let dashMetrics = config.dashMetrics;
-    let settings = config.settings;
+    let adapter = config.adapter;
     let boxParser = config.boxParser;
+    let dashMetrics = config.dashMetrics;
+    let errHandler = config.errHandler;
+    let fragmentModel = config.fragmentModel;
+    let manifestModel = config.manifestModel;
+    let mediaController = config.mediaController;
+    let mediaPlayerModel = config.mediaPlayerModel;
+    let mimeType = config.mimeType;
+    let playbackController = config.playbackController;
     let segmentBlacklistController = config.segmentBlacklistController;
+    let settings = config.settings;
+    let streamInfo = config.streamInfo;
+    let textController = config.textController;
+    let timelineConverter = config.timelineConverter;
+    let type = config.type;
 
-    let instance,
-        logger,
-        isDynamic,
-        currentMediaInfo,
-        mediaInfoArr,
-        bufferController,
-        scheduleController,
-        representationController,
-        shouldUseExplicitTimeForRequest,
-        shouldRepeatRequest,
-        qualityChangeInProgress,
-        dashHandler,
-        segmentsController,
+    let bufferController,
         bufferingTime,
-        pendingSwitchToVoRepresentation;
+        currentMediaInfo,
+        dashHandler,
+        instance,
+        isDynamic,
+        logger,
+        mediaInfoArr,
+        pendingSwitchToVoRepresentation,
+        qualityChangeInProgress,
+        representationController,
+        scheduleController,
+        segmentsController,
+        shouldRepeatRequest,
+        shouldUseExplicitTimeForRequest;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -634,9 +635,9 @@ function StreamProcessor(config) {
 
     /**
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
-     * @param {object} selectionInput
+     * @param {MediaInfoSelectionInput} mediaInfoSelectionInput
      */
-    function selectMediaInfo(selectionInput) {
+    function selectMediaInfo(mediaInfoSelectionInput) {
         return new Promise((resolve) => {
             if (!representationController) {
                 return Promise.resolve();
@@ -645,18 +646,18 @@ function StreamProcessor(config) {
             let selectedValues = null;
 
             // Switching to a new AdaptationSet as part of a quality switch
-            if (selectionInput.newRepresentation) {
-                selectedValues = _handleAdaptationSetQualitySwitch(selectionInput);
+            if (mediaInfoSelectionInput.newRepresentation) {
+                selectedValues = _handleAdaptationSetQualitySwitch(mediaInfoSelectionInput);
             }
 
             // Switching to a new AS
-            else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, selectionInput.newMediaInfo)))) {
-                selectedValues = _handleAdaptationSetSwitch(selectionInput);
+            else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, mediaInfoSelectionInput.newMediaInfo)))) {
+                selectedValues = _handleAdaptationSetSwitch(mediaInfoSelectionInput);
             }
 
             // MPD update quality remains the same
             else {
-                selectedValues = _handleMpdUpdate(selectionInput);
+                selectedValues = _handleMpdUpdate(mediaInfoSelectionInput);
             }
 
             _setCurrentMediaInfo(selectedValues.currentMediaInfo);
@@ -768,8 +769,8 @@ function StreamProcessor(config) {
 
         const newMediaInfo = newRepresentation.mediaInfo;
         _setCurrentMediaInfo(newMediaInfo);
-
-        selectMediaInfo({ newMediaInfo, newRepresentation })
+        const mediaInfoSelectionInput = new MediaInfoSelectionInput({ newMediaInfo, newRepresentation })
+        selectMediaInfo(mediaInfoSelectionInput)
             .then(() => {
                 _handleDifferentSwitchTypes(e, newRepresentation);
             })
@@ -1011,7 +1012,7 @@ function StreamProcessor(config) {
         });
 
         if (newMediaInfo) {
-            selectMediaInfo({ newMediaInfo })
+            selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     bufferController.setIsBufferingCompleted(false);
                     setExplicitBufferingTime(playbackController.getTime());
@@ -1267,63 +1268,104 @@ function StreamProcessor(config) {
             // when buffering is completed and we are not supposed to replace anything do nothing.
             // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
             if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
-                const representation = representationController.getCurrentRepresentation()
-                bufferController.prepareForNonReplacementTrackSwitch(representation)
+                _handleBufferingCompleteTrackSwitch()
                     .then(() => {
-                        eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
-                    })
-                    .catch(() => {
-                        eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
-                    })
-                resolve();
-                return;
-            }
-
-            // We stop the schedule controller and signal a track switch. That way we request a new init segment next
-            scheduleController.clearScheduleTimer();
-            scheduleController.setSwitchTrack(true);
-
-            // when we are supposed to replace it does not matter if buffering is already completed
-            if (shouldReplace) {
-                // Inform other classes like the GapController that we are replacing existing stuff
-                eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
-                    mediaType: type,
-                    streamId: streamInfo.id
-                }, { mediaType: type, streamId: streamInfo.id });
-
-                // Abort the current request it will be removed from the buffer anyways
-                fragmentModel.abortRequests();
-
-                // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-                const representation = getRepresentation()
-                bufferController.prepareForReplacementTrackSwitch(representation)
-                    .then(() => {
-                        // Timestamp offset couldve been changed by preloading period
-                        return bufferController.updateBufferTimestampOffset(representation);
-                    })
-                    .then(() => {
-                        _bufferClearedForReplacement();
                         resolve();
                     })
-                    .catch(() => {
-                        _bufferClearedForReplacement();
-                        resolve();
-                    });
             } else {
-                // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
-                const representation = getRepresentation()
-                bufferController.prepareForNonReplacementTrackSwitch(representation)
-                    .then(() => {
-                        _bufferClearedForNonReplacement();
-                        resolve();
-                    })
-                    .catch(() => {
-                        _bufferClearedForNonReplacement();
-                        resolve();
-                    });
+                // We stop the schedule controller and signal a track switch. That way we request a new init segment next
+                scheduleController.clearScheduleTimer();
+                scheduleController.setSwitchTrack(true);
+
+                // when we are supposed to replace it does not matter if buffering is already completed
+                if (shouldReplace) {
+                    _handleReplaceTrackSwitch()
+                        .then(() => {
+                            resolve();
+                        })
+                } else {
+                    // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
+                    _handleNoReplaceTrackSwitch()
+                        .then(() => {
+                            resolve();
+                        })
+                }
             }
         })
     }
+
+    function _handleBufferingCompleteTrackSwitch() {
+        return new Promise((resolve) => {
+            const representation = representationController.getCurrentRepresentation()
+            bufferController.prepareForNonReplacementTrackSwitch(representation)
+                .then(() => {
+                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
+                    resolve();
+                })
+                .catch(() => {
+                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
+                    resolve();
+                })
+        })
+    }
+
+    function _handleReplaceTrackSwitch() {
+        return new Promise((resolve) => {
+            // Inform other classes like the GapController that we are replacing existing stuff
+            eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
+                mediaType: type,
+                streamId: streamInfo.id
+            }, { mediaType: type, streamId: streamInfo.id });
+
+            // Abort the current request it will be removed from the buffer anyways
+            fragmentModel.abortRequests();
+
+            // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+            const representation = getRepresentation()
+            bufferController.prepareForReplacementTrackSwitch(representation)
+                .then(() => {
+                    // Timestamp offset couldve been changed by preloading period
+                    return bufferController.updateBufferTimestampOffset(representation);
+                })
+                .then(() => {
+                    _bufferClearedForReplacement();
+                    resolve();
+                })
+                .catch(() => {
+                    _bufferClearedForReplacement();
+                    resolve();
+                });
+        })
+    }
+
+    function _handleNoReplaceTrackSwitch() {
+        return new Promise((resolve) => {
+            // As long as we have ongoing requests we can not change the SourceBuffer type etc.
+            // Otherwise, we might run into cases in which we append the segment that is currently being downloaded with wrong SourceBuffer values.
+            // The ScheduleController was stopped. Once a potentially ongoing request was finished we can continue
+
+            const _finishNoReplaceTrackSwitch = () => {
+                const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING });
+                if (!ongoingRequests || ongoingRequests.length === 0) {
+                    const representation = getRepresentation()
+                    bufferController.prepareForNonReplacementTrackSwitch(representation)
+                        .then(() => {
+                            _bufferClearedForNonReplacement();
+                            resolve();
+                        })
+                        .catch(() => {
+                            _bufferClearedForNonReplacement();
+                            resolve();
+                        });
+                } else {
+                    eventBus.onOnce(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, _finishNoReplaceTrackSwitch, instance);
+                }
+            }
+
+            _finishNoReplaceTrackSwitch();
+        })
+    }
+
 
     /**
      * For an instant track switch we need to adjust the buffering time after the buffer has been pruned.
@@ -1417,8 +1459,8 @@ function StreamProcessor(config) {
         getFragmentModel,
         getMediaInfo,
         getMediaSource,
-        getRepresentationController,
         getRepresentation,
+        getRepresentationController,
         getScheduleController,
         getStreamId,
         getStreamInfo,
@@ -1431,9 +1473,9 @@ function StreamProcessor(config) {
         prepareTrackSwitch,
         probeNextRequest,
         reset,
-        setMediaInfoArray,
         selectMediaInfo,
         setExplicitBufferingTime,
+        setMediaInfoArray,
         setMediaSource,
         updateStreamInfo,
     };

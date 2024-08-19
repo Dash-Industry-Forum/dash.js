@@ -550,7 +550,7 @@ function DefaultProtectionModel(config) {
                 let usable = true;
                 session.keyStatuses.forEach(function () {
                     let keyStatus = _parseKeyStatus(arguments);
-                    if (keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED || ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR) {
+                    if (keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED || keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR) {
                         usable = false;
                     }
                 });

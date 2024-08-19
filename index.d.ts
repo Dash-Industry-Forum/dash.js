@@ -4388,6 +4388,12 @@ declare namespace dashjs {
         TcpList: TCPConnection[];
     }
 
+    export class MediaInfoSelectionInput {
+        newMediaInfo: MediaInfo;
+        previouslySelectedRepresentation: Representation | null;
+        newRepresentation: Representation | null
+    }
+
     export class TextRequest extends FragmentRequest {
         constructor(url: string, type: string);
 

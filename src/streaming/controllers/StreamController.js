@@ -45,6 +45,8 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
+import ProtectionEvents from '../protection/ProtectionEvents.js';
+import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -141,6 +143,8 @@ function StreamController() {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+
+        eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
     }
 
     function unRegisterEvents() {
@@ -165,6 +169,8 @@ function StreamController() {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+
+        eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
     }
 
     function _checkConfig() {
@@ -1326,6 +1332,35 @@ function StreamController() {
 
     function _createPlaylistMetrics(startReason) {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
+    }
+
+    function _onInternalKeyStatusChanged(e) {
+        if (e.keyStatus && e.keyStatus.status
+            && (e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR
+                || e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED)) {
+            const streamProcessors = getActiveStreamProcessors();
+            streamProcessors.forEach((streamProcessor) => {
+                const currentMediaInfo = streamProcessor.getMediaInfo();
+                const isKeyIdUsable =
+                    currentMediaInfo ? capabilities.isKeyIdUsableByMediaInfo(currentMediaInfo) : true;
+                if (!isKeyIdUsable) {
+                    _handleUnusableKeyId(streamProcessor)
+                }
+            })
+        }
+    }
+
+    function _handleUnusableKeyId(streamProcessor) {
+        const possibleMediaInfos = streamProcessor.getAllMediaInfos();
+        const supportedMediaInfos = possibleMediaInfos.filter((mediaInfo) => {
+            return capabilities.isKeyIdUsableByMediaInfo(mediaInfo);
+        })
+
+        if (!supportedMediaInfos || supportedMediaInfos.length === 0) {
+            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
+        }
+
+        mediaController.setTrack(supportedMediaInfos[0]);
     }
 
     function _onPlaybackError(e) {

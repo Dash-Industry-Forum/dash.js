@@ -44,6 +44,7 @@ function Capabilities() {
 
     let instance,
         settings,
+        protectionController,
         encryptedMediaSupported;
 
     function setup() {
@@ -58,6 +59,24 @@ function Capabilities() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.protectionController) {
+            protectionController = config.protectionController;
+        }
+    }
+
+    function setProtectionController(data) {
+        protectionController = data;
+    }
+
+    function isKeyIdUsableByMediaInfo(mediaInfo) {
+        if (!protectionController || !mediaInfo || !mediaInfo.contentProtection || mediaInfo.contentProtection.length === 0) {
+            return true
+        }
+
+        return mediaInfo.contentProtection.every((cp) => {
+            return protectionController.isKeyIdUsable(cp.keyId)
+        });
     }
 
     function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
@@ -299,9 +318,11 @@ function Capabilities() {
     }
 
     instance = {
+        isKeyIdUsableByMediaInfo,
         isProtectionCompatible,
         setConfig,
         setEncryptedMediaSupported,
+        setProtectionController,
         supportsCodec,
         supportsEncryptedMedia,
         supportsEssentialProperty,
