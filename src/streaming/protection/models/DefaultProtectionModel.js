@@ -64,7 +64,7 @@ function DefaultProtectionModel(config) {
         keySystem,
         videoElement,
         mediaKeys,
-        sessions,
+        sessionTokens,
         eventHandler,
         protectionKeyController;
 
@@ -73,20 +73,20 @@ function DefaultProtectionModel(config) {
         keySystem = null;
         videoElement = null;
         mediaKeys = null;
-        sessions = [];
+        sessionTokens = [];
         protectionKeyController = ProtectionKeyController(context).getInstance();
         eventHandler = createEventHandler();
     }
 
     function reset() {
-        const numSessions = sessions.length;
+        const numSessions = sessionTokens.length;
         let session;
 
         if (numSessions !== 0) {
             // Called when we are done closing a session.  Success or fail
             const done = function (session) {
                 removeSession(session);
-                if (sessions.length === 0) {
+                if (sessionTokens.length === 0) {
                     if (videoElement) {
                         videoElement.removeEventListener('encrypted', eventHandler);
                         videoElement.setMediaKeys(null).then(function () {
@@ -98,7 +98,7 @@ function DefaultProtectionModel(config) {
                 }
             };
             for (let i = 0; i < numSessions; i++) {
-                session = sessions[i];
+                session = sessionTokens[i];
                 (function (s) {
                     _closeKeySessionInternal(session)
                     done(s);
@@ -112,8 +112,8 @@ function DefaultProtectionModel(config) {
     function stop() {
         // Close and remove not usable sessions
         let session;
-        for (let i = 0; i < sessions.length; i++) {
-            session = sessions[i];
+        for (let i = 0; i < sessionTokens.length; i++) {
+            session = sessionTokens[i];
             if (!session.getUsable()) {
                 _closeKeySessionInternal(session)
                 removeSession(session);
@@ -123,16 +123,16 @@ function DefaultProtectionModel(config) {
 
     function getAllInitData() {
         const retVal = [];
-        for (let i = 0; i < sessions.length; i++) {
-            if (sessions[i].initData) {
-                retVal.push(sessions[i].initData);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            if (sessionTokens[i].initData) {
+                retVal.push(sessionTokens[i].initData);
             }
         }
         return retVal;
     }
 
-    function getSessions() {
-        return sessions;
+    function getSessionTokens() {
+        return sessionTokens;
     }
 
     function requestKeySystemAccess(keySystemConfigurationsToRequest) {
@@ -350,8 +350,8 @@ function DefaultProtectionModel(config) {
         const sessionId = keySystemMetadata.sessionId;
 
         // Check if session Id is not already loaded or loading
-        for (let i = 0; i < sessions.length; i++) {
-            if (sessionId === sessions[i].sessionId) {
+        for (let i = 0; i < sessionTokens.length; i++) {
+            if (sessionId === sessionTokens[i].sessionId) {
                 logger.warn('DRM: Ignoring session ID because we have already seen it!');
                 return;
             }
@@ -441,15 +441,15 @@ function DefaultProtectionModel(config) {
 
     function removeSession(token) {
         // Remove from our session list
-        for (let i = 0; i < sessions.length; i++) {
-            if (sessions[i] === token) {
-                sessions.splice(i, 1);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            if (sessionTokens[i] === token) {
+                sessionTokens.splice(i, 1);
                 break;
             }
         }
     }
 
-    function parseKeyStatus(args) {
+    function _parseKeyStatus(args) {
         // Edge and Chrome implement different version of keystatues, param are not on same order
         let status, keyId;
         if (args && args.length > 0) {
@@ -503,8 +503,8 @@ function DefaultProtectionModel(config) {
             _onKeyStatusChange: function (event) {
                 eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
                 event.target.keyStatuses.forEach(function () {
-                    let keyStatus = parseKeyStatus(arguments);
-                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {keyStatus, token});
+                    let keyStatus = _parseKeyStatus(arguments);
+                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { keyStatus, token });
 
                 });
             },
@@ -538,13 +538,25 @@ function DefaultProtectionModel(config) {
             getUsable: function () {
                 let usable = false;
                 session.keyStatuses.forEach(function () {
-                    let keyStatus = parseKeyStatus(arguments);
-                    if (keyStatus.status === 'usable') {
+                    let keyStatus = _parseKeyStatus(arguments);
+                    if (keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE) {
                         usable = true;
                     }
                 });
                 return usable;
+            },
+
+            isUsable: function () {
+                let usable = true;
+                session.keyStatuses.forEach(function () {
+                    let keyStatus = _parseKeyStatus(arguments);
+                    if (keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED || ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR) {
+                        usable = false;
+                    }
+                });
+                return usable;
             }
+
         };
 
         // Add all event listeners
@@ -559,7 +571,7 @@ function DefaultProtectionModel(config) {
         });
 
         // Add to our session list
-        sessions.push(token);
+        sessionTokens.push(token);
 
         return token;
     }
@@ -568,7 +580,7 @@ function DefaultProtectionModel(config) {
         closeKeySession,
         createKeySession,
         getAllInitData,
-        getSessions,
+        getSessionTokens,
         loadKeySession,
         removeKeySession,
         requestKeySystemAccess,

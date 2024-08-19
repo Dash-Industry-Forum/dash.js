@@ -466,7 +466,7 @@ function ProtectionController(config) {
         }
 
         try {
-            const sessions = protectionModel.getSessions();
+            const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
                 if (sessions[i].getKeyId() === keyId) {
                     return true;
@@ -1135,6 +1135,26 @@ function ProtectionController(config) {
         }
     }
 
+    function isKeyIdUsable(keyId) {
+        if (!keyId) {
+            return true;
+        }
+
+        const sessionTokens = protectionModel.getSessionTokens();
+        if (!sessionTokens || sessionTokens.length === 0) {
+            return true;
+        }
+
+        const targetSessionToken = sessionTokens.find((sessionToken) => {
+            return sessionToken.getKeyId() === keyId
+        })
+        if (!targetSessionToken) {
+            return true;
+        }
+
+        return targetSessionToken.isUsable(keyId);
+    }
+
     instance = {
         clearMediaInfoArray,
         closeKeySession,
@@ -1143,6 +1163,7 @@ function ProtectionController(config) {
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
         initializeForMedia,
+        isKeyIdUsable,
         loadKeySession,
         removeKeySession,
         reset,

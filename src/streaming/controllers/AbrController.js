@@ -42,8 +42,6 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
-import ProtectionEvents from '../protection/ProtectionEvents.js';
-import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_BITRATE = 100;
@@ -58,11 +56,11 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
+        protectionController,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
         windowResizeEventCalled,
-        unusableKeyIds,
         adapter,
         videoModel,
         mediaPlayerModel,
@@ -98,7 +96,6 @@ function AbrController() {
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
-        eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
     }
 
     /**
@@ -156,7 +153,6 @@ function AbrController() {
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
-        unusableKeyIds = new Set();
         if (droppedFramesHistory) {
             droppedFramesHistory.reset();
         }
@@ -179,7 +175,6 @@ function AbrController() {
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
-        eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();
@@ -220,6 +215,9 @@ function AbrController() {
         }
         if (config.settings) {
             settings = config.settings;
+        }
+        if (config.protectionController) {
+            protectionController = config.protectionController;
         }
     }
 
@@ -307,13 +305,13 @@ function AbrController() {
 
         voRepresentations = voRepresentations.filter((representation) => {
             const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
-            const keyIdsOfMediaInfo =
+            const isKeyIdUsable =
                 representation && representation.mediaInfo && representation.mediaInfo.contentProtection
                 && representation.mediaInfo.contentProtection.length > 0 ?
-                    new Set(representation.mediaInfo.contentProtection.map((cp) => {
-                        return cp.keyId
-                    })) : new Set();
-            return isMediaInfoAllowed && unusableKeyIds.intersection(keyIdsOfMediaInfo).size === 0
+                    representation.mediaInfo.contentProtection.every((cp) => {
+                        return protectionController.isKeyIdUsable(cp.keyId)
+                    }) : true;
+            return isMediaInfoAllowed && isKeyIdUsable
         })
 
         return voRepresentations
@@ -572,29 +570,6 @@ function AbrController() {
                 settings.get().streaming.abandonLoadTimeout
             );
         }
-    }
-
-    function _onInternalKeyStatusChanged(e) {
-        if (!e || !e.keyStatus || !e.keyStatus.status || !e.token) {
-            return
-        }
-        const keyStatus = e.keyStatus.status;
-
-        if (keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR || keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED) {
-            _handleNotUsableKeyStatus(e.token)
-        } else {
-            _handleUsableKeyStatus(e.token)
-        }
-    }
-
-    function _handleNotUsableKeyStatus(sessionToken) {
-        const unusableKeyId = sessionToken.keyId;
-        unusableKeyIds.add(unusableKeyId);
-    }
-
-    function _handleUsableKeyStatus(sessionToken) {
-        const usableKeyId = sessionToken.keyId;
-        unusableKeyIds.delete(usableKeyId);
     }
 
     /**

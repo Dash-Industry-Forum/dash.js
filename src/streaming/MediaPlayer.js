@@ -2436,6 +2436,7 @@ function MediaPlayer() {
 
         abrController.setConfig({
             streamController,
+            protectionController,
             domStorage,
             mediaPlayerModel,
             customParametersModel,

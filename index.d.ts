@@ -3043,6 +3043,8 @@ declare namespace dashjs {
         stop(): void;
 
         reset(): void;
+
+        isKeyIdUsable(): boolean;
     }
 
     export interface ProtectionKeyController {
@@ -3232,7 +3234,7 @@ declare namespace dashjs {
     export interface ProtectionModel_01b {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
@@ -3260,7 +3262,7 @@ declare namespace dashjs {
     export interface ProtectionModel_3Fe2014 {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
@@ -3288,7 +3290,7 @@ declare namespace dashjs {
     export interface DefaultProtectionModel {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
