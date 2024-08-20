@@ -28,6 +28,10 @@ class CapabilitiesMock {
     supportsCodec() {
         return 'probably';
     }
+
+    isKeyIdUsableByMediaInfo() {
+        return true;
+    }
 }
 
 export default CapabilitiesMock;
