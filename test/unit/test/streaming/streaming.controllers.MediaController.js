@@ -683,8 +683,6 @@ describe('MediaController', function () {
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            console.log('----------currenttrack', currentTrack);
-            console.log('-----------frtrck', frTrack);
             expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
 

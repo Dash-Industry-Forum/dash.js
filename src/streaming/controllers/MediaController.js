@@ -276,7 +276,7 @@ function MediaController() {
             }, { streamId: id });
         }
 
-        if (options.hasOwnProperty('noSettingsSave') && !options.noSettingsSave) {
+        if (!options.hasOwnProperty('noSettingsSave') || !options.noSettingsSave) {
 
             let settings = extractSettings(track);
 
