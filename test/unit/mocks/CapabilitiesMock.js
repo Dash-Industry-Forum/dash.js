@@ -29,7 +29,7 @@ class CapabilitiesMock {
         return 'probably';
     }
 
-    isKeyIdUsableByMediaInfo() {
+    areKeyIdsUsable() {
         return true;
     }
 }
