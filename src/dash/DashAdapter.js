@@ -1009,6 +1009,7 @@ function DashAdapter() {
         if (mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
             mediaInfo.contentProtection = _applyContentProtectionReferencing(mediaInfo.contentProtection, adaptation.period.mpd.manifest);
             mediaInfo.contentProtection = _applyDefaultKeyId(mediaInfo.contentProtection);
+            mediaInfo.normalizedKeyIds = _getNormalizedKeyIds(mediaInfo.contentProtection);
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
@@ -1066,6 +1067,17 @@ function DashAdapter() {
             }
             return contentProtectionElement
         })
+    }
+
+    function _getNormalizedKeyIds(contentProtection) {
+        const normalizedKeyIds = new Set();
+        contentProtection.forEach((contentProtectionElement) => {
+            if (contentProtectionElement.cencDefaultKid) {
+                normalizedKeyIds.add(contentProtectionElement.cencDefaultKid.replace(/-/g, '').toLowerCase());
+            }
+        })
+
+        return normalizedKeyIds
     }
 
     function _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation) {

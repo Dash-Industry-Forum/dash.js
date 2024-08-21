@@ -79,17 +79,18 @@ function ProtectionController(config) {
     let protectionModel = config.protectionModel;
     let needkeyRetries = [];
 
-    let instance,
+    let applicationProvidedProtectionData,
+        instance,
+        keyStatusMap,
+        keySystemSelectionInProgress,
+        licenseRequestRetryTimeout,
+        licenseXhrRequest,
         logger,
-        pendingMediaTypesToHandle,
         mediaInfoArr,
-        applicationProvidedProtectionData,
-        sessionType,
+        pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
-        keySystemSelectionInProgress,
-        licenseXhrRequest,
-        licenseRequestRetryTimeout;
+        sessionType;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -99,8 +100,8 @@ function ProtectionController(config) {
         robustnessLevel = '';
         licenseXhrRequest = null;
         licenseRequestRetryTimeout = null;
+        keyStatusMap = new Map();
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
     }
 
     function _checkConfig() {
@@ -640,7 +641,6 @@ function ProtectionController(config) {
      */
     function reset() {
         eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
-        eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
 
         _checkConfig();
 
@@ -650,6 +650,8 @@ function ProtectionController(config) {
 
         selectedKeySystem = null;
         keySystemSelectionInProgress = false;
+
+        keyStatusMap = new Map();
 
         if (protectionModel) {
             protectionModel.reset();
@@ -661,22 +663,6 @@ function ProtectionController(config) {
 
         mediaInfoArr = [];
         pendingMediaTypesToHandle = [];
-    }
-
-    /**
-     * Event handler for when the status of the key has changed
-     * @param {object} keyStatus
-     * @private
-     */
-    function _onInternalKeyStatusChanged(e) {
-        if (e.keyStatus && e.keyStatus.status && e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, {
-                data: null,
-                error: { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) }
-            });
-        } else {
-            logger.debug(`DRM: key status = ${e.keyStatus.status} for key id ${e.token.keyId}`);
-        }
     }
 
     /**
@@ -1135,27 +1121,64 @@ function ProtectionController(config) {
         }
     }
 
-    function isKeyIdUsable(keyId) {
-        if (!keyId) {
-            return true;
-        }
+    function updateKeyStatusesMap(e) {
+        try {
+            if (!e || !e.sessionToken || !e.parsedKeyStatuses) {
+                return
+            }
 
-        const sessionTokens = protectionModel.getSessionTokens();
-        if (!sessionTokens || sessionTokens.length === 0) {
-            return true;
-        }
+            const parsedKeyStatuses = e.parsedKeyStatuses;
+            const ua = Utils.parseUserAgent();
+            const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
+            parsedKeyStatuses.forEach((keyStatus) => {
 
-        const targetSessionToken = sessionTokens.find((sessionToken) => {
-            return sessionToken.getKeyId() === keyId
-        })
-        if (!targetSessionToken) {
-            return true;
-        }
+                if (isEdgeBrowser
+                    && selectedKeySystem.uuid === ProtectionConstants.PLAYREADY_UUID
+                    && keyStatus.keyId && keyStatus.keyId.byteLength === 16) {
+                    _handlePlayreadyKeyId(keyStatus.keyId);
+                }
 
-        return targetSessionToken.isUsable(keyId);
+                const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
+                keyStatusMap.set(keyIdInHex, keyStatus.status);
+            })
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    function _handlePlayreadyKeyId(keyId) {
+        const dataView = Utils.bufferSourceToDataView(keyId);
+        const part0 = dataView.getUint32(0, /* LE= */ true);
+        const part1 = dataView.getUint16(4, /* LE= */ true);
+        const part2 = dataView.getUint16(6, /* LE= */ true);
+        // Write it back in big-endian:
+        dataView.setUint32(0, part0, /* BE= */ false);
+        dataView.setUint16(4, part1, /* BE= */ false);
+        dataView.setUint16(6, part2, /* BE= */ false);
+    }
+
+    function areKeyIdsUsable(normalizedKeyIds) {
+        try {
+            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+                return true;
+            }
+
+            let usable = true
+
+            normalizedKeyIds.forEach((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId)
+                usable = !keyStatus || (keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED);
+            })
+
+            return usable
+        } catch (error) {
+            logger.error(error);
+            return true
+        }
     }
 
     instance = {
+        areKeyIdsUsable,
         clearMediaInfoArray,
         closeKeySession,
         createKeySession,
@@ -1163,7 +1186,6 @@ function ProtectionController(config) {
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
         initializeForMedia,
-        isKeyIdUsable,
         loadKeySession,
         removeKeySession,
         reset,
@@ -1174,6 +1196,7 @@ function ProtectionController(config) {
         setServerCertificate,
         setSessionType,
         stop,
+        updateKeyStatusesMap
     };
 
     setup();

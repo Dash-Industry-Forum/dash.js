@@ -260,6 +260,16 @@ class CommonEncryption {
             return null;
         }
     }
+
+    static hexKidToBufferSource(hexKid) {
+        const cleanedHexKid = hexKid.replace(/-/g, '');
+
+        const typedArray = new Uint8Array(cleanedHexKid.match(/[\da-f]{2}/gi).map(function (h) {
+            return parseInt(h, 16)
+        }))
+
+        return typedArray.buffer
+    }
 }
 
 export default CommonEncryption;

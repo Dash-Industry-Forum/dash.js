@@ -40,6 +40,7 @@ class MediaInfo {
         this.bitrateList = null;
         this.codec = null;
         this.contentProtection = null;
+        this.essentialProperties = [];
         this.id = null;
         this.index = null;
         this.isEmbedded = null;
@@ -48,6 +49,7 @@ class MediaInfo {
         this.labels = null;
         this.lang = null;
         this.mimeType = null;
+        this.normalizedKeyIds = new Set();
         this.representationCount = 0;
         this.roles = null;
         this.segmentAlignment = false;
@@ -55,7 +57,6 @@ class MediaInfo {
         this.streamInfo = null;
         this.subSegmentAlignment = false;
         this.supplementalProperties = [];
-        this.essentialProperties = [];
         this.type = null;
         this.viewpoint = null;
     }

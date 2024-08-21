@@ -305,9 +305,9 @@ function AbrController() {
 
         voRepresentations = voRepresentations.filter((representation) => {
             const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
-            const isKeyIdUsable =
-                representation && representation.mediaInfo ? capabilities.isKeyIdUsableByMediaInfo(representation.mediaInfo) : true;
-            return isMediaInfoAllowed && isKeyIdUsable
+            const areKeyIdsUsable =
+                representation && representation.mediaInfo ? capabilities.areKeyIdsUsable(representation.mediaInfo) : true;
+            return isMediaInfoAllowed && areKeyIdsUsable
         })
 
         return voRepresentations

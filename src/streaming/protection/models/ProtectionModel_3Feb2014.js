@@ -366,10 +366,6 @@ function ProtectionModel_3Feb2014(config) {
                 }
             },
 
-            isUsable: function () {
-                return true
-            },
-
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events

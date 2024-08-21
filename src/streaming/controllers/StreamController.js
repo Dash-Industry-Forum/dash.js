@@ -46,7 +46,6 @@ import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
 import ProtectionEvents from '../protection/ProtectionEvents.js';
-import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -144,7 +143,7 @@ function StreamController() {
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
 
-        eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
+        eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
 
     function unRegisterEvents() {
@@ -170,7 +169,7 @@ function StreamController() {
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
 
-        eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUS_CHANGED, _onInternalKeyStatusChanged, instance);
+        eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
 
     function _checkConfig() {
@@ -1334,36 +1333,55 @@ function StreamController() {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
-    function _onInternalKeyStatusChanged(e) {
-        if (e.keyStatus && e.keyStatus.status
-            && (e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR
-                || e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED)) {
-            const streamProcessors = getActiveStreamProcessors();
-            let hasUnusableKey = false;
-            streamProcessors.forEach((streamProcessor) => {
-                const currentMediaInfo = streamProcessor.getMediaInfo();
-                const isKeyIdUsable =
-                    currentMediaInfo ? capabilities.isKeyIdUsableByMediaInfo(currentMediaInfo) : true;
-                if (!isKeyIdUsable) {
-                    hasUnusableKey = true;
-                    _handleUnusableKeyId(streamProcessor)
-                }
-            })
-            // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
-            if (hasUnusableKey && playbackController.getTime() === 0) {
-                playbackController.seek(0.01, false, false);
+    function _onInternalKeyStatusesChanged(e) {
+        protectionController.updateKeyStatusesMap(e);
+        _handleUnusableKeyStatuses();
+
+
+        // From ProtectionController
+        /*
+        if (e.keyStatus && e.keyStatus.status && e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
+            eventBus.trigger(events.KEY_STATUSES_CHANGED, {
+                data: null,
+                error: { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) }
+            });
+        } else {
+            logger.debug(`DRM: key status = ${e.keyStatus.status} for key id ${e.token.keyId}`);
+        }
+        */
+
+    }
+
+    function _handleUnusableKeyStatuses() {
+        const streamProcessors = getActiveStreamProcessors();
+        let hasUnusableKey = false;
+
+        streamProcessors.forEach((streamProcessor) => {
+            const currentMediaInfo = streamProcessor.getMediaInfo();
+            const areKeyIdsUsable =
+                currentMediaInfo ? capabilities.areKeyIdsUsable(currentMediaInfo) : true;
+            if (!areKeyIdsUsable) {
+                hasUnusableKey = true;
+                _handleUnusableKeyId(streamProcessor)
             }
+        })
+        // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
+        if (hasUnusableKey && playbackController.getTime() === 0) {
+            eventBus.once(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, () => {
+                playbackController.seek(0.01, false, false);
+            }, instance)
         }
     }
 
     function _handleUnusableKeyId(streamProcessor) {
         const possibleMediaInfos = streamProcessor.getAllMediaInfos();
         const supportedMediaInfos = possibleMediaInfos.filter((mediaInfo) => {
-            return capabilities.isKeyIdUsableByMediaInfo(mediaInfo);
+            return capabilities.areKeyIdsUsable(mediaInfo);
         })
 
         if (!supportedMediaInfos || supportedMediaInfos.length === 0) {
             errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
+            return
         }
 
         mediaController.setTrack(supportedMediaInfos[0], { replaceBuffer: true })

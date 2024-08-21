@@ -449,32 +449,6 @@ function DefaultProtectionModel(config) {
         }
     }
 
-    function _parseKeyStatus(args) {
-        // Edge and Chrome implement different version of keystatues, param are not on same order
-        let status, keyId;
-        if (args && args.length > 0) {
-            if (args[0]) {
-                if (typeof args[0] === 'string') {
-                    status = args[0];
-                } else {
-                    keyId = args[0];
-                }
-            }
-
-            if (args[1]) {
-                if (typeof args[1] === 'string') {
-                    status = args[1];
-                } else {
-                    keyId = args[1];
-                }
-            }
-        }
-        return {
-            status: status,
-            keyId: keyId
-        };
-    }
-
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
     function _createSessionToken(session, keySystemMetadata) {
@@ -491,7 +465,7 @@ function DefaultProtectionModel(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        this._onKeyStatusChange(event);
+                        this._onKeyStatusesChange(event);
                         break;
 
                     case 'message':
@@ -500,12 +474,15 @@ function DefaultProtectionModel(config) {
                 }
             },
 
-            _onKeyStatusChange: function (event) {
+            _onKeyStatusesChange: function (event) {
                 eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
+                const keyStatuses = [];
                 event.target.keyStatuses.forEach(function () {
-                    let keyStatus = _parseKeyStatus(arguments);
-                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { keyStatus, token });
-
+                    keyStatuses.push(_parseKeyStatus(arguments));
+                });
+                eventBus.trigger(events.INTERNAL_KEY_STATUSES_CHANGED, {
+                    parsedKeyStatuses: keyStatuses,
+                    sessionToken: token
                 });
             },
 
@@ -544,17 +521,6 @@ function DefaultProtectionModel(config) {
                     }
                 });
                 return usable;
-            },
-
-            isUsable: function () {
-                let usable = true;
-                session.keyStatuses.forEach(function () {
-                    let keyStatus = _parseKeyStatus(arguments);
-                    if (keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED || keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR) {
-                        usable = false;
-                    }
-                });
-                return usable;
             }
 
         };
@@ -574,6 +540,32 @@ function DefaultProtectionModel(config) {
         sessionTokens.push(token);
 
         return token;
+    }
+
+    function _parseKeyStatus(args) {
+        // Edge and Chrome implement different version of keystatuses, param are not on same order
+        let status, keyId;
+        if (args && args.length > 0) {
+            if (args[0]) {
+                if (typeof args[0] === 'string') {
+                    status = args[0];
+                } else {
+                    keyId = args[0];
+                }
+            }
+
+            if (args[1]) {
+                if (typeof args[1] === 'string') {
+                    status = args[1];
+                } else {
+                    keyId = args[1];
+                }
+            }
+        }
+        return {
+            status: status,
+            keyId: keyId
+        };
     }
 
     instance = {

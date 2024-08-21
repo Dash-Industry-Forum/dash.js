@@ -69,14 +69,12 @@ function Capabilities() {
         protectionController = data;
     }
 
-    function isKeyIdUsableByMediaInfo(mediaInfo) {
-        if (!protectionController || !mediaInfo || !mediaInfo.contentProtection || mediaInfo.contentProtection.length === 0) {
+    function areKeyIdsUsable(mediaInfo) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
             return true
         }
 
-        return mediaInfo.contentProtection.every((cp) => {
-            return protectionController.isKeyIdUsable(cp.keyId)
-        });
+        return protectionController.areKeyIdsUsable(mediaInfo.normalizedKeyIds)
     }
 
     function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
@@ -318,7 +316,7 @@ function Capabilities() {
     }
 
     instance = {
-        isKeyIdUsableByMediaInfo,
+        areKeyIdsUsable,
         isProtectionCompatible,
         setConfig,
         setEncryptedMediaSupported,

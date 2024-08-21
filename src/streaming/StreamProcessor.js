@@ -1361,7 +1361,7 @@ function StreamProcessor(config) {
                             resolve();
                         });
                 } else {
-                    eventBus.onOnce(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, _finishNoReplaceTrackSwitch, instance);
+                    eventBus.once(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, _finishNoReplaceTrackSwitch, instance);
                 }
             }
 

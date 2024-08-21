@@ -88,7 +88,7 @@ function EventBus() {
         _commonOn(type, listener, scope, options);
     }
 
-    function onOnce(type, listener, scope, options = {}) {
+    function once(type, listener, scope, options = {}) {
         _commonOn(type, listener, scope, options, true)
     }
 
@@ -176,7 +176,7 @@ function EventBus() {
 
     const instance = {
         on,
-        onOnce,
+        once,
         off,
         trigger,
         reset

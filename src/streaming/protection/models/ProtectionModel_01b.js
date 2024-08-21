@@ -250,10 +250,6 @@ function ProtectionModel_01b(config) {
                             return undefined
                         }
                     }
-                },
-
-                isUsable: function () {
-                    return true
                 }
             };
             pendingSessions.push(newSession);
