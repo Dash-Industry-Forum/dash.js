@@ -1131,7 +1131,6 @@ function ProtectionController(config) {
             const ua = Utils.parseUserAgent();
             const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
             parsedKeyStatuses.forEach((keyStatus) => {
-
                 if (isEdgeBrowser
                     && selectedKeySystem.uuid === ProtectionConstants.PLAYREADY_UUID
                     && keyStatus.keyId && keyStatus.keyId.byteLength === 16) {
@@ -1141,6 +1140,7 @@ function ProtectionController(config) {
                 const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
                 keyStatusMap.set(keyIdInHex, keyStatus.status);
             })
+            eventBus.trigger(events.KEY_STATUSES_MAP_UPDATED, { keyStatusMap });
         } catch (e) {
             logger.error(e);
         }
@@ -1177,7 +1177,28 @@ function ProtectionController(config) {
         }
     }
 
+    function areKeyIdsExpired(normalizedKeyIds) {
+        try {
+            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+                return false;
+            }
+
+            let expired = false
+
+            normalizedKeyIds.forEach((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId)
+                expired = keyStatus && keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED
+            })
+
+            return expired
+        } catch (error) {
+            logger.error(error);
+            return true
+        }
+    }
+
     instance = {
+        areKeyIdsExpired,
         areKeyIdsUsable,
         clearMediaInfoArray,
         closeKeySession,

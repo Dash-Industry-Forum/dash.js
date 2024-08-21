@@ -155,12 +155,11 @@ function Stream(config) {
      */
     function registerProtectionEvents() {
         if (protectionController) {
-            eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
-            eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-            eventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-            eventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-            eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-            eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+            eventBus.on(Events.KEY_ERROR, _onProtectionError, instance);
+            eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+            eventBus.on(Events.LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+            eventBus.on(Events.KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+            eventBus.on(Events.KEY_SESSION_CREATED, _onProtectionError, instance);
         }
     }
 
@@ -169,12 +168,11 @@ function Stream(config) {
      */
     function unRegisterProtectionEvents() {
         if (protectionController) {
-            eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
-            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-            eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-            eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-            eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+            eventBus.off(Events.KEY_ERROR, _onProtectionError, instance);
+            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+            eventBus.off(Events.KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+            eventBus.off(Events.KEY_SESSION_CREATED, _onProtectionError, instance);
         }
     }
 
@@ -749,11 +747,15 @@ function Stream(config) {
         return possibleVoRepresentations[index];
     }
 
-    function onProtectionError(event) {
+    function _onProtectionError(event) {
         if (event.error) {
             errHandler.error(event.error);
             logger.fatal(event.error.message);
         }
+    }
+
+    function triggerProtectionError(event) {
+        _onProtectionError(event);
     }
 
     function prepareTrackChange(e) {
@@ -1072,6 +1074,7 @@ function Stream(config) {
         setMediaSource,
         startPreloading,
         startScheduleControllers,
+        triggerProtectionError,
         updateData,
     };
 

@@ -46,6 +46,7 @@ import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
 import ProtectionEvents from '../protection/ProtectionEvents.js';
+import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -1335,24 +1336,10 @@ function StreamController() {
 
     function _onInternalKeyStatusesChanged(e) {
         protectionController.updateKeyStatusesMap(e);
-        _handleUnusableKeyStatuses();
-
-
-        // From ProtectionController
-        /*
-        if (e.keyStatus && e.keyStatus.status && e.keyStatus.status === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, {
-                data: null,
-                error: { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) }
-            });
-        } else {
-            logger.debug(`DRM: key status = ${e.keyStatus.status} for key id ${e.token.keyId}`);
-        }
-        */
-
+        _handleKeyStatuses();
     }
 
-    function _handleUnusableKeyStatuses() {
+    function _handleKeyStatuses() {
         const streamProcessors = getActiveStreamProcessors();
         let hasUnusableKey = false;
 
@@ -1360,9 +1347,15 @@ function StreamController() {
             const currentMediaInfo = streamProcessor.getMediaInfo();
             const areKeyIdsUsable =
                 currentMediaInfo ? capabilities.areKeyIdsUsable(currentMediaInfo) : true;
+
             if (!areKeyIdsUsable) {
                 hasUnusableKey = true;
                 _handleUnusableKeyId(streamProcessor)
+            } else {
+                const areKeyIdsExpired = currentMediaInfo ? capabilities.areKeyIdsExpired(currentMediaInfo) : false;
+                if (areKeyIdsExpired) {
+                    _handleExpiredKeyId(streamProcessor);
+                }
             }
         })
         // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
@@ -1385,6 +1378,16 @@ function StreamController() {
         }
 
         mediaController.setTrack(supportedMediaInfos[0], { replaceBuffer: true })
+    }
+
+    function _handleExpiredKeyId(streamProcessor) {
+        const streamId = streamProcessor.getStreamId();
+        const stream = getStreamById(streamId);
+
+        if (stream) {
+            stream.triggerProtectionError({ error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) })
+        }
+
     }
 
     function _onPlaybackError(e) {

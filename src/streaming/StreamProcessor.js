@@ -686,6 +686,9 @@ function StreamProcessor(config) {
             streamId: streamInfo.id,
             currentMediaInfo
         });
+        eventBus.trigger(MediaPlayerEvents.TRACK_SELECTED, {
+            currentMediaInfo
+        });
     }
 
     function _handleAdaptationSetQualitySwitch(selectionInput) {

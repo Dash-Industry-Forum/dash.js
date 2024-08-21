@@ -476,6 +476,7 @@ function DefaultProtectionModel(config) {
 
             _onKeyStatusesChange: function (event) {
                 eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
+
                 const keyStatuses = [];
                 event.target.keyStatuses.forEach(function () {
                     keyStatuses.push(_parseKeyStatus(arguments));

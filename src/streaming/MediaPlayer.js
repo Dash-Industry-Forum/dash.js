@@ -1653,7 +1653,10 @@ function MediaPlayer() {
             return [];
         }
 
-        return mediaController.getTracksFor(type, streamInfo.id);
+        const tracks = mediaController.getTracksFor(type, streamInfo.id);
+        return tracks.filter((track) => {
+            return protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+        })
     }
 
     /**

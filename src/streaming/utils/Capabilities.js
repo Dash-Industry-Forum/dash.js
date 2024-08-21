@@ -77,6 +77,14 @@ function Capabilities() {
         return protectionController.areKeyIdsUsable(mediaInfo.normalizedKeyIds)
     }
 
+    function areKeyIdsExpired(mediaInfo) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+            return false
+        }
+
+        return protectionController.areKeyIdsExpired(mediaInfo.normalizedKeyIds)
+    }
+
     function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
         if (!newStreamInfo) {
             return true;
@@ -316,6 +324,7 @@ function Capabilities() {
     }
 
     instance = {
+        areKeyIdsExpired,
         areKeyIdsUsable,
         isProtectionCompatible,
         setConfig,

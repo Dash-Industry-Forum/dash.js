@@ -480,6 +480,16 @@
             "name": "DRM",
             "submenu": [
                 {
+                    "name": "Magenta TV multi security Level",
+                    "url": "https://xs26.tv.telekom.net/bpk-vod/vod/default/test-229170-6/test-229170-6/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine.entitlement.eu.theplatform.com/wv/web/ModularDrm/getRawWidevineLicense?schema=1.0&account=http%3A%2F%2Faccess.auth.theplatform.com%2Fdata%2FAccount%2F2709353959&form=json&releasePid=OrnJz13zM0oY&token=eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiJtZGV0ZXN0LWFnZHIvMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1IiwiaXNzIjoiMSIsImV4cCI6MTcyNDMxMjA3NywiaWF0IjoxNzI0MjI1Njc3MDM4LCJqdGkiOiIxNmM4NTUyNC03NDk5LTRlN2ItYTY1OC01YWY2OTE1MzZlZGQiLCJkaWQiOiJtZGV0ZXN0LWFnZHIiLCJ1bm0iOiIxMjAwNDkwMTAwMDAwMDAwMDAxODE4MzUiLCJjdHgiOiJ7XCJpZFwiOlwiMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1XCIsXCJ1c2VyTmFtZVwiOlwiMTIwMDQ5MDEwMDAwMDAwMDAwMTgxODM1XCIsXCJlbWFpbFwiOlwiXCIsXCJmdWxsTmFtZVwiOlwiXCIsXCJhdHRyaWJ1dGVzXCI6e1widXJuOnRoZXBsYXRmb3JtOmNvbnN1bWVyOmFjY291bnRcIjpcImh0dHBzOi8vYWNjb3VudHMuYXVkaWVuY2UudGhlcGxhdGZvcm0uZXUvYWNjb3VudHMvMjcwOTM1Mzk1OS8wM2Q3NjAxNi04NzNiLTRhOWEtYmZhYi04ZDk2ODc0NGE2NjFcIixcInVybjp0aGVwbGF0Zm9ybTpjb25zdW1lcjphY2NvdW50OnBlcnNvbmFcIjpcImh0dHBzOi8vYWNjb3VudHMuYXVkaWVuY2UudGhlcGxhdGZvcm0uZXUvYWNjb3VudHMvMjcwOTM1Mzk1OS8wM2Q3NjAxNi04NzNiLTRhOWEtYmZhYi04ZDk2ODc0NGE2NjEvcGVyc29uYXMvYjNjMjcwNjUtYmVkNC00ZWIxLWE4MWQtMGYxNjMxOTE0ZmFmXCJ9LFwib3duZXJJZFwiOlwiXCJ9XG4iLCJvaWQiOiIyNzA5MzUzOTU5In0.UbPff2Ox3DCgofTXhwJbU4-Y1l5V2bu6kb6q1FjV4SItHsec-Ok1ciAQdH57FFgKqqtO5K8GROgCqkreUYx02COOpc7IjKHaMAEQxBOv8AhwoU6U_h6pKMrdUbqF74zK6to0FHXw7ONtUi33b8CQf2VHcEbWHHArVeT3A_heNcMhy6sXarVQ2sJm1HV3cYU2mlfb6Hs292IRLFPxLK8sYZiIGwIMgMH-GCjYxwdAO8-Ajqd9sYgJ_zCOjxO9fPbsCqIZf93WyeXMODaZoXRiquTWKqTwyZcUcFPpSdk6hBJChnB2EtBBaQNytdPyWPikCY4CtgfrQsCHWZC0LJG_Bw"
+                        }
+                    },
+                    "provider": "aws"
+                },
+                {
                     "name": "Multiperiod - ContentProtection Reference",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/out/v1/feb9354da126479386ae8d47ba103cf8/index.mpd",
                     "protData": {
