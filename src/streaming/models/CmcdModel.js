@@ -377,6 +377,7 @@ function CmcdModel() {
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
         const pr = internalData.pr;
+        const ltc = playbackController.getCurrentLiveLatency() * 1000;
 
         const nextRequest = _probeNextRequest(mediaType);
 
@@ -441,6 +442,10 @@ function CmcdModel() {
 
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
+        }
+
+        if (!isNaN(ltc)) {
+            data.ltc = ltc;
         }
 
         if (_bufferLevelStarved[mediaType]) {
