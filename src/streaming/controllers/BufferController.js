@@ -523,36 +523,18 @@ function BufferController(config) {
     }
 
     function prepareForAbandonQualitySwitch(voRepresentation) {
-        return new Promise((resolve, reject) => {
-            updateBufferTimestampOffset(voRepresentation)
-                .then(() => {
-                    return changeType(voRepresentation)
-                })
-                .then(() => {
-                    resolve()
-                })
-                .catch((e) => {
-                    reject(e);
-                });
-        });
+        return _defaultQualitySwitchPreparation(voRepresentation);
     }
 
     function prepareForFastQualitySwitch(voRepresentation) {
-        return new Promise((resolve, reject) => {
-            updateBufferTimestampOffset(voRepresentation)
-                .then(() => {
-                    return changeType(voRepresentation)
-                })
-                .then(() => {
-                    resolve()
-                })
-                .catch((e) => {
-                    reject(e);
-                });
-        });
+        return _defaultQualitySwitchPreparation(voRepresentation);
     }
 
     function prepareForDefaultQualitySwitch(voRepresentation) {
+        return _defaultQualitySwitchPreparation(voRepresentation);
+    }
+
+    function _defaultQualitySwitchPreparation(voRepresentation) {
         return new Promise((resolve, reject) => {
             updateBufferTimestampOffset(voRepresentation)
                 .then(() => {
@@ -562,6 +544,7 @@ function BufferController(config) {
                     resolve()
                 })
                 .catch((e) => {
+                    logger.warn(e);
                     reject(e);
                 });
         });
