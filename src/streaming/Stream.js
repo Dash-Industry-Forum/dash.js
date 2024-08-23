@@ -981,7 +981,7 @@ function Stream(config) {
                 const mediaInfo = streamProcessors[i].getMediaInfo();
                 if (type === Constants.AUDIO ||
                     type === Constants.VIDEO ||
-                    (type === Constants.TEXT && mediaInfo.isFragmented)) {
+                    (type === Constants.TEXT && mediaInfo && mediaInfo.isFragmented)) {
                     let mediaInfo = streamProcessors[i].getMediaInfo();
                     if (mediaInfo) {
                         protectionController.initializeForMedia(mediaInfo);
