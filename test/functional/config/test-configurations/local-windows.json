@@ -1,7 +1,8 @@
 {
   "browsers": [
-    "chrome_custom",
-    "firefox_custom"
+    "edge_custom",
+    "firefox_custom",
+    "chrome_custom"
   ],
   "hostname": "localhost",
   "port": 4200,
@@ -10,6 +11,15 @@
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",
+      "flags": [
+        "--disable-web-security",
+        "--autoplay-policy=no-user-gesture-required",
+        "--disable-popup-blocking",
+        "--disable-search-engine-choice-screen"
+      ]
+    },
+    "edge_custom": {
+      "base": "Edge",
       "flags": [
         "--disable-web-security",
         "--autoplay-policy=no-user-gesture-required",
