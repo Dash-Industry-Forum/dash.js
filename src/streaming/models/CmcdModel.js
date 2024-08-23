@@ -377,7 +377,6 @@ function CmcdModel() {
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
         const pr = internalData.pr;
-        const ltc = playbackController.getCurrentLiveLatency() * 1000;
 
         const nextRequest = _probeNextRequest(mediaType);
 
@@ -444,10 +443,6 @@ function CmcdModel() {
             data.pr = pr;
         }
 
-        if (!isNaN(ltc)) {
-            data.ltc = ltc;
-        }
-
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
@@ -511,6 +506,11 @@ function CmcdModel() {
 
         if (cid) {
             data.cid = `${cid}`;
+        }
+
+        let ltc = playbackController.getCurrentLiveLatency() * 1000;
+        if (!isNaN(ltc)) {
+            data.ltc = ltc;
         }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
