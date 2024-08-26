@@ -1,0 +1,53 @@
+<!--
+Copyright (c) 2024 LG Electronics Inc.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>new app</title>
+    <style type="text/css">
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: #202020;
+        }
+
+        div {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            display: table;
+        }
+
+        h1 {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            color: #FFFFFF;
+        }
+
+    </style>
+</head>
+
+<script src="webOSTVjs-1.2.10/webOSTV.js" charset="utf-8"></script>
+<script src="webOSTVjs-1.2.10/webOSTV-dev.js" charset="utf-8"></script>
+<script type="text/javascript">
+    document.addEventListener('webOSLaunch', function (event) {
+        console.log(JSON.stringify(event.detail));
+        var url = event.detail.url;
+        window.location.href = url;
+    });
+
+</script>
+
+<body>
+<div>
+    <h1>Hello, World!</h1>
+</div>
+</body>
+
+</html>
