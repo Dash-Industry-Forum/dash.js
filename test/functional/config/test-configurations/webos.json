@@ -6,6 +6,7 @@
   "port": 4200,
   "protocol": "http",
   "concurrency": 3,
+  "useIframe": true,
   "customLaunchers": {
     "webOs": {
       "base": "WebOS"

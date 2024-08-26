@@ -32,9 +32,10 @@ function WebOSLauncher(baseBrowserDecorator, args, config, logger) {
             //let escapedUrl = encodeURI('https://google.com/?dsi=1234');
             //let escapedUrl = 'https://www.google.com/';
             let escapedUrl = url;
-            escapedUrl = escapedUrl.replace('localhost', '192.168.178.20');
+            //escapedUrl = escapedUrl.replace('localhost', '192.168.178.20');
+            escapedUrl = escapedUrl.replace('localhost', '10.147.67.219');
             log.info(`Target url is ${escapedUrl}`);
-            const launchCommand = `ares-launch com.dashjs.app --params "{'url':'${escapedUrl}'}"`;
+            const launchCommand = `ares-launch com.dashjs.app -o --params "{'url':'${escapedUrl}'}"`;
 
             exec(launchCommand, (error, stdout, stderr) => {
                 if (error) {

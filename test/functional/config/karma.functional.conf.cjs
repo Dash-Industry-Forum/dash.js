@@ -109,7 +109,7 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: false,
+            useIframe: testConfiguration && testConfiguration.hasOwnProperty('useIframe') ? testConfiguration.useIframe : false,
             mocha: {
                 timeout: 100000
             },
