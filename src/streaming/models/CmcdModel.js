@@ -533,6 +533,11 @@ function CmcdModel() {
             data.cid = `${cid}`;
         }
 
+        let ltc = playbackController.getCurrentLiveLatency() * 1000;
+        if (!isNaN(ltc)) {
+            data.ltc = ltc;
+        }
+
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
         }
