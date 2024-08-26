@@ -64,7 +64,9 @@ function CmcdModel() {
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
-        _initialMediaRequestsDone;
+        _initialMediaRequestsDone,
+        _playbackStartedTime,
+        _msdSent;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -83,6 +85,8 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance)
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
     }
 
     function setConfig(config) {
@@ -129,6 +133,20 @@ function CmcdModel() {
 
     function _onPeriodSwitchComplete() {
         _updateStreamProcessors();
+    }
+
+    function _onPlaybackStarted() {
+        if (!_playbackStartedTime) {
+            _playbackStartedTime = Date.now()
+        }
+    }
+
+    function _onPlaybackPlaying() {
+        if (!_playbackStartedTime || internalData.msd) {
+            return
+        }
+
+        internalData.msd = Date.now() - _playbackStartedTime
     }
 
     function _updateStreamProcessors() {
@@ -347,6 +365,7 @@ function CmcdModel() {
         const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
 
         data.ot = CmcdObjectType.OTHER;
+        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -355,6 +374,7 @@ function CmcdModel() {
         const data = _getGenericCmcdData(request);
 
         data.ot = CmcdObjectType.KEY;
+        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -363,6 +383,7 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
 
         data.ot = CmcdObjectType.MANIFEST;
+        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -443,6 +464,8 @@ function CmcdModel() {
             data.pr = pr;
         }
 
+        _setMsdIfNeeded(data);
+
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
@@ -477,6 +500,7 @@ function CmcdModel() {
 
         data.ot = CmcdObjectType.INIT;
         data.su = true;
+        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -485,6 +509,7 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
 
         data.ot = CmcdObjectType.OTHER;
+        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -592,6 +617,19 @@ function CmcdModel() {
         }
     }
 
+    function _setMsdIfNeeded(data) {
+        if (_msdSent) {
+            return
+        }
+
+        const msd = internalData.msd;
+
+        if (!isNaN(msd)) {
+            data.msd = msd;
+            _msdSent = true;
+        }
+    }
+
     function _onPlaybackRateChanged(data) {
         try {
             internalData.pr = data.playbackRate;
@@ -693,6 +731,8 @@ function CmcdModel() {
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance)
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
 
         _resetInitialSettings();
     }
