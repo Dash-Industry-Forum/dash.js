@@ -1,0 +1,22 @@
+{
+  "browsers": [
+    "tizen"
+  ],
+  "hostname": "localhost",
+  "port": 4200,
+  "protocol": "http",
+  "concurrency": 3,
+  "useIframe": true,
+  "customLaunchers": {
+    "tizen": {
+      "base": "Tizen",
+      "deviceId": ""
+    }
+  },
+  "reporters": [
+    "junit",
+    "mocha",
+    "html",
+    "coverage"
+  ]
+}

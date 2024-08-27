@@ -1,6 +1,7 @@
 const { exec } = require('child_process');
 const path = require('path');
-const fs = require('fs');
+const os = require('os');
+const {getHostIp} = require('./common.cjs');
 
 function WebOSLauncher(baseBrowserDecorator, args, config, logger) {
     baseBrowserDecorator(this);
@@ -10,40 +11,47 @@ function WebOSLauncher(baseBrowserDecorator, args, config, logger) {
     this._start = (url) => {
         log.info('Launching webOS browser with URL: ' + url);
 
-        // Path to your packaged web app
-        const appPath = path.resolve(__dirname, '../../apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk');
+        // Path to your web app directory
+        const appDir = path.resolve(__dirname, '../../apps/webos/test-app');
+        const appPackagePath = path.resolve(appDir, 'com.dashjs.app_1.0.0_all.ipk');
 
-        // Command to install the web app
-        const installCommand = `ares-install ${appPath}`;
+        // Command to package the web app
+        const packageCommand = `ares-package ${appDir} -o ${appDir}`;
 
-        // Write the URL to a file or local storage that the app can read
-        const urlFilePath = path.resolve(__dirname, '../../apps/webos/test-app/tmp/url.txt');
-        fs.writeFileSync(urlFilePath, url);
-
-        exec(installCommand, (error, stdout, stderr) => {
+        exec(packageCommand, (error, stdout, stderr) => {
             if (error) {
-                log.error(`Install exec error: ${error}`);
+                log.error(`Package exec error: ${error}`);
                 return;
             }
-            log.info(`Install stdout: ${stdout}`);
-            log.info(`Install stderr: ${stderr}`);
+            log.info(`Package stdout: ${stdout}`);
+            log.info(`Package stderr: ${stderr}`);
 
-            // Command to launch the web app
-            //let escapedUrl = encodeURI('https://google.com/?dsi=1234');
-            //let escapedUrl = 'https://www.google.com/';
-            let escapedUrl = url;
-            //escapedUrl = escapedUrl.replace('localhost', '192.168.178.20');
-            escapedUrl = escapedUrl.replace('localhost', '10.147.67.219');
-            log.info(`Target url is ${escapedUrl}`);
-            const launchCommand = `ares-launch com.dashjs.app -o --params "{'url':'${escapedUrl}'}"`;
+            // Command to install the web app
+            const installCommand = `ares-install ${appPackagePath}`;
 
-            exec(launchCommand, (error, stdout, stderr) => {
+            exec(installCommand, (error, stdout, stderr) => {
                 if (error) {
-                    log.error(`Launch exec error: ${error}`);
+                    log.error(`Install exec error: ${error}`);
                     return;
                 }
-                log.info(`Launch stdout: ${stdout}`);
-                log.info(`Launch stderr: ${stderr}`);
+                log.info(`Install stdout: ${stdout}`);
+                log.info(`Install stderr: ${stderr}`);
+
+                // Command to launch the web app
+                const hostIp = getHostIp();
+                let escapedUrl = url;
+                escapedUrl = escapedUrl.replace('localhost', hostIp);
+                log.info(`Target url is ${escapedUrl}`);
+                const launchCommand = `ares-launch com.dashjs.app -o --params "{'url':'${escapedUrl}'}"`;
+
+                exec(launchCommand, (error, stdout, stderr) => {
+                    if (error) {
+                        log.error(`Launch exec error: ${error}`);
+                        return;
+                    }
+                    log.info(`Launch stdout: ${stdout}`);
+                    log.info(`Launch stderr: ${stderr}`);
+                });
             });
         });
     };

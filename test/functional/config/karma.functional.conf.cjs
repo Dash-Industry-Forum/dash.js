@@ -1,6 +1,7 @@
 const fs = require('fs');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
+const path = require('path');
 
 module.exports = function (config) {
 
@@ -41,7 +42,8 @@ module.exports = function (config) {
         plugins: [
             'karma-*',  // default plugins
             '@*/karma-*', // default scoped plugins
-            require('./launchers/karma-webos-launcher.cjs')
+            require('./launchers/karma-webos-launcher.cjs'),
+            require('./launchers/karma-tizen-launcher.cjs')
         ],
 
         // list of files / patterns to load in the browser

@@ -37,7 +37,6 @@ SPDX-License-Identifier: Apache-2.0
 <script src="webOSTVjs-1.2.10/webOSTV-dev.js" charset="utf-8"></script>
 <script type="text/javascript">
     document.addEventListener('webOSLaunch', function (event) {
-        console.log(JSON.stringify(event.detail));
         var url = event.detail.url;
         window.location.href = url;
     });
