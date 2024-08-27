@@ -45,7 +45,7 @@ import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreaming
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
-const CMCD_VERSION = 1;
+const CMCD_DEFAULT_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
 
@@ -129,6 +129,7 @@ function CmcdModel() {
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
         _updateStreamProcessors();
+        _setCmcdVersion();
     }
 
     function _onPeriodSwitchComplete() {
@@ -196,7 +197,7 @@ function CmcdModel() {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
             const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-
+            
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
@@ -238,8 +239,8 @@ function CmcdModel() {
 
     function _canBeEnabled(cmcdParametersFromManifest) {
         if (Object.keys(cmcdParametersFromManifest).length) {
-            if (!cmcdParametersFromManifest.version) {
-                logger.error(`version parameter must be defined.`);
+            if (cmcdParametersFromManifest.version !== 1) {
+                logger.error(`version parameter must be defined in 1.`);
                 return false;
             }
             if (!cmcdParametersFromManifest.keys) {
@@ -276,18 +277,23 @@ function CmcdModel() {
 
     function _checkAvailableKeys(cmcdParametersFromManifest) {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
+        const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
-
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(internalData.v === 2 && defaultV2AvailableKeys.includes(k)));
         if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented.`);
+            logger.error(`None of the keys are implemented for CMCD version ${internalData.v}.`);
             return false;
         }
         invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented.`);
+            logger.warn(`key parameter ${k} is not implemented for CMCD version ${internalData.v}.`);
         });
 
         return true;
+    }
+
+    function _setCmcdVersion() {
+        const cmcdVersion = settings.get().streaming.cmcd?.reporting?.requestMode?.version
+        internalData.v = cmcdVersion ? cmcdVersion : CMCD_DEFAULT_VERSION;
     }
 
     function getCmcdParametersFromManifest() {
@@ -523,7 +529,9 @@ function CmcdModel() {
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
 
-        data.v = CMCD_VERSION;
+        if (internalData.v) {
+            data.v = internalData.v ?? CMCD_DEFAULT_VERSION;
+        }
 
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
@@ -555,7 +563,7 @@ function CmcdModel() {
     }
 
     function _creatCmcdV2HeadersCustomMap() {
-        return { 
+        return internalData.v === 1 ? {} : { 
             customHeaderMap: { 
                 [CmcdHeaderField.REQUEST]: ['ltc'],
                 [CmcdHeaderField.SESSION]: ['msd']
