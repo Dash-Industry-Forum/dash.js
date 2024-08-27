@@ -10,7 +10,9 @@
   "customLaunchers": {
     "tizen": {
       "base": "Tizen",
-      "deviceId": ""
+      "binaryPath": "/Users/danielsilhavy/tizen-studio/tools/ide/bin/tizen",
+      "deviceId": "GU43CU8589UXZG",
+      "sign": "dsi_samsung"
     }
   },
   "reporters": [

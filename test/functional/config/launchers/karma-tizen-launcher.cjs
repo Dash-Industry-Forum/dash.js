@@ -7,6 +7,9 @@ function TizenLauncher(baseBrowserDecorator, args, config, logger) {
     baseBrowserDecorator(this);
 
     const log = logger.create('launcher.tizen');
+    const binaryPath = args.binaryPath;
+    const deviceId = args.deviceId;
+    const sign = args.sign;
 
     this._start = (url) => {
         log.info('Launching Tizen browser with URL: ' + url);
@@ -25,7 +28,7 @@ function TizenLauncher(baseBrowserDecorator, args, config, logger) {
         log.info(`URL written to file: ${urlFilePath}`);
 
         // Command to package the Tizen web app
-        const packageCommand = `/Users/danielsilhavy/tizen-studio/tools/ide/bin/tizen package -t wgt -s dsi_samsung -o ${appPath} -- /Users/danielsilhavy/WebstormProjects/dash.js/test/functional/apps/tizen`;
+        const packageCommand = `${binaryPath} package -t wgt -s ${sign} -o ${appPath} -- ${appPath}`;
         log.info(`Running package command ${packageCommand}`);
         exec(packageCommand, (error, stdout, stderr) => {
             if (error) {
@@ -36,7 +39,7 @@ function TizenLauncher(baseBrowserDecorator, args, config, logger) {
             log.info(`Package stderr: ${stderr}`);
 
             // Command to install the Tizen web app
-            const installCommand = `/Users/danielsilhavy/tizen-studio/tools/ide/bin/tizen install -n ${appPath + '/dashjs.wgt'} -t GU43CU8589UXZG`;
+            const installCommand = `${binaryPath} install -n ${appPath + '/dashjs.wgt'} -t ${deviceId}`;
 
             exec(installCommand, (error, stdout, stderr) => {
                 if (error) {
@@ -53,7 +56,7 @@ function TizenLauncher(baseBrowserDecorator, args, config, logger) {
                     log.info(`Extracted package ID: ${packageId}`);
 
                     // Command to launch the Tizen web app
-                    const launchCommand = `/Users/danielsilhavy/tizen-studio/tools/ide/bin/tizen run -p ${packageId} -t GU43CU8589UXZG`;
+                    const launchCommand = `${binaryPath} run -p ${packageId} -t ${deviceId}`;
 
                     log.info(`Executing launch command: ${launchCommand}`);
 
