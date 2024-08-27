@@ -44,7 +44,7 @@ import {CmcdStreamType} from '@svta/common-media-library/cmcd/CmcdStreamType';
 import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreamingFormat';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
-
+import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
 const CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
@@ -66,7 +66,7 @@ function CmcdModel() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
-        _msdSent;
+        _msdSent
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -213,7 +213,8 @@ function CmcdModel() {
             if (isCmcdEnabled()) {
                 const cmcdData = getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
-                const headers = toCmcdHeaders(filteredCmcdData)
+                const options = _creatCmcdV2HeadersCustomMap()
+                const headers = toCmcdHeaders(filteredCmcdData, options);
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
@@ -551,6 +552,15 @@ function CmcdModel() {
         }
 
         return data;
+    }
+
+    function _creatCmcdV2HeadersCustomMap() {
+        return { 
+            customHeaderMap: { 
+                [CmcdHeaderField.REQUEST]: ['ltc'],
+                [CmcdHeaderField.SESSION]: ['msd']
+            }
+        }
     }
 
     function _getBitrateByRequest(request) {
