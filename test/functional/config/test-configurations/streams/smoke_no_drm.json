@@ -148,6 +148,8 @@
       "type": "live",
       "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd",
       "includedTestfiles": [
+        "audio/*",
+        "text/*"
       ]
     }
   ]
