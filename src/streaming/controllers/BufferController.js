@@ -38,8 +38,6 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import InitCache from '../utils/InitCache.js';
-import DashJSError from '../vo/DashJSError.js';
-import Errors from '../../core/errors/Errors.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
@@ -54,7 +52,6 @@ function BufferController(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const errHandler = config.errHandler;
     const fragmentModel = config.fragmentModel;
     const representationController = config.representationController;
     const textController = config.textController;
@@ -208,7 +205,7 @@ function BufferController(config) {
     }
 
     function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
@@ -222,9 +219,8 @@ function BufferController(config) {
                     resolve(sourceBufferSink);
                 })
                 .catch((e) => {
-                    logger.fatal('Caught error on create SourceBuffer: ' + e);
-                    errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
-                    reject(e);
+                    logger.warn('Caught error on create SourceBuffer: ' + e);
+                    resolve(sourceBufferSink);
                 });
         })
     }
