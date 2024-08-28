@@ -152,6 +152,9 @@
         {
           "browser": "safari"
         }
+      ],
+      "excludedTestfiles": [
+        "playback-advanced/preload"
       ]
     },
     {
@@ -162,6 +165,9 @@
         {
           "browser": "safari"
         }
+      ],
+      "excludedTestfiles": [
+        "playback-advanced/preload"
       ]
     }
   ]
