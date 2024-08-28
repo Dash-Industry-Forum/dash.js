@@ -240,16 +240,3 @@ workflows:
                             ignore: # as creds are available only for non-forked branches
                                 - /pull\/[0-9]+/
 
-    scheduled-workflow:
-        triggers:
-            -   schedule:
-                    cron: "0 0 * * 0,3"
-                    filters:
-                        branches:
-                            only:
-                                - development
-        jobs:
-            - functional-tests-full-part-1
-            - functional-tests-full-part-2
-            - functional-tests-full-part-3
-
