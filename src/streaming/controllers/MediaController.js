@@ -653,6 +653,9 @@ function MediaController() {
     }
 
     function _handleInitialTextTrackSelection(mediaInfos) {
+        if (!mediaInfos || mediaInfos.length === 0) {
+            return null;
+        }
         const filteredMediaInfos = mediaInfos.filter((mediaInfo) => {
             if (mediaInfo && mediaInfo.roles && mediaInfo.roles.length > 0) {
                 return mediaInfo.roles.every((role) => {
@@ -666,7 +669,7 @@ function MediaController() {
             return filteredMediaInfos[0];
         }
 
-        return null
+        return mediaInfos[0];
     }
 
     /**

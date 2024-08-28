@@ -1,0 +1,24 @@
+{
+  "browsers": [
+    "tizen"
+  ],
+  "hostname": "localhost",
+  "port": 4200,
+  "protocol": "http",
+  "concurrency": 3,
+  "useIframe": true,
+  "customLaunchers": {
+    "tizen": {
+      "base": "Tizen",
+      "binaryPath": "/Users/danielsilhavy/tizen-studio/tools/ide/bin/tizen",
+      "deviceId": "GU43CU8589UXZG",
+      "sign": "dsi_samsung"
+    }
+  },
+  "reporters": [
+    "junit",
+    "mocha",
+    "html",
+    "coverage"
+  ]
+}
