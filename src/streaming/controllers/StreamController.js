@@ -1359,11 +1359,29 @@ function StreamController() {
             }
         })
         // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
-        if (hasUnusableKey && playbackController.getTime() === 0) {
-            eventBus.once(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, () => {
-                playbackController.seek(0.01, false, false);
-            }, instance)
+        if (hasUnusableKey) {
+            _handleUnusableKeyStall();
         }
+    }
+
+    function _handleUnusableKeyStall() {
+        if (playbackController.getTime() === 0) {
+            eventBus.once(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, () => {
+                _triggerUnusableKeySeek();
+            }, instance)
+        } else {
+            playbackController.isProgressing(500)
+                .then((isProgressing) => {
+                    if (!isProgressing) {
+                        _triggerUnusableKeySeek();
+                    }
+                })
+        }
+    }
+
+    function _triggerUnusableKeySeek() {
+        const time = playbackController.getTime()
+        playbackController.seek(time + 0.01, false, false);
     }
 
     function _handleUnusableKeyId(streamProcessor) {
