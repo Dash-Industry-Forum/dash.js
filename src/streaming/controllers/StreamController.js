@@ -784,13 +784,12 @@ function StreamController() {
     }
 
     /**
-     * When the quality is changed in the currently active stream, and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
-     * Otherwise preloading can go on.
+     * When the quality is changed in the currently active stream we stop the prebuffering to avoid inconsistencies in the buffer settings like codec and append window
      * @param e
      * @private
      */
     function _onQualityChanged(e) {
-        if (e.streamInfo.id === activeStream.getId() && e.reason && e.reason.forceReplace) {
+        if (e.streamInfo.id === activeStream.getId()) {
             _deactivateAllPreloadingStreams();
         }
 

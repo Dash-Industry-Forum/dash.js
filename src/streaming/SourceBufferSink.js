@@ -383,6 +383,11 @@ function SourceBufferSink(config) {
                 if (nextChunk.data.bytes.byteLength === 0) {
                     afterSuccess.call(this);
                 } else {
+                    try {
+                        logger.debug(`Appending ${nextChunk.data.segmentType} from period ${nextChunk.data.streamId} to buffer. Request URL: ${nextChunk.request.url}, Representation: ID: ${nextChunk.data.representation.id}, bitrate: ${nextChunk.data.representation.bitrateInKbit}`)
+                    } catch (e) {
+
+                    }
                     if (buffer.appendBuffer) {
                         buffer.appendBuffer(nextChunk.data.bytes);
                     } else {
