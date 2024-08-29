@@ -784,7 +784,7 @@ function Stream(config) {
                 manifestUpdater.refreshManifest();
             }
         } else {
-
+            processor.clearScheduleTimer();
             processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;

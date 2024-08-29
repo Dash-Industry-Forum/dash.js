@@ -290,7 +290,7 @@ function StreamProcessor(config) {
             }
 
             // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
-            scheduleController.clearScheduleTimer();
+            clearScheduleTimer();
             fragmentModel.abortRequests();
 
             // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state.
@@ -354,7 +354,7 @@ function StreamProcessor(config) {
         return new Promise((resolve, reject) => {
             try {
                 // Stop scheduling
-                scheduleController.clearScheduleTimer();
+                clearScheduleTimer();
 
                 // Abort all ongoing requests
                 fragmentModel.abortRequests();
@@ -501,12 +501,12 @@ function StreamProcessor(config) {
         if (isLastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
-            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, {segmentIndex}, {
+            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
                 streamId: streamInfo.id,
                 mediaType: type
             });
             bufferController.segmentRequestingCompleted(segmentIndex);
-            scheduleController.clearScheduleTimer();
+            clearScheduleTimer();
             return;
         }
 
@@ -647,17 +647,17 @@ function StreamProcessor(config) {
 
             // Switching to a new AdaptationSet as part of a quality switch
             if (mediaInfoSelectionInput.newRepresentation) {
-                selectedValues = _handleAdaptationSetQualitySwitch(mediaInfoSelectionInput);
+                selectedValues = _getTargetValuesForAdaptationSetQualitySwitch(mediaInfoSelectionInput);
             }
 
             // Switching to a new AS
             else if ((currentMediaInfo === null || (!adapter.areMediaInfosEqual(currentMediaInfo, mediaInfoSelectionInput.newMediaInfo)))) {
-                selectedValues = _handleAdaptationSetSwitch(mediaInfoSelectionInput);
+                selectedValues = _getTargetValuesForAdaptationSetSwitch(mediaInfoSelectionInput);
             }
 
             // MPD update quality remains the same
             else {
-                selectedValues = _handleMpdUpdate(mediaInfoSelectionInput);
+                selectedValues = _getTargetValuesForMpdUpdate(mediaInfoSelectionInput);
             }
 
             _setCurrentMediaInfo(selectedValues.currentMediaInfo);
@@ -691,14 +691,14 @@ function StreamProcessor(config) {
         });
     }
 
-    function _handleAdaptationSetQualitySwitch(selectionInput) {
+    function _getTargetValuesForAdaptationSetQualitySwitch(selectionInput) {
         return {
             selectedRepresentation: selectionInput.newRepresentation,
             currentMediaInfo: selectionInput.newMediaInfo,
         }
     }
 
-    function _handleAdaptationSetSwitch(selectionInput) {
+    function _getTargetValuesForAdaptationSetSwitch(selectionInput) {
         let bitrateInKbit = NaN;
 
         // In case ABR was disabled and we got a selected Representation from the previous period we use a bitrate that is close to the one from the previous period
@@ -715,7 +715,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function _handleMpdUpdate(selectionInput) {
+    function _getTargetValuesForMpdUpdate(selectionInput) {
         return {
             currentMediaInfo: selectionInput.newMediaInfo,
             selectedRepresentation: representationController.getCurrentRepresentation()
@@ -751,7 +751,7 @@ function StreamProcessor(config) {
         qualityChangeInProgress = true;
 
         // Stop scheduling until we are done with preparing the quality switch
-        scheduleController.clearScheduleTimer();
+        clearScheduleTimer();
 
         // Update selected Representation in RepresentationController
         representationController.prepareQualityChange(newRepresentation);
@@ -765,14 +765,14 @@ function StreamProcessor(config) {
         qualityChangeInProgress = true;
 
         // Stop scheduling until we are done with preparing the quality switch
-        scheduleController.clearScheduleTimer();
+        clearScheduleTimer();
 
         // Informing ScheduleController about AS switch
         scheduleController.setSwitchTrack(true);
 
         const newMediaInfo = newRepresentation.mediaInfo;
         _setCurrentMediaInfo(newMediaInfo);
-        const mediaInfoSelectionInput = new MediaInfoSelectionInput({newMediaInfo, newRepresentation})
+        const mediaInfoSelectionInput = new MediaInfoSelectionInput({ newMediaInfo, newRepresentation })
         selectMediaInfo(mediaInfoSelectionInput)
             .then(() => {
                 _handleDifferentSwitchTypes(e, newRepresentation);
@@ -816,7 +816,7 @@ function StreamProcessor(config) {
         eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
             mediaType: type,
             streamId: streamInfo.id
-        }, {mediaType: type, streamId: streamInfo.id});
+        }, { mediaType: type, streamId: streamInfo.id });
 
         scheduleController.setCheckPlaybackQuality(false);
 
@@ -902,7 +902,7 @@ function StreamProcessor(config) {
 
     function _prepareForDefaultQualitySwitch(voRepresentation) {
         // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
-        const ongoingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING})
+        const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
         if (ongoingRequests && ongoingRequests.length > 0) {
             logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
             pendingSwitchToVoRepresentation = voRepresentation;
@@ -1027,7 +1027,7 @@ function StreamProcessor(config) {
         });
 
         if (newMediaInfo) {
-            selectMediaInfo(new MediaInfoSelectionInput({newMediaInfo}))
+            selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     bufferController.setIsBufferingCompleted(false);
                     setExplicitBufferingTime(playbackController.getTime());
@@ -1040,7 +1040,7 @@ function StreamProcessor(config) {
     function _onQuotaExceeded(e) {
         // Stop scheduler (will be restarted once buffer is pruned)
         setExplicitBufferingTime(e.quotaExceededTime);
-        scheduleController.clearScheduleTimer();
+        clearScheduleTimer();
     }
 
     function getRepresentationController() {
@@ -1093,6 +1093,12 @@ function StreamProcessor(config) {
 
     function getScheduleController() {
         return scheduleController;
+    }
+
+    function clearScheduleTimer() {
+        if (scheduleController) {
+            scheduleController.clearScheduleTimer();
+        }
     }
 
     /**
@@ -1166,8 +1172,8 @@ function StreamProcessor(config) {
                 const prfts = _handleInbandPrfts(isoFile, timescale);
                 if (prfts && prfts.length) {
                     eventBus.trigger(MediaPlayerEvents.INBAND_PRFT,
-                        {data: prfts},
-                        {streamId: streamInfo.id, mediaType: type}
+                        { data: prfts },
+                        { streamId: streamInfo.id, mediaType: type }
                     );
                 }
             }
@@ -1181,8 +1187,8 @@ function StreamProcessor(config) {
                 isoFile = isoFile ? isoFile : boxParser.parse(bytes);
                 const events = _handleInbandEvents(isoFile, request, eventStreamMedia, eventStreamTrack);
                 eventBus.trigger(Events.INBAND_EVENTS,
-                    {events: events},
-                    {streamId: streamInfo.id}
+                    { events: events },
+                    { streamId: streamInfo.id }
                 );
             }
         }
@@ -1292,9 +1298,7 @@ function StreamProcessor(config) {
                     })
             } else {
                 // We stop the schedule controller and signal a track switch. That way we request a new init segment next
-                scheduleController.clearScheduleTimer();
                 scheduleController.setSwitchTrack(true);
-
                 // when we are supposed to replace it does not matter if buffering is already completed
                 if (shouldReplace) {
                     _handleReplaceTrackSwitch()
@@ -1317,11 +1321,11 @@ function StreamProcessor(config) {
             const representation = representationController.getCurrentRepresentation()
             bufferController.prepareForNonReplacementTrackSwitch(representation)
                 .then(() => {
-                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, {streamId: streamInfo.id, mediaType: type})
+                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
                     resolve();
                 })
                 .catch(() => {
-                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, {streamId: streamInfo.id, mediaType: type})
+                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
                     resolve();
                 })
         })
@@ -1333,7 +1337,7 @@ function StreamProcessor(config) {
             eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
                 mediaType: type,
                 streamId: streamInfo.id
-            }, {mediaType: type, streamId: streamInfo.id});
+            }, { mediaType: type, streamId: streamInfo.id });
 
             // Abort the current request it will be removed from the buffer anyways
             fragmentModel.abortRequests();
@@ -1363,7 +1367,7 @@ function StreamProcessor(config) {
             // The ScheduleController was stopped. Once a potentially ongoing request was finished we can continue
 
             const _finishNoReplaceTrackSwitch = () => {
-                const ongoingRequests = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING});
+                const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING });
                 if (!ongoingRequests || ongoingRequests.length === 0) {
                     const representation = getRepresentation()
                     bufferController.prepareForNonReplacementTrackSwitch(representation)
@@ -1467,6 +1471,7 @@ function StreamProcessor(config) {
     }
 
     instance = {
+        clearScheduleTimer,
         createBufferSinks,
         dischargePreBuffer,
         finalisePlayList,

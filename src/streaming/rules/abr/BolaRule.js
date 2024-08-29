@@ -79,6 +79,7 @@ function BolaRule(config) {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
+        eventBus.on(MediaPlayerEvents.TRACK_SELECTED, _onTrackSelected, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
@@ -445,6 +446,16 @@ function BolaRule(config) {
         }
     }
 
+    function _onTrackSelected(e) {
+        if (!e || !e.currentMediaInfo) {
+            return;
+        }
+        const currentMediaInfo = e.currentMediaInfo;
+        if (bolaStateDict[currentMediaInfo.streamInfo.id] && bolaStateDict[currentMediaInfo.streamInfo.id][currentMediaInfo.type]) {
+            delete bolaStateDict[currentMediaInfo.streamInfo.id][currentMediaInfo.type];
+        }
+    }
+
     /**
      * At startup we decide on the best quality based on the throughput. The placeholderBuffer is adjusted accordingly.
      * @param switchRequest
@@ -614,9 +625,10 @@ function BolaRule(config) {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, instance);
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
+        eventBus.off(MediaPlayerEvents.TRACK_SELECTED, _onTrackSelected, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.on(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
-        eventBus.on(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
     }
 
     instance = {
