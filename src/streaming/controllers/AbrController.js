@@ -553,14 +553,20 @@ function AbrController() {
             index: e.request.index
         })[0];
         if (request) {
-            abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
+            const targetAbandonmentStateDict = _getAbandonmentStateDictFor(streamId, type);
+
+            if (targetAbandonmentStateDict) {
+                targetAbandonmentStateDict.state = MetricsConstants.ABANDON_LOAD;
+            }
             switchRequestHistory.reset();
             setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason);
 
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = setTimeout(
                 () => {
-                    abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+                    if (targetAbandonmentStateDict) {
+                        abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+                    }
                     abandonmentTimeout = null;
                 },
                 settings.get().streaming.abandonLoadTimeout
@@ -717,6 +723,11 @@ function AbrController() {
      */
     function getAbandonmentStateFor(streamId, type) {
         return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
+    }
+
+    function _getAbandonmentStateDictFor(streamId, type) {
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type] : null;
+
     }
 
 
