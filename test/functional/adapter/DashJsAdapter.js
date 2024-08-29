@@ -319,6 +319,18 @@ class DashJsAdapter {
         this.player.setCurrentTrack(track);
     }
 
+    getRepresentationsByType(type) {
+        return this.player.getRepresentationsByType(type);
+    }
+
+    getCurrentRepresentationForType(type) {
+        return this.player.getCurrentRepresentationForType(type);
+    }
+
+    setRepresentationForTypeById(type, id) {
+        this.player.setRepresentationForTypeById(type, id);
+    }
+
     /**
      * Checks if the player is in playing state when calling this function or after the configured threshold has been reached
      * @return {Promise<boolean>}
