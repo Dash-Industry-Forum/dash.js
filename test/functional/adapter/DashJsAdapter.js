@@ -9,8 +9,10 @@ class DashJsAdapter {
         this.ttmlRenderingDiv = document.getElementById('ttml-rendering-div');
         this.startedFragmentDownloads = [];
         this.logEvents = {};
+        this.errorEvents = [];
         this._onFragmentLoadedHandler = this._onFragmentLoaded.bind(this);
         this._onLogEvent = this._onLogEvent.bind(this);
+        this._onErrorEvent = this._onErrorEvent.bind(this);
     }
 
     /**
@@ -64,6 +66,10 @@ class DashJsAdapter {
         return this.logEvents;
     }
 
+    getErrorEvents() {
+        return this.errorEvents;
+    }
+
     getVideoElement() {
         return this.videoElement
     }
@@ -74,6 +80,7 @@ class DashJsAdapter {
 
     destroy() {
         this.logEvents = {};
+        this.errorEvents = [];
         if (this.player) {
             this._unregisterInternalEvents();
             this.player.resetSettings();
@@ -100,8 +107,9 @@ class DashJsAdapter {
      * @private
      */
     _registerInternalEvents() {
-        this.player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
-        this.player.on(dashjs.MediaPlayer.events.LOG, this._onLogEvent)
+        this.player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler);
+        this.player.on(dashjs.MediaPlayer.events.LOG, this._onLogEvent);
+        this.player.on(dashjs.MediaPlayer.events.ERROR, this._onErrorEvent);
     }
 
     /**
@@ -111,6 +119,8 @@ class DashJsAdapter {
     _unregisterInternalEvents() {
         this.player.off(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
         this.player.off(dashjs.MediaPlayer.events.LOG, this._onLogEvent)
+        this.player.off(dashjs.MediaPlayer.events.ERROR, this._onErrorEvent);
+
     }
 
     /**
@@ -143,6 +153,10 @@ class DashJsAdapter {
 
     _onLogEvent(e) {
         this.logEvents[e.level].push(e.message);
+    }
+
+    _onErrorEvent(e) {
+        this.errorEvents.push(e);
     }
 
     /**

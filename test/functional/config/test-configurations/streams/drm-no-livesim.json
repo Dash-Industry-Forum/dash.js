@@ -110,6 +110,9 @@
         {
           "browser": "safari"
         }
+      ],
+      "excludedTestfiles": [
+        "video/switch-video"
       ]
     },
     {

@@ -1459,13 +1459,13 @@ function StreamController() {
      * @private
      */
     function _handleMediaErrorDecode() {
-        logger.warn('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
+        logger.error('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
         const seekTime = playbackController.getTime();
         // Deactivate the current stream.
         activeStream.deactivate(false);
 
         // Reset MSE
-        logger.warn(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 

@@ -975,7 +975,9 @@ function Stream(config) {
                 })
                 .then(() => {
                     _initializationCompleted();
-                    processor.setTrackSwitchInProgress(false);
+                    if (processor) {
+                        processor.setTrackSwitchInProgress(false);
+                    }
                     eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
                     resolve();
                 })
