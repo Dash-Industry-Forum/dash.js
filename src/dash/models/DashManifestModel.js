@@ -28,30 +28,31 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../../streaming/constants/Constants.js';
-import DashConstants from '../constants/DashConstants.js';
-import Representation from '../vo/Representation.js';
 import AdaptationSet from '../vo/AdaptationSet.js';
-import Period from '../vo/Period.js';
-import Mpd from '../vo/Mpd.js';
-import UTCTiming from '../vo/UTCTiming.js';
-import Event from '../vo/Event.js';
 import BaseURL from '../vo/BaseURL.js';
-import EventStream from '../vo/EventStream.js';
-import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
-import ContentSteering from '../vo/ContentSteering.js';
-import DescriptorType from '../vo/DescriptorType.js';
-import ObjectUtils from '../../streaming/utils/ObjectUtils.js';
-import URLUtils from '../../streaming/utils/URLUtils.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
-import DashJSError from '../../streaming/vo/DashJSError.js';
-import Errors from '../../core/errors/Errors.js';
-import MpdLocation from '../vo/MpdLocation.js';
-import PatchLocation from '../vo/PatchLocation.js';
-import ContentProtection from '../vo/ContentProtection.js';
-import ClientDataReporting from '../vo/ClientDataReporting.js';
 import CMCDParameters from '../vo/CMCDParameters.js';
+import ClientDataReporting from '../vo/ClientDataReporting.js';
+import Constants from '../../streaming/constants/Constants.js';
+import ContentProtection from '../vo/ContentProtection.js';
+import ContentSteering from '../vo/ContentSteering.js';
+import DashConstants from '../constants/DashConstants.js';
+import DashJSError from '../../streaming/vo/DashJSError.js';
+import Debug from '../../core/Debug.js';
+import DescriptorType from '../vo/DescriptorType.js';
+import Errors from '../../core/errors/Errors.js';
+import Event from '../vo/Event.js';
+import EventStream from '../vo/EventStream.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Mpd from '../vo/Mpd.js';
+import MpdLocation from '../vo/MpdLocation.js';
+import ObjectUtils from '../../streaming/utils/ObjectUtils.js';
+import PatchLocation from '../vo/PatchLocation.js';
+import Period from '../vo/Period.js';
+import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
+import Representation from '../vo/Representation.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import UTCTiming from '../vo/UTCTiming.js';
+import Utils from '../../core/Utils.js';
 
 function DashManifestModel() {
     let instance,
@@ -643,6 +644,7 @@ function DashManifestModel() {
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.CODECS)) {
                     voRepresentation.codecs = realRepresentation.codecs;
+                    voRepresentation.codecFamily = Utils.getCodecFamily(voRepresentation.codecs);
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE)) {
                     voRepresentation.mimeType = realRepresentation[DashConstants.MIME_TYPE];

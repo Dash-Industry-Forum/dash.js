@@ -62,6 +62,7 @@ function StreamProcessor(config) {
     let abrController = config.abrController;
     let adapter = config.adapter;
     let boxParser = config.boxParser;
+    let capabilities = config.capabilities;
     let dashMetrics = config.dashMetrics;
     let errHandler = config.errHandler;
     let fragmentModel = config.fragmentModel;
@@ -211,7 +212,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
-        pendingSwitchToVoRepresentation = null;
+        _resetPendingSwitchToRepresentation();
     }
 
     function reset(errored, keepBuffers) {
@@ -626,11 +627,15 @@ function StreamProcessor(config) {
             logger.info('[' + type + '] ' + 'lastInitializedRepresentationId changed to ' + lastInitializedRepresentationId);
         }
 
-        if (pendingSwitchToVoRepresentation) {
-            _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation)
+        if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
+            _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation);
         } else {
             scheduleController.startScheduleTimer(0);
         }
+    }
+
+    function _resetPendingSwitchToRepresentation() {
+        pendingSwitchToVoRepresentation = { newRepresentation: null, oldRepresentation: null, enabled: false };
     }
 
     /**
@@ -732,8 +737,8 @@ function StreamProcessor(config) {
             return;
         }
 
-        if (pendingSwitchToVoRepresentation) {
-            logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.id} for ${type}`);
+        if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
+            logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.newRepresentation.id} for ${type}`);
         }
 
         if (e.isAdaptationSetSwitch) {
@@ -756,7 +761,7 @@ function StreamProcessor(config) {
         // Update selected Representation in RepresentationController
         representationController.prepareQualityChange(newRepresentation);
 
-        _handleDifferentSwitchTypes(e, newRepresentation);
+        _handleDifferentSwitchTypes(e);
     }
 
     function _prepareAdaptationSwitchQualityChange(e) {
@@ -775,37 +780,43 @@ function StreamProcessor(config) {
         const mediaInfoSelectionInput = new MediaInfoSelectionInput({ newMediaInfo, newRepresentation })
         selectMediaInfo(mediaInfoSelectionInput)
             .then(() => {
-                _handleDifferentSwitchTypes(e, newRepresentation);
+                _handleDifferentSwitchTypes(e);
             })
     }
 
-    function _handleDifferentSwitchTypes(e, newRepresentation) {
+    function _handleDifferentSwitchTypes(e) {
+        const newRepresentation = e.newRepresentation;
+        const oldRepresentation = e.oldRepresentation;
+
+        if (!newRepresentation || !oldRepresentation) {
+            logger.warn(`_handleDifferentSwitchTypes() is missing the target representations`);
+        }
 
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
-            _prepareForForceReplacementQualitySwitch(newRepresentation);
+            _prepareForForceReplacementQualitySwitch(newRepresentation, oldRepresentation);
         }
 
         // We abandoned a current request
         else if (e && e.reason && e.reason.forceAbandon) {
-            _prepareForAbandonQualitySwitch(newRepresentation)
+            _prepareForAbandonQualitySwitch(newRepresentation, oldRepresentation)
         }
 
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
         else if (settings.get().streaming.buffer.fastSwitchEnabled) {
-            _prepareForFastQualitySwitch(newRepresentation, e);
+            _prepareForFastQualitySwitch(newRepresentation, oldRepresentation);
         }
 
         // Default quality switch. We append the new quality to the already buffered stuff
         else {
-            _prepareForDefaultQualitySwitch(newRepresentation);
+            _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation);
         }
 
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
         dashMetrics.createPlaylistTraceMetrics(newRepresentation.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
     }
 
-    function _prepareForForceReplacementQualitySwitch(voRepresentation) {
+    function _prepareForForceReplacementQualitySwitch(newPresentation, oldRepresentation) {
 
         // Abort the current request to avoid inconsistencies and in case a rule such as AbandonRequestRule has forced a quality switch. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might use wrong values.
@@ -821,7 +832,7 @@ function StreamProcessor(config) {
         scheduleController.setCheckPlaybackQuality(false);
 
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-        bufferController.prepareForForceReplacementQualitySwitch(voRepresentation)
+        bufferController.prepareForForceReplacementQualitySwitch(newPresentation, oldRepresentation)
             .then(() => {
                 _replacementQualitySwitchPreparationDone();
             })
@@ -832,12 +843,12 @@ function StreamProcessor(config) {
 
     function _replacementQualitySwitchPreparationDone() {
         _bufferClearedForReplacement();
-        pendingSwitchToVoRepresentation = null;
+        _resetPendingSwitchToRepresentation();
         qualityChangeInProgress = false;
     }
 
-    function _prepareForAbandonQualitySwitch(voRepresentation) {
-        bufferController.prepareForAbandonQualitySwitch(voRepresentation)
+    function _prepareForAbandonQualitySwitch(newRepresentation, oldRepresentation) {
+        bufferController.prepareForAbandonQualitySwitch(newRepresentation, oldRepresentation)
             .then(() => {
                 _abandonQualitySwitchPreparationDone();
             })
@@ -854,10 +865,10 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
     }
 
-    function _prepareForFastQualitySwitch(voRepresentation) {
+    function _prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5 * (!isNaN(voRepresentation.fragmentDuration) ? voRepresentation.fragmentDuration : 1);
+        let safeBufferLevel = 1.5 * (!isNaN(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : 1);
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
@@ -869,8 +880,8 @@ function StreamProcessor(config) {
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
             // The new quality is higher than the one we originally requested
-            if (request.bandwidth < voRepresentation.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
-                bufferController.prepareForFastQualitySwitch(voRepresentation)
+            if (request.bandwidth < newRepresentation.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
+                bufferController.prepareForFastQualitySwitch(newRepresentation, oldRepresentation)
                     .then(() => {
                         _fastQualitySwitchPreparationDone(time, safeBufferLevel);
                     })
@@ -881,10 +892,10 @@ function StreamProcessor(config) {
 
             // If we have buffered a higher quality we do not replace anything.
             else {
-                _prepareForDefaultQualitySwitch(voRepresentation);
+                _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation);
             }
         } else {
-            _prepareForDefaultQualitySwitch(voRepresentation);
+            _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation);
         }
     }
 
@@ -900,16 +911,18 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
     }
 
-    function _prepareForDefaultQualitySwitch(voRepresentation) {
+    function _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation) {
         // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
         const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
         if (ongoingRequests && ongoingRequests.length > 0) {
             logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
-            pendingSwitchToVoRepresentation = voRepresentation;
+            pendingSwitchToVoRepresentation.newRepresentation = newRepresentation;
+            pendingSwitchToVoRepresentation.oldRepresentation = oldRepresentation;
+            pendingSwitchToVoRepresentation.enabled = true;
             return;
         }
 
-        bufferController.prepareForDefaultQualitySwitch(voRepresentation)
+        bufferController.prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation)
             .then(() => {
                 _defaultQualitySwitchPreparationDone();
             })
@@ -925,7 +938,7 @@ function StreamProcessor(config) {
         } else {
             _bufferClearedForNonReplacement()
         }
-        pendingSwitchToVoRepresentation = null;
+        _resetPendingSwitchToRepresentation();
         qualityChangeInProgress = false;
     }
 
@@ -1271,17 +1284,17 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBufferSinks(previousBufferSinks) {
+    function createBufferSinks(previousBufferSinks, oldRepresentation) {
         const buffer = getBuffer();
 
         if (buffer) {
             return Promise.resolve(buffer);
         }
 
-        return bufferController ? bufferController.createBufferSink(currentMediaInfo, previousBufferSinks) : Promise.resolve(null);
+        return bufferController ? bufferController.createBufferSink(currentMediaInfo, previousBufferSinks, oldRepresentation) : Promise.resolve(null);
     }
 
-    function prepareTrackSwitch(replaceBuffer = false) {
+    function prepareTrackSwitch(oldRepresentation, replaceBuffer = false) {
         return new Promise((resolve) => {
             logger.debug(`Preparing track switch for type ${type}`);
             const shouldReplace =
@@ -1292,7 +1305,7 @@ function StreamProcessor(config) {
             // when buffering is completed and we are not supposed to replace anything do nothing.
             // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
             if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
-                _handleBufferingCompleteTrackSwitch()
+                _handleBufferingCompleteTrackSwitch(oldRepresentation)
                     .then(() => {
                         resolve();
                     })
@@ -1301,13 +1314,13 @@ function StreamProcessor(config) {
                 scheduleController.setSwitchTrack(true);
                 // when we are supposed to replace it does not matter if buffering is already completed
                 if (shouldReplace) {
-                    _handleReplaceTrackSwitch()
+                    _handleReplaceTrackSwitch(oldRepresentation)
                         .then(() => {
                             resolve();
                         })
                 } else {
                     // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
-                    _handleNoReplaceTrackSwitch()
+                    _handleNoReplaceTrackSwitch(oldRepresentation)
                         .then(() => {
                             resolve();
                         })
@@ -1316,10 +1329,10 @@ function StreamProcessor(config) {
         })
     }
 
-    function _handleBufferingCompleteTrackSwitch() {
+    function _handleBufferingCompleteTrackSwitch(oldRepresentation) {
         return new Promise((resolve) => {
-            const representation = representationController.getCurrentRepresentation()
-            bufferController.prepareForNonReplacementTrackSwitch(representation)
+            const newRepresentation = representationController.getCurrentRepresentation()
+            bufferController.prepareForNonReplacementTrackSwitch(newRepresentation, oldRepresentation)
                 .then(() => {
                     eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
                     resolve();
@@ -1331,7 +1344,7 @@ function StreamProcessor(config) {
         })
     }
 
-    function _handleReplaceTrackSwitch() {
+    function _handleReplaceTrackSwitch(oldRepresentation) {
         return new Promise((resolve) => {
             // Inform other classes like the GapController that we are replacing existing stuff
             eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
@@ -1343,12 +1356,8 @@ function StreamProcessor(config) {
             fragmentModel.abortRequests();
 
             // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-            const representation = getRepresentation()
-            bufferController.prepareForReplacementTrackSwitch(representation)
-                .then(() => {
-                    // Timestamp offset couldve been changed by preloading period
-                    return bufferController.updateBufferTimestampOffset(representation);
-                })
+            const newRepresentation = getRepresentation()
+            bufferController.prepareForReplacementTrackSwitch(newRepresentation, oldRepresentation)
                 .then(() => {
                     _bufferClearedForReplacement();
                     resolve();
@@ -1360,7 +1369,7 @@ function StreamProcessor(config) {
         })
     }
 
-    function _handleNoReplaceTrackSwitch() {
+    function _handleNoReplaceTrackSwitch(oldRepresentation) {
         return new Promise((resolve) => {
             // As long as we have ongoing requests we can not change the SourceBuffer type etc.
             // Otherwise, we might run into cases in which we append the segment that is currently being downloaded with wrong SourceBuffer values.
@@ -1369,13 +1378,14 @@ function StreamProcessor(config) {
             const _finishNoReplaceTrackSwitch = () => {
                 const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING });
                 if (!ongoingRequests || ongoingRequests.length === 0) {
-                    const representation = getRepresentation()
-                    bufferController.prepareForNonReplacementTrackSwitch(representation)
+                    const newRepresentation = getRepresentation()
+                    bufferController.prepareForNonReplacementTrackSwitch(newRepresentation, oldRepresentation)
                         .then(() => {
                             _bufferClearedForNonReplacement();
                             resolve();
                         })
-                        .catch(() => {
+                        .catch((e) => {
+                            logger.error(e);
                             _bufferClearedForNonReplacement();
                             resolve();
                         });
@@ -1426,28 +1436,29 @@ function StreamProcessor(config) {
 
         if (type === Constants.TEXT && !isFragmented) {
             controller = NotFragmentedTextBufferController(context).create({
-                streamInfo,
-                type,
-                mimeType,
-                fragmentModel,
-                textController,
                 errHandler,
-                settings
+                fragmentModel,
+                mimeType,
+                settings,
+                streamInfo,
+                textController,
+                type,
             });
         } else {
             controller = BufferController(context).create({
-                streamInfo,
-                type,
-                mediaPlayerModel,
-                manifestModel,
-                fragmentModel,
-                errHandler,
-                mediaController,
-                representationController,
-                textController,
                 abrController,
+                capabilities,
+                errHandler,
+                fragmentModel,
+                manifestModel,
+                mediaController,
+                mediaPlayerModel,
                 playbackController,
-                settings
+                representationController,
+                settings,
+                streamInfo,
+                textController,
+                type,
             });
         }
 

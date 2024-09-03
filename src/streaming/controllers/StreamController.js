@@ -59,12 +59,11 @@ function StreamController() {
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
-        initCache,
-        errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
+        initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController,
+        protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -429,7 +428,7 @@ function StreamController() {
             activeStream = stream;
 
             if (previousStream) {
-                keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+                keepBuffers = _canSourceBuffersBeKept(stream, previousStream);
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
@@ -522,12 +521,7 @@ function StreamController() {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
         activeStream.activate(mediaSource, inputParameters.keepBuffers ? bufferSinks : undefined, representationsFromPreviousPeriod)
             .then((sinks) => {
-                // check if change type is supported by the browser
                 if (sinks) {
-                    const keys = Object.keys(sinks);
-                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
-                        supportsChangeType = true;
-                    }
                     bufferSinks = sinks;
                 }
 
@@ -673,14 +667,14 @@ function StreamController() {
      * @return {boolean}
      * @private
      */
-    function _canSourceBuffersBeReused(nextStream, previousStream) {
+    function _canSourceBuffersBeKept(nextStream, previousStream) {
         try {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method is implemented
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
-                && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));
+                && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
         }
@@ -695,7 +689,7 @@ function StreamController() {
     function _onStreamCanLoadNext(nextStream, previousStream = null) {
 
         if (mediaSource && !nextStream.getPreloaded()) {
-            let seamlessPeriodSwitch = _canSourceBuffersBeReused(nextStream, previousStream);
+            let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
                 const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
@@ -1602,7 +1596,6 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         firstLicenseIsFetched = false;
-        supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         errorInformation = {

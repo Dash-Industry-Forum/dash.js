@@ -81,21 +81,6 @@ function SourceBufferSink(config) {
 
         _copyPreviousSinkData(oldSourceBufferSink);
         _addEventListeners();
-
-        const promises = [];
-
-        promises.push(_abortBeforeAppend());
-        promises.push(updateAppendWindow(mediaInfo.streamInfo));
-
-        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            promises.push(changeType(selectedRepresentation));
-        }
-
-        if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
-            promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
-        }
-
-        return Promise.all(promises);
     }
 
     function changeType(representation) {
@@ -115,8 +100,9 @@ function SourceBufferSink(config) {
         buffer = oldSourceBufferSink.getBuffer();
     }
 
-    function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
+    function initializeForFirstUse(mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
+        const streamInfo = mInfo.streamInfo;
         type = mediaInfo.type;
         const codec = selectedRepresentation ? _getCodecStringForRepresentation(selectedRepresentation) : mInfo.codec;
         try {
@@ -299,7 +285,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function _abortBeforeAppend() {
+    function abortBeforeAppend() {
         return new Promise((resolve) => {
             _waitForUpdateEnd(() => {
                 // Save the append window, which is reset on abort().
@@ -469,15 +455,20 @@ function SourceBufferSink(config) {
     }
 
     function _waitForUpdateEnd(callback) {
-        callbacks.push(callback);
+        try {
+            callbacks.push(callback);
 
-        if (!buffer.updating) {
-            _executeCallback();
+            if (!buffer.updating) {
+                _executeCallback();
+            }
+        } catch (e) {
+            logger.error(e);
         }
     }
 
     instance = {
         abort,
+        abortBeforeAppend,
         append,
         changeType,
         getAllBufferRanges,

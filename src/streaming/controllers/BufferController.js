@@ -50,15 +50,16 @@ const BUFFER_CONTROLLER_TYPE = 'BufferController';
 function BufferController(config) {
 
     config = config || {};
+    const capabilities = config.capabilities;
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
-    const representationController = config.representationController;
-    const textController = config.textController;
     const playbackController = config.playbackController;
-    const streamInfo = config.streamInfo;
-    const type = config.type;
+    const representationController = config.representationController;
     const settings = config.settings;
+    const streamInfo = config.streamInfo;
+    const textController = config.textController;
+    const type = config.type;
 
     let instance,
         logger,
@@ -163,7 +164,7 @@ function BufferController(config) {
      * @param {array} oldBufferSinks
      * @return {Promise<Object>} SourceBufferSink
      */
-    function createBufferSink(mediaInfo, oldBufferSinks = []) {
+    function createBufferSink(mediaInfo, oldBufferSinks = [], oldRepresentation) {
         return new Promise((resolve, reject) => {
             if (!initCache || !mediaInfo) {
                 resolve(null);
@@ -171,7 +172,7 @@ function BufferController(config) {
             }
             if (mediaSource) {
                 isPrebuffering = false;
-                _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks)
+                _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks, oldRepresentation)
                     .then((sink) => {
                         resolve(sink);
                     })
@@ -204,14 +205,14 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks) {
+    function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks, oldRepresentation) {
         return new Promise((resolve) => {
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
                 eventBus
             });
-            _initializeSink(mediaInfo, oldBufferSinks)
+            _initializeSink(mediaInfo, oldBufferSinks, oldRepresentation)
                 .then(() => {
                     return updateBufferTimestampOffset(representationController.getCurrentRepresentation());
                 })
@@ -225,14 +226,33 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSink(mediaInfo, oldBufferSinks) {
-        const selectedVoRepresentation = representationController.getCurrentRepresentation();
+    function _initializeSink(mediaInfo, oldBufferSinks, oldRepresentation) {
+        const newRepresentation = representationController.getCurrentRepresentation();
 
         if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
-            return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedVoRepresentation, oldBufferSinks[type]);
+            return _initializeSinkForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks, oldRepresentation)
         } else {
-            return sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo, selectedVoRepresentation);
+            return _initializeSinkForFirstUse(mediaInfo, newRepresentation);
         }
+    }
+
+    function _initializeSinkForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks, oldRepresentation) {
+        sourceBufferSink.initializeForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks[type]);
+
+        const promises = [];
+        promises.push(sourceBufferSink.abortBeforeAppend());
+        promises.push(updateAppendWindow());
+        promises.push(_changeCodec(newRepresentation, oldRepresentation))
+
+        if (newRepresentation && newRepresentation.mseTimeOffset !== undefined) {
+            promises.push(updateBufferTimestampOffset(newRepresentation));
+        }
+
+        return Promise.allSettled(promises);
+    }
+
+    function _initializeSinkForFirstUse(mediaInfo, newRepresentation) {
+        return sourceBufferSink.initializeForFirstUse(mediaInfo, newRepresentation);
     }
 
     function dischargePreBuffer() {
@@ -492,102 +512,97 @@ function BufferController(config) {
         return sourceBufferSink.abort();
     }
 
-    function prepareForForceReplacementQualitySwitch(voRepresentation) {
-        return new Promise((resolve, reject) => {
-            sourceBufferSink.abort()
-                .then(() => {
-                    return updateAppendWindow();
-                })
-                .then(() => {
-                    return pruneAllSafely();
-                })
-                .then(() => {
-                    // In any case we need to update the MSE.timeOffset
-                    return updateBufferTimestampOffset(voRepresentation)
-                })
-                .then(() => {
-                    return changeType(voRepresentation)
-                })
+    function prepareForForceReplacementQualitySwitch(newRepresentation, oldRepresentation) {
+        return new Promise((resolve) => {
+            const promises = [];
+            promises.push(sourceBufferSink.abort())
+            promises.push(updateAppendWindow())
+            promises.push(pruneAllSafely())
+            promises.push(updateBufferTimestampOffset(newRepresentation))
+            promises.push(_changeCodec(newRepresentation, oldRepresentation))
+
+            Promise.allSettled(promises)
                 .then(() => {
                     setIsBufferingCompleted(false);
                     resolve();
                 })
-                .catch((e) => {
-                    reject(e);
-                });
+
         });
     }
 
-    function prepareForAbandonQualitySwitch(voRepresentation) {
-        return _defaultQualitySwitchPreparation(voRepresentation);
+    function prepareForAbandonQualitySwitch(newRepresentation, oldRepresentation) {
+        return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation);
     }
 
-    function prepareForFastQualitySwitch(voRepresentation) {
-        return _defaultQualitySwitchPreparation(voRepresentation);
+    function prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
+        return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation);
     }
 
-    function prepareForDefaultQualitySwitch(voRepresentation) {
-        return _defaultQualitySwitchPreparation(voRepresentation);
+    function prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation) {
+        return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation);
     }
 
-    function _defaultQualitySwitchPreparation(voRepresentation) {
-        return new Promise((resolve, reject) => {
-            updateBufferTimestampOffset(voRepresentation)
-                .then(() => {
-                    return changeType(voRepresentation)
-                })
-                .then(() => {
-                    resolve()
-                })
-                .catch((e) => {
-                    logger.warn(e);
-                    reject(e);
-                });
-        });
+    function _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation) {
+        const promises = [];
+        promises.push(updateBufferTimestampOffset(newRepresentation));
+        promises.push(abort());
+        promises.push(_changeCodec(newRepresentation, oldRepresentation));
+
+        return Promise.allSettled(promises);
     }
 
-    function prepareForReplacementTrackSwitch(selectedRepresentation) {
-        return new Promise((resolve, reject) => {
-            sourceBufferSink.abort()
-                .then(() => {
-                    return updateAppendWindow();
-                })
-                .then(() => {
-                    return changeType(selectedRepresentation)
-                })
-                .then(() => {
-                    return pruneAllSafely();
-                })
+    function prepareForReplacementTrackSwitch(newRepresentation, oldRepresentation) {
+        return new Promise((resolve) => {
+            const promises = [];
+            promises.push(sourceBufferSink.abort());
+            promises.push(updateAppendWindow());
+            promises.push(_changeCodec(newRepresentation, oldRepresentation));
+            promises.push(pruneAllSafely());
+            promises.push(updateBufferTimestampOffset(newRepresentation));
+
+            Promise.allSettled(promises)
                 .then(() => {
                     setIsBufferingCompleted(false);
                     resolve();
                 })
-                .catch((e) => {
-                    reject(e);
-                });
-        });
+        })
     }
 
-    function prepareForNonReplacementTrackSwitch(selectedRepresentation) {
-        return new Promise((resolve, reject) => {
-            updateAppendWindow()
-                .then(() => {
-                    return changeType(selectedRepresentation)
-                })
+    function prepareForNonReplacementTrackSwitch(newRepresentation, oldRepresentation) {
+        return new Promise((resolve) => {
+            const promises = [];
+
+            promises.push(updateAppendWindow());
+            promises.push(_changeCodec(newRepresentation, oldRepresentation))
+
+            Promise.allSettled(promises)
                 .then(() => {
                     resolve();
                 })
-                .catch((e) => {
-                    reject(e);
-                });
         });
     }
 
-    function changeType(selectedRepresentation) {
-        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            return sourceBufferSink.changeType(selectedRepresentation);
+    function _changeCodec(newRepresentation, oldRepresentation) {
+
+        if (!newRepresentation || !oldRepresentation) {
+            logger.warn(`BufferController._changeCodec() is missing the information about the Representations. Doing nothing`);
+            return Promise.resolve();
         }
-        return Promise.resolve()
+
+        // we dont need change type for the codec change if we have the same mime type and codec family
+        if (newRepresentation && oldRepresentation && newRepresentation.mimeType === oldRepresentation.mimeType && newRepresentation.codecFamily === oldRepresentation.codecFamily) {
+            logger.debug(`Switching to new codec ${newRepresentation.codecs} without changeType as previous codec ${oldRepresentation.codecs} is compatible.`);
+            return Promise.resolve();
+        }
+
+        // change type should not be used or is not supported
+        if (!settings.get().streaming.buffer.useChangeType || !capabilities.supportsChangeType()) {
+            logger.debug(`changeType() not available`);
+            return Promise.resolve()
+        }
+
+        logger.debug(`Using changeType() to switch from codec ${oldRepresentation.codecs} to ${newRepresentation.codecs}`);
+        return sourceBufferSink.changeType(newRepresentation);
     }
 
     function pruneAllSafely() {
@@ -1090,6 +1105,13 @@ function BufferController(config) {
 
     }
 
+    function abort() {
+        if (sourceBufferSink) {
+            return sourceBufferSink.abort();
+        }
+        return Promise.resolve();
+    }
+
     function updateAppendWindow() {
         if (sourceBufferSink && !isBufferingCompleted) {
             return sourceBufferSink.updateAppendWindow(streamInfo);
@@ -1263,7 +1285,6 @@ function BufferController(config) {
 
     instance = {
         appendInitSegmentFromCache,
-        changeType,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,

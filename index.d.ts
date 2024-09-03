@@ -1105,7 +1105,7 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
-                useChangeTypeForTrackSwitch?: boolean
+                useChangeType?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
             },

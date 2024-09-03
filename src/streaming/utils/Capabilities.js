@@ -103,6 +103,14 @@ function Capabilities() {
     }
 
     /**
+     * Checks whether SourceBuffer.changeType() is available
+     * @return {boolean} true is changeType() is available
+     */
+    function supportsChangeType() {
+        return !!window.SourceBuffer && !!SourceBuffer.prototype && !!SourceBuffer.prototype.changeType;
+    }
+
+    /**
      *
      * @param {boolean} value
      */
@@ -330,6 +338,7 @@ function Capabilities() {
         setConfig,
         setEncryptedMediaSupported,
         setProtectionController,
+        supportsChangeType,
         supportsCodec,
         supportsEncryptedMedia,
         supportsEssentialProperty,

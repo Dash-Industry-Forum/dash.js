@@ -467,6 +467,7 @@ function Stream(config) {
             adapter,
             baseURLController: config.baseURLController,
             boxParser,
+            capabilities,
             dashMetrics: config.dashMetrics,
             errHandler,
             fragmentModel,
@@ -506,7 +507,8 @@ function Stream(config) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                return sp.createBufferSinks(previousBuffersSinks);
+                const oldRepresentation = sp.getRepresentation();
+                return sp.createBufferSinks(previousBuffersSinks, oldRepresentation);
             });
 
             Promise.all(promises)
@@ -785,10 +787,11 @@ function Stream(config) {
             }
         } else {
             processor.clearScheduleTimer();
+            const oldRepresentation = processor.getRepresentation();
             processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;
-                    processor.prepareTrackSwitch(replaceBuffer);
+                    processor.prepareTrackSwitch(oldRepresentation, replaceBuffer);
                 });
         }
     }
@@ -957,7 +960,8 @@ function Stream(config) {
                         if (!processor) {
                             return;
                         }
-                        promises.push(processor.prepareTrackSwitch());
+                        const oldRepresentation = processor.getRepresentation();
+                        promises.push(processor.prepareTrackSwitch(oldRepresentation));
                         promises.push(processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo })));
                     }
 

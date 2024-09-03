@@ -41,7 +41,7 @@
           }
         }
       },
-      "type": "vod",
+      "type": "live",
       "excludedPlatforms": [
         {
           "browser": "safari"
