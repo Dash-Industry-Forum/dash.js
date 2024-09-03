@@ -10,27 +10,11 @@
   },
   "testvectors": [
     {
-      "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (2 keys : audio + video) - No key rotation",
-      "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams//6e16c26536564c2f9dbc5f725a820cff/index.mpd",
-      "drm": {
-        "com.widevine.alpha": {
-          "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
-          "httpRequestHeaders": {
-            "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-          }
-        },
-        "com.microsoft.playready": {
-          "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
-          "httpRequestHeaders": {
-            "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-          }
-        }
-      },
+      "name": "Segment Base",
       "type": "vod",
-      "excludedPlatforms": [
-        {
-          "browser": "safari"
-        }
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "playback/*"
       ]
     }
   ]
