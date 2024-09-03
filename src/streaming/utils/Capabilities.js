@@ -207,7 +207,7 @@ function Capabilities() {
             Promise.allSettled(promises)
                 .then((results) => {
                     const isSupported = results.some((singleResult) => {
-                        return singleResult.status === 'fulfilled' && singleResult.value && singleResult.value.supported
+                        return singleResult.status === 'fulfilled' && singleResult.value && !!singleResult.value.supported
                     })
                     resolve(isSupported);
                 })
