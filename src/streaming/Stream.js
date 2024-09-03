@@ -787,12 +787,16 @@ function Stream(config) {
             }
         } else {
             processor.clearScheduleTimer();
+            processor.setTrackSwitchInProgress(true);
             const oldRepresentation = processor.getRepresentation();
             processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
                     const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;
-                    processor.prepareTrackSwitch(oldRepresentation, replaceBuffer);
-                });
+                    return processor.prepareTrackSwitch(oldRepresentation, replaceBuffer);
+                })
+                .then(() => {
+                    processor.setTrackSwitchInProgress(false);
+                })
         }
     }
 
@@ -948,6 +952,7 @@ function Stream(config) {
                 }
             }
 
+            let processor;
             Promise.all(promises)
                 .then(() => {
                     let promises = [];
@@ -956,11 +961,12 @@ function Stream(config) {
                     while (trackChangedEvents.length > 0) {
                         let trackChangedEvent = trackChangedEvents.pop();
                         let newMediaInfo = trackChangedEvent.newMediaInfo;
-                        let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                        processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) {
                             return;
                         }
                         const oldRepresentation = processor.getRepresentation();
+                        processor.setTrackSwitchInProgress(true);
                         promises.push(processor.prepareTrackSwitch(oldRepresentation));
                         promises.push(processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo })));
                     }
@@ -969,6 +975,7 @@ function Stream(config) {
                 })
                 .then(() => {
                     _initializationCompleted();
+                    processor.setTrackSwitchInProgress(false);
                     eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
                     resolve();
                 })

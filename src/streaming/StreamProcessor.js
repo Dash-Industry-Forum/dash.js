@@ -92,7 +92,8 @@ function StreamProcessor(config) {
         scheduleController,
         segmentsController,
         shouldRepeatRequest,
-        shouldUseExplicitTimeForRequest;
+        shouldUseExplicitTimeForRequest,
+        trackSwitchInProgress;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -212,6 +213,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
+        trackSwitchInProgress = false;
         _resetPendingSwitchToRepresentation();
     }
 
@@ -629,7 +631,7 @@ function StreamProcessor(config) {
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation);
-        } else {
+        } else if (!trackSwitchInProgress) {
             scheduleController.startScheduleTimer(0);
         }
     }
@@ -1477,6 +1479,10 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = true;
     }
 
+    function setTrackSwitchInProgress(value) {
+        trackSwitchInProgress = value;
+    }
+
     function finalisePlayList(time, reason) {
         dashMetrics.pushPlayListTraceMetrics(time, reason);
     }
@@ -1511,6 +1517,7 @@ function StreamProcessor(config) {
         setExplicitBufferingTime,
         setMediaInfoArray,
         setMediaSource,
+        setTrackSwitchInProgress,
         updateStreamInfo,
     };
 
