@@ -342,6 +342,8 @@ function Stream(config) {
      */
     function _initializeMediaForType(type, mediaSource, representationFromPreviousPeriod) {
         let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        // Use the MediaInfo to create the final query strings after have the MPD parsed
+        // urlQueryInfoController.createFinalQueryStrings(allMediaForType);
         let embeddedMediaInfos = [];
 
         let mediaInfo = null;

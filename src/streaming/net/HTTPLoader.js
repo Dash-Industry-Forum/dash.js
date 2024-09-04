@@ -574,7 +574,12 @@ function HTTPLoader(cfg) {
      */
     function _updateRequestUrlAndHeaders(request) {
         _updateRequestUrlAndHeadersWithCMCD(request);
-
+        // Add UrlQueryInfo parameters
+        // const urlQueryInfoFinalQueryString = urlQueryInfoController.getFinalQueryString(request)
+        // if (urlQueryInfoFinalQueryString) {
+        //    request.url = Utils.addAditionalQueryParameterToUrl(request.url, );
+        // }
+        
         // Add queryParams that came from pathway cloning
         if (request.queryParams) {
             const queryParams = Object.keys(request.queryParams).map((key) => {
