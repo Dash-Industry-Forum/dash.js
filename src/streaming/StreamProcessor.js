@@ -687,13 +687,15 @@ function StreamProcessor(config) {
     }
 
     function _setCurrentMediaInfo(value) {
+        if (!adapter.areMediaInfosEqual(currentMediaInfo, value)) {
+            eventBus.trigger(MediaPlayerEvents.NEW_TRACK_SELECTED, {
+                value
+            });
+        }
         currentMediaInfo = value;
         eventBus.trigger(Events.MEDIAINFO_UPDATED, {
             mediaType: type,
             streamId: streamInfo.id,
-            currentMediaInfo
-        });
-        eventBus.trigger(MediaPlayerEvents.TRACK_SELECTED, {
             currentMediaInfo
         });
     }

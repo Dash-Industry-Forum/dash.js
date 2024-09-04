@@ -207,9 +207,9 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when the new track is being selected
-         * @event MediaPlayerEvents#TRACK_SELECTED
+         * @event MediaPlayerEvents#NEW_TRACK_SELECTED
          */
-        this.TRACK_SELECTED = 'trackSelected';
+        this.NEW_TRACK_SELECTED = 'newTrackSelected';
 
         /**
          * Triggered when the new track is being rendered.

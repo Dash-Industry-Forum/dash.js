@@ -115,7 +115,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
-        self.player.on(dashjs.MediaPlayer.events.TRACK_SELECTED, _onTrackSelected, this);
+        self.player.on(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
         self.player.on(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
@@ -128,7 +128,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.off(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
-        self.player.off(dashjs.MediaPlayer.events.TRACK_SELECTED, _onTrackSelected, this);
+        self.player.off(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
         self.player.off(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
@@ -697,7 +697,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         createCaptionSwitchMenu(e.streamId);
     };
 
-    var _onTrackSelected = function () {
+    var _onNewTrackSelected = function () {
         createTrackSwitchMenu();
         createBitrateSwitchMenu();
     }
