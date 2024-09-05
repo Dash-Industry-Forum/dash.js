@@ -54,7 +54,7 @@ function ObjectUtils() {
     }
 
     instance = {
-        areEqual: areEqual
+        areEqual
     };
 
     return instance;
