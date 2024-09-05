@@ -210,10 +210,6 @@ class Utils {
         return (/(http(s?)):\/\//i.test(string))
     }
 
-    /**
-     * @param {BufferSource} bufferSource
-     * @returns {DataView}
-     */
     static bufferSourceToDataView(bufferSource) {
         return Utils.toDataView(bufferSource, DataView);
     }
@@ -241,24 +237,15 @@ class Utils {
         if ('BYTES_PER_ELEMENT' in DataView) {
             bytesPerElement = DataView.BYTES_PER_ELEMENT;
         }
-        // Absolute end of the |data| view within |buffer|.
-        /** @suppress {strictMissingProperties} */
+
         const dataEnd = ((bufferSource.byteOffset || 0) + bufferSource.byteLength) /
             bytesPerElement;
-        // Absolute start of the result within |buffer|.
-        /** @suppress {strictMissingProperties} */
         const rawStart = ((bufferSource.byteOffset || 0)) / bytesPerElement;
         const start = Math.floor(Math.max(0, Math.min(rawStart, dataEnd)));
-        // Absolute end of the result within |buffer|.
         const end = Math.floor(Math.min(start + Math.max(Infinity, 0), dataEnd));
         return new Type(buffer, start, end - start);
     }
 
-    /**
-     * @param {BufferSource} view
-     * @return {!ArrayBuffer}
-     * @private
-     */
     static getArrayBuffer(view) {
         if (view instanceof ArrayBuffer) {
             return view;
