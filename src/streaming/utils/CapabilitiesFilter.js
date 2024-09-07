@@ -156,6 +156,10 @@ function CapabilitiesFilter() {
         });
     }
 
+    function _getConfigurationsToCheck() {
+
+    }
+
     function _createConfiguration(type, rep, codec) {
         let config = null;
         switch (type) {
@@ -170,6 +174,32 @@ function CapabilitiesFilter() {
         }
 
         return _addGenericAttributesToConfig(rep, config);
+    }
+
+    function _createVideoConfiguration(rep, codec) {
+        let config = {
+            codec: codec,
+            width: rep.width || null,
+            height: rep.height || null,
+            framerate: rep.frameRate || null,
+            bitrate: rep.bandwidth || null,
+            isSupported: true
+        }
+        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+            Object.assign(config, _convertHDRColorimetryToConfig(rep));
+        }
+        let colorimetrySupported = config.isSupported;
+
+        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+        }
+        let metadataFormatSupported = config.isSupported;
+
+        if (!colorimetrySupported || !metadataFormatSupported) {
+            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
+        }
+
+        return config;
     }
 
     function _convertHDRColorimetryToConfig(representation) {
@@ -233,32 +263,6 @@ function CapabilitiesFilter() {
         }
 
         return cfg;
-    }
-
-    function _createVideoConfiguration(rep, codec) {
-        let config = {
-            codec: codec,
-            width: rep.width || null,
-            height: rep.height || null,
-            framerate: rep.frameRate || null,
-            bitrate: rep.bandwidth || null,
-            isSupported: true
-        }
-        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
-            Object.assign(config, _convertHDRColorimetryToConfig(rep));
-        }
-        let colorimetrySupported = config.isSupported;
-
-        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
-        }
-        let metadataFormatSupported = config.isSupported;
-
-        if (!colorimetrySupported || !metadataFormatSupported) {
-            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
-        }
-
-        return config;
     }
 
     function _createAudioConfiguration(rep, codec) {

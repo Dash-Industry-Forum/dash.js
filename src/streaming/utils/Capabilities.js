@@ -91,6 +91,18 @@ function Capabilities() {
         encryptedMediaSupported = value;
     }
 
+    function resolveCodecSupportWithMediaCapabilitiesApi() {
+        if (!_isMediaCapabilitiesApiAvailable()) {
+            return Promise.resolve();
+        }
+
+        const promises = mediaCapabilityApiConfigurations.map((configuration) => {
+            return _checkSingleConfigurationWithMediaCapabilities(configuration);
+        })
+
+        return Promise.allSettled(promises);
+    }
+
     /**
      * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
      * @param {object} config
@@ -118,7 +130,11 @@ function Capabilities() {
      * @private
      */
     function _canUseMediaCapabilitiesApi(config, type) {
-        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
+        return _isMediaCapabilitiesApiAvailable() && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
+    }
+
+    function _isMediaCapabilitiesApiAvailable() {
+        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo
     }
 
     /**
@@ -346,6 +362,7 @@ function Capabilities() {
 
     instance = {
         isProtectionCompatible,
+        resolveCodecSupportWithMediaCapabilitiesApi,
         setConfig,
         setEncryptedMediaSupported,
         supportsCodec,
