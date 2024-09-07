@@ -51,6 +51,9 @@ const configProdEsm = merge(esmConfig, {
     output: {
         filename: '[name].min.esm.js'
     },
+    optimization: {
+        usedExports: false,
+    },
     performance: { hints: false },
     plugins: [
         new ESLintPlugin({
