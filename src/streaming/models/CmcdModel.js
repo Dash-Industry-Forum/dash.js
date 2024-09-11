@@ -45,7 +45,7 @@ import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreaming
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
-const CMCD_DEFAULT_VERSION = 1;
+const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
 
@@ -128,8 +128,9 @@ function CmcdModel() {
         _isStartup = {};
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
+        _playbackStartedTime = undefined;
+        _msdSent = false;
         _updateStreamProcessors();
-        _setCmcdVersion();
     }
 
     function _onPeriodSwitchComplete() {
@@ -239,7 +240,7 @@ function CmcdModel() {
 
     function _canBeEnabled(cmcdParametersFromManifest) {
         if (Object.keys(cmcdParametersFromManifest).length) {
-            if (cmcdParametersFromManifest.version !== 1) {
+            if (parseInt(cmcdParametersFromManifest.version) !== 1) {
                 logger.error(`version parameter must be defined in 1.`);
                 return false;
             }
@@ -279,21 +280,18 @@ function CmcdModel() {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
         const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(internalData.v === 2 && defaultV2AvailableKeys.includes(k)));
+        const cmcdVersion = settings.get().streaming.cmcd.reporting.requestMode.version;
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
+
         if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented for CMCD version ${internalData.v}.`);
+            logger.error(`None of the keys are implemented for CMCD version ${cmcdVersion}.`);
             return false;
         }
         invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented for CMCD version ${internalData.v}.`);
+            logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
         });
 
         return true;
-    }
-
-    function _setCmcdVersion() {
-        const cmcdVersion = settings.get().streaming.cmcd?.reporting?.requestMode?.version
-        internalData.v = cmcdVersion ? cmcdVersion : CMCD_DEFAULT_VERSION;
     }
 
     function getCmcdParametersFromManifest() {
@@ -372,7 +370,6 @@ function CmcdModel() {
         const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
 
         data.ot = CmcdObjectType.OTHER;
-        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -381,7 +378,6 @@ function CmcdModel() {
         const data = _getGenericCmcdData(request);
 
         data.ot = CmcdObjectType.KEY;
-        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -390,7 +386,6 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
 
         data.ot = CmcdObjectType.MANIFEST;
-        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -470,9 +465,6 @@ function CmcdModel() {
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
         }
-
-        _setMsdIfNeeded(data);
-
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
@@ -507,7 +499,6 @@ function CmcdModel() {
 
         data.ot = CmcdObjectType.INIT;
         data.su = true;
-        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -516,7 +507,6 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
 
         data.ot = CmcdObjectType.OTHER;
-        _setMsdIfNeeded(data);
 
         return data;
     }
@@ -529,9 +519,8 @@ function CmcdModel() {
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
 
-        if (internalData.v) {
-            data.v = internalData.v ?? CMCD_DEFAULT_VERSION;
-        }
+        let v = settings.get().streaming.cmcd.reporting.requestMode.version ?? DEFAULT_CMCD_VERSION;
+        data.v = v;
 
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
@@ -540,11 +529,6 @@ function CmcdModel() {
 
         if (cid) {
             data.cid = `${cid}`;
-        }
-
-        let ltc = playbackController.getCurrentLiveLatency() * 1000;
-        if (!isNaN(ltc)) {
-            data.ltc = ltc;
         }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
@@ -559,11 +543,26 @@ function CmcdModel() {
             data.sf = internalData.sf;
         }
 
+        if (v === 2) {
+            let ltc = playbackController.getCurrentLiveLatency() * 1000;
+            if (!isNaN(ltc)) {
+                data.ltc = ltc;
+            }
+            const msd = internalData.msd;
+            if (!_msdSent && !isNaN(msd)) {
+                data.msd = msd;
+                _msdSent = true;
+            }
+        }
+
+        
+
         return data;
     }
 
     function _creatCmcdV2HeadersCustomMap() {
-        return internalData.v === 1 ? {} : { 
+        const cmcdVersion = settings.get().streaming.cmcd.reporting.requestMode.version
+        return cmcdVersion === 1 ? {} : { 
             customHeaderMap: { 
                 [CmcdHeaderField.REQUEST]: ['ltc'],
                 [CmcdHeaderField.SESSION]: ['msd']
@@ -632,19 +631,6 @@ function CmcdModel() {
             return null;
         } catch (e) {
             return null;
-        }
-    }
-
-    function _setMsdIfNeeded(data) {
-        if (_msdSent) {
-            return
-        }
-
-        const msd = internalData.msd;
-
-        if (!isNaN(msd)) {
-            data.msd = msd;
-            _msdSent = true;
         }
     }
 
