@@ -1615,7 +1615,6 @@ describe('CmcdModel', function () {
                 expect(parameters.value).to.equal('sid="sid-123"');
             });
         });
-        
     });
 
 });
