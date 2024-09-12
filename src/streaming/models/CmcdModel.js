@@ -198,7 +198,7 @@ function CmcdModel() {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
             const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-            
+
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
@@ -465,6 +465,7 @@ function CmcdModel() {
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
         }
+
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
