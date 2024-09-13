@@ -44,6 +44,7 @@ import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
 import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
+import ExtUrlQueryInfoController from '../controllers/ExtUrlQueryInfoController.js';
 
 /**
  * @module HTTPLoader
@@ -77,6 +78,7 @@ function HTTPLoader(cfg) {
         customParametersModel,
         commonAccessTokenController,
         clientDataReportingController,
+        extUrlQueryInfoController,
         logger;
 
     function setup() {
@@ -89,6 +91,7 @@ function HTTPLoader(cfg) {
         cmsdModel = CmsdModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
         commonAccessTokenController = CommonAccessTokenController(context).getInstance();
+        extUrlQueryInfoController = ExtUrlQueryInfoController(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -574,12 +577,12 @@ function HTTPLoader(cfg) {
      */
     function _updateRequestUrlAndHeaders(request) {
         _updateRequestUrlAndHeadersWithCMCD(request);
-        // Add UrlQueryInfo parameters
-        // const urlQueryInfoFinalQueryString = urlQueryInfoController.getFinalQueryString(request)
-        // if (urlQueryInfoFinalQueryString) {
-        //    request.url = Utils.addAditionalQueryParameterToUrl(request.url, );
-        // }
-        
+        // Add ExtUrlQueryInfo parameters
+        let finalQueryString = extUrlQueryInfoController.getFinalQueryString(request);
+        if (finalQueryString) {
+            request.url = Utils.addAditionalQueryParameterToUrl(request.url, finalQueryString);
+        }
+
         // Add queryParams that came from pathway cloning
         if (request.queryParams) {
             const queryParams = Object.keys(request.queryParams).map((key) => {

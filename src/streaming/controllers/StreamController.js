@@ -45,6 +45,7 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
+import ExtUrlQueryInfoController from './ExtUrlQueryInfoController.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -57,7 +58,7 @@ function StreamController() {
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
-        initCache,
+        initCache, extUrlQueryInfoController,
         errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
@@ -98,6 +99,7 @@ function StreamController() {
         });
         eventController.start();
 
+        extUrlQueryInfoController = ExtUrlQueryInfoController(context).getInstance();
 
         timeSyncController.setConfig({
             dashMetrics, baseURLController, errHandler, settings
@@ -1281,6 +1283,8 @@ function StreamController() {
                             event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
                         });
                     }
+
+                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
 
                     let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
