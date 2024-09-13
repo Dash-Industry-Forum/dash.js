@@ -1302,7 +1302,7 @@ function Settings() {
                 includeInRequests: ['segment'],
                 reporting: {
                     requestMode: {
-                        version: null
+                        version: 1
                     }
                 }  
             },

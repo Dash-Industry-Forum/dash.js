@@ -66,7 +66,7 @@ function CmcdModel() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
-        _msdSent
+        _msdSent;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -85,8 +85,8 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance)
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
     }
 
     function setConfig(config) {
@@ -139,16 +139,16 @@ function CmcdModel() {
 
     function _onPlaybackStarted() {
         if (!_playbackStartedTime) {
-            _playbackStartedTime = Date.now()
+            _playbackStartedTime = Date.now();
         }
     }
 
     function _onPlaybackPlaying() {
         if (!_playbackStartedTime || internalData.msd) {
-            return
+            return;
         }
 
-        internalData.msd = Date.now() - _playbackStartedTime
+        internalData.msd = Date.now() - _playbackStartedTime;
     }
 
     function _updateStreamProcessors() {
@@ -215,7 +215,7 @@ function CmcdModel() {
             if (isCmcdEnabled()) {
                 const cmcdData = getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
-                const options = _creatCmcdV2HeadersCustomMap()
+                const options = _creatCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
@@ -520,8 +520,7 @@ function CmcdModel() {
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
 
-        let v = settings.get().streaming.cmcd.reporting.requestMode.version ?? DEFAULT_CMCD_VERSION;
-        data.v = v;
+        data.v = settings.get().streaming.cmcd.reporting.requestMode.version ?? DEFAULT_CMCD_VERSION;
 
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
@@ -544,7 +543,7 @@ function CmcdModel() {
             data.sf = internalData.sf;
         }
 
-        if (v === 2) {
+        if (data.v === 2) {
             let ltc = playbackController.getCurrentLiveLatency() * 1000;
             if (!isNaN(ltc)) {
                 data.ltc = ltc;
@@ -562,13 +561,13 @@ function CmcdModel() {
     }
 
     function _creatCmcdV2HeadersCustomMap() {
-        const cmcdVersion = settings.get().streaming.cmcd.reporting.requestMode.version
+        const cmcdVersion = settings.get().streaming.cmcd.reporting.requestMode.version;
         return cmcdVersion === 1 ? {} : { 
             customHeaderMap: { 
                 [CmcdHeaderField.REQUEST]: ['ltc'],
                 [CmcdHeaderField.SESSION]: ['msd']
             }
-        }
+        };
     }
 
     function _getBitrateByRequest(request) {
@@ -706,7 +705,7 @@ function CmcdModel() {
                 playbackRate = 1;
             }
             let { bandwidth, mediaType, representation, duration } = request;
-            const mediaInfo = representation.mediaInfo
+            const mediaInfo = representation.mediaInfo;
 
             if (!mediaInfo) {
                 return NaN;
@@ -736,8 +735,8 @@ function CmcdModel() {
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance)
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
 
         _resetInitialSettings();
     }
