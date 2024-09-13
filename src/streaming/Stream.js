@@ -42,6 +42,7 @@ import DashJSError from './vo/DashJSError.js';
 import BoxParser from './utils/BoxParser.js';
 import URLUtils from './utils/URLUtils.js';
 import BlacklistController from './controllers/BlacklistController.js';
+import ExternalMediaSource from './ExternalMediaSource.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -346,6 +347,7 @@ function Stream(config) {
 
         let mediaInfo = null;
         let initialMediaInfo;
+        let enhancementMediaInfoIndex = -1;
 
         if (!allMediaForType || allMediaForType.length === 0) {
             logger.info('No ' + type + ' data.');
@@ -369,6 +371,10 @@ function Stream(config) {
             }
             if (_isMediaSupported(mediaInfo)) {
                 mediaController.addTrack(mediaInfo);
+            }
+
+            if (mediaInfo.type === Constants.ENHANCEMENT) {
+                enhancementMediaInfoIndex = i;
             }
         }
 
@@ -409,7 +415,18 @@ function Stream(config) {
 
         mediaController.setInitialMediaSettingsForType(type, streamInfo);
 
-        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource);
+        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource, type);
+
+        if (enhancementMediaInfoIndex >= 0) {
+            // An adaptation set, mapped to mediaInfo, of enhancement type was found so a stream processor shall be created for it
+            // the enhancement stream processor will work in parallel to the media stream processor it enhances
+            let enhancementMediaSource = new ExternalMediaSource(eventBus);
+            enhancementMediaSource.open();
+            enhancementMediaSource.duration = streamInfo.manifestInfo.duration;
+            let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, Constants.ENHANCEMENT);
+            enhancementStreamProcessor.selectMediaInfo({ newMediaInfo: allMediaForType[enhancementMediaInfoIndex] });
+            streamProcessor.setEnhancementStreamProcessor(enhancementStreamProcessor);
+        }
 
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
 
@@ -452,11 +469,12 @@ function Stream(config) {
      * Creates the StreamProcessor for a given media type.
      * @param {array} allMediaForType
      * @param {object} mediaSource
+     * @param {object} aType
      * @private
      */
-    function _createStreamProcessor(allMediaForType, mediaSource) {
+    function _createStreamProcessor(allMediaForType, mediaSource, aType) {
 
-        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType[0] : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType.filter(m => (m.type === aType))[0] : null;
         let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
         const type = mediaInfo ? mediaInfo.type : null;
         const mimeType = mediaInfo ? mediaInfo.mimeType : null;
@@ -893,7 +911,7 @@ function Stream(config) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT) {
+            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.ENHANCEMENT) {
                 arr.push(streamProcessor);
             }
         }

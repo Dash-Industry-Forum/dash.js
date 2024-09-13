@@ -33,7 +33,7 @@ import DashJSError from './vo/DashJSError.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Errors from '../core/errors/Errors.js';
 import Settings from '../core/Settings.js';
-import constants from './constants/Constants.js';
+import Constants from './constants/Constants.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import Events from '../core/events/Events.js';
 
@@ -144,7 +144,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.type == constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
+            if ((mediaInfo.type == Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);
@@ -384,7 +384,7 @@ function SourceBufferSink(config) {
                     afterSuccess.call(this);
                 } else {
                     if (buffer.appendBuffer) {
-                        buffer.appendBuffer(nextChunk.data.bytes);
+                        buffer.appendBuffer(nextChunk.data.bytes, nextChunk.data.start, nextChunk.data.end);
                     } else {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
                     }

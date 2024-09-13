@@ -97,6 +97,10 @@ function Capabilities() {
             return Promise.resolve(true);
         }
 
+        if (config.codec.includes('video') && Constants.ENHANCEMENT_CODECS.some(cdc => config.codec.includes(cdc))) {
+            return Promise.resolve(true);
+        }
+
         if (_canUseMediaCapabilitiesApi(config, type)) {
             return _checkCodecWithMediaCapabilities(config, type);
         }

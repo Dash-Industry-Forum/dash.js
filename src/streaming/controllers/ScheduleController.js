@@ -444,6 +444,7 @@ function ScheduleController(config) {
         setCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,
+        setup
     };
 
     setup();

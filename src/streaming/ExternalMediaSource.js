@@ -28,61 +28,64 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class
- * @ignore
- */
+import ExternalSourceBuffer from './ExternalSourceBuffer.js';
 
-import DashConstants from '../constants/DashConstants.js';
-
-class Representation {
-
-    constructor() {
-        this.absoluteIndex = NaN;
-        this.adaptation = null;
-        this.availabilityTimeComplete = true;
-        this.availabilityTimeOffset = 0;
-        this.bandwidth = NaN;
-        this.bitrateInKbit = NaN;
-        this.bitsPerPixel = NaN;
-        this.codecPrivateData = null;
-        this.codecs = null;
-        this.essentialProperties = [];
-        this.fragmentDuration = null;
-        this.frameRate = null;
-        this.height = NaN;
-        this.id = null;
-        this.indexRange = null;
-        this.initialization = null;
-        this.maxPlayoutRate = NaN;
-        this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-        this.mediaInfo = null;
-        this.mimeType = null;
-        this.mseTimeOffset = NaN;
-        this.pixelsPerSecond = NaN;
-        this.presentationTimeOffset = 0;
-        this.qualityRanking = NaN;
-        this.range = null;
-        this.scanType = null;
-        this.segments = null;
-        this.segmentDuration = NaN;
-        this.segmentInfoType = null;
-        this.supplementalProperties = [];
-        this.startNumber = 1;
-        this.timescale = 1;
-        this.width = NaN;
-        this.dependentRepresentation = null
+class ExternalMediaSource {
+    constructor(eventBus) {
+        this.eventBus = eventBus;
+        this.sourceBuffers = new Map();
+        this._duration = NaN;
+        this._readyState = 'closed';
     }
 
-    hasInitialization() {
-        return (this.initialization !== null || this.range !== null);
+    get duration() {
+        return this._duration;
     }
 
-    hasSegments() {
-        return this.segmentInfoType !== DashConstants.BASE_URL &&
-            this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !this.indexRange;
+    set duration(value) {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
+        }
+        this._duration = value;
+    }
+
+    get readyState() {
+        return this._readyState;
+    }
+
+    addSourceBuffer(mimeType) {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
+        }
+        const sourceBuffer = new ExternalSourceBuffer(mimeType, this.eventBus);
+        this.sourceBuffers.set(sourceBuffer, mimeType);
+        return sourceBuffer;
+    }
+
+    removeSourceBuffer(sourceBuffer) {
+        if (!(this.sourceBuffers.has(sourceBuffer))) {
+            throw new Error('ExternalSourceBuffer not found');
+        }
+        this.sourceBuffers.delete(sourceBuffer);
+    }
+
+    open() {
+        this._readyState = 'open';
+        this.eventBus.trigger('externalMediaSourceOpen', { });
+    }
+
+    endOfStream() {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
+        }
+        this._readyState = 'ended';
+        this.eventBus.trigger('externalMediaSourceEnded', { });
+    }
+
+    close() {
+        this._readyState = 'closed';
+        this.eventBus.trigger('externalMediaSourceClosed', { });
     }
 }
 
-export default Representation;
+export default ExternalMediaSource;

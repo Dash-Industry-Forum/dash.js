@@ -3,6 +3,7 @@ import Settings from '../../../../src/core/Settings.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
+import Constants from '../../../../src/streaming/constants/Constants.js';
 
 let settings;
 let capabilities;
@@ -344,5 +345,13 @@ describe('Capabilities', function () {
                     done(e)
                 })
         })
+
+        it('should return true for enhancement codecs', function () {
+            const res = capabilities.supportsCodec({ codec: `video/${Constants.ENHANCEMENT_CODECS[0]}` }, Constants.VIDEO);
+
+            return res.then(function (isSupported) {
+                expect(isSupported).to.be.true;
+            });
+        });
     })
 });

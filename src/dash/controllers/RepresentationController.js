@@ -71,8 +71,23 @@ function RepresentationController(config) {
         }
     }
 
-    function getCurrentRepresentation() {
-        return currentVoRepresentation;
+    function getCurrentRepresentation(selectByType = true) {
+        let representation = null;
+        if (!selectByType || currentVoRepresentation?.mediaInfo.type === type) {
+            representation = currentVoRepresentation;
+        }
+        else {
+            let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
+            if (currentVoRepDep) {
+                if (!currentVoRepDep.mediaInfo) {
+                    throw new Error('dependentRepresentation has no mediaInfo!');
+                }
+                if (currentVoRepDep.mediaInfo.type === type) {
+                    representation = currentVoRepDep;
+                }
+            }
+        }
+        return representation;
     }
 
     function resetInitialSettings() {
@@ -88,11 +103,12 @@ function RepresentationController(config) {
     function updateData(availableRepresentations, isFragmented, selectedRepresentationId) {
         return new Promise((resolve, reject) => {
             voAvailableRepresentations = availableRepresentations;
+
+            // Override selected with the dependent representation
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-
-            if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
                 endDataUpdate();
                 resolve();
                 return;
@@ -288,7 +304,9 @@ function RepresentationController(config) {
 
     function _setCurrentVoRepresentation(value) {
         if (!currentVoRepresentation || currentVoRepresentation.id !== value.id) {
-            _addRepresentationSwitch(value);
+            let dependentRep = value.dependentRepresentation;
+            let switchRep = (dependentRep && dependentRep.mediaInfo && dependentRep.mediaInfo.type === type) ? dependentRep : value;
+            _addRepresentationSwitch(switchRep);
         }
         currentVoRepresentation = value;
     }

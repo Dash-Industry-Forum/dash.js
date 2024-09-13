@@ -75,6 +75,7 @@ function StreamProcessor(config) {
     let settings = config.settings;
     let boxParser = config.boxParser;
     let segmentBlacklistController = config.segmentBlacklistController;
+    let enhancementStreamProcessor = null;
 
     let instance,
         logger,
@@ -90,6 +91,7 @@ function StreamProcessor(config) {
         dashHandler,
         segmentsController,
         bufferingTime,
+        containsVideoTrack,
         pendingSwitchToVoRepresentation;
 
     function setup() {
@@ -188,6 +190,7 @@ function StreamProcessor(config) {
             settings
         });
 
+        containsVideoTrack = hasVideoTrack;
         scheduleController.initialize(hasVideoTrack);
 
         bufferingTime = 0;
@@ -211,6 +214,7 @@ function StreamProcessor(config) {
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
         pendingSwitchToVoRepresentation = null;
+        enhancementStreamProcessor = null;
     }
 
     function reset(errored, keepBuffers) {
@@ -264,6 +268,11 @@ function StreamProcessor(config) {
 
     function setMediaInfoArray(value) {
         mediaInfoArr = value;
+    }
+
+    function setEnhancementStreamProcessor(value) {
+        enhancementStreamProcessor = value;
+        logger.info('enhancementStreamProcessor = ' + enhancementStreamProcessor);
     }
 
     /**
@@ -564,7 +573,7 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
-        const currentRepresentation = representationController.getCurrentRepresentation()
+        const currentRepresentation = representationController.getCurrentRepresentation(false)
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -663,8 +672,16 @@ function StreamProcessor(config) {
 
             eventBus.trigger()
 
+            if (enhancementStreamProcessor && selectedValues.selectedRepresentation.dependentRepresentation) {
+                logger.info('[' + type + '] selectMediaInfo : call selectMediaInfo on enhancementStreamProcessor for index = ' + selectedValues.selectedRepresentation.absoluteIndex);
+                enhancementStreamProcessor.selectMediaInfo({
+                    newMediaInfo: selectedValues.selectedRepresentation.mediaInfo,
+                    newRepresentation: selectedValues.selectedRepresentation
+                });
+            }
+
             // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
-            const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
+            const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, true);
             return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, selectedValues.selectedRepresentation.id)
                 .then(() => {
                     _onDataUpdateCompleted()
@@ -704,7 +721,7 @@ function StreamProcessor(config) {
             bitrateInKbit = abrController.getInitialBitrateFor(type);
         }
 
-        const selectedRepresentation = abrController.getOptimalRepresentationForBitrate(selectionInput.newMediaInfo, bitrateInKbit, false);
+        const selectedRepresentation = abrController.getOptimalRepresentationForBitrate(selectionInput.newMediaInfo, bitrateInKbit, true);
         return {
             selectedRepresentation,
             currentMediaInfo: selectionInput.newMediaInfo
@@ -728,15 +745,35 @@ function StreamProcessor(config) {
             return;
         }
 
+        if (enhancementStreamProcessor) {
+            // Pass quality change on enhanced representation
+            enhancementStreamProcessor.prepareQualityChange(e);
+        }
+        else if (e.newRepresentation.mediaInfo.type !== e.oldRepresentation.mediaInfo.type) {
+            if (e.newRepresentation.mediaInfo.type !== type) {
+                // This has no enhancement and new representation is not of this type so must stop
+                logger.info('Stop ' + type + ' stream processor');
+                scheduleController.reset();
+            } else {
+                logger.info('Start ' + type + ' stream processor');
+                selectMediaInfo({ newMediaInfo: e.newRepresentation.mediaInfo, newRepresentation: e.newRepresentation }).then(() => {
+                    scheduleController.setup();
+                    scheduleController.initialize(containsVideoTrack);
+                    scheduleController.startScheduleTimer();
+                });
+            }
+            return;
+        }
+
         if (pendingSwitchToVoRepresentation) {
             logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.id} for ${type}`);
         }
 
         if (e.isAdaptationSetSwitch) {
-            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type}`);
+            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type} from representation id ${e.oldRepresentation.id} to ${e.newRepresentation.id}`);
             _prepareAdaptationSwitchQualityChange(e)
         } else {
-            logger.debug(`Preparing quality within the same AdaptationSet for type ${type}`);
+            logger.debug(`Preparing quality within the same AdaptationSet for type ${type} from representation id ${e.oldRepresentation.id} to ${e.newRepresentation.id}`);
             _prepareNonAdaptationSwitchQualityChange(e)
         }
     }
@@ -1098,6 +1135,10 @@ function StreamProcessor(config) {
         return voRepresentation
     }
 
+    function getAbrRepresentation() {
+        return representationController ? representationController.getCurrentRepresentation(false) : null;
+    }
+
     function isBufferingCompleted() {
         return bufferController ? bufferController.getIsBufferingCompleted() : false;
     }
@@ -1419,6 +1460,7 @@ function StreamProcessor(config) {
         getMediaSource,
         getRepresentationController,
         getRepresentation,
+        getAbrRepresentation,
         getScheduleController,
         getStreamId,
         getStreamInfo,
@@ -1432,6 +1474,7 @@ function StreamProcessor(config) {
         probeNextRequest,
         reset,
         setMediaInfoArray,
+        setEnhancementStreamProcessor,
         selectMediaInfo,
         setExplicitBufferingTime,
         setMediaSource,

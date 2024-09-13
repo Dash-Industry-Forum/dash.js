@@ -28,7 +28,13 @@ describe('AbrController', function () {
     const settings = Settings(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(Constants.VIDEO);
-    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1)];
+    const enhancementMediaInfo = voHelper.getDummyMediaInfo(Constants.ENHANCEMENT);
+    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1),
+        voHelper.getDummyRepresentation(Constants.ENHANCEMENT, 2)];
+
+    // Representation 2 has a dependentRepresentation with id 0
+    dummyRepresentations[2].dependentRepresentation = dummyRepresentations[0];
+
     const domStorageMock = new DomStorageMock();
     const dashMetricsMock = new DashMetricsMock();
     const streamControllerMock = new StreamControllerMock();
@@ -459,6 +465,26 @@ describe('AbrController', function () {
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
 
             abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, dummyRepresentations[0]);
+        });
+
+        it('should switch to a new enhancement Representation and have the correct dependentRep', function (done) {
+            const enhancementRepresentation = dummyRepresentations[2];
+            const dependentRepresentation = dummyRepresentations[0];
+    
+            const onQualityChange = (e) => {
+                expect(e.oldRepresentation).to.not.exist;
+    
+                // Representation 2 should have dependentRepresentation with id 0
+                expect(e.newRepresentation.id).to.be.equal(enhancementRepresentation.id);
+                expect(e.newRepresentation.dependentRepresentation.id).to.be.equal(dependentRepresentation.id);
+    
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            }
+    
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+    
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, enhancementMediaInfo.streamInfo, enhancementRepresentation);
         });
 
         it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {

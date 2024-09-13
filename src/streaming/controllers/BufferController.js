@@ -606,7 +606,13 @@ function BufferController(config) {
 
     function changeType(selectedRepresentation) {
         if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            return sourceBufferSink.changeType(selectedRepresentation);
+            // SourceBufferSink's changeType will be invoked with the AbrRepresentation, ie.
+            // representation from the manifest. However, MSE SourceBuffer doesn't understand
+            // enhancement codecs. In the case an enhancement representation is selected, resolve
+            // the dependent (base) representation before passing the codecs to MSE's changeType
+            const representation = selectedRepresentation.dependentRepresentation ?
+                selectedRepresentation.dependentRepresentation : selectedRepresentation;
+            return sourceBufferSink.changeType(representation);
         }
         return Promise.resolve()
     }
