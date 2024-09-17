@@ -176,27 +176,3 @@ manifest_edit \
     --python_pipeline_config=/etc/manifest-edit/conf/mpd/default.yaml \ 
     out-sorted.mpd 
 ```
-
-## Faster representation switching for demo purposes
-
-Enhanced representations, similar to base video representations, are buffered ahead according to default dash.js settings and representation switching is not instant. If faster representation switching is desired for demo purposes, dash.js buffer settings can be adjusted as needed:
-
-```js
-const bufferingDuration = 3;
-
-const defaultSettings = {
-  streaming: {
-    buffer: {
-      bufferTimeAtTopQuality: bufferingDuration,
-      bufferTimeAtTopQualityLongForm: bufferingDuration,
-      bufferTimeDefault: bufferingDuration,
-      bufferPruningInterval: bufferingDuration,
-      bufferToKeep: bufferingDuration,
-    },
-    ...
-  }
-  ...
-};
-
-player.updateSettings(defaultSettings);
-```
