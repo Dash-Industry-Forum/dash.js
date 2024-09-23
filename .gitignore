@@ -196,3 +196,6 @@ test/unit/results
 # Karma Functional tests
 test/functional/results
 test/functional/config/selenium/jars
+/samples/custom/
+/samples/modules/webpack/package-lock.json
+/test/functional/apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk
