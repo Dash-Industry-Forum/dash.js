@@ -151,7 +151,7 @@ function Capabilities() {
      * @private
      */
     function _canUseMediaCapabilitiesApi(basicConfiguration, type) {
-        return _isMediaCapabilitiesApiSupported() && ((basicConfiguration.codec && type === Constants.AUDIO) || (basicConfiguration === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width && basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
+        return _isMediaCapabilitiesApiSupported() && ((basicConfiguration.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width && basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
     }
 
     function _isMediaCapabilitiesApiSupported() {
