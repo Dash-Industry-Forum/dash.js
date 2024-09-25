@@ -264,9 +264,17 @@ describe('Capabilities', function () {
                 width: 320,
                 height: 180
             }
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: false
+                    }
+                }
+            });
 
-            capabilities.supportsCodec(config, 'video')
-                .then((result) => {
+            capabilities.runCodecSupportCheck(config, 'video')
+                .then(() => {
+                    const result = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, 'video');
                     expect(result).to.be.true
                     done()
                 })
@@ -282,8 +290,17 @@ describe('Capabilities', function () {
                 height: 180
             }
 
-            capabilities.supportsCodec(config, 'video')
-                .then((result) => {
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: false
+                    }
+                }
+            });
+
+            capabilities.runCodecSupportCheck(config, 'video')
+                .then(() => {
+                    const result = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, 'video');
                     expect(result).to.be.false
                     done()
                 })
@@ -292,14 +309,14 @@ describe('Capabilities', function () {
                 })
         })
 
-        /*
-        it('should return true for supported codec using the MediaCapabilitiesAPI', function (done) {
+        it('should return true for supported codec using Media Capabilities API', function (done) {
             const config = {
-                codec: 'video/mp4;codecs="avc1.64001f"',
+                codec: 'video/mp4;codecs="avc1.4D4028"',
                 width: 320,
                 height: 180,
-                bitrate: 5000,
-                framerate: 25
+                bitrate: 5000000,
+                framerate: '25/1',
+                isSupported: true
             }
             settings.update({
                 streaming: {
@@ -307,9 +324,11 @@ describe('Capabilities', function () {
                         useMediaCapabilitiesApi: true
                     }
                 }
-            })
-            capabilities.supportsCodec(config, 'video')
-                .then((result) => {
+            });
+
+            capabilities.runCodecSupportCheck(config, 'video')
+                .then(() => {
+                    const result = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, 'video');
                     expect(result).to.be.true
                     done()
                 })
@@ -317,15 +336,35 @@ describe('Capabilities', function () {
                     done(e)
                 })
         })
-         */
 
-        it('should filter unsupported codec using MediaSource.isTypeSupported', function (done) {
+        it('should return true when a valid codec string is provided but no other parameters. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            const config = {
+                codec: 'video/mp4;codecs="avc1.4D4028"',
+            }
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        useMediaCapabilitiesApi: true
+                    }
+                }
+            });
+
+            capabilities.runCodecSupportCheck(config, 'video')
+                .then(() => {
+                    const result = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, 'video');
+                    expect(result).to.be.true
+                    done()
+                })
+                .catch((e) => {
+                    done(e)
+                })
+        })
+
+        it('should filter unsupported codec using Media Capabilities API', function (done) {
             const config = {
                 codec: 'video/mp4;codecs="vvvvc1.64001f"',
                 width: 320,
-                height: 180,
-                bitrate: 5000,
-                framerate: 25
+                height: 180
             }
 
             settings.update({
@@ -335,8 +374,9 @@ describe('Capabilities', function () {
                     }
                 }
             })
-            capabilities.supportsCodec(config, 'video')
-                .then((result) => {
+            capabilities.runCodecSupportCheck(config, 'video')
+                .then(() => {
+                    const result = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, 'video');
                     expect(result).to.be.false
                     done()
                 })
