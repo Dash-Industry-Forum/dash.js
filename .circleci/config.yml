@@ -5,6 +5,7 @@ orbs:
 executors:
     dashjs-executor:
         working_directory: ~/repo
+        resource_class: large
         docker:
             -   image: cimg/node:20.11.1
 
@@ -61,7 +62,6 @@ commands:
                         echo 'export LT_ACCESS_KEY="${LAMBDATEST_ACCESS_KEY}"' >> $BASH_ENV
 
     run_testbuild:
-        resource_class: medium+
         steps:
             - browser-tools/install-browser-tools
             -   run:
