@@ -22,7 +22,6 @@
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
-    "test-functional-drm": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=drm",
     "prepare": "node githook.cjs",
     "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
   },
