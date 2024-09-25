@@ -246,7 +246,7 @@ declare namespace dashjs {
 
         getAdaptationsForType(manifest: object, periodIndex: number, type: string): any[];
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getMimeType(adaptation: object): object;
 
@@ -754,7 +754,7 @@ declare namespace dashjs {
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
 
@@ -3998,7 +3998,9 @@ declare namespace dashjs {
 
         supportsEncryptedMedia(): boolean;
 
-        supportsCodec(config: object, type: string): Promise<boolean>;
+        isCodecSupportedBasedOnTestedConfigurations(basicConfiguration: object, type: string): boolean;
+
+        runCodecSupportCheck(basicConfiguration: object, type: string): Promise<void>;
 
         setEncryptedMediaSupported(value: boolean): void;
 
