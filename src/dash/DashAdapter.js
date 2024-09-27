@@ -734,8 +734,8 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getCodec(adaptation, representationId, addResolutionInfo) {
-        return dashManifestModel.getCodec(adaptation, representationId, addResolutionInfo);
+    function getCodec(adaptation, representationIndex, addResolutionInfo) {
+        return dashManifestModel.getCodec(adaptation, representationIndex, addResolutionInfo);
     }
 
     /**

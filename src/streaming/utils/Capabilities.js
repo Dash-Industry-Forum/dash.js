@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 import ProtectionConstants from '../constants/ProtectionConstants.js';
 import ObjectUtils from './ObjectUtils.js';
+import Debug from '../../core/Debug.js';
 
 export function supportsMediaSource() {
     let hasManagedMediaSource = ('ManagedMediaSource' in window)
@@ -46,7 +47,8 @@ function Capabilities() {
     let instance,
         settings,
         testedCodecConfigurations,
-        encryptedMediaSupported;
+        encryptedMediaSupported,
+        logger;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -54,6 +56,7 @@ function Capabilities() {
     function setup() {
         encryptedMediaSupported = false;
         testedCodecConfigurations = [];
+        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function setConfig(config) {
@@ -84,7 +87,6 @@ function Capabilities() {
     }
 
     /**
-     *
      * @param {boolean} value
      */
     function setEncryptedMediaSupported(value) {
@@ -93,141 +95,136 @@ function Capabilities() {
 
     /**
      * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
-     * @param {object} config
+     * @param {object} basicConfiguration
      * @param {string} type
-     * @return {Promise<boolean>}
+     * @return {Promise<>}
      */
-    function supportsCodec(config, type) {
+    function runCodecSupportCheck(basicConfiguration, type) {
 
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
-            return Promise.resolve(true);
+            return Promise.resolve();
         }
 
-        if (_canUseMediaCapabilitiesApi(config, type)) {
-            return _checkCodecWithMediaCapabilities(config, type);
+        const configurationsToTest = _getEnhancedConfigurations(basicConfiguration, type);
+
+        if (_canUseMediaCapabilitiesApi(basicConfiguration, type)) {
+            return _checkCodecWithMediaCapabilities(configurationsToTest);
         }
 
-        return _checkCodecWithMse(config);
+        _checkCodecWithMse(configurationsToTest);
+        return Promise.resolve();
+    }
+
+    /**
+     * Checks whether a codec is supported according to the previously tested configurations.
+     * Note that you need to call runCodecSupportCheck() first to populate the testedCodecConfigurations array.
+     * This function only validates codec support based on previously tested configurations.
+     * @param basicConfiguration
+     * @param type
+     * @returns {*|boolean}
+     */
+    function isCodecSupportedBasedOnTestedConfigurations(basicConfiguration, type) {
+        if (!basicConfiguration || !basicConfiguration.codec || (basicConfiguration.isSupported === false)) {
+            return false;
+        }
+
+        const configurationsToTest = _getEnhancedConfigurations(basicConfiguration, type);
+
+        const testedConfigurations = configurationsToTest
+            .map((config) => {
+                return _getTestedCodecConfiguration(config, type);
+            })
+            .filter((config) => {
+                return config !== null && config !== undefined;
+            })
+
+        if (testedConfigurations && testedConfigurations.length > 0) {
+            return _isConfigSupported(testedConfigurations)
+        }
+
+        return true
     }
 
     /**
      * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required information.
-     * @param {object} config
-     * @param {string} type
-     * @return {*|boolean|boolean}
+     * @return {boolean}
      * @private
      */
-    function _canUseMediaCapabilitiesApi(config, type) {
-        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
+    function _canUseMediaCapabilitiesApi(basicConfiguration, type) {
+        return _isMediaCapabilitiesApiSupported() && ((basicConfiguration.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width && basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
     }
+
+    function _isMediaCapabilitiesApiSupported() {
+        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo
+    }
+
 
     /**
      * Check codec support using the MSE
-     * @param {object} config
-     * @return {Promise<void> | Promise<boolean>}
+     * @param {object} configurationsToTest
      * @private
      */
-    function _checkCodecWithMse(config) {
-        return new Promise((resolve) => {
-            if (!config || !config.codec) {
-                resolve(false);
-                return;
-            }
+    function _checkCodecWithMse(configurationsToTest) {
+        if (!configurationsToTest || !configurationsToTest.length) {
+            return;
+        }
 
-            let codec = config.codec;
-            if (config.width && config.height) {
-                codec += ';width="' + config.width + '";height="' + config.height + '"';
-            }
+        // We only need one config here as we can not add any DRM configuration to the test
+        const configurationToTest = configurationsToTest[0];
 
-            // eslint-disable-next-line no-undef
-            if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(codec)) {
-                resolve(true);
-                return;
-            } else if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
-                resolve(true);
-                return;
-            } else if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {
-                resolve(true);
-                return;
-            }
+        const alreadyTestedConfiguration = _getTestedCodecConfiguration(configurationToTest);
+        if (alreadyTestedConfiguration) {
+            return
+        }
 
-            resolve(false);
-        });
+        let decodingInfo = {
+            supported: false
+        }
 
+        // eslint-disable-next-line no-undef
+        if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
+            decodingInfo.supported = true;
+        } else if ('MediaSource' in window && MediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
+            decodingInfo.supported = true;
+        } else if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
+            decodingInfo.supported = true;
+        }
+
+        configurationToTest.decodingInfo = decodingInfo;
+        testedCodecConfigurations.push(configurationToTest);
     }
+
 
     /**
      * Check codec support using the MediaCapabilities API
-     * @param {object} inputConfig
-     * @param {string} type
+     * @param {object} configurationsToTest
      * @return {Promise<boolean>}
      * @private
      */
-    function _checkCodecWithMediaCapabilities(inputConfig, type) {
+    function _checkCodecWithMediaCapabilities(configurationsToTest) {
         return new Promise((resolve) => {
 
-            if (!inputConfig || !inputConfig.codec || (inputConfig.isSupported === false)) {
-                resolve(false);
+            if (!configurationsToTest || configurationsToTest.length === 0) {
+                resolve();
                 return;
             }
-
-            const genericMediaCapabilitiesConfiguration = _getGenericMediaCapabilitiesConfig(inputConfig, type);
-            const configurationsToTest = _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig, type)
 
             const promises = configurationsToTest.map((configuration) => {
                 return _checkSingleConfigurationWithMediaCapabilities(configuration);
             })
 
             Promise.allSettled(promises)
-                .then((results) => {
-                    const isSupported = results.some((result) => {
-                        return !!result.value
-                    })
-                    resolve(isSupported);
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
+                    resolve();
                 })
         });
     }
 
-    function _checkSingleConfigurationWithMediaCapabilities(configuration) {
-        return new Promise((resolve) => {
-            const alreadyTestedConfiguration = _getTestedCodecConfiguration(configuration);
-
-            if (alreadyTestedConfiguration) {
-                const isSupported = _isConfigSupported(alreadyTestedConfiguration.decodingInfo);
-                resolve(isSupported);
-                return
-            }
-
-            navigator.mediaCapabilities.decodingInfo(configuration)
-                .then((decodingInfo) => {
-                    configuration.decodingInfo = decodingInfo;
-                    testedCodecConfigurations.push(configuration);
-                    const isSupported = _isConfigSupported(decodingInfo);
-                    resolve(isSupported);
-                })
-        })
-    }
-
-    function _isConfigSupported(decodingInfo) {
-        return decodingInfo.supported
-    }
-
-    function _getTestedCodecConfiguration(configuration) {
-        if (!testedCodecConfigurations || testedCodecConfigurations.length === 0 || !configuration) {
-            return null
-        }
-
-        return testedCodecConfigurations.find((current) => {
-            const audioEqual = configuration && configuration.audio ? objectUtils.areEqual(configuration.audio, current.audio) : true;
-            const videoEqual = configuration && configuration.video ? objectUtils.areEqual(configuration.video, current.video) : true;
-            const keySystemEqual = configuration && configuration.keySystemConfiguration ? objectUtils.areEqual(configuration.keySystemConfiguration, current.keySystemConfiguration) : true;
-
-            return audioEqual && videoEqual && keySystemEqual
-        })
-
-    }
-
-    function _getGenericMediaCapabilitiesConfig(inputConfig, type) {
+    function _getEnhancedConfigurations(inputConfig, type) {
         let configuration
 
         if (type === Constants.VIDEO) {
@@ -240,7 +237,78 @@ function Capabilities() {
         configuration[type].bitrate = parseInt(inputConfig.bitrate);
         configuration.type = 'media-source';
 
-        return configuration
+        let mediaSourceCodecString = inputConfig.codec;
+        if (inputConfig.width && inputConfig.height) {
+            mediaSourceCodecString += ';width="' + inputConfig.width + '";height="' + inputConfig.height + '"';
+        }
+        configuration.mediaSourceCodecString = mediaSourceCodecString;
+
+        return _enhanceGenericConfigurationWithKeySystemConfiguration(configuration, inputConfig, type)
+    }
+
+    function _enhanceGenericConfigurationWithKeySystemConfiguration(genericConfiguration, inputConfig, type) {
+        if (!inputConfig || !inputConfig.keySystemsMetadata || inputConfig.keySystemsMetadata.length === 0) {
+            return [genericConfiguration];
+        }
+
+        return inputConfig.keySystemsMetadata.map((keySystemMetadata) => {
+            const curr = { ...genericConfiguration };
+            if (keySystemMetadata.ks) {
+                curr.keySystemConfiguration = {};
+                if (keySystemMetadata.ks.systemString) {
+                    curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
+                }
+                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
+                    curr.keySystemConfiguration[type] = { robustness: ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO };
+
+                }
+            }
+            return curr
+        })
+    }
+
+    function _checkSingleConfigurationWithMediaCapabilities(configuration) {
+        return new Promise((resolve) => {
+            const alreadyTestedConfiguration = _getTestedCodecConfiguration(configuration);
+            if (alreadyTestedConfiguration) {
+                resolve();
+                return
+            }
+
+            navigator.mediaCapabilities.decodingInfo(configuration)
+                .then((decodingInfo) => {
+                    configuration.decodingInfo = decodingInfo;
+                    testedCodecConfigurations.push(configuration);
+                    resolve();
+                })
+                .catch((e) => {
+                    configuration.decodingInfo = { supported: false };
+                    testedCodecConfigurations.push(configuration);
+                    logger.error(e);
+                    resolve();
+                })
+        })
+    }
+
+    function _isConfigSupported(testedConfigurations) {
+        return testedConfigurations.some((testedConfiguration) => {
+            return testedConfiguration && testedConfiguration.decodingInfo && testedConfiguration.decodingInfo.supported
+        });
+    }
+
+    function _getTestedCodecConfiguration(configuration) {
+        if (!testedCodecConfigurations || testedCodecConfigurations.length === 0 || !configuration) {
+            return
+        }
+
+        return testedCodecConfigurations.find((current) => {
+            const audioEqual = configuration && configuration.audio ? objectUtils.areEqual(configuration.audio, current.audio) : true;
+            const videoEqual = configuration && configuration.video ? objectUtils.areEqual(configuration.video, current.video) : true;
+            const keySystemEqual = configuration && configuration.keySystemConfiguration ? objectUtils.areEqual(configuration.keySystemConfiguration, current.keySystemConfiguration) : true;
+
+            return audioEqual && videoEqual && keySystemEqual
+        })
+
     }
 
     function _getGenericMediaCapabilitiesVideoConfig(inputConfig) {
@@ -248,9 +316,18 @@ function Capabilities() {
             video: {}
         };
 
-        configuration.video.width = inputConfig.width;
-        configuration.video.height = inputConfig.height;
-        configuration.video.framerate = parseFloat(inputConfig.framerate);
+        if (!inputConfig) {
+            return configuration;
+        }
+        if (inputConfig.width) {
+            configuration.video.width = inputConfig.width;
+        }
+        if (inputConfig.height) {
+            configuration.video.height = inputConfig.height;
+        }
+        if (inputConfig.framerate) {
+            configuration.video.framerate = parseFloat(inputConfig.framerate)
+        }
         if (inputConfig.hdrMetadataType) {
             configuration.video.hdrMetadataType = inputConfig.hdrMetadataType;
         }
@@ -274,27 +351,6 @@ function Capabilities() {
         }
 
         return configuration
-    }
-
-    function _enhanceGenericConfigurationWithKeySystemConfiguration(genericMediaCapabilitiesConfiguration, inputConfig, type) {
-        if (!inputConfig || !inputConfig.keySystemsMetadata || inputConfig.keySystemsMetadata.length === 0) {
-            return [genericMediaCapabilitiesConfiguration];
-        }
-
-        return inputConfig.keySystemsMetadata.map((keySystemMetadata) => {
-            const curr = { ...genericMediaCapabilitiesConfiguration };
-            if (keySystemMetadata.ks) {
-                curr.keySystemConfiguration = {};
-                if (keySystemMetadata.ks.systemString) {
-                    curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
-                }
-                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
-                    curr.keySystemConfiguration[type] = { robustness: ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO };
-
-                }
-            }
-            return curr
-        })
     }
 
     /**
@@ -345,10 +401,11 @@ function Capabilities() {
     }
 
     instance = {
+        isCodecSupportedBasedOnTestedConfigurations,
         isProtectionCompatible,
+        runCodecSupportCheck,
         setConfig,
         setEncryptedMediaSupported,
-        supportsCodec,
         supportsEncryptedMedia,
         supportsEssentialProperty,
         supportsMediaSource,

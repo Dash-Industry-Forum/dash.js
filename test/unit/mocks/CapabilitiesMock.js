@@ -28,6 +28,14 @@ class CapabilitiesMock {
     supportsCodec() {
         return 'probably';
     }
+
+    runCodecSupportCheck() {
+        return Promise.resolve();
+    }
+
+    isCodecSupportedBasedOnTestedConfigurations() {
+        return true;
+    }
 }
 
 export default CapabilitiesMock;

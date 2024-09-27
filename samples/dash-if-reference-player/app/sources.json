@@ -88,6 +88,11 @@
             "acronym": "Dolby",
             "name": "Dolby Laboratories Inc.",
             "url": "https://www.dolby.com/"
+        },
+        "arte": {
+            "acronym": "ARTE",
+            "name": "ARTE",
+            "url": "https://www.arte.tv/en/"
         }
     },
     "items": [
@@ -473,6 +478,11 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
+                },
+                {
+                    "name": "Arte forced-subtitles",
+                    "url": "https://arteamd1.akamaized.net/GPU/034000/034700/034755-230-A/221125154117/034755-230-A_8_DA_v20221125.mpd",
+                    "provider": "arte"
                 }
             ]
         },
