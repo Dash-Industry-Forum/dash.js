@@ -1,0 +1,21 @@
+{
+  "browsers": [
+    "webOs"
+  ],
+  "hostname": "localhost",
+  "port": 4200,
+  "protocol": "http",
+  "concurrency": 3,
+  "useIframe": true,
+  "customLaunchers": {
+    "webOs": {
+      "base": "WebOS"
+    }
+  },
+  "reporters": [
+    "junit",
+    "mocha",
+    "html",
+    "coverage"
+  ]
+}

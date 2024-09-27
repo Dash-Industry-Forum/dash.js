@@ -7,11 +7,13 @@
   },
   "globals": {
     "dashjs": true,
+    "ManagedMediaSource": true,
     "WebKitMediaSource": true,
     "MediaSource": true,
     "WebKitMediaKeys": true,
     "MSMediaKeys": true,
-    "MediaKeys": true
+    "MediaKeys": true,
+    "google": true
   },
   "parserOptions": {
     "ecmaVersion": 2020,

@@ -35,7 +35,7 @@ import CommonEncryption from '../CommonEncryption.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
+const uuid = ProtectionConstants.CLEARKEY_UUID;
 const systemString = ProtectionConstants.CLEARKEY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
@@ -141,4 +141,4 @@ function KeySystemClearKey(config) {
 }
 
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-export default FactoryMaker.getSingletonFactory(KeySystemClearKey); 
+export default FactoryMaker.getSingletonFactory(KeySystemClearKey);

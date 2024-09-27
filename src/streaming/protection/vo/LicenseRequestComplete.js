@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+
 /**
  * @classdesc Event indicating the receipt of a response from a license server
  * @ignore
@@ -47,7 +49,7 @@ class LicenseRequestComplete {
     constructor(message, sessionToken, messageType) {
         this.message = message;
         this.sessionToken = sessionToken;
-        this.messageType = messageType ? messageType : 'license-request';
+        this.messageType = messageType ? messageType : ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_REQUEST;
     }
 }
 
