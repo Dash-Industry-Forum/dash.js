@@ -5,6 +5,7 @@ orbs:
 executors:
     dashjs-executor:
         working_directory: ~/repo
+        resource_class: large
         docker:
             -   image: cimg/node:20.11.1
 

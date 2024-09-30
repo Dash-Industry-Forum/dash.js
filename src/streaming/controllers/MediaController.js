@@ -140,6 +140,7 @@ function MediaController() {
             filteredTracks = Array.from(possibleTracks);
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, settings)
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
@@ -425,6 +426,10 @@ function MediaController() {
 
     function matchSettingsIndex(settings, track) {
         return (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+    }
+
+    function matchSettingsId(settings, track) {
+        return (settings.id === undefined) || (settings.id === null) || (track.id === settings.id)
     }
 
     function matchSettingsViewPoint(settings, track) {

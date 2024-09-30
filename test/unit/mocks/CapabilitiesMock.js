@@ -37,6 +37,14 @@ class CapabilitiesMock {
     setProtectionController(data) {
         this.protectionController = data;
     }
+
+    runCodecSupportCheck() {
+        return Promise.resolve();
+    }
+
+    isCodecSupportedBasedOnTestedConfigurations() {
+        return true;
+    }
 }
 
 export default CapabilitiesMock;

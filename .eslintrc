@@ -7,6 +7,7 @@
   },
   "globals": {
     "dashjs": true,
+    "ManagedMediaSource": true,
     "WebKitMediaSource": true,
     "MediaSource": true,
     "WebKitMediaKeys": true,

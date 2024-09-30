@@ -374,12 +374,12 @@ function DashManifestModel() {
         return adaptations;
     }
 
-    function getCodec(adaptation, representationId, addResolutionInfo) {
+    function getCodec(adaptation, representationIndex, addResolutionInfo) {
         let codec = null;
 
         if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
-            const representation = isInteger(representationId) && representationId >= 0 && representationId < adaptation.Representation.length ?
-                adaptation.Representation[representationId] : adaptation.Representation[0];
+            const representation = isInteger(representationIndex) && representationIndex >= 0 && representationIndex < adaptation.Representation.length ?
+                adaptation.Representation[representationIndex] : adaptation.Representation[0];
             if (representation) {
                 codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
                 if (addResolutionInfo && representation.width !== undefined) {
