@@ -210,7 +210,7 @@ function DashAdapter() {
                     }
                     let accessibility = media.accessibility[j];
                     if (accessibility.schemeIdUri === constants.ACCESSIBILITY_CEA608_SCHEME) {
-                        if (accessibility.value === '') {
+                        if (!accessibility.value || accessibility.value === '') {
                             convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
                             mediaArr.push(media);
                             media = null;
