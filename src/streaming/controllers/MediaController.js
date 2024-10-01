@@ -140,6 +140,7 @@ function MediaController() {
             filteredTracks = Array.from(possibleTracks);
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, settings)
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
@@ -249,10 +250,10 @@ function MediaController() {
 
     /**
      * @param {MediaInfo} track
-     * @param {boolean} noSettingsSave specify if settings must be not be saved
+     * @param {object} options
      * @memberof MediaController#
      */
-    function setTrack(track, noSettingsSave = false) {
+    function setTrack(track, options = {}) {
         if (!track || !track.streamInfo) {
             return;
         }
@@ -272,11 +273,12 @@ function MediaController() {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
-                switchMode: settings.get().streaming.trackSwitchMode[type]
+                switchMode: settings.get().streaming.trackSwitchMode[type],
+                options
             }, { streamId: id });
         }
 
-        if (!noSettingsSave) {
+        if (!options.hasOwnProperty('noSettingsSave') || !options.noSettingsSave) {
 
             let settings = extractSettings(track);
 
@@ -425,6 +427,10 @@ function MediaController() {
 
     function matchSettingsIndex(settings, track) {
         return (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+    }
+
+    function matchSettingsId(settings, track) {
+        return (settings.id === undefined) || (settings.id === null) || (track.id === settings.id)
     }
 
     function matchSettingsViewPoint(settings, track) {

@@ -81,21 +81,6 @@ function SourceBufferSink(config) {
 
         _copyPreviousSinkData(oldSourceBufferSink);
         _addEventListeners();
-
-        const promises = [];
-
-        promises.push(_abortBeforeAppend());
-        promises.push(updateAppendWindow(mediaInfo.streamInfo));
-
-        if (settings.get().streaming.buffer.useChangeTypeForTrackSwitch) {
-            promises.push(changeType(selectedRepresentation));
-        }
-
-        if (selectedRepresentation && selectedRepresentation.mseTimeOffset !== undefined) {
-            promises.push(updateTimestampOffset(selectedRepresentation.mseTimeOffset));
-        }
-
-        return Promise.all(promises);
     }
 
     function changeType(representation) {
@@ -115,8 +100,9 @@ function SourceBufferSink(config) {
         buffer = oldSourceBufferSink.getBuffer();
     }
 
-    function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
+    function initializeForFirstUse(mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
+        const streamInfo = mInfo.streamInfo;
         type = mediaInfo.type;
         const codec = selectedRepresentation ? _getCodecStringForRepresentation(selectedRepresentation) : mInfo.codec;
         try {
@@ -299,7 +285,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function _abortBeforeAppend() {
+    function abortBeforeAppend() {
         return new Promise((resolve) => {
             _waitForUpdateEnd(() => {
                 // Save the append window, which is reset on abort().
@@ -383,6 +369,11 @@ function SourceBufferSink(config) {
                 if (nextChunk.data.bytes.byteLength === 0) {
                     afterSuccess.call(this);
                 } else {
+                    try {
+                        logger.debug(`Appending ${nextChunk.data.segmentType} from period ${nextChunk.data.streamId} to buffer. Request URL: ${nextChunk.request.url}, Representation: ID: ${nextChunk.data.representation.id}, bitrate: ${nextChunk.data.representation.bitrateInKbit}`)
+                    } catch (e) {
+
+                    }
                     if (buffer.appendBuffer) {
                         buffer.appendBuffer(nextChunk.data.bytes, nextChunk.data.start, nextChunk.data.end);
                     } else {
@@ -464,15 +455,20 @@ function SourceBufferSink(config) {
     }
 
     function _waitForUpdateEnd(callback) {
-        callbacks.push(callback);
+        try {
+            callbacks.push(callback);
 
-        if (!buffer.updating) {
-            _executeCallback();
+            if (!buffer.updating) {
+                _executeCallback();
+            }
+        } catch (e) {
+            logger.error(e);
         }
     }
 
     instance = {
         abort,
+        abortBeforeAppend,
         append,
         changeType,
         getAllBufferRanges,

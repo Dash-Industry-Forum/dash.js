@@ -246,7 +246,7 @@ declare namespace dashjs {
 
         getAdaptationsForType(manifest: object, periodIndex: number, type: string): any[];
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getMimeType(adaptation: object): object;
 
@@ -754,7 +754,7 @@ declare namespace dashjs {
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
 
@@ -1105,7 +1105,7 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
-                useChangeTypeForTrackSwitch?: boolean
+                useChangeType?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
             },
@@ -2329,7 +2329,7 @@ declare namespace dashjs {
 
         isCurrentTrack(track: MediaInfo): boolean;
 
-        setTrack(track: MediaInfo, noSettingsSave: boolean): void;
+        setTrack(track: MediaInfo, options: object): void;
 
         setInitialSettings(type: string, value: object): void;
 
@@ -3043,6 +3043,8 @@ declare namespace dashjs {
         stop(): void;
 
         reset(): void;
+
+        isKeyIdUsable(): boolean;
     }
 
     export interface ProtectionKeyController {
@@ -3232,7 +3234,7 @@ declare namespace dashjs {
     export interface ProtectionModel_01b {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
@@ -3260,7 +3262,7 @@ declare namespace dashjs {
     export interface ProtectionModel_3Fe2014 {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
@@ -3288,7 +3290,7 @@ declare namespace dashjs {
     export interface DefaultProtectionModel {
         getAllInitData(): ArrayBuffer[];
 
-        getSessions(): any[]; // Is this MediaSession[] ?
+        getSessionTokens(): any[]; // Is this MediaSession[] ?
 
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
@@ -3998,7 +4000,9 @@ declare namespace dashjs {
 
         supportsEncryptedMedia(): boolean;
 
-        supportsCodec(config: object, type: string): Promise<boolean>;
+        isCodecSupportedBasedOnTestedConfigurations(basicConfiguration: object, type: string): boolean;
+
+        runCodecSupportCheck(basicConfiguration: object, type: string): Promise<void>;
 
         setEncryptedMediaSupported(value: boolean): void;
 
@@ -4384,6 +4388,12 @@ declare namespace dashjs {
         RequestsQueue: RequestsQueue | null;
         SchedulingInfo: SchedulingInfo;
         TcpList: TCPConnection[];
+    }
+
+    export class MediaInfoSelectionInput {
+        newMediaInfo: MediaInfo;
+        previouslySelectedRepresentation: Representation | null;
+        newRepresentation: Representation | null
     }
 
     export class TextRequest extends FragmentRequest {

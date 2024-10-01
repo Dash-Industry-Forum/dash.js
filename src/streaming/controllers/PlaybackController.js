@@ -319,6 +319,34 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isStalled() : null;
     }
 
+    function isProgressing(timeoutValue = 500) {
+        return new Promise((resolve) => {
+            let startTime = -1;
+            let timeout = null;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                timeout = null;
+                eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(false);
+            }
+            const _onPlaybackTimeUpdated = (e) => {
+                if (startTime < 0) {
+                    startTime = e.time;
+                } else {
+                    if (e.time > startTime + 0.1) {
+                        _onComplete(true);
+                    }
+                }
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        })
+    }
+
     /**
      * Returns current playback rate of the video element
      * @return {number|null}
@@ -908,6 +936,7 @@ function PlaybackController() {
         getCurrentLiveLatency,
         play,
         isPaused,
+        isProgressing,
         isStalled,
         pause,
         isSeeking,

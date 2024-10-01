@@ -18,6 +18,7 @@ import {expect, assert} from 'chai';
 import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
+import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 
 describe('AbrController', function () {
     const context = {};
@@ -44,6 +45,7 @@ describe('AbrController', function () {
     const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
     const playbackControllerMock = new PlaybackControllerMock();
     const throughputControllerMock = new ThroughputControllerMock();
+    const capabilitiesMock = new CapabilitiesMock();
 
     let streamProcessor;
     let adapterMock;
@@ -65,6 +67,7 @@ describe('AbrController', function () {
             mediaPlayerModel,
             cmsdModel,
             settings: settings,
+            capabilities: capabilitiesMock,
             streamController: streamControllerMock,
             throughputController: throughputControllerMock,
             customParametersModel

@@ -61,6 +61,15 @@ export default {
             HW_SECURE_DECODE: 'HW_SECURE_DECODE',
             HW_SECURE_ALL: 'HW_SECURE_ALL'
         }
+    },
+    MEDIA_KEY_STATUSES: {
+        USABLE: 'usable',
+        EXPIRED: 'expired',
+        RELEASED: 'released',
+        OUTPUT_RESTRICTED: 'output-restricted',
+        OUTPUT_DOWNSCALED: 'output-downscaled',
+        STATUS_PENDING: 'status-pending',
+        INTERNAL_ERROR: 'internal-error',
     }
 }
 

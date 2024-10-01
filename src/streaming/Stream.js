@@ -43,6 +43,7 @@ import BoxParser from './utils/BoxParser.js';
 import URLUtils from './utils/URLUtils.js';
 import BlacklistController from './controllers/BlacklistController.js';
 import ExternalMediaSource from './ExternalMediaSource.js';
+import MediaInfoSelectionInput from './vo/MediaInfoSelectionInput.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -155,12 +156,11 @@ function Stream(config) {
      */
     function registerProtectionEvents() {
         if (protectionController) {
-            eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
-            eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-            eventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-            eventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-            eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-            eventBus.on(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+            eventBus.on(Events.KEY_ERROR, _onProtectionError, instance);
+            eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+            eventBus.on(Events.LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+            eventBus.on(Events.KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+            eventBus.on(Events.KEY_SESSION_CREATED, _onProtectionError, instance);
         }
     }
 
@@ -169,12 +169,11 @@ function Stream(config) {
      */
     function unRegisterProtectionEvents() {
         if (protectionController) {
-            eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
-            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-            eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-            eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
-            eventBus.off(Events.KEY_STATUSES_CHANGED, onProtectionError, instance);
+            eventBus.off(Events.KEY_ERROR, _onProtectionError, instance);
+            eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+            eventBus.off(Events.LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+            eventBus.off(Events.KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+            eventBus.off(Events.KEY_SESSION_CREATED, _onProtectionError, instance);
         }
     }
 
@@ -424,7 +423,7 @@ function Stream(config) {
             enhancementMediaSource.open();
             enhancementMediaSource.duration = streamInfo.manifestInfo.duration;
             let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, Constants.ENHANCEMENT);
-            enhancementStreamProcessor.selectMediaInfo({ newMediaInfo: allMediaForType[enhancementMediaInfoIndex] });
+            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[enhancementMediaInfoIndex] }));
             streamProcessor.setEnhancementStreamProcessor(enhancementStreamProcessor);
         }
 
@@ -433,10 +432,11 @@ function Stream(config) {
         if (initialMediaInfo) {
             // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
             const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
-            return streamProcessor.selectMediaInfo({
+            const mediaInfoSelectionInput = new MediaInfoSelectionInput({
                 newMediaInfo,
                 previouslySelectedRepresentation: representationFromPreviousPeriod
             });
+            return streamProcessor.selectMediaInfo(mediaInfoSelectionInput);
         }
 
         return Promise.resolve();
@@ -481,26 +481,27 @@ function Stream(config) {
         const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
 
         let streamProcessor = StreamProcessor(context).create({
-            streamInfo,
-            type,
-            mimeType,
-            timelineConverter,
-            adapter,
-            manifestModel,
-            mediaPlayerModel,
-            fragmentModel,
-            dashMetrics: config.dashMetrics,
-            baseURLController: config.baseURLController,
-            segmentBaseController: config.segmentBaseController,
             abrController,
-            playbackController,
-            throughputController,
-            mediaController,
-            textController,
-            errHandler,
-            settings,
+            adapter,
+            baseURLController: config.baseURLController,
             boxParser,
-            segmentBlacklistController
+            capabilities,
+            dashMetrics: config.dashMetrics,
+            errHandler,
+            fragmentModel,
+            manifestModel,
+            mediaController,
+            mediaPlayerModel,
+            mimeType,
+            playbackController,
+            segmentBaseController: config.segmentBaseController,
+            segmentBlacklistController,
+            settings,
+            streamInfo,
+            textController,
+            throughputController,
+            timelineConverter,
+            type,
         });
 
         streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
@@ -524,7 +525,8 @@ function Stream(config) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                return sp.createBufferSinks(previousBuffersSinks);
+                const oldRepresentation = sp.getRepresentation();
+                return sp.createBufferSinks(previousBuffersSinks, oldRepresentation);
             });
 
             Promise.all(promises)
@@ -765,11 +767,15 @@ function Stream(config) {
         return possibleVoRepresentations[index];
     }
 
-    function onProtectionError(event) {
+    function _onProtectionError(event) {
         if (event.error) {
             errHandler.error(event.error);
             logger.fatal(event.error.message);
         }
+    }
+
+    function triggerProtectionError(event) {
+        _onProtectionError(event);
     }
 
     function prepareTrackChange(e) {
@@ -798,10 +804,17 @@ function Stream(config) {
                 manifestUpdater.refreshManifest();
             }
         } else {
-            processor.selectMediaInfo({ newMediaInfo })
+            processor.clearScheduleTimer();
+            processor.setTrackSwitchInProgress(true);
+            const oldRepresentation = processor.getRepresentation();
+            processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo }))
                 .then(() => {
-                    processor.prepareTrackSwitch();
-                });
+                    const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;
+                    return processor.prepareTrackSwitch(oldRepresentation, replaceBuffer);
+                })
+                .then(() => {
+                    processor.setTrackSwitchInProgress(false);
+                })
         }
     }
 
@@ -951,12 +964,13 @@ function Stream(config) {
                 if (allMediaForType) {
                     for (let j = 0; j < allMediaForType.length; j++) {
                         if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
-                            promises.push(streamProcessor.selectMediaInfo({ newMediaInfo: allMediaForType[j] }))
+                            promises.push(streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[j] })))
                         }
                     }
                 }
             }
 
+            let processor;
             Promise.all(promises)
                 .then(() => {
                     let promises = [];
@@ -965,18 +979,23 @@ function Stream(config) {
                     while (trackChangedEvents.length > 0) {
                         let trackChangedEvent = trackChangedEvents.pop();
                         let newMediaInfo = trackChangedEvent.newMediaInfo;
-                        let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                        processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) {
                             return;
                         }
-                        promises.push(processor.prepareTrackSwitch());
-                        promises.push(processor.selectMediaInfo({ newMediaInfo }));
+                        const oldRepresentation = processor.getRepresentation();
+                        processor.setTrackSwitchInProgress(true);
+                        promises.push(processor.prepareTrackSwitch(oldRepresentation));
+                        promises.push(processor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo })));
                     }
 
                     return Promise.all(promises)
                 })
                 .then(() => {
                     _initializationCompleted();
+                    if (processor) {
+                        processor.setTrackSwitchInProgress(false);
+                    }
                     eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
                     resolve();
                 })
@@ -1086,6 +1105,7 @@ function Stream(config) {
         setMediaSource,
         startPreloading,
         startScheduleControllers,
+        triggerProtectionError,
         updateData,
     };
 

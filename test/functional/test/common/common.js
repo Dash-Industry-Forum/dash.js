@@ -20,6 +20,8 @@ export async function checkIsNotProgressing(playerAdapter) {
 export function checkNoCriticalErrors(playerAdapter) {
     const logEvents = playerAdapter.getLogEvents();
     expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
+    const errorEvents = playerAdapter.getErrorEvents();
+    expect(errorEvents).to.be.empty;
 }
 
 export async function checkForEndedEvent(playerAdapter) {

@@ -340,5 +340,16 @@ export default {
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
     DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
 
-    ENHANCEMENT_CODECS: ['lvc1']
+    ENHANCEMENT_CODECS: ['lvc1'],
+
+    CODEC_FAMILIES: {
+        MP3: 'mp3',
+        AAC: 'aac',
+        AC3: 'ac3',
+        EC3: 'ec3',
+        DTSX: 'dtsx',
+        DTSC: 'dtsc',
+        AVC: 'avc',
+        HEVC: 'hevc'
+    }
 }
