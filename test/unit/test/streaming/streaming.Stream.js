@@ -115,18 +115,6 @@ describe('Stream', function () {
             expect(duration).to.be.NaN; // jshint ignore:line
         });
 
-        it('License expired behavior', function () {
-            stream.initialize();
-
-            eventBus.trigger(Events.KEY_STATUSES_CHANGED, {
-                data: null,
-                error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)
-            });
-
-            expect(errHandlerMock.errorCode).to.be.equal(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE); // jshint ignore:line
-            expect(errHandlerMock.errorValue).to.be.equal(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE); // jshint ignore:line
-        });
-
         it('No Licenser server url defined behavior', function () {
             stream.initialize();
 

@@ -45,6 +45,7 @@ class Representation {
         this.bandwidth = NaN;
         this.bitrateInKbit = NaN;
         this.bitsPerPixel = NaN;
+        this.codecFamily = null;
         this.codecPrivateData = null;
         this.codecs = null;
         this.essentialProperties = [];

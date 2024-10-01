@@ -429,21 +429,21 @@ function ScheduleController(config) {
     }
 
     instance = {
-        initialize,
-        getType,
-        getStreamId,
-        setTimeToLoadDelay,
-        getTimeToLoadDelay,
-        setSwitchTrack,
-        getSwitchTrack,
-        startScheduleTimer,
         clearScheduleTimer,
-        reset,
         getBufferTarget,
         getPlaybackController,
+        getStreamId,
+        getSwitchTrack,
+        getTimeToLoadDelay,
+        getType,
+        initialize,
+        reset,
         setCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,
+        setSwitchTrack,
+        setTimeToLoadDelay,
+        startScheduleTimer,
     };
 
     setup();

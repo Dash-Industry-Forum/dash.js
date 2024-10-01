@@ -1,5 +1,6 @@
 import Utils from '../../../../src/core/Utils.js'
 import {expect} from 'chai';
+import {Constants} from '../../../../index.js';
 
 describe('Utils', () => {
     describe('getRelativeUrl', () => {
@@ -119,6 +120,16 @@ describe('Utils', () => {
         it('Should return a valid host for an http URL', () => {
             expect(Utils.getHostFromUrl('https://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
         })
+    })
 
+    describe('getCodecFamily', () => {
+
+        it('should return AAC codec family', () => {
+            expect(Utils.getCodecFamily('mp4a.40.2')).to.be.equal(Constants.CODEC_FAMILIES.AAC);
+        })
+
+        it('should return default base for unknown family', () => {
+            expect(Utils.getCodecFamily('vp09.00.10.08.00.02.02.02.00')).to.be.equal('vp09');
+        })
     })
 })

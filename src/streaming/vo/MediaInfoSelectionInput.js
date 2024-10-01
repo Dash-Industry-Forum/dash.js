@@ -32,35 +32,12 @@
  * @class
  * @ignore
  */
-class MediaInfo {
-    constructor() {
-        this.accessibility = null;
-        this.adaptationSetSwitchingCompatibleIds = [];
-        this.audioChannelConfiguration = null;
-        this.bitrateList = null;
-        this.codec = null;
-        this.contentProtection = null;
-        this.essentialProperties = [];
-        this.id = null;
-        this.index = null;
-        this.isEmbedded = null;
-        this.isFragmented = null;
-        this.isText = false;
-        this.labels = null;
-        this.lang = null;
-        this.mimeType = null;
-        this.normalizedKeyIds = new Set();
-        this.representationCount = 0;
-        this.roles = null;
-        this.segmentAlignment = false;
-        this.selectionPriority = 1;
-        this.streamInfo = null;
-        this.subSegmentAlignment = false;
-        this.supplementalProperties = [];
-        this.type = null;
-        this.viewpoint = null;
+class MediaInfoSelectionInput {
+    constructor(data) {
+        this.newMediaInfo = data.newMediaInfo;
+        this.previouslySelectedRepresentation = data.previouslySelectedRepresentation;
+        this.newRepresentation = data.newRepresentation;
     }
-
 }
 
-export default MediaInfo;
+export default MediaInfoSelectionInput;

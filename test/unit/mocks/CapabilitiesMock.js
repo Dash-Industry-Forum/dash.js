@@ -7,6 +7,7 @@ class CapabilitiesMock {
     setup() {
         this.encryptedMediaSupported = true;
         this.mediaSourceSupported = true;
+        this.protectionController = null;
     }
 
     setMediaSourceSupported(value) {
@@ -27,6 +28,14 @@ class CapabilitiesMock {
 
     supportsCodec() {
         return 'probably';
+    }
+
+    areKeyIdsUsable() {
+        return true;
+    }
+
+    setProtectionController(data) {
+        this.protectionController = data;
     }
 
     runCodecSupportCheck() {
