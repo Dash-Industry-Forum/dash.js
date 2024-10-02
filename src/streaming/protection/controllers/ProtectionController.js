@@ -838,7 +838,7 @@ function ProtectionController(config) {
                 });
 
                 if (cmcdParams) {
-                    request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                    request.url = Utils.addAdditionalQueryParameterToUrl(request.url, [cmcdParams]);
                 }
             }
         }

@@ -302,6 +302,7 @@ import Events from './events/Events.js';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+ *                includeInRequests: ['segment', 'mpd']
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -1299,7 +1300,7 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
-                includeInRequests: ['segment']
+                includeInRequests: ['segment', 'mpd']
             },
             cmsd: {
                 enabled: false,

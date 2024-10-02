@@ -81,23 +81,18 @@ class Utils {
         return Utils.mixin(r, src, Utils.clone);
     }
 
-    static addAditionalQueryParameterToUrl(url, params) {
+    static addAdditionalQueryParameterToUrl(url, params) {
         try {
             if (!params || params.length === 0) {
                 return url;
             }
 
-            let modifiedUrl = new URL(url);
-
-            params.forEach((param) => {
-                if (param.key && param.value) {
-                    modifiedUrl.searchParams.set(param.key, param.value);
-                }
+            let updatedUrl = url;
+            params.forEach(({ key, value }) => {
+                const separator = updatedUrl.includes('?') ? '&' : '?';
+                updatedUrl += `${separator}${(encodeURIComponent(key))}=${(encodeURIComponent(value))}`;
             });
-
-            return modifiedUrl.href;
-
-
+            return updatedUrl;
         } catch (e) {
             return url;
         }
