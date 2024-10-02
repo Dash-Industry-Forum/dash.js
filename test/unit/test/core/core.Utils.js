@@ -111,7 +111,7 @@ describe('Utils', () => {
         })
     })
 
-    describe('addAditionalQueryParameterToUrl', () => {
+    describe('addAdditionalQueryParameterToUrl', () => {
 
         it('Should escape URL with whitespaces correctly', () => {
             const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';

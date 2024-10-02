@@ -81,7 +81,7 @@ class Utils {
         return Utils.mixin(r, src, Utils.clone);
     }
 
-    static addAditionalQueryParameterToUrl(url, params) {
+    static addAdditionalQueryParameterToUrl(url, params) {
         try {
             if (!params || params.length === 0) {
                 return url;
