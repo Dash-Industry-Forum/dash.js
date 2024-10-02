@@ -587,7 +587,7 @@ function HTTPLoader(cfg) {
                     value: request.queryParams[key]
                 }
             })
-            request.url = Utils.addAditionalQueryParameterToUrl(request.url, queryParams);
+            request.url = Utils.addAdditionalQueryParameterToUrl(request.url, queryParams);
         }
     }
 
@@ -613,7 +613,7 @@ function HTTPLoader(cfg) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
-                request.url = Utils.addAditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 request.headers = Object.assign(request.headers, cmcdModel.getHeaderParameters(request));
             }

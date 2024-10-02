@@ -326,7 +326,7 @@ function ContentSteeringController() {
             });
         }
 
-        url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+        url = Utils.addAdditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
     }
 
