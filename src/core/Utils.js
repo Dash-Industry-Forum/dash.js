@@ -87,17 +87,12 @@ class Utils {
                 return url;
             }
 
-            let modifiedUrl = new URL(url);
-
-            params.forEach((param) => {
-                if (param.key && param.value) {
-                    modifiedUrl.searchParams.set(param.key, param.value);
-                }
+            let updatedUrl = url;
+            params.forEach(({ key, value }) => {
+                const separator = updatedUrl.includes('?') ? '&' : '?';
+                updatedUrl += `${separator}${(encodeURIComponent(key))}=${(encodeURIComponent(value))}`;
             });
-
-            return modifiedUrl.href;
-
-
+            return updatedUrl;
         } catch (e) {
             return url;
         }
