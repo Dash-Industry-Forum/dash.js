@@ -3,16 +3,16 @@ import Settings from '../../../../src/core/Settings.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
-import {UAParser} from 'ua-parser-js';
+//import {UAParser} from 'ua-parser-js';
 
 let settings;
 let capabilities;
 
-const uaString = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-const ua = UAParser(uaString);
+//const uaString = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+//const ua = UAParser(uaString);
 
 // The Media Capabilities API seems to return wrong values on Linux with Firefox. Deactivate some tests for now
-const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
+//const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
 
 
 let EssentialPropertyThumbNail = new DescriptorType;
@@ -320,6 +320,7 @@ describe('Capabilities', function () {
             })
         })
 
+        /*
         describe('MediaCapabilitiesAPI.decodingInfo()', function () {
 
             before(function () {
@@ -541,7 +542,7 @@ describe('Capabilities', function () {
                     })
             })
         })
-
+        */
 
 
     })

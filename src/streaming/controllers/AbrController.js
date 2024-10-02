@@ -56,6 +56,7 @@ function AbrController() {
         logger,
         abrRulesCollection,
         streamController,
+        capabilities,
         streamProcessorDict,
         abandonmentStateDict,
         abandonmentTimeout,
@@ -215,6 +216,9 @@ function AbrController() {
         if (config.settings) {
             settings = config.settings;
         }
+        if (config.capabilities) {
+            capabilities = config.capabilities;
+        }
     }
 
     function getOptimalRepresentationForBitrate(mediaInfo, bitrateInKbit, includeCompatibleMediaInfos = true) {
@@ -297,11 +301,14 @@ function AbrController() {
 
         // Filter the Representations in case we do not want to include compatible Media Infos
         // We can not apply the filter before otherwise the absolute index would be wrong
-        if (!includeCompatibleMediaInfos) {
-            voRepresentations = voRepresentations.filter((rep) => {
-                return adapter.areMediaInfosEqual(rep.mediaInfo, mediaInfo);
-            })
-        }
+        // Also ignore Representations with a key ID that is not usable
+
+        voRepresentations = voRepresentations.filter((representation) => {
+            const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
+            const areKeyIdsUsable =
+                representation && representation.mediaInfo ? capabilities.areKeyIdsUsable(representation.mediaInfo) : true;
+            return isMediaInfoAllowed && areKeyIdsUsable
+        })
 
         return voRepresentations
     }
@@ -546,14 +553,20 @@ function AbrController() {
             index: e.request.index
         })[0];
         if (request) {
-            abandonmentStateDict[streamId][type].state = MetricsConstants.ABANDON_LOAD;
+            const targetAbandonmentStateDict = _getAbandonmentStateDictFor(streamId, type);
+
+            if (targetAbandonmentStateDict) {
+                targetAbandonmentStateDict.state = MetricsConstants.ABANDON_LOAD;
+            }
             switchRequestHistory.reset();
             setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason);
 
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = setTimeout(
                 () => {
-                    abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+                    if (targetAbandonmentStateDict) {
+                        abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+                    }
                     abandonmentTimeout = null;
                 },
                 settings.get().streaming.abandonLoadTimeout
@@ -710,6 +723,11 @@ function AbrController() {
      */
     function getAbandonmentStateFor(streamId, type) {
         return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
+    }
+
+    function _getAbandonmentStateDictFor(streamId, type) {
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type] : null;
+
     }
 
 

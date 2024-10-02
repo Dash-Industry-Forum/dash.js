@@ -73,7 +73,7 @@ function ProtectionModel_01b(config) {
 
         // List of sessions that have been initialized.  Only the first position will
         // be used in the case that the CDM does not support sessionIds
-        sessions,
+        sessionTokens,
 
         // Not all CDMs support the notion of sessionIds.  Without sessionIds
         // there is no way for us to differentiate between sessions, therefore
@@ -91,7 +91,7 @@ function ProtectionModel_01b(config) {
         videoElement = null;
         keySystem = null;
         pendingSessions = [];
-        sessions = [];
+        sessionTokens = [];
         protectionKeyController = ProtectionKeyController(context).getInstance();
         eventHandler = createEventHandler();
     }
@@ -100,8 +100,8 @@ function ProtectionModel_01b(config) {
         if (videoElement) {
             removeEventListeners();
         }
-        for (let i = 0; i < sessions.length; i++) {
-            closeKeySession(sessions[i]);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            closeKeySession(sessionTokens[i]);
         }
         eventBus.trigger(events.TEARDOWN_COMPLETE);
     }
@@ -111,14 +111,14 @@ function ProtectionModel_01b(config) {
         for (let i = 0; i < pendingSessions.length; i++) {
             retVal.push(pendingSessions[i].initData);
         }
-        for (let i = 0; i < sessions.length; i++) {
-            retVal.push(sessions[i].initData);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            retVal.push(sessionTokens[i].initData);
         }
         return retVal;
     }
 
-    function getSessions() {
-        return sessions.concat(pendingSessions);
+    function getSessionTokens() {
+        return sessionTokens.concat(pendingSessions);
     }
 
     function requestKeySystemAccess(ksConfigurations) {
@@ -194,10 +194,10 @@ function ProtectionModel_01b(config) {
             removeEventListeners();
 
             // Close any open sessions - avoids memory leak on LG webOS 2016/2017 TVs
-            for (var i = 0; i < sessions.length; i++) {
-                closeKeySession(sessions[i]);
+            for (var i = 0; i < sessionTokens.length; i++) {
+                closeKeySession(sessionTokens[i]);
             }
-            sessions = [];
+            sessionTokens = [];
         }
 
         videoElement = mediaElement;
@@ -218,7 +218,7 @@ function ProtectionModel_01b(config) {
         }
 
         // Determine if creating a new session is allowed
-        if (moreSessionsAllowed || sessions.length === 0) {
+        if (moreSessionsAllowed || sessionTokens.length === 0) {
             const newSession = { // Implements SessionToken
                 sessionId: null,
                 keyId: ksInfo.keyId,
@@ -238,6 +238,18 @@ function ProtectionModel_01b(config) {
 
                 getSessionType: function () {
                     return 'temporary';
+                },
+
+                getKeyStatuses: function () {
+                    return {
+                        size: 0,
+                        has: () => {
+                            return false
+                        },
+                        get: () => {
+                            return undefined
+                        }
+                    }
                 }
             };
             pendingSessions.push(newSession);
@@ -301,7 +313,7 @@ function ProtectionModel_01b(config) {
                         break;
 
                     case api.keyerror:
-                        sessionToken = findSessionByID(sessions, event.sessionId);
+                        sessionToken = findSessionByID(sessionTokens, event.sessionId);
                         if (!sessionToken) {
                             sessionToken = findSessionByID(pendingSessions, event.sessionId);
                         }
@@ -344,7 +356,7 @@ function ProtectionModel_01b(config) {
                         break;
 
                     case api.keyadded:
-                        sessionToken = findSessionByID(sessions, event.sessionId);
+                        sessionToken = findSessionByID(sessionTokens, event.sessionId);
                         if (!sessionToken) {
                             sessionToken = findSessionByID(pendingSessions, event.sessionId);
                         }
@@ -365,20 +377,20 @@ function ProtectionModel_01b(config) {
                         // SessionIDs supported
                         if (moreSessionsAllowed) {
                             // Attempt to find an uninitialized token with this sessionId
-                            sessionToken = findSessionByID(sessions, event.sessionId);
+                            sessionToken = findSessionByID(sessionTokens, event.sessionId);
                             if (!sessionToken && pendingSessions.length > 0) {
 
                                 // This is the first message for our latest session, so set the
                                 // sessionId and add it to our list
                                 sessionToken = pendingSessions.shift();
-                                sessions.push(sessionToken);
+                                sessionTokens.push(sessionToken);
                                 sessionToken.sessionId = event.sessionId;
 
                                 eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
                             }
                         } else if (pendingSessions.length > 0) { // SessionIDs not supported
                             sessionToken = pendingSessions.shift();
-                            sessions.push(sessionToken);
+                            sessionTokens.push(sessionToken);
 
                             if (pendingSessions.length !== 0) {
                                 errHandler.error(new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE));
@@ -435,7 +447,7 @@ function ProtectionModel_01b(config) {
 
     instance = {
         getAllInitData,
-        getSessions,
+        getSessionTokens,
         requestKeySystemAccess,
         selectKeySystem,
         setMediaElement,

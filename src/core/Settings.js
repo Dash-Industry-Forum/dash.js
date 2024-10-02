@@ -117,7 +117,7 @@ import Events from './events/Events.js';
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true,
+ *                useChangeType: true,
  *                mediaSourceDurationInfinity: true,
  *                resetSourceBuffersForTrackSwitch: false
  *            },
@@ -414,8 +414,8 @@ import Events from './events/Events.js';
  * Avoids pruning of the buffered range that contains the current playback time.
  *
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
- * @property {boolean} [useChangeTypeForTrackSwitch=true]
- * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
+ * @property {boolean} [useChangeType=true]
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different codec family.
  * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
  * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
@@ -1099,7 +1099,7 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: true,
+                useChangeType: true,
                 mediaSourceDurationInfinity: true,
                 resetSourceBuffersForTrackSwitch: false
             },

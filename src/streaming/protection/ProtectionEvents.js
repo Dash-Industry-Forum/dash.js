@@ -54,7 +54,7 @@ class ProtectionEvents extends EventsBase {
          * Event ID for events delivered when the status of one decryption keys has changed
          * @ignore
          */
-        this.INTERNAL_KEY_STATUS_CHANGED = 'internalkeyStatusChanged';
+        this.INTERNAL_KEY_STATUSES_CHANGED = 'internalkeyStatusesChanged';
 
         /**
          * Event ID for events delivered when a new key has been added
@@ -107,6 +107,13 @@ class ProtectionEvents extends EventsBase {
          * @event ProtectionEvents#KEY_STATUSES_CHANGED
          */
         this.KEY_STATUSES_CHANGED = 'public_keyStatusesChanged';
+
+        /**
+         * Triggered when the key statuses Map() of the ProtectionController was updated. This happens after there is a keystatuseschange.
+         * The event can be used as an indicator when to refresh the list of possible Representations
+         * @event ProtectionEvents#KEY_STATUSES_MAP_UPDATED
+         */
+        this.KEY_STATUSES_MAP_UPDATED = 'keyStatusesMapUpdated';
 
         /**
          * Event ID for events delivered when a key system access procedure

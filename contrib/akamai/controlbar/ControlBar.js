@@ -115,6 +115,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
+        self.player.on(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
+        self.player.on(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
     var removePlayerEventsListeners = function () {
@@ -126,6 +128,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.off(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
+        self.player.off(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
+        self.player.off(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
     var getControlId = function (id) {
@@ -584,6 +588,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         info += '- Codec: ' + element.codec + ' ';
                     }
 
+                    if (element.id) {
+                        info += '- Id: ' + element.id + ' ';
+                    }
+
                     return label || info
                 };
                 trackSwitchMenu = createMenu(availableTracks, contentFunc);
@@ -688,6 +696,15 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         createCaptionSwitchMenu(e.streamId);
     };
+
+    var _onNewTrackSelected = function () {
+        createTrackSwitchMenu();
+        createBitrateSwitchMenu();
+    }
+
+    var _onKeyStatusChanged = function () {
+        createBitrateSwitchMenu();
+    }
 
     var _onBufferLevelUpdated = function () {
         if (seekbarBuffer) {
