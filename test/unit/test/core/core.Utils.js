@@ -115,7 +115,7 @@ describe('Utils', () => {
 
         it('Should escape URL with whitespaces correctly', () => {
             const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
-            const modifiedUrl = Utils.addAditionalQueryParameterToUrl(url, [{ key: 'test', value: 'testvalue' }]);
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, [{ key: 'test', value: 'testvalue' }]);
             expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces&test=testvalue');
         })
 
@@ -125,13 +125,13 @@ describe('Utils', () => {
                 value: 'bl=4000,br=14932,d=4000,dl=4000,mtp=84100,nor="bbb_30fps_3840x2160_12000k_3.m4v",ot=v,rtp=74700,sf=d,sid="4dba0bf4-e517-4b7c-b34a-d1a75206cd53",st=v,tb=14932'
             }];
             const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
-            const modifiedUrl = Utils.addAditionalQueryParameterToUrl(url, params);
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, params);
             expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces&CMCD=bl%3D4000%2Cbr%3D14932%2Cd%3D4000%2Cdl%3D4000%2Cmtp%3D84100%2Cnor%3D%22bbb_30fps_3840x2160_12000k_3.m4v%22%2Cot%3Dv%2Crtp%3D74700%2Csf%3Dd%2Csid%3D%224dba0bf4-e517-4b7c-b34a-d1a75206cd53%22%2Cst%3Dv%2Ctb%3D14932');
         })
 
         it('Should return the original URL if no query parameters are provided', () => {
             const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
-            const modifiedUrl = Utils.addAditionalQueryParameterToUrl(url);
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url);
             expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces');
         })
 
@@ -141,7 +141,7 @@ describe('Utils', () => {
                 key: 'CMCD',
                 value: 'bl=4000,br=14932,d=4000,dl=4000,mtp=84100,nor="bbb_30fps_3840x2160_12000k_3.m4v",ot=v,rtp=74700,sf=d,sid="4dba0bf4-e517-4b7c-b34a-d1a75206cd53",st=v,tb=14932'
             }];
-            const modifiedUrl = Utils.addAditionalQueryParameterToUrl(url, params);
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, params);
             expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=%3d&CMCD=bl%3D4000%2Cbr%3D14932%2Cd%3D4000%2Cdl%3D4000%2Cmtp%3D84100%2Cnor%3D%22bbb_30fps_3840x2160_12000k_3.m4v%22%2Cot%3Dv%2Crtp%3D74700%2Csf%3Dd%2Csid%3D%224dba0bf4-e517-4b7c-b34a-d1a75206cd53%22%2Cst%3Dv%2Ctb%3D14932');
 
         })
