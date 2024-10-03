@@ -291,9 +291,19 @@ function Capabilities() {
                 if (keySystemMetadata.ks.systemString) {
                     curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
                 }
-                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
-                    curr.keySystemConfiguration[type] = { robustness: ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO };
 
+                let robustnessLevel = ''
+                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
+                    robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
+                }
+                const protData = keySystemMetadata.protData
+                const audioRobustness = (protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+                const videoRobustness = (protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+
+                if (type === 'audio') {
+                    curr.keySystemConfiguration[type] = { robustness: audioRobustness }
+                } else if (type === 'video') {
+                    curr.keySystemConfiguration[type] = { robustness: videoRobustness }
                 }
             }
             return curr
