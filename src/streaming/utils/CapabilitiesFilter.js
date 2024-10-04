@@ -136,6 +136,22 @@ function CapabilitiesFilter() {
             }
             return supported
         });
+
+        // handle scte214:supplementalCodecs
+        as.Representation = as.Representation.map((rep) => {
+            const supplementalCodecs = rep['scte214:supplementalCodecs']
+            if (!supplementalCodecs) {
+                return rep
+            }
+            const codec = rep.mimeType + ';codecs="' + supplementalCodecs + '"';
+            const config = _createConfiguration(type, rep, codec);
+            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
+            if (supported) {
+                logger.debug(`[CapabilitiesFilter] Codec ${codec} supported. Upgrading Representation with ID ${rep.id}`);
+                rep.codecs = supplementalCodecs;
+            }
+            return rep;
+        })
     }
 
     function _getConfigurationsToCheck(manifest, type) {
