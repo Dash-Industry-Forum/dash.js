@@ -43,7 +43,7 @@ describe('ExtUrlQueryInfoController', () => {
                                 }
                             }],},
                             {EssentialProperty: [{
-                                schemeIdUri: 'urn:mpeg:dash:urlparam:2014',
+                                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
                                 ExtUrlQueryInfo: {
                                     tagName: 'UrlQueryInfo',
                                     queryTemplate: '$querypart$',
@@ -102,7 +102,7 @@ describe('ExtUrlQueryInfoController', () => {
                 }],
             }],
             SupplementalProperty: [{
-                schemeIdUri: 'urn:mpeg:dash:urlparam:2014',
+                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
                 ExtUrlQueryInfo: {
                     tagName: 'ExtUrlQueryInfo',
                     queryTemplate: '$querypart$',
@@ -134,6 +134,7 @@ describe('ExtUrlQueryInfoController', () => {
 
             const expectedResult = [{key: 'urlParam1' , value: 'urlValue1'}, {key: 'urlParam2' , value: 'urlValue2'}];
             const result = extUrlQueryInfoController.getFinalQueryString(request);
+            console.log(result)
             expect(result).to.have.deep.members(expectedResult);
         });
     
@@ -268,6 +269,7 @@ describe('ExtUrlQueryInfoController', () => {
             }; 
             
             const result = extUrlQueryInfoController.getFinalQueryString(request);
+            console.log(result)
             expect(result).to.be.undefined;
         });
 
@@ -422,7 +424,7 @@ describe('ExtUrlQueryInfoController', () => {
                     ],
                 }],
                 SupplementalProperty: [{
-                    schemeIdUri: 'urn:mpeg:dash:urlparam:2014',
+                    schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
                     ExtUrlQueryInfo: {
                         tagName: 'UrlQueryInfo',
                         queryTemplate: '$querypart$',
@@ -457,7 +459,7 @@ describe('ExtUrlQueryInfoController', () => {
                     ],
                 }],
                 SupplementalProperty: [{
-                    schemeIdUri: 'urn:mpeg:dash:urlparam:2014',
+                    schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
                     ExtUrlQueryInfo: {
                         tagName: 'UrlQueryInfo',
                         queryTemplate: '$querypart$',
@@ -494,7 +496,7 @@ describe('ExtUrlQueryInfoController', () => {
                     ],
                 }],
                 SupplementalProperty: [{
-                    schemeIdUri: 'urn:mpeg:dash:urlparam:2014',
+                    schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
                     ExtUrlQueryInfo: {
                         tagName: 'UrlQueryInfo',
                         queryTemplate: '$querypart$',
