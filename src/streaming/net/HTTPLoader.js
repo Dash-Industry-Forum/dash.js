@@ -112,6 +112,10 @@ function HTTPLoader(cfg) {
         if (config.commonAccessTokenController) {
             commonAccessTokenController = config.commonAccessTokenController
         }
+
+        if (config.ExtUrlQueryInfoController) {
+            extUrlQueryInfoController = config.ExtUrlQueryInfoController;
+        }
     }
 
     /**
