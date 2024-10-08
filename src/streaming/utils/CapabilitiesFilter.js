@@ -3,6 +3,7 @@ import Debug from '../../core/Debug.js';
 import Constants from '../constants/Constants.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function CapabilitiesFilter() {
 
@@ -14,6 +15,7 @@ function CapabilitiesFilter() {
         capabilities,
         settings,
         customParametersModel,
+        protectionController,
         logger;
 
 
@@ -38,6 +40,10 @@ function CapabilitiesFilter() {
             settings = config.settings;
         }
 
+        if (config.protectionController) {
+            protectionController = config.protectionController;
+        }
+
         if (config.customParametersModel) {
             customParametersModel = config.customParametersModel;
         }
@@ -46,120 +52,161 @@ function CapabilitiesFilter() {
 
     function filterUnsupportedFeatures(manifest) {
         return new Promise((resolve) => {
+            const mediaTypesToCheck = [Constants.VIDEO, Constants.AUDIO];
             const promises = [];
 
-            promises.push(_filterUnsupportedCodecs(Constants.VIDEO, manifest));
-            promises.push(_filterUnsupportedCodecs(Constants.AUDIO, manifest));
+            // We determine all the configurations we need to check. Each unique configuration should only be checked once.
+            // This is important especially for large multiperiod MPDs. A redundant configuration check can lead to increased processing time.
+            mediaTypesToCheck.forEach(mediaType => {
+                const configurationsToCheck = _getConfigurationsToCheck(manifest, mediaType);
+                configurationsToCheck.forEach(basicConfiguration => {
+                    promises.push(capabilities.runCodecSupportCheck(basicConfiguration, mediaType));
+                })
+            })
 
-            Promise.all(promises)
+
+            Promise.allSettled(promises)
                 .then(() => {
+                    mediaTypesToCheck.forEach((mediaType) => {
+                        _filterUnsupportedCodecs(mediaType, manifest)
+                    })
+
                     if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
+                    return _applyCustomFilters(manifest);
                 })
-                .then(() => _applyCustomFilters(manifest))
-                .then(() => resolve())
-                .catch(() => {
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    logger.error(e);
                     resolve();
                 });
         });
     }
+
 
     function _filterUnsupportedCodecs(type, manifest) {
         if (!manifest || !manifest.Period || manifest.Period.length === 0) {
-            return Promise.resolve();
+            return
         }
 
-        const promises = [];
-        manifest.Period.forEach((period) => {
-            promises.push(_filterUnsupportedAdaptationSetsOfPeriod(period, type));
-        });
-
-        return Promise.all(promises);
+        manifest.Period
+            .forEach((period) => {
+                _filterUnsupportedAdaptationSetsOfPeriod(period, type);
+            })
     }
 
     function _filterUnsupportedAdaptationSetsOfPeriod(period, type) {
-        return new Promise((resolve) => {
+        if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
+            return;
+        }
 
-            if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
-                resolve();
-                return;
+        period.AdaptationSet = period.AdaptationSet.filter((as) => {
+            if (adapter.getIsTypeOf(as, type)) {
+                _filterUnsupportedRepresentationsOfAdaptation(as, type);
+            }
+            const supported = as.Representation && as.Representation.length > 0;
+            if (!supported) {
+                eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
+                    adaptationSet: as
+                });
+                logger.warn(`[CapabilitiesFilter] AdaptationSet with ID ${as.id ? as.id : 'undefined'} and codec ${as.codecs ? as.codecs : 'undefined'} has been removed because of no supported Representation`);
             }
 
-            const promises = [];
-            period.AdaptationSet.forEach((as) => {
-                if (adapter.getIsTypeOf(as, type)) {
-                    promises.push(_filterUnsupportedRepresentationsOfAdaptation(as, type));
-                }
-            });
-
-            Promise.all(promises)
-                .then(() => {
-                    period.AdaptationSet = period.AdaptationSet.filter((as) => {
-                        const supported = as.Representation && as.Representation.length > 0;
-                        if (!supported) {
-                            eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
-                                adaptationSet: as
-                            });
-                            logger.warn(`AdaptationSet has been removed because of no supported Representation`);
-                        }
-
-                        return supported;
-                    });
-                    resolve();
-                })
-                .catch(() => {
-                    resolve();
-                });
-        });
-
+            return supported;
+        })
     }
 
     function _filterUnsupportedRepresentationsOfAdaptation(as, type) {
-        return new Promise((resolve) => {
+        if (!as.Representation || as.Representation.length === 0) {
+            return;
+        }
+        const configurations = [];
 
-            if (!as.Representation || as.Representation.length === 0) {
-                resolve();
-                return;
+        as.Representation = as.Representation.filter((rep, i) => {
+            const codec = adapter.getCodec(as, i, false);
+            const config = _createConfiguration(type, rep, codec);
+
+            configurations.push(config);
+            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
+            if (!supported) {
+                logger.debug(`[CapabilitiesFilter] Codec ${configurations[i].codec} not supported. Removing Representation with ID ${rep.id}`);
             }
-
-            const promises = [];
-            const configurations = [];
-
-            as.Representation.forEach((rep, i) => {
-                const codec = adapter.getCodec(as, i, false);
-                const config = _createConfiguration(type, rep, codec);
-
-                configurations.push(config);
-                promises.push(capabilities.supportsCodec(config, type));
-            });
-
-            Promise.all(promises)
-                .then((supported) => {
-                    as.Representation = as.Representation.filter((_, i) => {
-                        if (!supported[i]) {
-                            logger.debug(`[Stream] Codec ${configurations[i].codec} not supported `);
-                        }
-                        return supported[i];
-                    });
-                    resolve();
-                })
-                .catch(() => {
-                    resolve();
-                });
+            return supported
         });
     }
 
+    function _getConfigurationsToCheck(manifest, type) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+            return [];
+        }
+
+        const configurationsSet = new Set();
+        const configurations = [];
+
+        manifest.Period.forEach((period) => {
+            period.AdaptationSet.forEach((as) => {
+                if (adapter.getIsTypeOf(as, type)) {
+                    as.Representation.forEach((rep, i) => {
+                        const codec = adapter.getCodec(as, i, false);
+                        const config = _createConfiguration(type, rep, codec);
+                        const configString = JSON.stringify(config);
+
+                        if (!configurationsSet.has(configString)) {
+                            configurationsSet.add(configString);
+                            configurations.push(config);
+                        }
+                    });
+                }
+            });
+        });
+
+        return configurations;
+    }
+
+
     function _createConfiguration(type, rep, codec) {
+        let config = null;
         switch (type) {
             case Constants.VIDEO:
-                return _createVideoConfiguration(rep, codec);
+                config = _createVideoConfiguration(rep, codec);
+                break;
             case Constants.AUDIO:
-                return _createAudioConfiguration(rep, codec);
+                config = _createAudioConfiguration(rep, codec);
+                break;
             default:
-                return null;
-
+                return config;
         }
+
+        return _addGenericAttributesToConfig(rep, config);
+    }
+
+    function _createVideoConfiguration(rep, codec) {
+        let config = {
+            codec: codec,
+            width: rep.width || null,
+            height: rep.height || null,
+            framerate: rep.frameRate || null,
+            bitrate: rep.bandwidth || null,
+            isSupported: true
+        }
+        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+            Object.assign(config, _convertHDRColorimetryToConfig(rep));
+        }
+        let colorimetrySupported = config.isSupported;
+
+        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+        }
+        let metadataFormatSupported = config.isSupported;
+
+        if (!colorimetrySupported || !metadataFormatSupported) {
+            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
+        }
+
+        return config;
     }
 
     function _convertHDRColorimetryToConfig(representation) {
@@ -225,32 +272,6 @@ function CapabilitiesFilter() {
         return cfg;
     }
 
-    function _createVideoConfiguration(rep, codec) {
-        let config = {
-            codec: codec,
-            width: rep.width || null,
-            height: rep.height || null,
-            framerate: rep.frameRate || null,
-            bitrate: rep.bandwidth || null,
-            isSupported: true
-        }
-        if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
-            Object.assign(config, _convertHDRColorimetryToConfig(rep));
-        }
-        let colorimetrySupported = config.isSupported;
-
-        if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
-        }
-        let metadataFormatSupported = config.isSupported;
-
-        if (!colorimetrySupported || !metadataFormatSupported) {
-            config.isSupported = false; // restore this flag as it may got overridden by 2nd Object.assign
-        }
-
-        return config;
-    }
-
     function _createAudioConfiguration(rep, codec) {
         const samplerate = rep.audioSamplingRate || null;
         const bitrate = rep.bandwidth || null;
@@ -261,6 +282,13 @@ function CapabilitiesFilter() {
             samplerate,
             isSupported: true
         };
+    }
+
+    function _addGenericAttributesToConfig(rep, config) {
+        if (rep && rep[DashConstants.CONTENT_PROTECTION] && rep[DashConstants.CONTENT_PROTECTION].length > 0) {
+            config.keySystemsMetadata = protectionController.getSupportedKeySystemMetadataFromContentProtection(rep[DashConstants.CONTENT_PROTECTION])
+        }
+        return config
     }
 
     function _filterUnsupportedEssentialProperties(manifest) {

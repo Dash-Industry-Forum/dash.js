@@ -1,3 +1,5 @@
+import {UAParser} from 'ua-parser-js'
+
 class Utils {
 
     static getTestvectorsForTestcase(testcase) {
@@ -9,6 +11,10 @@ class Utils {
 
         const targetTestvectors = [];
         testvectors.forEach((testvector) => {
+
+            if (Utils._shouldPlatformBeExcluded(testvector.excludedPlatforms)) {
+                return
+            }
 
             // Nothing to be filtered
             if ((!testvector.includedTestfiles || testvector.includedTestfiles.length === 0) && (!testvector.excludedTestfiles || testvector.excludedTestfiles.length === 0)) {
@@ -45,6 +51,18 @@ class Utils {
         })
 
         return targetTestvectors
+    }
+
+    static _shouldPlatformBeExcluded(excludedPlatforms) {
+        if (!excludedPlatforms || excludedPlatforms.length <= 0) {
+            return false
+        }
+
+        const userAgent = UAParser(navigator.userAgent.toLowerCase())
+        return excludedPlatforms.some((platform) => {
+            return platform && platform.browser && platform.browser.toLowerCase() === userAgent.browser.name.toLowerCase()
+        })
+
     }
 }
 

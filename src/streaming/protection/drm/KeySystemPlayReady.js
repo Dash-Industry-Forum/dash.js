@@ -39,7 +39,7 @@ import CommonEncryption from '../CommonEncryption.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
+const uuid = ProtectionConstants.PLAYREADY_UUID;
 const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 const PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';

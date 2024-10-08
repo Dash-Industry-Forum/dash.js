@@ -140,6 +140,7 @@ function MediaController() {
             filteredTracks = Array.from(possibleTracks);
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, settings)
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
@@ -426,6 +427,10 @@ function MediaController() {
         return (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
     }
 
+    function matchSettingsId(settings, track) {
+        return (settings.id === undefined) || (settings.id === null) || (track.id === settings.id)
+    }
+
     function matchSettingsViewPoint(settings, track) {
         const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
             return _compareDescriptorType(item, settings.viewpoint);
@@ -652,6 +657,9 @@ function MediaController() {
     }
 
     function _handleInitialTextTrackSelection(mediaInfos) {
+        if (!mediaInfos || mediaInfos.length === 0) {
+            return null;
+        }
         const filteredMediaInfos = mediaInfos.filter((mediaInfo) => {
             if (mediaInfo && mediaInfo.roles && mediaInfo.roles.length > 0) {
                 return mediaInfo.roles.every((role) => {
@@ -665,7 +673,7 @@ function MediaController() {
             return filteredMediaInfos[0];
         }
 
-        return null
+        return mediaInfos[0];
     }
 
     /**

@@ -34,14 +34,34 @@
  * @ignore
  */
 export default {
-
     CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
     WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
     PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
     PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+    WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+    PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
+    CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
+    W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
     INITIALIZATION_DATA_TYPE_CENC: 'cenc',
     INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
-    INITIALIZATION_DATA_TYPE_WEBM: 'webm'
+    INITIALIZATION_DATA_TYPE_WEBM: 'webm',
+    ENCRYPTION_SCHEME_CENC: 'cenc',
+    ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    MEDIA_KEY_MESSAGE_TYPES: {
+        LICENSE_REQUEST: 'license-request',
+        LICENSE_RENEWAL: 'license-renewal',
+        LICENSE_RELEASE: 'license-release',
+        INDIVIDUALIZATION_REQUEST: 'individualization-request',
+    },
+    ROBUSTNESS_STRINGS: {
+        WIDEVINE: {
+            SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
+            SW_SECURE_DECODE: 'SW_SECURE_DECODE',
+            HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
+            HW_SECURE_DECODE: 'HW_SECURE_DECODE',
+            HW_SECURE_ALL: 'HW_SECURE_ALL'
+        }
+    }
 }
 
 

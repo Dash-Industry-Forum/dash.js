@@ -246,7 +246,7 @@ declare namespace dashjs {
 
         getAdaptationsForType(manifest: object, periodIndex: number, type: string): any[];
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getMimeType(adaptation: object): object;
 
@@ -754,7 +754,7 @@ declare namespace dashjs {
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
-        getCodec(adaptation: object, representationId: number, addResolutionInfo: boolean): string;
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
         getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
 
@@ -3030,7 +3030,7 @@ declare namespace dashjs {
 
         setProtectionData(data: object): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[]): object[];
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[]): object[];
 
         getKeySystems(): any[];
 
@@ -3060,7 +3060,7 @@ declare namespace dashjs {
 
         getKeySystemBySystemString(systemString: string): KeySystem | null;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
 
         getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
@@ -3285,7 +3285,7 @@ declare namespace dashjs {
         reset(): void;
     }
 
-    export interface ProtectionModel_21Jan2015 {
+    export interface DefaultProtectionModel {
         getAllInitData(): ArrayBuffer[];
 
         getSessions(): any[]; // Is this MediaSession[] ?
@@ -3998,7 +3998,9 @@ declare namespace dashjs {
 
         supportsEncryptedMedia(): boolean;
 
-        supportsCodec(config: object, type: string): Promise<boolean>;
+        isCodecSupportedBasedOnTestedConfigurations(basicConfiguration: object, type: string): boolean;
+
+        runCodecSupportCheck(basicConfiguration: object, type: string): Promise<void>;
 
         setEncryptedMediaSupported(value: boolean): void;
 
