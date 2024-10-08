@@ -30,80 +30,45 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Utils from '../../core/Utils.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 import Constants from '../constants/Constants.js';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
 
 function ExtUrlQueryInfoController() {
     let instance,
-        mpd;
+        mpdQueryStringInformation;
 
 
-    function generateQueryParams(resultObject, manifestObejc, propertyString, mpdUrlQuery, defaultInitialString) {
-        const property = manifestObejc[propertyString]?.find((property) => property.schemeIdUri === Constants.URL_QUERY_INFO_SCHEME);
-        generateInitialQueryString(property, defaultInitialString, resultObject, mpdUrlQuery);
-        resultObject.finalQueryString = generateFinalQueryString(resultObject.initialQueryString, property);
+    function _generateQueryParams(resultObject, manifestObject, mpdUrlQuery, parentLevelInfo, level) {
+        const property = _getPropertyFromManifestObject(manifestObject, level);
+        _generateInitialQueryString(property, parentLevelInfo.initialQueryString, resultObject, mpdUrlQuery);
         resultObject.sameOriginOnly = property?.ExtUrlQueryInfo?.sameOriginOnly;
-        resultObject.includeInRequests = property?.ExtUrlQueryInfo?.includeInRequests ? property?.ExtUrlQueryInfo?.includeInRequests?.split(' ') : ['segment'];
-        resultObject.queryParams = parseQueryParams(resultObject?.initialQueryString);
+        resultObject.queryParams = Utils.parseQueryParams(resultObject?.initialQueryString);
+        resultObject.includeInRequests = _getIncludeInRequestFromProperty(property, parentLevelInfo.includeInRequests);
     }
 
-    function createFinalQueryStrings(manifest) {
-        mpd = {};
-        const manifestUrl = new URL(manifest.url);
-        mpd.origin = manifestUrl.origin;
-        mpd.period = [];
-        mpd.finalQueryString = '';
-        const mpdUrlQuery = manifest.url.split('?')[1];
-
-        generateQueryParams(mpd, manifest, 'SupplementalProperty', mpdUrlQuery, '');
-
-        manifest.Period.forEach((period) => {
-            const periodObject = {};
-            periodObject.adaptation = [];
-            periodObject.finalQueryString = '';
-
-            generateQueryParams(periodObject, period, 'SupplementalProperty', mpdUrlQuery, mpd.initialQueryString);
-
-            period.AdaptationSet.forEach((adaptationSet) => {
-                const adaptationObject = {};
-                adaptationObject.representation = [];
-                adaptationObject.finalQueryString = '';
-
-                generateQueryParams(adaptationObject, adaptationSet, 'EssentialProperty', mpdUrlQuery, periodObject.initialQueryString);
-
-                adaptationSet.Representation.forEach((representation) => {
-                    const representationObject = {};
-                    representationObject.finalQueryString = '';
-
-                    generateQueryParams(representationObject, representation, 'EssentialProperty', mpdUrlQuery, adaptationObject.initialQueryString);
-
-                    adaptationObject.representation.push(representationObject);
-                });
-                periodObject.adaptation.push(adaptationObject);
-            });
-            mpd.period.push(periodObject);
-        });
-    }
-
-    function parseQueryParams(queryParamString) {
-        const params = [];
-        if (queryParamString){
-            const pairs = queryParamString.split('&');
-            for (const pair of pairs) {
-                const [key, value] = pair.split('=');
-                const object = {};
-                object.key = decodeURIComponent(key);
-                object.value = decodeURIComponent(value);
-                params.push(object);
-            }
+    function _getPropertyFromManifestObject(manifestObject, level) {
+        let properties = [];
+        if (level === DashConstants.PERIOD) {
+            properties = manifestObject[DashConstants.SUPPLEMENTAL_PROPERTY] || [];
+        } else {
+            properties = [
+                ...(manifestObject[DashConstants.ESSENTIAL_PROPERTY] || []),
+                ...(manifestObject[DashConstants.SUPPLEMENTAL_PROPERTY] || [])
+            ];
         }
-        return params;
+        return properties.filter((prop) => (
+            (prop.schemeIdUri === Constants.URL_QUERY_INFO_SCHEME && prop.UrlQueryInfo) ||
+            (prop.schemeIdUri === Constants.EXT_URL_QUERY_INFO_SCHEME && prop.ExtUrlQueryInfo)
+        ))[0];
     }
 
-    function generateInitialQueryString(essentialProperty, defaultInitialString, dst, mpdUrlQuery) {
+    function _generateInitialQueryString(property, defaultInitialString, dst, mpdUrlQuery) {
         dst.initialQueryString = '';
         let initialQueryString = '';
 
-        const queryInfo = essentialProperty?.ExtUrlQueryInfo || essentialProperty?.UrlQueryInfo;
+        const queryInfo = property?.ExtUrlQueryInfo || property?.UrlQueryInfo;
         
         if (queryInfo && queryInfo.queryString) {
             if (defaultInitialString && defaultInitialString.length > 0) {
@@ -120,66 +85,80 @@ function ExtUrlQueryInfoController() {
         dst.initialQueryString = initialQueryString;
     }
 
-    function buildInitialQueryParams(initialQueryString) {
-        const params = {};
-        const pairs = initialQueryString.split('&');
-        for (const pair of pairs) {
-            const [key, value] = pair.split('=');
-            params[decodeURIComponent(key)] = decodeURIComponent(value);
+    function _getIncludeInRequestFromProperty(property , parentIncludeInRequests) {
+        if (!property) {
+            return parentIncludeInRequests;
         }
-        return params;
+
+        if (property.ExtUrlQueryInfo?.includeInRequests) {
+            return property.ExtUrlQueryInfo.includeInRequests.split(' ');
+        } else {
+            return [DashConstants.SEGMENT_TYPE];
+        }
     }
 
-    function generateFinalQueryString(initialQueryString, essentialProperty) {
-        if (essentialProperty) {
+    function createFinalQueryStrings(manifest) {
+        mpdQueryStringInformation = {
+            origin: new URL(manifest.url).origin,
+            period: []
+        };
 
-            const queryTemplate = essentialProperty?.ExtUrlQueryInfo?.queryTemplate || essentialProperty?.UrlQueryInfo?.queryTemplate || '';
+        const mpdUrlQuery = manifest.url.split('?')[1];
+        const initialMpdObject = {initialQueryString: '', includeInRequests: []};
 
-            const initialQueryParams = buildInitialQueryParams(initialQueryString);
-            if (queryTemplate === '$querypart$') {
-                return Object.entries(initialQueryParams)
-                    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-                    .join('&');
-            } else {
-                return queryTemplate?.replace(/(\$\$)|\$query:([^$]+)\$|(\$querypart\$)/g, (match, escape, paramName, querypart) => {
-                    if (escape) {
-                        return '$';
-                    } else if (paramName) {
-                        return initialQueryParams[paramName] || '';
-                    } else if (querypart) {
-                        return Object.entries(initialQueryParams)
-                            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-                            .join('&');
-                    }
+        _generateQueryParams(mpdQueryStringInformation, manifest, mpdUrlQuery, initialMpdObject, DashConstants.MPD);
+
+        manifest.Period.forEach((period) => {
+            const periodObject = {
+                adaptation: []
+            };
+            _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
+
+            period.AdaptationSet.forEach((adaptationSet) => {
+                const adaptationObject = {
+                    representation: []
+                };
+                _generateQueryParams(adaptationObject, adaptationSet, mpdUrlQuery, periodObject, DashConstants.ADAPTATION_SET);
+
+                adaptationSet.Representation.forEach((representation) => {
+                    const representationObject = {};
+                    _generateQueryParams(representationObject, representation, mpdUrlQuery, adaptationObject, DashConstants.REPRESENTATION);
+
+                    adaptationObject.representation.push(representationObject);
                 });
-            }
-        }
+                periodObject.adaptation.push(adaptationObject);
+            });
+            mpdQueryStringInformation.period.push(periodObject);
+        });
     }
 
     function getFinalQueryString(request) {
-        if (request.type == 'MediaSegment' || request.type == 'InitializationSegment') {
-            if (mpd) {
-                const representation = request.representation;
-                const adaptation = representation.adaptation;
-                const period = adaptation.period;
-                const queryInfo = mpd
-                    .period[period.index]
-                    .adaptation[adaptation.index]
-                    .representation[representation.index];
-                const requestUrl = new URL(request.url);
-                const canSendToOrigin = !queryInfo.sameOriginOnly || mpd.origin == requestUrl.origin;
-                const inRequest = queryInfo.includeInRequests.includes('segment');
-                if (inRequest && canSendToOrigin) {
-                    return queryInfo.queryParams;
-                }
-            }
+        if (!mpdQueryStringInformation) {
+            return
         }
-        else if (request.type == 'MPD') {
-            if (mpd) {
-                const inRequest = ['mpd', 'mpdpatch'].some(r => mpd.includeInRequests.includes(r));
-                if (inRequest) {
-                    return mpd.queryParams;
-                }
+        if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+            const representation = request.representation;
+            const adaptation = representation.adaptation;
+            const period = adaptation.period;
+            const queryInfo = mpdQueryStringInformation
+                .period[period.index]
+                .adaptation[adaptation.index]
+                .representation[representation.index];
+            const requestUrl = new URL(request.url);
+            const canSendToOrigin = !queryInfo.sameOriginOnly || mpdQueryStringInformation.origin === requestUrl.origin;
+            const inRequest = queryInfo.includeInRequests.includes(DashConstants.SEGMENT_TYPE);
+            if (inRequest && canSendToOrigin) {
+                return queryInfo.queryParams;
+            }
+        } else if (request.type === HTTPRequest.MPD_TYPE) {
+            const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE].some(r => mpdQueryStringInformation.includeInRequests.includes(r));
+            if (inRequest) {
+                return mpdQueryStringInformation.queryParams;
+            }
+        } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+            const inRequest = mpdQueryStringInformation.includeInRequests.includes(DashConstants.STEERING_TYPE);
+            if (inRequest) {
+                return mpdQueryStringInformation.queryParams;
             }
         }
     }

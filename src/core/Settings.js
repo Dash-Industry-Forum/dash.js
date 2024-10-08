@@ -76,6 +76,8 @@ import Events from './events/Events.js';
  *               supportedEssentialProperties: [
  *                   { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
  *                   { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /1|5|6|7/ },
+ *                   { schemeIdUri: Constants.URL_QUERY_INFO_SCHEME },
+ *                   { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },  
  *                   { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
  *                   { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
@@ -1059,6 +1061,7 @@ function Settings() {
                     { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
                     { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /1|5|6|7/ },
                     { schemeIdUri: Constants.URL_QUERY_INFO_SCHEME },
+                    { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
