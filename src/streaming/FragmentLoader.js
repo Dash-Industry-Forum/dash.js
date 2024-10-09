@@ -156,6 +156,7 @@ function FragmentLoader(config) {
     function reset() {
         if (urlLoader) {
             urlLoader.abort();
+            urlLoader.reset();
             urlLoader = null;
         }
     }

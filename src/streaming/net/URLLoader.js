@@ -36,7 +36,7 @@ import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory.js';
  * @description  Call Offline Loader or Online Loader depending on URL
  * @param {Object} cfg - dependencies
  * @ignore
-*/
+ */
 function URLLoader(cfg) {
 
     cfg = cfg || {};
@@ -71,14 +71,26 @@ function URLLoader(cfg) {
             loader.abort();
         }
     }
+
+    function reset() {
+        schemeLoaderFactory.reset();
+        schemeLoaderFactory = null;
+        if (loader && loader.reset === 'function') {
+            loader.reset();
+        }
+        loader = null;
+    }
+
     instance = {
-        load: load,
-        abort: abort
+        abort,
+        load,
+        reset
     };
 
     return instance;
 
 }
+
 URLLoader.__dashjs_factory_name = 'URLLoader';
 
 const factory = FactoryMaker.getClassFactory(URLLoader);

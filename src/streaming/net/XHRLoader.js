@@ -66,7 +66,7 @@ function XHRLoader() {
         xhr.withCredentials = httpRequest.credentials === 'include';
         xhr.timeout = httpRequest.timeout;
 
-        xhr.onload = function() {
+        xhr.onload = function () {
             httpResponse.url = this.responseURL;
             httpResponse.status = this.status;
             httpResponse.statusText = this.statusText;
@@ -93,10 +93,16 @@ function XHRLoader() {
         return xhr
     }
 
+    function reset() {
+        xhr = null;
+        instance = null;
+    }
+
     instance = {
         load,
         abort,
-        getXhr
+        getXhr,
+        reset
     };
 
     return instance;

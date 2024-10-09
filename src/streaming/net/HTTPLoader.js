@@ -680,10 +680,21 @@ function HTTPLoader(cfg) {
         httpRequests = [];
     }
 
+    function reset() {
+        httpRequests = [];
+        delayedRequests = [];
+        retryRequests = [];
+        xhrLoader.reset();
+        fetchLoader.reset();
+        xhrLoader = null;
+        fetchLoader = null;
+    }
+
     instance = {
-        load,
         abort,
-        setConfig
+        load,
+        reset,
+        setConfig,
     };
 
     setup();
